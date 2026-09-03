@@ -32,14 +32,14 @@ class _HabitScreenState extends State<HabitScreen> {
   @override
   void initState() {
     super.initState();
-    _habitsStream = _dbRef.child('houses/${widget.houseId}/habits').onValue;
+    _habitsStream = _dbRef.child('houses/${widget.houseId}/habits').limitToLast(25).onValue;
   }
 
   @override
   void didUpdateWidget(covariant HabitScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.houseId != widget.houseId) {
-      _habitsStream = _dbRef.child('houses/${widget.houseId}/habits').onValue;
+      _habitsStream = _dbRef.child('houses/${widget.houseId}/habits').limitToLast(25).onValue;
     }
   }
 

@@ -75,7 +75,7 @@ class _MessengerScreenState extends State<MessengerScreen>
   Map<dynamic, dynamic>? _internalPartnerPresence;
   ChatRoomMeta _internalPartnerRoomMeta = const ChatRoomMeta();
   bool _isBootstrapping = true;
-  static const Duration _friendRealtimeReleaseDelay = Duration(seconds: 18);
+  static const Duration _friendRealtimeReleaseDelay = Duration(seconds: 5);
   static const Duration _realtimeUiDebounce = Duration(milliseconds: 140);
   static const int _friendRealtimeWarmupCount = 3;
   static const ChatMessagePreviewLabels _lastMessagePreviewLabels =

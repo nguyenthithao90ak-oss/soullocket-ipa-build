@@ -78,7 +78,7 @@ import '../../utilities/diary_export_screen.dart';
 import '../../utilities/device_manager_screen.dart';
 // import '../../auth/qr_authorize_scanner_screen.dart';
 import '../../utilities/user_support_chat_screen.dart';
-import '../../../../core/sl_countdown_shapes.dart';
+import 'package:soullocket_app/core/sl_countdown_shapes.dart';
 import '../../../utils/services/l10n_service.dart';
 import '../../../utils/services/auth_service.dart';
 import '../../../utils/services/device_manager_service.dart';

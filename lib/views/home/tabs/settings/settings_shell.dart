@@ -904,6 +904,24 @@ extension _SettingsTabShell on _SettingsTabState {
           isDark: isDark,
           onTap: () => _togglePanel('notifications'),
         ),
+        _buildDivider(isDark),
+        _buildiOSRow(
+          icon: Icons.smart_toy_rounded,
+          iconBgColor: const Color(0xFFD81B60),
+          title: context.tr('util_chatthnthi_c39699'),
+          subtitle: L10nService().translate(
+            'Trò chuyện, tâm sự và lắng nghe cảm xúc cùng trợ lý thân thiện.',
+          ),
+          isDark: isDark,
+          onTap: () {
+            final houseId = (_houseId ?? '').trim();
+            final myName = _resolveSettingsMyName();
+            slPush(
+              context,
+              FriendlyChatScreen(houseId: houseId, myName: myName),
+            );
+          },
+        ),
       ], isDark),
       _buildSectionTitle(context.tr('settings_security_label'), topPadding: 22),
       _buildiOSSectionCard([

@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+
 import 'aurora_form_widgets.dart';
 import 'aurora_social_buttons.dart';
 
 final RegExp _loginEmailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
-/// Aurora-styled login form section.
-/// Giữ nguyên logic validation từ login_form_section.dart cũ.
 class AuroraLoginForm extends StatelessWidget {
   final TextEditingController emailController;
   final TextEditingController passwordController;
@@ -44,7 +42,7 @@ class AuroraLoginForm extends StatelessWidget {
     final emailLabel = l10n.translate('email');
     final passwordLabel = l10n.translate('password');
     final rememberMeLabel = l10n.translate('remember_me');
-    final loginLabel = l10n.translate('login').toUpperCase();
+    final loginLabel = l10n.translate('login');
     final forgotPasswordLabel = l10n.translate('forgot_password');
 
     return AutofillGroup(
@@ -52,9 +50,16 @@ class AuroraLoginForm extends StatelessWidget {
         key: const ValueKey('aurora_login'),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Email input
-          _AuroraSectionLabel(label: emailLabel),
-          const SizedBox(height: 8),
+          _FormWelcomeLine(
+            title: l10n.translate('Chào bạn quay lại'),
+            subtitle: l10n.translate('Mở chiếc locket nhỏ và tiếp tục câu chuyện của hai bạn.'),
+          ),
+          const SizedBox(height: 17),
+          _CuteSectionLabel(
+            icon: Icons.alternate_email_rounded,
+            label: emailLabel,
+          ),
+          const SizedBox(height: 7),
           AuroraTextField(
             controller: emailController,
             keyboardType: TextInputType.emailAddress,
@@ -62,18 +67,14 @@ class AuroraLoginForm extends StatelessWidget {
             autofillHints: const [AutofillHints.username, AutofillHints.email],
             onSubmitted: (_) => FocusScope.of(context).nextFocus(),
             hintText: emailLabel,
-            prefixIcon: const Icon(
-              Icons.mail_outline_rounded,
-              color: Color(0xFF6B7280),
-              size: 20,
-            ),
+            prefixIcon: const Icon(Icons.mail_outline_rounded),
           ),
-
-          const SizedBox(height: 14),
-
-          // Password input
-          _AuroraSectionLabel(label: passwordLabel),
-          const SizedBox(height: 8),
+          const SizedBox(height: 13),
+          _CuteSectionLabel(
+            icon: Icons.key_rounded,
+            label: passwordLabel,
+          ),
+          const SizedBox(height: 7),
           AuroraTextField(
             controller: passwordController,
             obscureText: obscurePassword,
@@ -92,104 +93,87 @@ class AuroraLoginForm extends StatelessWidget {
               }
             },
             hintText: passwordLabel,
-            prefixIcon: const Icon(
-              Icons.lock_outline_rounded,
-              color: Color(0xFF6B7280),
-              size: 20,
-            ),
+            prefixIcon: const Icon(Icons.lock_outline_rounded),
             suffixIcon: IconButton(
-              icon: Icon(
-                obscurePassword ? Icons.visibility : Icons.visibility_off,
-                color: SLTheme.authMutedTextColor,
-                size: 20,
-              ),
+              tooltip: obscurePassword
+                  ? l10n.translate('Hiện mật khẩu')
+                  : l10n.translate('Ẩn mật khẩu'),
               onPressed: onToggleObscure,
+              icon: Icon(
+                obscurePassword
+                    ? Icons.visibility_rounded
+                    : Icons.visibility_off_rounded,
+                size: 20,
+                color: const Color(0xFF947B85),
+              ),
             ),
           ),
-
-          const SizedBox(height: 12),
-
-          // Remember me toggle
-          GestureDetector(
-            onTap: () => onRememberMeChanged(!rememberMe),
-            child: _AuroraToggleCard(
-              selected: rememberMe,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: Checkbox(
-                        value: rememberMe,
-                        activeColor: const Color(0xFFFF5E7E),
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: VisualDensity.compact,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        onChanged: onRememberMeChanged,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        rememberMeLabel,
-                        style: TextStyle(
-                          fontFamily: 'Quicksand',
-                          fontSize: 12,
-                          color: const Color(0xFF667085)
-                              .withValues(alpha: 0.92),
-                          fontWeight: FontWeight.w800,
-                          height: 1.35,
-                        ),
-                      ),
-                    ),
-                  ],
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _RememberChip(
+                  selected: rememberMe,
+                  label: rememberMeLabel,
+                  onTap: () => onRememberMeChanged(!rememberMe),
+                  onChanged: onRememberMeChanged,
                 ),
               ),
-            ),
+              const SizedBox(width: 8),
+              TextButton(
+                onPressed: isLoading ? null : onForgotPassword,
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFFD6587B),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  forgotPasswordLabel,
+                  style: const TextStyle(
+                    fontFamily: 'Quicksand',
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
           ),
-
-          const SizedBox(height: 16),
-
-          // Login button
+          const SizedBox(height: 14),
           ValueListenableBuilder<TextEditingValue>(
             valueListenable: emailController,
             builder: (context, emailValue, _) {
               return ValueListenableBuilder<TextEditingValue>(
                 valueListenable: passwordController,
                 builder: (context, passwordValue, _) {
-                  final isInputValid = _isLoginInputValid(
+                  final valid = _isLoginInputValid(
                     emailValue.text,
                     passwordValue.text,
                   );
-
                   return AuroraPrimaryButton(
                     label: loginLabel,
                     onPressed: isLoading
                         ? null
                         : () {
-                            if (!isInputValid) {
+                            if (!valid) {
                               final email = emailValue.text.trim();
                               final password = passwordValue.text;
                               if (email.isEmpty) {
-                                _showAuroraError(context, 'Vui lòng nhập Email.');
+                                _showError(context, l10n.translate('Vui lòng nhập Email.'));
                               } else if (!_loginEmailRegex.hasMatch(email)) {
-                                _showAuroraError(
-                                    context, 'Email không hợp lệ.');
+                                _showError(context, l10n.translate('Email không hợp lệ.'));
                               } else if (password.isEmpty) {
-                                _showAuroraError(
-                                    context, 'Vui lòng nhập Mật khẩu.');
+                                _showError(context, l10n.translate('Vui lòng nhập Mật khẩu.'));
                               } else if (password.length < 6) {
-                                _showAuroraError(context,
-                                    'Mật khẩu phải từ 6 ký tự trở lên.');
+                                _showError(
+                                  context,
+                                  l10n.translate('Mật khẩu phải từ 6 ký tự trở lên.'),
+                                );
                               } else {
-                                _showAuroraError(context,
-                                    'Thông tin đăng nhập chưa hợp lệ.');
+                                _showError(
+                                  context,
+                                  l10n.translate('Thông tin đăng nhập chưa hợp lệ.'),
+                                );
                               }
                               return;
                             }
@@ -202,86 +186,18 @@ class AuroraLoginForm extends StatelessWidget {
               );
             },
           ),
-
-          // Forgot password
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: isLoading ? null : onForgotPassword,
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFFFF5E7E),
-                padding:
-                    const EdgeInsets.only(top: 2, bottom: 4, right: 2),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Text(
-                forgotPasswordLabel,
-                style: const TextStyle(
-                  fontFamily: 'Quicksand',
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFFF5E7E),
-                  decoration: TextDecoration.none,
-                ),
-              ),
-            ),
-          ),
-
-          // Social auth divider
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Center(
-              child: Text(
-                '✨ ${l10n.translate('HOẶC ĐĂNG KÝ NHANH')} ✨',
-                style: const TextStyle(
-                  fontFamily: 'Quicksand',
-                  color: Color(0xFF6B7280),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-
-          // Social auth buttons
+          const SizedBox(height: 15),
+          _SoftDivider(label: l10n.translate('Hoặc tiếp tục với')),
+          const SizedBox(height: 13),
           AuroraSocialButtons(onProviderTap: onSocialLogin),
-
           const SizedBox(height: 12),
-
-          // Encryption note
-          Center(
-            child: Text(
-              l10n.translate('auth_encrypted_note'),
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Color(0xFFBBBBBB),
-                fontSize: 9,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 4),
-
-          Center(
-            child: Text(
-              l10n.translate('auth_social_login_notice'),
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontFamily: 'Quicksand',
-                color: Color(0xFF999999),
-                fontSize: 10.5,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
+          _PrivacyNote(text: l10n.translate('auth_encrypted_note')),
         ],
       ),
     );
   }
 
-  void _showAuroraError(BuildContext context, String message) {
+  void _showError(BuildContext context, String message) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -289,12 +205,12 @@ class AuroraLoginForm extends StatelessWidget {
           message,
           style: const TextStyle(
             fontFamily: 'Quicksand',
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w800,
           ),
         ),
-        backgroundColor: const Color(0xFFEF4444),
+        backgroundColor: const Color(0xFFC74F6C),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         margin: const EdgeInsets.all(16),
         duration: const Duration(seconds: 3),
       ),
@@ -302,51 +218,231 @@ class AuroraLoginForm extends StatelessWidget {
   }
 }
 
-class _AuroraSectionLabel extends StatelessWidget {
-  final String label;
+class _FormWelcomeLine extends StatelessWidget {
+  final String title;
+  final String subtitle;
 
-  const _AuroraSectionLabel({required this.label});
+  const _FormWelcomeLine({required this.title, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      label,
-      style: const TextStyle(
-        fontFamily: 'Quicksand',
-        fontSize: 13.5,
-        color: Color(0xFF2F3441),
-        fontWeight: FontWeight.w800,
-        letterSpacing: 0.1,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7F1),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFF2DED3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 1),
+            child: Icon(
+              Icons.waving_hand_rounded,
+              size: 20,
+              color: Color(0xFFE3A44C),
+            ),
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: 'Quicksand',
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF6F5760),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontFamily: 'Quicksand',
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF947F86),
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _AuroraToggleCard extends StatelessWidget {
-  final Widget child;
-  final bool selected;
+class _CuteSectionLabel extends StatelessWidget {
+  final IconData icon;
+  final String label;
 
-  const _AuroraToggleCard({
-    required this.child,
+  const _CuteSectionLabel({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 13, color: const Color(0xFFD25A7B)),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Quicksand',
+            fontSize: 12.5,
+            color: Color(0xFF604C54),
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RememberChip extends StatelessWidget {
+  final bool selected;
+  final String label;
+  final VoidCallback onTap;
+  final ValueChanged<bool?> onChanged;
+
+  const _RememberChip({
     required this.selected,
+    required this.label,
+    required this.onTap,
+    required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: selected
-            ? const Color(0xFFFFF1F2).withValues(alpha: 0.65)
-            : Colors.white.withValues(alpha: 0.50),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: selected
-              ? const Color(0xFFFF5E7E).withValues(alpha: 0.5)
-              : const Color(0xFFF0E5DF),
-          width: 1.2,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        height: 38,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFFFFEEF3) : const Color(0xFFFFFAF8),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected ? const Color(0xFFF1B0C0) : const Color(0xFFEEDFE3),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: Checkbox(
+                value: selected,
+                onChanged: onChanged,
+                activeColor: const Color(0xFFE56184),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(5),
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: 'Quicksand',
+                  fontSize: 10.8,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF7B656D),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
-      child: child,
+    );
+  }
+}
+
+class _SoftDivider extends StatelessWidget {
+  final String label;
+
+  const _SoftDivider({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 1,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.transparent, Color(0xFFEBDDE1)],
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Quicksand',
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFFA5929A),
+              letterSpacing: 0.2,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Container(
+            height: 1,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFEBDDE1), Colors.transparent],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PrivacyNote extends StatelessWidget {
+  final String text;
+
+  const _PrivacyNote({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.lock_outline_rounded, size: 12, color: Color(0xFFA28D95)),
+        const SizedBox(width: 5),
+        Flexible(
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Quicksand',
+              fontSize: 9.5,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFFA28D95),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

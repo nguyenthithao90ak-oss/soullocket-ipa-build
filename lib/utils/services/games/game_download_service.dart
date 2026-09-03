@@ -209,8 +209,8 @@ class GameDownloadService extends ChangeNotifier {
 
   String _getCleanR2Domain(String domain) {
     final d = domain.trim();
-    if (d.startsWith('https://images.weserv.nl/if (url != null) url!=')) {
-      final sub = d.substring('https://images.weserv.nl/if (url != null) url!='.length);
+    if (d.startsWith('https://images.weserv.nl/?url=')) {
+      final sub = d.substring('https://images.weserv.nl/?url='.length);
       return 'https://$sub';
     }
     return d;

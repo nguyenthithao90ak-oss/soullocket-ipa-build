@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
-import 'package:soullocket_app/core/theme/design_tokens.dart';
 import 'package:soullocket_app/utils/services/anti_spam_service.dart';
 import 'package:soullocket_app/utils/services/auth_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -324,11 +322,13 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
     FocusScope.of(context).unfocus();
 
     final email = _emailController.text.trim().toLowerCase();
-    final password = _passwordController.text;
+    final rawPassword = _passwordController.text.trim();
+    // Tự động nhận diện chữ hoa thành chữ thường nếu người dùng gõ lộn chữ đầu hoa
+    final password = rawPassword.toLowerCase();
     String? sessionRole;
     bool handedOffToAppEntry = false;
 
-    if (email.isEmpty || password.isEmpty) {
+    if (email.isEmpty || rawPassword.isEmpty) {
       _showErrorDialog(L10nService().translate('auth_err_empty_credentials'));
       return;
     }
@@ -344,18 +344,17 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
       '@outlook.com',
       '@icloud.com',
       '@yahoo.com',
+      '@live.com',
+      '@msn.com',
+      '@proton.me',
+      '@protonmail.com',
     ];
     final isDomainAllowed = allowedDomains
-        .any((domain) => email.toLowerCase().endsWith(domain));
+        .any((domain) => email.endsWith(domain));
 
     if (!isDomainAllowed) {
       _showErrorDialog(
-        L10nService().format('auth_supported_domains_only', {
-          'action': _isLoginTab
-              ? L10nService().translate('đăng nhập')
-              : L10nService().translate('đăng ký'),
-          'domains': allowedDomains.join(', '),
-        }),
+        L10nService().translate('auth_supported_domains_only'),
       );
       return;
     }
@@ -367,9 +366,8 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
         _showErrorDialog(L10nService().translate('auth_err_must_agree_terms'));
         return;
       }
-      final strongRegex = RegExp(r'^(?=.*[0-9])(?=.{6,})');
-      if (!strongRegex.hasMatch(password)) {
-        _showErrorDialog('Mật khẩu yếu: Cần ít nhất 6 ký tự và 1 số!');
+      if (password.length < 6) {
+        _showErrorDialog('Mật khẩu cần tối thiểu 6 ký tự (chữ thường và số)!');
         return;
       }
     }
@@ -415,7 +413,19 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
           L10nService().translate('Đang đăng nhập... 🔐'),
         );
         _rememberProxyStateAtLogin();
-        await _authService.signInWithEmailPassword(email, password);
+        try {
+          await _authService.signInWithEmailPassword(email, rawPassword);
+        } catch (e) {
+          if (rawPassword != password) {
+            try {
+              await _authService.signInWithEmailPassword(email, password);
+            } catch (_) {
+              rethrow;
+            }
+          } else {
+            rethrow;
+          }
+        }
 
         // Remember email
         final prefs = await SharedPreferences.getInstance();
@@ -690,25 +700,26 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
   // ─── Sync guide dialog ──────────────────────────────────────────────
   void _showSyncGuideDialog(BuildContext context, {bool enforceDelay = false}) {
     Timer? timer;
-    showDialog(
+    showDialog<void>(
       context: context,
       barrierDismissible: !enforceDelay,
+      barrierColor: const Color(0xFF4A3540).withValues(alpha: 0.28),
       builder: (dialogContext) {
         int countdownMs = enforceDelay ? (kDebugMode ? 500 : 3000) : 0;
 
         return StatefulBuilder(
-          builder: (stateContext, setState) {
+          builder: (stateContext, setDialogState) {
             if (enforceDelay && timer == null && countdownMs > 0) {
-              timer = Timer.periodic(const Duration(milliseconds: 100), (t) {
+              timer = Timer.periodic(const Duration(milliseconds: 100), (tick) {
                 if (!stateContext.mounted) {
-                  t.cancel();
+                  tick.cancel();
                   return;
                 }
                 if (countdownMs > 100) {
-                  setState(() => countdownMs -= 100);
+                  setDialogState(() => countdownMs -= 100);
                 } else {
-                  t.cancel();
-                  setState(() => countdownMs = 0);
+                  tick.cancel();
+                  setDialogState(() => countdownMs = 0);
                 }
               });
             }
@@ -718,183 +729,193 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
               canPop: !enforceDelay || countdownMs == 0,
               child: Dialog(
                 backgroundColor: Colors.transparent,
-                insetPadding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 420),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFFFFFDFE),
-                        Color(0xFFFFF2F8),
-                        Color(0xFFFCF4FF),
+                elevation: 0,
+                insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFFCF8),
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.96),
+                        width: 1.6,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFA65370).withValues(alpha: 0.18),
+                          blurRadius: 34,
+                          offset: const Offset(0, 18),
+                        ),
                       ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(32),
-                    border: Border.all(
-                      color: const Color(0xFFFF85A2).withValues(alpha: 0.55),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFFF5277).withValues(alpha: 0.20),
-                        blurRadius: 40,
-                        offset: const Offset(0, 20),
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.all(22),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFFFF7597),
-                                  Color(0xFFFF5277)
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFFF5277)
-                                      .withValues(alpha: 0.35),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.sync_rounded,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.translate('Hướng dẫn đồng bộ dữ liệu'),
-                                  style: TextStyle(
-                                    fontFamily: 'Quicksand',
-                                    fontSize: 16.5,
-                                    fontWeight: FontWeight.w900,
-                                    color: const Color(0xFF2F3441),
-                                  ),
-                                ),
-                                Text(
-                                  l10n.translate('Mô hình ghép đôi tài khoản riêng'),
-                                  style: TextStyle(
-                                    fontFamily: 'Quicksand',
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFFFF5277),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        l10n.translate(
-                            'SoulLocket sử dụng hệ thống tài khoản riêng biệt để bảo vệ quyền riêng tư 100% cho từng người!'),
-                        style: TextStyle(
-                          fontFamily: 'Quicksand',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF667085),
-                          height: 1.35,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      _buildSyncStepCard(
-                        stepNumber: '1',
-                        title: l10n.translate('Tạo 2 tài khoản riêng biệt'),
-                        description: l10n.translate(
-                            'Mỗi người tự đăng ký tài khoản riêng (Email, Google, Apple) và đăng nhập vào ứng dụng trên máy mình.'),
-                        icon: Icons.person_add_alt_1_rounded,
-                        accentColor: const Color(0xFFFF5277),
-                      ),
-                      const SizedBox(height: 10),
-                      _buildSyncStepCard(
-                        stepNumber: '2',
-                        title: l10n.translate('Tạo hoặc nhập Mã ghép đôi'),
-                        description: l10n.translate(
-                            'Vào Cài đặt ⚙️ → Ghép nối dữ liệu. Một người bấm "Tạo mã ghép nối" và gửi cho người kia nhập vào.'),
-                        icon: Icons.qr_code_rounded,
-                        accentColor: const Color(0xFF7C4DFF),
-                      ),
-                      const SizedBox(height: 10),
-                      _buildSyncStepCard(
-                        stepNumber: '3',
-                        title: l10n.translate('Đồng bộ dữ liệu thời gian thực'),
-                        description: l10n.translate(
-                            'Sau khi kết nối, mọi kỷ niệm, nhật ký, album ảnh và vị trí sẽ tự động đồng bộ tức thì giữa 2 máy!'),
-                        icon: Icons.favorite_rounded,
-                        accentColor: const Color(0xFF00BFA5),
-                      ),
-                      const SizedBox(height: 14),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 9),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF3E0),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: const Color(0xFFFFB74D).withValues(alpha: 0.5),
-                          ),
-                        ),
-                        child: Row(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
                           children: [
-                            const Icon(
-                              Icons.lightbulb_rounded,
-                              color: Color(0xFFF57C00),
-                              size: 18,
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFE8EE),
+                                borderRadius: BorderRadius.circular(15),
+                                border: Border.all(color: const Color(0xFFEEC2CE)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.favorite_rounded,
+                                    size: 12,
+                                    color: Color(0xFFD85879),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    l10n.translate('Kết nối hai thiết bị'),
+                                    style: const TextStyle(
+                                      fontFamily: 'Quicksand',
+                                      fontSize: 9.8,
+                                      fontWeight: FontWeight.w900,
+                                      color: Color(0xFFC64E6E),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                l10n.translate(
-                                    'Mẹo: Dữ liệu được lưu an toàn trên đám mây. Đăng nhập lại trên máy mới dữ liệu tự động tải về đầy đủ.'),
-                                style: TextStyle(
-                                  fontFamily: 'Quicksand',
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFFE65100),
-                                  height: 1.3,
-                                ),
+                            const Spacer(),
+                            Container(
+                              width: 34,
+                              height: 34,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFF2EDFF),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.sync_rounded,
+                                size: 18,
+                                color: Color(0xFF806BC1),
                               ),
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 18),
-                      SizedBox(
-                        width: double.infinity,
-                        child: _AuroraDialogButton(
-                          label: countdownMs > 0
-                              ? '${l10n.translate('Đã hiểu')} (${(countdownMs / 1000).ceil()})'
-                              : l10n.translate('Đã hiểu'),
-                          onPressed: countdownMs > 0 ? null : () {
-                            timer?.cancel();
-                            Navigator.pop(stateContext);
-                          },
+                        const SizedBox(height: 6),
+                        const SizedBox(
+                          height: 126,
+                          width: double.infinity,
+                          child: RepaintBoundary(
+                            child: CustomPaint(
+                              painter: _SyncLoveThreadPainter(),
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                        Text(
+                          l10n.translate('Hai tài khoản, một góc nhỏ chung'),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: 'Quicksand',
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF4D3D44),
+                            height: 1.1,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          l10n.translate(
+                            'Mỗi người vẫn có tài khoản riêng. Sau khi ghép đôi, dữ liệu thuộc không gian chung mới được đồng bộ giữa hai máy.',
+                          ),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: 'Quicksand',
+                            fontSize: 11.2,
+                            height: 1.42,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF89757D),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildSyncStepCard(
+                          stepNumber: '1',
+                          title: l10n.translate('Mỗi người đăng nhập tài khoản riêng'),
+                          description: l10n.translate(
+                            'Đăng ký hoặc đăng nhập trên điện thoại của mình bằng Email, Google hoặc Apple.',
+                          ),
+                          icon: Icons.person_outline_rounded,
+                          accentColor: const Color(0xFFE06686),
+                        ),
+                        _buildSyncStepCard(
+                          stepNumber: '2',
+                          title: l10n.translate('Ghép đôi bằng một mã kết nối'),
+                          description: l10n.translate(
+                            'Vào Cài đặt → Ghép nối dữ liệu. Một người tạo mã, người còn lại nhập mã đó để xác nhận.',
+                          ),
+                          icon: Icons.qr_code_2_rounded,
+                          accentColor: const Color(0xFF8771C7),
+                        ),
+                        _buildSyncStepCard(
+                          stepNumber: '3',
+                          title: l10n.translate('Cùng cập nhật không gian chung'),
+                          description: l10n.translate(
+                            'Kỷ niệm, nhật ký, album và dữ liệu đôi sẽ được cập nhật sau khi hai tài khoản đã kết nối.',
+                          ),
+                          icon: Icons.favorite_outline_rounded,
+                          accentColor: const Color(0xFF4F9B90),
+                          isLast: true,
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF5E6),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: const Color(0xFFF0D49E)),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(
+                                Icons.lightbulb_outline_rounded,
+                                size: 17,
+                                color: Color(0xFFC88B30),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  l10n.translate(
+                                    'Khi đổi điện thoại, hãy đăng nhập lại đúng tài khoản để tải phần dữ liệu đã được lưu trên cloud.',
+                                  ),
+                                  style: const TextStyle(
+                                    fontFamily: 'Quicksand',
+                                    fontSize: 10.4,
+                                    height: 1.35,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF926621),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        SizedBox(
+                          width: double.infinity,
+                          child: _AuroraDialogButton(
+                            label: countdownMs > 0
+                                ? '${l10n.translate('Đã hiểu')} (${(countdownMs / 1000).ceil()})'
+                                : l10n.translate('Đã hiểu'),
+                            onPressed: countdownMs > 0
+                                ? null
+                                : () {
+                                    timer?.cancel();
+                                    Navigator.pop(stateContext);
+                                  },
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -913,93 +934,109 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
     required String description,
     required IconData icon,
     required Color accentColor,
+    bool isLast = false,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: accentColor.withValues(alpha: 0.28),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: accentColor.withValues(alpha: 0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [accentColor, accentColor.withValues(alpha: 0.8)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: accentColor.withValues(alpha: 0.35),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Text(
-              stepNumber,
-              style: const TextStyle(
-                fontFamily: 'Quicksand',
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(icon, size: 16, color: accentColor),
-                    const SizedBox(width: 6),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              width: 38,
+              child: Column(
+                children: [
+                  Container(
+                    width: 31,
+                    height: 31,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: accentColor.withValues(alpha: 0.42),
+                      ),
+                    ),
+                    child: Text(
+                      stepNumber,
+                      style: TextStyle(
+                        fontFamily: 'Quicksand',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        color: accentColor,
+                      ),
+                    ),
+                  ),
+                  if (!isLast)
                     Expanded(
-                      child: Text(
-                        title,
-                        style: TextStyle(
-                          fontFamily: 'Quicksand',
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFF2F3441),
-                        ),
+                      child: Container(
+                        width: 1.5,
+                        margin: const EdgeInsets.symmetric(vertical: 4),
+                        color: accentColor.withValues(alpha: 0.24),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.055),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: accentColor.withValues(alpha: 0.16),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.82),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(icon, size: 17, color: accentColor),
+                    ),
+                    const SizedBox(width: 9),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontFamily: 'Quicksand',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF5B4850),
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            description,
+                            style: const TextStyle(
+                              fontFamily: 'Quicksand',
+                              fontSize: 10.3,
+                              height: 1.34,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF8A757D),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontFamily: 'Quicksand',
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF667085),
-                    height: 1.35,
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1074,65 +1111,57 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
                                 bottom: isCompact ? 12 : 16,
                               ),
                               child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  // Sync guide chip
-                                  GestureDetector(
-                                    onTap: () =>
-                                        _showSyncGuideDialog(context),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 14, vertical: 8),
-                                      decoration: BoxDecoration(
-                                        color:
-                                            Colors.white.withValues(alpha: 0.65),
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(
-                                          color: const Color(0xFFFFD6E0),
-                                          width: 1.2,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: SLAuroraPalette.roseDeep
-                                                .withValues(alpha: 0.08),
-                                            blurRadius: 10,
-                                            offset: const Offset(0, 3),
+                                  // Compact Sync Guide Icon Button
+                                  Tooltip(
+                                    message: L10nService()
+                                        .translate('auth_sync_guide'),
+                                    child: GestureDetector(
+                                      onTap: () =>
+                                          _showSyncGuideDialog(context),
+                                      child: Container(
+                                        width: 36,
+                                        height: 36,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.82),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: const Color(0xFFFFD166),
+                                            width: 1.2,
                                           ),
-                                        ],
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          ShaderMask(
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(0xFFFFB703)
+                                                  .withValues(alpha: 0.18),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Center(
+                                          child: ShaderMask(
                                             shaderCallback: (bounds) =>
                                                 const LinearGradient(
                                               colors: [
-                                                Color(0xFFFF9E00),
-                                                Color(0xFFFF6B00)
+                                                Color(0xFFFFB703),
+                                                Color(0xFFFB8500),
                                               ],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
                                             ).createShader(bounds),
                                             child: const Icon(
                                               Icons.lightbulb_rounded,
-                                              size: 16,
+                                              size: 19,
                                               color: Colors.white,
                                             ),
                                           ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            L10nService()
-                                                .translate('auth_sync_guide'),
-                                            style: TextStyle(
-                                              fontFamily: 'Quicksand',
-                                              fontSize: 12.5,
-                                              fontWeight: FontWeight.w900,
-                                              color: SLAuroraPalette.roseDeep,
-                                            ),
-                                          ),
-                                        ],
+                                        ),
                                       ),
                                     ),
                                   ),
+                                  const SizedBox(width: 8),
 
                                   // Language toggle
                                   ListenableBuilder(
@@ -1241,7 +1270,7 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
                         fontFamily: 'Quicksand',
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white.withValues(alpha: 0.50),
+                        color: const Color(0xFF7D6971).withValues(alpha: 0.52),
                       ),
                     ),
                   ),
@@ -1255,7 +1284,7 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
   }
 }
 
-/// Glass panel wrapper cho aurora login shell.
+/// Soft paper panel used by the redesigned authentication screen.
 class _AuroraGlassPanel extends StatelessWidget {
   final Widget child;
 
@@ -1263,34 +1292,67 @@ class _AuroraGlassPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(32),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.85),
-            borderRadius: BorderRadius.circular(32),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.5),
-              width: 1.2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFFF6B9D).withValues(alpha: 0.12),
-                blurRadius: 40,
-                offset: const Offset(0, 16),
-              ),
-            ],
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFCF8).withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(31),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.96),
+          width: 1.6,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF9C6475).withValues(alpha: 0.14),
+            blurRadius: 34,
+            offset: const Offset(0, 17),
           ),
-          child: child,
+          BoxShadow(
+            color: Colors.white.withValues(alpha: 0.78),
+            blurRadius: 0,
+            spreadRadius: 1,
+            offset: const Offset(0, -1),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(31),
+        child: Stack(
+          children: [
+            const Positioned(
+              top: -28,
+              right: -26,
+              child: _PanelPaperSeal(),
+            ),
+            child,
+          ],
         ),
       ),
     );
   }
 }
 
-/// Aurora-styled dialog button cho sync guide.
+class _PanelPaperSeal extends StatelessWidget {
+  const _PanelPaperSeal();
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: 0.18,
+      child: Container(
+        width: 92,
+        height: 54,
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFE5ED).withValues(alpha: 0.72),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: const Color(0xFFF2BFCE).withValues(alpha: 0.66),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _AuroraDialogButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -1316,7 +1378,7 @@ class _AuroraDialogButtonState extends State<_AuroraDialogButton>
       vsync: this,
       duration: const Duration(milliseconds: 120),
     );
-    _pressAnim = Tween<double>(begin: 1.0, end: 0.96).animate(
+    _pressAnim = Tween<double>(begin: 1.0, end: 0.97).animate(
       CurvedAnimation(parent: _pressCtrl, curve: Curves.easeOutCubic),
     );
   }
@@ -1329,61 +1391,227 @@ class _AuroraDialogButtonState extends State<_AuroraDialogButton>
 
   @override
   Widget build(BuildContext context) {
-    final isDisabled = widget.onPressed == null;
+    final disabled = widget.onPressed == null;
 
     return GestureDetector(
-      onTapDown: isDisabled ? null : (_) => _pressCtrl.forward(),
-      onTapUp: isDisabled
+      onTapDown: disabled ? null : (_) => _pressCtrl.forward(),
+      onTapUp: disabled
           ? null
           : (_) {
               _pressCtrl.reverse();
               widget.onPressed?.call();
             },
-      onTapCancel: isDisabled ? null : () => _pressCtrl.reverse(),
+      onTapCancel: disabled ? null : () => _pressCtrl.reverse(),
       child: ScaleTransition(
         scale: _pressAnim,
-        child: Opacity(
-          opacity: isDisabled ? 0.65 : 1.0,
+        child: AnimatedOpacity(
+          opacity: disabled ? 0.56 : 1,
+          duration: const Duration(milliseconds: 140),
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 14),
+            height: 50,
             decoration: BoxDecoration(
-              gradient: isDisabled
-                  ? const LinearGradient(
-                      colors: [Color(0xFFFFB6C1), Color(0xFFFFC0CB)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    )
-                  : const LinearGradient(
-                      colors: [Color(0xFFFF5277), Color(0xFFFF7597)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: isDisabled
-                  ? []
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFFE56284),
+                  Color(0xFFF0839D),
+                  Color(0xFF9276CC),
+                ],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              borderRadius: BorderRadius.circular(19),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.46),
+              ),
+              boxShadow: disabled
+                  ? const []
                   : [
                       BoxShadow(
-                        color: const Color(0xFFFF5277).withValues(alpha: 0.38),
-                        blurRadius: 20,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 8),
+                        color: const Color(0xFFD75A7B).withValues(alpha: 0.22),
+                        blurRadius: 16,
+                        offset: const Offset(0, 7),
                       ),
                     ],
             ),
-            alignment: Alignment.center,
-            child: Text(
-              widget.label,
-              style: TextStyle(
-                fontFamily: 'Quicksand',
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                fontSize: 15.5,
-                letterSpacing: 0.5,
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.favorite_rounded,
+                  size: 15,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 7),
+                Flexible(
+                  child: Text(
+                    widget.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Quicksand',
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14.5,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
       ),
     );
   }
+}
+
+class _SyncLoveThreadPainter extends CustomPainter {
+  const _SyncLoveThreadPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final leftCenter = Offset(size.width * 0.27, size.height * 0.53);
+    final rightCenter = Offset(size.width * 0.73, size.height * 0.53);
+
+    _drawPhone(canvas, leftCenter, const Color(0xFFFFE7ED), const Color(0xFFD85C7C));
+    _drawPhone(canvas, rightCenter, const Color(0xFFEDE7FF), const Color(0xFF7F69BB));
+
+    final thread = Path()
+      ..moveTo(leftCenter.dx + 28, leftCenter.dy - 6)
+      ..cubicTo(
+        size.width * 0.43,
+        size.height * 0.24,
+        size.width * 0.57,
+        size.height * 0.24,
+        rightCenter.dx - 28,
+        rightCenter.dy - 6,
+      );
+    final metric = thread.computeMetrics().first;
+    final linePaint = Paint()
+      ..color = const Color(0xFFE18BA4).withValues(alpha: 0.62)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.7
+      ..strokeCap = StrokeCap.round;
+
+    var distance = 0.0;
+    const dash = 6.0;
+    const gap = 5.0;
+    while (distance < metric.length) {
+      canvas.drawPath(
+        metric.extractPath(
+          distance,
+          math.min(distance + dash, metric.length),
+        ),
+        linePaint,
+      );
+      distance += dash + gap;
+    }
+
+    final heartCenter = Offset(size.width * 0.50, size.height * 0.25);
+    final heart = Path()
+      ..moveTo(heartCenter.dx, heartCenter.dy + 12)
+      ..cubicTo(
+        heartCenter.dx - 24,
+        heartCenter.dy - 3,
+        heartCenter.dx - 13,
+        heartCenter.dy - 23,
+        heartCenter.dx,
+        heartCenter.dy - 8,
+      )
+      ..cubicTo(
+        heartCenter.dx + 13,
+        heartCenter.dy - 23,
+        heartCenter.dx + 24,
+        heartCenter.dy - 3,
+        heartCenter.dx,
+        heartCenter.dy + 12,
+      );
+    canvas.drawPath(heart, Paint()..color = const Color(0xFFE76183));
+
+    final sparkle = Paint()
+      ..color = const Color(0xFFD7A348)
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round;
+    final p1 = Offset(size.width * 0.42, size.height * 0.16);
+    final p2 = Offset(size.width * 0.61, size.height * 0.14);
+    for (final point in [p1, p2]) {
+      canvas.drawLine(point.translate(-5, 0), point.translate(5, 0), sparkle);
+      canvas.drawLine(point.translate(0, -5), point.translate(0, 5), sparkle);
+    }
+  }
+
+  void _drawPhone(
+    Canvas canvas,
+    Offset center,
+    Color fill,
+    Color accent,
+  ) {
+    final shadow = Paint()
+      ..color = accent.withValues(alpha: 0.10)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: center.translate(0, 5),
+          width: 58,
+          height: 82,
+        ),
+        const Radius.circular(16),
+      ),
+      shadow,
+    );
+
+    final phone = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: center, width: 58, height: 82),
+      const Radius.circular(16),
+    );
+    canvas.drawRRect(phone, Paint()..color = fill);
+    canvas.drawRRect(
+      phone,
+      Paint()
+        ..color = accent.withValues(alpha: 0.55)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.7,
+    );
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: center.translate(0, 1),
+          width: 42,
+          height: 56,
+        ),
+        const Radius.circular(11),
+      ),
+      Paint()..color = Colors.white.withValues(alpha: 0.86),
+    );
+
+    final tinyHeart = Path()
+      ..moveTo(center.dx, center.dy + 7)
+      ..cubicTo(
+        center.dx - 12,
+        center.dy - 1,
+        center.dx - 7,
+        center.dy - 11,
+        center.dx,
+        center.dy - 4,
+      )
+      ..cubicTo(
+        center.dx + 7,
+        center.dy - 11,
+        center.dx + 12,
+        center.dy - 1,
+        center.dx,
+        center.dy + 7,
+      );
+    canvas.drawPath(tinyHeart, Paint()..color = accent);
+
+    canvas.drawCircle(
+      center.translate(0, 34),
+      2.2,
+      Paint()..color = accent.withValues(alpha: 0.58),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

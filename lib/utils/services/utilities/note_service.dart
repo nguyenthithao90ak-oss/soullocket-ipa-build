@@ -93,4 +93,33 @@ class NoteService {
       return notes;
     });
   }
+
+  // Stream giới hạn cho Home — chỉ tải 10 note gần nhất thay vì toàn bộ
+  Stream<List<SharedNote>> streamRecentNotes(String houseId, {int limit = 10}) {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) {
+      return Stream<List<SharedNote>>.value(const []);
+    }
+    return _dbRef
+        .child('houses/$normalizedHouseId/utilities/notes')
+        .orderByChild('updatedAt')
+        .limitToLast(limit)
+        .onValue
+        .map((event) {
+      if (!event.snapshot.exists) return [];
+      final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
+      final List<SharedNote> notes = [];
+      data.forEach((key, value) {
+        if (value is! Map) return;
+        final map = Map<dynamic, dynamic>.from(value);
+        notes.add(SharedNote.fromMap(key, map));
+      });
+      notes.sort((a, b) {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return b.updatedAt.compareTo(a.updatedAt);
+      });
+      return notes;
+    });
+  }
 }

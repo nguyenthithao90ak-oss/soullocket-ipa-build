@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../core/sl_theme.dart';
+import 'package:soullocket_app/core/sl_theme.dart';
 import 'sl_toast.dart';
 
 /// Màn hình demo hiển thị tất cả các variant của SLToast/snackbar/dialog.

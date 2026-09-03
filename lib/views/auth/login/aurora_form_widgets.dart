@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/core/theme/design_tokens.dart';
 
-/// Aurora-styled floating label input field.
-/// Glass white background với Aurora border khi focus.
+/// Text field for the Locket Garden authentication design.
+/// Public API is unchanged so the auth logic can remain untouched.
 class AuroraTextField extends StatefulWidget {
   final TextEditingController controller;
   final String hintText;
@@ -17,6 +16,7 @@ class AuroraTextField extends StatefulWidget {
   final bool enableSuggestions;
   final bool autocorrect;
   final bool isPassword;
+  final TextCapitalization textCapitalization;
 
   const AuroraTextField({
     super.key,
@@ -33,144 +33,188 @@ class AuroraTextField extends StatefulWidget {
     this.enableSuggestions = true,
     this.autocorrect = true,
     this.isPassword = false,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   @override
   State<AuroraTextField> createState() => _AuroraTextFieldState();
 }
 
-class _AuroraTextFieldState extends State<AuroraTextField>
-    with SingleTickerProviderStateMixin {
-  late final FocusNode _internalFocusNode;
-  late final AnimationController _borderAnimCtrl;
-  late final Animation<double> _borderAnim;
-
-  bool get _isFocused => _internalFocusNode.hasFocus;
+class _AuroraTextFieldState extends State<AuroraTextField> {
+  late FocusNode _focusNode;
+  bool _ownsFocusNode = false;
 
   @override
   void initState() {
     super.initState();
-    _internalFocusNode = widget.focusNode ?? FocusNode();
-    _internalFocusNode.addListener(_onFocusChange);
-    _borderAnimCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 250),
-    );
-    _borderAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _borderAnimCtrl, curve: Curves.easeOutCubic),
-    );
+    _ownsFocusNode = widget.focusNode == null;
+    _focusNode = widget.focusNode ?? FocusNode();
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(covariant AuroraTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.focusNode == widget.focusNode) return;
+
+    _focusNode.removeListener(_handleFocusChange);
+    if (_ownsFocusNode) {
+      _focusNode.dispose();
+    }
+
+    _ownsFocusNode = widget.focusNode == null;
+    _focusNode = widget.focusNode ?? FocusNode();
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  void _handleFocusChange() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
-    _internalFocusNode.removeListener(_onFocusChange);
-    if (widget.focusNode == null) {
-      _internalFocusNode.dispose();
+    _focusNode.removeListener(_handleFocusChange);
+    if (_ownsFocusNode) {
+      _focusNode.dispose();
     }
-    _borderAnimCtrl.dispose();
     super.dispose();
-  }
-
-  void _onFocusChange() {
-    setState(() {});
-    if (_isFocused) {
-      _borderAnimCtrl.forward();
-    } else {
-      _borderAnimCtrl.reverse();
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _borderAnim,
-      builder: (context, _) {
-        return Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: _isFocused
-                ? [
-                    BoxShadow(
-                      color: const Color(0xFFFF6B9D).withValues(alpha: 0.15),
-                      blurRadius: 12,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
+    final focused = _focusNode.hasFocus;
+    const ink = Color(0xFF493C46);
+    const rose = Color(0xFFE9698B);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(23),
+        boxShadow: [
+          BoxShadow(
+            color: focused
+                ? rose.withValues(alpha: 0.16)
+                : const Color(0xFFB59AA4).withValues(alpha: 0.07),
+            blurRadius: focused ? 18 : 10,
+            offset: const Offset(0, 6),
           ),
-          child: TextField(
-            controller: widget.controller,
-            focusNode: _internalFocusNode,
-            obscureText: widget.obscureText,
-            keyboardType: widget.keyboardType,
-            textInputAction: widget.textInputAction,
-            autofillHints: widget.autofillHints,
-            onSubmitted: widget.onSubmitted,
-            enableSuggestions: widget.enableSuggestions,
-            autocorrect: widget.autocorrect,
-            style: TextStyle(
-              fontFamily: 'Quicksand',
-              fontWeight: FontWeight.w700,
-              fontSize: 15.5,
-              color: const Color(0xFF2F3441),
-            ),
-            cursorColor: SLAuroraPalette.roseDeep,
-            cursorRadius: const Radius.circular(2),
-            cursorWidth: 2.5,
-            decoration: InputDecoration(
-              hintText: widget.hintText,
-              hintStyle: TextStyle(
-                fontFamily: 'Quicksand',
-                fontSize: 15.5,
-                color: const Color(0xFF667085).withValues(alpha: 0.55),
-                fontWeight: FontWeight.w700,
-              ),
-              prefixIcon: widget.prefixIcon,
-              suffixIcon: widget.suffixIcon,
-              filled: true,
-              fillColor: Colors.white.withValues(alpha: 0.75),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide: BorderSide(
-                  color: const Color(0xFFFFD6E0).withValues(alpha: 0.7),
-                  width: 1.2,
+        ],
+      ),
+      child: TextField(
+        controller: widget.controller,
+        focusNode: _focusNode,
+        obscureText: widget.obscureText,
+        textCapitalization: widget.textCapitalization,
+        keyboardType: widget.keyboardType,
+        textInputAction: widget.textInputAction,
+        autofillHints: widget.autofillHints,
+        onSubmitted: widget.onSubmitted,
+        enableSuggestions: widget.enableSuggestions,
+        autocorrect: widget.autocorrect,
+        style: const TextStyle(
+          fontFamily: 'Quicksand',
+          fontWeight: FontWeight.w800,
+          fontSize: 15,
+          color: ink,
+        ),
+        cursorColor: rose,
+        cursorWidth: 2.2,
+        decoration: InputDecoration(
+          hintText: widget.hintText,
+          hintStyle: TextStyle(
+            fontFamily: 'Quicksand',
+            fontSize: 14.5,
+            fontWeight: FontWeight.w700,
+            color: ink.withValues(alpha: 0.42),
+          ),
+          prefixIcon: widget.prefixIcon == null
+              ? null
+              : Padding(
+                  padding: const EdgeInsets.only(left: 8, right: 4),
+                  child: _SoftIconBubble(
+                    active: focused,
+                    child: widget.prefixIcon!,
+                  ),
                 ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide: BorderSide(
-                  color: SLAuroraPalette.roseDeep.withValues(alpha: 0.8 + _borderAnim.value * 0.2),
-                  width: 1.6,
-                ),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide: const BorderSide(
-                  color: SLSemanticTokens.danger,
-                  width: 1.2,
-                ),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide: const BorderSide(
-                  color: SLSemanticTokens.danger,
-                  width: 1.5,
-                ),
-              ),
+          prefixIconConstraints: const BoxConstraints.tightFor(width: 48, height: 48),
+          suffixIcon: widget.suffixIcon,
+          suffixIconConstraints: const BoxConstraints.tightFor(width: 48, height: 48),
+          filled: true,
+          fillColor: focused
+              ? const Color(0xFFFFFCFD)
+              : const Color(0xFFFFFAF8).withValues(alpha: 0.92),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(23),
+            borderSide: const BorderSide(
+              color: Color(0xFFF1D9E0),
+              width: 1.25,
             ),
           ),
-        );
-      },
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(23),
+            borderSide: const BorderSide(
+              color: Color(0xFFEA7B98),
+              width: 1.7,
+            ),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(23),
+            borderSide: const BorderSide(
+              color: Color(0xFFD94A65),
+              width: 1.4,
+            ),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(23),
+            borderSide: const BorderSide(
+              color: Color(0xFFD94A65),
+              width: 1.7,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
 
-/// Aurora primary button với gradient và press animation.
+class _SoftIconBubble extends StatelessWidget {
+  final bool active;
+  final Widget child;
+
+  const _SoftIconBubble({required this.active, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          color: active ? const Color(0xFFFFE7EE) : const Color(0xFFFFF0F3),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: IconTheme.merge(
+            data: IconThemeData(
+              size: 18,
+              color: active ? const Color(0xFFE75F83) : const Color(0xFF9C7F89),
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Primary CTA with a soft hand-made ribbon feeling.
 class AuroraPrimaryButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
+  final VoidCallback? onDisabledTap;
   final bool isLoading;
   final bool enabled;
 
@@ -178,6 +222,7 @@ class AuroraPrimaryButton extends StatefulWidget {
     super.key,
     required this.label,
     required this.onPressed,
+    this.onDisabledTap,
     this.isLoading = false,
     this.enabled = true,
   });
@@ -186,99 +231,122 @@ class AuroraPrimaryButton extends StatefulWidget {
   State<AuroraPrimaryButton> createState() => _AuroraPrimaryButtonState();
 }
 
-class _AuroraPrimaryButtonState extends State<AuroraPrimaryButton>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pressCtrl;
-  late final Animation<double> _pressAnim;
+class _AuroraPrimaryButtonState extends State<AuroraPrimaryButton> {
+  bool _pressed = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _pressCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 120),
-    );
-    _pressAnim = Tween<double>(begin: 1.0, end: 0.96).animate(
-      CurvedAnimation(parent: _pressCtrl, curve: Curves.easeOutCubic),
-    );
+  bool get _canInteract =>
+      !widget.isLoading &&
+      (widget.onPressed != null || widget.onDisabledTap != null);
+
+  void _setPressed(bool value) {
+    if (!_canInteract || _pressed == value) return;
+    setState(() => _pressed = value);
   }
-
-  @override
-  void dispose() {
-    _pressCtrl.dispose();
-    super.dispose();
-  }
-
-  bool get _isDisabled => widget.onPressed == null || widget.isLoading || !widget.enabled;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: _isDisabled ? null : (_) => _pressCtrl.forward(),
-      onTapUp: _isDisabled
-          ? null
-          : (_) {
-              _pressCtrl.reverse();
-              widget.onPressed?.call();
-            },
-      onTapCancel: _isDisabled ? null : () => _pressCtrl.reverse(),
-      child: ScaleTransition(
-        scale: _pressAnim,
-        child: Opacity(
-          opacity: _isDisabled ? 0.65 : 1.0,
-          child: Container(
-            width: double.infinity,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: _isDisabled
-                  ? const LinearGradient(
-                      colors: [Color(0xFFFFD6E0), Color(0xFFFFC2D1)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    )
-                  : const LinearGradient(
-                      colors: [
-                        SLAuroraPalette.roseDeep, // rose → lavender
-                        SLAuroraPalette.lavender,
-                      ],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-              borderRadius: BorderRadius.circular(28),
-              boxShadow: _isDisabled
-                  ? []
-                  : [
-                      BoxShadow(
-                        color: SLAuroraPalette.roseDeep.withValues(alpha: 0.38),
-                        blurRadius: 24,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                alignment: Alignment.center,
-                child: widget.isLoading
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2.5,
+    final isActuallyDisabled = !widget.enabled || widget.isLoading;
+    final opacity = isActuallyDisabled ? 0.58 : 1.0;
+
+    return Semantics(
+      button: true,
+      enabled: _canInteract,
+      label: widget.label,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: !_canInteract ? null : (_) => _setPressed(true),
+        onTapCancel: !_canInteract ? null : () => _setPressed(false),
+        onTapUp: !_canInteract
+            ? null
+            : (_) {
+                _setPressed(false);
+                if (!widget.enabled) {
+                  widget.onDisabledTap?.call();
+                } else {
+                  widget.onPressed?.call();
+                }
+              },
+        child: AnimatedScale(
+          scale: _pressed ? 0.975 : 1.0,
+          duration: const Duration(milliseconds: 110),
+          curve: Curves.easeOutCubic,
+          child: AnimatedOpacity(
+            opacity: opacity,
+            duration: const Duration(milliseconds: 150),
+            child: Container(
+              width: double.infinity,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFFEA6688),
+                    Color(0xFFF1849F),
+                    Color(0xFF9B83D8),
+                  ],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.58),
+                  width: 1.1,
+                ),
+                boxShadow: isActuallyDisabled
+                    ? const []
+                    : [
+                        BoxShadow(
+                          color: const Color(0xFFE65F83).withValues(alpha: 0.24),
+                          blurRadius: 20,
+                          offset: const Offset(0, 9),
                         ),
-                      )
-                    : Text(
+                      ],
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned(
+                    left: 18,
+                    child: Icon(
+                      Icons.auto_awesome_rounded,
+                      size: 17,
+                      color: Colors.white.withValues(alpha: 0.72),
+                    ),
+                  ),
+                  if (widget.isLoading)
+                    const SizedBox(
+                      width: 23,
+                      height: 23,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.4,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 44),
+                      child: Text(
                         widget.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontFamily: 'Quicksand',
                           color: Colors.white,
                           fontWeight: FontWeight.w900,
-                          fontSize: 17,
-                          letterSpacing: 1.0,
+                          fontSize: 16,
+                          letterSpacing: 0.45,
                         ),
                       ),
+                    ),
+                  Positioned(
+                    right: 18,
+                    child: Icon(
+                      Icons.favorite_rounded,
+                      size: 16,
+                      color: Colors.white.withValues(alpha: 0.78),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

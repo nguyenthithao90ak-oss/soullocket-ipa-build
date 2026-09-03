@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/sl_theme.dart';
-import '../../../utils/services/l10n_service.dart';
-import 'auth_tab_switcher.dart';
+import 'aurora_login_shell.dart';
 
+/// Presentation wrapper for the legacy auth flow.
+///
+/// The authentication state and callbacks stay in [LoginScreen]; only the
+/// visual shell is shared with the new Locket Garden design.
 class AuthPanelShell extends StatelessWidget {
   final bool compact;
   final bool isLoginTab;
@@ -26,176 +28,43 @@ class AuthPanelShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = L10nService();
-    final textScale = MediaQuery.textScalerOf(context).scale(1);
-
-    return SLTheme.paperCard(
-      color: SLColors.paper.withValues(alpha: 0.97),
-      accentColor: SLColors.thread,
-      radius: compact ? 26 : 30,
-      showTape: true,
-      padding: EdgeInsets.fromLTRB(
-        compact ? 18 : 28,
-        compact ? 18 : 22,
-        compact ? 18 : 28,
-        compact ? 18 : 24,
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFCF8).withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(31),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.96),
+          width: 1.6,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF9C6475).withValues(alpha: 0.14),
+            blurRadius: 34,
+            offset: const Offset(0, 17),
+          ),
+          BoxShadow(
+            color: const Color(0xFF8A75C3).withValues(alpha: 0.06),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // --- brand micro-header ---
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'SoulLocket',
-                            style: SLTheme.textStyleForKey(
-                              'dancingScript',
-                              fontSize: compact ? 36 : 42,
-                              fontWeight: FontWeight.w800,
-                              color: SLColors.brandPink,
-                              letterSpacing: 0.2,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            width: compact ? 28 : 32,
-                            height: compact ? 28 : 32,
-                            decoration: BoxDecoration(
-                              color: SLColors.primarySoft,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: SLColors.primary.withValues(alpha: 0.24),
-                              ),
-                            ),
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Icon(
-                                  Icons.favorite_rounded,
-                                  size: compact ? 17 : 19,
-                                  color: SLColors.primary,
-                                ),
-                                Positioned(
-                                  right: 2,
-                                  bottom: 2,
-                                  child: Icon(
-                                    Icons.lock_rounded,
-                                    size: compact ? 9 : 10,
-                                    color: SLColors.ink,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '❤️ ${l10n.translate('Nơi lưu giữ những khoảnh khắc yêu thương')} ❤️',
-                        textAlign: TextAlign.center,
-                        style: SLTheme.quicksand(
-                          fontSize: compact ? 13 : 14.5,
-                          fontWeight: FontWeight.w700,
-                          color: SLColors.textSecond,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              AuthTabSwitcher(
-                isLoginTab: isLoginTab,
-                onSelectLogin: onSelectLogin,
-                onSelectRegister: onSelectRegister,
-              ),
-              SLSpacing.h16,
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 280),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                layoutBuilder: (currentChild, previousChildren) {
-                  return Stack(
-                    alignment: Alignment.topCenter,
-                    children: [
-                      ...previousChildren,
-                      ...?currentChild == null ? null : [currentChild],
-                    ],
-                  );
-                },
-                transitionBuilder: (child, animation) {
-                  final fade = CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.easeOutCubic,
-                  );
-                  final slide = Tween<Offset>(
-                    begin: const Offset(0.0, 0.04),
-                    end: Offset.zero,
-                  ).animate(fade);
-                  return FadeTransition(
-                    opacity: fade,
-                    child: SlideTransition(position: slide, child: child),
-                  );
-                },
-                child: RepaintBoundary(child: authSection),
-              ),
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                padding: EdgeInsets.fromLTRB(
-                  compact ? 12 : 14,
-                  8,
-                  compact ? 12 : 14,
-                  compact ? 8 : 10,
-                ),
-                decoration: const BoxDecoration(color: Colors.transparent),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final stackButtons =
-                        compact ||
-                        textScale > 1.25 ||
-                        constraints.maxWidth < 280;
-                    final buttons = [
-                      _AuthHelpButton(
-                        icon: Icons.menu_book_rounded,
-                        label: l10n.translate('Hướng dẫn'),
-                        onTap: onOpenGuide,
-                        isGuide: true,
-                        expanded: !stackButtons,
-                        compact: compact,
-                      ),
-                      _AuthHelpButton(
-                        icon: Icons.headset_mic_rounded,
-                        label: l10n.translate('Hỗ trợ'),
-                        onTap: onOpenContact,
-                        isGuide: false,
-                        expanded: !stackButtons,
-                        compact: compact,
-                      ),
-                    ];
-
-                    if (stackButtons) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [buttons.first, SLSpacing.h8, buttons.last],
-                      );
-                    }
-
-                    return Row(
-                      children: [buttons.first, SLSpacing.w8, buttons.last],
-                    );
-                  },
-                ),
-              ),
-            ],
+          AuroraLoginShell(
+            compact: compact,
+            isLoginTab: isLoginTab,
+            onSelectLogin: onSelectLogin,
+            onSelectRegister: onSelectRegister,
+            authSection: authSection,
+            onOpenGuide: onOpenGuide,
+            onOpenContact: onOpenContact,
+          ),
+          const Positioned(
+            right: 18,
+            top: -6,
+            child: _PaperSeal(),
           ),
         ],
       ),
@@ -203,84 +72,24 @@ class AuthPanelShell extends StatelessWidget {
   }
 }
 
-class _AuthHelpButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final bool isGuide;
-  final bool expanded;
-  final bool compact;
-
-  const _AuthHelpButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    required this.isGuide,
-    required this.expanded,
-    required this.compact,
-  });
+class _PaperSeal extends StatelessWidget {
+  const _PaperSeal();
 
   @override
   Widget build(BuildContext context) {
-    final foreground = isGuide ? Colors.white : SLColors.brandPink;
-    final buttonChild = Container(
-      decoration: BoxDecoration(
-        gradient: isGuide
-            ? const LinearGradient(
-                colors: [SLColors.brandPink, Color(0xFFFF69B4)],
-              )
-            : null,
-        color: isGuide ? null : Colors.white.withValues(alpha: 0.68),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: isGuide
-              ? Colors.white.withValues(alpha: 0.3)
-              : const Color(0xFFFFD6E0),
-          width: 1.3,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: SLColors.brandPink.withValues(alpha: isGuide ? 0.28 : 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(22),
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: compact ? 12 : 14),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: compact ? 15 : 16, color: foreground),
-                SLSpacing.w8,
-                Flexible(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: SLTheme.quicksand(
-                      fontSize: compact ? 13.0 : 13.5,
-                      fontWeight: FontWeight.w800,
-                      color: foreground,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+    return Transform.rotate(
+      angle: 0.08,
+      child: Container(
+        width: 38,
+        height: 17,
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFE3A8).withValues(alpha: 0.78),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: const Color(0xFFDDBA73).withValues(alpha: 0.48),
           ),
         ),
       ),
     );
-
-    if (expanded) {
-      return Expanded(child: buttonChild);
-    }
-    return buttonChild;
   }
 }

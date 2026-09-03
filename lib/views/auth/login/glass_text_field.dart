@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../core/sl_theme.dart';
 
-class GlassTextField extends StatefulWidget {
+import 'aurora_form_widgets.dart';
+
+/// Legacy API adapter. Keeps the old form logic untouched while rendering the
+/// new soft Locket Garden field.
+class GlassTextField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
   final Widget? prefixIcon;
@@ -34,72 +37,21 @@ class GlassTextField extends StatefulWidget {
   });
 
   @override
-  State<GlassTextField> createState() => _GlassTextFieldState();
-}
-
-class _GlassTextFieldState extends State<GlassTextField>
-    with SingleTickerProviderStateMixin {
-  late final FocusNode _internalFocusNode = widget.focusNode ?? FocusNode();
-  late final AnimationController _animCtrl = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 250),
-  );
-  late final Animation<double> _scaleAnim =
-      Tween<double>(begin: 1.0, end: 1.02).animate(
-    CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutBack),
-  );
-
-  @override
-  void initState() {
-    super.initState();
-    _internalFocusNode.addListener(_onFocusChange);
-  }
-
-  @override
-  void dispose() {
-    _internalFocusNode.removeListener(_onFocusChange);
-    if (widget.focusNode == null) {
-      _internalFocusNode.dispose();
-    }
-    _animCtrl.dispose();
-    super.dispose();
-  }
-
-  void _onFocusChange() {
-    if (_internalFocusNode.hasFocus) {
-      _animCtrl.forward();
-    } else {
-      _animCtrl.reverse();
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return ScaleTransition(
-      scale: _scaleAnim,
-      child: TextField(
-        controller: widget.controller,
-        focusNode: _internalFocusNode,
-        obscureText: widget.obscureText,
-        keyboardType: widget.keyboardType,
-        textInputAction: widget.textInputAction,
-        autofillHints: widget.autofillHints,
-        onSubmitted: widget.onSubmitted,
-        enableSuggestions: widget.enableSuggestions,
-        autocorrect: widget.autocorrect,
-        style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 16),
-        cursorColor: widget.accentColor ?? SLColors.brandPink,
-        cursorRadius: const Radius.circular(2),
-        cursorWidth: 2.5,
-        decoration: SLTheme.authInputDecoration(
-          hintText: widget.hintText,
-          prefixIcon: widget.prefixIcon,
-          suffixIcon: widget.suffixIcon,
-          focusColor: widget.accentColor ?? SLColors.brandPink,
-          fillColor: Colors.white,
-          borderColor: const Color(0xFFFFD6E0),
-        ),
-      ),
+    return AuroraTextField(
+      controller: controller,
+      hintText: hintText,
+      prefixIcon: prefixIcon,
+      suffixIcon: suffixIcon,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      autofillHints: autofillHints,
+      onSubmitted: onSubmitted,
+      focusNode: focusNode,
+      enableSuggestions: enableSuggestions,
+      autocorrect: autocorrect,
+      isPassword: obscureText,
     );
   }
 }

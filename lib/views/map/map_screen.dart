@@ -313,19 +313,11 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     }
   }
 
+  // GpsTrackerService listener đã bị loại bỏ — _listenLiveGps() trong
+  // map_location_logic.dart đã lắng nghe gps/$houseId/$partnerRole rồi.
+  // Giữ lại hàm trống để không phá các call-site hiện tại.
   void _setPartnerListenerActive(bool active) {
-    if (active) {
-      if (_partnerListenerActive) return;
-      final myUid = FirebaseAuth.instance.currentUser?.uid;
-      if (myUid == null) return;
-      GpsTrackerService().startListeningPartner(widget.houseId, myUid);
-      _partnerListenerActive = true;
-      return;
-    }
-
-    if (!_partnerListenerActive) return;
-    GpsTrackerService().stopListeningPartner();
-    _partnerListenerActive = false;
+    // No-op: partner GPS đã được _listenLiveGps() xử lý.
   }
 
   void _setRealtimePipelinesActive(bool active) {

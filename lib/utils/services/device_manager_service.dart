@@ -339,7 +339,7 @@ class DeviceManagerService {
       // Nếu vẫn không được, thử ipify
       if (ip == 'unknown') {
         final data =
-            await fetchIpData('https://api.ipify.orgif (format != null) format!=json', 'ipify');
+            await fetchIpData('https://api.ipify.org?format=json', 'ipify');
         if (data != null && data['ip'] != null) {
           ipData = data;
           ip = data['ip'].toString();
@@ -607,7 +607,7 @@ class DeviceManagerService {
 
     if (ip == 'unknown') {
       final data =
-          await fetchIpData('https://api.ipify.orgif (format != null) format!=json', 'ipify');
+          await fetchIpData('https://api.ipify.org?format=json', 'ipify');
       if (data != null && data['ip'] != null) {
         ipData = data;
         ip = data['ip'].toString();

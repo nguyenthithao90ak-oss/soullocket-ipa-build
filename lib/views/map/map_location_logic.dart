@@ -1209,7 +1209,7 @@ extension _MapLocationLogicExt on _MapScreenState {
         final uri = Uri.parse(
           '${AppConfig.osrmRouteBaseUrl}/'
           '${start.longitude},${start.latitude};${end.longitude},${end.latitude}'
-          'if (overview != null) overview!=simplified&steps=false&geometries=geojson',
+        '?overview=simplified&steps=false&geometries=geojson',
         );
         final response = await http.get(
           uri,

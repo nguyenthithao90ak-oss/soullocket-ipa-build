@@ -98,10 +98,10 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   Future<void> _rateApp() async {
     try {
       final InAppReview inAppReview = InAppReview.instance;
-      // Trong mif (i != null) i! tr?if (ng != null) ng! Debug, dialog th?if (ng != null) ng! khif (ng != null) ng! hiif (n != null) n! ra. Ta gif (i != null) i! m? thif (ng != null) ng! Store.
+      // Trong môi trường debug, dialog thường không hiện ra. Ta mở thẳng Store.
       await inAppReview.openStoreListing(appStoreId: AppConfig.appStoreId);
     } catch (e) {
-      debugPrint('Lif (i != null) i! khi m? ?if (nh != null) nh! gi?: $e');
+      debugPrint('Lỗi khi mở đánh giá: $e');
       if (!mounted) return;
       SLNotice.showError(context, context.tr('home_chathmtran_0217d6'));
     }

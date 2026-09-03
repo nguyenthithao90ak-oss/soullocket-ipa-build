@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/utils/sl_notice.dart';
 import 'aurora_form_widgets.dart';
 import 'aurora_social_buttons.dart';
 
@@ -38,9 +39,63 @@ class AuroraRegisterForm extends StatelessWidget {
   });
 
   bool _isRegisterInputValid(String email, String password, bool acceptTerms) {
-    return _registerEmailRegex.hasMatch(email.trim()) &&
+    return _registerEmailRegex.hasMatch(email.trim().toLowerCase()) &&
         password.trim().length >= 6 &&
         acceptTerms;
+  }
+
+  void _handleDisabledTap(BuildContext context) {
+    final email = emailController.text.trim().toLowerCase();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty) {
+      SLNotice.showError(context, 'Vui lòng nhập địa chỉ Email!');
+      return;
+    }
+    if (!email.contains('@') || !_registerEmailRegex.hasMatch(email)) {
+      SLNotice.showError(
+        context,
+        'Email chưa đúng định dạng. Vui lòng kiểm tra lại!',
+      );
+      return;
+    }
+    const allowedDomains = [
+      '@gmail.com',
+      '@hotmail.com',
+      '@outlook.com',
+      '@icloud.com',
+      '@yahoo.com',
+      '@live.com',
+      '@msn.com',
+      '@proton.me',
+      '@protonmail.com',
+    ];
+    final isDomainAllowed = allowedDomains.any((d) => email.endsWith(d));
+    if (!isDomainAllowed) {
+      SLNotice.showError(
+        context,
+        L10nService().translate('auth_supported_domains_only'),
+      );
+      return;
+    }
+    if (password.isEmpty) {
+      SLNotice.showError(context, 'Vui lòng nhập mật khẩu!');
+      return;
+    }
+    if (password.length < 6) {
+      SLNotice.showError(
+        context,
+        'Mật khẩu cần tối thiểu 6 ký tự (chữ thường và số)!',
+      );
+      return;
+    }
+    if (!acceptTerms) {
+      SLNotice.showError(
+        context,
+        'Vui lòng tích chọn xác nhận bạn từ 13 tuổi trở lên và chấp nhận Điều khoản sử dụng!',
+      );
+      return;
+    }
   }
 
   @override
@@ -61,6 +116,7 @@ class AuroraRegisterForm extends StatelessWidget {
           AuroraTextField(
             controller: emailController,
             keyboardType: TextInputType.emailAddress,
+            textCapitalization: TextCapitalization.none,
             textInputAction: TextInputAction.next,
             autofillHints: const [
               AutofillHints.newUsername,
@@ -91,6 +147,8 @@ class AuroraRegisterForm extends StatelessWidget {
             onSubmitted: (_) {
               if (!isLoading && acceptTerms) {
                 onRegister();
+              } else {
+                _handleDisabledTap(context);
               }
             },
             hintText: passwordHint,
@@ -136,7 +194,8 @@ class AuroraRegisterForm extends StatelessWidget {
 
                   return AuroraPrimaryButton(
                     label: signupLabel,
-                    onPressed: isLoading || !isInputValid ? null : onRegister,
+                    onPressed: onRegister,
+                    onDisabledTap: () => _handleDisabledTap(context),
                     isLoading: isLoading,
                     enabled: isInputValid,
                   );
@@ -146,20 +205,11 @@ class AuroraRegisterForm extends StatelessWidget {
           ),
 
           // Social auth divider
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Center(
-              child: Text(
-                '🩷 ${l10n.translate('HOẶC ĐĂNG KÝ NHANH')} 🩷',
-                style: const TextStyle(
-                  fontFamily: 'Quicksand',
-                  color: Color(0xFFFF6B9D),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
+          const SizedBox(height: 18),
+          _AuroraRegisterDivider(
+            label: l10n.translate('Hoặc đăng ký nhanh với'),
           ),
+          const SizedBox(height: 16),
 
           // Social auth buttons
           AuroraSocialButtons(onProviderTap: onSocialLogin),
@@ -295,6 +345,53 @@ class _AuroraTermsCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _AuroraRegisterDivider extends StatelessWidget {
+  final String label;
+
+  const _AuroraRegisterDivider({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 1,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.transparent, Color(0xFFEBDDE1)],
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Quicksand',
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFFA5929A),
+              letterSpacing: 0.2,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Container(
+            height: 1,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFEBDDE1), Colors.transparent],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

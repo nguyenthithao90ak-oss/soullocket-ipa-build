@@ -517,7 +517,11 @@ class GroupChatService {
 
     controller = StreamController<List<GroupChatRoom>>(
       onListen: () {
-        indexSub = _dbRef.child('houses/$houseId/group_ids').onValue.listen(
+        indexSub = _dbRef
+            .child('houses/$houseId/group_ids')
+            .limitToLast(20)
+            .onValue
+            .listen(
           (event) {
             final ids = <String>[];
             final raw = event.snapshot.value;

@@ -4,6 +4,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1467,23 +1468,119 @@ class StorageService {
     int minWidth = 960,
     int minHeight = 960,
     int quality = 62,
-  }) {
-    return _uploadSignedImageWithCompression(
-      file: file,
-      sessionBuilder: (contentType, preferredFileName) =>
-          _createSecretVaultUploadSession(
-        houseId: houseId,
-        contentType: contentType,
-        fileName: preferredFileName,
-      ),
-      minWidth: minWidth,
-      minHeight: minHeight,
-      quality: quality,
-      tempPrefix: 'sl_vault',
-      errorLabel: 'Secret vault image',
-      mapResult: mapSecretVaultStorageUploadResult,
-      errorMessage: 'Không thể tải ảnh lên kho bí mật.',
-    );
+  }) async {
+    final normalizedHouseId = houseId.trim();
+    if (normalizedHouseId.isEmpty) {
+      throw Exception('Thiếu thông tin kho bí mật.');
+    }
+    _requireCurrentUid();
+
+    try {
+      final originalName = file.name.trim().isNotEmpty
+          ? file.name.trim()
+          : p.basename(file.path);
+      var uploadName = originalName.isEmpty ? 'vault_image.jpg' : originalName;
+      var contentType = detectContentType(
+        uploadName,
+        fallback: 'image/jpeg',
+      );
+      var bytes = await file.readAsBytes();
+
+      final extension = p.extension(uploadName).toLowerCase();
+      if (!kIsWeb &&
+          file.path.isNotEmpty &&
+          contentType.startsWith('image/') &&
+          extension != '.gif') {
+        try {
+          final compressed = await FlutterImageCompress.compressWithFile(
+            file.path,
+            minWidth: minWidth,
+            minHeight: minHeight,
+            quality: quality,
+            format: CompressFormat.webp,
+          );
+          if (compressed != null && compressed.isNotEmpty) {
+            bytes = compressed;
+            contentType = 'image/webp';
+            uploadName = '${p.basenameWithoutExtension(uploadName)}.webp';
+          }
+        } catch (error) {
+          debugPrint(
+            'Secret Vault compression skipped: ${AppErrorMapper.resolve(error).message}',
+          );
+        }
+      }
+
+      final sessionResult = await _callWithAppCheckRetry(
+        () => _functions.httpsCallable('generateUploadUrl').call({
+          'folder': 'secret_vault',
+          'houseId': normalizedHouseId,
+          'fileName': uploadName,
+          'contentType': contentType,
+          'fileSize': bytes.length,
+        }),
+        allowUnauthenticatedWithoutMarkers: true,
+      );
+      final rawSession = sessionResult.data;
+      if (rawSession is! Map) {
+        throw Exception('Máy chủ trả về phiên tải kho bí mật không hợp lệ.');
+      }
+      final session = Map<String, dynamic>.from(rawSession);
+      final uploadId = session['uploadId']?.toString().trim() ?? '';
+      final uploadUrl = session['url']?.toString().trim() ?? '';
+      final storagePath = session['path']?.toString().trim() ?? '';
+      if (uploadId.isEmpty || uploadUrl.isEmpty || storagePath.isEmpty) {
+        throw Exception('Phiên tải kho bí mật thiếu thông tin bắt buộc.');
+      }
+
+      final headers = <String, String>{};
+      final rawHeaders = session['requiredHeaders'];
+      if (rawHeaders is Map) {
+        rawHeaders.forEach((key, value) {
+          if (key != null && value != null) {
+            headers[key.toString()] = value.toString();
+          }
+        });
+      }
+      headers.putIfAbsent('Content-Type', () => contentType);
+
+      final uploadResponse = await http
+          .put(Uri.parse(uploadUrl), headers: headers, body: bytes)
+          .timeout(const Duration(minutes: 2));
+      if (uploadResponse.statusCode < 200 || uploadResponse.statusCode >= 300) {
+        throw Exception(
+          'Máy chủ lưu trữ từ chối ảnh (${uploadResponse.statusCode}).',
+        );
+      }
+
+      final finalized = await _callWithAppCheckRetry(
+        () => _functions.httpsCallable('finalizeR2Upload').call({
+          'uploadId': uploadId,
+        }),
+        allowUnauthenticatedWithoutMarkers: true,
+      );
+      final finalizeData = finalized.data;
+      if (finalizeData is! Map || finalizeData['success'] != true) {
+        throw Exception('Không thể xác nhận ảnh kho bí mật đã tải xong.');
+      }
+
+      return StorageUploadResult(
+        downloadUrl: '',
+        storagePath: storagePath,
+        sessionId: uploadId,
+        uploadedBytes: bytes.length,
+      );
+    } catch (error) {
+      debugPrint(
+        'Secret Vault private upload failed: ${AppErrorMapper.resolve(error).message}',
+      );
+      throw Exception(
+        AppErrorMapper.resolve(
+          error,
+          fallbackMessage: 'Không thể tải ảnh lên kho bí mật.',
+        ).message,
+      );
+    }
   }
 
   String? extractStoragePathFromUrl(String url) {
@@ -1537,6 +1634,38 @@ class StorageService {
       return await CloudflareR2Service.instance.deleteByPath(normalizedPath);
     } catch (e) {
       debugPrint('deleteFileByPath error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> deleteSecretVaultFileByPath({
+    required String houseId,
+    required String mediaId,
+    required String storagePath,
+  }) async {
+    final normalizedHouseId = houseId.trim();
+    final normalizedMediaId = mediaId.trim();
+    final normalizedPath = storagePath.trim();
+    if (normalizedHouseId.isEmpty ||
+        normalizedMediaId.isEmpty ||
+        normalizedPath.isEmpty) {
+      return false;
+    }
+    try {
+      final result = await _callWithAppCheckRetry(
+        () => _functions.httpsCallable('deleteR2Object').call({
+          'houseId': normalizedHouseId,
+          'mediaId': normalizedMediaId,
+          'objectKey': normalizedPath,
+        }),
+        allowUnauthenticatedWithoutMarkers: true,
+      );
+      final data = result.data;
+      return data is Map && data['success'] == true;
+    } catch (error) {
+      debugPrint(
+        'Secret Vault private delete failed: ${AppErrorMapper.resolve(error).message}',
+      );
       return false;
     }
   }

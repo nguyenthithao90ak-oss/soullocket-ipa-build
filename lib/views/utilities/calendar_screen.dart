@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'dart:ui' as ui;
-import '../../../utils/services/notification_service.dart';
-import '../../../utils/services/widget_service.dart';
-import '../../../core/sl_theme.dart';
+import 'package:soullocket_app/utils/services/notification_service.dart';
+import 'package:soullocket_app/utils/services/widget_service.dart';
+import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 import 'package:soullocket_app/views/utilities/calendar/dialogs/calendar_quick_add_sheet.dart';
 import 'package:soullocket_app/views/utilities/calendar/widgets/calendar_background_decor.dart';
@@ -69,8 +69,21 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   void _loadEvents() {
+    _calendarSubscription?.cancel();
+    // Chỉ query 3 tháng xung quanh tháng đang xem (trước/hiện/sau)
+    final focusMonth = DateTime(_focusedDay.year, _focusedDay.month, 1);
+    final startMonth = DateTime(focusMonth.year, focusMonth.month - 1, 1);
+    final endMonth = DateTime(focusMonth.year, focusMonth.month + 2, 0);
+    final startStr =
+        '${startMonth.year}-${startMonth.month.toString().padLeft(2, '0')}-${startMonth.day.toString().padLeft(2, '0')}';
+    final endStr =
+        '${endMonth.year}-${endMonth.month.toString().padLeft(2, '0')}-${endMonth.day.toString().padLeft(2, '0')}';
+
     _calendarSubscription = _dbRef
         .child('houses/${widget.houseId}/calendar')
+        .orderByKey()
+        .startAt(startStr)
+        .endAt(endStr)
         .onValue
         .listen(
       (event) {
@@ -957,7 +970,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       }
                     },
                     onPageChanged: (focusedDay) {
+                      final oldMonth = _focusedDay.month;
+                      final oldYear = _focusedDay.year;
                       _focusedDay = focusedDay;
+                      // Khi chuyển tháng → reload query cho tháng mới
+                      if (focusedDay.month != oldMonth || focusedDay.year != oldYear) {
+                        _reloadCalendar();
+                      }
                     },
                   ),
                   if (selectedDay != null) ...[

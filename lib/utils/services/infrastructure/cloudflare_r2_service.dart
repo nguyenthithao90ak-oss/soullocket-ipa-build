@@ -26,8 +26,8 @@ class CloudflareR2Service {
   /// Video_player sẽ lỗi nếu đi qua proxy ảnh. Hàm này bóc URL gốc ra để play.
   static String resolveVideoUrl(String rawUrl) {
     if (rawUrl.isEmpty) return rawUrl;
-    if (rawUrl.contains('images.weserv.nl/if (url != null) url!=')) {
-      final unproxied = rawUrl.split('images.weserv.nl/if (url != null) url!=').last;
+    if (rawUrl.contains('images.weserv.nl/?url=')) {
+      final unproxied = rawUrl.split('images.weserv.nl/?url=').last;
       if (!unproxied.startsWith('http')) {
         return 'https://$unproxied';
       }

@@ -4,7 +4,7 @@ extension _MainHomeListeners on _MainHomeTabState {
   void _listenHighlights(String houseId) {
     _noteSubscription?.cancel();
 
-    _noteSubscription = _noteService.streamNotes(houseId).listen((items) {
+    _noteSubscription = _noteService.streamRecentNotes(houseId, limit: 10).listen((items) {
       final nextNoteHighlights = items.take(4).toList(growable: false);
       if (_sameNoteHighlights(_noteHighlights, nextNoteHighlights)) {
         return;
@@ -16,7 +16,18 @@ extension _MainHomeListeners on _MainHomeTabState {
 
   void _listenHomeCalendarEvents(String houseId) {
     _homeCalendarSubscription?.cancel();
-    final calendarRef = _dbRef.child('houses/$houseId/calendar');
+    // Chỉ query 30 ngày tới thay vì toàn bộ lịch sử calendar
+    final now = DateTime.now();
+    final todayStr =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final end = now.add(const Duration(days: 30));
+    final endStr =
+        '${end.year}-${end.month.toString().padLeft(2, '0')}-${end.day.toString().padLeft(2, '0')}';
+    final calendarRef = _dbRef
+        .child('houses/$houseId/calendar')
+        .orderByKey()
+        .startAt(todayStr)
+        .endAt(endStr);
     _homeCalendarSubscription = calendarRef.onValue.listen(
       (event) {
         if (!mounted || !_isTabActive) return;

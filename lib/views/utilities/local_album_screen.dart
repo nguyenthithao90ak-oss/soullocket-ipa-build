@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:vision_gallery_saver/vision_gallery_saver.dart';
@@ -117,12 +118,13 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text(
-          '⚠️ Ảnh/video chỉ lưu trên thiết bị này, không đồng bộ lên server.\nNếu xóa app, toàn bộ dữ liệu sẽ mất!',
-        ),
+        content: Text(context.tr('local_album_notice')),
         duration: const Duration(seconds: 5),
         behavior: SnackBarBehavior.floating,
-        action: SnackBarAction(label: 'Đã hiểu', onPressed: () {}),
+        action: SnackBarAction(
+          label: context.tr('local_album_notice_acknowledge'),
+          onPressed: () {},
+        ),
       ),
     );
   }
@@ -163,7 +165,8 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     if (_searchQuery.isNotEmpty) {
       result = result
           .where(
-              (i) => i.name.toLowerCase().contains(_searchQuery.toLowerCase()))
+            (i) => i.name.toLowerCase().contains(_searchQuery.toLowerCase()),
+          )
           .toList();
     }
     if (_selectedMonth != null) {
@@ -180,17 +183,26 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
   String get _gridLabel {
     final photos = _filteredItems.where((i) => i.type == 'image').length;
     final videos = _filteredItems.where((i) => i.type == 'video').length;
-    if (_items.length != _filteredItems.length) {
-      final parts = <String>[];
-      if (photos > 0) parts.add('$photos ảnh');
-      if (videos > 0) parts.add('$videos video');
-      return '${parts.isEmpty ? "0" : parts.join(" • ")} (lọc)';
-    }
     final parts = <String>[];
-    if (photos > 0) parts.add('$photos ảnh');
-    if (videos > 0) parts.add('$videos video');
-    final total = _items.length;
-    return parts.isEmpty ? '0 mục' : '$total mục • ${parts.join(' • ')}';
+    if (photos > 0) {
+      parts.add(
+        L10nService().format('local_album_photo_count', {'count': photos}),
+      );
+    }
+    if (videos > 0) {
+      parts.add(
+        L10nService().format('local_album_video_count', {'count': videos}),
+      );
+    }
+    final summary = parts.isEmpty
+        ? L10nService().format('local_album_item_count', {'count': 0})
+        : parts.join(' • ');
+    if (_items.length != _filteredItems.length) {
+      return L10nService().format('local_album_filtered_summary', {
+        'summary': summary,
+      });
+    }
+    return summary;
   }
 
   List<Map<String, dynamic>> get _groupedByDate {
@@ -207,9 +219,15 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
         final partsB = b.split('/');
         if (partsA.length != 3 || partsB.length != 3) return 0;
         final dateA = DateTime(
-            int.parse(partsA[2]), int.parse(partsA[1]), int.parse(partsA[0]));
+          int.parse(partsA[2]),
+          int.parse(partsA[1]),
+          int.parse(partsA[0]),
+        );
         final dateB = DateTime(
-            int.parse(partsB[2]), int.parse(partsB[1]), int.parse(partsB[0]));
+          int.parse(partsB[2]),
+          int.parse(partsB[1]),
+          int.parse(partsB[0]),
+        );
         return dateB.compareTo(dateA);
       });
     return sortedKeys.map((k) => {'date': k, 'items': map[k]!}).toList();
@@ -241,13 +259,15 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
       final bytes = await xfile.readAsBytes();
       final fileName = await _saveFile(bytes, '.jpg');
       if (fileName.isEmpty) continue;
-      _items.add(LocalAlbumItem(
-        id: '${DateTime.now().millisecondsSinceEpoch}_${_items.length}',
-        name: p.basename(xfile.name),
-        fileName: fileName,
-        type: 'image',
-        addedAtMs: DateTime.now().millisecondsSinceEpoch,
-      ));
+      _items.add(
+        LocalAlbumItem(
+          id: '${DateTime.now().millisecondsSinceEpoch}_${_items.length}',
+          name: p.basename(xfile.name),
+          fileName: fileName,
+          type: 'image',
+          addedAtMs: DateTime.now().millisecondsSinceEpoch,
+        ),
+      );
     }
     await _saveItems();
     _applyFilters();
@@ -266,7 +286,8 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     int todayCount = await _getTodayVideoCount();
     if (todayCount >= _maxVideosPerDay) {
       _showMsg(
-          'Đã đạt giới hạn $_maxVideosPerDay video/ngày. Thử lại vào ngày mai.');
+        'Đã đạt giới hạn $_maxVideosPerDay video/ngày. Thử lại vào ngày mai.',
+      );
       return;
     }
     final videos = await _picker.pickMultipleMedia();
@@ -276,7 +297,8 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
       if (_items.length >= _maxItems) break;
       if (todayCount + added >= _maxVideosPerDay) {
         _showMsg(
-            'Đã đạt giới hạn $_maxVideosPerDay video/ngày. Một số video không được thêm.');
+          'Đã đạt giới hạn $_maxVideosPerDay video/ngày. Một số video không được thêm.',
+        );
         break;
       }
       final ext = p.extension(xfile.name).toLowerCase();
@@ -293,13 +315,15 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
       // Copy file thay vì readAsBytes để tránh OOM
       final fileName = await _copyVideoFile(xfile.path, ext);
       if (fileName.isEmpty) continue;
-      _items.add(LocalAlbumItem(
-        id: '${DateTime.now().millisecondsSinceEpoch}_${_items.length}',
-        name: p.basename(xfile.name),
-        fileName: fileName,
-        type: 'video',
-        addedAtMs: DateTime.now().millisecondsSinceEpoch,
-      ));
+      _items.add(
+        LocalAlbumItem(
+          id: '${DateTime.now().millisecondsSinceEpoch}_${_items.length}',
+          name: p.basename(xfile.name),
+          fileName: fileName,
+          type: 'video',
+          addedAtMs: DateTime.now().millisecondsSinceEpoch,
+        ),
+      );
       added++;
     }
     if (added > 0) await _incrementTodayVideoCount(todayCount + added);
@@ -316,18 +340,28 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     int todayCount = await _getTodayVideoCount();
     // ignore: deprecated_member_use
     final files = await FilePicker.pickFiles(
-        type: FileType.media, allowMultiple: true, withData: false);
+      type: FileType.media,
+      allowMultiple: true,
+      withData: false,
+    );
     if (files.isEmpty || !mounted) return;
     int videoAdded = 0;
     for (final file in files) {
       if (_items.length >= _maxItems) break;
       final ext = p.extension(file.name).toLowerCase();
-      final isVideo =
-          ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.3gp'].contains(ext);
+      final isVideo = [
+        '.mp4',
+        '.mov',
+        '.avi',
+        '.mkv',
+        '.webm',
+        '.3gp',
+      ].contains(ext);
       if (isVideo) {
         if (todayCount + videoAdded >= _maxVideosPerDay) {
           _showMsg(
-              'Đã đạt giới hạn $_maxVideosPerDay video/ngày. Một số video không được thêm.');
+            'Đã đạt giới hạn $_maxVideosPerDay video/ngày. Một số video không được thêm.',
+          );
           continue;
         }
         final srcPath = file.path ?? '';
@@ -339,13 +373,15 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
         }
         final fileName = await _copyVideoFile(srcPath, ext);
         if (fileName.isEmpty) continue;
-        _items.add(LocalAlbumItem(
-          id: '${DateTime.now().millisecondsSinceEpoch}_${_items.length}',
-          name: file.name,
-          fileName: fileName,
-          type: 'video',
-          addedAtMs: DateTime.now().millisecondsSinceEpoch,
-        ));
+        _items.add(
+          LocalAlbumItem(
+            id: '${DateTime.now().millisecondsSinceEpoch}_${_items.length}',
+            name: file.name,
+            fileName: fileName,
+            type: 'video',
+            addedAtMs: DateTime.now().millisecondsSinceEpoch,
+          ),
+        );
         videoAdded++;
       } else {
         // Ảnh: dùng bytes như cũ
@@ -355,13 +391,15 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
         if (bytes.isEmpty) continue;
         final fileName = await _saveFile(bytes, ext.isNotEmpty ? ext : '.jpg');
         if (fileName.isEmpty) continue;
-        _items.add(LocalAlbumItem(
-          id: '${DateTime.now().millisecondsSinceEpoch}_${_items.length}',
-          name: file.name,
-          fileName: fileName,
-          type: 'image',
-          addedAtMs: DateTime.now().millisecondsSinceEpoch,
-        ));
+        _items.add(
+          LocalAlbumItem(
+            id: '${DateTime.now().millisecondsSinceEpoch}_${_items.length}',
+            name: file.name,
+            fileName: fileName,
+            type: 'image',
+            addedAtMs: DateTime.now().millisecondsSinceEpoch,
+          ),
+        );
       }
     }
     if (videoAdded > 0) {
@@ -415,10 +453,13 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Xoá mục đã chọn'),
         content: Text(
-            'Bạn có chắc chắn muốn xoá ${_selectedIds.length} mục đã chọn? Hành động này không thể hoàn tác.'),
+          'Bạn có chắc chắn muốn xoá ${_selectedIds.length} mục đã chọn? Hành động này không thể hoàn tác.',
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Huỷ'),
+          ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -451,49 +492,57 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     final months = _availableMonths.toList()..sort((a, b) => b.compareTo(a));
     showModalBottomSheet(
       context: context,
+      backgroundColor: SLColors.bgElevated,
+      showDragHandle: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Lọc theo tháng',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 12),
-              ListTile(
-                leading: const Icon(Icons.all_inclusive_rounded),
-                title: const Text('Tất cả'),
-                selected: _selectedMonth == null,
-                onTap: () {
-                  setState(() {
-                    _selectedMonth = null;
-                    _applyFilters();
-                  });
-                  Navigator.pop(ctx);
-                },
-              ),
-              SizedBox(
-                height: months.length * 56.0,
-                child: ListView.builder(
-                  itemCount: months.length,
-                  itemBuilder: (_, i) => ListTile(
-                    leading: const Icon(Icons.calendar_month_rounded),
-                    title: Text(DateFormat('MM/yyyy').format(months[i])),
-                    selected: _selectedMonth == months[i],
-                    onTap: () {
-                      setState(() {
-                        _selectedMonth = months[i];
-                        _applyFilters();
-                      });
-                      Navigator.pop(ctx);
-                    },
-                  ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(SLRadius.xl)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.tr('local_album_filter_month'),
+              style: SLTypography.titleMedium,
+            ),
+            SLSpacing.h12,
+            _buildSheetOption(
+              icon: Icons.all_inclusive_rounded,
+              title: context.tr('local_album_all_months'),
+              selected: _selectedMonth == null,
+              color: SLColors.primary,
+              onTap: () {
+                setState(() {
+                  _selectedMonth = null;
+                  _applyFilters();
+                });
+                Navigator.pop(ctx);
+              },
+            ),
+            SizedBox(
+              height: (months.length * 58.0).clamp(0, 348).toDouble(),
+              child: ListView.separated(
+                itemCount: months.length,
+                separatorBuilder: (_, _) => SLSpacing.h4,
+                itemBuilder: (_, i) => _buildSheetOption(
+                  icon: Icons.calendar_month_rounded,
+                  title: DateFormat('MM/yyyy').format(months[i]),
+                  selected: _selectedMonth == months[i],
+                  color: SLColors.accentPurpleDark,
+                  onTap: () {
+                    setState(() {
+                      _selectedMonth = months[i];
+                      _applyFilters();
+                    });
+                    Navigator.pop(ctx);
+                  },
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -502,46 +551,106 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
   void _showPickOptions() {
     showModalBottomSheet(
       context: context,
+      backgroundColor: SLColors.bgElevated,
+      showDragHandle: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => SafeArea(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(SLRadius.xl)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.tr('local_album_choose_source'),
+              style: SLTypography.titleMedium,
+            ),
+            SLSpacing.h16,
+            _buildSheetOption(
+              icon: Icons.photo_library_rounded,
+              title: context.tr('local_album_source_photos'),
+              subtitle: context.tr('local_album_source_photos_desc'),
+              color: SLColors.primary,
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickImages();
+              },
+            ),
+            SLSpacing.h8,
+            _buildSheetOption(
+              icon: Icons.video_library_rounded,
+              title: context.tr('local_album_source_videos'),
+              subtitle: context.tr('local_album_source_videos_desc'),
+              color: SLColors.accentPurpleDark,
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickVideos();
+              },
+            ),
+            SLSpacing.h8,
+            _buildSheetOption(
+              icon: Icons.folder_rounded,
+              title: context.tr('local_album_source_files'),
+              subtitle: context.tr('local_album_source_files_desc'),
+              color: SLColors.info,
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickFromFilePicker();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSheetOption({
+    required IconData icon,
+    required String title,
+    required Color color,
+    required VoidCallback onTap,
+    String? subtitle,
+    bool selected = false,
+  }) {
+    return Material(
+      color: selected ? color.withValues(alpha: 0.10) : SLColors.bgSubtle,
+      borderRadius: SLRadius.lgAll,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: SLRadius.lgAll,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
             children: [
-              const Text('Chọn nguồn',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: const Icon(Icons.photo_library_rounded,
-                    color: Color(0xFFD81B60)),
-                title: const Text('Ảnh từ thư viện'),
-                subtitle: const Text('Chọn nhiều ảnh'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _pickImages();
-                },
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.13),
+                  borderRadius: SLRadius.mdAll,
+                ),
+                child: Icon(icon, color: color, size: 22),
               ),
-              ListTile(
-                leading: const Icon(Icons.video_library_rounded,
-                    color: Color(0xFF7C4DFF)),
-                title: const Text('Video từ thư viện'),
-                subtitle: const Text('Chọn video'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _pickVideos();
-                },
+              SLSpacing.w12,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: SLTypography.labelLarge),
+                    if (subtitle != null) ...[
+                      SLSpacing.h4,
+                      Text(subtitle, style: SLTypography.bodySmall),
+                    ],
+                  ],
+                ),
               ),
-              ListTile(
-                leading:
-                    const Icon(Icons.folder_rounded, color: Color(0xFF42A5F5)),
-                title: const Text('Trình quản lý file'),
-                subtitle: const Text('Chọn ảnh/video từ bộ nhớ'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _pickFromFilePicker();
-                },
+              Icon(
+                selected
+                    ? Icons.check_circle_rounded
+                    : Icons.chevron_right_rounded,
+                color: selected ? color : SLColors.textTertiary,
               ),
             ],
           ),
@@ -579,15 +688,22 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: SLColors.paperCanvas,
       appBar: AppBar(
+        backgroundColor: SLColors.paper.withValues(alpha: 0.96),
+        surfaceTintColor: Colors.transparent,
         title: _showSearch
             ? TextField(
                 controller: _searchCtrl,
                 autofocus: true,
-                style: const TextStyle(fontSize: 14),
-                decoration: const InputDecoration(
-                  hintText: 'Tìm theo tên file...',
+                style: SLTypography.bodyLarge,
+                decoration: InputDecoration(
+                  hintText: context.tr('local_album_search_hint'),
+                  hintStyle: SLTypography.bodyMedium,
+                  filled: false,
                   border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
                 ),
                 onChanged: (v) {
                   setState(() {
@@ -596,12 +712,20 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
                   });
                 },
               )
-            : Text(context.tr('util_luunhtbit_6f4b4a')),
+            : Text(
+                _isSelectionMode
+                    ? L10nService().format('local_album_selected_count', {
+                        'count': _selectedIds.length,
+                      })
+                    : context.tr('util_luunhtbit_6f4b4a'),
+                style: SLTypography.titleMedium,
+              ),
         actions: [
           if (!_isSelectionMode)
             IconButton(
               icon: Icon(
-                  _showSearch ? Icons.close_rounded : Icons.search_rounded),
+                _showSearch ? Icons.close_rounded : Icons.search_rounded,
+              ),
               onPressed: () {
                 setState(() {
                   _showSearch = !_showSearch;
@@ -612,91 +736,222 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
                   }
                 });
               },
+              tooltip: _showSearch
+                  ? context.tr('local_album_close_search')
+                  : context.tr('local_album_search'),
             ),
           if (!_isSelectionMode && _items.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.calendar_month_rounded),
               onPressed: _showMonthPicker,
+              tooltip: context.tr('local_album_filter_month'),
             ),
           IconButton(
             icon: const Icon(Icons.info_outline_rounded),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                      '⚠️ Ảnh/video chỉ lưu trên thiết bị này, không đồng bộ server.\nXóa app sẽ mất toàn bộ dữ liệu!'),
-                  duration: Duration(seconds: 5),
+                SnackBar(
+                  content: Text(context.tr('local_album_notice')),
+                  duration: const Duration(seconds: 5),
                   behavior: SnackBarBehavior.floating,
                 ),
               );
             },
+            tooltip: context.tr('local_album_storage_info'),
           ),
           if (_filteredItems.isNotEmpty)
             IconButton(
               icon: Icon(
-                  _isSelectionMode ? Icons.close_rounded : Icons.checklist),
+                _isSelectionMode ? Icons.close_rounded : Icons.checklist,
+              ),
               onPressed: () {
                 setState(() {
                   _isSelectionMode = !_isSelectionMode;
                   if (!_isSelectionMode) _selectedIds.clear();
                 });
               },
+              tooltip: _isSelectionMode
+                  ? context.tr('local_album_cancel_selection')
+                  : context.tr('local_album_select_items'),
             ),
           if (_isSelectionMode && _selectedIds.isNotEmpty) ...[
             IconButton(
-              icon:
-                  const Icon(Icons.download_rounded, color: Color(0xFF4CAF50)),
+              icon: const Icon(
+                Icons.download_rounded,
+                color: Color(0xFF4CAF50),
+              ),
               onPressed: _saveSelected,
-              tooltip: 'Lưu ảnh đã chọn',
+              tooltip: context.tr('local_album_save_selected'),
             ),
             IconButton(
               icon: const Icon(Icons.delete_rounded, color: Colors.red),
               onPressed: _deleteSelected,
+              tooltip: context.tr('local_album_delete_selected'),
             ),
           ],
         ],
       ),
-      body: _albumDir == null
-          ? const Center(child: CircularProgressIndicator())
-          : _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _items.isEmpty
-                  ? _buildEmptyState()
-                  : _filteredItems.isEmpty
-                      ? Center(
-                          child: Text('Không tìm thấy kết quả',
-                              style: TextStyle(
-                                  color: Colors.grey[500], fontSize: 16)))
-                      : _buildGrid(),
+      body: SLTheme.softCanvasBackdrop(
+        baseColor: SLColors.paperCanvas,
+        accentColor: SLColors.primary,
+        secondaryAccent: SLColors.accentPurple,
+        motif: SLCanvasBackdropMotif.journal,
+        child: _buildAlbumContent(),
+      ),
       floatingActionButton: _isSelectionMode
           ? null
-          : FloatingActionButton(
+          : FloatingActionButton.extended(
               onPressed: _showPickOptions,
-              child: const Icon(Icons.add_photo_alternate_rounded),
+              backgroundColor: SLColors.primary,
+              foregroundColor: SLColors.textInverse,
+              icon: const Icon(Icons.add_photo_alternate_rounded),
+              label: Text(
+                context.tr('local_album_add_memory'),
+                style: SLTypography.labelLarge.copyWith(
+                  color: SLColors.textInverse,
+                ),
+              ),
             ),
     );
   }
 
+  Widget _buildAlbumContent() {
+    if (_albumDir == null || _isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: SLColors.primary),
+      );
+    }
+    if (_items.isEmpty) return _buildEmptyState();
+    if (_filteredItems.isEmpty) return _buildNoResultsState();
+    return _buildGrid();
+  }
+
   Widget _buildEmptyState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: SingleChildScrollView(
+        padding: SLSpacing.all24,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 440),
+          child: SLTheme.softPanel(
+            padding: const EdgeInsets.fromLTRB(28, 30, 28, 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 86,
+                  height: 86,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [SLColors.primarySoft, SLColors.tertiarySoft],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: SLRadius.xlAll,
+                    boxShadow: SLShadow.primary,
+                  ),
+                  child: const Icon(
+                    Icons.photo_library_rounded,
+                    size: 42,
+                    color: SLColors.primary,
+                  ),
+                ),
+                SLSpacing.h20,
+                Text(
+                  context.tr('local_album_empty_title'),
+                  textAlign: TextAlign.center,
+                  style: SLTypography.titleLarge,
+                ),
+                SLSpacing.h8,
+                Text(
+                  context.tr('local_album_empty_desc'),
+                  textAlign: TextAlign.center,
+                  style: SLTypography.bodyMedium,
+                ),
+                SLSpacing.h20,
+                _buildPrivacyNote(),
+                SLSpacing.h24,
+                ElevatedButton.icon(
+                  onPressed: _showPickOptions,
+                  icon: const Icon(Icons.add_photo_alternate_rounded),
+                  label: Text(context.tr('local_album_add_photos_videos')),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoResultsState() {
+    return Center(
+      child: Padding(
+        padding: SLSpacing.all24,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.photo_filter_rounded,
+              size: 56,
+              color: SLColors.textTertiary,
+            ),
+            SLSpacing.h16,
+            Text(
+              context.tr('local_album_no_results_title'),
+              textAlign: TextAlign.center,
+              style: SLTypography.titleMedium,
+            ),
+            SLSpacing.h8,
+            Text(
+              context.tr('local_album_no_results_desc'),
+              textAlign: TextAlign.center,
+              style: SLTypography.bodyMedium,
+            ),
+            SLSpacing.h20,
+            OutlinedButton.icon(
+              onPressed: () {
+                setState(() {
+                  _searchQuery = '';
+                  _searchCtrl.clear();
+                  _selectedMonth = null;
+                  _showSearch = false;
+                  _applyFilters();
+                });
+              },
+              icon: const Icon(Icons.filter_alt_off_rounded),
+              label: Text(context.tr('local_album_clear_filters')),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPrivacyNote() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: SLColors.infoLight,
+        borderRadius: SLRadius.lgAll,
+        border: Border.all(color: SLColors.info.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.photo_library_rounded, size: 64, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text('Chưa có ảnh/video nào',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.grey[600])),
-          const SizedBox(height: 8),
-          Text('Nhấn nút + để thêm từ thiết bị',
-              style: TextStyle(fontSize: 14, color: Colors.grey[500])),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-              onPressed: _showPickOptions,
-              icon: const Icon(Icons.add_photo_alternate_rounded),
-              label: const Text('Thêm ảnh/video')),
+          const Icon(
+            Icons.phone_android_rounded,
+            color: SLColors.info,
+            size: 20,
+          ),
+          SLSpacing.w10,
+          Expanded(
+            child: Text(
+              context.tr('local_album_local_only_short'),
+              style: SLTypography.bodySmall.copyWith(
+                color: SLColors.textPrimary,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -704,178 +959,231 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
 
   Widget _buildGrid() {
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final crossAxisCount = screenWidth > 600
+    final crossAxisCount = screenWidth >= 1000
+        ? 6
+        : screenWidth >= 720
         ? 5
-        : screenWidth > 400
-            ? 4
-            : 3;
+        : screenWidth >= 520
+        ? 4
+        : 3;
 
     return Column(
       children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          color: Colors.grey[50],
-          child: Row(
-            children: [
-              Text(_gridLabel,
-                  style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w600)),
-              const Spacer(),
-              if (_selectedMonth != null)
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedMonth = null;
-                      _applyFilters();
-                    });
-                  },
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                        color: const Color(0xFFD81B60).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12)),
-                    child: Text(DateFormat('MM/yyyy').format(_selectedMonth!),
-                        style: const TextStyle(
-                            fontSize: 11,
-                            color: Color(0xFFD81B60),
-                            fontWeight: FontWeight.w700)),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 960),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: SLColors.paper.withValues(alpha: 0.94),
+                borderRadius: SLRadius.lgAll,
+                border: Border.all(color: SLColors.border),
+                boxShadow: SLShadow.subtle,
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.collections_bookmark_rounded,
+                    color: SLColors.primary,
+                    size: 20,
                   ),
-                ),
-            ],
+                  SLSpacing.w10,
+                  Expanded(
+                    child: Text(
+                      _gridLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: SLTypography.labelMedium,
+                    ),
+                  ),
+                  if (_selectedMonth != null)
+                    InputChip(
+                      label: Text(
+                        DateFormat('MM/yyyy').format(_selectedMonth!),
+                      ),
+                      onDeleted: () {
+                        setState(() {
+                          _selectedMonth = null;
+                          _applyFilters();
+                        });
+                      },
+                      deleteIcon: const Icon(Icons.close_rounded, size: 16),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
         Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: CustomScrollView(
-              slivers: [
-                for (int index = 0; index < _groupedByDate.length; index++) ...[
-                  Builder(
-                    builder: (context) {
-                      final group = _groupedByDate[index];
-                      final dateStr = group['date'] as String;
-                      return SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 4, vertical: 8),
-                          child: Text(
-                            dateStr,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.grey[800],
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 960),
+              child: CustomScrollView(
+                physics: SLResponsive.scrollPhysicsForPlatform(),
+                slivers: [
+                  for (
+                    int index = 0;
+                    index < _groupedByDate.length;
+                    index++
+                  ) ...[
+                    Builder(
+                      builder: (context) {
+                        final group = _groupedByDate[index];
+                        final dateStr = group['date'] as String;
+                        return SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 18, 16, 9),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.favorite_border_rounded,
+                                  size: 17,
+                                  color: SLColors.primary,
+                                ),
+                                SLSpacing.w8,
+                                Text(dateStr, style: SLTypography.labelLarge),
+                              ],
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                  Builder(
-                    builder: (context) {
-                      final group = _groupedByDate[index];
-                      final items = group['items'] as List<LocalAlbumItem>;
-                      return SliverGrid(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          mainAxisSpacing: 4,
-                          crossAxisSpacing: 4,
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, i) {
-                            final item = items[i];
-                            final selected = _selectedIds.contains(item.id);
-                            return GestureDetector(
-                              onTap: () {
-                                if (_isSelectionMode) {
-                                  setState(() {
-                                    if (selected) {
-                                      _selectedIds.remove(item.id);
-                                    } else {
-                                      _selectedIds.add(item.id);
-                                    }
-                                  });
-                                } else {
-                                  _viewItem(item);
-                                }
-                              },
-                              onLongPress: _isSelectionMode
-                                  ? null
-                                  : () {
-                                      setState(() {
-                                        _isSelectionMode = true;
-                                        _selectedIds.add(item.id);
-                                      });
+                        );
+                      },
+                    ),
+                    Builder(
+                      builder: (context) {
+                        final group = _groupedByDate[index];
+                        final items = group['items'] as List<LocalAlbumItem>;
+                        return SliverPadding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          sliver: SliverGrid(
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: crossAxisCount,
+                                  mainAxisSpacing: 8,
+                                  crossAxisSpacing: 8,
+                                ),
+                            delegate: SliverChildBuilderDelegate((context, i) {
+                              final item = items[i];
+                              final selected = _selectedIds.contains(item.id);
+                              return Semantics(
+                                button: true,
+                                selected: selected,
+                                label: item.name,
+                                child: Material(
+                                  color: SLColors.bgMuted,
+                                  borderRadius: SLRadius.mdAll,
+                                  clipBehavior: Clip.antiAlias,
+                                  child: InkWell(
+                                    onTap: () {
+                                      if (_isSelectionMode) {
+                                        setState(() {
+                                          if (selected) {
+                                            _selectedIds.remove(item.id);
+                                          } else {
+                                            _selectedIds.add(item.id);
+                                          }
+                                        });
+                                      } else {
+                                        _viewItem(item);
+                                      }
                                     },
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  if (item.type == 'video')
-                                    Container(
-                                      color: Colors.grey[900],
-                                      child: const Center(
-                                          child: Icon(
-                                              Icons.play_circle_fill_rounded,
-                                              color: Colors.white70,
-                                              size: 40)),
-                                    )
-                                  else
-                                    Image.file(
-                                      File(_filePath(item)),
-                                      fit: BoxFit.cover,
-                                      filterQuality: FilterQuality.low,
-                                      errorBuilder: (_, __, ___) => Container(
-                                          color: Colors.grey[200],
-                                          child: const Icon(
-                                              Icons.broken_image_rounded,
-                                              color: Colors.grey)),
+                                    onLongPress: _isSelectionMode
+                                        ? null
+                                        : () {
+                                            setState(() {
+                                              _isSelectionMode = true;
+                                              _selectedIds.add(item.id);
+                                            });
+                                          },
+                                    child: Stack(
+                                      fit: StackFit.expand,
+                                      children: [
+                                        if (item.type == 'video')
+                                          Container(
+                                            color: SLColors.darkBgMain,
+                                            child: const Center(
+                                              child: Icon(
+                                                Icons.play_circle_fill_rounded,
+                                                color: Colors.white70,
+                                                size: 40,
+                                              ),
+                                            ),
+                                          )
+                                        else
+                                          Image.file(
+                                            File(_filePath(item)),
+                                            fit: BoxFit.cover,
+                                            filterQuality: FilterQuality.low,
+                                            errorBuilder: (_, _, _) =>
+                                                const ColoredBox(
+                                                  color: SLColors.bgMuted,
+                                                  child: Icon(
+                                                    Icons.broken_image_rounded,
+                                                    color:
+                                                        SLColors.textTertiary,
+                                                  ),
+                                                ),
+                                          ),
+                                        if (_isSelectionMode)
+                                          Container(
+                                            color: selected
+                                                ? Colors.black.withValues(
+                                                    alpha: 0.3,
+                                                  )
+                                                : Colors.transparent,
+                                            child: Center(
+                                              child: Icon(
+                                                selected
+                                                    ? Icons.check_circle_rounded
+                                                    : Icons.circle_outlined,
+                                                color: selected
+                                                    ? Colors.white
+                                                    : Colors.white54,
+                                                size: 28,
+                                              ),
+                                            ),
+                                          ),
+                                        if (item.type == 'video' &&
+                                            !_isSelectionMode)
+                                          Positioned(
+                                            top: 2,
+                                            left: 2,
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 6,
+                                                    vertical: 3,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: SLColors.danger,
+                                                borderRadius: SLRadius.smAll,
+                                              ),
+                                              child: Text(
+                                                context.tr(
+                                                  'local_album_video_badge',
+                                                ),
+                                                style: SLTypography.labelSmall
+                                                    .copyWith(
+                                                      color: Colors.white,
+                                                      fontSize: 9,
+                                                    ),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
                                     ),
-                                  if (_isSelectionMode)
-                                    Container(
-                                      color: selected
-                                          ? Colors.black.withValues(alpha: 0.3)
-                                          : Colors.transparent,
-                                      child: Center(
-                                          child: Icon(
-                                              selected
-                                                  ? Icons.check_circle_rounded
-                                                  : Icons.circle_outlined,
-                                              color: selected
-                                                  ? Colors.white
-                                                  : Colors.white54,
-                                              size: 28)),
-                                    ),
-                                  if (item.type == 'video' && !_isSelectionMode)
-                                    Positioned(
-                                        top: 2,
-                                        left: 2,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 4, vertical: 2),
-                                          decoration: BoxDecoration(
-                                              color: Colors.redAccent,
-                                              borderRadius:
-                                                  BorderRadius.circular(4)),
-                                          child: const Text('VIDEO',
-                                              style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 8,
-                                                  fontWeight: FontWeight.w700)),
-                                        )),
-                                ],
-                              ),
-                            );
-                          },
-                          childCount: items.length,
-                        ),
-                      );
-                    },
-                  ),
+                                  ),
+                                ),
+                              );
+                            }, childCount: items.length),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -904,12 +1212,12 @@ class LocalAlbumItem {
   });
 
   String toJson() => jsonEncode({
-        'id': id,
-        'name': name,
-        'fileName': fileName,
-        'type': type,
-        'addedAtMs': addedAtMs,
-      });
+    'id': id,
+    'name': name,
+    'fileName': fileName,
+    'type': type,
+    'addedAtMs': addedAtMs,
+  });
 
   factory LocalAlbumItem.fromJson(String jsonStr) {
     final map = jsonDecode(jsonStr) as Map<String, dynamic>;
@@ -918,7 +1226,8 @@ class LocalAlbumItem {
       name: map['name'] as String? ?? '',
       fileName: (map['fileName'] ?? map['filePath'] ?? '').toString(),
       type: map['type'] as String? ?? 'image',
-      addedAtMs: map['addedAtMs'] as int? ??
+      addedAtMs:
+          map['addedAtMs'] as int? ??
           (map['addedAt'] is int ? map['addedAt'] as int : 0),
     );
   }
@@ -981,14 +1290,17 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
     _videoController?.dispose();
     _videoController = VideoPlayerController.file(File(path));
     _videoInitialized = false;
-    _videoController!.initialize().then((_) {
-      if (mounted) {
-        setState(() => _videoInitialized = true);
-        _videoController!.play();
-      }
-    }).catchError((_) {
-      if (mounted) setState(() => _videoInitialized = true);
-    });
+    _videoController!
+        .initialize()
+        .then((_) {
+          if (mounted) {
+            setState(() => _videoInitialized = true);
+            _videoController!.play();
+          }
+        })
+        .catchError((_) {
+          if (mounted) setState(() => _videoInitialized = true);
+        });
   }
 
   void _deleteCurrent() {
@@ -998,10 +1310,13 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Xoá mục này'),
         content: const Text(
-            'Bạn có chắc chắn muốn xoá mục này? Hành động này không thể hoàn tác.'),
+          'Bạn có chắc chắn muốn xoá mục này? Hành động này không thể hoàn tác.',
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Huỷ'),
+          ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -1035,22 +1350,22 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Không tìm thấy file để chia sẻ'),
-              duration: Duration(seconds: 2)),
+            content: Text('Không tìm thấy file để chia sẻ'),
+            duration: Duration(seconds: 2),
+          ),
         );
       }
       return;
     }
     try {
-      await SharePlus.instance.share(
-        ShareParams(files: [XFile(file.path)]),
-      );
+      await SharePlus.instance.share(ShareParams(files: [XFile(file.path)]));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Lỗi chia sẻ: $e'),
-              duration: const Duration(seconds: 2)),
+            content: Text('Lỗi chia sẻ: $e'),
+            duration: const Duration(seconds: 2),
+          ),
         );
       }
     }
@@ -1062,8 +1377,9 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Chỉ hỗ trợ lưu ảnh'),
-              duration: Duration(seconds: 2)),
+            content: Text('Chỉ hỗ trợ lưu ảnh'),
+            duration: Duration(seconds: 2),
+          ),
         );
       }
       return;
@@ -1072,8 +1388,9 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
       final file = File(_filePath(_currentIndex));
       if (!await file.exists()) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('File không tồn tại')));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('File không tồn tại')));
         }
         return;
       }
@@ -1083,16 +1400,18 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Đã lưu ảnh vào thiết bị'),
-              duration: Duration(seconds: 2)),
+            content: Text('Đã lưu ảnh vào thiết bị'),
+            duration: Duration(seconds: 2),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Lỗi lưu ảnh: $e'),
-              duration: const Duration(seconds: 2)),
+            content: Text('Lỗi lưu ảnh: $e'),
+            duration: const Duration(seconds: 2),
+          ),
         );
       }
     }
@@ -1108,17 +1427,23 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black87,
         foregroundColor: Colors.white,
-        title: Text('${_currentIndex + 1}/${widget.items.length}',
-            style: const TextStyle(fontSize: 14)),
+        title: Text(
+          '${_currentIndex + 1}/${widget.items.length}',
+          style: const TextStyle(fontSize: 14),
+        ),
         actions: [
           IconButton(
-              icon: const Icon(Icons.download_rounded),
-              onPressed: _saveCurrentItem),
+            icon: const Icon(Icons.download_rounded),
+            onPressed: _saveCurrentItem,
+          ),
           IconButton(
-              icon: const Icon(Icons.share_rounded), onPressed: _shareItem),
+            icon: const Icon(Icons.share_rounded),
+            onPressed: _shareItem,
+          ),
           IconButton(
-              icon: const Icon(Icons.delete_rounded, color: Colors.red),
-              onPressed: _deleteCurrent),
+            icon: const Icon(Icons.delete_rounded, color: Colors.red),
+            onPressed: _deleteCurrent,
+          ),
         ],
       ),
       body: PageView.builder(
@@ -1139,9 +1464,12 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
                       child: Image.file(
                         File(_filePath(index)),
                         fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Center(
-                            child: Text('Không thể hiển thị ảnh',
-                                style: TextStyle(color: Colors.white))),
+                        errorBuilder: (_, _, _) => const Center(
+                          child: Text(
+                            'Không thể hiển thị ảnh',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -1163,7 +1491,8 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
   Widget _buildVideoView(int index) {
     if (!_videoInitialized) {
       return const Center(
-          child: CircularProgressIndicator(color: Colors.white));
+        child: CircularProgressIndicator(color: Colors.white),
+      );
     }
     if (_videoController == null || !_videoController!.value.isInitialized) {
       return const Padding(
@@ -1173,8 +1502,10 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
           children: [
             Icon(Icons.video_file_rounded, color: Colors.white70, size: 80),
             SizedBox(height: 16),
-            Text('Không thể phát video',
-                style: TextStyle(color: Colors.white54, fontSize: 14)),
+            Text(
+              'Không thể phát video',
+              style: TextStyle(color: Colors.white54, fontSize: 14),
+            ),
           ],
         ),
       );
@@ -1195,8 +1526,11 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
           if (!_videoController!.value.isPlaying)
             Container(
               color: Colors.black26,
-              child: const Icon(Icons.play_circle_fill_rounded,
-                  color: Colors.white, size: 64),
+              child: const Icon(
+                Icons.play_circle_fill_rounded,
+                color: Colors.white,
+                size: 64,
+              ),
             ),
         ],
       ),

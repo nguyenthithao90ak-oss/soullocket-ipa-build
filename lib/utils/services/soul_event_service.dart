@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:soullocket_app/models/soul_event.dart';
 import 'package:soullocket_app/utils/services/local_database_service.dart';
@@ -11,6 +12,7 @@ class SoulEventService {
   SoulEventService._internal();
 
   final _updateController = StreamController<String>.broadcast();
+  final Random _random = Random();
 
   Stream<List<SoulEvent>> streamEvents(String houseId) async* {
     yield await getEvents(houseId);
@@ -39,7 +41,7 @@ class SoulEventService {
   }
 
   String _generateId() {
-    return '\${DateTime.now().millisecondsSinceEpoch}_\${Random().nextInt(10000)}';
+    return '${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(1 << 32).toRadixString(36)}';
   }
 
   Future<void> saveEvent(String houseId, SoulEvent event) async {

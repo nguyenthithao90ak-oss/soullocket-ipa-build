@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
@@ -133,191 +134,347 @@ class _ConsentGateState extends State<ConsentGate> {
       context: context,
       useRootNavigator: true,
       barrierDismissible: false,
-      barrierColor: Colors.black.withValues(alpha: 0.18), // Nền phía sau nhìn thấy rõ Login màn hình hồng
+      barrierColor: const Color(0xFF18191B),
       builder: (ctx) {
-        var cookieLevel =
-            initialCookieLevel == 'essential' ? 'essential' : 'all';
-        final showScrollHintNotifier = ValueNotifier<bool>(true);
-
-        return StatefulBuilder(
-          builder: (ctx, setState) {
-            final screenSize = MediaQuery.sizeOf(ctx);
-            final mediaPadding = MediaQuery.of(ctx).padding;
-            final compact = screenSize.width < 620;
-            const dialogRadius = 26.0;
-            const horizontalInset = 24.0;
-            const verticalInset = 32.0;
-            const horizontalPadding = 14.0;
-
-            return PopScope(
-              canPop: false,
-              child: Dialog(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                insetPadding: const EdgeInsets.symmetric(
-                  horizontal: horizontalInset,
-                  vertical: verticalInset,
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(dialogRadius),
-                  child: FastBackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                    child: Container(
-                      constraints: BoxConstraints(
-                        maxWidth: 380, // Thu gọn chiều rộng cho cực kỳ xinh xắn
-                        maxHeight: screenSize.height * 0.82, // Thu gọn chiều cao
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFCF5F7).withValues(alpha: 0.90), // Kính mờ trắng hồng nổi trên Login
-                        borderRadius: BorderRadius.circular(dialogRadius),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          width: 1.8,
+        final l10n = L10nService();
+        return PopScope(
+          canPop: false,
+          child: Dialog(
+            insetPadding: EdgeInsets.zero,
+            backgroundColor: const Color(0xFF18191B),
+            child: Scaffold(
+              backgroundColor: const Color(0xFF18191B),
+              body: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 12),
+                      // Brand Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF242527),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFF333538)),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFFF4081).withValues(alpha: 0.15),
-                            blurRadius: 32,
-                            offset: const Offset(0, 12),
-                          ),
-                        ],
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.favorite_rounded,
+                              size: 13,
+                              color: Color(0xFFFF5277),
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              'SoulLocket Privacy',
+                              style: TextStyle(
+                                fontFamily: 'Quicksand',
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFFE4E6EB),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    child: SafeArea(
-                      top: compact,
-                      bottom: false,
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: Stack(
-                              children: [
-                                NotificationListener<ScrollNotification>(
-                                  onNotification: (notification) {
-                                    final shouldShow =
-                                        notification.metrics.pixels <= 8 &&
-                                            notification
-                                                    .metrics.maxScrollExtent >
-                                                16;
-                                    if (showScrollHintNotifier.value !=
-                                        shouldShow) {
-                                      showScrollHintNotifier.value = shouldShow;
-                                    }
-                                    return false;
-                                  },
-                                  child: SingleChildScrollView(
-                                    padding: EdgeInsets.fromLTRB(
-                                      horizontalPadding,
-                                      compact ? 12 : 16,
-                                      horizontalPadding,
-                                      14,
+                      const SizedBox(height: 18),
+                      // Title exactly like Image 1
+                      Text(
+                        l10n.translate('Điều khoản và Chính sách quyền riêng tư của SoulLocket'),
+                        style: const TextStyle(
+                          fontFamily: 'Quicksand',
+                          fontSize: 23,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          height: 1.28,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Subtitle & Interactive RichText exactly like Image 1
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            fontFamily: 'Quicksand',
+                            fontSize: 14.5,
+                            height: 1.55,
+                            color: Color(0xFFB0B3B8),
+                            fontWeight: FontWeight.w600,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: l10n.translate('Bằng cách tiếp tục, bạn đồng ý với '),
+                            ),
+                            TextSpan(
+                              text: l10n.translate('Điều khoản của SoulLocket'),
+                              style: const TextStyle(
+                                color: Color(0xFF4599FF),
+                                fontWeight: FontWeight.w800,
+                              ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () => _openDoc(
+                                      ctx,
+                                      l10n.translate('Điều khoản dịch vụ'),
+                                      'assets/docs/terms.html',
                                     ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        _buildStartupConsentHeader(ctx,
-                                            compact: compact),
-                                        const SizedBox(height: 14),
-                                        _buildStartupLegalSection(
-                                          accent: _accentRose,
-                                          icon: Icons.gavel_rounded,
-                                          title: context
-                                              .tr('consent_iukhonsdng_9a9c73'),
-                                          subtitle: context
-                                              .tr('consent_tmttcchdng_0cbb57'),
-                                          bullets: [],
-                                          actionLabel: context
-                                              .tr('consent_xemiukhon_5d9f36'),
-                                          onTap: () => _openDoc(
-                                            ctx,
-                                            context.tr(
-                                                'consent_iukhonsdng_9a9c73'),
-                                            'assets/docs/terms.html',
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        _buildStartupLegalSection(
-                                          accent: _accentLavender,
-                                          icon: Icons.privacy_tip_rounded,
-                                          title: context
-                                              .tr('consent_chnhschbom_98b319'),
-                                          subtitle: context
-                                              .tr('consent_tmttdliuap_7cebb7'),
-                                          bullets: [],
-                                          actionLabel: context
-                                              .tr('consent_xembomt_eaa9ec'),
-                                          onTap: () => _openDoc(
-                                            context,
-                                            context.tr(
-                                                'consent_chnhschbom_98b319'),
-                                            'assets/docs/privacy.html',
-                                          ),
-                                        ),
-                                        const SizedBox(height: 14),
-                                        Padding(
-                                          padding: const EdgeInsets.only(left: 4, bottom: 6),
-                                          child: Text(
-                                            context.tr('consent_tychnlutr_ffd19f'),
-                                            style: SLTheme.quicksand(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w800,
-                                              color: _ink,
-                                            ),
-                                          ),
-                                        ),
-                                        _buildStartupCookieStorageSection(
-                                          ctx,
-                                          cookieLevel: cookieLevel,
-                                          onChanged: (value) => setState(() {
-                                            cookieLevel = value;
-                                          }),
-                                        ),
-                                        const SizedBox(height: 12),
-                                        _buildStartupAgreeBar(
-                                          ctx,
-                                          compact: compact,
-                                          bottomInset: mediaPadding.bottom,
-                                          cookieLevel: cookieLevel,
-                                          onConfirm: () => Navigator.pop(
-                                            ctx,
-                                            _StartupConsentResult(
-                                              cookieLevel: cookieLevel,
-                                            ),
-                                          ),
-                                          ),
-                                        ],
-                                      ),
+                            ),
+                            TextSpan(
+                              text: l10n.translate(' và '),
+                            ),
+                            TextSpan(
+                              text: l10n.translate('Chính sách quyền riêng tư của chúng tôi'),
+                              style: const TextStyle(
+                                color: Color(0xFF4599FF),
+                                fontWeight: FontWeight.w800,
+                              ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () => _openDoc(
+                                      ctx,
+                                      l10n.translate('Chính sách quyền riêng tư'),
+                                      'assets/docs/privacy.html',
                                     ),
-                                  ),
-                                  Positioned(
-                                  left: 0,
-                                  right: 0,
-                                  bottom: 8,
-                                  child: IgnorePointer(
-                                    child: ValueListenableBuilder<bool>(
-                                      valueListenable: showScrollHintNotifier,
-                                      builder: (context, showHint, _) {
-                                        return AnimatedOpacity(
-                                          duration:
-                                              const Duration(milliseconds: 180),
-                                          opacity: showHint ? 1 : 0,
-                                          child: _buildStartupScrollHint(),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            ),
+                            TextSpan(
+                              text: l10n.translate(
+                                '. SoulLocket bảo vệ không gian riêng tư của hai bạn bằng hệ thống mã hóa an toàn. Bạn có thể kiểm tra hoặc quản lý cài đặt bất cứ lúc nào. ',
+                              ),
+                            ),
+                            TextSpan(
+                              text: l10n.translate('Tìm hiểu thêm'),
+                              style: const TextStyle(
+                                color: Color(0xFF4599FF),
+                                fontWeight: FontWeight.w800,
+                              ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () => _showMetaStyleLearnMore(ctx),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      // Clean Meta/Apple-style Trust Highlights
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF242527),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFF333538), width: 1.1),
+                        ),
+                        child: Column(
+                          children: [
+                            _buildMetaPrivacyBullet(
+                              icon: Icons.favorite_border_rounded,
+                              iconColor: const Color(0xFFFF6987),
+                              title: l10n.translate('Không gian riêng hai người'),
+                              desc: l10n.translate('Hình ảnh và khoảnh khắc chỉ hiển thị riêng cho hai bạn.'),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: Divider(color: Color(0xFF383A3D), height: 1),
+                            ),
+                            _buildMetaPrivacyBullet(
+                              icon: Icons.shield_outlined,
+                              iconColor: const Color(0xFF4599FF),
+                              title: l10n.translate('Bảo mật dữ liệu tuyệt đối'),
+                              desc: l10n.translate('Cam kết không bao giờ bán dữ liệu cho bên thứ ba.'),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: Divider(color: Color(0xFF383A3D), height: 1),
+                            ),
+                            _buildMetaPrivacyBullet(
+                              icon: Icons.lock_outline_rounded,
+                              iconColor: const Color(0xFF4CD964),
+                              title: l10n.translate('Bạn luôn làm chủ'),
+                              desc: l10n.translate('Toàn quyền xuất hoặc xóa vĩnh viễn dữ liệu bất kỳ lúc nào.'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      // Bottom Meta Blue CTA Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(ctx).pop(
+                              const _StartupConsentResult(cookieLevel: 'all'),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0064E0),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(25),
                             ),
                           ),
-                        ],
+                          child: Text(
+                            l10n.translate('Tiếp tục'),
+                            style: const TextStyle(
+                              fontFamily: 'Quicksand',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 10),
+                      // Bottom Home bar indicator
+                      Center(
+                        child: Container(
+                          width: 134,
+                          height: 4.5,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF4E4F52),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-          );
-          },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMetaPrivacyBullet({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String desc,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: 0.14),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: iconColor, size: 19),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontFamily: 'Quicksand',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                desc,
+                style: const TextStyle(
+                  fontFamily: 'Quicksand',
+                  fontSize: 12.2,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFFB0B3B8),
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showMetaStyleLearnMore(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFF242527),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (bottomCtx) {
+        final l10n = L10nService();
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4E4F52),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  l10n.translate('Cam kết bảo mật của SoulLocket'),
+                  style: const TextStyle(
+                    fontFamily: 'Quicksand',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  l10n.translate(
+                    '1. Hình ảnh và khoảnh khắc được lưu trữ an toàn trên đám mây Cloudflare R2 mã hóa.\n\n'
+                    '2. Chỉ có bạn và người ghép đôi mới xem được nội dung trong nhà chung.\n\n'
+                    '3. Ứng dụng không theo dõi hành vi và không bán dữ liệu cho bên thứ ba.\n\n'
+                    '4. Bạn có toàn quyền xuất hoặc xóa vĩnh viễn dữ liệu tài khoản bất cứ lúc nào.',
+                  ),
+                  style: const TextStyle(
+                    fontFamily: 'Quicksand',
+                    fontSize: 13.5,
+                    height: 1.45,
+                    color: Color(0xFFB0B3B8),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 46,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(bottomCtx),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0064E0),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(23),
+                      ),
+                    ),
+                    child: Text(
+                      l10n.translate('Đã hiểu'),
+                      style: const TextStyle(
+                        fontFamily: 'Quicksand',
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );

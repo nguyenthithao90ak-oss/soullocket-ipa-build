@@ -84,7 +84,7 @@ class _BucketListScreenState extends State<BucketListScreen>
   @override
   void initState() {
     super.initState();
-    _bucketStream = _dbRef.child('houses/${widget.houseId}/bucket').onValue;
+    _bucketStream = _dbRef.child('houses/${widget.houseId}/bucket').limitToLast(50).onValue;
     _confettiCtrl =
         AnimationController(vsync: this, duration: const Duration(seconds: 2))
           ..addStatusListener((s) {
@@ -98,7 +98,7 @@ class _BucketListScreenState extends State<BucketListScreen>
   void didUpdateWidget(covariant BucketListScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.houseId != widget.houseId) {
-      _bucketStream = _dbRef.child('houses/${widget.houseId}/bucket').onValue;
+      _bucketStream = _dbRef.child('houses/${widget.houseId}/bucket').limitToLast(50).onValue;
     }
   }
 

@@ -243,7 +243,7 @@ abstract final class _L10nStaticData {
     'auth_rate_limit_wait':
         'Bạn thao tác quá nhanh. Vui lòng chờ {seconds} giây rồi thử lại.',
     'auth_supported_domains_only':
-        'Hệ thống chỉ hỗ trợ {action} bằng: {domains}!',
+        'Địa chỉ email này không được phép, bạn có thể thử lại email có đuôi @gmail.com hoặc các email quen thuộc.',
     'auth_reset_sending_code':
         'Đang gửi mã 6 số đến {email}...\nBảng nhập mã đã mở sẵn, bạn chỉ cần chờ email tới.',
     'auth_reset_code_sent':
@@ -826,7 +826,7 @@ abstract final class _L10nStaticData {
     'auth_rate_limit_wait':
         'You are acting too quickly. Please wait {seconds} seconds and try again.',
     'auth_supported_domains_only':
-        'The system only supports {action} using: {domains}!',
+        'This email address is not allowed. Please try with an @gmail.com email or common email provider.',
     'auth_reset_sending_code':
         'Sending a 6-digit code to {email}...\nThe code form is already open, you just need to wait for the email.',
     'auth_reset_checking_code':

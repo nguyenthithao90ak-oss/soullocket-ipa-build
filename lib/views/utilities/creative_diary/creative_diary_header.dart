@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
-import '../../../../core/sl_theme.dart';
+import 'package:soullocket_app/core/sl_theme.dart';
 import 'creative_diary_controller.dart';
 
 class CreativeDiaryHeader extends StatelessWidget {

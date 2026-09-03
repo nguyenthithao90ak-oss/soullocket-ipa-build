@@ -36,6 +36,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen>
   StreamSubscription? _presenceSub;
   StreamSubscription? _historySub;
   StreamSubscription? _settingsSub;
+  StreamSubscription? _settingsSub2;
 
   String _myRole = 'husband';
 
@@ -85,23 +86,23 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen>
 
     // Hủy stream cũ trước khi tạo mới (tránh rò rỉ nếu _initData bị gọi lại)
     await _settingsSub?.cancel();
+    await _settingsSub2?.cancel();
     await _presenceSub?.cancel();
     await _historySub?.cancel();
 
-    _settingsSub = _dbRef
-        .child('houses/${widget.houseId}/settings')
-        .onValue
-        .listen((event) {
+    // Chỉ nghe 2 field cần thiết thay vì toàn bộ settings node
+    final settingsRef = _dbRef.child('houses/${widget.houseId}/settings');
+    _settingsSub = settingsRef.child('nameU1').onValue.listen((event) {
       if (!mounted) return;
-      if (event.snapshot.value != null) {
-        final settings =
-            Map<dynamic, dynamic>.from(event.snapshot.value as Map);
-        setState(() {
-          _husbandName = settings['nameU1'] ?? 'Bạn Nam';
-          _wifeName = settings['nameU2'] ?? 'Người ấy';
-        });
-        _syncWidgetData();
-      }
+      final name = event.snapshot.value as String? ?? 'Bạn Nam';
+      setState(() => _husbandName = name);
+      _syncWidgetData();
+    });
+    _settingsSub2 = settingsRef.child('nameU2').onValue.listen((event) {
+      if (!mounted) return;
+      final name = event.snapshot.value as String? ?? 'Người ấy';
+      setState(() => _wifeName = name);
+      _syncWidgetData();
     });
 
     _presenceSub = _dbRef
@@ -120,6 +121,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen>
 
     _historySub = _dbRef
         .child('houses/${widget.houseId}/sleep_history')
+        .limitToLast(30)
         .onValue
         .listen((event) {
       if (!mounted) return;
@@ -150,6 +152,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen>
   void dispose() {
     _pulseController.dispose();
     _settingsSub?.cancel();
+    _settingsSub2?.cancel();
     _presenceSub?.cancel();
     _historySub?.cancel();
     super.dispose();

@@ -4,8 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
-import '../../utils/helpers/cloudflare_image_helper.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -21,6 +19,7 @@ import '../../utils/services/auth_service.dart';
 import '../../utils/services/connectivity_service.dart';
 import '../../utils/services/encryption_service.dart';
 import '../../utils/services/secret_vault_reset_service.dart';
+import '../../utils/services/vault_media_url_service.dart';
 import '../../core/fast_backdrop_filter.dart';
 import '../../core/sl_theme.dart';
 import '../home/tabs/settings/security/security_otp_dialogs.dart';
@@ -63,6 +62,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
   final StorageService _storageService = StorageService();
   final EncryptionService _enc = EncryptionService();
   final SecretVaultResetService _vaultResetService = SecretVaultResetService();
+  final VaultMediaUrlService _vaultMediaUrlService =
+      VaultMediaUrlService.instance;
   final DateFormat _resetTimeFormat = DateFormat('HH:mm • dd/MM/yyyy');
   StreamSubscription<DatabaseEvent>? _photosSub;
   StreamSubscription<bool>? _networkSub;
@@ -92,6 +93,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     _listenResetRequest();
     _networkSub = ConnectivityService().isOnlineStream.listen((isOnline) {
       if (!isOnline && mounted) {
+        _clearVaultMediaCache();
         _safeSetState(() {
           _encryptionReady = false;
           _encStatusMsg = L10nService().translate('vault_no_connection');
@@ -112,6 +114,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
 
   @override
   void dispose() {
+    _clearVaultMediaCache();
     _networkSub?.cancel();
     _photosSub?.cancel();
     _resetRequestSub?.cancel();
@@ -119,6 +122,29 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
   }
 
   bool get _hasPendingReset => _pendingResetRequest?.isPending == true;
+
+  void _clearVaultMediaCache() {
+    _vaultMediaUrlService.clearCache();
+    PaintingBinding.instance.imageCache
+      ..clear()
+      ..clearLiveImages();
+  }
+
+  Future<String> _resolveVaultPhotoUrl(Map<String, dynamic> photo) async {
+    final storagePath = photo['storagePath']?.toString().trim() ?? '';
+    final mediaId = photo['id']?.toString().trim() ?? '';
+    if (storagePath.isNotEmpty && mediaId.isNotEmpty) {
+      return _vaultMediaUrlService.resolveUrl(
+        storagePath: storagePath,
+        houseId: widget.houseId,
+        mediaId: mediaId,
+      );
+    }
+
+    // Chỉ fallback cho bản ghi cũ không có storagePath. Bản ghi mới fail-closed.
+    final legacyUrl = photo['url']?.toString().trim() ?? '';
+    return VaultMediaUrlService.isPublicUrl(legacyUrl) ? legacyUrl : '';
+  }
 
   bool get _pendingResetRequestedByCurrentUser {
     final myUid = FirebaseAuth.instance.currentUser?.uid ?? '';

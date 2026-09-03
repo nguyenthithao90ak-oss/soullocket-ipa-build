@@ -31,6 +31,8 @@ import 'login/forgot_password_launcher.dart';
 import 'login/login_shell.dart';
 import 'login/social_auth_action_helper.dart';
 import 'login/aurora_login_screen.dart';
+import 'login/aurora_hero_background.dart';
+import 'login/aurora_decorative_orbs.dart';
 import '../../views/ui_prefs.dart';
 import 'register/register_shell.dart';
 import 'widgets/gender_selection_dialog.dart';
@@ -402,6 +404,10 @@ class _LoginScreenState extends State<LoginScreen> {
       '@outlook.com',
       '@icloud.com',
       '@yahoo.com',
+      '@live.com',
+      '@msn.com',
+      '@proton.me',
+      '@protonmail.com',
     ];
     final isDomainAllowed = allowedDomains.any(
       (domain) => emailLower.endsWith(domain),
@@ -409,12 +415,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (!isDomainAllowed) {
       _showErrorDialog(
-        L10nService().format('auth_supported_domains_only', {
-          'action': _isLoginTab
-              ? L10nService().translate('đăng nhập')
-              : L10nService().translate('đăng ký'),
-          'domains': allowedDomains.join(', '),
-        }),
+        L10nService().translate('auth_supported_domains_only'),
       );
       return;
     }
@@ -429,10 +430,9 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      final strongRegex = RegExp(r'^(?=.*[0-9])(?=.{6,})');
-      if (!strongRegex.hasMatch(password)) {
+      if (password.length < 6) {
         _showErrorDialog(
-          L10nService().translate('Mật khẩu yếu: Cần ít nhất 6 ký tự và 1 số!'),
+          L10nService().translate('Mật khẩu cần tối thiểu 6 ký tự!'),
         );
         return;
       }
@@ -996,32 +996,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
                   child: Stack(
                     children: [
-                      Positioned.fill(
-                        child: Image.asset(
-                          'assets/images/default_auth_bg.jpg',
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                          color: SLColors.surfaceWarm.withValues(alpha: 0.16),
-                          colorBlendMode: BlendMode.softLight,
-                        ),
+                      const Positioned.fill(child: AuroraHeroBackground()),
+                      const Positioned.fill(
+                        child: IgnorePointer(child: AuroraDecorativeOrbs()),
                       ),
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          child: SLTheme.softCanvasBackdrop(
-                            baseColor: SLColors.surfaceWarm.withValues(
-                              alpha: 0.58,
-                            ),
-                            accentColor: SLColors.thread,
-                            secondaryAccent: SLColors.secondary,
-                            motif: SLCanvasBackdropMotif.journal,
-                            child: const SizedBox.expand(),
-                          ),
-                        ),
-                      ),
-                      // Note: Removed BackdropFilter(sigma=2) — background is
-                      // static so GPU blur is wasteful. Apply blur offline in
-                      // the source asset if a blurred look is desired.
                       LayoutBuilder(
                         builder: (context, constraints) {
                           final isDesktop = constraints.maxWidth >= 920;
@@ -1341,344 +1319,234 @@ class _SyncGuideDialogContentState extends State<_SyncGuideDialogContent>
   @override
   void initState() {
     super.initState();
+    final countdownMs = widget.enforceDelay ? (kDebugMode ? 500 : 3000) : 1;
+    _countdownController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: countdownMs),
+    );
     if (widget.enforceDelay) {
-      const countdownMs = kDebugMode ? 500 : 3000;
-      _countdownController = AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: countdownMs),
-      )..addListener(_onCountdownTick);
-      _countdownController.forward();
+      _countdownController
+        ..addListener(_onCountdownTick)
+        ..forward();
     } else {
-      _countdownController = AnimationController(
-        vsync: this,
-        duration: Duration.zero,
-        value: 1.0,
-      );
+      _countdownController.value = 1;
     }
   }
 
   void _onCountdownTick() {
-    if (mounted) {
-      setState(() {});
-    }
+    if (mounted) setState(() {});
+  }
+
+  bool get _isCountdownActive =>
+      widget.enforceDelay && !_countdownController.isCompleted;
+
+  int get _remainingSeconds {
+    if (!_isCountdownActive) return 0;
+    final durationMs = _countdownController.duration?.inMilliseconds ?? 0;
+    final remaining = durationMs * (1 - _countdownController.value);
+    return (remaining / 1000).ceil().clamp(1, 99).toInt();
   }
 
   @override
   void dispose() {
-    _countdownController.dispose();
+    _countdownController
+      ..removeListener(_onCountdownTick)
+      ..dispose();
     super.dispose();
   }
-
-  int get _remainingSeconds {
-    if (!widget.enforceDelay) return 0;
-    const totalSeconds = kDebugMode ? 1 : 3;
-    final remaining = (totalSeconds * (1.0 - _countdownController.value))
-        .ceil();
-    return remaining.clamp(0, totalSeconds);
-  }
-
-  bool get _isCountdownActive => _countdownController.isAnimating;
 
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: !widget.enforceDelay || !_isCountdownActive,
+      canPop: !_isCountdownActive,
       child: Dialog(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: Container(
             constraints: const BoxConstraints(maxWidth: 420),
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [
-                  Color(0xFFFFFDF9),
-                  Color(0xFFFFEFF4),
-                  Color(0xFFF4EEFF),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(32),
+              color: const Color(0xFFFFFCF8),
+              borderRadius: BorderRadius.circular(30),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.94),
-                width: 1.8,
+                color: Colors.white.withValues(alpha: 0.96),
+                width: 1.6,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFE65372).withValues(alpha: 0.16),
-                  blurRadius: 38,
+                  color: const Color(0xFFA65370).withValues(alpha: 0.18),
+                  blurRadius: 34,
                   offset: const Offset(0, 18),
                 ),
               ],
             ),
-            child: Stack(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Positioned(
-                  right: 20,
-                  top: 18,
-                  child: Icon(
-                    Icons.favorite_rounded,
-                    size: 24,
-                    color: const Color(0xFFE65372).withValues(alpha: 0.10),
-                  ),
-                ),
-                Positioned(
-                  left: 24,
-                  top: 88,
-                  child: Icon(
-                    Icons.auto_awesome_rounded,
-                    size: 15,
-                    color: const Color(0xFF8F72D8).withValues(alpha: 0.20),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFE8EE),
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(color: const Color(0xFFEEC2CE)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Container(
-                            width: 54,
-                            height: 54,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFFFF7597),
-                                  Color(0xFFE65372),
-                                  Color(0xFF9A78E6),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(19),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFE65372)
-                                      .withValues(alpha: 0.24),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 7),
-                                ),
-                              ],
-                            ),
-                            child: const Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Icon(
-                                  Icons.sync_alt_rounded,
-                                  color: Colors.white,
-                                  size: 28,
-                                ),
-                                Positioned(
-                                  right: 7,
-                                  top: 7,
-                                  child: Icon(
-                                    Icons.favorite_rounded,
-                                    color: Colors.white,
-                                    size: 10,
-                                  ),
-                                ),
-                              ],
-                            ),
+                          const Icon(
+                            Icons.favorite_rounded,
+                            size: 12,
+                            color: Color(0xFFD85879),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 9,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFFEAF0),
-                                    borderRadius: BorderRadius.circular(999),
-                                  ),
-                                  child: Text(
-                                    _l10n.translate('Kết nối hai thiết bị'),
-                                    style: SLTheme.quicksand(
-                                      fontSize: 9.5,
-                                      fontWeight: FontWeight.w900,
-                                      color: const Color(0xFFE65372),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  _l10n.translate('Hướng dẫn đồng bộ dữ liệu'),
-                                  style: SLTheme.quicksand(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w900,
-                                    color: SLColors.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  _l10n.translate(
-                                    'Mỗi người một tài khoản, cùng chung một không gian kỷ niệm.',
-                                  ),
-                                  style: SLTheme.quicksand(
-                                    fontSize: 11.5,
-                                    height: 1.35,
-                                    fontWeight: FontWeight.w700,
-                                    color: SLColors.textSecond,
-                                  ),
-                                ),
-                              ],
+                          const SizedBox(width: 5),
+                          Text(
+                            _l10n.translate('Kết nối hai thiết bị'),
+                            style: const TextStyle(
+                              fontFamily: 'Quicksand',
+                              fontSize: 9.8,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFFC64E6E),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.70),
-                          borderRadius: BorderRadius.circular(17),
-                          border: Border.all(
-                            color: const Color(0xFFFFD3DE),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 30,
-                              height: 30,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFFFEAF0),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.lock_rounded,
-                                size: 16,
-                                color: Color(0xFFE65372),
-                              ),
-                            ),
-                            const SizedBox(width: 9),
-                            Expanded(
-                              child: Text(
-                                _l10n.translate(
-                                  'Tài khoản vẫn riêng tư; chỉ dữ liệu bạn chọn cho không gian đôi mới được đồng bộ.',
-                                ),
-                                style: SLTheme.quicksand(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: SLColors.textSecond,
-                                  height: 1.35,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF2EDFF),
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(height: 13),
-                      _buildSyncStepCard(
-                        stepNumber: '1',
-                        title: _l10n.translate('Mỗi người dùng tài khoản riêng'),
-                        description: _l10n.translate(
-                          'Đăng ký và đăng nhập trên thiết bị của mình bằng Email, Google hoặc Apple.',
-                        ),
-                        icon: Icons.person_rounded,
-                        accentColor: const Color(0xFFE65372),
+                      child: const Icon(
+                        Icons.sync_rounded,
+                        size: 18,
+                        color: Color(0xFF806BC1),
                       ),
-                      const SizedBox(height: 9),
-                      _buildSyncStepCard(
-                        stepNumber: '2',
-                        title: _l10n.translate('Ghép đôi bằng mã kết nối'),
-                        description: _l10n.translate(
-                          'Vào Cài đặt → Ghép nối dữ liệu. Một người tạo mã, người còn lại nhập mã để xác nhận.',
-                        ),
-                        icon: Icons.qr_code_2_rounded,
-                        accentColor: const Color(0xFF8F72D8),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const SizedBox(
+                  height: 126,
+                  width: double.infinity,
+                  child: RepaintBoundary(
+                    child: CustomPaint(painter: _LegacySyncLoveThreadPainter()),
+                  ),
+                ),
+                Text(
+                  _l10n.translate('Hai tài khoản, một góc nhỏ chung'),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: 'Quicksand',
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF4D3D44),
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _l10n.translate(
+                    'Mỗi người vẫn có tài khoản riêng. Sau khi ghép đôi, dữ liệu thuộc không gian chung mới được đồng bộ giữa hai máy.',
+                  ),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: 'Quicksand',
+                    fontSize: 11.2,
+                    height: 1.42,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF89757D),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildStep(
+                  number: '1',
+                  title: _l10n.translate('Mỗi người đăng nhập tài khoản riêng'),
+                  description: _l10n.translate(
+                    'Đăng ký hoặc đăng nhập trên điện thoại của mình bằng Email, Google hoặc Apple.',
+                  ),
+                  icon: Icons.person_outline_rounded,
+                  accent: const Color(0xFFE06686),
+                ),
+                _buildStep(
+                  number: '2',
+                  title: _l10n.translate('Ghép đôi bằng một mã kết nối'),
+                  description: _l10n.translate(
+                    'Vào Cài đặt → Ghép nối dữ liệu. Một người tạo mã, người còn lại nhập mã đó để xác nhận.',
+                  ),
+                  icon: Icons.qr_code_2_rounded,
+                  accent: const Color(0xFF8771C7),
+                ),
+                _buildStep(
+                  number: '3',
+                  title: _l10n.translate('Cùng cập nhật không gian chung'),
+                  description: _l10n.translate(
+                    'Kỷ niệm, nhật ký, album và dữ liệu đôi sẽ được cập nhật sau khi hai tài khoản đã kết nối.',
+                  ),
+                  icon: Icons.favorite_outline_rounded,
+                  accent: const Color(0xFF4F9B90),
+                  isLast: true,
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF5E6),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0xFFF0D49E)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.lightbulb_outline_rounded,
+                        size: 17,
+                        color: Color(0xFFC88B30),
                       ),
-                      const SizedBox(height: 9),
-                      _buildSyncStepCard(
-                        stepNumber: '3',
-                        title: _l10n.translate('Tự đồng bộ sau khi kết nối'),
-                        description: _l10n.translate(
-                          'Kỷ niệm, nhật ký, album và dữ liệu đôi được cập nhật giữa hai thiết bị khi có kết nối.',
-                        ),
-                        icon: Icons.favorite_rounded,
-                        accentColor: const Color(0xFF2C9B86),
-                      ),
-                      const SizedBox(height: 13),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF6E6),
-                          borderRadius: BorderRadius.circular(17),
-                          border: Border.all(
-                            color: const Color(0xFFF4C978).withValues(alpha: 0.62),
-                          ),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(
-                              Icons.lightbulb_rounded,
-                              color: Color(0xFFD58A24),
-                              size: 18,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _l10n.translate(
-                                  'Mẹo: khi đổi điện thoại, chỉ cần đăng nhập lại đúng tài khoản để khôi phục phần dữ liệu đã được lưu trên cloud.',
-                                ),
-                                style: SLTheme.quicksand(
-                                  fontSize: 10.8,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF9A651B),
-                                  height: 1.35,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: SLTheme.authPrimaryButton(
-                          label: _isCountdownActive
-                              ? '${_l10n.translate('Đã hiểu')} ($_remainingSeconds)'
-                              : _l10n.translate('Đã hiểu'),
-                          onPressed: _isCountdownActive
-                              ? null
-                              : () => Navigator.pop(context),
-                          colors: const [
-                            Color(0xFFE65372),
-                            Color(0xFFFF7597),
-                            Color(0xFF9A78E6),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Center(
+                      const SizedBox(width: 8),
+                      Expanded(
                         child: Text(
-                          _l10n.translate('SoulLocket • riêng tư trước, đồng bộ sau'),
-                          style: SLTheme.quicksand(
-                            fontSize: 9.5,
+                          _l10n.translate(
+                            'Khi đổi điện thoại, hãy đăng nhập lại đúng tài khoản để tải phần dữ liệu đã được lưu trên cloud.',
+                          ),
+                          style: const TextStyle(
+                            fontFamily: 'Quicksand',
+                            fontSize: 10.4,
+                            height: 1.35,
                             fontWeight: FontWeight.w700,
-                            color: SLColors.textTertiary,
+                            color: Color(0xFF926621),
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: _LegacyCuteDialogButton(
+                    label: _isCountdownActive
+                        ? '${_l10n.translate('Đã hiểu')} ($_remainingSeconds)'
+                        : _l10n.translate('Đã hiểu'),
+                    onPressed: _isCountdownActive
+                        ? null
+                        : () => Navigator.pop(context),
+                  ),
+                ),
               ],
             ),
           ),
@@ -1687,103 +1555,286 @@ class _SyncGuideDialogContentState extends State<_SyncGuideDialogContent>
     );
   }
 
-  Widget _buildSyncStepCard({
-    required String stepNumber,
+  Widget _buildStep({
+    required String number,
     required String title,
     required String description,
     required IconData icon,
-    required Color accentColor,
+    required Color accent,
+    bool isLast = false,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.78),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: accentColor.withValues(alpha: 0.18),
-          width: 1.1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: accentColor.withValues(alpha: 0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: accentColor.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(13),
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Icon(icon, size: 19, color: accentColor),
-                Positioned(
-                  right: 2,
-                  top: 2,
-                  child: Container(
-                    width: 15,
-                    height: 15,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              width: 38,
+              child: Column(
+                children: [
+                  Container(
+                    width: 31,
+                    height: 31,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: accentColor,
+                      color: accent.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 1.5),
+                      border: Border.all(color: accent.withValues(alpha: 0.42)),
                     ),
                     child: Text(
-                      stepNumber,
-                      style: SLTheme.quicksand(
-                        fontSize: 8,
+                      number,
+                      style: TextStyle(
+                        fontFamily: 'Quicksand',
+                        fontSize: 12,
                         fontWeight: FontWeight.w900,
-                        color: Colors.white,
+                        color: accent,
                       ),
                     ),
                   ),
-                ),
-              ],
+                  if (!isLast)
+                    Expanded(
+                      child: Container(
+                        width: 1.5,
+                        margin: const EdgeInsets.symmetric(vertical: 4),
+                        color: accent.withValues(alpha: 0.24),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: SLTheme.quicksand(
-                    fontSize: 12.8,
-                    fontWeight: FontWeight.w900,
-                    color: SLColors.textPrimary,
-                  ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.055),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: accent.withValues(alpha: 0.16)),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  description,
-                  style: SLTheme.quicksand(
-                    fontSize: 10.8,
-                    fontWeight: FontWeight.w600,
-                    color: SLColors.textSecond,
-                    height: 1.38,
-                  ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.82),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(icon, size: 17, color: accent),
+                    ),
+                    const SizedBox(width: 9),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontFamily: 'Quicksand',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF5B4850),
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            description,
+                            style: const TextStyle(
+                              fontFamily: 'Quicksand',
+                              fontSize: 10.3,
+                              height: 1.34,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF8A757D),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-          const SizedBox(width: 4),
-          Icon(
-            Icons.check_circle_rounded,
-            size: 17,
-            color: accentColor.withValues(alpha: 0.72),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
+}
+
+class _LegacyCuteDialogButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onPressed;
+
+  const _LegacyCuteDialogButton({required this.label, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+    return Opacity(
+      opacity: enabled ? 1 : 0.55,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(20),
+          child: Ink(
+            height: 50,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFE9698B), Color(0xFFF38FA8)],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: enabled
+                  ? [
+                      BoxShadow(
+                        color: const Color(0xFFE9698B).withValues(alpha: 0.22),
+                        blurRadius: 16,
+                        offset: const Offset(0, 7),
+                      ),
+                    ]
+                  : const [],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.favorite_rounded,
+                  size: 16,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Quicksand',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LegacySyncLoveThreadPainter extends CustomPainter {
+  const _LegacySyncLoveThreadPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final centerY = size.height * 0.53;
+    final left = Offset(size.width * 0.20, centerY);
+    final right = Offset(size.width * 0.80, centerY);
+
+    final thread = Paint()
+      ..color = const Color(0xFFE79AAF)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.1
+      ..strokeCap = StrokeCap.round;
+    final path = Path()
+      ..moveTo(left.dx + 29, left.dy)
+      ..cubicTo(
+        size.width * 0.38,
+        centerY - 30,
+        size.width * 0.62,
+        centerY + 30,
+        right.dx - 29,
+        right.dy,
+      );
+    canvas.drawPath(path, thread);
+
+    _drawPerson(canvas, left, const Color(0xFFFFD9E2), const Color(0xFFE76B8C));
+    _drawPerson(canvas, right, const Color(0xFFE6DFFF), const Color(0xFF7E6CC1));
+
+    final heartCenter = Offset(size.width * 0.50, centerY - 1);
+    _drawHeart(canvas, heartCenter, 19, const Color(0xFFF06D8D));
+
+    final sparkle = Paint()
+      ..color = const Color(0xFFF0C66E)
+      ..strokeWidth = 1.8
+      ..strokeCap = StrokeCap.round;
+    for (final point in <Offset>[
+      Offset(size.width * 0.35, centerY - 35),
+      Offset(size.width * 0.66, centerY - 32),
+      Offset(size.width * 0.53, centerY + 37),
+    ]) {
+      canvas.drawLine(point.translate(-4, 0), point.translate(4, 0), sparkle);
+      canvas.drawLine(point.translate(0, -4), point.translate(0, 4), sparkle);
+    }
+  }
+
+  void _drawPerson(Canvas canvas, Offset center, Color fill, Color accent) {
+    final shadow = Paint()..color = const Color(0xFF7B5F68).withValues(alpha: 0.10);
+    canvas.drawOval(
+      Rect.fromCenter(center: center.translate(0, 28), width: 55, height: 12),
+      shadow,
+    );
+
+    final card = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: center, width: 58, height: 70),
+      const Radius.circular(22),
+    );
+    canvas.drawRRect(card, Paint()..color = fill);
+    canvas.drawRRect(
+      card,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.88)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+
+    canvas.drawCircle(center.translate(0, -9), 10, Paint()..color = Colors.white);
+    canvas.drawCircle(center.translate(-3.5, -10), 1.3, Paint()..color = accent);
+    canvas.drawCircle(center.translate(3.5, -10), 1.3, Paint()..color = accent);
+    final smile = Path()
+      ..moveTo(center.dx - 3.5, center.dy - 5)
+      ..quadraticBezierTo(center.dx, center.dy - 1, center.dx + 3.5, center.dy - 5);
+    canvas.drawPath(
+      smile,
+      Paint()
+        ..color = accent
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..strokeCap = StrokeCap.round,
+    );
+    _drawHeart(canvas, center.translate(0, 17), 7, accent);
+  }
+
+  void _drawHeart(Canvas canvas, Offset center, double size, Color color) {
+    final path = Path()
+      ..moveTo(center.dx, center.dy + size * 0.46)
+      ..cubicTo(
+        center.dx - size * 0.58,
+        center.dy + size * 0.05,
+        center.dx - size * 0.52,
+        center.dy - size * 0.42,
+        center.dx,
+        center.dy - size * 0.12,
+      )
+      ..cubicTo(
+        center.dx + size * 0.52,
+        center.dy - size * 0.42,
+        center.dx + size * 0.58,
+        center.dy + size * 0.05,
+        center.dx,
+        center.dy + size * 0.46,
+      )
+      ..close();
+    canvas.drawPath(path, Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(covariant _LegacySyncLoveThreadPainter oldDelegate) => false;
 }

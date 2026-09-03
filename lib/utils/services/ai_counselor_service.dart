@@ -64,6 +64,34 @@ class AiCounselorService {
     String? persona,
   }) async* {
     lastErrorMessage = null;
+
+    // 1. Ưu tiên hàng đầu: Worker AI siêu tốc (Gemini 3.7 Flash / Llama 3.3 70B)
+    try {
+      final combinedInstruction = persona?.trim().isNotEmpty == true
+          ? '$systemInstruction\nTHÔNG TIN NGƯỜI DÙNG TỰ GIỚI THIỆU: "$persona".'
+          : systemInstruction;
+
+      final reply = await callTextGeneration(
+        prompt,
+        combinedInstruction,
+        memoryScope: memoryScope,
+        memoryText: memoryText,
+      );
+
+      if (reply != null && reply.trim().isNotEmpty) {
+        // Hiệu ứng stream từng chữ mượt mà cho UI chat
+        final words = reply.split(' ');
+        for (var i = 0; i < words.length; i++) {
+          yield (i == 0 ? '' : ' ') + words[i];
+          await Future.delayed(const Duration(milliseconds: 20));
+        }
+        return;
+      }
+    } catch (e) {
+      debugPrint('[AiCounselor] stream via Worker fallback to Cloud Functions: $e');
+    }
+
+    // 2. Dự phòng: Firebase Cloud Function cũ
     final user = FirebaseAuth.instance.currentUser;
     final token = await user?.getIdToken();
     if (token == null) {
@@ -117,6 +145,11 @@ class AiCounselorService {
     }
   }
 
+  // Worker AI proxy — cập nhật URL sau khi deploy soullocket-api Worker
+  // Deploy: cd soullocket-api && npm run deploy
+  static const _workerBaseUrl =
+      'https://soullocket-api.soullocket-api.workers.dev';
+
   Future<String?> callTextGeneration(
     String prompt,
     String systemInstruction, {
@@ -124,6 +157,30 @@ class AiCounselorService {
     String? memoryText,
   }) async {
     lastErrorMessage = null;
+
+    // 1. Ưu tiên Worker API: 9Router -> Gemini 3.7 Flash (siêu mượt ~3s)
+    final workerReply = await _callWorkerAi(
+      prompt,
+      systemInstruction,
+      endpoint: '/api/v1/ai/9router',
+      memoryContext: memoryText,
+    );
+    if (workerReply != null && workerReply.isNotEmpty) {
+      return workerReply;
+    }
+
+    // 2. Dự phòng 1: Worker API -> Cloudflare Workers AI (Llama 3.3 70B Miễn phí)
+    final workersAiReply = await _callWorkerAi(
+      prompt,
+      systemInstruction,
+      endpoint: '/api/v1/ai/chat',
+      memoryContext: memoryText,
+    );
+    if (workersAiReply != null && workersAiReply.isNotEmpty) {
+      return workersAiReply;
+    }
+
+    // 3. Dự phòng 2: Cloud Function cũ
     final openAiReply = await _callOpenAiFunction(
       prompt,
       systemInstruction,
@@ -133,7 +190,54 @@ class AiCounselorService {
     if (openAiReply != null && openAiReply.isNotEmpty) {
       return openAiReply;
     }
+
+    // 4. Dự phòng cuối: Gemini direct proxy
     return _callGeminiProxy(prompt, systemInstruction);
+  }
+
+  Future<String?> _callWorkerAi(
+    String prompt,
+    String systemInstruction, {
+    required String endpoint,
+    String? memoryContext,
+  }) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final uid = user?.uid ?? '';
+      const houseId = '';
+
+      final response = await http
+          .post(
+            Uri.parse('$_workerBaseUrl$endpoint'),
+            headers: {
+              'Content-Type': 'application/json',
+              'X-User-UID': uid,
+              'X-House-ID': houseId,
+            },
+            body: jsonEncode({
+              'prompt': prompt,
+              'systemInstruction': systemInstruction,
+              if (memoryContext?.trim().isNotEmpty == true)
+                'memoryContext': memoryContext!.trim(),
+            }),
+          )
+          .timeout(const Duration(seconds: 25));
+
+      if (response.statusCode != 200) {
+        debugPrint(
+            '[AiCounselor] Worker $endpoint failed: ${response.statusCode}');
+        return null;
+      }
+
+      final data = jsonDecode(response.body);
+      if (data is! Map) return null;
+      final text = data['text']?.toString().trim();
+      if (text == null || text.isEmpty) return null;
+      return text;
+    } catch (e) {
+      debugPrint('[AiCounselor] Worker $endpoint error: $e');
+      return null;
+    }
   }
 
   Future<bool> reportAiReply({
@@ -226,7 +330,7 @@ class AiCounselorService {
     }
     for (final key in apiKeys) {
       urlsToTry.add(
-          'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContentif (key != null) key!=$key');
+          'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=${Uri.encodeQueryComponent(key)}');
     }
 
     if (urlsToTry.isEmpty) {

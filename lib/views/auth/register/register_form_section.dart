@@ -232,19 +232,11 @@ class RegisterForm extends StatelessWidget {
               );
             },
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Center(
-              child: Text(
-                '🩷 ${l10n.translate('HOẶC ĐĂNG KÝ NHANH')} 🩷',
-                style: SLTheme.quicksand(
-                  color: const Color(0xFFFF69B4),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
+          const SizedBox(height: 16),
+          _AuroraRegisterDivider(
+            label: l10n.translate('Hoặc đăng ký nhanh với'),
           ),
+          const SizedBox(height: 14),
           SocialAuthButtons(
             onProviderTap: onSocialLogin,
           ),
@@ -262,6 +254,53 @@ class RegisterForm extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _AuroraRegisterDivider extends StatelessWidget {
+  final String label;
+
+  const _AuroraRegisterDivider({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 1,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.transparent, Color(0xFFEBDDE1)],
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Quicksand',
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFFA5929A),
+              letterSpacing: 0.2,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Container(
+            height: 1,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFEBDDE1), Colors.transparent],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
