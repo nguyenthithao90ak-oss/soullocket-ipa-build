@@ -90,7 +90,6 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
     _loadRememberedEmail();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkKickReason();
-      _checkFirstTimeSyncGuide();
     });
   }
 
@@ -103,17 +102,6 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
   }
 
   // ─── Lifecycle helpers ───────────────────────────────────────────────
-  Future<void> _checkFirstTimeSyncGuide() async {
-    await Future<void>.delayed(const Duration(milliseconds: 1200));
-    if (!mounted || _isLoading) return;
-    final prefs = await SharedPreferences.getInstance();
-    final hasSeen = prefs.getBool('il_has_seen_sync_guide_v2') ?? false;
-    if (!hasSeen) {
-      await prefs.setBool('il_has_seen_sync_guide_v2', true);
-      if (!mounted) return;
-      _showSyncGuideDialog(context, enforceDelay: true);
-    }
-  }
 
   Future<void> _checkKickReason() async {
     final prefs = await SharedPreferences.getInstance();

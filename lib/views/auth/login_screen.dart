@@ -98,7 +98,6 @@ class _LoginScreenState extends State<LoginScreen> {
     unawaited(_initPrefs().then((_) => _loadRememberedEmail()));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkKickReason();
-      _checkFirstTimeSyncGuide();
     });
   }
 
@@ -106,18 +105,6 @@ class _LoginScreenState extends State<LoginScreen> {
     _prefs = await SharedPreferences.getInstance();
   }
 
-  Future<void> _checkFirstTimeSyncGuide() async {
-    await Future<void>.delayed(const Duration(milliseconds: 1200));
-    if (!mounted || _isLoading) return;
-    _prefs ??= await SharedPreferences.getInstance();
-    final prefs = _prefs!;
-    final hasSeen = prefs.getBool('il_has_seen_sync_guide_v2') ?? false;
-    if (!hasSeen) {
-      await prefs.setBool('il_has_seen_sync_guide_v2', true);
-      if (!mounted) return;
-      _showSyncGuideDialog(context, enforceDelay: true);
-    }
-  }
 
   Future<void> _checkKickReason() async {
     _prefs ??= await SharedPreferences.getInstance();
