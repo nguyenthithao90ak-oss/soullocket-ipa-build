@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import 'calendar_info_pill.dart';
 
@@ -36,10 +37,7 @@ class CalendarSelectedDaySummary extends StatelessWidget {
         padding: EdgeInsets.all(compact ? 16 : 18),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [
-              Color(0xFFFFFEFF),
-              Color(0xFFF7FBFF),
-            ],
+            colors: [Color(0xFFFFFEFF), Color(0xFFF7FBFF)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -133,13 +131,15 @@ class CalendarSelectedDaySummary extends StatelessWidget {
                 ),
                 CalendarInfoPill(
                   icon: Icons.event_note_rounded,
-                  label: '$eventCount kế hoạch',
+                  label: L10nService().format('calendar_plan_count', {
+                    'count': eventCount,
+                  }),
                   accent: accent,
                   compact: compact,
                 ),
                 CalendarInfoPill(
                   icon: Icons.notifications_active_rounded,
-                  label: 'Nhắc lúc 09:00',
+                  label: context.tr('calendar_reminder_at_nine'),
                   accent: accent,
                   compact: compact,
                 ),

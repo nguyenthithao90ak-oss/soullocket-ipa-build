@@ -30,18 +30,15 @@ class _SLBouncingButtonState extends State<SLBouncingButton>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: widget.scaleFactor,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOutCubic,
-      reverseCurve: Curves.easeOutCubic,
-    ));
+    _controller = AnimationController(vsync: this, duration: widget.duration);
+    _scaleAnimation = Tween<double>(begin: 1.0, end: widget.scaleFactor)
+        .animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: Curves.easeInOutCubic,
+            reverseCurve: Curves.easeOutCubic,
+          ),
+        );
   }
 
   @override
@@ -79,16 +76,20 @@ class _SLBouncingButtonState extends State<SLBouncingButton>
     );
 
     if (widget.onTap != null || widget.onLongPress != null) {
-      return GestureDetector(
-        behavior: widget.behavior,
-        onTapDown: (_) => _controller.forward(),
-        onTapUp: (_) {
-          _controller.reverse();
-          widget.onTap?.call();
-        },
-        onTapCancel: () => _controller.reverse(),
-        onLongPress: widget.onLongPress,
-        child: scaleWidget,
+      return Semantics(
+        button: true,
+        enabled: true,
+        child: GestureDetector(
+          behavior: widget.behavior,
+          onTapDown: (_) => _controller.forward(),
+          onTapUp: (_) {
+            _controller.reverse();
+            widget.onTap?.call();
+          },
+          onTapCancel: () => _controller.reverse(),
+          onLongPress: widget.onLongPress,
+          child: scaleWidget,
+        ),
       );
     }
 

@@ -33,7 +33,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     }
 
     final String message = !_isAppLockEnabled
-        ? 'App chưa bật khóa bảo vệ. Bạn nên bật khóa app để phần Cài đặt an toàn hơn.'
+        ? context.tr('settings_app_lock_warning')
         : context.tr('home_sinhtrchcc_9d6c56');
 
     _markSecurityWarningShownThisSession();
@@ -234,26 +234,34 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
 
   Widget _buildHeaderAction({
     required IconData icon,
+    required String tooltip,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 38,
-        height: 38,
-        decoration: BoxDecoration(
-          color: _kSettingsHeaderSurface,
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _kSettingsHeaderBorder),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+          child: Ink(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: _kSettingsHeaderSurface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _kSettingsHeaderBorder),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-          ],
+            child: Icon(icon, color: const Color(0xFFFF78A8), size: 18),
+          ),
         ),
-        child: Icon(icon, color: const Color(0xFFFF78A8), size: 18),
       ),
     );
   }
@@ -628,7 +636,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                           height: 1.05,
                         ),
                       ),
-                      if (titleBadge != null) titleBadge,
+                      ?titleBadge,
                     ],
                   ),
                 ),
@@ -937,7 +945,15 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
           ),
           const SizedBox(height: 6),
           Text(
-            'Dự kiến xóa: $dateLabel. ${isMine ? 'Bạn có thể hoàn tác trước thời điểm này.' : context.tr('home_chtikhongi_3eca08')}',
+            L10nService().format(
+              isMine
+                  ? 'settings_delete_scheduled_mine'
+                  : 'settings_delete_scheduled_partner',
+              {
+                'date': dateLabel,
+                'detail': context.tr('home_chtikhongi_3eca08'),
+              },
+            ),
             style: SLTheme.quicksand(
               fontSize: 11.8,
               fontWeight: FontWeight.w700,
@@ -1022,7 +1038,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
               ),
             ),
           ),
-          if (trailing != null) trailing,
+          ?trailing,
         ],
       ),
     );

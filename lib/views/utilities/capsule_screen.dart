@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:async';
 
 import 'package:soullocket_app/widgets/skeleton_container.dart';
 
@@ -133,16 +132,20 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
   }
 
   void _loadCapsules() {
-    _capsulesSubscription =
-        TimeCapsuleService().listenToCapsules(widget.houseId).listen((list) {
-      if (mounted) {
-        setState(() {
-          _capsules = list;
-          _capsules.sort((a, b) => (b['buried_at'] as int? ?? 0)
-              .compareTo(a['buried_at'] as int? ?? 0));
+    _capsulesSubscription = TimeCapsuleService()
+        .listenToCapsules(widget.houseId)
+        .listen((list) {
+          if (mounted) {
+            setState(() {
+              _capsules = list;
+              _capsules.sort(
+                (a, b) => (b['buried_at'] as int? ?? 0).compareTo(
+                  a['buried_at'] as int? ?? 0,
+                ),
+              );
+            });
+          }
         });
-      }
-    });
   }
 
   Future<void> _pickImage() async {
@@ -162,20 +165,23 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
 
     if (widget.houseId.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('util_chatmthynh_da24d0'))));
+        SnackBar(content: Text(context.tr('util_chatmthynh_da24d0'))),
+      );
       return;
     }
 
     if (content.isEmpty || _unlockDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('util_bnchnngymv_4173b0'))));
+        SnackBar(content: Text(context.tr('util_bnchnngymv_4173b0'))),
+      );
       return;
     }
 
     if (_selectedImage != null && !await File(_selectedImage!.path).exists()) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('util_nhchnkhngc_321118'))));
+        SnackBar(content: Text(context.tr('util_nhchnkhngc_321118'))),
+      );
       return;
     }
 
@@ -186,11 +192,11 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
     try {
       await PendingUploadService.instance
           .save(_pendingUploadKey, <String, dynamic>{
-        'title': title,
-        'content': content,
-        'unlockDateMs': _unlockDate!.millisecondsSinceEpoch,
-        'imagePath': _selectedImage?.path ?? '',
-      });
+            'title': title,
+            'content': content,
+            'unlockDateMs': _unlockDate!.millisecondsSinceEpoch,
+            'imagePath': _selectedImage?.path ?? '',
+          });
       String? imageUrl;
       if (_selectedImage != null) {
         imageUrl = await _storageService.uploadImage(
@@ -220,15 +226,17 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
       FocusScope.of(context).unfocus();
 
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('util_khahpthtng_4043ab'))));
+        SnackBar(content: Text(context.tr('util_khahpthtng_4043ab'))),
+      );
     } catch (e) {
       if (mounted) {
         final errorInfo = AppErrorMapper.resolve(
           e,
           fallbackMessage: context.tr('util_chathlukho_774aa4'),
         );
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(errorInfo.message)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorInfo.message)));
       }
     } finally {
       if (mounted) {
@@ -316,8 +324,10 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
 
   void _openCapsule(Map<String, dynamic> capsule) async {
     try {
-      final updated =
-          await TimeCapsuleService().openCapsule(widget.houseId, capsule);
+      final updated = await TimeCapsuleService().openCapsule(
+        widget.houseId,
+        capsule,
+      );
       if (!mounted) return;
 
       showDialog(
@@ -340,9 +350,11 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('💌',
-                          style: TextStyle(fontSize: 60),
-                          textScaler: TextScaler.linear(1.0)),
+                      const Text(
+                        '💌',
+                        style: TextStyle(fontSize: 60),
+                        textScaler: TextScaler.linear(1.0),
+                      ),
                       SLSpacing.h16,
                       Text(
                         context.tr('util_hpthtnglai_31f728'),
@@ -356,20 +368,23 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                       SLSpacing.h20,
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 16),
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
                               const Color(0xFF6366F1).withValues(alpha: 0.12),
-                              const Color(0xFF8B5CF6).withValues(alpha: 0.12)
+                              const Color(0xFF8B5CF6).withValues(alpha: 0.12),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color:
-                                const Color(0xFF8B5CF6).withValues(alpha: 0.25),
+                            color: const Color(
+                              0xFF8B5CF6,
+                            ).withValues(alpha: 0.25),
                             width: 1.5,
                           ),
                         ),
@@ -378,12 +393,16 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF8B5CF6)
-                                    .withValues(alpha: 0.15),
+                                color: const Color(
+                                  0xFF8B5CF6,
+                                ).withValues(alpha: 0.15),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.local_post_office_rounded,
-                                  color: Color(0xFF8B5CF6), size: 24),
+                              child: const Icon(
+                                Icons.local_post_office_rounded,
+                                color: Color(0xFF8B5CF6),
+                                size: 24,
+                              ),
                             ),
                             SLSpacing.w16,
                             Expanded(
@@ -394,7 +413,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                     L10nService().format('util_capsule_from', {
                                       'sender': updated['sender_uid'] == 'me'
                                           ? context.tr('util_ti_a843eb')
-                                          : context.tr('util_ngiy_5bab37')
+                                          : context.tr('util_ngiy_5bab37'),
                                     }),
                                     style: SLTheme.quicksand(
                                       fontWeight: FontWeight.w800,
@@ -404,12 +423,16 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                   ),
                                   SLSpacing.h4,
                                   Text(
-                                    L10nService()
-                                        .format('util_capsule_open_date', {
-                                      'date': DateFormat('dd/MM/yyyy').format(
+                                    L10nService().format(
+                                      'util_capsule_open_date',
+                                      {
+                                        'date': DateFormat('dd/MM/yyyy').format(
                                           DateTime.fromMillisecondsSinceEpoch(
-                                              updated['unlock_time_ms'] ?? 0))
-                                    }),
+                                            updated['unlock_time_ms'] ?? 0,
+                                          ),
+                                        ),
+                                      },
+                                    ),
                                     style: SLTheme.quicksand(
                                       color: _textMuted,
                                       fontSize: 12,
@@ -432,8 +455,9 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                           border: Border.all(color: _dialogBorder),
                           boxShadow: [
                             BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.14),
-                                blurRadius: 14)
+                              color: Colors.black.withValues(alpha: 0.14),
+                              blurRadius: 14,
+                            ),
                           ],
                         ),
                         constraints: const BoxConstraints(maxHeight: 350),
@@ -447,7 +471,9 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                       .isNotEmpty) ...[
                                 GestureDetector(
                                   onTap: () => _showImageFullScreen(
-                                      context, updated['image_url']),
+                                    context,
+                                    updated['image_url'],
+                                  ),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(16),
                                     child: Stack(
@@ -462,21 +488,21 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                           filterQuality: FilterQuality.medium,
                                           placeholder: (_, __) =>
                                               const SkeletonContainer.rounded(
-                                            width: double.infinity,
-                                            height: 220,
-                                            borderRadius: BorderRadius.zero,
-                                          ),
+                                                width: double.infinity,
+                                                height: 220,
+                                                borderRadius: BorderRadius.zero,
+                                              ),
                                           errorWidget: (_, __, ___) =>
                                               const SizedBox(
-                                            height: 220,
-                                            child: Center(
-                                              child: Icon(
-                                                Icons
-                                                    .image_not_supported_outlined,
-                                                color: Colors.white70,
+                                                height: 220,
+                                                child: Center(
+                                                  child: Icon(
+                                                    Icons
+                                                        .image_not_supported_outlined,
+                                                    color: Colors.white70,
+                                                  ),
+                                                ),
                                               ),
-                                            ),
-                                          ),
                                         ),
                                         Positioned(
                                           bottom: 8,
@@ -484,14 +510,16 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                           child: Container(
                                             padding: const EdgeInsets.all(6),
                                             decoration: BoxDecoration(
-                                              color: Colors.black
-                                                  .withValues(alpha: 0.5),
+                                              color: Colors.black.withValues(
+                                                alpha: 0.5,
+                                              ),
                                               shape: BoxShape.circle,
                                             ),
                                             child: const Icon(
-                                                Icons.zoom_out_map,
-                                                color: Colors.white,
-                                                size: 16),
+                                              Icons.zoom_out_map,
+                                              color: Colors.white,
+                                              size: 16,
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -503,10 +531,11 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                               Text(
                                 updated['content'] ?? '',
                                 style: SLTheme.quicksand(
-                                    fontSize: 16,
-                                    height: 1.6,
-                                    fontWeight: FontWeight.w600,
-                                    color: _textSecondary),
+                                  fontSize: 16,
+                                  height: 1.6,
+                                  fontWeight: FontWeight.w600,
+                                  color: _textSecondary,
+                                ),
                               ),
                             ],
                           ),
@@ -521,12 +550,16 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                             backgroundColor: _buttonFill,
                             padding: const EdgeInsets.symmetric(vertical: 15),
                             shape: RoundedRectangleBorder(
-                                borderRadius: SLRadius.lgAll),
+                              borderRadius: SLRadius.lgAll,
+                            ),
                           ),
-                          child: Text(context.tr('util_ng_aecc61'),
-                              style: SLTheme.quicksand(
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white)),
+                          child: Text(
+                            context.tr('util_ng_aecc61'),
+                            style: SLTheme.quicksand(
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -543,8 +576,9 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
           e,
           fallbackMessage: context.tr('util_chathmhpth_c3a6c5'),
         );
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(errorInfo.message)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorInfo.message)));
       }
     }
   }
@@ -558,36 +592,50 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
         title: Text(
           'Hộp thời gian',
           style: SLTheme.quicksand(
-              fontWeight: FontWeight.w900, color: Colors.white),
+            fontWeight: FontWeight.w900,
+            color: Colors.white,
+          ),
         ),
         content: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tính năng:',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold, color: Colors.white)),
+              Text(
+                'Tính năng:',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
               SizedBox(height: 4),
               Text(
-                  '- Gửi gắm một thông điệp, hình ảnh, hoặc video vào tương lai.\n- Hộp sẽ bị khóa cứng và không ai (kể cả bạn) có thể mở ra xem trước thời hạn.',
-                  style: TextStyle(color: Colors.white70)),
+                '- Gửi gắm một thông điệp, hình ảnh, hoặc video vào tương lai.\n- Hộp sẽ bị khóa cứng và không ai (kể cả bạn) có thể mở ra xem trước thời hạn.',
+                style: TextStyle(color: Colors.white70),
+              ),
               SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold, color: Colors.white)),
+              Text(
+                'Cách sử dụng:',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
               SizedBox(height: 4),
               Text(
-                  '- Bấm Tạo hộp mới, chọn thời gian mở khóa (ví dụ: kỷ niệm 10 năm).\n- Thêm lời nhắn, ảnh, video, sau đó bấm Niêm phong.\n- Cả hai sẽ nhận được thông báo khi hộp thời gian đến ngày mở khóa.',
-                  style: TextStyle(color: Colors.white70)),
+                '- Bấm Tạo hộp mới, chọn thời gian mở khóa (ví dụ: kỷ niệm 10 năm).\n- Thêm lời nhắn, ảnh, video, sau đó bấm Niêm phong.\n- Cả hai sẽ nhận được thông báo khi hộp thời gian đến ngày mở khóa.',
+                style: TextStyle(color: Colors.white70),
+              ),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu',
-                style: TextStyle(color: Color(0xFF64B5F6))),
+            child: const Text(
+              'Đã hiểu',
+              style: TextStyle(color: Color(0xFF64B5F6)),
+            ),
           ),
         ],
       ),
@@ -615,20 +663,24 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
         flexibleSpace: ClipRect(
           child: FastBackdropFilter(
             filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.2),
-            ),
+            child: Container(color: Colors.black.withValues(alpha: 0.2)),
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new,
-              color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.info_outline_rounded,
-                color: Colors.white, size: 22),
+            icon: const Icon(
+              Icons.info_outline_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
             onPressed: () => _showInfoDialog(context),
           ),
         ],
@@ -645,12 +697,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
           child: SafeArea(
             child: SingleChildScrollView(
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              child: Column(
-                children: [
-                  _buildInputArea(),
-                  _buildCapsuleList(),
-                ],
-              ),
+              child: Column(children: [_buildInputArea(), _buildCapsuleList()]),
             ),
           ),
         ),
@@ -707,8 +754,10 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                           ),
                         ],
                       ),
-                      child: const Icon(Icons.mark_email_unread_rounded,
-                          color: Color(0xFF5B2B6F)),
+                      child: const Icon(
+                        Icons.mark_email_unread_rounded,
+                        color: Color(0xFF5B2B6F),
+                      ),
                     ),
                     SLSpacing.w12,
                     Expanded(
@@ -737,8 +786,11 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                   ],
                 ),
                 SLSpacing.h16,
-                _buildTextField(_titleController,
-                    context.tr('util_tiuth_e1af07'), Icons.title),
+                _buildTextField(
+                  _titleController,
+                  context.tr('util_tiuth_e1af07'),
+                  Icons.title,
+                ),
                 SLSpacing.h10,
                 _buildTextField(
                   _contentController,
@@ -767,14 +819,13 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(22),
                         side: BorderSide(
-                            color: Colors.white.withValues(alpha: 0.26)),
+                          color: Colors.white.withValues(alpha: 0.26),
+                        ),
                       ),
                     ),
                     onPressed: _isUploading ? null : _addCapsule,
                     icon: _isUploading
-                        ? const SkeletonContainer.square(
-                            size: 20,
-                          )
+                        ? const SkeletonContainer.square(size: 20)
                         : const Icon(Icons.lock_clock_rounded),
                     label: Text(
                       _isUploading
@@ -787,7 +838,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                       ),
                     ),
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -809,7 +860,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
             colors: hasImage
                 ? [
                     Colors.white.withValues(alpha: 0.36),
-                    Colors.white.withValues(alpha: 0.18)
+                    Colors.white.withValues(alpha: 0.18),
                   ]
                 : [const Color(0x33FFFFFF), const Color(0x1FFFFFFF)],
             begin: Alignment.topLeft,
@@ -843,7 +894,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                         gradient: LinearGradient(
                           colors: [
                             Colors.transparent,
-                            Colors.black.withValues(alpha: 0.44)
+                            Colors.black.withValues(alpha: 0.44),
                           ],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
@@ -857,8 +908,11 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                     bottom: 10,
                     child: Row(
                       children: [
-                        const Icon(Icons.image_rounded,
-                            color: Colors.white, size: 18),
+                        const Icon(
+                          Icons.image_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                         SLSpacing.gapW(6),
                         Expanded(
                           child: Text(
@@ -872,7 +926,9 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 5),
+                            horizontal: 8,
+                            vertical: 5,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.20),
                             borderRadius: SLRadius.pillAll,
@@ -901,10 +957,14 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                       color: Colors.white.withValues(alpha: 0.18),
                       shape: BoxShape.circle,
                       border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.26)),
+                        color: Colors.white.withValues(alpha: 0.26),
+                      ),
                     ),
-                    child: const Icon(Icons.add_photo_alternate_rounded,
-                        color: Colors.white, size: 24),
+                    child: const Icon(
+                      Icons.add_photo_alternate_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                   ),
                   SLSpacing.h10,
                   Text(
@@ -932,15 +992,16 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
   }
 
   Widget _buildTextField(
-      TextEditingController controller, String hint, IconData icon,
-      {int maxLines = 1}) {
+    TextEditingController controller,
+    String hint,
+    IconData icon, {
+    int maxLines = 1,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: _tileFill,
         borderRadius: SLRadius.lgAll,
-        border: Border.all(
-          color: _tileBorder,
-        ),
+        border: Border.all(color: _tileBorder),
       ),
       child: TextField(
         controller: controller,
@@ -948,7 +1009,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
         cursorColor: _textPrimary,
         style: SLTheme.quicksand(
           color: const Color(
-              0xFF2B1F66), // Dark purple for visibility on white background
+            0xFF2B1F66,
+          ), // Dark purple for visibility on white background
           fontWeight: FontWeight.w700,
         ),
         decoration: InputDecoration(
@@ -956,8 +1018,10 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
           hintStyle: SLTheme.quicksand(color: _textMuted),
           prefixIcon: Icon(icon, color: _accentColor),
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 15,
+            vertical: 12,
+          ),
         ),
       ),
     );
@@ -980,7 +1044,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                 ? [const Color(0xFFFFD1E3), const Color(0xFFFF8AA0)]
                 : [
                     Colors.white.withValues(alpha: 0.32),
-                    Colors.white.withValues(alpha: 0.16)
+                    Colors.white.withValues(alpha: 0.16),
                   ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -1010,11 +1074,13 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color:
-                        Colors.white.withValues(alpha: hasDate ? 0.26 : 0.16),
+                    color: Colors.white.withValues(
+                      alpha: hasDate ? 0.26 : 0.16,
+                    ),
                     shape: BoxShape.circle,
-                    border:
-                        Border.all(color: Colors.white.withValues(alpha: 0.24)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.24),
+                    ),
                   ),
                   child: Icon(
                     hasDate
@@ -1027,8 +1093,10 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                 const Spacer(),
                 if (hasDate)
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.24),
                       borderRadius: SLRadius.pillAll,
@@ -1058,8 +1126,9 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
             SLSpacing.h4,
             Text(
               hasDate
-                  ? L10nService()
-                      .format('util_capsule_days_left', {'days': daysLeft})
+                  ? L10nService().format('util_capsule_days_left', {
+                      'days': daysLeft,
+                    })
                   : context.tr('util_khitingyny_6a6df1'),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -1123,11 +1192,14 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                     children: [
                       Icon(Icons.delete_rounded, color: Colors.white, size: 28),
                       SizedBox(height: 4),
-                      Text('Xóa',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 12)),
+                      Text(
+                        'Xóa',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -1144,11 +1216,11 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                             colors: isOpen
                                 ? [
                                     Colors.white.withValues(alpha: 0.3),
-                                    Colors.white.withValues(alpha: 0.15)
+                                    Colors.white.withValues(alpha: 0.15),
                                   ]
                                 : [
                                     Colors.white.withValues(alpha: 0.15),
-                                    Colors.white.withValues(alpha: 0.05)
+                                    Colors.white.withValues(alpha: 0.05),
                                   ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -1169,10 +1241,13 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                 capsule['image_url'].toString().isNotEmpty)
                               GestureDetector(
                                 onTap: () => _showImageFullScreen(
-                                    context, capsule['image_url']),
+                                  context,
+                                  capsule['image_url'],
+                                ),
                                 child: ClipRRect(
                                   borderRadius: const BorderRadius.vertical(
-                                      top: Radius.circular(20)),
+                                    top: Radius.circular(20),
+                                  ),
                                   child: Stack(
                                     children: [
                                       SizedBox(
@@ -1184,18 +1259,20 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                           memCacheWidth: 600,
                                           placeholder: (_, __) =>
                                               const SkeletonContainer.rounded(
-                                            width: double.infinity,
-                                            height: 140,
-                                          ),
+                                                width: double.infinity,
+                                                height: 140,
+                                              ),
                                           errorWidget: (context, url, error) =>
                                               Container(
-                                            color: Colors.white
-                                                .withValues(alpha: 0.1),
-                                            child: const Icon(
-                                                Icons.broken_image_rounded,
-                                                color: Colors.white38,
-                                                size: 40),
-                                          ),
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.1,
+                                                ),
+                                                child: const Icon(
+                                                  Icons.broken_image_rounded,
+                                                  color: Colors.white38,
+                                                  size: 40,
+                                                ),
+                                              ),
                                         ),
                                       ),
                                       Positioned(
@@ -1204,14 +1281,16 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                         child: Container(
                                           padding: const EdgeInsets.all(6),
                                           decoration: BoxDecoration(
-                                            color: Colors.black
-                                                .withValues(alpha: 0.4),
+                                            color: Colors.black.withValues(
+                                              alpha: 0.4,
+                                            ),
                                             shape: BoxShape.circle,
                                           ),
                                           child: const Icon(
-                                              Icons.zoom_out_map_rounded,
-                                              color: Colors.white,
-                                              size: 16),
+                                            Icons.zoom_out_map_rounded,
+                                            color: Colors.white,
+                                            size: 16,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -1230,54 +1309,67 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                       Row(
                                         children: [
                                           Icon(
-                                              isOpen
-                                                  ? Icons
-                                                      .mark_email_read_rounded
-                                                  : Icons.lock_clock_rounded,
-                                              size: 16,
-                                              color: isOpen
-                                                  ? Colors.white
-                                                  : Colors.white60),
+                                            isOpen
+                                                ? Icons.mark_email_read_rounded
+                                                : Icons.lock_clock_rounded,
+                                            size: 16,
+                                            color: isOpen
+                                                ? Colors.white
+                                                : Colors.white60,
+                                          ),
                                           SLSpacing.w8,
                                           Text(
                                             L10nService().format(
-                                                'util_capsule_open_short', {
-                                              'date': DateFormat('dd/MM/yyyy')
-                                                  .format(DateTime
-                                                      .fromMillisecondsSinceEpoch(
-                                                          unlockDate))
-                                            }),
+                                              'util_capsule_open_short',
+                                              {
+                                                'date': DateFormat('dd/MM/yyyy')
+                                                    .format(
+                                                      DateTime.fromMillisecondsSinceEpoch(
+                                                        unlockDate,
+                                                      ),
+                                                    ),
+                                              },
+                                            ),
                                             style: SLTheme.quicksand(
-                                                color: isOpen
-                                                    ? Colors.white
-                                                    : Colors.white70,
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w800),
+                                              color: isOpen
+                                                  ? Colors.white
+                                                  : Colors.white70,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w800,
+                                            ),
                                           ),
                                         ],
                                       ),
                                       Container(
                                         padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 5),
+                                          horizontal: 10,
+                                          vertical: 5,
+                                        ),
                                         decoration: BoxDecoration(
+                                          color: isOpen
+                                              ? const Color(
+                                                  0xFF10B981,
+                                                ).withValues(alpha: 0.25)
+                                              : const Color(
+                                                  0xFFF59E0B,
+                                                ).withValues(alpha: 0.25),
+                                          borderRadius: SLRadius.pillAll,
+                                          border: Border.all(
                                             color: isOpen
-                                                ? const Color(0xFF10B981)
-                                                    .withValues(alpha: 0.25)
-                                                : const Color(0xFFF59E0B)
-                                                    .withValues(alpha: 0.25),
-                                            borderRadius: SLRadius.pillAll,
-                                            border: Border.all(
-                                              color: isOpen
-                                                  ? const Color(0xFF10B981)
-                                                      .withValues(alpha: 0.5)
-                                                  : const Color(0xFFF59E0B)
-                                                      .withValues(alpha: 0.5),
-                                            )),
+                                                ? const Color(
+                                                    0xFF10B981,
+                                                  ).withValues(alpha: 0.5)
+                                                : const Color(
+                                                    0xFFF59E0B,
+                                                  ).withValues(alpha: 0.5),
+                                          ),
+                                        ),
                                         child: Text(
                                           isOpen
                                               ? context.tr('util_m_7b4530')
-                                              : context
-                                                  .tr('util_angkha_d004dc'),
+                                              : context.tr(
+                                                  'util_angkha_d004dc',
+                                                ),
                                           style: SLTheme.quicksand(
                                             color: isOpen
                                                 ? const Color(0xFF6EE7B7)
@@ -1298,19 +1390,22 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                       style: SLTheme.quicksand(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w700),
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     )
                                   else
                                     Text(
                                       context.tr('util_nidungsmng_ea25c0'),
                                       style: SLTheme.quicksand(
-                                          color: Colors.white
-                                              .withValues(alpha: 0.5),
-                                          fontSize: 14,
-                                          fontStyle: FontStyle.italic,
-                                          fontWeight: FontWeight.w600),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                        fontSize: 14,
+                                        fontStyle: FontStyle.italic,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   SLSpacing.h16,
                                   Align(
@@ -1320,16 +1415,19 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                           ? () => _openCapsule(capsule)
                                           : null,
                                       child: AnimatedContainer(
-                                        duration:
-                                            const Duration(milliseconds: 200),
+                                        duration: const Duration(
+                                          milliseconds: 200,
+                                        ),
                                         padding: const EdgeInsets.symmetric(
-                                            horizontal: 18, vertical: 10),
+                                          horizontal: 18,
+                                          vertical: 10,
+                                        ),
                                         decoration: BoxDecoration(
                                           gradient: isOpen
                                               ? const LinearGradient(
                                                   colors: [
                                                     Color(0xFF6366F1),
-                                                    Color(0xFF8B5CF6)
+                                                    Color(0xFF8B5CF6),
                                                   ],
                                                   begin: Alignment.topLeft,
                                                   end: Alignment.bottomRight,
@@ -1337,19 +1435,19 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                               : null,
                                           color: isOpen
                                               ? null
-                                              : Colors.white
-                                                  .withValues(alpha: 0.1),
+                                              : Colors.white.withValues(
+                                                  alpha: 0.1,
+                                                ),
                                           borderRadius: SLRadius.pillAll,
                                           boxShadow: isOpen
                                               ? [
                                                   BoxShadow(
-                                                    color:
-                                                        const Color(0xFF6366F1)
-                                                            .withValues(
-                                                                alpha: 0.4),
+                                                    color: const Color(
+                                                      0xFF6366F1,
+                                                    ).withValues(alpha: 0.4),
                                                     blurRadius: 10,
                                                     offset: const Offset(0, 4),
-                                                  )
+                                                  ),
                                                 ]
                                               : null,
                                         ),
@@ -1369,10 +1467,11 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                             if (isOpen) ...[
                                               const SizedBox(width: 6),
                                               const Icon(
-                                                  Icons.arrow_forward_rounded,
-                                                  color: Colors.white,
-                                                  size: 14),
-                                            ]
+                                                Icons.arrow_forward_rounded,
+                                                color: Colors.white,
+                                                size: 14,
+                                              ),
+                                            ],
                                           ],
                                         ),
                                       ),
@@ -1403,26 +1502,39 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
         title: Text(
           'Xóa hòm thời gian?',
           style: SLTheme.quicksand(
-              color: Colors.white, fontWeight: FontWeight.w800, fontSize: 17),
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+            fontSize: 17,
+          ),
         ),
         content: Text(
           'Hành động này không thể hoàn tác. Nội dung trong hòm sẽ bị xóa vĩnh viễn.',
           style: SLTheme.quicksand(
-              color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 14),
+            color: Colors.white70,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Hủy',
-                style: SLTheme.quicksand(
-                    color: Colors.white54, fontWeight: FontWeight.w700)),
+            child: Text(
+              'Hủy',
+              style: SLTheme.quicksand(
+                color: Colors.white54,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Xóa',
-                style: SLTheme.quicksand(
-                    color: const Color(0xFFEF4444),
-                    fontWeight: FontWeight.w900)),
+            child: Text(
+              'Xóa',
+              style: SLTheme.quicksand(
+                color: const Color(0xFFEF4444),
+                fontWeight: FontWeight.w900,
+              ),
+            ),
           ),
         ],
       ),
@@ -1435,8 +1547,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content:
-                  Text('Xóa thất bại: ${AppErrorMapper.resolve(e).message}')),
+            content: Text('Xóa thất bại: ${AppErrorMapper.resolve(e).message}'),
+          ),
         );
       }
       return false;
@@ -1469,9 +1581,10 @@ class _CapsuleTouchWrapperState extends State<_CapsuleTouchWrapper>
       lowerBound: 0.0,
       upperBound: 1.0,
     );
-    _scale = Tween<double>(begin: 1.0, end: 0.965).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
-    );
+    _scale = Tween<double>(
+      begin: 1.0,
+      end: 0.965,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
   }
 
   @override
@@ -1490,10 +1603,7 @@ class _CapsuleTouchWrapperState extends State<_CapsuleTouchWrapper>
         animation: _scale,
         builder: (_, child) => Transform.scale(
           scale: _scale.value,
-          child: Container(
-            margin: widget.margin,
-            child: child,
-          ),
+          child: Container(margin: widget.margin, child: child),
         ),
         child: widget.child,
       ),

@@ -74,6 +74,10 @@ extension _HomeScreenShellControls on _HomeScreenState {
     required bool isSwiping,
   }) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final horizontalInset = viewportWidth > 784
+        ? (viewportWidth - 760) / 2
+        : 12.0;
     final uiState = UiPrefs.notifier.value;
     final effectProfile = _resolveHomeEffectProfile(
       uiState,
@@ -133,9 +137,9 @@ extension _HomeScreenShellControls on _HomeScreenState {
       child: Padding(
         key: const ValueKey('expanded-nav'),
         padding: EdgeInsets.fromLTRB(
-          12,
+          horizontalInset,
           0,
-          12,
+          horizontalInset,
           bottomInset > 0 ? bottomInset + 5 : 10,
         ),
         child: Stack(

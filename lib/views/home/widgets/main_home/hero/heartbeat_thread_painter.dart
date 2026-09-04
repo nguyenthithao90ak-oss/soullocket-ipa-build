@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 class HeartbeatThreadWidget extends StatefulWidget {
@@ -50,10 +49,7 @@ class _FateStringPainter extends CustomPainter {
   final double progress;
   final bool isOnline;
 
-  _FateStringPainter({
-    required this.progress,
-    required this.isOnline,
-  });
+  _FateStringPainter({required this.progress, required this.isOnline});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -61,10 +57,13 @@ class _FateStringPainter extends CustomPainter {
 
     final start = Offset(size.width * 0.2, size.height * 0.5);
     final end = Offset(size.width * 0.8, size.height * 0.5);
-    
+
     // Wave animation for the string to feel "alive"
     final waveOffset = sin(progress * 2 * pi) * 8.0;
-    final controlPoint = Offset(size.width * 0.5, size.height * 0.15 + waveOffset);
+    final controlPoint = Offset(
+      size.width * 0.5,
+      size.height * 0.15 + waveOffset,
+    );
 
     // Build the path
     final path = Path()
@@ -82,23 +81,25 @@ class _FateStringPainter extends CustomPainter {
     // Create an organic, vein-like path with multiple curves
     final path1 = Path();
     final path2 = Path();
-    
+
     path1.moveTo(start.dx, start.dy);
     path2.moveTo(start.dx, start.dy);
 
     final dx = end.dx - start.dx;
     final dy = end.dy - start.dy;
-    
+
     // Draw 2 intertwined veins
     for (int i = 1; i <= 10; i++) {
       final t = i / 10;
       final currentX = start.dx + dx * t;
       final currentY = start.dy + dy * t;
-      
+
       // Add organic noise/wiggles
-      final wave1 = sin(progress * pi * 2 + t * pi * 4) * 8.0 + sin(t * pi * 8) * 4.0;
-      final wave2 = cos(progress * pi * 2 + t * pi * 5) * 6.0 - cos(t * pi * 7) * 5.0;
-      
+      final wave1 =
+          sin(progress * pi * 2 + t * pi * 4) * 8.0 + sin(t * pi * 8) * 4.0;
+      final wave2 =
+          cos(progress * pi * 2 + t * pi * 5) * 6.0 - cos(t * pi * 7) * 5.0;
+
       if (i == 10) {
         path1.lineTo(end.dx, end.dy);
         path2.lineTo(end.dx, end.dy);
@@ -120,7 +121,9 @@ class _FateStringPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     final basePaint2 = Paint()
-      ..color = const Color(0xFFD30000).withValues(alpha: isOnline ? 0.85 : 0.35)
+      ..color = const Color(
+        0xFFD30000,
+      ).withValues(alpha: isOnline ? 0.85 : 0.35)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0
       ..strokeJoin = StrokeJoin.round
@@ -135,14 +138,14 @@ class _FateStringPainter extends CustomPainter {
         // Approximate point on path
         final px = start.dx + dx * t;
         final py = start.dy + dy * t;
-        
+
         final trailPaint = Paint()
           ..color = const Color(0xFFFF8888).withValues(alpha: 0.9)
           ..style = PaintingStyle.fill
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
-          
+
         canvas.drawCircle(Offset(px, py), 2.5, trailPaint);
-        
+
         final corePaint = Paint()
           ..color = Colors.white.withValues(alpha: 0.8)
           ..style = PaintingStyle.fill;

@@ -88,8 +88,9 @@ class MapScreen extends StatefulWidget {
   final String myAvatarUrl;
   final String partnerAvatarUrl;
 
-  static final ValueNotifier<bool> isMapScreenActive =
-      ValueNotifier<bool>(false);
+  static final ValueNotifier<bool> isMapScreenActive = ValueNotifier<bool>(
+    false,
+  );
 
   const MapScreen({
     super.key,
@@ -184,7 +185,6 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   Timer? _mapReadyTimeout;
   Timer? _fitDebounce;
   bool _realtimePipelinesActive = false;
-  bool _partnerListenerActive = false;
   bool _isFitting = false;
   String? _lastRouteKey;
   int _routeRequestToken = 0;
@@ -231,7 +231,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     try {
       FirebaseDatabase.instance
           .ref(
-              'houses/${widget.houseId}/presence/${widget.myRole}/isViewingMap')
+            'houses/${widget.houseId}/presence/${widget.myRole}/isViewingMap',
+          )
           .set(active ? true : null);
     } catch (_) {}
   }
@@ -429,12 +430,15 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     final map = _toStringDynamicMap(raw);
     final parsedCurrent = _parseGpsPoint(map);
     final lastKnown = _parseGpsPoint(map['lastKnown']);
-    final current =
-        _isStableLiveGpsPoint(parsedCurrent, lastKnown) ? parsedCurrent : null;
-    final isLive = (map['isLive'] == true || map['sharingEnabled'] == true) &&
+    final current = _isStableLiveGpsPoint(parsedCurrent, lastKnown)
+        ? parsedCurrent
+        : null;
+    final isLive =
+        (map['isLive'] == true || map['sharingEnabled'] == true) &&
         current != null &&
         _isGpsFresh(_readInt(map['ts']) ?? current.ts);
-    final hasHistory = map['everShared'] == true ||
+    final hasHistory =
+        map['everShared'] == true ||
         map['sharingEnabled'] == true ||
         map['isLive'] == true ||
         lastKnown != null;
@@ -458,15 +462,14 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           const Duration(seconds: 8),
           onTimeout: () {},
         ),
-        _loadHistoryForDate(_selectedHistoryDate, fitToHistory: false)
-            .timeout(const Duration(seconds: 8), onTimeout: () {}),
+        _loadHistoryForDate(
+          _selectedHistoryDate,
+          fitToHistory: false,
+        ).timeout(const Duration(seconds: 8), onTimeout: () {}),
       ]);
     } catch (e) {
       debugPrint(
-        'Map init failed: ${AppErrorMapper.resolve(
-          e,
-          fallbackMessage: L10nService().translate('map_bntmthicha_687e4b'),
-        ).message}',
+        'Map init failed: ${AppErrorMapper.resolve(e, fallbackMessage: L10nService().translate('map_bntmthicha_687e4b')).message}',
       );
     }
 
@@ -518,7 +521,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   }
 
   ({String label, Color color, bool isLow}) _gpsAccuracyPresentation(
-      double? accuracy) {
+    double? accuracy,
+  ) {
     if (accuracy == null || !accuracy.isFinite) {
       return (
         label: context.tr('map_angogps_61d784'),
@@ -584,11 +588,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     });
 
     final started = await _locationService
-        .startTracking(
-          widget.houseId,
-          widget.myRole,
-          context: context,
-        )
+        .startTracking(widget.houseId, widget.myRole, context: context)
         .timeout(const Duration(seconds: 12), onTimeout: () => false);
 
     if (!mounted) return;
@@ -644,10 +644,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       );
     }
 
-    await collectFrom(
-      'map_memories',
-      allowDirectEntriesWithoutHouseId: false,
-    );
+    await collectFrom('map_memories', allowDirectEntriesWithoutHouseId: false);
     await collectFrom(
       'houses/${widget.houseId}/memories',
       allowDirectEntriesWithoutHouseId: true,
@@ -715,8 +712,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
 
     for (final entry in map.entries) {
       final entryMap = _toStringDynamicMap(entry.value);
-      final directHouseId =
-          (entryMap['houseId'] ?? entryMap['hid'] ?? '').toString().trim();
+      final directHouseId = (entryMap['houseId'] ?? entryMap['hid'] ?? '')
+          .toString()
+          .trim();
       if (!allowDirectEntriesWithoutHouseId && directHouseId.isEmpty) {
         continue;
       }
@@ -809,10 +807,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         '${myPoint.lng},${myPoint.lat};${partnerPoint.lng},${partnerPoint.lat}'
         '?overview=full&steps=false&alternatives=false&geometries=geojson',
       );
-      final response = await http.get(
-        uri,
-        headers: const {'User-Agent': 'SoulLocket-App'},
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .get(uri, headers: const {'User-Agent': 'SoulLocket-App'})
+          .timeout(const Duration(seconds: 10));
       if (response.statusCode != 200) return null;
 
       final decoded = response.body.length > 20000
@@ -824,8 +821,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
 
       final route = routes.first as Map<String, dynamic>;
       final geometry = route['geometry'];
-      final coords =
-          geometry is Map<String, dynamic> ? geometry['coordinates'] : null;
+      final coords = geometry is Map<String, dynamic>
+          ? geometry['coordinates']
+          : null;
       final points = <ll.LatLng>[];
       if (coords is List) {
         for (final item in coords) {
@@ -841,8 +839,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       if (points.length < 2) return null;
 
       return _RouteSnapshot(
-        distanceMeters:
-            (_readDouble(route['distance']) ?? 0).clamp(0, double.infinity),
+        distanceMeters: (_readDouble(route['distance']) ?? 0).clamp(
+          0,
+          double.infinity,
+        ),
         etaMinutes: (((_readDouble(route['duration']) ?? 0) / 60)
             .clamp(0, 9999)
             .ceil()),
@@ -874,10 +874,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           '${AppConfig.nominatimReverseUrl}'
           '?format=jsonv2&lat=$lat&lon=$lng&accept-language=vi',
         );
-        final response = await http.get(
-          uri,
-          headers: const {'User-Agent': 'SoulLocket-App'},
-        ).timeout(const Duration(seconds: 10));
+        final response = await http
+            .get(uri, headers: const {'User-Agent': 'SoulLocket-App'})
+            .timeout(const Duration(seconds: 10));
         if (response.statusCode != 200) return null;
         final decoded = response.body.length > 12000
             ? await compute(jsonDecode, response.body)
@@ -950,8 +949,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       myAddressText: _myAddressText,
       partnerAddressText: _partnerAddressText,
       myUpdatedText: _lastUpdatedLabel(_effectiveGpsForRole(widget.myRole)?.ts),
-      partnerUpdatedText:
-          _lastUpdatedLabel(_effectiveGpsForRole(widget.partnerRole)?.ts),
+      partnerUpdatedText: _lastUpdatedLabel(
+        _effectiveGpsForRole(widget.partnerRole)?.ts,
+      ),
       distanceText: _distanceText,
       routeDistanceText: _routeDistanceText,
       etaText: _etaText,
@@ -1042,11 +1042,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       if (deltaMs <= 0) continue;
 
       final distanceMeters = _distance
-          .as(
-            ll.LengthUnit.Meter,
-            previous.latLng,
-            point.latLng,
-          )
+          .as(ll.LengthUnit.Meter, previous.latLng, point.latLng)
           .toDouble();
 
       if (distanceMeters < 8 && deltaMs < 2 * 60 * 1000) {
@@ -1175,9 +1171,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   List<fm.Polyline> _buildHistoryPolylines(_HistoryBundle history) {
     final polylines = <fm.Polyline>[];
     if (history.myPoints.length >= 2) {
-      final myRenderPoints = _compressHistoryPoints(history.myPoints)
-          .map((e) => e.latLng)
-          .toList();
+      final myRenderPoints = _compressHistoryPoints(
+        history.myPoints,
+      ).map((e) => e.latLng).toList();
       polylines.add(
         _buildSharpPolyline(
           points: myRenderPoints,
@@ -1189,9 +1185,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       );
     }
     if (history.partnerPoints.length >= 2) {
-      final partnerRenderPoints = _compressHistoryPoints(history.partnerPoints)
-          .map((e) => e.latLng)
-          .toList();
+      final partnerRenderPoints = _compressHistoryPoints(
+        history.partnerPoints,
+      ).map((e) => e.latLng).toList();
       polylines.add(
         _buildSharpPolyline(
           points: partnerRenderPoints,
@@ -1250,12 +1246,16 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     }
     if (includeHistory) {
       points.addAll(
-        _compressHistoryPoints(_historyBundle.myPoints, maxPoints: 120)
-            .map((e) => e.latLng),
+        _compressHistoryPoints(
+          _historyBundle.myPoints,
+          maxPoints: 120,
+        ).map((e) => e.latLng),
       );
       points.addAll(
-        _compressHistoryPoints(_historyBundle.partnerPoints, maxPoints: 120)
-            .map((e) => e.latLng),
+        _compressHistoryPoints(
+          _historyBundle.partnerPoints,
+          maxPoints: 120,
+        ).map((e) => e.latLng),
       );
     }
 
@@ -1313,9 +1313,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         ?..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
-            content: Text(
-              context.tr('map_bncthghimv_4c0adc'),
-            ),
+            content: Text(context.tr('map_bncthghimv_4c0adc')),
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 3),
           ),
@@ -1342,7 +1340,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     final messenger = ScaffoldMessenger.maybeOf(context);
     messenger?.showSnackBar(
       SnackBar(
-        content: Text(context.tr('map_anglychia_d19a1e') ?? 'Đang tải địa chỉ...'),
+        content: Text(context.tr('map_anglychia_d19a1e')),
         duration: const Duration(seconds: 1),
       ),
     );
@@ -1415,7 +1413,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 ],
               ),
               child: IconButton(
-                tooltip: 'Tìm kiếm địa điểm',
+                tooltip: context.tr('map_search_place_tooltip'),
                 onPressed: _showSearchSheet,
                 color: SLColors.textPrimary,
                 icon: const Icon(Icons.search_rounded),
@@ -1461,7 +1459,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     final markerHeight = marker.compact ? 62.0 : 100.0;
     final avatarSize = marker.compact ? 26.0 : 50.0;
     final hasAvatar = marker.avatarUrl != null && marker.avatarUrl!.isNotEmpty;
-    final hasSecondaryAvatar = marker.secondaryAvatarUrl != null &&
+    final hasSecondaryAvatar =
+        marker.secondaryAvatarUrl != null &&
         marker.secondaryAvatarUrl!.isNotEmpty;
 
     return fm.Marker(
@@ -1495,10 +1494,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                               color: marker.color.withValues(alpha: 0.18),
                             ),
                           )
-                        : _PulseGlowCircle(
-                            size: 68.0,
-                            color: marker.color,
-                          ),
+                        : _PulseGlowCircle(size: 68.0, color: marker.color),
                   ),
                 if (marker.compact) ...[
                   SizedBox(
@@ -1576,7 +1572,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                             _buildPinnedMarkerFace(
                               size: avatarSize,
                               avatarUrl: marker.secondaryAvatarUrl,
-                              icon: marker.secondaryIcon ??
+                              icon:
+                                  marker.secondaryIcon ??
                                   Icons.favorite_rounded,
                               color: marker.secondaryColor ?? _kMapPinkDeep,
                               isCompact: false,
@@ -1589,21 +1586,27 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 ],
                 if (!marker.compact)
                   () {
-                    final speedKmh =
-                        marker.speed != null ? (marker.speed! * 3.6).round() : 0;
+                    final speedKmh = marker.speed != null
+                        ? (marker.speed! * 3.6).round()
+                        : 0;
                     final isFastMoving = marker.isSpeeding || speedKmh >= 40;
 
                     // 1. Dynamic Top Banner Status
                     Widget? topBadge;
                     if (marker.isTogether) {
                       topBadge = Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFF2D75),
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFFF2D75).withValues(alpha: 0.4),
+                              color: const Color(
+                                0xFFFF2D75,
+                              ).withValues(alpha: 0.4),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -1612,7 +1615,11 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.favorite_rounded, color: Colors.white, size: 11),
+                            const Icon(
+                              Icons.favorite_rounded,
+                              color: Colors.white,
+                              size: 11,
+                            ),
                             const SizedBox(width: 3),
                             Text(
                               marker.togetherTime ?? 'Đang bên nhau 💕',
@@ -1627,14 +1634,22 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                       );
                     } else if (marker.isSleeping) {
                       topBadge = Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF312E81),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFF818CF8), width: 1),
+                          border: Border.all(
+                            color: const Color(0xFF818CF8),
+                            width: 1,
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF312E81).withValues(alpha: 0.4),
+                              color: const Color(
+                                0xFF312E81,
+                              ).withValues(alpha: 0.4),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -1657,13 +1672,18 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                       );
                     } else if (isFastMoving) {
                       topBadge = Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFEA580C),
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFEA580C).withValues(alpha: 0.4),
+                              color: const Color(
+                                0xFFEA580C,
+                              ).withValues(alpha: 0.4),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -1684,15 +1704,21 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                           ],
                         ),
                       );
-                    } else if (marker.musicTitle != null && marker.musicTitle!.isNotEmpty) {
+                    } else if (marker.musicTitle != null &&
+                        marker.musicTitle!.isNotEmpty) {
                       topBadge = Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF7C3AED),
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF7C3AED).withValues(alpha: 0.4),
+                              color: const Color(
+                                0xFF7C3AED,
+                              ).withValues(alpha: 0.4),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -1723,8 +1749,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     if (marker.battery != null) {
                       final pct = marker.battery!;
                       final isCharging = marker.isCharging == true;
-                      final batteryEmoji =
-                          isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
+                      final batteryEmoji = isCharging
+                          ? '⚡'
+                          : (pct > 20 ? '🔋' : '🪫');
                       displayText += ' $batteryEmoji $pct%';
                     }
 
@@ -1754,8 +1781,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color:
-                                  const Color(0xFF18191A).withValues(alpha: 0.94),
+                              color: const Color(
+                                0xFF18191A,
+                              ).withValues(alpha: 0.94),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: marker.color.withValues(alpha: 0.22),
@@ -1794,8 +1822,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     bool isCompact = true,
   }) {
     final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
-    final borderRadius =
-        isCompact ? BorderRadius.circular(999) : BorderRadius.circular(16);
+    final borderRadius = isCompact
+        ? BorderRadius.circular(999)
+        : BorderRadius.circular(16);
 
     return Container(
       width: size,
@@ -1803,8 +1832,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       decoration: BoxDecoration(
         borderRadius: borderRadius,
         color: color,
-        border:
-            Border.all(color: Colors.white.withValues(alpha: 0.95), width: 2.5),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.95),
+          width: 2.5,
+        ),
       ),
       child: ClipRRect(
         borderRadius: borderRadius,
@@ -1814,17 +1845,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 fit: BoxFit.cover,
                 memCacheWidth: 200,
                 memCacheHeight: 200,
-                errorWidget: (context, url, error) => Icon(
-                  icon,
-                  color: Colors.white,
-                  size: size * 0.54,
-                ),
+                errorWidget: (context, url, error) =>
+                    Icon(icon, color: Colors.white, size: size * 0.54),
               )
-            : Icon(
-                icon,
-                color: Colors.white,
-                size: size * 0.54,
-              ),
+            : Icon(icon, color: Colors.white, size: size * 0.54),
       ),
     );
   }
@@ -1888,11 +1912,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       ),
       child: hasAvatar
           ? null
-          : Icon(
-              icon,
-              color: Colors.white,
-              size: compact ? 16 : 20,
-            ),
+          : Icon(icon, color: Colors.white, size: compact ? 16 : 20),
     );
   }
 
@@ -1944,23 +1964,23 @@ class _LiveUiSnapshot {
   });
 
   factory _LiveUiSnapshot.empty() => _LiveUiSnapshot(
-        myPoint: null,
-        partnerPoint: null,
-        myIsLive: false,
-        partnerIsLive: false,
-        myHasHistory: false,
-        partnerHasHistory: false,
-        isFetchingRoute: false,
-        myAddressText: L10nService().translate('map_chacvtr_a02989'),
-        partnerAddressText: L10nService().translate('map_chacvtr_a02989'),
-        myUpdatedText: L10nService().translate('map_chacthigia_2ba794'),
-        partnerUpdatedText: L10nService().translate('map_chacthigia_2ba794'),
-        distanceText: L10nService().translate('map_angnhv_ea3669'),
-        routeDistanceText: '--',
-        etaText: '--',
-        mapInsightText: L10nService().translate('map_angqutdliu_8eeb1b'),
-        mapAlert: null,
-      );
+    myPoint: null,
+    partnerPoint: null,
+    myIsLive: false,
+    partnerIsLive: false,
+    myHasHistory: false,
+    partnerHasHistory: false,
+    isFetchingRoute: false,
+    myAddressText: L10nService().translate('map_chacvtr_a02989'),
+    partnerAddressText: L10nService().translate('map_chacvtr_a02989'),
+    myUpdatedText: L10nService().translate('map_chacthigia_2ba794'),
+    partnerUpdatedText: L10nService().translate('map_chacthigia_2ba794'),
+    distanceText: L10nService().translate('map_angnhv_ea3669'),
+    routeDistanceText: '--',
+    etaText: '--',
+    mapInsightText: L10nService().translate('map_angqutdliu_8eeb1b'),
+    mapAlert: null,
+  );
 }
 
 class _LocationNodeState {
@@ -2051,12 +2071,12 @@ class _HistoryBundle {
   });
 
   factory _HistoryBundle.empty() => const _HistoryBundle(
-        dateKey: '',
-        myPoints: <_HistoryPoint>[],
-        partnerPoints: <_HistoryPoint>[],
-        myDistanceMeters: 0,
-        partnerDistanceMeters: 0,
-      );
+    dateKey: '',
+    myPoints: <_HistoryPoint>[],
+    partnerPoints: <_HistoryPoint>[],
+    myDistanceMeters: 0,
+    partnerDistanceMeters: 0,
+  );
 
   bool get isEmpty => myPoints.isEmpty && partnerPoints.isEmpty;
   int get totalPoints => myPoints.length + partnerPoints.length;
@@ -2253,11 +2273,7 @@ class _PulseGlowCircle extends StatefulWidget {
   final double size;
   final Color color;
 
-  const _PulseGlowCircle({
-    super.key,
-    required this.size,
-    required this.color,
-  });
+  const _PulseGlowCircle({required this.size, required this.color});
 
   @override
   State<_PulseGlowCircle> createState() => _PulseGlowCircleState();

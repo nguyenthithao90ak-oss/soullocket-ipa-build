@@ -77,7 +77,8 @@ class GameDownloadService extends ChangeNotifier {
 
   Future<bool> isGameDownloaded(String gameId) async {
     final config = _gameConfigs[gameId];
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     final savedStatus = prefs.getBool('game_downloaded_$gameId') ?? false;
     if (savedStatus) {
@@ -114,7 +115,8 @@ class GameDownloadService extends ChangeNotifier {
         notifyListeners();
       }
 
-      final prefs = OfflineCacheService.getPrefsSync() ??
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
       await prefs.setBool('game_downloaded_$gameId', true);
       _downloadProgress.remove(gameId);
@@ -157,8 +159,9 @@ class GameDownloadService extends ChangeNotifier {
           // Tải từ Cloudflare R2 (public domain)
           final fullStoragePath = '${config.storagePath}/$fileName';
           CloudflareR2Service.instance.init();
-          final cleanDomain =
-              _getCleanR2Domain(CloudflareR2Service.publicDomain);
+          final cleanDomain = _getCleanR2Domain(
+            CloudflareR2Service.publicDomain,
+          );
           final remoteUrl = '$cleanDomain/$fullStoragePath';
 
           await _dio.download(
@@ -178,7 +181,8 @@ class GameDownloadService extends ChangeNotifier {
       }
 
       // Lưu trạng thái đã tải
-      final prefs = OfflineCacheService.getPrefsSync() ??
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
       await prefs.setBool('game_downloaded_$gameId', true);
 
@@ -201,7 +205,8 @@ class GameDownloadService extends ChangeNotifier {
     if (await gameDir.exists()) {
       await gameDir.delete(recursive: true);
     }
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     await prefs.setBool('game_downloaded_$gameId', false);
     notifyListeners();

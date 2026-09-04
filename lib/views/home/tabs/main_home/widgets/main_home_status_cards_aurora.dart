@@ -34,7 +34,6 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/core/theme/design_tokens.dart';
-import 'package:soullocket_app/core/theme/sl_typography.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
 
@@ -231,9 +230,7 @@ class AuroraMainHomeCards {
     required BuildContext context,
     required MainHomeHighlightData data,
   }) {
-    return RepaintBoundary(
-      child: _AuroraHighlightCard(data: data),
-    );
+    return RepaintBoundary(child: _AuroraHighlightCard(data: data));
   }
 
   // ─── InsightCard ─────────────────────────────────────────────────────────
@@ -244,9 +241,7 @@ class AuroraMainHomeCards {
     required BuildContext context,
     required MainHomeInsightData data,
   }) {
-    return RepaintBoundary(
-      child: _AuroraInsightCard(data: data),
-    );
+    return RepaintBoundary(child: _AuroraInsightCard(data: data));
   }
 
   // ─── MapCard ─────────────────────────────────────────────────────────────
@@ -257,9 +252,7 @@ class AuroraMainHomeCards {
     required BuildContext context,
     required MainHomeMapData data,
   }) {
-    return RepaintBoundary(
-      child: _AuroraMapCard(data: data),
-    );
+    return RepaintBoundary(child: _AuroraMapCard(data: data));
   }
 
   // ─── StatusGrid ───────────────────────────────────────────────────────────
@@ -269,9 +262,7 @@ class AuroraMainHomeCards {
     required BuildContext context,
     required List<MainHomeStatItem> stats,
   }) {
-    return RepaintBoundary(
-      child: _AuroraStatusGrid(stats: stats),
-    );
+    return RepaintBoundary(child: _AuroraStatusGrid(stats: stats));
   }
 
   // ─── ShortcutDock ────────────────────────────────────────────────────────
@@ -282,9 +273,7 @@ class AuroraMainHomeCards {
     required BuildContext context,
     required List<MainHomeShortcutItem> shortcuts,
   }) {
-    return RepaintBoundary(
-      child: _AuroraShortcutDock(shortcuts: shortcuts),
-    );
+    return RepaintBoundary(child: _AuroraShortcutDock(shortcuts: shortcuts));
   }
 }
 
@@ -632,7 +621,8 @@ class _AuroraMapCard extends StatelessWidget {
                   ),
 
                   // Battery indicators
-                  if (data.myBatteryText != null || data.partnerBatteryText != null)
+                  if (data.myBatteryText != null ||
+                      data.partnerBatteryText != null)
                     _BatteryIndicators(
                       myBattery: data.myBatteryText,
                       partnerBattery: data.partnerBatteryText,
@@ -670,10 +660,7 @@ class _AuroraStatusGrid extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: stats.map((stat) {
-            return _StatPill(
-              stat: stat,
-              crossAxisCount: crossAxisCount,
-            );
+            return _StatPill(stat: stat, crossAxisCount: crossAxisCount);
           }).toList(),
         );
       },
@@ -685,10 +672,7 @@ class _StatPill extends StatelessWidget {
   final MainHomeStatItem stat;
   final int crossAxisCount;
 
-  const _StatPill({
-    required this.stat,
-    required this.crossAxisCount,
-  });
+  const _StatPill({required this.stat, required this.crossAxisCount});
 
   @override
   Widget build(BuildContext context) {
@@ -729,11 +713,7 @@ class _StatPill extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (stat.icon != null) ...[
-              Icon(
-                stat.icon,
-                size: 14,
-                color: accentColor,
-              ),
+              Icon(stat.icon, size: 14, color: accentColor),
               const SizedBox(width: 4),
             ],
             Column(
@@ -792,8 +772,8 @@ class _AuroraShortcutDock extends StatelessWidget {
             final crossAxisCount = availableWidth < 280
                 ? 2
                 : availableWidth < 420
-                    ? 3
-                    : 4;
+                ? 3
+                : 4;
 
             return GridView.builder(
               shrinkWrap: true,
@@ -835,11 +815,7 @@ class _ShortcutDockEmpty extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.push_pin_outlined,
-                color: Colors.grey[400],
-                size: 16,
-              ),
+              Icon(Icons.push_pin_outlined, color: Colors.grey[400], size: 16),
               const SizedBox(width: 8),
               Flexible(
                 child: Text(
@@ -865,10 +841,7 @@ class _AuroraShortcutItem extends StatelessWidget {
   final MainHomeShortcutItem shortcut;
   final int index;
 
-  const _AuroraShortcutItem({
-    required this.shortcut,
-    required this.index,
-  });
+  const _AuroraShortcutItem({required this.shortcut, required this.index});
 
   @override
   Widget build(BuildContext context) {
@@ -1004,11 +977,7 @@ class _AuroraIconRing extends StatelessWidget {
         ],
       ),
       child: Center(
-        child: Icon(
-          icon,
-          size: size * 0.5,
-          color: Colors.white,
-        ),
+        child: Icon(icon, size: size * 0.5, color: Colors.white),
       ),
     );
   }
@@ -1021,10 +990,7 @@ class _AuroraGlassCard extends StatelessWidget {
   final Widget child;
   final LinearGradient? borderGradient;
 
-  const _AuroraGlassCard({
-    required this.child,
-    this.borderGradient,
-  });
+  const _AuroraGlassCard({required this.child, this.borderGradient});
 
   @override
   Widget build(BuildContext context) {
@@ -1194,7 +1160,8 @@ class _JourneyStatsSection extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _JourneyStatTile(
-                      imageAsset: 'assets/icons/cute_3d/card_ngay_yeu_calendar.png',
+                      imageAsset:
+                          'assets/icons/cute_3d/card_ngay_yeu_calendar.png',
                       value: totalDays > 0 ? '$totalDays' : '--',
                       label: L10nService().translate('home_love_days'),
                     ),
@@ -1202,9 +1169,12 @@ class _JourneyStatsSection extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: _JourneyStatTile(
-                      imageAsset: 'assets/icons/cute_3d/card_ky_niem_photos.png',
+                      imageAsset:
+                          'assets/icons/cute_3d/card_ky_niem_photos.png',
                       value: '$albumCount',
-                      label: L10nService().translate('home_anniversary_memories'),
+                      label: L10nService().translate(
+                        'home_anniversary_memories',
+                      ),
                     ),
                   ),
                 ],
@@ -1276,12 +1246,7 @@ class _JourneyStatTile extends StatelessWidget {
       child: Row(
         children: [
           if (imageAsset != null)
-            Image.asset(
-              imageAsset!,
-              width: 36,
-              height: 36,
-              fit: BoxFit.contain,
-            )
+            Image.asset(imageAsset!, width: 36, height: 36, fit: BoxFit.contain)
           else
             const SizedBox(width: 36),
           const SizedBox(width: 8),
@@ -1363,8 +1328,10 @@ class _UpcomingEventsSection extends StatelessWidget {
                 final timeStr = daysUntil <= 0
                     ? L10nService().translate('home_hmnay_d87b33')
                     : (daysUntil == 1
-                        ? L10nService().translate('home_ngymai_a3d820')
-                        : L10nService().format('home_days_later', {'n': daysUntil}));
+                          ? L10nService().translate('home_ngymai_a3d820')
+                          : L10nService().format('home_days_later', {
+                              'n': daysUntil,
+                            }));
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 6.0),
                   child: Row(
@@ -1540,39 +1507,42 @@ class _InsightBubbles extends StatelessWidget {
   final MainHomeInsightData data;
   final bool enableMotion;
 
-  const _InsightBubbles({
-    required this.data,
-    required this.enableMotion,
-  });
+  const _InsightBubbles({required this.data, required this.enableMotion});
 
   @override
   Widget build(BuildContext context) {
     final specs = <_AuroraInsightBubbleSpec>[];
 
     if (!data.isSingle && data.loveU1 != null) {
-      specs.add(_AuroraInsightBubbleSpec(
-        label: data.nameU1 ?? '',
-        value: data.loveU1!,
-        color: const Color(0xFF42A5F5),
-        phase: 0.2,
-      ));
+      specs.add(
+        _AuroraInsightBubbleSpec(
+          label: data.nameU1 ?? '',
+          value: data.loveU1!,
+          color: const Color(0xFF42A5F5),
+          phase: 0.2,
+        ),
+      );
     }
 
-    specs.add(_AuroraInsightBubbleSpec(
-      label: data.isSingle ? 'LEVEL' : 'LOVE',
-      value: data.loveScore ?? 0,
-      color: SLColors.primary,
-      phase: 1.4,
-      emphasize: true,
-    ));
+    specs.add(
+      _AuroraInsightBubbleSpec(
+        label: data.isSingle ? 'LEVEL' : 'LOVE',
+        value: data.loveScore ?? 0,
+        color: SLColors.primary,
+        phase: 1.4,
+        emphasize: true,
+      ),
+    );
 
     if (!data.isSingle && data.loveU2 != null) {
-      specs.add(_AuroraInsightBubbleSpec(
-        label: data.nameU2 ?? '',
-        value: data.loveU2!,
-        color: const Color(0xFF7B7FF6),
-        phase: 2.5,
-      ));
+      specs.add(
+        _AuroraInsightBubbleSpec(
+          label: data.nameU2 ?? '',
+          value: data.loveU2!,
+          color: const Color(0xFF7B7FF6),
+          phase: 2.5,
+        ),
+      );
     }
 
     return Row(
@@ -1614,10 +1584,7 @@ class _AuroraFloatingBubble extends StatefulWidget {
   final _AuroraInsightBubbleSpec spec;
   final bool enableMotion;
 
-  const _AuroraFloatingBubble({
-    required this.spec,
-    required this.enableMotion,
-  });
+  const _AuroraFloatingBubble({required this.spec, required this.enableMotion});
 
   @override
   State<_AuroraFloatingBubble> createState() => _AuroraFloatingBubbleState();
@@ -1633,7 +1600,9 @@ class _AuroraFloatingBubbleState extends State<_AuroraFloatingBubble>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 4200 + (widget.spec.phase * 240).round()),
+      duration: Duration(
+        milliseconds: 4200 + (widget.spec.phase * 240).round(),
+      ),
     );
     if (widget.enableMotion) {
       _controller.repeat();
@@ -1662,7 +1631,8 @@ class _AuroraFloatingBubbleState extends State<_AuroraFloatingBubble>
   Widget build(BuildContext context) {
     final clampedValue = widget.spec.value.clamp(0, 100);
     final label = widget.spec.label.isEmpty ? 'LOVE' : widget.spec.label;
-    final shouldUseLoveBlock = widget.spec.emphasize && label.toUpperCase() == 'LOVE';
+    final shouldUseLoveBlock =
+        widget.spec.emphasize && label.toUpperCase() == 'LOVE';
 
     Widget content;
     if (shouldUseLoveBlock) {
@@ -1763,8 +1733,12 @@ class _AuroraFloatingBubbleState extends State<_AuroraFloatingBubble>
                     child: CircularProgressIndicator(
                       value: progress,
                       strokeWidth: 4.6,
-                      backgroundColor: widget.spec.color.withValues(alpha: 0.09),
-                      valueColor: AlwaysStoppedAnimation<Color>(widget.spec.color),
+                      backgroundColor: widget.spec.color.withValues(
+                        alpha: 0.09,
+                      ),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        widget.spec.color,
+                      ),
                     ),
                   ),
                   // Center dot
@@ -1979,8 +1953,9 @@ class _ActionPill extends StatelessWidget {
         border: Border.all(color: borderColor, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: (isGradient ? const Color(0xFFFF4F87) : color)
-                .withValues(alpha: isGradient ? 0.35 : 0.08),
+            color: (isGradient ? const Color(0xFFFF4F87) : color).withValues(
+              alpha: isGradient ? 0.35 : 0.08,
+            ),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -1989,11 +1964,7 @@ class _ActionPill extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            icon,
-            size: 15,
-            color: color,
-          ),
+          Icon(icon, size: 15, color: color),
           const SizedBox(width: 4),
           Text(
             label,
@@ -2033,10 +2004,14 @@ class _AISuggestionBlock extends StatelessWidget {
       return L10nService().translate('home_cpnhtgnnht_d75b69');
     }
     if (diff.inHours < 1) {
-      return L10nService().format('home_updated_minutes_ago', {'n': diff.inMinutes});
+      return L10nService().format('home_updated_minutes_ago', {
+        'n': diff.inMinutes,
+      });
     }
     if (diff.inDays < 1) {
-      return L10nService().format('home_updated_hours_ago', {'n': diff.inHours});
+      return L10nService().format('home_updated_hours_ago', {
+        'n': diff.inHours,
+      });
     }
     return L10nService().format('home_updated_days_ago', {'n': diff.inDays});
   }
@@ -2144,7 +2119,9 @@ class _InsightLoadingShimmerState extends State<_InsightLoadingShimmer>
                         width: 60,
                         height: 60,
                         decoration: BoxDecoration(
-                          color: SLColors.primary.withValues(alpha: value * 0.3),
+                          color: SLColors.primary.withValues(
+                            alpha: value * 0.3,
+                          ),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -2187,10 +2164,7 @@ class _BatteryIndicators extends StatelessWidget {
   final String? myBattery;
   final String? partnerBattery;
 
-  const _BatteryIndicators({
-    this.myBattery,
-    this.partnerBattery,
-  });
+  const _BatteryIndicators({this.myBattery, this.partnerBattery});
 
   @override
   Widget build(BuildContext context) {

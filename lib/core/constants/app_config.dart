@@ -164,8 +164,7 @@ class AppConfig {
   // ── SERVER VERIFICATION URL ──────────────────────────────────────────
   static const String cloudflareWorkerUrl = String.fromEnvironment(
     'CLOUDFLARE_WORKER_URL',
-    defaultValue:
-        'https://soullocket-api.soullocket-api.workers.dev',
+    defaultValue: 'https://soullocket-api.soullocket-api.workers.dev',
   );
   static const String purchaseVerifyUrl = String.fromEnvironment(
     'PURCHASE_VERIFY_URL',
@@ -243,10 +242,7 @@ class AppConfig {
       'https://soullocketwitget.web.app/cookie-policy.html';
 
   // ── TELEGRAM ALERTS ──────────────────────────────────────────────────
-  static Uri webUri(
-    String path, {
-    Map<String, dynamic>? queryParameters,
-  }) {
+  static Uri webUri(String path, {Map<String, dynamic>? queryParameters}) {
     final base = Uri.parse(webBaseUrl);
     final normalizedPath = path.startsWith('/') ? path : '/$path';
     final query = queryParameters?.map(

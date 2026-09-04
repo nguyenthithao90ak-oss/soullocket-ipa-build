@@ -34,12 +34,14 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
         setState(() => _errorDetails = details);
       }
       widget.onError?.call(details);
-      unawaited(ErrorLoggerService.instance.logError(
-        details.exception,
-        details.stack,
-        reason: 'ErrorBoundary',
-        fatal: false,
-      ));
+      unawaited(
+        ErrorLoggerService.instance.logError(
+          details.exception,
+          details.stack,
+          reason: 'ErrorBoundary',
+          fatal: false,
+        ),
+      );
     };
   }
 
@@ -64,95 +66,104 @@ class _DefaultErrorFallback extends StatelessWidget {
     final l10n = L10nService();
 
     return Material(
-      color: SLColors.darkBgMain,
+      color: SLColors.paperCanvas,
       child: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: SLColors.primary.withAlpha(25),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.favorite_border_rounded,
-                  color: SLColors.primary,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                l10n.translate('core_err_widget_title'),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: SLColors.darkTextPrimary,
-                  decoration: TextDecoration.none,
-                  fontFamily: 'Quicksand',
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                l10n.translate('core_err_widget_desc'),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: SLColors.darkTextSecond,
-                  decoration: TextDecoration.none,
-                  fontFamily: 'Quicksand',
-                ),
-              ),
-              const SizedBox(height: 16),
-              FilledButton.icon(
-                onPressed: () {
-                  try {
-                    SystemNavigator.pop();
-                  } catch (_) {}
-                },
-                icon: const Icon(Icons.close_rounded, size: 16),
-                label: Text(l10n.translate('core_err_widget_close')),
-                style: FilledButton.styleFrom(
-                  backgroundColor: SLColors.primary,
-                  foregroundColor: SLColors.textInverse,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(SLRadius.sm),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                ),
-              ),
-              if (kDebugMode) ...[
-                const SizedBox(height: 16),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: SLColors.darkBgCard,
-                    borderRadius: BorderRadius.circular(SLRadius.sm),
-                    border: Border.all(color: SLColors.darkBorder),
-                  ),
-                  child: Text(
-                    details.exception.toString(),
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: SLColors.darkTextSecond,
-                      decoration: TextDecoration.none,
-                      fontFamily: 'monospace',
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 460),
+            child: SLTheme.softPanel(
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+              child: Semantics(
+                liveRegion: true,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: SLColors.primary.withAlpha(25),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.favorite_border_rounded,
+                        color: SLColors.primary,
+                        size: 28,
+                      ),
                     ),
-                    maxLines: 10,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.translate('core_err_widget_title'),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: SLColors.textPrimary,
+                        decoration: TextDecoration.none,
+                        fontFamily: 'Quicksand',
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      l10n.translate('core_err_widget_desc'),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: SLColors.textSecondary,
+                        decoration: TextDecoration.none,
+                        fontFamily: 'Quicksand',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton.icon(
+                      onPressed: () {
+                        try {
+                          SystemNavigator.pop();
+                        } catch (_) {}
+                      },
+                      icon: const Icon(Icons.close_rounded, size: 16),
+                      label: Text(l10n.translate('core_err_widget_close')),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: SLColors.primary,
+                        foregroundColor: SLColors.textInverse,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(SLRadius.sm),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                      ),
+                    ),
+                    if (kDebugMode) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: SLColors.paperPeach,
+                          borderRadius: BorderRadius.circular(SLRadius.sm),
+                          border: Border.all(color: SLColors.borderLight),
+                        ),
+                        child: Text(
+                          details.exception.toString(),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: SLColors.textSecondary,
+                            decoration: TextDecoration.none,
+                            fontFamily: 'monospace',
+                          ),
+                          maxLines: 10,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ],
-            ],
+              ),
+            ),
           ),
         ),
       ),

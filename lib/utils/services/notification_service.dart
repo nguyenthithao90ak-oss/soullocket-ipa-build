@@ -280,7 +280,11 @@ class NotificationService {
           message: text.toString(),
           senderName: senderName,
         );
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[NotificationService] Không đồng bộ được Soul Merge widget: $error',
+        );
+      }
     }
 
     final isInteractionOrMerge =
@@ -812,7 +816,11 @@ class NotificationService {
       if (resolvedName.isNotEmpty) {
         return resolvedName;
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[NotificationService] Không lấy được tên hiển thị từ house: $error',
+      );
+    }
 
     return cachedUserName.isNotEmpty ? cachedUserName : fallback;
   }

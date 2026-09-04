@@ -45,10 +45,12 @@ extension _MessengerRoomListPart on _MessengerScreenState {
       );
     }
 
-    final fallbackLabel =
-        mates.isNotEmpty ? mates.first.name : _primaryLabel(friendId);
-    final fallbackAvatar =
-        mates.isNotEmpty ? mates.first.avatar : _displayAvatar(friendId);
+    final fallbackLabel = mates.isNotEmpty
+        ? mates.first.name
+        : _primaryLabel(friendId);
+    final fallbackAvatar = mates.isNotEmpty
+        ? mates.first.avatar
+        : _displayAvatar(friendId);
 
     return SizedBox(
       width: 56,
@@ -95,8 +97,9 @@ extension _MessengerRoomListPart on _MessengerScreenState {
       child: CircleAvatar(
         radius: radius,
         backgroundColor: Colors.pink[50],
-        backgroundImage:
-            avatarUrl.isNotEmpty ? CachedNetworkImageProvider(avatarUrl) : null,
+        backgroundImage: avatarUrl.isNotEmpty
+            ? CachedNetworkImageProvider(avatarUrl)
+            : null,
         child: avatarUrl.isEmpty
             ? Text(
                 label.isNotEmpty ? label[0].toUpperCase() : '?',
@@ -134,8 +137,9 @@ extension _MessengerRoomListPart on _MessengerScreenState {
         color: highlighted ? const Color(0xFFFFEEF5) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color:
-              highlighted ? const Color(0xFFF8BBD0) : const Color(0xFFE2E8F0),
+          color: highlighted
+              ? const Color(0xFFF8BBD0)
+              : const Color(0xFFE2E8F0),
         ),
       ),
       child: Text(
@@ -143,8 +147,9 @@ extension _MessengerRoomListPart on _MessengerScreenState {
         style: SLTheme.quicksand(
           fontSize: 10.5,
           fontWeight: FontWeight.w900,
-          color:
-              highlighted ? const Color(0xFFD81B60) : const Color(0xFF94A3B8),
+          color: highlighted
+              ? const Color(0xFFD81B60)
+              : const Color(0xFF94A3B8),
         ),
       ),
     );
@@ -168,7 +173,9 @@ extension _MessengerRoomListPart on _MessengerScreenState {
     required Color statusColor,
   }) {
     final safePreview = repairMojibakeText(
-      preview.trim().isEmpty ? 'Nhấn để bắt đầu trò chuyện...' : preview.trim(),
+      preview.trim().isEmpty
+          ? context.tr('messenger_start_conversation')
+          : preview.trim(),
     );
     final safeStatus = repairMojibakeText(statusText.trim());
 
@@ -313,7 +320,8 @@ extension _MessengerRoomListPart on _MessengerScreenState {
                               right: 3,
                               bottom: 3,
                               child: _buildStatusDot(
-                                  _internalPartnerStatusColor()),
+                                _internalPartnerStatusColor(),
+                              ),
                             ),
                           ],
                         ),
@@ -393,27 +401,29 @@ extension _MessengerRoomListPart on _MessengerScreenState {
     required List<GroupChatRoom> filteredGroups,
   }) {
     final hasInternalPartner = _shouldShowInternalPartnerTile;
-    final totalCount = filteredFriends.length +
+    final totalCount =
+        filteredFriends.length +
         filteredGroups.length +
         (hasInternalPartner ? 1 : 0);
     if (totalCount == 0) {
       return _searchQuery.isNotEmpty
           ? _buildEmptyState(
               icon: Icons.search_off_rounded,
-              title: 'Không tìm thấy đoạn chat phù hợp',
-              body: 'Thử tìm bằng tên nhà, tên người hoặc tên nhóm khác.',
+              title: context.tr('messenger_no_results_title'),
+              body: context.tr('messenger_no_results_desc'),
             )
           : _buildEmptyState(
               icon: Icons.chat_bubble_outline_rounded,
-              title: 'Chưa có cuộc trò chuyện nào',
-              body: 'Kết bạn trước rồi quay lại đây để bắt đầu nhắn tin.',
+              title: context.tr('messenger_empty_title'),
+              body: context.tr('messenger_empty_desc'),
             );
     }
 
     return ListView.builder(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.only(bottom: 10),
-      itemCount: 1 +
+      physics: SLResponsive.scrollPhysicsForPlatform(),
+      padding: const EdgeInsets.only(bottom: 18),
+      itemCount:
+          1 +
           (hasInternalPartner ? 1 : 0) +
           filteredFriends.length +
           filteredGroups.length,
@@ -446,12 +456,14 @@ extension _MessengerRoomListPart on _MessengerScreenState {
     final lastMessageTime = _formatLastMessageTime(lastMap);
     final hasUnread = _friendHasUnread(friendId);
     final previewText = isClosed
-        ? 'Tài khoản đã bị xóa, chỉ còn xem lại lịch sử.'
+        ? context.tr('messenger_deleted_history_only')
         : _formatLastMessage(lastMap);
-    final statusColor =
-        isClosed ? const Color(0xFFD81B60) : _presenceColor(presence);
-    final statusText =
-        isClosed ? 'Đoạn chat đã đóng' : _presenceLabel(presence);
+    final statusColor = isClosed
+        ? const Color(0xFFD81B60)
+        : _presenceColor(presence);
+    final statusText = isClosed
+        ? context.tr('messenger_chat_closed')
+        : _presenceLabel(presence);
 
     final tile = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -463,8 +475,9 @@ extension _MessengerRoomListPart on _MessengerScreenState {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: SLColors.paper.withValues(alpha: 0.96),
               borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: SLColors.borderLight),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFF0F172A).withValues(alpha: 0.05),
@@ -504,7 +517,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
                               const SizedBox(width: 6),
                               _buildUnreadDot(prominent: true),
                             ],
-                          ]
+                          ],
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -566,7 +579,9 @@ extension _MessengerRoomListPart on _MessengerScreenState {
     final hasUnread = _internalPartnerHasUnread;
     final previewText = _formatLastMessage(
       lastMap,
-      fallback: 'Nhắn để bắt đầu trò chuyện cùng $name',
+      fallback: L10nService().format('messenger_start_with_name', {
+        'name': name,
+      }),
     );
 
     return Padding(
@@ -579,8 +594,9 @@ extension _MessengerRoomListPart on _MessengerScreenState {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: SLColors.paper.withValues(alpha: 0.96),
               borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: SLColors.borderLight),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFFD81B60).withValues(alpha: 0.08),
@@ -638,7 +654,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
                               const SizedBox(width: 6),
                               _buildUnreadDot(prominent: true),
                             ],
-                          ]
+                          ],
                         ],
                       ),
                       const SizedBox(height: 8),

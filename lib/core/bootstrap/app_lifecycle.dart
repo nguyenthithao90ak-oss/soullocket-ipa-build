@@ -75,7 +75,9 @@ Future<void> purgeDeprecatedSecrets() async {
   try {
     const secureStorage = FlutterSecureStorage();
     await secureStorage.delete(key: 'gemini_api_key');
-  } catch (_) {}
+  } catch (error) {
+    debugPrint('Không thể xóa Gemini key cũ khỏi secure storage: $error');
+  }
 }
 
 Future<void> clearStaleIosAuthAfterFreshInstall() async {
@@ -93,31 +95,31 @@ Future<void> clearStaleIosAuthAfterFreshInstall() async {
   }
 
   final hasLocalAppState = prefs.getKeys().any(
-        (key) => key.startsWith('il_') || key.startsWith('email_verify_'),
-      );
+    (key) => key.startsWith('il_') || key.startsWith('email_verify_'),
+  );
   final staleUser = FirebaseAuth.instance.currentUser;
   final hasStaleAuth = staleUser != null;
   final shouldSignOut = !hasLocalAppState && hasStaleAuth;
 
   if (hasStaleAuth) {
     try {
-      unawaited(FirebaseDatabase.instance
-          .ref('debugFreshInstallCleanup/${staleUser.uid}')
-          .push()
-          .set({
-        'platform': defaultTargetPlatform.name,
-        'hasLocalAppState': hasLocalAppState,
-        'hasStaleAuth': hasStaleAuth,
-        'didSignOut': shouldSignOut,
-        'localKeyCount': prefs.getKeys().length,
-        'createdAtMs': DateTime.now().millisecondsSinceEpoch,
-      }));
+      unawaited(
+        FirebaseDatabase.instance
+            .ref('debugFreshInstallCleanup/${staleUser.uid}')
+            .push()
+            .set({
+              'platform': defaultTargetPlatform.name,
+              'hasLocalAppState': hasLocalAppState,
+              'hasStaleAuth': hasStaleAuth,
+              'didSignOut': shouldSignOut,
+              'localKeyCount': prefs.getKeys().length,
+              'createdAtMs': DateTime.now().millisecondsSinceEpoch,
+            }),
+      );
     } catch (e) {
-      debugPrint('Fresh install cleanup log skipped: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage:
-            L10nService().translate('core_err_log_fresh_install_failed'),
-      ).message}');
+      debugPrint(
+        'Fresh install cleanup log skipped: ${AppErrorMapper.resolve(e, fallbackMessage: L10nService().translate('core_err_log_fresh_install_failed')).message}',
+      );
     }
   }
 
@@ -126,7 +128,9 @@ Future<void> clearStaleIosAuthAfterFreshInstall() async {
     try {
       const secureStorage = FlutterSecureStorage();
       await secureStorage.deleteAll();
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('Không thể xóa secure storage sau fresh install: $error');
+    }
   }
 
   await prefs.setBool(installMarkerKey, true);
@@ -138,56 +142,63 @@ Future<void> clearStaleIosAuthAfterFreshInstall() async {
 
 void scheduleDeferredBootstrap() {
   SchedulerBinding.instance.addPostFrameCallback((_) {
-    unawaited(Future<void>(() async {
-      try {
-        PlatformDispatcher.instance.onError = (error, stackTrace) {
-          final mappedError = AppErrorMapper.resolve(
-            error,
-            fallbackMessage: 'Lỗi nền hệ thống.',
-          );
-          unawaited(ErrorLoggerService.instance.logError(
-            error,
-            stackTrace,
-            reason: 'platform_dispatcher',
-            fatal: true,
-          ));
+    unawaited(
+      Future<void>(() async {
+        try {
+          PlatformDispatcher.instance.onError = (error, stackTrace) {
+            final mappedError = AppErrorMapper.resolve(
+              error,
+              fallbackMessage: 'Lỗi nền hệ thống.',
+            );
+            unawaited(
+              ErrorLoggerService.instance.logError(
+                error,
+                stackTrace,
+                reason: 'platform_dispatcher',
+                fatal: true,
+              ),
+            );
+            unawaited(
+              RevenueSecurityTelemetryService.instance.logSystemEvent(
+                type: 'platform_dispatcher_error',
+                reason: mappedError.message,
+              ),
+            );
+            return true;
+          };
+          await Future.wait([
+            initializeDeferredFirebaseAppCheck(),
+            _purgeDeprecatedSecretsDeferred(),
+            _warmUpOfflineCache(),
+            _warmUpLocalDatabase(),
+            _warmUpWidgetService(),
+            _warmUpGoogleFonts(),
+            StorageService.instance.purgeStaleCache(),
+          ]);
+          unawaited(_warmUpBackgroundServices());
+
+          // Delay heavy SDK initializations to ensure smooth first frames
           unawaited(
-            RevenueSecurityTelemetryService.instance.logSystemEvent(
-              type: 'platform_dispatcher_error',
-              reason: mappedError.message,
+            Future.delayed(const Duration(seconds: 3), () {
+              unawaited(_initializeGoogleMobileAds());
+              unawaited(_requestIosTrackingAuthorization());
+            }),
+          );
+        } catch (error, stackTrace) {
+          debugPrint(
+            'Deferred bootstrap error: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('core_err_bg_task_failed')).message}',
+          );
+          unawaited(
+            ErrorLoggerService.instance.logError(
+              error,
+              stackTrace,
+              reason: 'deferred_bootstrap_error',
+              fatal: false,
             ),
           );
-          return true;
-        };
-        await Future.wait([
-          initializeDeferredFirebaseAppCheck(),
-          _purgeDeprecatedSecretsDeferred(),
-          _warmUpOfflineCache(),
-          _warmUpLocalDatabase(),
-          _warmUpWidgetService(),
-          _warmUpGoogleFonts(),
-          StorageService.instance.purgeStaleCache(),
-        ]);
-        unawaited(_warmUpBackgroundServices());
-
-        // Delay heavy SDK initializations to ensure smooth first frames
-        unawaited(Future.delayed(const Duration(seconds: 3), () {
-          unawaited(_initializeGoogleMobileAds());
-          unawaited(_requestIosTrackingAuthorization());
-        }));
-      } catch (error, stackTrace) {
-        debugPrint('Deferred bootstrap error: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: L10nService().translate('core_err_bg_task_failed'),
-        ).message}');
-        unawaited(ErrorLoggerService.instance.logError(
-          error,
-          stackTrace,
-          reason: 'deferred_bootstrap_error',
-          fatal: false,
-        ));
-      }
-    }));
+        }
+      }),
+    );
   });
 }
 
@@ -195,10 +206,9 @@ Future<void> _purgeDeprecatedSecretsDeferred() async {
   try {
     await purgeDeprecatedSecrets();
   } catch (e) {
-    debugPrint('Deprecated secrets cleanup error: ${AppErrorMapper.resolve(
-      e,
-      fallbackMessage: L10nService().translate('core_err_clean_secrets_failed'),
-    ).message}');
+    debugPrint(
+      'Deprecated secrets cleanup error: ${AppErrorMapper.resolve(e, fallbackMessage: L10nService().translate('core_err_clean_secrets_failed')).message}',
+    );
   }
 }
 
@@ -219,10 +229,9 @@ Future<void> _warmUpOfflineCache() async {
   try {
     await OfflineCacheService.initialize();
   } catch (e) {
-    debugPrint('Prefs init error: ${AppErrorMapper.resolve(
-      e,
-      fallbackMessage: L10nService().translate('core_err_init_prefs_failed'),
-    ).message}');
+    debugPrint(
+      'Prefs init error: ${AppErrorMapper.resolve(e, fallbackMessage: L10nService().translate('core_err_init_prefs_failed')).message}',
+    );
   }
 }
 
@@ -230,10 +239,9 @@ Future<void> _warmUpLocalDatabase() async {
   try {
     await LocalDatabaseService().initialize();
   } catch (e) {
-    debugPrint('LocalDB init error: ${AppErrorMapper.resolve(
-      e,
-      fallbackMessage: L10nService().translate('core_err_init_local_db_failed'),
-    ).message}');
+    debugPrint(
+      'LocalDB init error: ${AppErrorMapper.resolve(e, fallbackMessage: L10nService().translate('core_err_init_local_db_failed')).message}',
+    );
   }
 }
 
@@ -242,26 +250,28 @@ Future<void> _warmUpWidgetService() async {
   try {
     await WidgetService.ensureInitialized();
   } catch (e) {
-    debugPrint('Widget bootstrap error: ${AppErrorMapper.resolve(
-      e,
-      fallbackMessage: L10nService().translate('core_err_init_widget_failed'),
-    ).message}');
+    debugPrint(
+      'Widget bootstrap error: ${AppErrorMapper.resolve(e, fallbackMessage: L10nService().translate('core_err_init_widget_failed')).message}',
+    );
   }
 }
 
 Future<void> _warmUpBackgroundServices() async {
-  unawaited(_runBackgroundWarmUpTask(
-    'Music init error',
-    () => MusicService().init(),
-  ));
-  unawaited(_runBackgroundWarmUpTask(
-    'Connectivity init error',
-    () => ConnectivityService().initialize(),
-  ));
-  unawaited(_runBackgroundWarmUpTask(
-    'Security warm-up error',
-    () => SecurityService().isProxyOrVpnActive(),
-  ));
+  unawaited(
+    _runBackgroundWarmUpTask('Music init error', () => MusicService().init()),
+  );
+  unawaited(
+    _runBackgroundWarmUpTask(
+      'Connectivity init error',
+      () => ConnectivityService().initialize(),
+    ),
+  );
+  unawaited(
+    _runBackgroundWarmUpTask(
+      'Security warm-up error',
+      () => SecurityService().isProxyOrVpnActive(),
+    ),
+  );
 }
 
 Future<void> _runBackgroundWarmUpTask(
@@ -271,10 +281,9 @@ Future<void> _runBackgroundWarmUpTask(
   try {
     await task();
   } catch (e) {
-    debugPrint('$label: ${AppErrorMapper.resolve(
-      e,
-      fallbackMessage: 'Không thể chạy tác vụ khởi động nền.',
-    ).message}');
+    debugPrint(
+      '$label: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể chạy tác vụ khởi động nền.').message}',
+    );
   }
 }
 
@@ -291,10 +300,9 @@ Future<void> _initializeGoogleMobileAds() async {
     await MobileAds.instance.initialize();
     debugPrint('Google Mobile Ads initialized successfully');
   } catch (e) {
-    debugPrint('Google Mobile Ads init error: ${AppErrorMapper.resolve(
-      e,
-      fallbackMessage: 'Could not initialize Google Mobile Ads',
-    ).message}');
+    debugPrint(
+      'Google Mobile Ads init error: ${AppErrorMapper.resolve(e, fallbackMessage: 'Could not initialize Google Mobile Ads').message}',
+    );
   }
 }
 
@@ -312,4 +320,3 @@ Future<void> _requestIosTrackingAuthorization() async {
     debugPrint('ATT request skipped: $e');
   }
 }
-

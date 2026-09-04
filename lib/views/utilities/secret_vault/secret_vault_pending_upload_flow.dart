@@ -78,6 +78,7 @@ Future<_PendingVaultUploadRetryPayload?> _loadPendingVaultUploadRetry(
     );
   }
   final retryImages = <XFile>[];
+  final validPaths = <String>[];
   for (final rawPath in rawPaths) {
     final path = rawPath.toString().trim();
     if (path.isEmpty) {
@@ -87,8 +88,21 @@ Future<_PendingVaultUploadRetryPayload?> _loadPendingVaultUploadRetry(
     try {
       if (await file.length() > 0) {
         retryImages.add(file);
+        validPaths.add(path);
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[SecretVault] Bỏ tệp chờ tải lên không còn đọc được: $error');
+    }
+  }
+  if (validPaths.length != rawPaths.length) {
+    if (validPaths.isEmpty) {
+      await PendingUploadService.instance.clear(pendingKey);
+    } else {
+      await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
+        'imagePaths': validPaths,
+        'encryptedCaption': pending['encryptedCaption']?.toString() ?? '',
+      });
+    }
   }
   return _PendingVaultUploadRetryPayload(
     images: retryImages,

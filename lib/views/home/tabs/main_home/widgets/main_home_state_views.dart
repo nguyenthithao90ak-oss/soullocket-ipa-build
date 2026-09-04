@@ -76,7 +76,7 @@ class _MainHomeLoadingView extends StatelessWidget {
         ),
         Semantics(
           liveRegion: true,
-          label: context.tr('Đang tải...'),
+          label: context.tr('main_home_loading'),
           child: Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -215,7 +215,7 @@ class _MainHomeLoadingOverlay extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  context.tr('Đang tải...'),
+                  context.tr('main_home_loading'),
                   style: SLTheme.quicksand(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
@@ -247,14 +247,50 @@ class _MainHomeErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        message,
-        textAlign: TextAlign.center,
-        style: SLTheme.quicksand(
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-          color: _mainHomeErrorTextColor,
+    return SLTheme.softCanvasBackdrop(
+      baseColor: SLColors.paperCanvas,
+      accentColor: SLColors.primary,
+      secondaryAccent: SLColors.secondary,
+      motif: SLCanvasBackdropMotif.journal,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 430),
+            child: SLTheme.softPanel(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.cloud_off_rounded,
+                    color: SLColors.primary,
+                    size: 46,
+                  ),
+                  SLSpacing.h12,
+                  Text(
+                    context.tr('main_home_error_title'),
+                    textAlign: TextAlign.center,
+                    style: SLTheme.quicksand(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                      color: SLColors.textPrimary,
+                    ),
+                  ),
+                  SLSpacing.h8,
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: SLTheme.quicksand(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: _mainHomeErrorTextColor,
+                      height: 1.45,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );

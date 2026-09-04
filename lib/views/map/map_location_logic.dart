@@ -187,7 +187,8 @@ extension _MapLocationLogicExt on _MapScreenState {
     final currentLat = _readDouble(activeLiveMap['lat'] ?? activeLiveMap['lt']);
     final currentLng = _readDouble(activeLiveMap['lng'] ?? activeLiveMap['lg']);
     final currentTs = _readInt(activeLiveMap['ts'] ?? map['lastSeenAt']);
-    final hasLiveFlag = map['isLive'] == true ||
+    final hasLiveFlag =
+        map['isLive'] == true ||
         map['sharingEnabled'] == true ||
         liveMap.isNotEmpty;
     final isLive = hasLiveFlag && _isGpsFresh(currentTs);
@@ -201,8 +202,9 @@ extension _MapLocationLogicExt on _MapScreenState {
         lng: currentLng,
         ts: currentTs,
         accuracy: _readDouble(activeLiveMap['acc']),
-        battery:
-            _readInt(activeLiveMap['battery'] ?? activeLiveMap['batteryPct']),
+        battery: _readInt(
+          activeLiveMap['battery'] ?? activeLiveMap['batteryPct'],
+        ),
         isCharging: activeLiveMap['isCharging'] == true,
         speed: _readDouble(activeLiveMap['speed']),
       );
@@ -230,8 +232,9 @@ extension _MapLocationLogicExt on _MapScreenState {
         lng: currentLng,
         ts: currentTs,
         accuracy: _readDouble(activeLiveMap['acc']),
-        battery:
-            _readInt(activeLiveMap['battery'] ?? activeLiveMap['batteryPct']),
+        battery: _readInt(
+          activeLiveMap['battery'] ?? activeLiveMap['batteryPct'],
+        ),
         isCharging: activeLiveMap['isCharging'] == true,
         speed: _readDouble(activeLiveMap['speed']),
       );
@@ -241,7 +244,8 @@ extension _MapLocationLogicExt on _MapScreenState {
       current: current,
       lastKnown: lastKnown,
       isLive: current != null,
-      hasHistory: current != null ||
+      hasHistory:
+          current != null ||
           lastKnown != null ||
           map['everShared'] == true ||
           map['sharingEnabled'] == true ||
@@ -520,7 +524,8 @@ extension _MapLocationLogicExt on _MapScreenState {
     required String body,
   }) {
     final now = DateTime.now();
-    final canShowBanner = _lastProximityBannerKey != key ||
+    final canShowBanner =
+        _lastProximityBannerKey != key ||
         _lastProximityBannerAt == null ||
         now.difference(_lastProximityBannerAt!) > const Duration(seconds: 6);
     _lastProximityBannerKey = key;
@@ -572,63 +577,66 @@ extension _MapLocationLogicExt on _MapScreenState {
 
     final msgMyGpsListenFail = context.tr('map_khngththeo_b5b716');
     final msgPartnerGpsListenFail = context.tr('map_khngththeo_cd61b1');
-    _myLocSub =
-        _dbRef.child('gps/${widget.houseId}/${widget.myRole}').onValue.listen(
-      (event) {
-        myGpsDebounce?.cancel();
-        myGpsDebounce = Timer(const Duration(milliseconds: 140), () {
-          _setRoleLocationState(
-            widget.myRole,
-            _parseLocationNodeState(event.snapshot.value),
-          );
-          _scheduleLiveRefresh();
-        });
-      },
-      onError: (Object error) {
-        final message = AppErrorMapper.resolve(
-          error,
-          fallbackMessage: msgMyGpsListenFail,
-        ).message;
-        debugPrint('Map live GPS listen failed: $message');
-      },
-    );
+    _myLocSub = _dbRef
+        .child('gps/${widget.houseId}/${widget.myRole}')
+        .onValue
+        .listen(
+          (event) {
+            myGpsDebounce?.cancel();
+            myGpsDebounce = Timer(const Duration(milliseconds: 140), () {
+              _setRoleLocationState(
+                widget.myRole,
+                _parseLocationNodeState(event.snapshot.value),
+              );
+              _scheduleLiveRefresh();
+            });
+          },
+          onError: (Object error) {
+            final message = AppErrorMapper.resolve(
+              error,
+              fallbackMessage: msgMyGpsListenFail,
+            ).message;
+            debugPrint('Map live GPS listen failed: $message');
+          },
+        );
 
     _partnerLocSub = _dbRef
         .child('gps/${widget.houseId}/${widget.partnerRole}')
         .onValue
         .listen(
-      (event) {
-        partnerGpsDebounce?.cancel();
-        partnerGpsDebounce = Timer(const Duration(milliseconds: 140), () {
-          _setRoleLocationState(
-            widget.partnerRole,
-            _parseLocationNodeState(event.snapshot.value),
-          );
-          _scheduleLiveRefresh();
-        });
-      },
-      onError: (Object error) {
-        final message = AppErrorMapper.resolve(
-          error,
-          fallbackMessage: msgPartnerGpsListenFail,
-        ).message;
-        debugPrint('Map partner GPS listen failed: $message');
-      },
-    );
+          (event) {
+            partnerGpsDebounce?.cancel();
+            partnerGpsDebounce = Timer(const Duration(milliseconds: 140), () {
+              _setRoleLocationState(
+                widget.partnerRole,
+                _parseLocationNodeState(event.snapshot.value),
+              );
+              _scheduleLiveRefresh();
+            });
+          },
+          onError: (Object error) {
+            final message = AppErrorMapper.resolve(
+              error,
+              fallbackMessage: msgPartnerGpsListenFail,
+            ).message;
+            debugPrint('Map partner GPS listen failed: $message');
+          },
+        );
 
     // Listen to Partner Sleep Mode State
     _sleepModeSub?.cancel();
     _sleepModeSub = SleepModeService.instance
         .streamSleepMode(widget.houseId)
         .listen((state) {
-      _partnerSleepState = state;
-      _scheduleLiveRefresh();
-    });
+          _partnerSleepState = state;
+          _scheduleLiveRefresh();
+        });
 
     // Listen to Music playing state for house
     _musicSub?.cancel();
-    _musicSub =
-        _dbRef.child('houses/${widget.houseId}/music').onValue.listen((event) {
+    _musicSub = _dbRef.child('houses/${widget.houseId}/music').onValue.listen((
+      event,
+    ) {
       if (event.snapshot.exists && event.snapshot.value is Map) {
         final map = Map<String, dynamic>.from(event.snapshot.value as Map);
         if (map['isPlaying'] == true) {
@@ -648,10 +656,6 @@ extension _MapLocationLogicExt on _MapScreenState {
   void _listenMemoryNodes() {
     _disposeMemoryPipeline();
     final state = _memoryPipelineState;
-    final publicHouseBucketQuery = _dbRef
-        .child('map_memories/${widget.houseId}')
-        .orderByChild('ts')
-        .limitToLast(_kMapMemoryQueryLimit);
     final houseMemoriesQuery = _dbRef
         .child('houses/${widget.houseId}/memories')
         .orderByChild('ts')
@@ -668,29 +672,11 @@ extension _MapLocationLogicExt on _MapScreenState {
     }
 
     syncMemorySource(_MapMemorySourceKind.publicDirect, const {});
+    syncMemorySource(_MapMemorySourceKind.publicHouseBucket, const {});
 
-    final msgPublicMemFail = context.tr('map_khngthtigh_1162c8');
     final msgHouseMemFail = context.tr('map_khngthtigh_2b4b7f');
     const memDebounceMs = Duration(milliseconds: 200);
     state.subscriptions.addAll([
-      publicHouseBucketQuery.onValue.listen(
-        (event) {
-          state.debounce?.cancel();
-          state.debounce = Timer(memDebounceMs, () {
-            syncMemorySource(
-              _MapMemorySourceKind.publicHouseBucket,
-              _extractHouseScopedMemoryItems(event.snapshot.value),
-            );
-          });
-        },
-        onError: (Object error) {
-          final message = AppErrorMapper.resolve(
-            error,
-            fallbackMessage: msgPublicMemFail,
-          ).message;
-          debugPrint('Map public memory listen failed: $message');
-        },
-      ),
       houseMemoriesQuery.onValue.listen(
         (event) {
           state.houseDebounce?.cancel();
@@ -715,11 +701,6 @@ extension _MapLocationLogicExt on _MapScreenState {
   Future<void> _primeMemoryPipeline() async {
     final msgFail = context.tr('map_khngthtidl_876664');
     try {
-      final publicSnapshot = await _dbRef
-          .child('map_memories/${widget.houseId}')
-          .orderByChild('ts')
-          .limitToLast(_kMapMemoryQueryLimit)
-          .get();
       final houseSnapshot = await _dbRef
           .child('houses/${widget.houseId}/memories')
           .orderByChild('ts')
@@ -727,10 +708,12 @@ extension _MapLocationLogicExt on _MapScreenState {
           .get();
 
       final didChangePublicDirect = _replaceMemorySourceKindFromItems(
-          _MapMemorySourceKind.publicDirect, const {});
+        _MapMemorySourceKind.publicDirect,
+        const {},
+      );
       final didChangePublicBucket = _replaceMemorySourceKindFromItems(
         _MapMemorySourceKind.publicHouseBucket,
-        _extractHouseScopedMemoryItems(publicSnapshot.value),
+        const {},
       );
       final didChangeHouseScoped = _replaceMemorySourceKindFromItems(
         _MapMemorySourceKind.houseScoped,
@@ -777,58 +760,61 @@ extension _MapLocationLogicExt on _MapScreenState {
         .limitToLast(_kMapCheckinQueryLimit)
         .onValue
         .listen(
-      (event) {
-        _checkinsDebounce?.cancel();
-        _checkinsDebounce = Timer(const Duration(milliseconds: 200), () {
-          if (!mounted) return;
-          final items = <_MapCheckinItem>[];
-          final raw = _toStringDynamicMap(event.snapshot.value);
-          for (final entry in raw.entries) {
-            final map = _toStringDynamicMap(entry.value);
-            final lat = _readDouble(map['lat']) ?? _readDouble(map['lt']);
-            final lng = _readDouble(map['lng']) ?? _readDouble(map['lg']);
-            if (lat == null || lng == null || !_isValidCoordinate(lat, lng)) {
-              continue;
-            }
-            items.add(
-              _MapCheckinItem(
-                id: entry.key,
-                lat: lat,
-                lng: lng,
-                title: (map['name'] ?? 'Check-in').toString(),
-                note: (map['note'] ?? '').toString(),
-                imageUrl: (map['imageUrl'] ?? map['photoUrl'] ?? '').toString(),
-                role: (map['role'] ?? '').toString(),
-                author: (map['author'] ?? map['uid'] ?? '').toString(),
-                ts: _readInt(map['ts']),
-              ),
-            );
-          }
-          items.sort((a, b) => (b.ts ?? 0).compareTo(a.ts ?? 0));
-          final signature = _buildCheckinSignature(items);
-          if (signature == _checkinSignature) return;
-          _checkinSignature = signature;
-          _applyPanelStateUpdate(() {
-            _checkins = items;
-            _checkinSummary = items.isEmpty
-                ? context.tr('map_chacchecki_51b108')
-                : '${items.length} check-in gần đây';
-            _checkinSummary = _buildCheckinSummaryLabel(items.length);
-          });
-          _rebuildStaticMarkersCached(
-            rebuildMemories: false,
-            rebuildCheckins: true,
-          );
-        });
-      },
-      onError: (Object error) {
-        final message = AppErrorMapper.resolve(
-          error,
-          fallbackMessage: msgCheckinFail,
-        ).message;
-        debugPrint('Map check-in listen failed: $message');
-      },
-    );
+          (event) {
+            _checkinsDebounce?.cancel();
+            _checkinsDebounce = Timer(const Duration(milliseconds: 200), () {
+              if (!mounted) return;
+              final items = <_MapCheckinItem>[];
+              final raw = _toStringDynamicMap(event.snapshot.value);
+              for (final entry in raw.entries) {
+                final map = _toStringDynamicMap(entry.value);
+                final lat = _readDouble(map['lat']) ?? _readDouble(map['lt']);
+                final lng = _readDouble(map['lng']) ?? _readDouble(map['lg']);
+                if (lat == null ||
+                    lng == null ||
+                    !_isValidCoordinate(lat, lng)) {
+                  continue;
+                }
+                items.add(
+                  _MapCheckinItem(
+                    id: entry.key,
+                    lat: lat,
+                    lng: lng,
+                    title: (map['name'] ?? 'Check-in').toString(),
+                    note: (map['note'] ?? '').toString(),
+                    imageUrl: (map['imageUrl'] ?? map['photoUrl'] ?? '')
+                        .toString(),
+                    role: (map['role'] ?? '').toString(),
+                    author: (map['author'] ?? map['uid'] ?? '').toString(),
+                    ts: _readInt(map['ts']),
+                  ),
+                );
+              }
+              items.sort((a, b) => (b.ts ?? 0).compareTo(a.ts ?? 0));
+              final signature = _buildCheckinSignature(items);
+              if (signature == _checkinSignature) return;
+              _checkinSignature = signature;
+              _applyPanelStateUpdate(() {
+                _checkins = items;
+                _checkinSummary = items.isEmpty
+                    ? context.tr('map_chacchecki_51b108')
+                    : '${items.length} check-in gần đây';
+                _checkinSummary = _buildCheckinSummaryLabel(items.length);
+              });
+              _rebuildStaticMarkersCached(
+                rebuildMemories: false,
+                rebuildCheckins: true,
+              );
+            });
+          },
+          onError: (Object error) {
+            final message = AppErrorMapper.resolve(
+              error,
+              fallbackMessage: msgCheckinFail,
+            ).message;
+            debugPrint('Map check-in listen failed: $message');
+          },
+        );
   }
 
   void _scheduleLiveRefresh() {
@@ -850,7 +836,8 @@ extension _MapLocationLogicExt on _MapScreenState {
     var didChange = false;
 
     for (final entry in nextItems.entries) {
-      didChange = _upsertMemorySourceItem(
+      didChange =
+          _upsertMemorySourceItem(
             kind,
             rawKey: entry.key,
             item: entry.value,
@@ -861,10 +848,8 @@ extension _MapLocationLogicExt on _MapScreenState {
     }
 
     for (final scopedKey in previousScopedKeys) {
-      didChange = _removeMemorySourceByScopedKey(
-            scopedKey,
-            emitNow: false,
-          ) ||
+      didChange =
+          _removeMemorySourceByScopedKey(scopedKey, emitNow: false) ||
           didChange;
     }
 
@@ -1050,8 +1035,8 @@ extension _MapLocationLogicExt on _MapScreenState {
 
       final sameRecord =
           previousCanonical.scopedKey == nextCanonical.scopedKey &&
-              previousCanonical.contentKey == nextCanonical.contentKey &&
-              previousCanonical.item.ts == nextCanonical.item.ts;
+          previousCanonical.contentKey == nextCanonical.contentKey &&
+          previousCanonical.item.ts == nextCanonical.item.ts;
       if (sameRecord) {
         continue;
       }
@@ -1156,10 +1141,7 @@ extension _MapLocationLogicExt on _MapScreenState {
       _memories = merged;
       _memorySummary = _buildMemorySummaryLabel(merged.length);
     });
-    _rebuildStaticMarkersCached(
-      rebuildMemories: true,
-      rebuildCheckins: false,
-    );
+    _rebuildStaticMarkersCached(rebuildMemories: true, rebuildCheckins: false);
   }
 
   void _resolveAddressForPoint(_GpsPoint point, bool isMyRole) async {
@@ -1193,7 +1175,9 @@ extension _MapLocationLogicExt on _MapScreenState {
   }
 
   Future<_RouteSnapshot?> _fetchRouteSnapshot(
-      ll.LatLng start, ll.LatLng end) async {
+    ll.LatLng start,
+    ll.LatLng end,
+  ) async {
     final cacheKey = _buildRouteCacheLookupKey(start, end);
     if (_isCacheEntryFresh(_routeCacheTs, cacheKey, _kMapRouteCacheTtl)) {
       return _routeCache[cacheKey];
@@ -1209,23 +1193,24 @@ extension _MapLocationLogicExt on _MapScreenState {
         final uri = Uri.parse(
           '${AppConfig.osrmRouteBaseUrl}/'
           '${start.longitude},${start.latitude};${end.longitude},${end.latitude}'
-        '?overview=simplified&steps=false&geometries=geojson',
+          '?overview=simplified&steps=false&geometries=geojson',
         );
-        final response = await http.get(
-          uri,
-          headers: const {'User-Agent': 'SoulLocket-App'},
-        ).timeout(const Duration(seconds: 10));
+        final response = await http
+            .get(uri, headers: const {'User-Agent': 'SoulLocket-App'})
+            .timeout(const Duration(seconds: 10));
         if (response.statusCode != 200) return null;
 
-        final map = await compute(_parseRouteMap, response.body)
-            as Map<String, dynamic>;
+        final map =
+            await compute(_parseRouteMap, response.body)
+                as Map<String, dynamic>;
         final routes = map['routes'];
         if (routes is! List || routes.isEmpty) return null;
 
         final route = routes.first as Map<String, dynamic>;
         final geometry = route['geometry'];
-        final coords =
-            geometry is Map<String, dynamic> ? geometry['coordinates'] : null;
+        final coords = geometry is Map<String, dynamic>
+            ? geometry['coordinates']
+            : null;
         final points = <ll.LatLng>[];
         if (coords is List) {
           for (final item in coords) {
@@ -1240,8 +1225,10 @@ extension _MapLocationLogicExt on _MapScreenState {
         }
 
         return _RouteSnapshot(
-          distanceMeters:
-              (_readDouble(route['distance']) ?? 0).clamp(0, double.infinity),
+          distanceMeters: (_readDouble(route['distance']) ?? 0).clamp(
+            0,
+            double.infinity,
+          ),
           etaMinutes: (((_readDouble(route['duration']) ?? 0) / 60)
               .clamp(0, 9999)
               .ceil()),
@@ -1279,8 +1266,9 @@ extension _MapLocationLogicExt on _MapScreenState {
       myAddressText: _myAddressText,
       partnerAddressText: _partnerAddressText,
       myUpdatedText: _lastUpdatedLabel(_effectiveGpsForRole(widget.myRole)?.ts),
-      partnerUpdatedText:
-          _lastUpdatedLabel(_effectiveGpsForRole(widget.partnerRole)?.ts),
+      partnerUpdatedText: _lastUpdatedLabel(
+        _effectiveGpsForRole(widget.partnerRole)?.ts,
+      ),
       distanceText: _distanceText,
       routeDistanceText: _routeDistanceText,
       etaText: _etaText,
@@ -1295,8 +1283,9 @@ extension _MapLocationLogicExt on _MapScreenState {
 
   void _scheduleAddressRefresh() {
     final myPoint = _effectiveGpsForRole(widget.myRole);
-    final partnerPoint =
-        _isSingleRelationship ? null : _effectiveGpsForRole(widget.partnerRole);
+    final partnerPoint = _isSingleRelationship
+        ? null
+        : _effectiveGpsForRole(widget.partnerRole);
 
     final myKey = myPoint == null
         ? null
@@ -1328,8 +1317,9 @@ extension _MapLocationLogicExt on _MapScreenState {
 
   void _refreshLiveDataSmart() {
     final myPoint = _effectiveGpsForRole(widget.myRole);
-    final partnerPoint =
-        _isSingleRelationship ? null : _effectiveGpsForRole(widget.partnerRole);
+    final partnerPoint = _isSingleRelationship
+        ? null
+        : _effectiveGpsForRole(widget.partnerRole);
     final myLivePoint = _effectiveLiveGpsForRole(widget.myRole);
     final partnerLivePoint = _isSingleRelationship
         ? null
@@ -1394,8 +1384,8 @@ extension _MapLocationLogicExt on _MapScreenState {
       routeDistanceText = hasExactRoute
           ? _formatDistanceMeters(_routeSnapshot!.distanceMeters)
           : (_isFetchingRoute
-              ? context.tr('map_angtnhqung_7529aa')
-              : context.tr('map_chacqungng_38c097'));
+                ? context.tr('map_angtnhqung_7529aa')
+                : context.tr('map_chacqungng_38c097'));
       etaText = hasExactRoute ? '${_routeSnapshot!.etaMinutes} phút' : '--';
 
       if (myLive && partnerLive) {
@@ -1431,14 +1421,17 @@ extension _MapLocationLogicExt on _MapScreenState {
       if (!partnerHasHistory) {
         distanceText = context.tr('map_ngiychabtg_defe08');
         mapInsightText = L10nService().format(
-            'partner_location_not_enabled_map',
-            {'partnerName': widget.partnerName});
-        mapAlert = L10nService().format(
-            'partner_gps_not_enabled_map', {'partnerName': widget.partnerName});
+          'partner_location_not_enabled_map',
+          {'partnerName': widget.partnerName},
+        );
+        mapAlert = L10nService().format('partner_gps_not_enabled_map', {
+          'partnerName': widget.partnerName,
+        });
       } else if (!myHasHistory) {
         distanceText = context.tr('map_bnchabtgps_fc6f46');
-        mapInsightText = L10nService().format('you_location_not_enabled_map',
-            {'partnerName': widget.partnerName});
+        mapInsightText = L10nService().format('you_location_not_enabled_map', {
+          'partnerName': widget.partnerName,
+        });
         mapAlert = context.tr('map_bnchabtgps_2de829');
       } else if (!partnerLive) {
         distanceText = context.tr('map_vtrcuilu_b4c8ee');
@@ -1533,11 +1526,13 @@ extension _MapLocationLogicExt on _MapScreenState {
     final livePolylines = <fm.Polyline>[];
 
     final myPoint = _effectiveGpsForRole(widget.myRole);
-    final partnerPoint =
-        _isSingleRelationship ? null : _effectiveGpsForRole(widget.partnerRole);
+    final partnerPoint = _isSingleRelationship
+        ? null
+        : _effectiveGpsForRole(widget.partnerRole);
     final myLive = _isRoleLive(widget.myRole);
-    final partnerLive =
-        _isSingleRelationship ? false : _isRoleLive(widget.partnerRole);
+    final partnerLive = _isSingleRelationship
+        ? false
+        : _isRoleLive(widget.partnerRole);
 
     ll.LatLng? partnerLatLng;
     if (partnerPoint != null) {
@@ -1545,10 +1540,12 @@ extension _MapLocationLogicExt on _MapScreenState {
     }
 
     final isPartnerSleeping = _partnerSleepState?.isEffectivelyActive == true;
-    final partnerSpeedKmh =
-        partnerPoint?.speed != null ? (partnerPoint!.speed! * 3.6).round() : 0;
-    final mySpeedKmh =
-        myPoint?.speed != null ? (myPoint!.speed! * 3.6).round() : 0;
+    final partnerSpeedKmh = partnerPoint?.speed != null
+        ? (partnerPoint!.speed! * 3.6).round()
+        : 0;
+    final mySpeedKmh = myPoint?.speed != null
+        ? (myPoint!.speed! * 3.6).round()
+        : 0;
 
     final distanceMeters = (myPoint != null && partnerPoint != null)
         ? _distance.as(ll.LengthUnit.Meter, myPoint.latLng, partnerPoint.latLng)
@@ -1676,13 +1673,15 @@ extension _MapLocationLogicExt on _MapScreenState {
         _routeSnapshot != null &&
         _routeSnapshot!.points.length >= 2) {
       final validPoints = _routeSnapshot!.points
-          .where((p) =>
-              !p.latitude.isNaN &&
-              !p.longitude.isNaN &&
-              p.latitude <= 90.0 &&
-              p.latitude >= -90.0 &&
-              p.longitude <= 180.0 &&
-              p.longitude >= -180.0)
+          .where(
+            (p) =>
+                !p.latitude.isNaN &&
+                !p.longitude.isNaN &&
+                p.latitude <= 90.0 &&
+                p.latitude >= -90.0 &&
+                p.longitude <= 180.0 &&
+                p.longitude >= -180.0,
+          )
           .toList(growable: false);
 
       if (validPoints.length >= 2) {
@@ -1710,8 +1709,9 @@ extension _MapLocationLogicExt on _MapScreenState {
     final markerSignature = _buildMarkerSignature(liveMarkerSpecs);
     if (markerSignature != _liveMarkerSignature) {
       _liveMarkerSignature = markerSignature;
-      _liveMarkersVN.value =
-          liveMarkerSpecs.map(_buildOsmMarker).toList(growable: false);
+      _liveMarkersVN.value = liveMarkerSpecs
+          .map(_buildOsmMarker)
+          .toList(growable: false);
     }
 
     final polylineSignature = _buildPolylineSignature(livePolylines);

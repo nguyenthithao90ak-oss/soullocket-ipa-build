@@ -5,10 +5,7 @@ import 'package:soullocket_app/core/constants/app_config.dart';
 import 'auth_support.dart';
 
 class AuthAdminService {
-  AuthAdminService({
-    this._firebaseAuth,
-    this._databaseRef,
-  });
+  AuthAdminService({this._firebaseAuth, this._databaseRef});
 
   final firebase_auth.FirebaseAuth? _firebaseAuth;
   final DatabaseReference? _databaseRef;
@@ -28,16 +25,16 @@ class AuthAdminService {
     if (user == null) return false;
 
     try {
-      final tokenResult = await user.getIdTokenResult(forceRefresh).timeout(
-            const Duration(seconds: 3),
-          );
+      final tokenResult = await user
+          .getIdTokenResult(forceRefresh)
+          .timeout(const Duration(seconds: 3));
       final hasClaim = hasAdminClaim(tokenResult.claims);
 
       if (hasClaim) {
-        final adminSnapshot =
-            await _db.child('admins/${user.uid}').get().timeout(
-                  const Duration(seconds: 3),
-                );
+        final adminSnapshot = await _db
+            .child('admins/${user.uid}')
+            .get()
+            .timeout(const Duration(seconds: 3));
         if (adminSnapshot.exists) {
           return true;
         }
@@ -76,30 +73,9 @@ class AuthAdminService {
     final normalizedEmail = email.trim().toLowerCase();
     if (normalizedEmail.isEmpty) return null;
 
-    var isAdmin = false;
-    if (allowAdminBypass) {
-      final currentUser = _auth.currentUser;
-      final currentEmail = currentUser?.email?.trim().toLowerCase() ?? '';
-      if (currentEmail.isNotEmpty && currentEmail == normalizedEmail) {
-        isAdmin = await isCurrentUserAdmin(forceRefresh: forceRefreshAdmin);
-      }
-    }
-
     final isMaintenanceMode = await isMaintenanceModeEnabled();
     if (isMaintenanceMode) {
       return 'Hệ thống đang trong chế độ bảo trì. Vui lòng quay lại sau.';
-    }
-
-    try {
-      final bannedSnapshot = await _db
-          .child('banned_users/${normalizeEmailKey(normalizedEmail)}')
-          .get()
-          .timeout(const Duration(seconds: 2));
-      if (bannedSnapshot.exists && !isAdmin) {
-        return 'Tài khoản này đã bị khóa truy cập. Vui lòng liên hệ quản trị viên.';
-      }
-    } catch (_) {
-      return null;
     }
 
     return null;
@@ -109,9 +85,6 @@ class AuthAdminService {
     final user = _auth.currentUser;
     final email = user?.email;
     if (email == null || email.isEmpty) return null;
-    return getSystemBlockReason(
-      email,
-      allowAdminBypass: true,
-    );
+    return getSystemBlockReason(email, allowAdminBypass: true);
   }
 }

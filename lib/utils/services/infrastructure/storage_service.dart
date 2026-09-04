@@ -1320,7 +1320,8 @@ class StorageService {
           } else {
             tempCompressedPath = null;
           }
-        } catch (_) {
+        } catch (error) {
+          debugPrint('[StorageService] Nén ảnh thất bại, dùng tệp gốc: $error');
           tempCompressedPath = null;
         }
       }
@@ -1345,7 +1346,9 @@ class StorageService {
         int? compressedBytes;
         try {
           compressedBytes = await uploadFile.length();
-        } catch (_) {}
+        } catch (error) {
+          debugPrint('[StorageService] Không đọc được kích thước tệp: $error');
+        }
 
         final downloadUrl = _rawUploadHelper.uploadFileToPath(
           storagePath: path,

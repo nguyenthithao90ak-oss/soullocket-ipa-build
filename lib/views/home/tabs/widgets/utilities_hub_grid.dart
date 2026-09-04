@@ -38,19 +38,34 @@ class UtilitiesHubGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        const crossAxisCount = 4;
-        const tileHeight = 122.0; // Tăng chiều cao để chứa icon to hơn
-        final spacing = width >= 430 ? 18.0 : 14.0; // Tăng khoảng cách ngang
+        final crossAxisCount = width >= 1000
+            ? 6
+            : width >= 760
+            ? 5
+            : width >= 520
+            ? 4
+            : 3;
+        const tileHeight = 126.0;
+        final spacing = width >= 520 ? 16.0 : 12.0;
+        final horizontalInset = width > 1040 ? (width - 1000) / 2 : 20.0;
         final itemWidth =
-            ((width - 44 - (spacing * (crossAxisCount - 1))) / crossAxisCount)
-                .clamp(64.0, 100.0);
+            ((width -
+                        (horizontalInset * 2) -
+                        (spacing * (crossAxisCount - 1))) /
+                    crossAxisCount)
+                .clamp(78.0, 150.0);
 
         return CustomScrollView(
           physics: SLResponsive.scrollPhysicsForPlatform(),
           slivers: [
             if (pinnedApps.isNotEmpty || recentApps.isNotEmpty)
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
+                padding: EdgeInsets.fromLTRB(
+                  horizontalInset,
+                  8,
+                  horizontalInset,
+                  12,
+                ),
                 sliver: SliverToBoxAdapter(
                   child: UtilitiesHubShortcuts(
                     pinnedApps: pinnedApps,
@@ -60,39 +75,37 @@ class UtilitiesHubGrid extends StatelessWidget {
                 ),
               ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(22, 8, 22, 12),
+              padding: EdgeInsets.fromLTRB(
+                horizontalInset,
+                8,
+                horizontalInset,
+                12,
+              ),
               sliver: SliverGrid(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: crossAxisCount,
-                  mainAxisSpacing: 20, // Tăng khoảng cách dọc
+                  mainAxisSpacing: 16,
                   crossAxisSpacing: spacing,
                   childAspectRatio: itemWidth / tileHeight,
                 ),
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final app = apps[index];
-                    return RepaintBoundary(
-                      child: UtilitiesHubItem(
-                        key: ValueKey<String>(app.id),
-                        app: app,
-                        isEditMode: isEditMode,
-                        onTap: () => onAppTap(app.id),
-                        onReorder: onReorder,
-                        onEditModeChanged: onEditModeChanged,
-                      ),
-                    );
-                  },
-                  childCount: apps.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final app = apps[index];
+                  return RepaintBoundary(
+                    child: UtilitiesHubItem(
+                      key: ValueKey<String>(app.id),
+                      app: app,
+                      isEditMode: isEditMode,
+                      onTap: () => onAppTap(app.id),
+                      onReorder: onReorder,
+                      onEditModeChanged: onEditModeChanged,
+                    ),
+                  );
+                }, childCount: apps.length),
               ),
             ),
             if (showBottomBanner)
-              SliverToBoxAdapter(
-                child: _buildBottomBanner(bottomBannerAd),
-              ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 120),
-            ),
+              SliverToBoxAdapter(child: _buildBottomBanner(bottomBannerAd)),
+            const SliverToBoxAdapter(child: SizedBox(height: 120)),
           ],
         );
       },
@@ -113,10 +126,7 @@ class UtilitiesHubGrid extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(12, 22, 12, 0),
         child: Center(
           child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 8,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               color: SLColors.bgElevated.withValues(alpha: 0.72),
               borderRadius: SLRadius.lgAll,

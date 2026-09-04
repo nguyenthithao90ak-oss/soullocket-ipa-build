@@ -36,17 +36,18 @@ class ToastDemoScreen extends StatelessWidget {
                 'Lỗi (danger)',
                 Icons.error,
                 SLColors.danger,
-                () => SLToast.error(context, 'Mất kết nối mạng, vui lòng thử lại.'),
+                () => SLToast.error(
+                  context,
+                  'Mất kết nối mạng, vui lòng thử lại.',
+                ),
               ),
               const SizedBox(height: 10),
               _demoButton(
                 'Cảnh báo (warning)',
                 Icons.warning_amber,
                 SLColors.warning,
-                () => SLToast.warning(
-                  context,
-                  'Bạn đã đạt giới hạn 5 ảnh/ngày.',
-                ),
+                () =>
+                    SLToast.warning(context, 'Bạn đã đạt giới hạn 5 ảnh/ngày.'),
               ),
               const SizedBox(height: 10),
               _demoButton(
@@ -151,17 +152,17 @@ class ToastDemoScreen extends StatelessWidget {
   }
 
   Widget _sectionTitle(String text) => Padding(
-        padding: const EdgeInsets.only(top: 8, bottom: 4),
-        child: Text(
-          text,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w900,
-            color: SLColors.textPrimary,
-            letterSpacing: 0.3,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.only(top: 8, bottom: 4),
+    child: Text(
+      text,
+      style: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w900,
+        color: SLColors.textPrimary,
+        letterSpacing: 0.3,
+      ),
+    ),
+  );
 
   Widget _demoButton(
     String label,
@@ -180,10 +181,7 @@ class ToastDemoScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: color.withValues(alpha: 0.25),
-              width: 1,
-            ),
+            border: Border.all(color: color.withValues(alpha: 0.25), width: 1),
           ),
           child: Row(
             children: [

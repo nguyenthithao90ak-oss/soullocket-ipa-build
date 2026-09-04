@@ -157,8 +157,9 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
             .child('houses/$friendId/settings')
             .get()
             .timeout(const Duration(seconds: 6));
-        String name =
-            L10nService().format('share_house_name_fallback', {'id': friendId});
+        String name = L10nService().format('share_house_name_fallback', {
+          'id': friendId,
+        });
         String avatar = '';
 
         if (houseSnap.exists) {
@@ -166,7 +167,8 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
           name = houseInfo['houseName']?.toString().trim().isNotEmpty == true
               ? houseInfo['houseName'].toString().trim()
               : name;
-          avatar = houseInfo['houseAvatar']?.toString() ??
+          avatar =
+              houseInfo['houseAvatar']?.toString() ??
               houseInfo['avtUser1']?.toString() ??
               '';
         }
@@ -236,7 +238,8 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
   void _shareToSpecific(String platform) async {
     final link = Uri.encodeComponent(widget.shareUrl.trim());
     final text = Uri.encodeComponent(
-        '${widget.contentToShare}\n${widget.shareUrl}'.trim());
+      '${widget.contentToShare}\n${widget.shareUrl}'.trim(),
+    );
     String urlStr = '';
 
     switch (platform) {
@@ -315,12 +318,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
     try {
       final message = _composeShareMessage();
       await _chatService
-          .sendMessage(
-            widget.myHouseId,
-            friendId,
-            message,
-            type: 'share',
-          )
+          .sendMessage(widget.myHouseId, friendId, message, type: 'share')
           .timeout(const Duration(seconds: 12));
       if (!mounted) return;
       Navigator.pop(context);
@@ -532,8 +530,9 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                           ),
                           child: _buildSectionHeader(
                             title: L10nService().translate('share_send_to'),
-                            subtitle:
-                                L10nService().translate('share_recent_friends'),
+                            subtitle: L10nService().translate(
+                              'share_recent_friends',
+                            ),
                             compact: compact,
                             screenWidth: screenWidth,
                           ),
@@ -575,7 +574,8 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                           end: Alignment.bottomRight,
                                         ),
                                         borderRadius: BorderRadius.all(
-                                            Radius.circular(14)),
+                                          Radius.circular(14),
+                                        ),
                                       ),
                                     ),
                                     SizedBox(
@@ -594,8 +594,9 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                             Color(0xFFE2E8F0),
                                           ],
                                         ),
-                                        borderRadius:
-                                            BorderRadius.circular(999),
+                                        borderRadius: BorderRadius.circular(
+                                          999,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -614,10 +615,12 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                             child: _buildEmptyStateCard(
                               compact: compact,
                               icon: Icons.people_alt_rounded,
-                              title: L10nService()
-                                  .translate('share_no_friends_title'),
-                              subtitle: L10nService()
-                                  .translate('share_no_friends_subtitle'),
+                              title: L10nService().translate(
+                                'share_no_friends_title',
+                              ),
+                              subtitle: L10nService().translate(
+                                'share_no_friends_subtitle',
+                              ),
                               screenWidth: screenWidth,
                             ),
                           )
@@ -635,8 +638,9 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                               itemCount: _friends.length,
                               itemBuilder: (ctx, i) {
                                 final f = _friends[i];
-                                final isSending = _sendingTargetIds
-                                    .contains('friend:${f['id']}');
+                                final isSending = _sendingTargetIds.contains(
+                                  'friend:${f['id']}',
+                                );
                                 return _buildShareTargetBlock(
                                   compact: compact,
                                   label: f['name'].toString(),
@@ -668,10 +672,12 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                             vertical: SLResponsive.dp(8, screenWidth),
                           ),
                           child: _buildSectionHeader(
-                            title:
-                                L10nService().translate('share_send_to_group'),
-                            subtitle:
-                                L10nService().translate('share_groups_member'),
+                            title: L10nService().translate(
+                              'share_send_to_group',
+                            ),
+                            subtitle: L10nService().translate(
+                              'share_groups_member',
+                            ),
                             compact: compact,
                             screenWidth: screenWidth,
                           ),
@@ -687,10 +693,12 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                             child: _buildEmptyStateCard(
                               compact: compact,
                               icon: Icons.groups_rounded,
-                              title: L10nService()
-                                  .translate('share_no_groups_title'),
-                              subtitle: L10nService()
-                                  .translate('share_no_groups_subtitle'),
+                              title: L10nService().translate(
+                                'share_no_groups_title',
+                              ),
+                              subtitle: L10nService().translate(
+                                'share_no_groups_subtitle',
+                              ),
                               screenWidth: screenWidth,
                             ),
                           )
@@ -708,8 +716,9 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                               itemCount: _groups.length,
                               itemBuilder: (ctx, i) {
                                 final group = _groups[i];
-                                final isSending = _sendingTargetIds
-                                    .contains('group:${group.id}');
+                                final isSending = _sendingTargetIds.contains(
+                                  'group:${group.id}',
+                                );
                                 return _buildShareTargetBlock(
                                   compact: compact,
                                   label: group.name,
@@ -746,8 +755,9 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                             Expanded(
                               child: _buildSectionHeader(
                                 title: L10nService().translate('share_via'),
-                                subtitle:
-                                    L10nService().translate('share_external_copy'),
+                                subtitle: L10nService().translate(
+                                  'share_external_copy',
+                                ),
                                 compact: compact,
                                 screenWidth: screenWidth,
                               ),
@@ -761,31 +771,45 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => SettingsLinksManagerScreen(
-                                          houseId: widget.myHouseId,
-                                        ),
+                                        builder: (_) =>
+                                            SettingsLinksManagerScreen(
+                                              houseId: widget.myHouseId,
+                                            ),
                                       ),
                                     );
                                   },
                                   child: Container(
                                     padding: EdgeInsets.symmetric(
-                                      horizontal: SLResponsive.dp(10, screenWidth),
+                                      horizontal: SLResponsive.dp(
+                                        10,
+                                        screenWidth,
+                                      ),
                                       vertical: SLResponsive.dp(6, screenWidth),
                                     ),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFFFF0F5),
                                       borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: const Color(0xFFFFE0EB)),
+                                      border: Border.all(
+                                        color: const Color(0xFFFFE0EB),
+                                      ),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
                                           Icons.link_rounded,
-                                          size: SLResponsive.dp(14, screenWidth),
+                                          size: SLResponsive.dp(
+                                            14,
+                                            screenWidth,
+                                          ),
                                           color: const Color(0xFFD81B60),
                                         ),
-                                        SizedBox(width: SLResponsive.dp(4, screenWidth)),
+                                        SizedBox(
+                                          width: SLResponsive.dp(
+                                            4,
+                                            screenWidth,
+                                          ),
+                                        ),
                                         Text(
                                           'Quản lý',
                                           style: SLTheme.quicksand(
@@ -819,11 +843,13 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                             _buildExternalShareItem(
                               icon: _buildModernSocialIcon(
                                 size: SLResponsive.dp(
-                                    compact ? 48 : 52, screenWidth),
+                                  compact ? 48 : 52,
+                                  screenWidth,
+                                ),
                                 svgData: _zaloSvg,
                                 fallbackColors: const [
                                   Color(0xFF00B2FF),
-                                  Color(0xFF0068FF)
+                                  Color(0xFF0068FF),
                                 ],
                               ),
                               label: 'Zalo',
@@ -834,11 +860,13 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                             _buildExternalShareItem(
                               icon: _buildModernSocialIcon(
                                 size: SLResponsive.dp(
-                                    compact ? 48 : 52, screenWidth),
+                                  compact ? 48 : 52,
+                                  screenWidth,
+                                ),
                                 svgData: _fbSvg,
                                 fallbackColors: const [
                                   Color(0xFF1877F2),
-                                  Color(0xFF0C56B6)
+                                  Color(0xFF0C56B6),
                                 ],
                               ),
                               label: 'Facebook',
@@ -849,7 +877,9 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                             _buildExternalShareItem(
                               icon: _buildModernSocialIcon(
                                 size: SLResponsive.dp(
-                                    compact ? 48 : 52, screenWidth),
+                                  compact ? 48 : 52,
+                                  screenWidth,
+                                ),
                                 svgData: _messengerSvg,
                                 fallbackColors: const [
                                   Color(0xFF00B2FF),
@@ -866,7 +896,9 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                             _buildExternalShareItem(
                               icon: _buildModernSocialIcon(
                                 size: SLResponsive.dp(
-                                    compact ? 48 : 52, screenWidth),
+                                  compact ? 48 : 52,
+                                  screenWidth,
+                                ),
                                 svgData: _instagramSvg,
                                 customGradient: const RadialGradient(
                                   colors: [
@@ -887,11 +919,13 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                             _buildExternalShareItem(
                               icon: _buildModernSocialIcon(
                                 size: SLResponsive.dp(
-                                    compact ? 48 : 52, screenWidth),
+                                  compact ? 48 : 52,
+                                  screenWidth,
+                                ),
                                 svgData: _telegramSvg,
                                 fallbackColors: const [
                                   Color(0xFF24A1DE),
-                                  Color(0xFF1E88BE)
+                                  Color(0xFF1E88BE),
                                 ],
                               ),
                               label: 'Telegram',
@@ -903,15 +937,18 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                               icon: Container(
                                 decoration: const BoxDecoration(
                                   color: Color(0xFF34C759),
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(14)),
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(14),
+                                  ),
                                 ),
                                 alignment: Alignment.center,
                                 child: Icon(
                                   Icons.chat_bubble_rounded,
                                   color: Colors.white,
                                   size: SLResponsive.dp(
-                                      compact ? 22 : 24, screenWidth),
+                                    compact ? 22 : 24,
+                                    screenWidth,
+                                  ),
                                 ),
                               ),
                               label: 'Tin nhắn',
@@ -923,15 +960,18 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                               icon: Container(
                                 decoration: const BoxDecoration(
                                   color: Color(0xFF64748B),
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(14)),
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(14),
+                                  ),
                                 ),
                                 alignment: Alignment.center,
                                 child: Icon(
                                   Icons.copy_all_rounded,
                                   color: Colors.white,
                                   size: SLResponsive.dp(
-                                      compact ? 22 : 24, screenWidth),
+                                    compact ? 22 : 24,
+                                    screenWidth,
+                                  ),
                                 ),
                               ),
                               label: L10nService().translate('core_copy'),
@@ -943,15 +983,18 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                               icon: Container(
                                 decoration: const BoxDecoration(
                                   color: Color(0xFF94A3B8),
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(14)),
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(14),
+                                  ),
                                 ),
                                 alignment: Alignment.center,
                                 child: Icon(
                                   Icons.share_rounded,
                                   color: Colors.white,
                                   size: SLResponsive.dp(
-                                      compact ? 22 : 24, screenWidth),
+                                    compact ? 22 : 24,
+                                    screenWidth,
+                                  ),
                                 ),
                               ),
                               label: L10nService().translate('core_other'),
@@ -1065,8 +1108,9 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius:
-                  BorderRadius.circular(SLResponsive.dp(14, screenWidth)),
+              borderRadius: BorderRadius.circular(
+                SLResponsive.dp(14, screenWidth),
+              ),
             ),
             child: Icon(
               icon,
@@ -1084,8 +1128,10 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: SLTheme.quicksand(
-                    fontSize:
-                        SLResponsive.sp(compact ? 12.2 : 12.8, screenWidth),
+                    fontSize: SLResponsive.sp(
+                      compact ? 12.2 : 12.8,
+                      screenWidth,
+                    ),
                     fontWeight: FontWeight.w900,
                     color: const Color(0xFF334155),
                   ),
@@ -1098,8 +1144,10 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: SLTheme.quicksand(
-                    fontSize:
-                        SLResponsive.sp(compact ? 11.1 : 11.6, screenWidth),
+                    fontSize: SLResponsive.sp(
+                      compact ? 11.1 : 11.6,
+                      screenWidth,
+                    ),
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF94A3B8),
                     height: 1.35,
@@ -1172,8 +1220,10 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                     Text(
                       'Nội dung bạn đang chia sẻ',
                       style: SLTheme.quicksand(
-                        fontSize:
-                            SLResponsive.sp(compact ? 12.8 : 13.4, screenWidth),
+                        fontSize: SLResponsive.sp(
+                          compact ? 12.8 : 13.4,
+                          screenWidth,
+                        ),
                         fontWeight: FontWeight.w900,
                         color: const Color(0xFFD81B60),
                       ),
@@ -1187,8 +1237,9 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFFF0F5),
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(14)),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(14),
+                            ),
                             border: Border.all(color: const Color(0xFFFFE0EB)),
                           ),
                           child: Icon(
@@ -1213,8 +1264,10 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                       maxLines: 4,
                       overflow: TextOverflow.ellipsis,
                       style: SLTheme.quicksand(
-                        fontSize:
-                            SLResponsive.sp(compact ? 12.6 : 13.2, screenWidth),
+                        fontSize: SLResponsive.sp(
+                          compact ? 12.6 : 13.2,
+                          screenWidth,
+                        ),
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFF334155),
                         height: 1.4,
@@ -1236,7 +1289,8 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                         decoration: BoxDecoration(
                           color: const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(
-                              SLResponsive.dp(14, screenWidth)),
+                            SLResponsive.dp(14, screenWidth),
+                          ),
                           border: Border.all(color: const Color(0xFFE2E8F0)),
                         ),
                         child: Row(
@@ -1316,18 +1370,16 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                 ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      accentColor.withValues(alpha: 0.14),
-                      Colors.white,
-                    ],
+                    colors: [accentColor.withValues(alpha: 0.14), Colors.white],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
                   borderRadius: BorderRadius.circular(
                     SLResponsive.dp(22, screenWidth),
                   ),
-                  border:
-                      Border.all(color: accentColor.withValues(alpha: 0.16)),
+                  border: Border.all(
+                    color: accentColor.withValues(alpha: 0.16),
+                  ),
                   boxShadow: const [
                     BoxShadow(
                       color: Color(0x100F172A),
@@ -1367,10 +1419,8 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                     fit: BoxFit.cover,
                                     memCacheWidth: 400,
                                     filterQuality: FilterQuality.medium,
-                                    errorWidget: (_, __, ___) => Icon(
-                                      icon,
-                                      color: accentColor,
-                                    ),
+                                    errorWidget: (_, __, ___) =>
+                                        Icon(icon, color: accentColor),
                                   )
                                 : Icon(
                                     icon,
@@ -1383,19 +1433,32 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                           ),
                         ),
                         Positioned(
-                          right:
-                              SLResponsive.dp(-3, screenWidth, min: 1, max: 1),
-                          bottom:
-                              SLResponsive.dp(-3, screenWidth, min: 1, max: 1),
+                          right: SLResponsive.dp(
+                            -3,
+                            screenWidth,
+                            min: 1,
+                            max: 1,
+                          ),
+                          bottom: SLResponsive.dp(
+                            -3,
+                            screenWidth,
+                            min: 1,
+                            max: 1,
+                          ),
                           child: Container(
-                            width:
-                                SLResponsive.dp(compact ? 20 : 22, screenWidth),
-                            height:
-                                SLResponsive.dp(compact ? 20 : 22, screenWidth),
+                            width: SLResponsive.dp(
+                              compact ? 20 : 22,
+                              screenWidth,
+                            ),
+                            height: SLResponsive.dp(
+                              compact ? 20 : 22,
+                              screenWidth,
+                            ),
                             decoration: BoxDecoration(
                               color: accentColor,
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(14)),
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(14),
+                              ),
                               border: Border.all(color: Colors.white, width: 2),
                             ),
                             child: isSending

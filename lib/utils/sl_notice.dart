@@ -56,6 +56,10 @@ class SLNotice {
 
     _lastMessage = resolvedMessage;
     _lastMessageTime = now;
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final horizontalMargin = viewportWidth > 552
+        ? (viewportWidth - 520) / 2
+        : 16.0;
 
     try {
       messenger
@@ -67,45 +71,55 @@ class SLNotice {
           elevation: 0,
           backgroundColor: Colors.transparent,
           behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.only(bottom: 24, left: 16, right: 16),
+          margin: EdgeInsets.only(
+            bottom: 24,
+            left: horizontalMargin,
+            right: horizontalMargin,
+          ),
           duration: const Duration(seconds: 4),
-          content: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: backgroundColor.withValues(alpha: 0.3), width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: backgroundColor.withValues(alpha: 0.15),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
+          content: Semantics(
+            liveRegion: true,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: SLColors.paper,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                  color: backgroundColor.withValues(alpha: 0.3),
+                  width: 1.5,
                 ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: backgroundColor.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: backgroundColor.withValues(alpha: 0.15),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
                   ),
-                  child: Icon(icon, color: backgroundColor, size: 22),
-                ),
-                SLSpacing.w12,
-                Expanded(
-                  child: Text(
-                    resolvedMessage,
-                    style: SLTheme.quicksand(
-                      color: SLColors.textPrimary,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13.5,
-                      height: 1.4,
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: backgroundColor.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(icon, color: backgroundColor, size: 22),
+                  ),
+                  SLSpacing.w12,
+                  Expanded(
+                    child: Text(
+                      resolvedMessage,
+                      style: SLTheme.quicksand(
+                        color: SLColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13.5,
+                        height: 1.4,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -136,8 +150,8 @@ class SLNotice {
     BuildContext context, {
     required String title,
     required String message,
-    String confirmText = 'Xác nhận',
-    String cancelText = 'Hủy',
+    String confirmText = 'confirm',
+    String cancelText = 'cancel',
     bool isDanger = false,
   }) {
     final l10n = L10nService();
@@ -167,11 +181,11 @@ class SLNotice {
     return showDialog<bool>(
       context: dialogContext,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28),
-        ),
+        backgroundColor: SLColors.paper,
+        surfaceTintColor: Colors.transparent,
+        constraints: const BoxConstraints(maxWidth: 480),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
         contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
         title: Row(
@@ -200,7 +214,7 @@ class SLNotice {
             SLSpacing.w12,
             Expanded(
               child: Text(
-                resolvedTitle.toUpperCase(),
+                resolvedTitle,
                 style: SLTheme.quicksand(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,

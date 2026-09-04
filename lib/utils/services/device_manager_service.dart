@@ -219,20 +219,22 @@ class DeviceManagerService {
       final autoApproveAtMs = storedAutoApproveAtMs > 0
           ? storedAutoApproveAtMs
           : firstSeenAtMs > 0
-              ? firstSeenAtMs + pendingAutoTrustDelay.inMilliseconds
-              : 0;
+          ? firstSeenAtMs + pendingAutoTrustDelay.inMilliseconds
+          : 0;
 
       var isAdmin = data['is_admin'] == true;
 
       if (autoApprove && status == 'pending') {
         final trustedCount = await _countTrustedDevicesForHouse(houseId);
         if (trustedCount < autoTrustedDeviceLimit) {
-          await ref.update({
-            'status': 'approved',
-            'is_admin': true,
-            'approved_at': ServerValue.timestamp,
-            'approved_reason': 'auto_first_three_devices',
-          }).timeout(const Duration(seconds: 5));
+          await ref
+              .update({
+                'status': 'approved',
+                'is_admin': true,
+                'approved_at': ServerValue.timestamp,
+                'approved_reason': 'auto_first_three_devices',
+              })
+              .timeout(const Duration(seconds: 5));
           status = 'approved';
           isAdmin = true;
         }
@@ -242,11 +244,13 @@ class DeviceManagerService {
           status == 'pending' &&
           autoApproveAtMs > 0 &&
           DateTime.now().millisecondsSinceEpoch >= autoApproveAtMs) {
-        await ref.update({
-          'status': 'approved',
-          'approved_at': ServerValue.timestamp,
-          'approved_reason': 'auto_after_12_hours',
-        }).timeout(const Duration(seconds: 5));
+        await ref
+            .update({
+              'status': 'approved',
+              'approved_at': ServerValue.timestamp,
+              'approved_reason': 'auto_after_12_hours',
+            })
+            .timeout(const Duration(seconds: 5));
         status = 'approved';
       }
 
@@ -260,10 +264,9 @@ class DeviceManagerService {
         isAdmin: isAdmin,
       );
     } catch (e) {
-      debugPrint('getCurrentDeviceTrustState ignored: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể kiểm tra trạng thái thiết bị.',
-      ).message}');
+      debugPrint(
+        'getCurrentDeviceTrustState ignored: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể kiểm tra trạng thái thiết bị.').message}',
+      );
       return _unknownTrustState;
     }
   }
@@ -552,14 +555,13 @@ class DeviceManagerService {
       return true;
     } on FirebaseFunctionsException catch (e) {
       debugPrint(
-          'registerCurrentDeviceSecure fallback to legacy DB write: ${e.code}');
+        'registerCurrentDeviceSecure fallback to legacy DB write: ${e.code}',
+      );
       return false;
     } catch (e) {
       debugPrint(
-          'registerCurrentDeviceSecure fallback to legacy DB write: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể đăng ký thiết bị qua máy chủ bảo mật.',
-      ).message}');
+        'registerCurrentDeviceSecure fallback to legacy DB write: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể đăng ký thiết bị qua máy chủ bảo mật.').message}',
+      );
       return false;
     }
   }
@@ -571,20 +573,20 @@ class DeviceManagerService {
     Map<String, dynamic> ipData = {};
 
     Future<Map<String, dynamic>?> fetchIpData(
-        String url, String sourceName) async {
+      String url,
+      String sourceName,
+    ) async {
       try {
-        final response =
-            await ResilientHttp.get(Uri.parse(url));
+        final response = await ResilientHttp.get(Uri.parse(url));
         if (response.statusCode == 200) {
           final data = json.decode(response.body);
           data['source'] = sourceName;
           return data;
         }
       } catch (e) {
-        debugPrint('fetchIpData error: ${AppErrorMapper.resolve(
-          e,
-          fallbackMessage: 'Không thể lấy dữ liệu mạng thiết bị.',
-        ).message}');
+        debugPrint(
+          'fetchIpData error: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể lấy dữ liệu mạng thiết bị.').message}',
+        );
       }
       return null;
     }
@@ -606,8 +608,10 @@ class DeviceManagerService {
     }
 
     if (ip == 'unknown') {
-      final data =
-          await fetchIpData('https://api.ipify.org?format=json', 'ipify');
+      final data = await fetchIpData(
+        'https://api.ipify.org?format=json',
+        'ipify',
+      );
       if (data != null && data['ip'] != null) {
         ipData = data;
         ip = data['ip'].toString();
@@ -621,8 +625,11 @@ class DeviceManagerService {
           (ipData['region'] ?? ipData['regionName'])?.toString() ?? '';
       final country =
           (ipData['country'] ?? ipData['country_name'])?.toString() ?? '';
-      final locParts =
-          [city, region, country].where((e) => e.isNotEmpty).toList();
+      final locParts = [
+        city,
+        region,
+        country,
+      ].where((e) => e.isNotEmpty).toList();
       if (locParts.isNotEmpty) {
         location = locParts.join(', ');
       }
@@ -638,7 +645,8 @@ class DeviceManagerService {
       'timezone': ipData['timezone']?.toString() ?? '',
       'latitude': (ipData['latitude'] ?? ipData['lat'])?.toString() ?? '',
       'longitude': (ipData['longitude'] ?? ipData['lon'])?.toString() ?? '',
-      'org': (ipData['organization_name'] ?? ipData['org'] ?? ipData['isp'])
+      'org':
+          (ipData['organization_name'] ?? ipData['org'] ?? ipData['isp'])
               ?.toString() ??
           '',
       'ipSource': ipSource,
@@ -714,7 +722,8 @@ class DeviceManagerService {
   }
 
   Future<void> _forceSignOutWithLocalSessionClear() async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     await SecureStorageService.instance.delete(SecureStorageService.keyHouseId);
     await SecureStorageService.instance.delete(SecureStorageService.keyAuthUid);
@@ -844,11 +853,14 @@ class DeviceManagerService {
               if (ageMs >= pendingAutoTrustDelay.inMilliseconds) {
                 device['status'] = 'approved';
                 unawaited(
-                  _db.ref('houses/$houseId/security/devices/${e.key}').update({
-                    'status': 'approved',
-                    'approved_at': ServerValue.timestamp,
-                    'approved_reason': 'auto_after_12_hours',
-                  }).catchError((_) {}),
+                  _db
+                      .ref('houses/$houseId/security/devices/${e.key}')
+                      .update({
+                        'status': 'approved',
+                        'approved_at': ServerValue.timestamp,
+                        'approved_reason': 'auto_after_12_hours',
+                      })
+                      .catchError((_) {}),
                 );
               }
             }
@@ -913,10 +925,8 @@ class DeviceManagerService {
       return null;
     } catch (e) {
       debugPrint(
-          'getDeviceListSecure fallback to legacy DB read: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể tải danh sách thiết bị bảo mật.',
-      ).message}');
+        'getDeviceListSecure fallback to legacy DB read: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể tải danh sách thiết bị bảo mật.').message}',
+      );
       return null;
     }
   }
@@ -950,17 +960,6 @@ class DeviceManagerService {
     if (houseId == null || houseId.isEmpty) return;
 
     final ref = _db.ref('houses/$houseId/security/devices/$deviceId');
-    final snap = await ref.get();
-    if (snap.exists) {
-      final data = snap.value as Map;
-      final ip = data['ip'] as String?;
-      if (ip != null && ip.isNotEmpty && ip != 'unknown') {
-        final cleanIp = ip.replaceAll('.', '_');
-        // Bif (n != null) n! IP trên toàn hệ thống
-        await _db.ref('banned_ips/$cleanIp').set(true);
-      }
-    }
-
     await ref.update({
       'status': 'blocked',
       'blocked_at': ServerValue.timestamp,
@@ -985,7 +984,9 @@ class DeviceManagerService {
   }
 
   Future<bool> _callDeviceActionFunction(
-      String functionName, String deviceId) async {
+    String functionName,
+    String deviceId,
+  ) async {
     try {
       final currentDeviceId = await getCurrentDeviceIdentifier();
       final callable = _functions.httpsCallable(functionName);
@@ -999,11 +1000,8 @@ class DeviceManagerService {
       return false;
     } catch (e) {
       debugPrint(
-          'Device action fallback to legacy DB write: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage:
-            'Không thể xử lý thao tác thiết bị qua máy chủ bảo mật.',
-      ).message}');
+        'Device action fallback to legacy DB write: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể xử lý thao tác thiết bị qua máy chủ bảo mật.').message}',
+      );
       return false;
     }
   }
@@ -1017,29 +1015,38 @@ class DeviceManagerService {
       return memoryHouseId;
     }
 
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     await SecureStorageService.instance.migrateFromPrefs(
-        SecureStorageService.keyHouseId, prefs.getString(_prefHouseId));
+      SecureStorageService.keyHouseId,
+      prefs.getString(_prefHouseId),
+    );
     await SecureStorageService.instance.migrateFromPrefs(
-        SecureStorageService.keyAuthUid, prefs.getString(_prefAuthUid));
-    final cachedHouseId = (await SecureStorageService.instance
-                .read(SecureStorageService.keyHouseId))
-            ?.trim() ??
+      SecureStorageService.keyAuthUid,
+      prefs.getString(_prefAuthUid),
+    );
+    final cachedHouseId =
+        (await SecureStorageService.instance.read(
+          SecureStorageService.keyHouseId,
+        ))?.trim() ??
         '';
-    final cachedAuthUid = (await SecureStorageService.instance
-                .read(SecureStorageService.keyAuthUid))
-            ?.trim() ??
+    final cachedAuthUid =
+        (await SecureStorageService.instance.read(
+          SecureStorageService.keyAuthUid,
+        ))?.trim() ??
         '';
     if (cachedHouseId.isNotEmpty) {
       if (cachedAuthUid == uid) {
         _rememberHouseId(cachedHouseId, uid: uid);
         return cachedHouseId;
       }
-      await SecureStorageService.instance
-          .delete(SecureStorageService.keyHouseId);
-      await SecureStorageService.instance
-          .delete(SecureStorageService.keyAuthUid);
+      await SecureStorageService.instance.delete(
+        SecureStorageService.keyHouseId,
+      );
+      await SecureStorageService.instance.delete(
+        SecureStorageService.keyAuthUid,
+      );
       await SecureStorageService.instance.delete(SecureStorageService.keyRole);
       await prefs.remove(_prefHouseId);
       await prefs.remove(_prefAuthUid);
@@ -1078,10 +1085,14 @@ class DeviceManagerService {
     }
 
     _rememberHouseId(houseId, uid: uid);
-    await SecureStorageService.instance
-        .write(SecureStorageService.keyHouseId, houseId);
-    await SecureStorageService.instance
-        .write(SecureStorageService.keyAuthUid, uid);
+    await SecureStorageService.instance.write(
+      SecureStorageService.keyHouseId,
+      houseId,
+    );
+    await SecureStorageService.instance.write(
+      SecureStorageService.keyAuthUid,
+      uid,
+    );
     await prefs.remove(_prefHouseId);
     await prefs.remove(_prefAuthUid);
     return houseId;
@@ -1146,9 +1157,9 @@ class DeviceManagerService {
 
       devices.add(
         Map<String, dynamic>.from(
-          Map<dynamic, dynamic>.from(rawDevice).map(
-            (key, value) => MapEntry(key.toString(), value),
-          ),
+          Map<dynamic, dynamic>.from(
+            rawDevice,
+          ).map((key, value) => MapEntry(key.toString(), value)),
         ),
       );
     }
@@ -1187,7 +1198,9 @@ class DeviceManagerService {
 
     try {
       stableDeviceId = (await SecurityService().getDeviceId()).trim();
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[DeviceManager] Không lấy được mã thiết bị ổn định: $error');
+    }
 
     try {
       if (kIsWeb) {

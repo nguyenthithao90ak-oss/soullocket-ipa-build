@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureStorageService {
@@ -6,7 +7,8 @@ class SecureStorageService {
   static const FlutterSecureStorage _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(),
     iOptions: IOSOptions(
-        accessibility: KeychainAccessibility.first_unlock_this_device),
+      accessibility: KeychainAccessibility.first_unlock_this_device,
+    ),
   );
 
   SecureStorageService._internal();
@@ -24,13 +26,16 @@ class SecureStorageService {
       await _storage
           .write(key: key, value: value)
           .timeout(const Duration(seconds: 2));
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[SecureStorage] write thất bại: $error');
+    }
   }
 
   Future<String?> read(String key) async {
     try {
       return await _storage.read(key: key).timeout(const Duration(seconds: 2));
-    } catch (_) {
+    } catch (error) {
+      debugPrint('[SecureStorage] read thất bại: $error');
       return null;
     }
   }
@@ -38,13 +43,17 @@ class SecureStorageService {
   Future<void> delete(String key) async {
     try {
       await _storage.delete(key: key).timeout(const Duration(seconds: 2));
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[SecureStorage] delete thất bại: $error');
+    }
   }
 
   Future<void> deleteAll() async {
     try {
       await _storage.deleteAll().timeout(const Duration(seconds: 2));
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[SecureStorage] deleteAll thất bại: $error');
+    }
   }
 
   /// Migrates a key from SharedPreferences to SecureStorage if it exists

@@ -14,6 +14,8 @@ class VaultMediaUrlService {
   static final instance = VaultMediaUrlService._();
 
   final _cache = <String, VaultMediaUrlResult>{};
+  final _inFlight = <String, Future<String>>{};
+  int _cacheGeneration = 0;
 
   /// Resolve a storagePath to a signed URL.
   /// Returns the signed URL string.
@@ -41,15 +43,43 @@ class VaultMediaUrlService {
       return cached.url;
     }
 
+    final pending = _inFlight[cacheKey];
+    if (pending != null) return pending;
+
+    final generation = _cacheGeneration;
+    final request = _fetchSignedUrl(
+      cacheKey: cacheKey,
+      generation: generation,
+      storagePath: normalizedPath,
+      houseId: normalizedHouseId,
+      mediaId: normalizedMediaId,
+    );
+    _inFlight[cacheKey] = request;
+    try {
+      return await request;
+    } finally {
+      if (identical(_inFlight[cacheKey], request)) {
+        _inFlight.remove(cacheKey);
+      }
+    }
+  }
+
+  Future<String> _fetchSignedUrl({
+    required String cacheKey,
+    required int generation,
+    required String storagePath,
+    required String houseId,
+    required String mediaId,
+  }) async {
     try {
       final callable = FirebaseFunctions.instance.httpsCallable(
         'generateReadUrl',
         options: HttpsCallableOptions(timeout: const Duration(seconds: 15)),
       );
       final result = await callable.call<Map<String, dynamic>>({
-        'storagePath': normalizedPath,
-        'houseId': normalizedHouseId,
-        'mediaId': normalizedMediaId,
+        'storagePath': storagePath,
+        'houseId': houseId,
+        'mediaId': mediaId,
       });
 
       final data = result.data;
@@ -59,7 +89,9 @@ class VaultMediaUrlService {
           ? rawExpiresAt.toInt()
           : int.tryParse(rawExpiresAt?.toString() ?? '') ?? 0;
 
-      if (url.isNotEmpty && expiresAt > DateTime.now().millisecondsSinceEpoch) {
+      if (generation == _cacheGeneration &&
+          url.isNotEmpty &&
+          expiresAt > DateTime.now().millisecondsSinceEpoch) {
         _cache[cacheKey] = VaultMediaUrlResult(url: url, expiresAt: expiresAt);
       }
       return url;
@@ -76,5 +108,8 @@ class VaultMediaUrlService {
     return url.startsWith('http://') || url.startsWith('https://');
   }
 
-  void clearCache() => _cache.clear();
+  void clearCache() {
+    _cache.clear();
+    _cacheGeneration++;
+  }
 }

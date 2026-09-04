@@ -7,7 +7,7 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
     if (_houseSettings == null) return '✨ 0';
     final dob =
         _houseSettings!['dob${role == 'user1' ? 'U1' : 'U2'}']?.toString() ??
-            '';
+        '';
     if (dob.isEmpty) return '✨ 0';
 
     try {
@@ -43,9 +43,7 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
     final items = <({int order, String url})>[];
     raw.forEach((_, value) {
       if (value is! Map) return;
-      final map = value.map(
-        (key, item) => MapEntry(key.toString(), item),
-      );
+      final map = value.map((key, item) => MapEntry(key.toString(), item));
       final imageUrl = (map['url'] ?? map['imageUrl'] ?? map['thumbUrl'] ?? '')
           .toString()
           .trim();
@@ -89,22 +87,24 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
   }
 
   Future<
-      ({
-        String bgTheme,
-        String widgetStyleKey,
-        bool showDiaryOnWidget,
-        bool heartAnimated,
-        String heartStyleKey,
-        String heartColorKey,
-        String diaryLayoutKey,
-        String seasonModeKey,
-      })> _loadWidgetAppearancePrefsImpl(String houseId) async {
+    ({
+      String bgTheme,
+      String widgetStyleKey,
+      bool showDiaryOnWidget,
+      bool heartAnimated,
+      String heartStyleKey,
+      String heartColorKey,
+      String diaryLayoutKey,
+      String seasonModeKey,
+    })
+  >
+  _loadWidgetAppearancePrefsImpl(String houseId) async {
     final prefs = await SharedPreferences.getInstance();
     final accountKey = _widgetAccountKeyImpl(houseId);
     final showDiaryOnWidget =
         prefs.getBool('il_widget_show_diary_$accountKey') ??
-            prefs.getBool('il_widget_show_diary') ??
-            true;
+        prefs.getBool('il_widget_show_diary') ??
+        true;
     // Always pin heart style (no random animation) on app entry.
     const heartAnimated = false;
     final displayMode = WidgetService.normalizeWidgetDisplayMode(
@@ -112,7 +112,8 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       heartAnimated: heartAnimated,
     );
     return (
-      bgTheme: prefs.getString('il_widget_theme_$accountKey') ??
+      bgTheme:
+          prefs.getString('il_widget_theme_$accountKey') ??
           prefs.getString('il_widget_theme') ??
           'pink',
       widgetStyleKey: WidgetService.normalizeWidgetStyleKey(
@@ -124,13 +125,16 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       heartAnimated: displayMode.heartAnimated,
       // Force fixed default heart style (5th item) on app entry.
       heartStyleKey: '❤️',
-      heartColorKey: prefs.getString('il_widget_heart_color_$accountKey') ??
+      heartColorKey:
+          prefs.getString('il_widget_heart_color_$accountKey') ??
           prefs.getString('il_widget_heart_color') ??
           'rose',
-      diaryLayoutKey: prefs.getString('il_widget_diary_layout_$accountKey') ??
+      diaryLayoutKey:
+          prefs.getString('il_widget_diary_layout_$accountKey') ??
           prefs.getString('il_widget_diary_layout') ??
           'single',
-      seasonModeKey: prefs.getString('il_widget_season_mode_$accountKey') ??
+      seasonModeKey:
+          prefs.getString('il_widget_season_mode_$accountKey') ??
           prefs.getString('il_widget_season_mode') ??
           'auto',
     );
@@ -150,9 +154,11 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
     final nextSettingsKey = _buildWidgetSettingsSyncKeyImpl(nextSettings);
     final pendingSettings = _pendingWidgetSettings;
     if (pendingSettings != null) {
-      final pendingSettingsKey =
-          _buildWidgetSettingsSyncKeyImpl(pendingSettings);
-      final alreadyCoversRequest = pendingSettingsKey == nextSettingsKey &&
+      final pendingSettingsKey = _buildWidgetSettingsSyncKeyImpl(
+        pendingSettings,
+      );
+      final alreadyCoversRequest =
+          pendingSettingsKey == nextSettingsKey &&
           (_pendingWidgetSyncIncludeDiaryMedia || !includeDiaryMedia);
       if (alreadyCoversRequest) {
         return;
@@ -166,36 +172,39 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       return;
     }
     _loveWidgetSyncDebounce?.cancel();
-    _loveWidgetSyncDebounce =
-        Timer(const Duration(milliseconds: 700), () async {
-      if (_widgetSyncInFlight) {
-        return;
-      }
-      final pendingSettings = _pendingWidgetSettings;
-      final shouldIncludeDiaryMedia = _pendingWidgetSyncIncludeDiaryMedia;
-      _pendingWidgetSettings = null;
-      _pendingWidgetSyncIncludeDiaryMedia = false;
-      if (pendingSettings == null || !mounted || !_isTabActive) return;
-      _widgetSyncInFlight = true;
-      try {
-        await _syncLoveWidgetImpl(
-          pendingSettings,
-          includeDiaryMedia: shouldIncludeDiaryMedia,
-        );
-      } finally {
-        _widgetSyncInFlight = false;
-        final nextQueuedSettings = _pendingWidgetSettings;
-        final nextQueuedIncludeDiaryMedia = _pendingWidgetSyncIncludeDiaryMedia;
-        if (nextQueuedSettings != null && mounted && _isTabActive) {
-          _pendingWidgetSettings = null;
-          _pendingWidgetSyncIncludeDiaryMedia = false;
-          _scheduleLoveWidgetSyncImpl(
-            nextQueuedSettings,
-            includeDiaryMedia: nextQueuedIncludeDiaryMedia,
-          );
+    _loveWidgetSyncDebounce = Timer(
+      const Duration(milliseconds: 700),
+      () async {
+        if (_widgetSyncInFlight) {
+          return;
         }
-      }
-    });
+        final pendingSettings = _pendingWidgetSettings;
+        final shouldIncludeDiaryMedia = _pendingWidgetSyncIncludeDiaryMedia;
+        _pendingWidgetSettings = null;
+        _pendingWidgetSyncIncludeDiaryMedia = false;
+        if (pendingSettings == null || !mounted || !_isTabActive) return;
+        _widgetSyncInFlight = true;
+        try {
+          await _syncLoveWidgetImpl(
+            pendingSettings,
+            includeDiaryMedia: shouldIncludeDiaryMedia,
+          );
+        } finally {
+          _widgetSyncInFlight = false;
+          final nextQueuedSettings = _pendingWidgetSettings;
+          final nextQueuedIncludeDiaryMedia =
+              _pendingWidgetSyncIncludeDiaryMedia;
+          if (nextQueuedSettings != null && mounted && _isTabActive) {
+            _pendingWidgetSettings = null;
+            _pendingWidgetSyncIncludeDiaryMedia = false;
+            _scheduleLoveWidgetSyncImpl(
+              nextQueuedSettings,
+              includeDiaryMedia: nextQueuedIncludeDiaryMedia,
+            );
+          }
+        }
+      },
+    );
   }
 
   Future<void> _syncLoveWidgetImpl(
@@ -220,31 +229,31 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       );
       final rawNameU1 =
           (settings['nameU1']?.toString().trim().isNotEmpty ?? false)
-              ? settings['nameU1'].toString().trim()
-              : L10nService().translate('home_bn_1fd75b');
+          ? settings['nameU1'].toString().trim()
+          : L10nService().translate('home_bn_1fd75b');
       final rawNameU2 =
           (settings['nameU2']?.toString().trim().isNotEmpty ?? false)
-              ? settings['nameU2'].toString().trim()
-              : L10nService().translate('home_ngiy_5bab37');
+          ? settings['nameU2'].toString().trim()
+          : L10nService().translate('home_ngiy_5bab37');
 
       final nameU1 = rawNameU1.toLowerCase() == 'bạn nam'
           ? L10nService().translate('male_role_default')
           : (rawNameU1.toLowerCase() == 'bạn nữ'
-              ? L10nService().translate('female_role_default')
-              : rawNameU1);
+                ? L10nService().translate('female_role_default')
+                : rawNameU1);
       final nameU2 = rawNameU2.toLowerCase() == 'bạn nữ'
           ? L10nService().translate('female_role_default')
           : (rawNameU2.toLowerCase() == 'bạn nam'
-              ? L10nService().translate('male_role_default')
-              : rawNameU2);
+                ? L10nService().translate('male_role_default')
+                : rawNameU2);
 
       final configuredBucket = AppConfig.firebaseStorageBucket.trim();
       final defaultMaleAvatarUrl = configuredBucket.isEmpty
           ? ''
-              : 'https://firebasestorage.googleapis.com/v0/b/$configuredBucket/o/default_avatars%2Fmale.jpg?alt=media';
+          : 'https://firebasestorage.googleapis.com/v0/b/$configuredBucket/o/default_avatars%2Fmale.jpg?alt=media';
       final defaultFemaleAvatarUrl = configuredBucket.isEmpty
           ? ''
-              : 'https://firebasestorage.googleapis.com/v0/b/$configuredBucket/o/default_avatars%2Ffemale.jpg?alt=media';
+          : 'https://firebasestorage.googleapis.com/v0/b/$configuredBucket/o/default_avatars%2Ffemale.jpg?alt=media';
       final avt1 = settings['avtUser1']?.toString().isNotEmpty == true
           ? settings['avtUser1'].toString()
           : defaultMaleAvatarUrl;
@@ -254,10 +263,14 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
 
       final status1Text = _presenceStatusText('user1');
       final status2Text = _presenceStatusText('user2');
-      final isOnline1 =
-          _isPresenceDataOnlineForRole('user1', _presenceForRole('user1'));
-      final isOnline2 =
-          _isPresenceDataOnlineForRole('user2', _presenceForRole('user2'));
+      final isOnline1 = _isPresenceDataOnlineForRole(
+        'user1',
+        _presenceForRole('user1'),
+      );
+      final isOnline2 = _isPresenceDataOnlineForRole(
+        'user2',
+        _presenceForRole('user2'),
+      );
 
       final w1 = _widgetLocationTextForRole('user1');
       final w2 = _widgetLocationTextForRole('user2');
@@ -270,8 +283,8 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       final dobU2 = settings['dobU2']?.toString() ?? '';
       final diaryImageUrls = appearance.showDiaryOnWidget
           ? (includeDiaryMedia || _cachedWidgetDiaryImageUrls.isEmpty
-              ? await _loadWidgetDiaryImageUrlsImpl(houseId)
-              : _cachedWidgetDiaryImageUrls)
+                ? await _loadWidgetDiaryImageUrlsImpl(houseId)
+                : _cachedWidgetDiaryImageUrls)
           : const <String>[];
       if (!_isTabActive) return;
       if (appearance.showDiaryOnWidget) {

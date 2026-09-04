@@ -215,11 +215,9 @@ class _UtilitiesTabState extends State<UtilitiesTab>
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: SLRadius.xlAll,
-          ),
+          shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
           title: Text(
-            'Đặt lại bố cục',
+            context.tr('utilities_reset_layout_title'),
             style: SLTheme.quicksand(
               fontWeight: FontWeight.w900,
               color: const Color(0xFFD81B60),
@@ -227,10 +225,7 @@ class _UtilitiesTabState extends State<UtilitiesTab>
           ),
           content: Text(
             context.tr('home_bncchcmuna_5043aa'),
-            style: SLTheme.quicksand(
-              fontWeight: FontWeight.w700,
-              height: 1.5,
-            ),
+            style: SLTheme.quicksand(fontWeight: FontWeight.w700, height: 1.5),
           ),
           actions: [
             TextButton(
@@ -271,15 +266,17 @@ class _UtilitiesTabState extends State<UtilitiesTab>
       _houseId = await _houseService.getCurrentHouseId();
       if (_houseId != null) {
         // Tải từ cache trước
-        final cachedData =
-            OfflineCacheService.loadCacheSync('utilities_settings_$_houseId');
+        final cachedData = OfflineCacheService.loadCacheSync(
+          'utilities_settings_$_houseId',
+        );
         if (cachedData != null) {
           if (mounted) {
             setState(() {
               _myName = cachedData['nameU1'] ?? context.tr('home_bn_1fd75b');
               _relationshipMode =
                   HouseSettings.inferRelationshipModeFromSettingsMap(
-                      Map<dynamic, dynamic>.from(cachedData));
+                    Map<dynamic, dynamic>.from(cachedData),
+                  );
             });
           }
         }
@@ -326,21 +323,27 @@ class _UtilitiesTabState extends State<UtilitiesTab>
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: UtilitiesTabBody(
-        currentSegment: _currentSegment,
-        onSegmentChanged: _handleSegmentChanged,
-        onResetTap: _confirmResetLayout,
-        commonApps: commonApps,
-        essentialApps: essentialApps,
-        pinnedApps: _shortcutPinnedApps,
-        recentApps: _shortcutRecentApps,
-        onShortcutTap: _navigateToApp,
-        showBottomBanner: _shouldShowBottomBanner,
-        bottomBannerAd: _bottomBannerAd,
-        isEditMode: _isEditMode,
-        onAppTap: _navigateToApp,
-        onReorder: _reorderApp,
-        onEditModeChanged: _handleEditModeChanged,
+      body: SLTheme.softCanvasBackdrop(
+        baseColor: SLColors.paperCanvas,
+        accentColor: SLColors.secondary,
+        secondaryAccent: SLColors.thread,
+        motif: SLCanvasBackdropMotif.sparkles,
+        child: UtilitiesTabBody(
+          currentSegment: _currentSegment,
+          onSegmentChanged: _handleSegmentChanged,
+          onResetTap: _confirmResetLayout,
+          commonApps: commonApps,
+          essentialApps: essentialApps,
+          pinnedApps: _shortcutPinnedApps,
+          recentApps: _shortcutRecentApps,
+          onShortcutTap: _navigateToApp,
+          showBottomBanner: _shouldShowBottomBanner,
+          bottomBannerAd: _bottomBannerAd,
+          isEditMode: _isEditMode,
+          onAppTap: _navigateToApp,
+          onReorder: _reorderApp,
+          onEditModeChanged: _handleEditModeChanged,
+        ),
       ),
     );
   }
@@ -353,7 +356,8 @@ class _UtilitiesTabState extends State<UtilitiesTab>
   List<UtilityApp> get _shortcutPinnedApps {
     return _pinnedApps
         .where(
-            (app) => UtilityService.isUtilityAllowed(app.id, _relationshipMode))
+          (app) => UtilityService.isUtilityAllowed(app.id, _relationshipMode),
+        )
         .toList(growable: false);
   }
 
@@ -361,7 +365,8 @@ class _UtilitiesTabState extends State<UtilitiesTab>
     final pinnedIds = _shortcutPinnedApps.map((app) => app.id).toSet();
     return _recentApps
         .where(
-            (app) => UtilityService.isUtilityAllowed(app.id, _relationshipMode))
+          (app) => UtilityService.isUtilityAllowed(app.id, _relationshipMode),
+        )
         .where((app) => !pinnedIds.contains(app.id))
         .toList(growable: false);
   }
@@ -414,8 +419,10 @@ class _UtilitiesTabState extends State<UtilitiesTab>
 
   Future<void> _navigateToApp(String id) async {
     if (!UtilityService.isUtilityAllowed(id, _relationshipMode)) {
-      final blockedMessage =
-          UtilityService.blockedMessageForMode(id, _relationshipMode);
+      final blockedMessage = UtilityService.blockedMessageForMode(
+        id,
+        _relationshipMode,
+      );
       if (blockedMessage.isNotEmpty) {
         SLNotice.showInfo(context, blockedMessage);
         return;
@@ -426,7 +433,9 @@ class _UtilitiesTabState extends State<UtilitiesTab>
     // LocalAlbumScreen khong can houseId
     if (id == 'local_album') {
       Navigator.push(
-          context, SLRoute(builder: (_) => const LocalAlbumScreen()));
+        context,
+        SLRoute(builder: (_) => const LocalAlbumScreen()),
+      );
       return;
     }
     final houseId = _houseId;
@@ -437,9 +446,9 @@ class _UtilitiesTabState extends State<UtilitiesTab>
 
     if (id == 'couple_connect') {
       Navigator.push(
-          context,
-          SLRoute(
-              builder: (_) => SettingsLinksManagerScreen(houseId: houseId)));
+        context,
+        SLRoute(builder: (_) => SettingsLinksManagerScreen(houseId: houseId)),
+      );
       return;
     }
 
@@ -490,16 +499,21 @@ class _UtilitiesTabState extends State<UtilitiesTab>
         final isUnderDailyLimit = shownToday < 3;
 
         debugPrint(
-            'UtilityClickAd: Cooldown passed = $has2HourCooldownPassed, Shown today = $shownToday, Under limit = $isUnderDailyLimit');
+          'UtilityClickAd: Cooldown passed = $has2HourCooldownPassed, Shown today = $shownToday, Under limit = $isUnderDailyLimit',
+        );
 
         if (has2HourCooldownPassed && isUnderDailyLimit) {
           debugPrint('UtilityClickAd: Target reached! Showing click-count ad.');
           final shown = await _adMob.showInterstitialAd();
           if (shown) {
             await prefs.setInt(
-                'utility_click_ad_last_shown_time', now.millisecondsSinceEpoch);
+              'utility_click_ad_last_shown_time',
+              now.millisecondsSinceEpoch,
+            );
             await prefs.setInt(
-                'utility_click_ad_shown_today_count', shownToday + 1);
+              'utility_click_ad_shown_today_count',
+              shownToday + 1,
+            );
             _lastUtilityAdTime = now;
           }
         }
@@ -634,7 +648,8 @@ class _UtilitiesTabState extends State<UtilitiesTab>
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('home_tinchnyang_612f3d'))));
+        SnackBar(content: Text(context.tr('home_tinchnyang_612f3d'))),
+      );
     }
   }
 }

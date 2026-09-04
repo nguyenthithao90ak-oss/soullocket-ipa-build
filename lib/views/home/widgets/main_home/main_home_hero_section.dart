@@ -175,7 +175,7 @@ class _ModernHomeBody extends StatelessWidget {
                 return false;
               },
               child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
+                physics: SLResponsive.scrollPhysicsForPlatform(),
                 padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                 child: Center(
                   child: ConstrainedBox(
@@ -306,8 +306,8 @@ class _ChatReminderBanner extends StatelessWidget {
 
     final days = (diffMs / oneDayMs).floor();
     final label = days == 1
-        ? context.tr('Hôm nay chưa nhắn tin cho nhau 💌')
-        : context.tr('$days ngày chưa nhắn tin cho nhau 💌');
+        ? context.tr('main_home_chat_reminder_today')
+        : L10nService().format('main_home_chat_reminder_days', {'days': days});
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -357,7 +357,7 @@ class _ChatReminderBanner extends StatelessWidget {
             const SizedBox(width: 8),
             Semantics(
               button: true,
-              label: context.tr('Nhắn ngay'),
+              label: context.tr('main_home_chat_now'),
               child: Material(
                 color: SLColors.primary,
                 borderRadius: BorderRadius.circular(999),

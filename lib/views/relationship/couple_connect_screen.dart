@@ -97,7 +97,9 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
 
   void _copy(String text) async {
     await Clipboard.setData(ClipboardData(text: text));
-    _showSnack('Đã sao chép mã nhà: $text');
+    _showSnack(
+      L10nService().format('relationship_house_code_copied', {'code': text}),
+    );
   }
 
   String _scannerErrorText(MobileScannerException error) {
@@ -211,7 +213,9 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
       _joinError = null;
       _statusText = source == 'camera'
           ? context.tr('relationship_ccqrnhngdn_a2faca')
-          : 'Đã nhận ID nhà từ $source. Ứng dụng đang thử ghép đôi.';
+          : L10nService().format('relationship_received_house_id_source', {
+              'source': source,
+            });
       _isJoining = true;
     });
 
@@ -231,10 +235,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
         if (mounted) Navigator.of(context).pop(true);
         return;
       }
-      _setError(
-        result.errorMessage.trim(),
-        scannedValue: targetHouseId,
-      );
+      _setError(result.errorMessage.trim(), scannedValue: targetHouseId);
     } catch (error) {
       _setError(
         AppErrorMapper.resolve(
@@ -269,7 +270,8 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
       if (image == null) return;
       await _scannerCtrl.stop();
       final capture = await _scannerCtrl.analyzeImage(image.path);
-      final raw = capture?.barcodes
+      final raw =
+          capture?.barcodes
               .map((item) => item.rawValue?.trim() ?? '')
               .firstWhere((item) => item.isNotEmpty, orElse: () => '') ??
           '';
@@ -282,10 +284,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
       _setError(_scannerErrorText(error));
     } catch (error) {
       _setError(
-        AppErrorMapper.resolve(
-          error,
-          fallbackMessage: msgAnalyzeFail,
-        ).message,
+        AppErrorMapper.resolve(error, fallbackMessage: msgAnalyzeFail).message,
       );
     } finally {
       if (mounted) setState(() => _isAnalyzingImage = false);
@@ -297,43 +296,66 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
   Widget build(BuildContext context) {
     final houseId = widget.houseId.trim();
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF5F8),
+      backgroundColor: SLColors.paperCanvas,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFFF5F8),
+        backgroundColor: SLColors.paper,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         title: Text(
           context.tr('relationship_ktnivingiy_5bb8af'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w900,
-            color: const Color(0xFFD81B60),
+            color: SLColors.textPrimary,
           ),
         ),
-        iconTheme: const IconThemeData(color: Color(0xFFD81B60)),
+        iconTheme: const IconThemeData(color: SLColors.textPrimary),
         bottom: TabBar(
           controller: _tabController,
           labelStyle: SLTheme.quicksand(fontWeight: FontWeight.w900),
-          indicatorColor: const Color(0xFFD81B60),
-          labelColor: const Color(0xFFD81B60),
-          unselectedLabelColor: Colors.grey,
+          indicator: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [SLColors.primary, SLColors.secondary],
+            ),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          indicatorSize: TabBarIndicatorSize.tab,
+          indicatorPadding: const EdgeInsets.fromLTRB(6, 5, 6, 5),
+          dividerColor: Colors.transparent,
+          labelColor: Colors.white,
+          unselectedLabelColor: SLColors.textSecondary,
           tabs: [
             Tab(text: context.tr('relationship_mqrnh_99a331')),
             Tab(text: context.tr('relationship_qutmqr_5c2829')),
           ],
         ),
       ),
-      body: TabBarView(
-        physics: const SLPagePhysics(),
-        controller: _tabController,
-        children: [
-          _buildViewTab(houseId),
-          _buildScanTab(),
-        ],
+      body: SLTheme.softCanvasBackdrop(
+        baseColor: SLColors.paperCanvas,
+        accentColor: SLColors.primary,
+        secondaryAccent: SLColors.secondary,
+        motif: SLCanvasBackdropMotif.safety,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final horizontalInset = constraints.maxWidth > 760
+                ? (constraints.maxWidth - 720) / 2
+                : 0.0;
+            return Padding(
+              padding: EdgeInsets.symmetric(horizontal: horizontalInset),
+              child: TabBarView(
+                physics: const SLPagePhysics(),
+                controller: _tabController,
+                children: [_buildViewTab(houseId), _buildScanTab()],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
   Widget _buildViewTab(String houseId) {
     return SingleChildScrollView(
+      physics: SLResponsive.scrollPhysicsForPlatform(),
       padding: SLSpacing.all16,
       child: Column(
         children: [
@@ -341,9 +363,10 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
             width: double.infinity,
             padding: SLSpacing.all16,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: SLColors.paper.withValues(alpha: 0.97),
               borderRadius: SLRadius.xlAll,
-              border: Border.all(color: const Color(0x26D81B60)),
+              border: Border.all(color: SLColors.borderLight),
+              boxShadow: SLShadow.subtle,
             ),
             child: Column(
               children: [
@@ -379,14 +402,19 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
                   ),
                 ),
                 SLSpacing.h12,
-                ElevatedButton(
+                FilledButton.icon(
                   onPressed: () => _copy(houseId),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFD81B60),
+                  icon: const Icon(Icons.copy_rounded, size: 18),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: SLColors.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 13,
+                    ),
                   ),
-                  child: Text(
+                  label: Text(
                     context.tr('relationship_saochpmnh_039efa'),
                     style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                   ),
@@ -399,9 +427,10 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
             width: double.infinity,
             padding: SLSpacing.all16,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: SLColors.paperPeach.withValues(alpha: 0.94),
               borderRadius: SLRadius.xlAll,
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: SLColors.borderLight),
+              boxShadow: SLShadow.subtle,
             ),
             child: Text(
               context.tr('relationship_ngiycthqut_f245e2'),
@@ -456,9 +485,11 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
                 child: Row(
                   children: [
                     IconButton(
+                      tooltip: context.tr('relationship_switch_camera'),
                       onPressed: () async {
-                        final msgSwitchFail =
-                            context.tr('relationship_khngthicam_8bf16f');
+                        final msgSwitchFail = context.tr(
+                          'relationship_khngthicam_8bf16f',
+                        );
                         try {
                           await _scannerCtrl.switchCamera();
                         } catch (_) {
@@ -468,9 +499,11 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
                       icon: const Icon(Icons.cameraswitch, color: Colors.white),
                     ),
                     IconButton(
+                      tooltip: context.tr('relationship_toggle_flash'),
                       onPressed: () async {
-                        final msgTorchFail =
-                            context.tr('relationship_thitbnykhn_df24cd');
+                        final msgTorchFail = context.tr(
+                          'relationship_thitbnykhn_df24cd',
+                        );
                         try {
                           await _scannerCtrl.toggleTorch();
                           if (mounted) {
@@ -499,7 +532,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
         ),
         Container(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-          color: const Color(0xFFFFF5F8),
+          color: SLColors.paper.withValues(alpha: 0.96),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -526,8 +559,12 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
                 controller: _manualCtrl,
                 textInputAction: TextInputAction.done,
                 onChanged: (_) => setState(() {}),
-                onSubmitted: (_) => unawaited(_handleValue(_manualCtrl.text,
-                    source: context.tr('relationship_nhptay_d6a84b'))),
+                onSubmitted: (_) => unawaited(
+                  _handleValue(
+                    _manualCtrl.text,
+                    source: context.tr('relationship_nhptay_d6a84b'),
+                  ),
+                ),
                 decoration: InputDecoration(
                   hintText: context.tr('relationship_vdabc123xy_28686a'),
                   filled: true,
@@ -553,9 +590,11 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
                 onPressed: _isJoining
                     ? null
                     : () => unawaited(
-                          _handleValue(_manualCtrl.text,
-                              source: context.tr('relationship_nhptay_d6a84b')),
+                        _handleValue(
+                          _manualCtrl.text,
+                          source: context.tr('relationship_nhptay_d6a84b'),
                         ),
+                      ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFD81B60),
                   foregroundColor: Colors.white,

@@ -4,7 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'app_check_http_headers.dart';
 
 class AiCounselorService {
   static final AiCounselorService _instance = AiCounselorService._internal();
@@ -34,10 +36,8 @@ class AiCounselorService {
           .map((item) {
             final text = item['text']?.toString().trim() ?? '';
             final role = item['role']?.toString().trim();
-            final createdAt = int.tryParse(
-                  item['createdAt']?.toString() ?? '',
-                ) ??
-                0;
+            final createdAt =
+                int.tryParse(item['createdAt']?.toString() ?? '') ?? 0;
             if (text.isEmpty || (role != 'user' && role != 'assistant')) {
               return null;
             }
@@ -51,7 +51,8 @@ class AiCounselorService {
           .toList(growable: false);
     } catch (error) {
       debugPrint(
-          '[AiCounselor] getAiChatHistory failed: ${AppErrorMapper.resolve(error).message}');
+        '[AiCounselor] getAiChatHistory failed: ${AppErrorMapper.resolve(error).message}',
+      );
       return const <AiChatHistoryMessage>[];
     }
   }
@@ -86,7 +87,7 @@ class AiCounselorService {
           'memoryScope': memoryScope,
           'memoryText': memoryText,
           'persona': persona,
-        }
+        },
       });
 
       final response = await http.Client().send(request);
@@ -95,9 +96,10 @@ class AiCounselorService {
         return;
       }
 
-      await for (var line in response.stream
-          .transform(utf8.decoder)
-          .transform(const LineSplitter())) {
+      await for (var line
+          in response.stream
+              .transform(utf8.decoder)
+              .transform(const LineSplitter())) {
         if (line.startsWith('data: ')) {
           try {
             final payload = jsonDecode(line.substring(6));
@@ -133,7 +135,12 @@ class AiCounselorService {
     if (openAiReply != null && openAiReply.isNotEmpty) {
       return openAiReply;
     }
-    return _callGeminiProxy(prompt, systemInstruction);
+    return _callWorkerAi(
+      prompt,
+      systemInstruction,
+      endpoint: '/api/v1/ai/chat',
+      memoryContext: memoryText,
+    );
   }
 
   Future<bool> reportAiReply({
@@ -155,7 +162,8 @@ class AiCounselorService {
       return true;
     } catch (error) {
       debugPrint(
-          '[AiCounselor] reportAiReply failed: ${AppErrorMapper.resolve(error).message}');
+        '[AiCounselor] reportAiReply failed: ${AppErrorMapper.resolve(error).message}',
+      );
       return false;
     }
   }
@@ -203,90 +211,56 @@ class AiCounselorService {
     }
   }
 
-  Future<String?> _callGeminiProxy(
+  Future<String?> _callWorkerAi(
     String prompt,
-    String systemInstruction,
-  ) async {
-    const proxyUrl =
-        String.fromEnvironment('GEMINI_PROXY_URL', defaultValue: '');
-    const apiKeysString =
-        String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
-    const model = String.fromEnvironment('GEMINI_MODEL',
-        defaultValue: 'gemini-1.5-flash');
+    String systemInstruction, {
+    String endpoint = '/api/v1/ai/chat',
+    String? memoryContext,
+  }) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final idToken = await user?.getIdToken();
 
-    final apiKeys = apiKeysString
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty && e != 'ĐIỀN_KEY_CỦA_BẠN_VÀO_ĐÂY')
-        .toList();
+      var headers = <String, String>{
+        'Content-Type': 'application/json',
+        if (idToken != null && idToken.isNotEmpty)
+          'Authorization': 'Bearer $idToken',
+      };
+      headers = await AppCheckHttpHeaders.withOptionalToken(headers);
 
-    List<String> urlsToTry = [];
-    if (proxyUrl.isNotEmpty) {
-      urlsToTry.add(proxyUrl);
-    }
-    for (final key in apiKeys) {
-      urlsToTry.add(
-          'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContentif (key != null) key!=$key');
-    }
+      final workerUrl = AppConfig.cloudflareWorkerUrl.isNotEmpty
+          ? AppConfig.cloudflareWorkerUrl
+          : 'https://soullocket-api.soullocket-api.workers.dev';
 
-    if (urlsToTry.isEmpty) {
+      final response = await http
+          .post(
+            Uri.parse('$workerUrl$endpoint'),
+            headers: headers,
+            body: jsonEncode({
+              'prompt': prompt,
+              'systemInstruction': systemInstruction,
+              if (memoryContext?.trim().isNotEmpty == true)
+                'memoryContext': memoryContext!.trim(),
+            }),
+          )
+          .timeout(const Duration(seconds: 25));
+
+      if (response.statusCode != 200) {
+        debugPrint(
+          '[AiCounselor] Worker $endpoint failed: ${response.statusCode}',
+        );
+        return null;
+      }
+
+      final data = jsonDecode(response.body);
+      if (data is! Map) return null;
+      final text = data['text']?.toString().trim();
+      if (text == null || text.isEmpty) return null;
+      return text;
+    } catch (e) {
+      debugPrint('[AiCounselor] Worker $endpoint error: $e');
       return null;
     }
-
-    for (final url in urlsToTry) {
-      final uri = Uri.parse(url);
-
-      try {
-        final response = await http.post(
-          uri,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'system_instruction': {
-              'parts': [
-                {'text': systemInstruction}
-              ]
-            },
-            'contents': [
-              {
-                'parts': [
-                  {'text': prompt}
-                ]
-              }
-            ],
-            'generationConfig': {
-              'temperature': 0.7,
-            }
-          }),
-        );
-
-        if (response.statusCode != 200) {
-          continue; // Try next URL/key
-        }
-
-        final data = jsonDecode(response.body);
-        final candidates = data['candidates'];
-        if (candidates is! List || candidates.isEmpty) {
-          continue;
-        }
-
-        final first = candidates.first;
-        final content = first['content'];
-        final parts = content['parts'];
-        if (parts is! List || parts.isEmpty) {
-          continue;
-        }
-
-        final text = parts.first['text']?.toString().trim();
-        if (text == null || text.isEmpty) {
-          continue;
-        }
-
-        return text;
-      } catch (_) {
-        continue;
-      }
-    }
-    return null;
   }
 
   String _mapFunctionsError(FirebaseFunctionsException error) {

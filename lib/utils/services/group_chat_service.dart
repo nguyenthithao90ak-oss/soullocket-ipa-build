@@ -210,37 +210,35 @@ class GroupChatService {
     }
     await _enforceRateLimit('group_chat_send_${groupId}_$senderHouseId');
 
-    await requireMemberRoom(
-      groupId: groupId,
-      viewerHouseId: senderHouseId,
-    );
+    await requireMemberRoom(groupId: groupId, viewerHouseId: senderHouseId);
 
     final docRef = await FirebaseFirestore.instance
         .collection('group_chats')
         .doc(groupId)
         .collection('messages')
         .add({
-      'senderId': senderHouseId,
-      'text': safeText,
-      'type': type,
-      'ts': DateTime.now().millisecondsSinceEpoch,
-      'isRead': false,
-    });
+          'senderId': senderHouseId,
+          'text': safeText,
+          'type': type,
+          'ts': DateTime.now().millisecondsSinceEpoch,
+          'isRead': false,
+        });
     final messageId = docRef.id;
 
-    final lastMessagePayload = <String, dynamic>{
-      'senderId': senderHouseId,
-      'text': type == 'share' ? '[Chia sẻ]' : safeText,
-      'type': type,
-      'ts': ServerValue.timestamp,
-      'isRead': false,
-      if (messageId.isNotEmpty) 'messageId': messageId,
-    };
-
-    await _dbRef.update({
-      'groups/$groupId/lastMessage': lastMessagePayload,
-      'groups/$groupId/updatedAt': ServerValue.timestamp,
-    });
+    try {
+      await _functions
+          .httpsCallable('updateGroupChatMetadataSecure')
+          .call<void>(<String, dynamic>{
+            'action': 'last_message',
+            'groupId': groupId.trim(),
+            'messageId': messageId,
+          });
+    } catch (error) {
+      // Tin nhắn đã được lưu ở Firestore; không báo thất bại để tránh gửi trùng.
+      debugPrint(
+        '[GroupChat] last message metadata sync failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể cập nhật bản xem trước tin nhắn nhóm.').message}',
+      );
+    }
   }
 
   Future<void> renameGroup({
@@ -261,10 +259,21 @@ class GroupChatService {
         viewerHouseId: actorHouseId!.trim(),
       );
     }
-    await _dbRef.child('groups/$groupId').update({
-      'name': nextName,
-      'updatedAt': ServerValue.timestamp,
-    });
+    try {
+      await _functions
+          .httpsCallable('updateGroupChatMetadataSecure')
+          .call<void>(<String, dynamic>{
+            'action': 'rename',
+            'groupId': groupId.trim(),
+            'name': nextName,
+          });
+    } on FirebaseFunctionsException catch (error) {
+      final message = error.message?.trim();
+      if (message != null && message.isNotEmpty) {
+        throw Exception(message);
+      }
+      throw Exception('Không thể đổi tên nhóm lúc này.');
+    }
   }
 
   Future<void> reportGroup({
@@ -275,16 +284,14 @@ class GroupChatService {
     final uid = _auth.currentUser?.uid.trim();
     if (uid == null || uid.isEmpty) {
       throw Exception(
-          'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại rồi thử tiếp.');
+        'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại rồi thử tiếp.',
+      );
     }
     final normalizedReason = reason.trim();
     if (normalizedReason.isEmpty) {
       throw Exception('Hãy chọn lý do báo cáo.');
     }
-    await requireMemberRoom(
-      groupId: groupId,
-      viewerHouseId: reporterHouseId,
-    );
+    await requireMemberRoom(groupId: groupId, viewerHouseId: reporterHouseId);
     await FirebaseFirestore.instance.collection('reports').add({
       'type': 'group_report',
       'groupId': groupId.trim(),
@@ -305,10 +312,7 @@ class GroupChatService {
     int limit = 40,
     int? beforeTs,
   }) async {
-    await requireMemberRoom(
-      groupId: groupId,
-      viewerHouseId: viewerHouseId,
-    );
+    await requireMemberRoom(groupId: groupId, viewerHouseId: viewerHouseId);
     var query = FirebaseFirestore.instance
         .collection('group_chats')
         .doc(groupId)
@@ -369,70 +373,71 @@ class GroupChatService {
             .orderBy('ts')
             .snapshots()
             .listen(
-          (snapshot) {
-            for (final change in snapshot.docChanges) {
-              if (change.type == DocumentChangeType.added ||
-                  change.type == DocumentChangeType.modified) {
-                try {
-                  final msg = ChatMessage.fromMap(
-                    change.doc.id,
-                    change.doc.data()!,
-                  );
-                  controller.add(msg);
-                } catch (_) {}
-              }
-            }
-          },
-          onError: (Object error) {
-            debugPrint(
-              '[GroupChat] firestore message stream failed: ${AppErrorMapper.resolve(
-                error,
-                fallbackMessage: 'Không thể tải tin nhắn nhóm.',
-              ).message}',
+              (snapshot) {
+                for (final change in snapshot.docChanges) {
+                  if (change.type == DocumentChangeType.added ||
+                      change.type == DocumentChangeType.modified) {
+                    try {
+                      final msg = ChatMessage.fromMap(
+                        change.doc.id,
+                        change.doc.data()!,
+                      );
+                      controller.add(msg);
+                    } catch (_) {}
+                  }
+                }
+              },
+              onError: (Object error) {
+                debugPrint(
+                  '[GroupChat] firestore message stream failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể tải tin nhắn nhóm.').message}',
+                );
+              },
             );
-          },
-        );
 
         Timer? membershipDebounce;
-        membershipSub =
-            _dbRef.child('groups/$groupId/memberHouseIds').onValue.listen((
-          event,
-        ) {
-          membershipDebounce?.cancel();
-          membershipDebounce = Timer(const Duration(milliseconds: 200), () {
-            final raw = event.snapshot.value;
-            final nextMembers = <String>[];
-            if (raw is Map) {
-              for (final entry in raw.entries) {
-                final houseId = entry.key.toString().trim();
-                final enabled = entry.value == true || entry.value == 1;
-                if (houseId.isNotEmpty && enabled) {
-                  nextMembers.add(houseId);
-                }
-              }
-            } else if (raw is List) {
-              for (final item in raw) {
-                final houseId = item.toString().trim();
-                if (houseId.isNotEmpty) {
-                  nextMembers.add(houseId);
-                }
-              }
-            }
-            if (viewerHouseId.trim().isEmpty ||
-                nextMembers.contains(viewerHouseId.trim())) {
-              return;
-            }
-            controller.addError(
-                Exception('Bạn không còn là thành viên của nhóm này.'));
-          });
-        }, onError: (Object error) {
-          debugPrint(
-            '[GroupChat] membership stream failed: ${AppErrorMapper.resolve(
-              error,
-              fallbackMessage: 'Không thể tải danh sách thành viên nhóm.',
-            ).message}',
-          );
-        });
+        membershipSub = _dbRef
+            .child('groups/$groupId/memberHouseIds')
+            .onValue
+            .listen(
+              (event) {
+                membershipDebounce?.cancel();
+                membershipDebounce = Timer(
+                  const Duration(milliseconds: 200),
+                  () {
+                    final raw = event.snapshot.value;
+                    final nextMembers = <String>[];
+                    if (raw is Map) {
+                      for (final entry in raw.entries) {
+                        final houseId = entry.key.toString().trim();
+                        final enabled = entry.value == true || entry.value == 1;
+                        if (houseId.isNotEmpty && enabled) {
+                          nextMembers.add(houseId);
+                        }
+                      }
+                    } else if (raw is List) {
+                      for (final item in raw) {
+                        final houseId = item.toString().trim();
+                        if (houseId.isNotEmpty) {
+                          nextMembers.add(houseId);
+                        }
+                      }
+                    }
+                    if (viewerHouseId.trim().isEmpty ||
+                        nextMembers.contains(viewerHouseId.trim())) {
+                      return;
+                    }
+                    controller.addError(
+                      Exception('Bạn không còn là thành viên của nhóm này.'),
+                    );
+                  },
+                );
+              },
+              onError: (Object error) {
+                debugPrint(
+                  '[GroupChat] membership stream failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể tải danh sách thành viên nhóm.').message}',
+                );
+              },
+            );
       },
       onCancel: () async {
         await firestoreSub?.cancel();
@@ -489,27 +494,28 @@ class GroupChatService {
         if (groupSubs.containsKey(groupId)) {
           continue;
         }
-        groupSubs[groupId] = _dbRef.child('groups/$groupId').onValue.listen(
-          (event) {
-            if (!event.snapshot.exists || event.snapshot.value is! Map) {
-              groups.remove(groupId);
-              emit();
-              return;
-            }
-            groups[groupId] = GroupChatRoom.fromMap(
-              event.snapshot.key ?? groupId,
-              Map<dynamic, dynamic>.from(event.snapshot.value as Map),
+        groupSubs[groupId] = _dbRef
+            .child('groups/$groupId')
+            .onValue
+            .listen(
+              (event) {
+                if (!event.snapshot.exists || event.snapshot.value is! Map) {
+                  groups.remove(groupId);
+                  emit();
+                  return;
+                }
+                groups[groupId] = GroupChatRoom.fromMap(
+                  event.snapshot.key ?? groupId,
+                  Map<dynamic, dynamic>.from(event.snapshot.value as Map),
+                );
+                emit();
+              },
+              onError: (Object error) {
+                debugPrint(
+                  '[GroupChat] group room stream failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể tải phòng chat nhóm.').message}',
+                );
+              },
             );
-            emit();
-          },
-          onError: (Object error) {
-            debugPrint(
-                '[GroupChat] group room stream failed: ${AppErrorMapper.resolve(
-              error,
-              fallbackMessage: 'Không thể tải phòng chat nhóm.',
-            ).message}');
-          },
-        );
       }
 
       emit();
@@ -522,30 +528,27 @@ class GroupChatService {
             .limitToLast(20)
             .onValue
             .listen(
-          (event) {
-            final ids = <String>[];
-            final raw = event.snapshot.value;
-            if (raw is Map) {
-              for (final entry in raw.entries) {
-                final groupId = entry.key.toString().trim();
-                final enabled = entry.value == true || entry.value == 1;
-                if (groupId.isNotEmpty && enabled) {
-                  ids.add(groupId);
+              (event) {
+                final ids = <String>[];
+                final raw = event.snapshot.value;
+                if (raw is Map) {
+                  for (final entry in raw.entries) {
+                    final groupId = entry.key.toString().trim();
+                    final enabled = entry.value == true || entry.value == 1;
+                    if (groupId.isNotEmpty && enabled) {
+                      ids.add(groupId);
+                    }
+                  }
                 }
-              }
-            }
-            ids.sort();
-            unawaited(syncGroupSubscriptions(ids));
-          },
-          onError: (Object error) {
-            debugPrint(
-              '[GroupChat] group index stream failed: ${AppErrorMapper.resolve(
-                error,
-                fallbackMessage: 'Không thể tải chỉ mục nhóm.',
-              ).message}',
+                ids.sort();
+                unawaited(syncGroupSubscriptions(ids));
+              },
+              onError: (Object error) {
+                debugPrint(
+                  '[GroupChat] group index stream failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể tải chỉ mục nhóm.').message}',
+                );
+              },
             );
-          },
-        );
       },
       onCancel: () async {
         await indexSub?.cancel();

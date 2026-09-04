@@ -25,8 +25,27 @@ class MissingBootstrapConfig implements Exception {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const _bootstrapChannelName = 'soul_locket/bootstrap';
+Future<void>? _firebaseBootstrapFuture;
 
 Future<void> initializeFirebaseBootstrap() async {
+  final activeBootstrap = _firebaseBootstrapFuture;
+  if (activeBootstrap != null) {
+    return activeBootstrap;
+  }
+
+  final bootstrap = _initializeFirebaseBootstrapOnce();
+  _firebaseBootstrapFuture = bootstrap;
+  try {
+    await bootstrap;
+  } catch (_) {
+    if (identical(_firebaseBootstrapFuture, bootstrap)) {
+      _firebaseBootstrapFuture = null;
+    }
+    rethrow;
+  }
+}
+
+Future<void> _initializeFirebaseBootstrapOnce() async {
   if (kIsWeb) {
     throwIfFirebaseEnvMissing();
     await Firebase.initializeApp(
@@ -49,22 +68,8 @@ Future<void> initializeFirebaseBootstrap() async {
     throw StateError(L10nService().translate('core_err_firebase_not_init'));
   }
 
-  try {
-    await FirebaseAppCheck.instance
-        .activate(
-          providerAndroid: kDebugMode
-              ? const AndroidDebugProvider()
-              : const AndroidPlayIntegrityProvider(),
-          providerApple: kDebugMode
-              ? const AppleDebugProvider()
-              : const AppleDeviceCheckProvider(),
-        )
-        .timeout(const Duration(seconds: 2), onTimeout: () => null);
-  } catch (e) {
-    debugPrint('Firebase AppCheck init error: $e');
-  }
-
   if (!kIsWeb) {
+    await _initializeNativeFirebaseAppCheck();
     try {
       FirebaseDatabase.instance.setPersistenceEnabled(true);
       // ⚡ Increased from 5MB → 40MB to significantly improve offline chat/diary caching
@@ -83,9 +88,26 @@ Future<void> initializeFirebaseBootstrap() async {
     } catch (e) {
       debugPrint('Firestore persistence error: $e');
     }
-
-    unawaited(_initializeFirebaseAppCheck());
     await ErrorLoggerService.instance.initialize();
+  }
+}
+
+Future<void> _initializeNativeFirebaseAppCheck() async {
+  try {
+    await FirebaseAppCheck.instance
+        .activate(
+          providerAndroid: kDebugMode
+              ? const AndroidDebugProvider()
+              : const AndroidPlayIntegrityProvider(),
+          providerApple: kDebugMode
+              ? const AppleDebugProvider()
+              : const AppleDeviceCheckProvider(),
+        )
+        .timeout(const Duration(seconds: 2), onTimeout: () => null);
+  } catch (error) {
+    debugPrint(
+      'Firebase App Check native init error: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('core_err_appcheck_failed')).message}',
+    );
   }
 }
 
@@ -226,24 +248,16 @@ Future<FirebaseOptions?> _loadNativeFirebaseOptions() async {
   }
 }
 
-Future<void> _initializeFirebaseAppCheck() async {
+Future<void> _initializeWebFirebaseAppCheck() async {
   try {
     final webSiteKey = AppConfig.recaptchaV3SiteKey.trim();
-    if (kIsWeb) {
-      if (webSiteKey.isEmpty) {
-        debugPrint('Firebase App Check skipped on web: missing site key');
-        return;
-      }
-      await FirebaseAppCheck.instance
-          .activate(providerWeb: ReCaptchaV3Provider(webSiteKey))
-          .timeout(const Duration(seconds: 3));
+    if (webSiteKey.isEmpty) {
+      debugPrint('Firebase App Check skipped on web: missing site key');
       return;
     }
-
-    if (kDebugMode) {
-      debugPrint('Firebase App Check: Skipped in debug mode (emulator-safe).');
-      return;
-    }
+    await FirebaseAppCheck.instance
+        .activate(providerWeb: ReCaptchaV3Provider(webSiteKey))
+        .timeout(const Duration(seconds: 3));
   } catch (e) {
     debugPrint(
       'Firebase App Check init error: ${AppErrorMapper.resolve(e, fallbackMessage: L10nService().translate('core_err_appcheck_failed')).message}',
@@ -253,7 +267,7 @@ Future<void> _initializeFirebaseAppCheck() async {
 
 Future<void> initializeDeferredFirebaseAppCheck() async {
   if (!kIsWeb) return;
-  await _initializeFirebaseAppCheck();
+  await _initializeWebFirebaseAppCheck();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

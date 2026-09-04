@@ -71,8 +71,11 @@ class _MilestonesScreenState extends State<MilestonesScreen>
 
     // 1. Cột mốc kỷ niệm ngày yêu
     if (startDt != null) {
-      final startDtMidnight =
-          DateTime(startDt.year, startDt.month, startDt.day);
+      final startDtMidnight = DateTime(
+        startDt.year,
+        startDt.month,
+        startDt.day,
+      );
 
       // Cột mốc ngày (cả quá khứ và tương lai)
       final milestoneDays = [
@@ -92,18 +95,21 @@ class _MilestonesScreenState extends State<MilestonesScreen>
         3000,
         4000,
         5000,
-        10000
+        10000,
       ];
       for (final m in milestoneDays) {
         final milestoneDate = startDtMidnight.add(Duration(days: m - 1));
         final diff = milestoneDate.difference(todayMidnight).inDays;
-        allEvents.add(MilestoneEvent(
-          title: L10nService()
-              .format('milestone_anniversary_days', {'days': m.toString()}),
-          date: milestoneDate,
-          type: 'anniversary',
-          diffDays: diff,
-        ));
+        allEvents.add(
+          MilestoneEvent(
+            title: L10nService().format('milestone_anniversary_days', {
+              'days': m.toString(),
+            }),
+            date: milestoneDate,
+            type: 'anniversary',
+            diffDays: diff,
+          ),
+        );
       }
 
       // Cột mốc tháng (kỷ niệm tháng yêu nhau: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 tháng)
@@ -118,26 +124,34 @@ class _MilestonesScreenState extends State<MilestonesScreen>
         final title = L10nService().localeCode == 'vi'
             ? 'Kỷ niệm $m tháng bên nhau 💖'
             : 'Celebrating $m months of love 💖';
-        allEvents.add(MilestoneEvent(
-          title: title,
-          date: milestoneDate,
-          type: 'anniversary',
-          diffDays: diff,
-        ));
+        allEvents.add(
+          MilestoneEvent(
+            title: title,
+            date: milestoneDate,
+            type: 'anniversary',
+            diffDays: diff,
+          ),
+        );
       }
 
       // Cột mốc năm (kỷ niệm năm yêu nhau)
       for (int y = 1; y <= 25; y++) {
-        final annivDate = DateTime(startDtMidnight.year + y,
-            startDtMidnight.month, startDtMidnight.day);
+        final annivDate = DateTime(
+          startDtMidnight.year + y,
+          startDtMidnight.month,
+          startDtMidnight.day,
+        );
         final diff = annivDate.difference(todayMidnight).inDays;
-        allEvents.add(MilestoneEvent(
-          title: L10nService()
-              .format('milestone_anniversary_years', {'years': y.toString()}),
-          date: annivDate,
-          type: 'anniversary',
-          diffDays: diff,
-        ));
+        allEvents.add(
+          MilestoneEvent(
+            title: L10nService().format('milestone_anniversary_years', {
+              'years': y.toString(),
+            }),
+            date: annivDate,
+            type: 'anniversary',
+            diffDays: diff,
+          ),
+        );
       }
     }
 
@@ -156,18 +170,21 @@ class _MilestonesScreenState extends State<MilestonesScreen>
           final targetYear = todayMidnight.year + yearOffset;
           int day = bday.day;
           if (bday.month == 2 && bday.day == 29) {
-            final isLeap = (targetYear % 4 == 0 && targetYear % 100 != 0) ||
+            final isLeap =
+                (targetYear % 4 == 0 && targetYear % 100 != 0) ||
                 (targetYear % 400 == 0);
             if (!isLeap) day = 28;
           }
           final bdayDate = DateTime(targetYear, bday.month, day);
           final diff = bdayDate.difference(todayMidnight).inDays;
-          allEvents.add(MilestoneEvent(
-            title: L10nService().format('milestone_birthday', {'name': name}),
-            date: bdayDate,
-            type: 'birthday',
-            diffDays: diff,
-          ));
+          allEvents.add(
+            MilestoneEvent(
+              title: L10nService().format('milestone_birthday', {'name': name}),
+              date: bdayDate,
+              type: 'birthday',
+              diffDays: diff,
+            ),
+          );
         }
       } catch (_) {}
     }
@@ -180,81 +197,86 @@ class _MilestonesScreenState extends State<MilestonesScreen>
       {
         'month': 1,
         'day': 1,
-        'name': L10nService().translate('holiday_new_year')
+        'name': L10nService().translate('holiday_new_year'),
       },
       {
         'month': 2,
         'day': 14,
-        'name': L10nService().translate('holiday_valentine')
+        'name': L10nService().translate('holiday_valentine'),
       },
       {
         'month': 3,
         'day': 8,
-        'name': L10nService().translate('holiday_womens_day')
+        'name': L10nService().translate('holiday_womens_day'),
       },
       {
         'month': 3,
         'day': 14,
-        'name': L10nService().translate('holiday_white_valentine')
+        'name': L10nService().translate('holiday_white_valentine'),
       },
       {
         'month': 4,
         'day': 1,
-        'name': L10nService().translate('holiday_april_fools')
+        'name': L10nService().translate('holiday_april_fools'),
       },
       {
         'month': 4,
         'day': 14,
-        'name': L10nService().translate('holiday_black_valentine')
+        'name': L10nService().translate('holiday_black_valentine'),
       },
       {
         'month': 6,
         'day': 1,
-        'name': L10nService().translate('holiday_childrens_day')
+        'name': L10nService().translate('holiday_childrens_day'),
       },
       {
         'month': 6,
         'day': 28,
-        'name': L10nService().translate('holiday_vietnamese_family_day')
+        'name': L10nService().translate('holiday_vietnamese_family_day'),
       },
       {
         'month': 10,
         'day': 20,
-        'name': L10nService().translate('holiday_vietnamese_womens_day')
+        'name': L10nService().translate('holiday_vietnamese_womens_day'),
       },
       {
         'month': 10,
         'day': 31,
-        'name': L10nService().translate('holiday_halloween')
+        'name': L10nService().translate('holiday_halloween'),
       },
       {
         'month': 12,
         'day': 24,
-        'name': L10nService().translate('holiday_christmas_eve')
+        'name': L10nService().translate('holiday_christmas_eve'),
       },
       {
         'month': 12,
         'day': 25,
-        'name': L10nService().translate('holiday_christmas')
+        'name': L10nService().translate('holiday_christmas'),
       },
       {
         'month': 12,
         'day': 31,
-        'name': L10nService().translate('holiday_new_years_eve')
+        'name': L10nService().translate('holiday_new_years_eve'),
       },
     ];
     for (final h in holidaysList) {
       for (int yearOffset = -1; yearOffset <= 1; yearOffset++) {
         final targetYear = todayMidnight.year + yearOffset;
-        final holidayDate =
-            DateTime(targetYear, h['month'] as int, h['day'] as int);
+        final holidayDate = DateTime(
+          targetYear,
+          h['month'] as int,
+          h['day'] as int,
+        );
         final diff = holidayDate.difference(todayMidnight).inDays;
-        allEvents.add(MilestoneEvent(
-          title: h['name'] as String,
-          date: holidayDate,
-          type: 'holiday',
-          diffDays: diff,
-        ));
+        allEvents.add(
+          MilestoneEvent(
+            title: h['name'] as String,
+            date: holidayDate,
+            type: 'holiday',
+            diffDays: diff,
+          ),
+        );
       }
     }
 
@@ -273,12 +295,14 @@ class _MilestonesScreenState extends State<MilestonesScreen>
 
       final eventDate = DateTime(year, month, day);
       final diff = eventDate.difference(todayMidnight).inDays;
-      allEvents.add(MilestoneEvent(
-        title: evTitle,
-        date: eventDate,
-        type: 'calendar',
-        diffDays: diff,
-      ));
+      allEvents.add(
+        MilestoneEvent(
+          title: evTitle,
+          date: eventDate,
+          type: 'calendar',
+          diffDays: diff,
+        ),
+      );
     }
 
     // Lọc trùng
@@ -298,10 +322,16 @@ class _MilestonesScreenState extends State<MilestonesScreen>
     final past = uniqueEvents.where((e) {
       if (e.diffDays >= 0) return false;
       if (startDt != null) {
-        final startDtMidnight =
-            DateTime(startDt.year, startDt.month, startDt.day);
-        final eventDateMidnight =
-            DateTime(e.date.year, e.date.month, e.date.day);
+        final startDtMidnight = DateTime(
+          startDt.year,
+          startDt.month,
+          startDt.day,
+        );
+        final eventDateMidnight = DateTime(
+          e.date.year,
+          e.date.month,
+          e.date.day,
+        );
         return !eventDateMidnight.isBefore(startDtMidnight);
       }
       return true;
@@ -342,8 +372,11 @@ class _MilestonesScreenState extends State<MilestonesScreen>
     if (widget.startDate != null && widget.startDate!.isNotEmpty) {
       try {
         final startDt = DateTime.parse(widget.startDate!);
-        final startDtMidnight =
-            DateTime(startDt.year, startDt.month, startDt.day);
+        final startDtMidnight = DateTime(
+          startDt.year,
+          startDt.month,
+          startDt.day,
+        );
         daysLove = todayMidnight.difference(startDtMidnight).inDays;
       } catch (_) {}
     }
@@ -402,8 +435,10 @@ class _MilestonesScreenState extends State<MilestonesScreen>
               children: [
                 // Custom App Bar siêu đáng yêu
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   child: Row(
                     children: [
                       IconButton(
@@ -413,7 +448,8 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                             color: Colors.white.withValues(alpha: 0.85),
                             shape: BoxShape.circle,
                             border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.9)),
+                              color: Colors.white.withValues(alpha: 0.9),
+                            ),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withValues(alpha: 0.04),
@@ -447,7 +483,8 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                             color: Colors.white.withValues(alpha: 0.85),
                             shape: BoxShape.circle,
                             border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.9)),
+                              color: Colors.white.withValues(alpha: 0.9),
+                            ),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withValues(alpha: 0.04),
@@ -463,8 +500,9 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                           ),
                         ),
                         onPressed: _openCalendar,
-                        tooltip: L10nService()
-                            .translate('milestone_manage_calendar'),
+                        tooltip: L10nService().translate(
+                          'milestone_manage_calendar',
+                        ),
                       ),
                     ],
                   ),
@@ -472,8 +510,10 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                 // Banner số ngày yêu nhau xinh xắn
                 if (daysLove > 0)
                   Container(
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     width: double.infinity,
                     height: 100,
                     child: Stack(
@@ -485,19 +525,21 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                                 colors: [
                                   Color(0xFFFF85A2),
                                   Color(0xFFFF4D7D),
-                                  Color(0xFFFF6584)
+                                  Color(0xFFFF6584),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
                               borderRadius: BorderRadius.circular(26),
                               border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.6),
-                                  width: 1.2),
+                                color: Colors.white.withValues(alpha: 0.6),
+                                width: 1.2,
+                              ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFFF4D7D)
-                                      .withValues(alpha: 0.35),
+                                  color: const Color(
+                                    0xFFFF4D7D,
+                                  ).withValues(alpha: 0.35),
                                   blurRadius: 20,
                                   offset: const Offset(0, 10),
                                 ),
@@ -544,33 +586,38 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 16),
+                            horizontal: 20,
+                            vertical: 16,
+                          ),
                           child: Row(
                             children: [
                               Container(
-                                width: 52,
-                                height: 52,
+                                width: 62,
+                                height: 62,
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.25),
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                      color: Colors.white.withValues(alpha: 0.6),
-                                      width: 2),
+                                    color: Colors.white.withValues(alpha: 0.6),
+                                    width: 2,
+                                  ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.08),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.08,
+                                      ),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     ),
                                   ],
                                 ),
                                 child: const Center(
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(4.0),
+                                  child: Padding(
+                                    padding: EdgeInsets.all(3.0),
                                     child: MilestoneEmbeddedSticker(
                                       'fireworks_couple',
-                                      width: 40,
-                                      height: 40,
+                                      width: 54,
+                                      height: 54,
                                       fallbackAssetPath:
                                           'assets/images/anhtomau_stickers/sticker_2.gif',
                                     ),
@@ -584,20 +631,23 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
-                                      L10nService()
-                                          .translate('milestone_together_for'),
+                                      L10nService().translate(
+                                        'milestone_together_for',
+                                      ),
                                       style: SLTheme.quicksand(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w700,
-                                        color:
-                                            Colors.white.withValues(alpha: 0.95),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.95,
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(height: 3),
                                     Text(
                                       L10nService().format(
-                                          'milestone_love_days',
-                                          {'days': daysLove.toString()}),
+                                        'milestone_love_days',
+                                        {'days': daysLove.toString()},
+                                      ),
                                       style: SLTheme.quicksand(
                                         fontSize: 19,
                                         fontWeight: FontWeight.w900,
@@ -622,14 +672,15 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                   ),
                 // Custom TabBar kiểu bong bóng kẹo ngọt
                 Container(
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.75),
                     borderRadius: BorderRadius.circular(22),
-                    border:
-                        Border.all(color: Colors.white, width: 1.5),
+                    border: Border.all(color: Colors.white, width: 1.5),
                     boxShadow: [
                       BoxShadow(
                         color: const Color(0xFFCEBCD0).withValues(alpha: 0.12),
@@ -645,9 +696,13 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                     labelColor: Colors.white,
                     unselectedLabelColor: const Color(0xFF7E6475),
                     labelStyle: SLTheme.quicksand(
-                        fontWeight: FontWeight.w900, fontSize: 13.5),
+                      fontWeight: FontWeight.w900,
+                      fontSize: 13.5,
+                    ),
                     unselectedLabelStyle: SLTheme.quicksand(
-                        fontWeight: FontWeight.w700, fontSize: 13.5),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.5,
+                    ),
                     indicator: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [Color(0xFFFF7E9B), Color(0xFFFF4D7D)],
@@ -671,8 +726,9 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                           children: [
                             const Icon(Icons.hourglass_empty_rounded, size: 16),
                             const SizedBox(width: 6),
-                            Text(L10nService()
-                                .translate('milestone_tab_upcoming')),
+                            Text(
+                              L10nService().translate('milestone_tab_upcoming'),
+                            ),
                           ],
                         ),
                       ),
@@ -787,10 +843,15 @@ class _MilestonesScreenState extends State<MilestonesScreen>
 
     if (event.type == 'calendar') {
       if (title.contains('movie')) return 'movie_date';
-      if (title.contains('trip') || title.contains('travel') || title.contains('du lịch') || title.contains('chuyến đi')) {
+      if (title.contains('trip') ||
+          title.contains('travel') ||
+          title.contains('du lịch') ||
+          title.contains('chuyến đi')) {
         return 'travel';
       }
-      if (title.contains('cafe') || title.contains('coffee') || title.contains('date')) {
+      if (title.contains('cafe') ||
+          title.contains('coffee') ||
+          title.contains('date')) {
         return 'coffee';
       }
       if (title.contains('picnic')) return 'picnic';
@@ -800,8 +861,10 @@ class _MilestonesScreenState extends State<MilestonesScreen>
     return 'heart_lock';
   }
 
-  Widget _buildEventsList(List<MilestoneEvent> list,
-      {required bool isUpcoming}) {
+  Widget _buildEventsList(
+    List<MilestoneEvent> list, {
+    required bool isUpcoming,
+  }) {
     if (list.isEmpty) {
       return Center(
         child: Padding(
@@ -828,7 +891,8 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                   child: Padding(
                     padding: EdgeInsets.all(12.0),
                     child: R2StickerImage(
-                        'assets/images/anhtomau_stickers/sticker_25.gif'), // Thỏ chờ đợi
+                      'assets/images/anhtomau_stickers/sticker_25.gif',
+                    ), // Thỏ chờ đợi
                   ),
                 ),
               ),
@@ -850,18 +914,27 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                 ElevatedButton.icon(
                   onPressed: _openCalendar,
                   icon: const Icon(Icons.add_rounded, size: 18),
-                  label: Text(L10nService().translate('milestone_plan_now'),
-                      style: SLTheme.quicksand(
-                          fontWeight: FontWeight.w800, fontSize: 13)),
+                  label: Text(
+                    L10nService().translate('milestone_plan_now'),
+                    style: SLTheme.quicksand(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                    ),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFF4D7D),
                     foregroundColor: Colors.white,
                     elevation: 4,
-                    shadowColor: const Color(0xFFFF4D7D).withValues(alpha: 0.35),
+                    shadowColor: const Color(
+                      0xFFFF4D7D,
+                    ).withValues(alpha: 0.35),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                   ),
                 ),
               ],
@@ -883,58 +956,63 @@ class _MilestonesScreenState extends State<MilestonesScreen>
   }
 
   Widget _buildEventItemCard(MilestoneEvent event, {required bool isUpcoming}) {
-    final (countdownText, badgeBgColors, badgeBorderColor, badgeTextColor) =
-        switch ((isUpcoming, event.diffDays)) {
+    final (
+      countdownText,
+      badgeBgColors,
+      badgeBorderColor,
+      badgeTextColor,
+    ) = switch ((isUpcoming, event.diffDays)) {
       (true, 0) => (
-          L10nService().translate('milestone_today'),
-          const [Color(0xFFDCFCE7), Color(0xFFBBF7D0)],
-          const Color(0xFF86EFAC),
-          const Color(0xFF15803D)
-        ),
+        L10nService().translate('milestone_today'),
+        const [Color(0xFFDCFCE7), Color(0xFFBBF7D0)],
+        const Color(0xFF86EFAC),
+        const Color(0xFF15803D),
+      ),
       (true, 1) => (
-          L10nService().translate('milestone_tomorrow'),
-          const [Color(0xFFE0F2FE), Color(0xFFBAE6FD)],
-          const Color(0xFF7DD3FC),
-          const Color(0xFF0369A1)
-        ),
+        L10nService().translate('milestone_tomorrow'),
+        const [Color(0xFFE0F2FE), Color(0xFFBAE6FD)],
+        const Color(0xFF7DD3FC),
+        const Color(0xFF0369A1),
+      ),
       (true, final d) => (
-          L10nService().format('milestone_days_left', {'days': d.toString()}),
-          const [Color(0xFFFFF0F5), Color(0xFFFFE4EC)],
-          const Color(0xFFFFC0CB),
-          const Color(0xFF9D174D)
-        ),
+        L10nService().format('milestone_days_left', {'days': d.toString()}),
+        const [Color(0xFFFFF0F5), Color(0xFFFFE4EC)],
+        const Color(0xFFFFC0CB),
+        const Color(0xFF9D174D),
+      ),
       (false, -1) => (
-          L10nService().translate('milestone_yesterday'),
-          const [Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
-          const Color(0xFFE2E8F0),
-          const Color(0xFF475569)
-        ),
+        L10nService().translate('milestone_yesterday'),
+        const [Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
+        const Color(0xFFE2E8F0),
+        const Color(0xFF475569),
+      ),
       (false, _) => (
-          L10nService().format('milestone_days_passed',
-              {'days': event.diffDays.abs().toString()}),
-          const [Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
-          const Color(0xFFE2E8F0),
-          const Color(0xFF475569)
-        ),
+        L10nService().format('milestone_days_passed', {
+          'days': event.diffDays.abs().toString(),
+        }),
+        const [Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
+        const Color(0xFFE2E8F0),
+        const Color(0xFF475569),
+      ),
     };
 
     final (stickerPath, iconGradients) = switch (event.type) {
       'birthday' => (
-          'assets/images/anhtomau_stickers/sticker_17.gif',
-          const [Color(0xFFFFF3C4), Color(0xFFFFE082)]
-        ),
+        'assets/images/anhtomau_stickers/sticker_17.gif',
+        const [Color(0xFFFFF3C4), Color(0xFFFFE082)],
+      ),
       'anniversary' => (
-          'assets/images/anhtomau_stickers/sticker_14.gif',
-          const [Color(0xFFFFD1E1), Color(0xFFFFB2CC)]
-        ),
+        'assets/images/anhtomau_stickers/sticker_14.gif',
+        const [Color(0xFFFFD1E1), Color(0xFFFFB2CC)],
+      ),
       'holiday' => (
-          'assets/images/anhtomau_stickers/sticker_22.gif',
-          const [Color(0xFFE9D5FF), Color(0xFFD8B4FE)]
-        ),
+        'assets/images/anhtomau_stickers/sticker_22.gif',
+        const [Color(0xFFE9D5FF), Color(0xFFD8B4FE)],
+      ),
       _ => (
-          'assets/images/anhtomau_stickers/sticker_9.gif',
-          const [Color(0xFFBAE6FD), Color(0xFF7DD3FC)]
-        ),
+        'assets/images/anhtomau_stickers/sticker_9.gif',
+        const [Color(0xFFBAE6FD), Color(0xFF7DD3FC)],
+      ),
     };
     final stickerKey = _resolveMilestoneStickerKey(event);
 
@@ -945,7 +1023,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
       L10nService().translate('milestone_weekday_4'),
       L10nService().translate('milestone_weekday_5'),
       L10nService().translate('milestone_weekday_6'),
-      L10nService().translate('milestone_weekday_7')
+      L10nService().translate('milestone_weekday_7'),
     ];
     final weekdayStr = weekdays[event.date.weekday - 1];
     final formattedDate =
@@ -964,7 +1042,9 @@ class _MilestonesScreenState extends State<MilestonesScreen>
         ),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-            color: Colors.white.withValues(alpha: 0.95), width: 1.5),
+          color: Colors.white.withValues(alpha: 0.95),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFFFF9EB7).withValues(alpha: 0.12),
@@ -987,31 +1067,33 @@ class _MilestonesScreenState extends State<MilestonesScreen>
               Transform.rotate(
                 angle: -0.03,
                 child: Container(
-                  width: 52,
-                  height: 52,
+                  width: 62,
+                  height: 62,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: iconGradients,
                     ),
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.8), width: 1.5),
+                      color: Colors.white.withValues(alpha: 0.9),
+                      width: 1.5,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: iconGradients.last.withValues(alpha: 0.3),
-                        blurRadius: 10,
+                        color: iconGradients.last.withValues(alpha: 0.35),
+                        blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
                     ],
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(6.0),
+                    padding: const EdgeInsets.all(2.5),
                     child: MilestoneEmbeddedSticker(
                       stickerKey,
-                      width: 40,
-                      height: 40,
+                      width: 56,
+                      height: 56,
                       fallbackAssetPath: stickerPath,
                     ),
                   ),
@@ -1055,8 +1137,10 @@ class _MilestonesScreenState extends State<MilestonesScreen>
               ),
               const SizedBox(width: 10),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: badgeBgColors,
@@ -1094,11 +1178,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
     required List<Color> colors,
     int delay = 0,
   }) {
-    return _FloatingOrb(
-      size: size,
-      colors: colors,
-      delayMilliseconds: delay,
-    );
+    return _FloatingOrb(size: size, colors: colors, delayMilliseconds: delay);
   }
 }
 
@@ -1174,4 +1254,3 @@ class _FloatingOrb extends StatefulWidget {
   @override
   State<_FloatingOrb> createState() => _FloatingOrbState();
 }
-

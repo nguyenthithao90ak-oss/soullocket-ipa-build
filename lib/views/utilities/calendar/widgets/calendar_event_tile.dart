@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 class CalendarEventTile extends StatelessWidget {
   final Color accent;
@@ -27,10 +28,7 @@ class CalendarEventTile extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Colors.white,
-            accent.withValues(alpha: 0.04),
-          ],
+          colors: [Colors.white, accent.withValues(alpha: 0.04)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -52,10 +50,7 @@ class CalendarEventTile extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  accent.withValues(alpha: 0.92),
-                  accent,
-                ],
+                colors: [accent.withValues(alpha: 0.92), accent],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -85,7 +80,9 @@ class CalendarEventTile extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        title.isEmpty ? 'Chưa có nội dung kế hoạch' : title,
+                        title.isEmpty
+                            ? context.tr('calendar_plan_no_content')
+                            : title,
                         style: SLTheme.quicksand(
                           fontSize: 14.5,
                           fontWeight: FontWeight.w900,
@@ -123,8 +120,10 @@ class CalendarEventTile extends StatelessWidget {
                     _CalendarEventMetaChip(
                       icon: Icons.person_rounded,
                       label: author?.isNotEmpty == true
-                          ? 'Tạo bởi $author'
-                          : 'Chưa rõ người tạo',
+                          ? L10nService().format('calendar_created_by', {
+                              'name': author!,
+                            })
+                          : context.tr('calendar_unknown_creator'),
                     ),
                     _CalendarEventMetaChip(
                       icon: Icons.schedule_rounded,
@@ -132,7 +131,9 @@ class CalendarEventTile extends StatelessWidget {
                     ),
                     _CalendarEventMetaChip(
                       icon: Icons.tag_faces_rounded,
-                      label: 'Mục ${index + 1}',
+                      label: L10nService().format('calendar_item_index', {
+                        'index': index + 1,
+                      }),
                     ),
                   ],
                 ),
@@ -149,9 +150,7 @@ class CalendarEventTile extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFFFFEFF4),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: const Color(0xFFFFC6D6),
-                ),
+                border: Border.all(color: const Color(0xFFFFC6D6)),
               ),
               child: const Icon(
                 Icons.delete_outline_rounded,
@@ -170,10 +169,7 @@ class _CalendarEventMetaChip extends StatelessWidget {
   final IconData icon;
   final String label;
 
-  const _CalendarEventMetaChip({
-    required this.icon,
-    required this.label,
-  });
+  const _CalendarEventMetaChip({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {

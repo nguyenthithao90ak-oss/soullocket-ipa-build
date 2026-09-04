@@ -7,7 +7,6 @@ import 'package:soullocket_app/utils/services/single_match_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/models/single_match_models.dart';
-import 'package:soullocket_app/views/relationship/video_call_screen.dart';
 import 'package:soullocket_app/views/visitors/visitor_profile_screen.dart';
 import '../screens/single_match_finding_screen.dart';
 import '../screens/single_match_call_screen.dart';
@@ -32,22 +31,25 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
   void initState() {
     super.initState();
 
-    _historySub = _service.streamHistory(widget.houseId).listen(
-      (list) {
-        if (mounted) setState(() => _history = list);
-      },
-      onError: (err) {
-        if (mounted) {
-          setState(() {
-            _error = AppErrorMapper.resolve(
-              err,
-              fallbackMessage:
-                  L10nService().translate('match_khngthtidl_11f27c'),
-            ).message;
-          });
-        }
-      },
-    );
+    _historySub = _service
+        .streamHistory(widget.houseId)
+        .listen(
+          (list) {
+            if (mounted) setState(() => _history = list);
+          },
+          onError: (err) {
+            if (mounted) {
+              setState(() {
+                _error = AppErrorMapper.resolve(
+                  err,
+                  fallbackMessage: L10nService().translate(
+                    'match_khngthtidl_11f27c',
+                  ),
+                ).message;
+              });
+            }
+          },
+        );
   }
 
   @override
@@ -56,9 +58,14 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
     super.dispose();
   }
 
-  Future<void> _startRandomCall({required bool isVideo, required bool isBlind}) async {
-    final excludeHouseIds =
-        _history.where((e) => e.isCall).map((e) => e.peerHouseId).toSet();
+  Future<void> _startRandomCall({
+    required bool isVideo,
+    required bool isBlind,
+  }) async {
+    final excludeHouseIds = _history
+        .where((e) => e.isCall)
+        .map((e) => e.peerHouseId)
+        .toSet();
 
     final result = await Navigator.push<dynamic>(
       context,
@@ -76,7 +83,8 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
     if (result == null || result is! SingleMatchCandidate) {
       if (!mounted) return;
       _showSnack(
-          'Hiện không có ai phù hợp để gọi lúc này. Vui lòng thử lại sau.');
+        'Hiện không có ai phù hợp để gọi lúc này. Vui lòng thử lại sau.',
+      );
       return;
     }
 
@@ -149,15 +157,20 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.cloud_off_rounded,
-                  size: 48, color: SLColors.textTertiary),
+              const Icon(
+                Icons.cloud_off_rounded,
+                size: 48,
+                color: SLColors.textTertiary,
+              ),
               const SizedBox(height: 12),
-              Text(_error!,
-                  textAlign: TextAlign.center,
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w700,
-                    color: SLColors.textSecondary,
-                  )),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w700,
+                  color: SLColors.textSecondary,
+                ),
+              ),
             ],
           ),
         ),
@@ -183,57 +196,70 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
           ),
           child: Column(
             children: [
-              const Icon(Icons.casino_rounded,
-                  size: 40, color: Color(0xFF7C61FF)),
+              const Icon(
+                Icons.casino_rounded,
+                size: 40,
+                color: Color(0xFF7C61FF),
+              ),
               const SizedBox(height: 8),
-              Text('Gọi ngẫu nhiên',
-                  style: SLTheme.quicksand(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF32203B),
-                  )),
-              const SizedBox(height: 4),
-              Text('Hệ thống chọn người phù hợp và kết nối ngay',
-                  textAlign: TextAlign.center,
-                  style: SLTheme.quicksand(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF8A798E),
-                  )),
-              const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () => _startRandomCall(isVideo: false, isBlind: true),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF3B3B58),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16)),
-                        ),
-                        icon: const Text('🎭', style: TextStyle(fontSize: 18)),
-                        label: Text('Giấu mặt',
-                            style:
-                                SLTheme.quicksand(fontWeight: FontWeight.w900)),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () => _startRandomCall(isVideo: true, isBlind: false),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFFFF5E7E),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16)),
-                        ),
-                        icon: const Text('⚡', style: TextStyle(fontSize: 18)),
-                        label: Text('Gọi trực tiếp',
-                            style:
-                                SLTheme.quicksand(fontWeight: FontWeight.w900)),
-                      ),
-                    ),
-                  ],
+              Text(
+                'Gọi ngẫu nhiên',
+                style: SLTheme.quicksand(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF32203B),
                 ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Hệ thống chọn người phù hợp và kết nối ngay',
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF8A798E),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () =>
+                          _startRandomCall(isVideo: false, isBlind: true),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF3B3B58),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      icon: const Text('🎭', style: TextStyle(fontSize: 18)),
+                      label: Text(
+                        'Giấu mặt',
+                        style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () =>
+                          _startRandomCall(isVideo: true, isBlind: false),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFFFF5E7E),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      icon: const Text('⚡', style: TextStyle(fontSize: 18)),
+                      label: Text(
+                        'Gọi trực tiếp',
+                        style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -265,12 +291,14 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
           const SizedBox(height: 18),
           Row(
             children: [
-              Text('Lịch sử cuộc gọi',
-                  style: SLTheme.quicksand(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF2E2427),
-                  )),
+              Text(
+                'Lịch sử cuộc gọi',
+                style: SLTheme.quicksand(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF2E2427),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -288,23 +316,30 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
             ),
             child: Column(
               children: [
-                const Icon(Icons.call_end_rounded,
-                    size: 52, color: SLColors.textTertiary),
+                const Icon(
+                  Icons.call_end_rounded,
+                  size: 52,
+                  color: SLColors.textTertiary,
+                ),
                 const SizedBox(height: 12),
-                Text('Chưa có cuộc gọi nào',
-                    style: SLTheme.quicksand(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      color: SLColors.textPrimary,
-                    )),
+                Text(
+                  'Chưa có cuộc gọi nào',
+                  style: SLTheme.quicksand(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: SLColors.textPrimary,
+                  ),
+                ),
                 const SizedBox(height: 6),
-                Text('Hãy bắt đầu ghép đôi và gọi cho người lạ.',
-                    textAlign: TextAlign.center,
-                    style: SLTheme.quicksand(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: SLColors.textSecondary,
-                    )),
+                Text(
+                  'Hãy bắt đầu ghép đôi và gọi cho người lạ.',
+                  textAlign: TextAlign.center,
+                  style: SLTheme.quicksand(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: SLColors.textSecondary,
+                  ),
+                ),
               ],
             ),
           ),
@@ -345,9 +380,11 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                   ? CachedNetworkImageProvider(entry.peerAvatarUrl)
                   : null,
               child: entry.peerAvatarUrl.isEmpty
-                  ? Text(entry.peerName.isNotEmpty
-                      ? entry.peerName[0].toUpperCase()
-                      : '?')
+                  ? Text(
+                      entry.peerName.isNotEmpty
+                          ? entry.peerName[0].toUpperCase()
+                          : '?',
+                    )
                   : null,
             ),
             const SizedBox(width: 12),
@@ -373,7 +410,9 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 9, vertical: 6),
+                          horizontal: 9,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: accent.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(999),
@@ -417,12 +456,14 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                           context,
                           MaterialPageRoute(
                             builder: (_) => VisitorProfileScreen(
-                                targetHouseId: entry.peerHouseId),
+                              targetHouseId: entry.peerHouseId,
+                            ),
                           ),
                         ),
                         icon: const Icon(Icons.person_search_rounded, size: 17),
-                        label:
-                            Text(L10nService().translate('match_mhs_d226ff')),
+                        label: Text(
+                          L10nService().translate('match_mhs_d226ff'),
+                        ),
                       ),
                       TextButton.icon(
                         onPressed: () => _launchCall(
@@ -452,9 +493,7 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                               : Icons.call_made_rounded,
                           size: 17,
                         ),
-                        label: Text(
-                          isVideo ? 'Gọi video lại' : 'Gọi lại',
-                        ),
+                        label: Text(isVideo ? 'Gọi video lại' : 'Gọi lại'),
                       ),
                     ],
                   ),
@@ -510,18 +549,22 @@ class _StatTile extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: 28),
           const SizedBox(height: 8),
-          Text(value,
-              style: SLTheme.quicksand(
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                color: color,
-              )),
-          Text(label,
-              style: SLTheme.quicksand(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF8A798E),
-              )),
+          Text(
+            value,
+            style: SLTheme.quicksand(
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              color: color,
+            ),
+          ),
+          Text(
+            label,
+            style: SLTheme.quicksand(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF8A798E),
+            ),
+          ),
         ],
       ),
     );

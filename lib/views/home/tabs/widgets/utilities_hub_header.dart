@@ -21,7 +21,7 @@ class UtilitiesHubHeader extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(
         20,
-        MediaQuery.paddingOf(context).top + 8,
+        MediaQuery.paddingOf(context).top + 12,
         20,
         12,
       ),
@@ -30,39 +30,49 @@ class UtilitiesHubHeader extends StatelessWidget {
         children: [
           Row(
             children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [SLColors.primary, SLColors.secondary],
+                  ),
+                  borderRadius: BorderRadius.circular(17),
+                  boxShadow: SLShadow.subtle,
+                ),
+                child: const Icon(
+                  Icons.widgets_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [Color(0xFFFF5E7E), Color(0xFFFF9E7A)],
-                      ).createShader(bounds),
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'UTILITIES HUB',
-                          maxLines: 1,
-                          softWrap: false,
-                          style: SLTheme.quicksand(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
+                    Text(
+                      context.tr('utilities_hub_title'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: SLTheme.quicksand(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: SLColors.textPrimary,
+                        letterSpacing: -0.5,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Container(
-                      width: 100,
-                      height: 3,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFFF5E7E), Color(0xFFFF9E7A)],
-                        ),
-                        borderRadius: BorderRadius.circular(999),
+                    const SizedBox(height: 2),
+                    Text(
+                      context.tr('utilities_hub_subtitle'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: SLTheme.quicksand(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: SLColors.textMuted,
                       ),
                     ),
                   ],
@@ -83,31 +93,23 @@ class UtilitiesHubHeader extends StatelessWidget {
               ),
             ],
           ),
-          SLSpacing.h20,
+          SLSpacing.h16,
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(5),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.35),
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  )
-                ],
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.6),
-                  width: 1.5,
-                ),
+                color: SLColors.paper.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: SLShadow.subtle,
+                border: Border.all(color: SLColors.borderLight),
               ),
               child: Row(
                 children: [
                   Expanded(
                     child: _UtilitiesHubSegmentButton(
                       label: context.tr('home_tinchchung_3e7d5e'),
+                      icon: Icons.favorite_rounded,
                       active: currentSegment == 0,
                       onTap: () => onSegmentChanged(0),
                     ),
@@ -115,6 +117,7 @@ class UtilitiesHubHeader extends StatelessWidget {
                   Expanded(
                     child: _UtilitiesHubSegmentButton(
                       label: context.tr('home_cngcthityu_872418'),
+                      icon: Icons.handyman_rounded,
                       active: currentSegment == 1,
                       onTap: () => onSegmentChanged(1),
                     ),
@@ -157,11 +160,7 @@ class _UtilitiesHubHeaderAction extends StatelessWidget {
               color: SLColors.bgElevated.withValues(alpha: 0.5),
             ),
           ),
-          child: Icon(
-            icon,
-            color: SLColors.primary,
-            size: 20,
-          ),
+          child: Icon(icon, color: SLColors.primary, size: 20),
         ),
       ),
     );
@@ -171,11 +170,13 @@ class _UtilitiesHubHeaderAction extends StatelessWidget {
 class _UtilitiesHubSegmentButton extends StatelessWidget {
   const _UtilitiesHubSegmentButton({
     required this.label,
+    required this.icon,
     required this.active,
     required this.onTap,
   });
 
   final String label;
+  final IconData icon;
   final bool active;
   final VoidCallback onTap;
 
@@ -187,31 +188,48 @@ class _UtilitiesHubSegmentButton extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 8),
         decoration: BoxDecoration(
-          color: active ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(24),
+          gradient: active
+              ? const LinearGradient(
+                  colors: [SLColors.primary, SLColors.secondary],
+                )
+              : null,
+          color: active ? null : Colors.transparent,
+          borderRadius: BorderRadius.circular(17),
           boxShadow: active
               ? [
                   BoxShadow(
-                    color: const Color(0xFFFF5E7E).withValues(alpha: 0.15),
+                    color: SLColors.primary.withValues(alpha: 0.2),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
-                  )
+                  ),
                 ]
               : null,
         ),
         alignment: Alignment.center,
-        child: Text(
-          label,
-          style: SLTheme.quicksand(
-            fontWeight: active ? FontWeight.w900 : FontWeight.w700,
-            fontSize: 14.5,
-            color: active
-                ? SLColors.primary
-                : SLColors.textPrimary.withValues(alpha: 0.55),
-            letterSpacing: 0.3,
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 17,
+              color: active ? Colors.white : SLColors.textMuted,
+            ),
+            const SizedBox(width: 7),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: SLTheme.quicksand(
+                  fontWeight: active ? FontWeight.w900 : FontWeight.w700,
+                  fontSize: 13.5,
+                  color: active ? Colors.white : SLColors.textSecondary,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

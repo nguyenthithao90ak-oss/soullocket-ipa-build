@@ -2034,7 +2034,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             onPressed: () => Navigator.pop(context),
             child: Text(
               L10nService().translate('vault_understood'),
-              style: TextStyle(
+              style: const TextStyle(
                 color: _vaultAccent,
                 fontWeight: FontWeight.w800,
               ),

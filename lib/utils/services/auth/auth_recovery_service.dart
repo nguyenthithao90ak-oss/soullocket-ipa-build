@@ -41,15 +41,17 @@ class AuthRecoveryService {
     bool allowUnauthenticatedWithoutMarkers = false,
   }) {
     final code = error.code.trim().toLowerCase();
-    final isPossibleAppCheckCode = code == 'failed-precondition' ||
+    final isPossibleAppCheckCode =
+        code == 'failed-precondition' ||
         code == 'permission-denied' ||
         code == 'unauthenticated';
     if (!isPossibleAppCheckCode) {
       return false;
     }
 
-    final message =
-        '${error.message ?? ''} ${error.details ?? ''}'.trim().toLowerCase();
+    final message = '${error.message ?? ''} ${error.details ?? ''}'
+        .trim()
+        .toLowerCase();
 
     const appCheckMarkers = <String>[
       'app check',
@@ -95,10 +97,8 @@ class AuthRecoveryService {
     } catch (error) {
       if (kDebugMode) {
         debugPrint(
-            'AuthRecoveryService App Check warm-up failed: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: 'Không thể chuẩn bị App Check.',
-        ).message}');
+          'AuthRecoveryService App Check warm-up failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể chuẩn bị App Check.').message}',
+        );
       }
     }
     return false;
@@ -114,7 +114,9 @@ class AuthRecoveryService {
 
     try {
       await user.reload();
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[AuthRecovery] Không thể reload phiên người dùng: $error');
+    }
 
     if (!forceRefreshIdToken) {
       return;
@@ -122,7 +124,9 @@ class AuthRecoveryService {
 
     try {
       await _auth.currentUser?.getIdToken(true);
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[AuthRecovery] Không thể làm mới ID token: $error');
+    }
   }
 
   Future<T> _callOtpFunction<T>(
@@ -247,19 +251,21 @@ class AuthRecoveryService {
           _asStringDynamicMap(securitySnap.value) ?? <String, dynamic>{};
       final recovery =
           _asStringDynamicMap(security['recovery']) ?? <String, dynamic>{};
-      final question = (recovery['question'] ??
-              recoveryQSnap.value ??
-              security['question'] ??
-              '')
-          .toString()
-          .trim();
-      final answerHash = (recovery['answerHash'] ??
-              recoveryASnap.value ??
-              security['answer'] ??
-              security['answerHash'] ??
-              '')
-          .toString()
-          .trim();
+      final question =
+          (recovery['question'] ??
+                  recoveryQSnap.value ??
+                  security['question'] ??
+                  '')
+              .toString()
+              .trim();
+      final answerHash =
+          (recovery['answerHash'] ??
+                  recoveryASnap.value ??
+                  security['answer'] ??
+                  security['answerHash'] ??
+                  '')
+              .toString()
+              .trim();
       if (question.isNotEmpty) {
         security['question'] = question;
       }
@@ -298,8 +304,9 @@ class AuthRecoveryService {
 
   Future<String?> findEmailByHouseId(String houseId) async {
     try {
-      final securitySnap =
-          await _db.child('houses/$houseId/security/email').get();
+      final securitySnap = await _db
+          .child('houses/$houseId/security/email')
+          .get();
       final securityEmail = securitySnap.value?.toString().trim();
       if (securityEmail != null && securityEmail.isNotEmpty) {
         return securityEmail;
@@ -315,8 +322,8 @@ class AuthRecoveryService {
   Future<bool> verifySecurityAnswer(String houseId, String answer) async {
     try {
       final security = await getHouseSecurityData(houseId);
-      final storedAnswer =
-          (security?['answerHash'] ?? security?['answer'])?.toString();
+      final storedAnswer = (security?['answerHash'] ?? security?['answer'])
+          ?.toString();
       return matchesRecoveryAnswer(storedAnswer, answer);
     } catch (_) {
       return false;
@@ -332,10 +339,7 @@ class AuthRecoveryService {
       final result = await _callOtpFunction(
         () => CloudFunctionsHelper.callSecure<dynamic>(
           'verifyHousePin',
-          payload: {
-            'houseId': houseId.trim(),
-            'pin': pin.trim(),
-          },
+          payload: {'houseId': houseId.trim(), 'pin': pin.trim()},
           throwOriginalException: true,
         ),
       );
@@ -427,10 +431,7 @@ class AuthRecoveryService {
       final result = await _callOtpFunction(
         () => CloudFunctionsHelper.callSecure<dynamic>(
           'verifyEmailOTP',
-          payload: {
-            'email': email.trim(),
-            'otp': otp.trim(),
-          },
+          payload: {'email': email.trim(), 'otp': otp.trim()},
           throwOriginalException: true,
         ),
         allowUnauthenticatedWithoutMarkers: true,
@@ -470,8 +471,9 @@ class AuthRecoveryService {
     try {
       await _refreshCurrentUserSession(forceRefreshIdToken: true);
 
-      final currentEmail =
-          auth_support.normalizeSecurityEmail(_auth.currentUser?.email ?? '');
+      final currentEmail = auth_support.normalizeSecurityEmail(
+        _auth.currentUser?.email ?? '',
+      );
       if (currentEmail.isEmpty) {
         throw 'Không tìm thấy email chính của tài khoản hiện tại.';
       }
@@ -482,10 +484,7 @@ class AuthRecoveryService {
       final result = await _callOtpFunction(
         () => CloudFunctionsHelper.callSecure<dynamic>(
           'verifyPrimaryEmailOTP',
-          payload: {
-            'email': normalizedEmail,
-            'otp': otp.trim(),
-          },
+          payload: {'email': normalizedEmail, 'otp': otp.trim()},
           throwOriginalException: true,
         ),
       );
@@ -517,10 +516,7 @@ class AuthRecoveryService {
       final result = await _callOtpFunction(
         () => CloudFunctionsHelper.callSecure<dynamic>(
           'validateEmailOTP',
-          payload: {
-            'email': email.trim(),
-            'otp': otp.trim(),
-          },
+          payload: {'email': email.trim(), 'otp': otp.trim()},
           throwOriginalException: true,
         ),
         allowUnauthenticatedWithoutMarkers: true,
@@ -554,8 +550,9 @@ class AuthRecoveryService {
     final userCredential = await _auth.signInWithCustomToken(token);
     final user = userCredential.user;
     if (user != null) {
-      final hasPasswordProvider = user.providerData
-          .any((provider) => provider.providerId == 'password');
+      final hasPasswordProvider = user.providerData.any(
+        (provider) => provider.providerId == 'password',
+      );
       if (hasPasswordProvider) {
         await user.updatePassword(newPassword);
         return;

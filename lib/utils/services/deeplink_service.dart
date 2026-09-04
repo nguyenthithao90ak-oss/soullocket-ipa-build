@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
 import '../../utils/services/love_card_link_service.dart';
 
@@ -46,23 +47,24 @@ class DeeplinkService {
           onPasswordResetLink,
         );
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[Deeplink] Không thể đọc liên kết khởi động: $error');
+    }
 
     try {
       _sub = _appLinks.uriLinkStream.listen(
         (uri) {
           unawaited(
-            _handleUri(
-              uri,
-              onJoinHouse,
-              onOpenLoveCard,
-              onPasswordResetLink,
-            ),
+            _handleUri(uri, onJoinHouse, onOpenLoveCard, onPasswordResetLink),
           );
         },
-        onError: (_) {},
+        onError: (Object error) {
+          debugPrint('[Deeplink] Stream liên kết gặp lỗi: $error');
+        },
       );
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[Deeplink] Không thể khởi tạo stream liên kết: $error');
+    }
   }
 
   Future<void> _handleUri(
@@ -74,8 +76,9 @@ class DeeplinkService {
     if (_shouldSkipUri(uri)) return;
     final isTrustedWebUri = AppConfig.isTrustedWebUri(uri);
     final isTrustedAuthActionUri = AppConfig.isTrustedAuthActionUri(uri);
-    final isTrustedAuthCompletionUri =
-        AppConfig.isTrustedAuthCompletionUri(uri);
+    final isTrustedAuthCompletionUri = AppConfig.isTrustedAuthCompletionUri(
+      uri,
+    );
     if (!isTrustedWebUri &&
         !isTrustedAuthActionUri &&
         !isTrustedAuthCompletionUri) {
@@ -105,13 +108,17 @@ class DeeplinkService {
           onPasswordResetLink != null) {
         await onPasswordResetLink(uri);
       }
-    } catch (_) {}
+    } catch (error) {
+      // Không log URI vì liên kết xác thực có thể chứa mã dùng một lần.
+      debugPrint('[Deeplink] Xử lý liên kết thất bại: $error');
+    }
   }
 
   bool _shouldSkipUri(Uri uri) {
     final key = uri.toString().trim();
     final now = DateTime.now();
-    final shouldSkip = _lastHandledUriKey == key &&
+    final shouldSkip =
+        _lastHandledUriKey == key &&
         _lastHandledAt != null &&
         now.difference(_lastHandledAt!) < const Duration(seconds: 3);
     _lastHandledUriKey = key;

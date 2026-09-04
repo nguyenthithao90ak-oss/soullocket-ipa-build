@@ -58,10 +58,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     return null;
   }
 
-  bool _isPresenceDataOnlineForRole(
-    String role,
-    Map<dynamic, dynamic>? data,
-  ) {
+  bool _isPresenceDataOnlineForRole(String role, Map<dynamic, dynamic>? data) {
     return data != null &&
         PresenceService.isPresenceOnline(
           data,
@@ -78,10 +75,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     return role == _currentRole && _auth.currentUser != null;
   }
 
-  bool _isIgnoredUidOnlyPresence(
-    String role,
-    Map<dynamic, dynamic>? data,
-  ) {
+  bool _isIgnoredUidOnlyPresence(String role, Map<dynamic, dynamic>? data) {
     final ignoredUid = _ignoredPresenceUidForRole(role);
     if (data == null || ignoredUid == null || ignoredUid.isEmpty) {
       return false;
@@ -106,7 +100,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     return uid == ignoredUid;
   }
 
-/*
+  /*
 
     final now = DateTime.now().millisecondsSinceEpoch;
     const ghostThreshold = 12 * 3600 * 1000;
@@ -212,10 +206,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     return _readEpochMs(weather['lastUpdate']);
   }
 
-  bool _isWeatherFreshForRole(
-    String role, {
-    required Duration maxAge,
-  }) {
+  bool _isWeatherFreshForRole(String role, {required Duration maxAge}) {
     final lastUpdateMs = _weatherLastUpdateMsForRole(role);
     if (lastUpdateMs == null) {
       return false;
@@ -292,15 +283,17 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
         : (_weatherMatchesCold(weather) ? 'warmth' : '');
     if (type.isEmpty) return;
 
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     final currentBucket = _weatherCareBucket(weather);
     final bucketKey = 'il_weather_care_bucket_${houseId}_$_currentRole';
     final lastBucket = prefs.getString(bucketKey) ?? '';
     final now = DateTime.now();
     if (lastBucket == currentBucket) {
-      final sentAtStr =
-          prefs.getString('il_weather_care_sent_at_${houseId}_$_currentRole');
+      final sentAtStr = prefs.getString(
+        'il_weather_care_sent_at_${houseId}_$_currentRole',
+      );
       final sentAt = sentAtStr == null ? null : DateTime.tryParse(sentAtStr);
       if (sentAt != null && now.difference(sentAt) < _kWeatherCareCooldown) {
         return;
@@ -496,10 +489,9 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
           'https://nominatim.openstreetmap.org/reverse'
           '?format=jsonv2&lat=$lat&lon=$lng&accept-language=vi',
         );
-        final response = await http.get(
-          uri,
-          headers: const {'User-Agent': 'SoulLocket-App'},
-        ).timeout(const Duration(seconds: 10));
+        final response = await http
+            .get(uri, headers: const {'User-Agent': 'SoulLocket-App'})
+            .timeout(const Duration(seconds: 10));
         if (response.statusCode != 200) return null;
         final map = jsonDecode(response.body) as Map<String, dynamic>;
         final displayName = map['display_name']?.toString().trim();
@@ -553,7 +545,8 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
 
     final sortedEntries = _weatherReverseGeocodeCacheTs.entries.toList()
       ..sort((a, b) => a.value.compareTo(b.value));
-    final overflowCount = _weatherReverseGeocodeCacheTs.length -
+    final overflowCount =
+        _weatherReverseGeocodeCacheTs.length -
         _kWeatherReverseGeocodeCacheMaxEntries;
     for (final entry in sortedEntries.take(overflowCount)) {
       _weatherReverseGeocodeCacheTs.remove(entry.key);
@@ -569,7 +562,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     try {
       final uri = Uri.parse(
         'https://api.open-meteo.com/v1/forecast'
-          '?latitude=$lat&longitude=$lng'
+        '?latitude=$lat&longitude=$lng'
         '&current=temperature_2m,weather_code'
         '&timezone=auto',
       );
@@ -589,7 +582,8 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
         'temp': temp,
         'cond': cond,
         'code': weatherCode,
-        'isRain': cond.contains(context.tr('home_ma_a464da')) ||
+        'isRain':
+            cond.contains(context.tr('home_ma_a464da')) ||
             cond.contains(context.tr('home_dng_c363ff')),
         'isCold': temp < 20,
         'isHot': temp > 32,
@@ -613,7 +607,9 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     _weatherRefreshTimer?.cancel();
     _refreshCurrentRoleWeather();
     _weatherRefreshTimer = Timer.periodic(
-        const Duration(minutes: 15), (_) => _refreshCurrentRoleWeather());
+      const Duration(minutes: 15),
+      (_) => _refreshCurrentRoleWeather(),
+    );
   }
 
   Future<void> _refreshCurrentRoleWeather() async {
@@ -639,16 +635,18 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
       bool isUsingDefaultHCM = false;
 
       try {
-        final hasLocationPermission =
-            await _locationService.requestPermission(context: context);
+        final hasLocationPermission = await _locationService.requestPermission(
+          context: context,
+        );
         final isLocationServiceEnabled =
             await Geolocator.isLocationServiceEnabled();
 
         if (hasLocationPermission && isLocationServiceEnabled) {
           final position = await Geolocator.getCurrentPosition(
             locationSettings: const LocationSettings(
-              accuracy:
-                  kIsWeb ? LocationAccuracy.medium : LocationAccuracy.high,
+              accuracy: kIsWeb
+                  ? LocationAccuracy.medium
+                  : LocationAccuracy.high,
             ),
           );
           lat = position.latitude;
@@ -671,7 +669,8 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
         locLabel = 'TP.HCM';
 
         try {
-          final prefs = OfflineCacheService.getPrefsSync() ??
+          final prefs =
+              OfflineCacheService.getPrefsSync() ??
               await SharedPreferences.getInstance();
           final lastShownStr = prefs.getString('il_weather_perm_notice_ts');
           final now = DateTime.now();
@@ -701,7 +700,9 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
               ),
             );
             await prefs.setString(
-                'il_weather_perm_notice_ts', now.toIso8601String());
+              'il_weather_perm_notice_ts',
+              now.toIso8601String(),
+            );
           }
         } catch (e) {
           debugPrint('[PresenceMap] weather permission notice error: $e');
@@ -752,7 +753,9 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
   }
 
   Map<String, dynamic>? _gpsPreviewStateForRole(
-      Map<String, dynamic> gpsData, String role) {
+    Map<String, dynamic> gpsData,
+    String role,
+  ) {
     final raw = gpsData[role];
     if (raw is! Map) return null;
     final node = _toStringDynamicMap(raw);
@@ -764,18 +767,22 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
         _readDouble(lastKnown['lt']) ?? _readDouble(lastKnown['lat']);
     final lastLng =
         _readDouble(lastKnown['lg']) ?? _readDouble(lastKnown['lng']);
-    final isLive = (node['isLive'] == true || node['sharingEnabled'] == true) &&
+    final isLive =
+        (node['isLive'] == true || node['sharingEnabled'] == true) &&
         currentLat != null &&
         currentLng != null &&
         _isFreshGpsTs(currentTs);
-    final hasHistory = node['everShared'] == true ||
+    final hasHistory =
+        node['everShared'] == true ||
         node['sharingEnabled'] == true ||
         node['isLive'] == true ||
         (lastLat != null && lastLng != null);
-    final effectiveLat =
-        isLive ? currentLat : (lastLat ?? (hasHistory ? currentLat : null));
-    final effectiveLng =
-        isLive ? currentLng : (lastLng ?? (hasHistory ? currentLng : null));
+    final effectiveLat = isLive
+        ? currentLat
+        : (lastLat ?? (hasHistory ? currentLat : null));
+    final effectiveLng = isLive
+        ? currentLng
+        : (lastLng ?? (hasHistory ? currentLng : null));
     if (!hasHistory || effectiveLat == null || effectiveLng == null) {
       return null;
     }
@@ -809,7 +816,9 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
             status == LocationPermission.deniedForever) {
           _updateHomeMapPreview(
             distanceText: L10nService().translate('Chưa cấp quyền vị trí'),
-            alertText: L10nService().translate('Vui lòng cấp quyền vị trí để xem bản đồ.'),
+            alertText: L10nService().translate(
+              'Vui lòng cấp quyền vị trí để xem bản đồ.',
+            ),
           );
         }
       }
@@ -822,152 +831,155 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
 
   void _bindHomeMapPreview(String houseId) {
     _gpsSubscription?.cancel();
-    _gpsSubscription = _dbRef.child('gps/$houseId').onValue.listen(
-      (event) {
-        final isSingle = _isSingleRelationship;
-        final gpsData = _toStringDynamicMap(event.snapshot.value);
-        final myPoint = _gpsPreviewStateForRole(gpsData, _currentRole);
-        final partnerPoint = _gpsPreviewStateForRole(gpsData, _partnerRole);
-        final myLive = myPoint?['isLive'] == true;
-        final partnerLive = partnerPoint?['isLive'] == true;
-        final myHasHistory = myPoint?['hasHistory'] == true;
-        final partnerHasHistory = partnerPoint?['hasHistory'] == true;
+    _gpsSubscription = _dbRef
+        .child('gps/$houseId')
+        .onValue
+        .listen(
+          (event) {
+            final isSingle = _isSingleRelationship;
+            final gpsData = _toStringDynamicMap(event.snapshot.value);
+            final myPoint = _gpsPreviewStateForRole(gpsData, _currentRole);
+            final partnerPoint = _gpsPreviewStateForRole(gpsData, _partnerRole);
+            final myLive = myPoint?['isLive'] == true;
+            final partnerLive = partnerPoint?['isLive'] == true;
+            final myHasHistory = myPoint?['hasHistory'] == true;
+            final partnerHasHistory = partnerPoint?['hasHistory'] == true;
 
-        final partnerNode = gpsData[_partnerRole];
-        if (partnerNode is Map) {
-          final partnerNodeMap = _toStringDynamicMap(partnerNode);
-          final battery =
-              partnerNodeMap['battery'] ?? partnerNodeMap['batteryPct'];
-          final isCharging = partnerNodeMap['isCharging'] == true;
-          if (battery is num) {
-            _homePartnerBatteryNotifier.value = {
-              'level': battery.toInt(),
-              'isCharging': isCharging,
-            };
-          } else {
-            final lastKnown = partnerNodeMap['lastKnown'];
-            if (lastKnown is Map) {
-              final lastKnownMap = _toStringDynamicMap(lastKnown);
-              final lkBattery =
-                  lastKnownMap['battery'] ?? lastKnownMap['batteryPct'];
-              final lkIsCharging = lastKnownMap['isCharging'] == true;
-              if (lkBattery is num) {
+            final partnerNode = gpsData[_partnerRole];
+            if (partnerNode is Map) {
+              final partnerNodeMap = _toStringDynamicMap(partnerNode);
+              final battery =
+                  partnerNodeMap['battery'] ?? partnerNodeMap['batteryPct'];
+              final isCharging = partnerNodeMap['isCharging'] == true;
+              if (battery is num) {
                 _homePartnerBatteryNotifier.value = {
-                  'level': lkBattery.toInt(),
-                  'isCharging': lkIsCharging,
+                  'level': battery.toInt(),
+                  'isCharging': isCharging,
                 };
               } else {
-                _homePartnerBatteryNotifier.value = null;
+                final lastKnown = partnerNodeMap['lastKnown'];
+                if (lastKnown is Map) {
+                  final lastKnownMap = _toStringDynamicMap(lastKnown);
+                  final lkBattery =
+                      lastKnownMap['battery'] ?? lastKnownMap['batteryPct'];
+                  final lkIsCharging = lastKnownMap['isCharging'] == true;
+                  if (lkBattery is num) {
+                    _homePartnerBatteryNotifier.value = {
+                      'level': lkBattery.toInt(),
+                      'isCharging': lkIsCharging,
+                    };
+                  } else {
+                    _homePartnerBatteryNotifier.value = null;
+                  }
+                } else {
+                  _homePartnerBatteryNotifier.value = null;
+                }
               }
             } else {
               _homePartnerBatteryNotifier.value = null;
             }
-          }
-        } else {
-          _homePartnerBatteryNotifier.value = null;
-        }
 
-        final myNode = gpsData[_currentRole];
-        if (myNode is Map) {
-          final myNodeMap = _toStringDynamicMap(myNode);
-          final battery = myNodeMap['battery'] ?? myNodeMap['batteryPct'];
-          final isCharging = myNodeMap['isCharging'] == true;
-          if (battery is num) {
-            _homeMyBatteryNotifier.value = {
-              'level': battery.toInt(),
-              'isCharging': isCharging,
-            };
-          } else {
-            final lastKnown = myNodeMap['lastKnown'];
-            if (lastKnown is Map) {
-              final lastKnownMap = _toStringDynamicMap(lastKnown);
-              final lkBattery =
-                  lastKnownMap['battery'] ?? lastKnownMap['batteryPct'];
-              final lkIsCharging = lastKnownMap['isCharging'] == true;
-              if (lkBattery is num) {
+            final myNode = gpsData[_currentRole];
+            if (myNode is Map) {
+              final myNodeMap = _toStringDynamicMap(myNode);
+              final battery = myNodeMap['battery'] ?? myNodeMap['batteryPct'];
+              final isCharging = myNodeMap['isCharging'] == true;
+              if (battery is num) {
                 _homeMyBatteryNotifier.value = {
-                  'level': lkBattery.toInt(),
-                  'isCharging': lkIsCharging,
+                  'level': battery.toInt(),
+                  'isCharging': isCharging,
                 };
               } else {
-                _homeMyBatteryNotifier.value = null;
+                final lastKnown = myNodeMap['lastKnown'];
+                if (lastKnown is Map) {
+                  final lastKnownMap = _toStringDynamicMap(lastKnown);
+                  final lkBattery =
+                      lastKnownMap['battery'] ?? lastKnownMap['batteryPct'];
+                  final lkIsCharging = lastKnownMap['isCharging'] == true;
+                  if (lkBattery is num) {
+                    _homeMyBatteryNotifier.value = {
+                      'level': lkBattery.toInt(),
+                      'isCharging': lkIsCharging,
+                    };
+                  } else {
+                    _homeMyBatteryNotifier.value = null;
+                  }
+                } else {
+                  _homeMyBatteryNotifier.value = null;
+                }
               }
             } else {
               _homeMyBatteryNotifier.value = null;
             }
-          }
-        } else {
-          _homeMyBatteryNotifier.value = null;
-        }
 
-        if (!mounted) return;
-        var nextDistance = context.tr('home_angnhv_ea3669');
-        String? nextAlert = isSingle
-            ? context.tr('home_btvtrbnhin_5f5891')
-            : context.tr('home_btvtrtheod_b09bba');
+            if (!mounted) return;
+            var nextDistance = context.tr('home_angnhv_ea3669');
+            String? nextAlert = isSingle
+                ? context.tr('home_btvtrbnhin_5f5891')
+                : context.tr('home_btvtrtheod_b09bba');
 
-        if (isSingle) {
-          if (myPoint != null && myLive) {
-            nextDistance = context.tr('home_angchias_51b41c');
-            nextAlert = context.tr('home_bmxemvtrhi_e4d474');
-          } else if (myPoint != null || myHasHistory) {
-            nextDistance = context.tr('home_vtrlu_7f955b');
-            nextAlert = context.tr('home_bnanghinth_652b9f');
-          } else {
-            nextDistance = context.tr('home_chabtvtr_5f7a9a');
-          }
-        } else if (myLive &&
-            partnerLive &&
-            myPoint != null &&
-            partnerPoint != null) {
-          final meters = const ll.Distance().as(
-            ll.LengthUnit.Meter,
-            ll.LatLng(myPoint['lt']!, myPoint['lg']!),
-            ll.LatLng(partnerPoint['lt']!, partnerPoint['lg']!),
-          );
-          nextDistance = _formatDistanceMeters(meters);
-          nextAlert = context.tr('home_bmxembnyca_b88207');
-        } else if (!partnerHasHistory) {
-          nextDistance = context.tr('home_ngiychabt_4fbd8d');
-          nextAlert = context.tr('home_ngiychabtv_a26a9a');
-        } else if (!myHasHistory) {
-          nextDistance = context.tr('home_bnchabt_4d6ead');
-          nextAlert = L10nService().format('home_location_not_enabled_action',
-              {'button': context.tr('home_btvtr_4d948b')});
-        } else if (!myLive || !partnerLive) {
-          nextDistance = context.tr('home_vtrcuilu_b4c8ee');
-          nextAlert = context.tr('home_cpnhtvtran_6aea3c');
-        }
+            if (isSingle) {
+              if (myPoint != null && myLive) {
+                nextDistance = context.tr('home_angchias_51b41c');
+                nextAlert = context.tr('home_bmxemvtrhi_e4d474');
+              } else if (myPoint != null || myHasHistory) {
+                nextDistance = context.tr('home_vtrlu_7f955b');
+                nextAlert = context.tr('home_bnanghinth_652b9f');
+              } else {
+                nextDistance = context.tr('home_chabtvtr_5f7a9a');
+              }
+            } else if (myLive &&
+                partnerLive &&
+                myPoint != null &&
+                partnerPoint != null) {
+              final meters = const ll.Distance().as(
+                ll.LengthUnit.Meter,
+                ll.LatLng(myPoint['lt']!, myPoint['lg']!),
+                ll.LatLng(partnerPoint['lt']!, partnerPoint['lg']!),
+              );
+              nextDistance = _formatDistanceMeters(meters);
+              nextAlert = context.tr('home_bmxembnyca_b88207');
+            } else if (!partnerHasHistory) {
+              nextDistance = context.tr('home_ngiychabt_4fbd8d');
+              nextAlert = context.tr('home_ngiychabtv_a26a9a');
+            } else if (!myHasHistory) {
+              nextDistance = context.tr('home_bnchabt_4d6ead');
+              nextAlert = L10nService().format(
+                'home_location_not_enabled_action',
+                {'button': context.tr('home_btvtr_4d948b')},
+              );
+            } else if (!myLive || !partnerLive) {
+              nextDistance = context.tr('home_vtrcuilu_b4c8ee');
+              nextAlert = context.tr('home_cpnhtvtran_6aea3c');
+            }
 
-        _updateHomeMapPreview(
-          distanceText: nextDistance,
-          alertText: nextAlert,
+            _updateHomeMapPreview(
+              distanceText: nextDistance,
+              alertText: nextAlert,
+            );
+          },
+          onError: (Object error) {
+            if (!mounted) {
+              debugPrint('Home GPS preview listener failed (unmounted)');
+              return;
+            }
+            debugPrint(
+              'Home GPS preview listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: context.tr('home_khngthtidl_d524ab')).message}',
+            );
+            _updateHomeMapPreview(
+              distanceText: context.tr('home_angnhv_ea3669'),
+              alertText: context.tr('home_khngthtidl_d524ab'),
+            );
+          },
         );
-      },
-      onError: (Object error) {
-        if (!mounted) {
-          debugPrint('Home GPS preview listener failed (unmounted)');
-          return;
-        }
-        debugPrint(
-          'Home GPS preview listener failed: ${AppErrorMapper.resolve(
-            error,
-            fallbackMessage: context.tr('home_khngthtidl_d524ab'),
-          ).message}',
-        );
-        _updateHomeMapPreview(
-          distanceText: context.tr('home_angnhv_ea3669'),
-          alertText: context.tr('home_khngthtidl_d524ab'),
-        );
-      },
-    );
   }
 
   Future<void> _openMapScreen() async {
     if (!mounted) return;
 
-    final hasPermission =
-        await _locationService.requestPermission(context: context);
+    final hasPermission = await _locationService.requestPermission(
+      context: context,
+    );
     if (!hasPermission) {
       return;
     }
@@ -976,17 +988,19 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     final navigator = Navigator.of(context);
     final houseId = _houseId ?? await _houseService.getCurrentHouseId();
     if (!mounted || houseId == null) return;
-    navigator.push(MaterialPageRoute(
-      builder: (_) => MapScreen(
-        houseId: houseId,
-        relationshipMode: _relationshipMode,
-        myRole: _currentRole,
-        partnerRole: _partnerRole,
-        myName: _resolveMyName(),
-        partnerName: _resolvePartnerName(),
-        myAvatarUrl: _resolveAvatarForRole(_currentRole),
-        partnerAvatarUrl: _resolveAvatarForRole(_partnerRole),
+    navigator.push(
+      MaterialPageRoute(
+        builder: (_) => MapScreen(
+          houseId: houseId,
+          relationshipMode: _relationshipMode,
+          myRole: _currentRole,
+          partnerRole: _partnerRole,
+          myName: _resolveMyName(),
+          partnerName: _resolvePartnerName(),
+          myAvatarUrl: _resolveAvatarForRole(_currentRole),
+          partnerAvatarUrl: _resolveAvatarForRole(_partnerRole),
+        ),
       ),
-    ));
+    );
   }
 }

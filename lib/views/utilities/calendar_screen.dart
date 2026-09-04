@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -8,6 +9,7 @@ import 'package:soullocket_app/utils/services/notification_service.dart';
 import 'package:soullocket_app/utils/services/widget_service.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/views/utilities/calendar/calendar_notification_ids.dart';
 import 'package:soullocket_app/views/utilities/calendar/dialogs/calendar_quick_add_sheet.dart';
 import 'package:soullocket_app/views/utilities/calendar/widgets/calendar_background_decor.dart';
@@ -895,6 +897,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   double _horizontalInsetForWidth(double width) {
+    if (width > 860) {
+      return (width - 820) / 2;
+    }
     if (width <= 360) {
       return 8;
     }
@@ -922,7 +927,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
-          'Lịch Chung 💗',
+          context.tr('calendar_shared_title'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w900,
             fontSize: 19,
@@ -936,7 +941,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF163E99), Color(0xFF3B73E7)],
+              colors: [Color(0xFF5668C8), Color(0xFF7C70D4)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -952,7 +957,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: 'Hướng dẫn sử dụng',
+            tooltip: context.tr('calendar_usage_guide_tooltip'),
             onPressed: _showUsageGuide,
             icon: const Icon(
               Icons.info_outline_rounded,
@@ -973,8 +978,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 await Future<void>.delayed(const Duration(milliseconds: 350));
               },
               child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(
-                  parent: BouncingScrollPhysics(),
+                physics: AlwaysScrollableScrollPhysics(
+                  parent: SLResponsive.scrollPhysicsForPlatform(),
                 ),
                 padding: const EdgeInsets.only(bottom: 20),
                 child: Column(
@@ -1010,7 +1015,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Đồng bộ lịch đang gặp trục trặc nhỏ',
+                                      context.tr('calendar_sync_error_title'),
                                       style: SLTheme.quicksand(
                                         fontSize: 13.5,
                                         fontWeight: FontWeight.w900,
@@ -1019,7 +1024,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      'Bạn có thể kéo xuống để tải lại hoặc chạm thử lại. Dữ liệu cũ vẫn được giữ nếu đã tải trước đó.',
+                                      context.tr('calendar_sync_error_desc'),
                                       style: SLTheme.quicksand(
                                         fontSize: 11.5,
                                         fontWeight: FontWeight.w700,
@@ -1035,7 +1040,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                   unawaited(_reloadCalendar());
                                 },
                                 child: Text(
-                                  'Thử lại',
+                                  context.tr('calendar_retry'),
                                   style: SLTheme.quicksand(
                                     fontWeight: FontWeight.w900,
                                     color: const Color(0xFFE45B87),
@@ -1089,7 +1094,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         shortDateLabel: _formatShortDate(selectedDay),
                         eventCount: eventCount,
                       ),
-                      if (Platform.isAndroid) ...[
+                      if (!kIsWeb && Platform.isAndroid) ...[
                         SizedBox(height: compact ? 12 : 16),
                         Padding(
                           padding: EdgeInsets.symmetric(

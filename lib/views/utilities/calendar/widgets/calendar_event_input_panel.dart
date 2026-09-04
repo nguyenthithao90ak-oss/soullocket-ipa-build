@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import 'calendar_info_pill.dart';
 
@@ -31,10 +32,7 @@ class CalendarEventInputPanel extends StatelessWidget {
         padding: EdgeInsets.all(compact ? 16 : 18),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [
-              Color(0xFFF9FCFF),
-              Color(0xFFF7F3FF),
-            ],
+            colors: [Color(0xFFF9FCFF), Color(0xFFF7F3FF)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -79,7 +77,7 @@ class CalendarEventInputPanel extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Thêm kế hoạch mới',
+                        context.tr('calendar_add_plan_title'),
                         style: SLTheme.quicksand(
                           fontSize: compact ? 15 : 16,
                           fontWeight: FontWeight.w900,
@@ -88,7 +86,7 @@ class CalendarEventInputPanel extends StatelessWidget {
                       ),
                       SLSpacing.h4,
                       Text(
-                        'Ghi rõ giờ hẹn, điều cần chuẩn bị hoặc một việc nhỏ hai bạn muốn nhớ.',
+                        context.tr('calendar_add_plan_desc'),
                         style: SLTheme.quicksand(
                           fontSize: compact ? 11.5 : 12,
                           fontWeight: FontWeight.w700,
@@ -126,8 +124,7 @@ class CalendarEventInputPanel extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
                 decoration: InputDecoration(
-                  hintText:
-                      'Ví dụ: 19:30 gọi video, mua bánh nhỏ, chuẩn bị quà và viết lời nhắn...',
+                  hintText: context.tr('calendar_plan_hint'),
                   hintStyle: SLTheme.quicksand(
                     color: SLTheme.textMuted,
                     fontWeight: FontWeight.w600,
@@ -144,19 +141,21 @@ class CalendarEventInputPanel extends StatelessWidget {
               children: [
                 CalendarInfoPill(
                   icon: Icons.notifications_none_rounded,
-                  label: 'Nhắc trước 1 ngày',
+                  label: context.tr('calendar_remind_one_day_before'),
                   accent: accent,
                   compact: compact,
                 ),
                 CalendarInfoPill(
                   icon: Icons.schedule_rounded,
-                  label: '$eventCount mục trong ngày',
+                  label: L10nService().format('calendar_items_in_day', {
+                    'count': eventCount,
+                  }),
                   accent: accent,
                   compact: compact,
                 ),
                 CalendarInfoPill(
                   icon: Icons.favorite_outline_rounded,
-                  label: 'Ghi chú đáng yêu',
+                  label: context.tr('calendar_lovely_note'),
                   accent: accent,
                   compact: compact,
                 ),
@@ -183,13 +182,16 @@ class CalendarEventInputPanel extends StatelessWidget {
                         height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : const Icon(Icons.add_task_rounded, size: 20),
                 label: Text(
-                  isSaving ? 'Đang lưu kế hoạch...' : 'Thêm vào lịch của hai bạn',
+                  isSaving
+                      ? context.tr('calendar_saving_plan')
+                      : context.tr('calendar_add_to_shared'),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w900,
                     fontSize: compact ? 13 : 14,

@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Query, Transaction;
 import 'package:cloud_firestore/cloud_firestore.dart' as cf;
 import 'package:soullocket_app/models/social_post.dart';
-import 'push_notification_helper.dart';
 import 'local_database_service.dart';
 
 /// SocialService — Quản lý social feed cộng đồng
@@ -147,7 +146,9 @@ class SocialService {
   }
 
   Future<Map<String, dynamic>?> _loadCommentHybrid(
-      String postId, String commentId) async {
+    String postId,
+    String commentId,
+  ) async {
     try {
       final doc = await _getDocWithCacheFallback(
         _firestore
@@ -187,8 +188,11 @@ class SocialService {
     final blocked = results.any((snap) => snap.value == true);
 
     // Cache 5 phút — blocked status hiếm khi thay đổi
-    await LocalDatabaseService()
-        .setCacheEntry(cacheKey, blocked, ttl: const Duration(minutes: 5));
+    await LocalDatabaseService().setCacheEntry(
+      cacheKey,
+      blocked,
+      ttl: const Duration(minutes: 5),
+    );
     return blocked;
   }
 
@@ -347,9 +351,10 @@ class SocialService {
     }
 
     final normalized = normalizeCommunityText(trimmed);
-    final links = RegExp(r'(https?:\/\/|www\.)', caseSensitive: false)
-        .allMatches(trimmed)
-        .length;
+    final links = RegExp(
+      r'(https?:\/\/|www\.)',
+      caseSensitive: false,
+    ).allMatches(trimmed).length;
     if (links > 1) {
       return 'Chỉ nên gắn tối đa 1 liên kết để tránh bị xem là spam.';
     }
@@ -425,7 +430,6 @@ class SocialService {
     required String actorHouseId,
   }) async {}
 
-
   // ── STREAM feed của 1 nhà ─────────────────────────────────────────────
   Future<List<SocialPost>> fetchHouseFeedPage(
     String houseId, {
@@ -449,7 +453,6 @@ class SocialService {
         .toList();
   }
 
-
   // ── XÓA bài ──────────────────────────────────────────────────────────
   Future<void> deletePost({
     required String postId,
@@ -472,13 +475,15 @@ class SocialService {
 
     final postHouseId = (data['houseId'] ?? '').toString().trim();
     final legacyHouseId = (data['uid'] ?? '').toString().trim();
-    final authorUid =
-        (data['author_uid'] ?? data['authorUid'] ?? '').toString().trim();
+    final authorUid = (data['author_uid'] ?? data['authorUid'] ?? '')
+        .toString()
+        .trim();
     final currentUid = FirebaseAuth.instance.currentUser?.uid.trim() ?? '';
     final skipLegacyDeleteCheck =
         currentUid.isNotEmpty || normalizedRequestingHouseId.isNotEmpty;
 
-    var canDelete = normalizedRequestingHouseId.isNotEmpty &&
+    var canDelete =
+        normalizedRequestingHouseId.isNotEmpty &&
         (normalizedRequestingHouseId == postHouseId ||
             normalizedRequestingHouseId == legacyHouseId);
 
@@ -486,8 +491,9 @@ class SocialService {
       if (authorUid.isNotEmpty && authorUid == currentUid) {
         canDelete = true;
       } else {
-        final managedHouseId =
-            postHouseId.isNotEmpty ? postHouseId : legacyHouseId;
+        final managedHouseId = postHouseId.isNotEmpty
+            ? postHouseId
+            : legacyHouseId;
         if (managedHouseId.isNotEmpty) {
           final permissionChecks = await Future.wait([
             _dbRef.child('houses/$managedHouseId/owner_uid').get(),
@@ -580,11 +586,14 @@ class SocialService {
         .collection('social_posts')
         .doc(postId)
         .snapshots()
-        .map((snapshot) => snapshot.exists &&
-            _readMapField(snapshot.data()?['likes_map'])
-                .containsKey(myHouseId));
+        .map(
+          (snapshot) =>
+              snapshot.exists &&
+              _readMapField(
+                snapshot.data()?['likes_map'],
+              ).containsKey(myHouseId),
+        );
   }
-
 
   // ── DELETE COMMENT ──────────────────────────────────────────────────
   Future<void> deleteComment({
@@ -610,8 +619,9 @@ class SocialService {
         final postDoc = await _getDocWithCacheFallback(
           _firestore.collection('social_posts').doc(postId),
         );
-        final postOwnerHouseId =
-            (postDoc.data()?['houseId'] ?? '').toString().trim();
+        final postOwnerHouseId = (postDoc.data()?['houseId'] ?? '')
+            .toString()
+            .trim();
         if (requester != authorHouseId && requester != postOwnerHouseId) {
           throw 'Bạn không có quyền xóa bình luận này.';
         }
@@ -631,8 +641,10 @@ class SocialService {
     String? replyToName,
   }) async {
     final trimmedContent = content.trim();
-    final validationError =
-        validateCommunityText(trimmedContent, isComment: true);
+    final validationError = validateCommunityText(
+      trimmedContent,
+      isComment: true,
+    );
     if (validationError != null) {
       throw validationError;
     }
@@ -647,8 +659,9 @@ class SocialService {
     }
     if (resolvedAvt.isEmpty) {
       try {
-        final avtSnap =
-            await _dbRef.child('houses/$houseId/settings/houseAvt').get();
+        final avtSnap = await _dbRef
+            .child('houses/$houseId/settings/houseAvt')
+            .get();
         resolvedAvt = avtSnap.value?.toString() ?? '';
       } catch (_) {}
     }
@@ -786,8 +799,8 @@ class SocialService {
     if (commentData == null) {
       throw 'Bình luận không còn tồn tại.';
     }
-    final targetHouseId =
-        (commentData['houseId'] ?? commentData['uid'] ?? '').toString();
+    final targetHouseId = (commentData['houseId'] ?? commentData['uid'] ?? '')
+        .toString();
 
     await _firestore.collection('reports').add({
       'type': 'comment_report',
@@ -836,10 +849,12 @@ class SocialService {
     });
   }
 
-
   // ── FETCH feed đã LIKE (Phân trang) ──────────────────────────────────
-  Future<List<SocialPost>> fetchLikedFeedPage(String houseId,
-      {int limit = 10, int? endBeforeTs}) async {
+  Future<List<SocialPost>> fetchLikedFeedPage(
+    String houseId, {
+    int limit = 10,
+    int? endBeforeTs,
+  }) async {
     var query = _firestore
         .collection('house_likes')
         .doc(houseId)
@@ -853,10 +868,9 @@ class SocialService {
     if (likedDocs.docs.isEmpty) return [];
 
     final posts = <SocialPost>[];
-    final futures = likedDocs.docs.map((likeDoc) => _firestore
-        .collection('social_posts')
-        .doc(likeDoc.id)
-        .get());
+    final futures = likedDocs.docs.map(
+      (likeDoc) => _firestore.collection('social_posts').doc(likeDoc.id).get(),
+    );
     final docSnaps = await Future.wait(futures);
 
     final staleLikeRefs = <DocumentReference<Map<String, dynamic>>>[];
@@ -882,24 +896,40 @@ class SocialService {
   }
 
   // ── FETCH feed REPOST ───────────────────────────────────────────────
-  Future<List<SocialPost>> fetchRepostFeedPage(String houseId,
-      {int limit = 10, int? endBeforeTs}) async {
-    final posts = await fetchHouseFeedPage(houseId,
-        limit: limit * 3, endBeforeTs: endBeforeTs);
+  Future<List<SocialPost>> fetchRepostFeedPage(
+    String houseId, {
+    int limit = 10,
+    int? endBeforeTs,
+  }) async {
+    final posts = await fetchHouseFeedPage(
+      houseId,
+      limit: limit * 3,
+      endBeforeTs: endBeforeTs,
+    );
     return posts.where((p) => p.isRepost).take(limit).toList();
   }
 
   // ── FETCH feed PRIVATE ──────────────────────────────────────────────
-  Future<List<SocialPost>> fetchPrivateFeedPage(String houseId,
-      {int limit = 10, int? endBeforeTs}) async {
-    final posts = await fetchHouseFeedPage(houseId,
-        limit: limit * 3, endBeforeTs: endBeforeTs, includePrivate: true);
+  Future<List<SocialPost>> fetchPrivateFeedPage(
+    String houseId, {
+    int limit = 10,
+    int? endBeforeTs,
+  }) async {
+    final posts = await fetchHouseFeedPage(
+      houseId,
+      limit: limit * 3,
+      endBeforeTs: endBeforeTs,
+      includePrivate: true,
+    );
     return posts.where((p) => p.privacy == 'private').take(limit).toList();
   }
 
   // ── FETCH feed LOCKET ───────────────────────────────────────────────
-  Future<List<SocialPost>> fetchLocketFeedPage(String houseId,
-      {int limit = 10, int? endBeforeTs}) async {
+  Future<List<SocialPost>> fetchLocketFeedPage(
+    String houseId, {
+    int limit = 10,
+    int? endBeforeTs,
+  }) async {
     var query = _firestore
         .collection('social_posts')
         .where('houseId', isEqualTo: houseId)
@@ -926,23 +956,35 @@ class SocialService {
     switch (feedType) {
       case 'liked':
         return houseId != null
-            ? fetchLikedFeedPage(houseId,
-                limit: limit, endBeforeTs: endBeforeTs)
+            ? fetchLikedFeedPage(
+                houseId,
+                limit: limit,
+                endBeforeTs: endBeforeTs,
+              )
             : const <SocialPost>[];
       case 'repost':
         return houseId != null
-            ? fetchRepostFeedPage(houseId,
-                limit: limit, endBeforeTs: endBeforeTs)
+            ? fetchRepostFeedPage(
+                houseId,
+                limit: limit,
+                endBeforeTs: endBeforeTs,
+              )
             : const <SocialPost>[];
       case 'private':
         return houseId != null
-            ? fetchPrivateFeedPage(houseId,
-                limit: limit, endBeforeTs: endBeforeTs)
+            ? fetchPrivateFeedPage(
+                houseId,
+                limit: limit,
+                endBeforeTs: endBeforeTs,
+              )
             : const <SocialPost>[];
       case 'locket':
         return houseId != null
-            ? fetchLocketFeedPage(houseId,
-                limit: limit, endBeforeTs: endBeforeTs)
+            ? fetchLocketFeedPage(
+                houseId,
+                limit: limit,
+                endBeforeTs: endBeforeTs,
+              )
             : const <SocialPost>[];
       case 'hot':
         var query = _firestore
@@ -957,7 +999,8 @@ class SocialService {
         posts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
         if (endBeforeTs != null) {
           posts.removeWhere(
-              (p) => p.timestamp.millisecondsSinceEpoch >= endBeforeTs);
+            (p) => p.timestamp.millisecondsSinceEpoch >= endBeforeTs,
+          );
         }
         return posts.take(limit).toList();
       default:

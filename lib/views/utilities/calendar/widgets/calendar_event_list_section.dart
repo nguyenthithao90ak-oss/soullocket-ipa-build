@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import 'calendar_event_state_card.dart';
 import 'calendar_event_tile.dart';
@@ -59,10 +60,7 @@ class CalendarEventListSection extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [
-              Color(0xFFFFFCFF),
-              Color(0xFFF8FBFF),
-            ],
+            colors: [Color(0xFFFFFCFF), Color(0xFFF8FBFF)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -107,7 +105,7 @@ class CalendarEventListSection extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Những điều hai bạn đã lên lịch',
+                        context.tr('calendar_scheduled_title'),
                         style: SLTheme.quicksand(
                           fontSize: compact ? 15 : 16,
                           fontWeight: FontWeight.w900,
@@ -116,7 +114,9 @@ class CalendarEventListSection extends StatelessWidget {
                       ),
                       SLSpacing.h4,
                       Text(
-                        'Tất cả kế hoạch của $selectedDateLabel sẽ nằm ở đây để dễ xem lại.',
+                        L10nService().format('calendar_scheduled_desc', {
+                          'date': selectedDateLabel,
+                        }),
                         style: SLTheme.quicksand(
                           fontSize: compact ? 11.5 : 12,
                           fontWeight: FontWeight.w700,
@@ -137,7 +137,9 @@ class CalendarEventListSection extends StatelessWidget {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    '$itemCount mục',
+                    L10nService().format('calendar_item_count', {
+                      'count': itemCount,
+                    }),
                     style: SLTheme.quicksand(
                       fontSize: compact ? 10 : 11,
                       fontWeight: FontWeight.w900,
@@ -151,26 +153,24 @@ class CalendarEventListSection extends StatelessWidget {
             if (isLoading)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 18),
-                child: Center(
-                  child: CircularProgressIndicator(color: accent),
-                ),
+                child: Center(child: CircularProgressIndicator(color: accent)),
               )
             else if (errorMessage != null && errorMessage!.trim().isNotEmpty)
               CalendarEventStateCard(
                 icon: Icons.cloud_off_rounded,
-                title: 'Có lỗi nhỏ khi tải lịch',
-                description:
-                    'Ứng dụng chưa đọc được dữ liệu mới nhất. Bạn có thể thử tải lại để đồng bộ tiếp.\n$errorMessage',
+                title: context.tr('calendar_load_error_title'),
+                description: L10nService().format('calendar_load_error_desc', {
+                  'error': errorMessage!,
+                }),
                 color: const Color(0xFFE46A7A),
-                actionLabel: 'Thử tải lại',
+                actionLabel: context.tr('calendar_retry_load'),
                 onAction: onRetry,
               )
             else if (sortedItems.isEmpty)
               CalendarEventStateCard(
                 icon: Icons.event_available_rounded,
-                title: 'Ngày này chưa có kế hoạch nào',
-                description:
-                    'Hãy thêm một lịch hẹn, việc cần làm hoặc mốc đáng yêu để cả hai cùng theo dõi nhé.',
+                title: context.tr('calendar_empty_day_title'),
+                description: context.tr('calendar_empty_day_desc'),
                 color: accent,
               )
             else
@@ -187,11 +187,14 @@ class CalendarEventListSection extends StatelessWidget {
                     accent: accent,
                     title: item['title']?.toString().trim() ?? '',
                     author: item['author']?.toString().trim(),
-                    timestampLabel:
-                        formatCreatedTime(_parseTimestamp(item['ts'])),
+                    timestampLabel: formatCreatedTime(
+                      _parseTimestamp(item['ts']),
+                    ),
                     index: index,
                     statusLabel: statusLabel,
-                    onDelete: eventKey.isEmpty ? null : () => onDelete(eventKey),
+                    onDelete: eventKey.isEmpty
+                        ? null
+                        : () => onDelete(eventKey),
                   );
                 },
               ),

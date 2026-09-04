@@ -28,8 +28,8 @@ class AuthService {
     auth_support.HttpGet? httpGet,
     auth_support.HttpPost? httpPost,
     auth_support.NowProvider? nowProvider,
-  })  : _firebaseAuth = firebaseAuth,
-        _databaseRef = databaseRef {
+  }) : _firebaseAuth = firebaseAuth,
+       _databaseRef = databaseRef {
     _adminService = AuthAdminService(
       firebaseAuth: firebaseAuth,
       databaseRef: databaseRef,
@@ -37,9 +37,7 @@ class AuthService {
     _houseContextService = AuthHouseContextService(
       firebaseAuth: firebaseAuth,
       databaseRef: databaseRef,
-      consentService: consentService,
       sharedPreferencesProvider: sharedPreferencesProvider,
-      httpGet: httpGet,
       nowProvider: nowProvider,
     );
     _playIntegrityService = PlayIntegrityService(

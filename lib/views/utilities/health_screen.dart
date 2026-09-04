@@ -1,14 +1,10 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
-import 'dart:ui' as ui;
-import 'dart:math' as math;
 import '../../core/sl_theme.dart';
 import '../../utils/services/health_period_service.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 import 'package:soullocket_app/utils/services/widget_service.dart';
 import '../../utils/services/l10n_service.dart';
 
@@ -64,10 +60,7 @@ class _HealthScreenState extends State<HealthScreen> {
         ),
         content: Text(
           'SoulLocket thu thập và lưu trữ thông tin chu kỳ kinh nguyệt của bạn để tính toán và hiển thị dự báo cho bạn và nửa kia. Dữ liệu sức khỏe này là nhạy cảm và chỉ được chia sẻ an toàn với người ấy. Bạn có đồng ý cung cấp thông tin này không?',
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.w600,
-            height: 1.5,
-          ),
+          style: SLTheme.quicksand(fontWeight: FontWeight.w600, height: 1.5),
         ),
         actions: [
           ElevatedButton(
@@ -113,22 +106,22 @@ class _HealthScreenState extends State<HealthScreen> {
         .child('houses/${widget.houseId}/health_cycle')
         .onValue
         .listen((event) {
-      final raw = event.snapshot.value;
-      if (raw is Map) {
-        final data = Map<String, dynamic>.from(raw);
-        if (mounted) {
-          setState(() {
-            if (data['lastDate'] != null) {
-              _lastDate = DateTime.tryParse(data['lastDate']);
+          final raw = event.snapshot.value;
+          if (raw is Map) {
+            final data = Map<String, dynamic>.from(raw);
+            if (mounted) {
+              setState(() {
+                if (data['lastDate'] != null) {
+                  _lastDate = DateTime.tryParse(data['lastDate']);
+                }
+                _length = data['length'] ?? 28;
+                _periodDays = data['periodDays'] ?? 5;
+                _shareWithPartner = data['shareWithPartner'] != false;
+                _recentHistory = _parseRecentHistory(data['history']);
+              });
             }
-            _length = data['length'] ?? 28;
-            _periodDays = data['periodDays'] ?? 5;
-            _shareWithPartner = data['shareWithPartner'] != false;
-            _recentHistory = _parseRecentHistory(data['history']);
-          });
-        }
-      }
-    });
+          }
+        });
   }
 
   List<DateTime> _parseRecentHistory(dynamic rawHistory) {
@@ -144,8 +137,8 @@ class _HealthScreenState extends State<HealthScreen> {
           final ms = rawMs is int
               ? rawMs
               : rawMs is num
-                  ? rawMs.toInt()
-                  : int.tryParse(rawMs?.toString() ?? '');
+              ? rawMs.toInt()
+              : int.tryParse(rawMs?.toString() ?? '');
           if (ms != null && ms > 0) {
             dates.add(DateTime.fromMillisecondsSinceEpoch(ms));
           }
@@ -189,12 +182,14 @@ class _HealthScreenState extends State<HealthScreen> {
 
     if (mounted) {
       setState(() {
-        _recentHistory = _buildHistoryIsoDates(_lastDate!)
-            .map(DateTime.parse)
-            .toList(growable: false);
+        _recentHistory = _buildHistoryIsoDates(
+          _lastDate!,
+        ).map(DateTime.parse).toList(growable: false);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(L10nService().translate('Đã lưu cài đặt sức khỏe! ✨'))),
+        SnackBar(
+          content: Text(L10nService().translate('Đã lưu cài đặt sức khỏe! ✨')),
+        ),
       );
     }
   }
@@ -262,7 +257,13 @@ class _HealthScreenState extends State<HealthScreen> {
     }
   }
 
-  Widget _buildOutlinedText(String text, double fontSize, Color textColor, Color outlineColor, {FontWeight fontWeight = FontWeight.w900}) {
+  Widget _buildOutlinedText(
+    String text,
+    double fontSize,
+    Color textColor,
+    Color outlineColor, {
+    FontWeight fontWeight = FontWeight.w900,
+  }) {
     return Stack(
       children: [
         Text(
@@ -300,7 +301,11 @@ class _HealthScreenState extends State<HealthScreen> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFFD81B60), size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Color(0xFFD81B60),
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         backgroundColor: Colors.transparent,
@@ -338,7 +343,7 @@ class _HealthScreenState extends State<HealthScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: _buildPrivacyAndNotesSection(),
                     ),
-                  ]
+                  ],
                 ],
               ),
             ),
@@ -351,9 +356,21 @@ class _HealthScreenState extends State<HealthScreen> {
   Widget _buildHeader() {
     return Column(
       children: [
-        _buildOutlinedText('Theo dõi', 32, const Color(0xFFFF69B4), Colors.white, fontWeight: FontWeight.w900),
+        _buildOutlinedText(
+          'Theo dõi',
+          32,
+          const Color(0xFFFF69B4),
+          Colors.white,
+          fontWeight: FontWeight.w900,
+        ),
         const SizedBox(height: 0),
-        _buildOutlinedText('Chu Kì', 48, const Color(0xFFD81B60), Colors.white, fontWeight: FontWeight.w900),
+        _buildOutlinedText(
+          'Chu Kì',
+          48,
+          const Color(0xFFD81B60),
+          Colors.white,
+          fontWeight: FontWeight.w900,
+        ),
         SLSpacing.h8,
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -371,7 +388,7 @@ class _HealthScreenState extends State<HealthScreen> {
             const SizedBox(width: 8),
             const Icon(Icons.favorite, color: Color(0xFFFF80AB), size: 16),
           ],
-        )
+        ),
       ],
     );
   }
@@ -390,10 +407,7 @@ class _HealthScreenState extends State<HealthScreen> {
         onPressed: _requestConsent,
         child: Text(
           'Bật tính năng theo dõi chu kỳ',
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
+          style: SLTheme.quicksand(fontWeight: FontWeight.bold, fontSize: 16),
         ),
       ),
     );
@@ -412,8 +426,8 @@ class _HealthScreenState extends State<HealthScreen> {
                 color: const Color(0xFFFF80AB).withValues(alpha: 0.2),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
-              )
-            ]
+              ),
+            ],
           ),
           child: Text(
             'Vui lòng cài đặt\nngày bắt đầu chu kỳ.',
@@ -473,7 +487,10 @@ class _HealthScreenState extends State<HealthScreen> {
                   ),
                   const SizedBox(height: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFCE4EC),
                       borderRadius: BorderRadius.circular(20),
@@ -489,7 +506,9 @@ class _HealthScreenState extends State<HealthScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    cycleData['nextPeriodDays'] == 0 ? 'Hôm nay' : '${cycleData['nextPeriodDays']}',
+                    cycleData['nextPeriodDays'] == 0
+                        ? 'Hôm nay'
+                        : '${cycleData['nextPeriodDays']}',
                     style: SLTheme.quicksand(
                       color: const Color(0xFFD81B60),
                       fontWeight: FontWeight.w900,
@@ -508,7 +527,10 @@ class _HealthScreenState extends State<HealthScreen> {
                     ),
                   const SizedBox(height: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF3E5F5),
                       borderRadius: BorderRadius.circular(20),
@@ -527,7 +549,7 @@ class _HealthScreenState extends State<HealthScreen> {
             ),
           ),
         ),
-        
+
         // Top Ring Decor
         Positioned(
           top: -8,
@@ -574,7 +596,7 @@ class _HealthScreenState extends State<HealthScreen> {
                   color: const Color(0xFFFF80AB).withValues(alpha: 0.2),
                   blurRadius: 15,
                   offset: const Offset(0, 8),
-                )
+                ),
               ],
             ),
             child: Row(
@@ -586,7 +608,11 @@ class _HealthScreenState extends State<HealthScreen> {
                     color: cycleData['phaseColor'],
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.favorite_border, color: Color(0xFFD81B60), size: 16),
+                  child: const Icon(
+                    Icons.favorite_border,
+                    color: Color(0xFFD81B60),
+                    size: 16,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -617,8 +643,8 @@ class _HealthScreenState extends State<HealthScreen> {
                   color: const Color(0xFFFF80AB).withValues(alpha: 0.3),
                   blurRadius: 15,
                   offset: const Offset(0, 5),
-                )
-              ]
+                ),
+              ],
             ),
             child: const Center(
               child: Icon(Icons.pets, color: Color(0xFFFF80AB), size: 30),
@@ -668,13 +694,14 @@ class _HealthScreenState extends State<HealthScreen> {
               child: _buildNumberCard(
                 label: 'Độ dài chu kỳ (ngày)',
                 value: _length.toString(),
-                onTap: () => _showEditDialog('Độ dài chu kỳ', _length.toString(), (val) {
-                  final v = int.tryParse(val);
-                  if (v != null && v >= 20 && v <= 45) {
-                    _length = v;
-                    _saveHealthData();
-                  }
-                }),
+                onTap: () =>
+                    _showEditDialog('Độ dài chu kỳ', _length.toString(), (val) {
+                      final v = int.tryParse(val);
+                      if (v != null && v >= 20 && v <= 45) {
+                        _length = v;
+                        _saveHealthData();
+                      }
+                    }),
                 icon: Icons.calendar_month,
                 iconColor: const Color(0xFFFF80AB),
               ),
@@ -684,13 +711,17 @@ class _HealthScreenState extends State<HealthScreen> {
               child: _buildNumberCard(
                 label: 'Số ngày kinh (ngày)',
                 value: _periodDays.toString(),
-                onTap: () => _showEditDialog('Số ngày kinh', _periodDays.toString(), (val) {
-                  final v = int.tryParse(val);
-                  if (v != null && v >= 2 && v <= 10) {
-                    _periodDays = v;
-                    _saveHealthData();
-                  }
-                }),
+                onTap: () => _showEditDialog(
+                  'Số ngày kinh',
+                  _periodDays.toString(),
+                  (val) {
+                    final v = int.tryParse(val);
+                    if (v != null && v >= 2 && v <= 10) {
+                      _periodDays = v;
+                      _saveHealthData();
+                    }
+                  },
+                ),
                 icon: Icons.local_florist,
                 iconColor: const Color(0xFFBA68C8),
               ),
@@ -701,19 +732,27 @@ class _HealthScreenState extends State<HealthScreen> {
     );
   }
 
-  void _showEditDialog(String title, String initialValue, Function(String) onSave) {
+  void _showEditDialog(
+    String title,
+    String initialValue,
+    Function(String) onSave,
+  ) {
     String currentValue = initialValue;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(title, style: SLTheme.quicksand(fontWeight: FontWeight.bold, color: const Color(0xFFD81B60))),
+        title: Text(
+          title,
+          style: SLTheme.quicksand(
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFFD81B60),
+          ),
+        ),
         content: TextField(
           controller: TextEditingController(text: initialValue),
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-          ),
+          decoration: const InputDecoration(border: OutlineInputBorder()),
           onChanged: (val) => currentValue = val,
         ),
         actions: [
@@ -724,14 +763,22 @@ class _HealthScreenState extends State<HealthScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFD81B60),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             onPressed: () {
               onSave(currentValue);
               Navigator.pop(ctx);
             },
-            child: Text('Lưu', style: SLTheme.quicksand(color: Colors.white, fontWeight: FontWeight.bold)),
-          )
+            child: Text(
+              'Lưu',
+              style: SLTheme.quicksand(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -754,7 +801,7 @@ class _HealthScreenState extends State<HealthScreen> {
             color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Material(
@@ -824,7 +871,7 @@ class _HealthScreenState extends State<HealthScreen> {
             color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Material(
@@ -873,7 +920,11 @@ class _HealthScreenState extends State<HealthScreen> {
                         ),
                       ],
                     ),
-                    Icon(icon, color: iconColor.withValues(alpha: 0.5), size: 36),
+                    Icon(
+                      icon,
+                      color: iconColor.withValues(alpha: 0.5),
+                      size: 36,
+                    ),
                   ],
                 ),
               ],
@@ -907,7 +958,7 @@ class _HealthScreenState extends State<HealthScreen> {
                 color: Colors.black.withValues(alpha: 0.03),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
-              )
+              ),
             ],
           ),
           child: Column(
@@ -920,7 +971,11 @@ class _HealthScreenState extends State<HealthScreen> {
                       color: const Color(0xFFFCE4EC),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.favorite, color: Color(0xFFFF80AB), size: 24),
+                    child: const Icon(
+                      Icons.favorite,
+                      color: Color(0xFFFF80AB),
+                      size: 24,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -965,7 +1020,10 @@ class _HealthScreenState extends State<HealthScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFFDF7F8),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFFFE0E8), style: BorderStyle.solid),
+                  border: Border.all(
+                    color: const Color(0xFFFFE0E8),
+                    style: BorderStyle.solid,
+                  ),
                 ),
                 child: Row(
                   children: [

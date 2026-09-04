@@ -3,7 +3,6 @@ import 'dart:io' show Platform;
 import 'dart:math' as math;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
 import '../resilient_http.dart';
@@ -35,7 +34,8 @@ class UpdateCheckerService {
       if (data != null) {
         final latestVersion = data['latest_version']?.toString() ?? '1.0.0';
         final forceUpdate = data['force_update'] == true;
-        final androidUrl = data['android_url']?.toString() ??
+        final androidUrl =
+            data['android_url']?.toString() ??
             'https://play.google.com/store/apps/details?id=com.soullocket.app';
         final iosUrl = data['ios_url']?.toString() ?? '';
 
@@ -65,8 +65,7 @@ class UpdateCheckerService {
         final cdnUrl = Uri.parse(
           '${r2Domain.replaceAll(RegExp(r'/+$'), '')}/app_config.json',
         );
-        final response =
-            await ResilientHttp.get(cdnUrl);
+        final response = await ResilientHttp.get(cdnUrl);
         if (response.statusCode == 200) {
           final decoded = jsonDecode(response.body);
           if (decoded is Map) {
@@ -97,10 +96,14 @@ class UpdateCheckerService {
 
   static bool _shouldUpdate(String current, String latest) {
     try {
-      final currentParts =
-          current.split('.').map((e) => int.tryParse(e) ?? 0).toList();
-      final latestParts =
-          latest.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+      final currentParts = current
+          .split('.')
+          .map((e) => int.tryParse(e) ?? 0)
+          .toList();
+      final latestParts = latest
+          .split('.')
+          .map((e) => int.tryParse(e) ?? 0)
+          .toList();
       final length = math.max(currentParts.length, latestParts.length);
       for (int i = 0; i < length; i++) {
         final currentPart = i < currentParts.length ? currentParts[i] : 0;

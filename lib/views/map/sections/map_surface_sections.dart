@@ -2,31 +2,36 @@ part of '../map_screen.dart';
 
 extension _MapSurfaceSectionsExt on _MapScreenState {
   Widget _buildMapLoadingState() {
-    return Container(
-      color: SLColors.bgMain,
+    return SLTheme.softCanvasBackdrop(
+      baseColor: SLColors.paperCanvas,
+      accentColor: SLColors.secondary,
+      secondaryAccent: SLColors.thread,
+      motif: SLCanvasBackdropMotif.sparkles,
       child: Center(
-        child: Container(
+        child: SLTheme.softPanel(
           margin: const EdgeInsets.symmetric(horizontal: 28),
           padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
-          decoration: BoxDecoration(
-            color: SLColors.bgElevated,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: SLColors.borderLight),
-            boxShadow: [
-              BoxShadow(
-                color: SLColors.primaryLight.withValues(alpha: 0.5),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.6,
+                  color: SLColors.primary,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                context.tr('map_loading_short'),
+                style: const TextStyle(
+                  color: SLColors.textSecondary,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.4,
+                ),
               ),
             ],
-          ),
-          child: const SizedBox(
-            width: 26,
-            height: 26,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.6,
-              color: SLColors.primary,
-            ),
           ),
         ),
       ),
@@ -95,7 +100,8 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
               chips.add(
                 _buildTopChip(
                   icon: Icons.alt_route_rounded,
-                  label: uiSnap.isFetchingRoute && uiSnap.routeDistanceText == '--'
+                  label:
+                      uiSnap.isFetchingRoute && uiSnap.routeDistanceText == '--'
                       ? context.tr('map_angtnhng_143257')
                       : uiSnap.routeDistanceText,
                   accent: _kMapBlue,
@@ -109,8 +115,8 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                   icon: Icons.schedule_rounded,
                   label: uiSnap.etaText == '--'
                       ? (uiSnap.isFetchingRoute
-                          ? context.tr('map_angctnh_9fd8b3')
-                          : context.tr('map_chacthigia_2ba794'))
+                            ? context.tr('map_angctnh_9fd8b3')
+                            : context.tr('map_chacthigia_2ba794'))
                       : uiSnap.etaText,
                   accent: const Color(0xFF7C3AED),
                 ),
@@ -204,8 +210,9 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
               decoration: BoxDecoration(
                 color: SLColors.bgElevated.withValues(alpha: 0.9),
                 borderRadius: SLRadius.pillAll,
-                border:
-                    Border.all(color: _kMapPinkDeep.withValues(alpha: 0.20)),
+                border: Border.all(
+                  color: _kMapPinkDeep.withValues(alpha: 0.20),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: _kMapPinkDeep.withValues(alpha: 0.12),
@@ -266,45 +273,53 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
       minChildSize: 0.10,
       maxChildSize: 0.78,
       builder: (context, scrollController) {
-        return ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-          child: Container(
-            decoration: BoxDecoration(
-              color: SLColors.bgElevated.withValues(alpha: 0.95),
-              border: const Border(
-                top: BorderSide(color: SLColors.borderLight),
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(30),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -5),
-                ),
-              ],
-            ),
-            child: ListView(
-              controller: scrollController,
-              padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
-              children: [
-                Center(
-                  child: Container(
-                    width: 54,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: SLColors.border,
-                      borderRadius: SLRadius.pillAll,
-                    ),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: SLColors.paper.withValues(alpha: 0.96),
+                  border: const Border(
+                    top: BorderSide(color: SLColors.borderLight),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 18,
+                      offset: const Offset(0, -7),
+                    ),
+                  ],
                 ),
-                SLSpacing.h12,
-                _buildSummaryCard(),
-                SLSpacing.h8,
-                _buildPeopleStatusRow(),
-                SLSpacing.h8,
-                _buildHistoryCard(),
-                SLSpacing.h8,
-                _buildMemoryAndCheckinCard(),
-              ],
+                child: ListView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 54,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: SLColors.border,
+                          borderRadius: SLRadius.pillAll,
+                        ),
+                      ),
+                    ),
+                    SLSpacing.h12,
+                    _buildSummaryCard(),
+                    SLSpacing.h8,
+                    _buildPeopleStatusRow(),
+                    SLSpacing.h8,
+                    _buildHistoryCard(),
+                    SLSpacing.h8,
+                    _buildMemoryAndCheckinCard(),
+                  ],
+                ),
+              ),
             ),
           ),
         );
@@ -389,18 +404,14 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
               valueListenable: _staticMarkersVN,
               builder: (context, markers, _) {
                 if (markers.isEmpty) return const SizedBox.shrink();
-                return fm.MarkerLayer(
-                  markers: markers,
-                );
+                return fm.MarkerLayer(markers: markers);
               },
             ),
             ValueListenableBuilder<List<fm.Marker>>(
               valueListenable: _liveMarkersVN,
               builder: (context, markers, _) {
                 if (markers.isEmpty) return const SizedBox.shrink();
-                return fm.MarkerLayer(
-                  markers: markers,
-                );
+                return fm.MarkerLayer(markers: markers);
               },
             ),
           ],

@@ -75,6 +75,9 @@ extension _SettingsTabShell on _SettingsTabState {
 
   Future<void> _swapRole() async {
     final fallbackErrMsg = context.tr('home_clixyra_775791');
+    final singleRoleSwapUnavailable = context.tr(
+      'settings_single_role_swap_unavailable',
+    );
     final houseId = _houseId?.trim();
     if (houseId != null &&
         houseId.isNotEmpty &&
@@ -98,10 +101,7 @@ extension _SettingsTabShell on _SettingsTabState {
     RoleUtils.roleNotifier.value = nextRole;
 
     if (_relationshipMode == 'single') {
-      _showToast(
-        L10nService().translate('Chế độ độc thân không hỗ trợ đổi vai Nam/Nữ.'),
-        success: false,
-      );
+      _showToast(singleRoleSwapUnavailable, success: false);
     } else {
       _showToast(
         '${L10nService().translate('settings_role_swap_prefix')} $roleTerm 🎉',
@@ -127,8 +127,10 @@ extension _SettingsTabShell on _SettingsTabState {
           toHouseId: resolvedHouseId,
           type: 'role_change',
           title: roleChangeTitle,
-          content:
-              'Thiết bị này vừa chuyển từ ${_displayNameForRole(previousRole)} sang ${_displayNameForRole(nextRole)} trong phần Cài đặt.',
+          content: L10nService().format('settings_role_change_event', {
+            'from': _displayNameForRole(previousRole),
+            'to': _displayNameForRole(nextRole),
+          }),
           extra: {'previousRole': previousRole, 'role': nextRole},
         ),
       );
@@ -345,7 +347,7 @@ extension _SettingsTabShell on _SettingsTabState {
                           ),
                         ),
                         child: ListView(
-                          physics: const ClampingScrollPhysics(),
+                          physics: SLResponsive.scrollPhysicsForPlatform(),
                           padding: EdgeInsets.only(
                             top: headerHeight,
                             bottom: 120,
@@ -483,6 +485,7 @@ extension _SettingsTabShell on _SettingsTabState {
             ),
             _buildHeaderAction(
               icon: Icons.search_rounded,
+              tooltip: context.tr('settings_search_tooltip'),
               onTap: () {
                 final houseId = _houseId?.trim() ?? '';
                 if (houseId.isEmpty) {
@@ -909,9 +912,7 @@ extension _SettingsTabShell on _SettingsTabState {
           icon: Icons.smart_toy_rounded,
           iconBgColor: const Color(0xFFD81B60),
           title: context.tr('util_chatthnthi_c39699'),
-          subtitle: L10nService().translate(
-            'Trò chuyện, tâm sự và lắng nghe cảm xúc cùng trợ lý thân thiện.',
-          ),
+          subtitle: L10nService().translate('settings_friendly_chat_desc'),
           isDark: isDark,
           onTap: () {
             final houseId = (_houseId ?? '').trim();
@@ -947,7 +948,7 @@ extension _SettingsTabShell on _SettingsTabState {
           icon: Icons.admin_panel_settings_outlined,
           iconBgColor: SLColors.accentPurple,
           title: context.tr('theme_permission_center'),
-          subtitle: L10nService().translate('Quản lý cấp quyền hệ thống'),
+          subtitle: context.tr('settings_permission_center_desc'),
           isDark: isDark,
           onTap: _isGrantingPermissions ? () {} : _requestAllPermissions,
         ),
@@ -960,7 +961,7 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildiOSRow(
           icon: Icons.history_rounded,
           iconBgColor: SLColors.info,
-          title: L10nService().translate('Lịch sử hoạt động'),
+          title: context.tr('settings_activity_history'),
           isDark: isDark,
           onTap: () {
             final houseId = _houseId?.trim() ?? '';
@@ -1055,7 +1056,7 @@ extension _SettingsTabShell on _SettingsTabState {
             ),
             const SizedBox(height: 4),
             Text(
-              L10nService().translate('© Bản quyền SoulLocket Hoàng & Tú'),
+              context.tr('settings_copyright_short'),
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 fontSize: 10.5,
@@ -1197,9 +1198,7 @@ extension _SettingsTabShell on _SettingsTabState {
         return kIsWeb
             ? _buildUnavailablePanel(
                 title: context.tr('home_screen_widget'),
-                message: L10nService().translate(
-                  'Tiện ích màn hình chỉ hỗ trợ trên thiết bị thật. Phần cấu hình này nên thao tác trên app cài đặt.',
-                ),
+                message: context.tr('settings_widget_device_only'),
               )
             : _buildSectionStack([_buildWidgetPanel(hideBackButton: false)]);
       case 'notifications':
@@ -1214,10 +1213,8 @@ extension _SettingsTabShell on _SettingsTabState {
         return _buildDataHealthPanel(hideBackButton: false);
       default:
         return _buildUnavailablePanel(
-          title: L10nService().translate('Mục đang hoàn thiện'),
-          message: L10nService().translate(
-            'Tính năng này đang được cập nhật trong phiên bản mới.',
-          ),
+          title: context.tr('settings_feature_in_progress_title'),
+          message: context.tr('settings_feature_in_progress_desc'),
         );
     }
   }
@@ -1341,12 +1338,12 @@ class _DraggableFloatingChatIconState
   String? _currentSpeech;
 
   final List<String> _randomSpeeches = [
-    L10nService().translate('Hello bạn, mình là Chat Thân Thiện đây!'),
-    L10nService().translate('Bạn có tâm sự gì không? Kể mình nghe nhé!'),
-    L10nService().translate('Bấm vào mình để trò chuyện nha!'),
-    L10nService().translate('Hôm nay của bạn thế nào?'),
-    L10nService().translate('Mình luôn ở đây để lắng nghe bạn!'),
-    L10nService().translate('Bạn đang tìm gì trong cài đặt thế?'),
+    L10nService().translate('settings_chat_speech_hello'),
+    L10nService().translate('settings_chat_speech_share'),
+    L10nService().translate('settings_chat_speech_tap'),
+    L10nService().translate('settings_chat_speech_today'),
+    L10nService().translate('settings_chat_speech_listen'),
+    L10nService().translate('settings_chat_speech_search'),
   ];
 
   @override

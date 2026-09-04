@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import '../resilient_http.dart';
 
@@ -34,10 +33,12 @@ class NominatimService {
     if (query.trim().isEmpty) return [];
     try {
       final uri = Uri.parse(
-          '$_baseUrl/search?q=${Uri.encodeQueryComponent(query)}&format=json&limit=10&addressdetails=1');
-      final response = await ResilientHttp.get(uri, headers: {
-        'User-Agent': 'SoulLocketApp/1.0',
-      });
+        '$_baseUrl/search?q=${Uri.encodeQueryComponent(query)}&format=json&limit=10&addressdetails=1',
+      );
+      final response = await ResilientHttp.get(
+        uri,
+        headers: {'User-Agent': 'SoulLocketApp/1.0'},
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
@@ -53,10 +54,12 @@ class NominatimService {
   static Future<String?> reverseGeocode(LatLng point) async {
     try {
       final uri = Uri.parse(
-          '$_baseUrl/reverse?lat=${point.latitude}&lon=${point.longitude}&format=json&addressdetails=1');
-      final response = await ResilientHttp.get(uri, headers: {
-        'User-Agent': 'SoulLocketApp/1.0',
-      });
+        '$_baseUrl/reverse?lat=${point.latitude}&lon=${point.longitude}&format=json&addressdetails=1',
+      );
+      final response = await ResilientHttp.get(
+        uri,
+        headers: {'User-Agent': 'SoulLocketApp/1.0'},
+      );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

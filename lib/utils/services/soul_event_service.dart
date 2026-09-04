@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/models/soul_event.dart';
 import 'package:soullocket_app/utils/services/local_database_service.dart';
 import 'package:soullocket_app/utils/services/widget_service.dart';
@@ -16,15 +17,17 @@ class SoulEventService {
 
   Stream<List<SoulEvent>> streamEvents(String houseId) async* {
     yield await getEvents(houseId);
-    await for (final _
-        in _updateController.stream.where((id) => id == houseId)) {
+    await for (final _ in _updateController.stream.where(
+      (id) => id == houseId,
+    )) {
       yield await getEvents(houseId);
     }
   }
 
   Future<List<SoulEvent>> getEvents(String houseId) async {
-    final cacheData = await LocalDatabaseService()
-        .getCacheEntry('soul_events_local_$houseId');
+    final cacheData = await LocalDatabaseService().getCacheEntry(
+      'soul_events_local_$houseId',
+    );
     if (cacheData != null) {
       try {
         final raw = jsonDecode(cacheData);
@@ -35,7 +38,12 @@ class SoulEventService {
           events.sort((a, b) => a.dateMs.compareTo(b.dateMs));
           return events;
         }
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[SoulEventService] Bỏ cache sự kiện bị lỗi: $error');
+        await LocalDatabaseService().clearCacheEntry(
+          'soul_events_local_$houseId',
+        );
+      }
     }
     return [];
   }
@@ -71,9 +79,12 @@ class SoulEventService {
   }
 
   Future<void> _saveToLocal(String houseId, List<SoulEvent> events) async {
-    final cacheJson =
-        jsonEncode(events.map((e) => e.toJson()..['id'] = e.id).toList());
-    await LocalDatabaseService()
-        .setCacheEntry('soul_events_local_$houseId', cacheJson);
+    final cacheJson = jsonEncode(
+      events.map((e) => e.toJson()..['id'] = e.id).toList(),
+    );
+    await LocalDatabaseService().setCacheEntry(
+      'soul_events_local_$houseId',
+      cacheJson,
+    );
   }
 }

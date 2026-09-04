@@ -80,8 +80,10 @@ class CreativeDiaryHeader extends StatelessWidget {
                       ? L10nService().translate('util_lulinhngdn_f942d3')
                       : L10nService().format('util_diary_saved_date', {
                           'date': DateFormat('dd/MM/yyyy').format(
-                              DateTime.fromMillisecondsSinceEpoch(
-                                  activePage!.createdAtMs))
+                            DateTime.fromMillisecondsSinceEpoch(
+                              activePage!.createdAtMs,
+                            ),
+                          ),
                         }),
                   style: SLTheme.quicksand(
                     fontSize: compact ? 11.5 : 12.5,
@@ -95,8 +97,9 @@ class CreativeDiaryHeader extends StatelessWidget {
             // chip
             final chip = Container(
               constraints: BoxConstraints(
-                maxWidth:
-                    narrow ? constraints.maxWidth : constraints.maxWidth * 0.28,
+                maxWidth: narrow
+                    ? constraints.maxWidth
+                    : constraints.maxWidth * 0.28,
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
@@ -106,8 +109,11 @@ class CreativeDiaryHeader extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.favorite_rounded,
-                      color: SLColors.primaryActive, size: 14),
+                  const Icon(
+                    Icons.favorite_rounded,
+                    color: SLColors.primaryActive,
+                    size: 14,
+                  ),
                   const SizedBox(width: 4),
                   Flexible(
                     child: Text(
@@ -128,11 +134,7 @@ class CreativeDiaryHeader extends StatelessWidget {
             if (narrow) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  info,
-                  SLSpacing.h12,
-                  chip,
-                ],
+                children: [info, SLSpacing.h12, chip],
               );
             }
 
