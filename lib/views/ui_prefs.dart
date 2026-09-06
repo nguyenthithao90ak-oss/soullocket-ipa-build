@@ -245,10 +245,12 @@ class UiPrefs {
 
   static final ValueNotifier<UiPrefsState> notifier =
       ValueNotifier<UiPrefsState>(UiPrefsState.defaults);
-  static final ValueNotifier<bool> captureModeNotifier =
-      ValueNotifier<bool>(false);
-  static const MethodChannel _appControlChannel =
-      MethodChannel('soul_locket/app_control');
+  static final ValueNotifier<bool> captureModeNotifier = ValueNotifier<bool>(
+    false,
+  );
+  static const MethodChannel _appControlChannel = MethodChannel(
+    'soul_locket/app_control',
+  );
 
   static bool _loaded = false;
   static String _cachedAutoQuality = 'low';
@@ -287,8 +289,8 @@ class UiPrefs {
     final graphicsQualityKey = state.liteMode
         ? 'low'
         : (state.graphicsQualityKey == 'auto'
-            ? getAutoGraphicsQuality()
-            : state.graphicsQualityKey);
+              ? getAutoGraphicsQuality()
+              : state.graphicsQualityKey);
     final performanceMode =
         pauseAnimations || state.liteMode || graphicsQualityKey == 'low';
     final premiumEffects =
@@ -344,8 +346,9 @@ class UiPrefs {
         }
       }
       if (totalMemoryMB <= 0) {
-        totalMemoryMB =
-            defaultTargetPlatform == TargetPlatform.iOS ? 3072 : 4096;
+        totalMemoryMB = defaultTargetPlatform == TargetPlatform.iOS
+            ? 3072
+            : 4096;
       }
       final cpuCores = Platform.numberOfProcessors;
 
@@ -365,43 +368,51 @@ class UiPrefs {
   static Future<void> reload() async {
     _loaded = true;
     _cachedAutoQuality = await _detectAutoQuality();
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     // Đọc theme đã lưu từ SharedPreferences, fallback về default nếu chưa có.
     final themeKey =
         (prefs.getString(_kThemeKey) ?? UiPrefsState.defaults.themeKey).trim();
-    final effectKey = (prefs.getString(_kFallingEffectKey) ??
-            UiPrefsState.defaults.fallingEffectKey)
-        .trim();
+    final effectKey =
+        (prefs.getString(_kFallingEffectKey) ??
+                UiPrefsState.defaults.fallingEffectKey)
+            .trim();
 
-    final avatarFrameKey = (prefs.getString(_kAvatarFrameKey) ??
-            UiPrefsState.defaults.avatarFrameKey)
-        .trim();
+    final avatarFrameKey =
+        (prefs.getString(_kAvatarFrameKey) ??
+                UiPrefsState.defaults.avatarFrameKey)
+            .trim();
     const countdownShapeKey = 'circle';
-    final countdownStyleKey = (prefs.getString(_kCountdownStyleKey) ??
-            UiPrefsState.defaults.countdownStyleKey)
+    final countdownStyleKey =
+        (prefs.getString(_kCountdownStyleKey) ??
+                UiPrefsState.defaults.countdownStyleKey)
+            .trim();
+    final countdownTopLabel = (prefs.getString(_kCountdownTopLabelKey) ?? '')
         .trim();
-    final countdownTopLabel =
-        (prefs.getString(_kCountdownTopLabelKey) ?? '').trim();
     final countdownBottomLabel =
         (prefs.getString(_kCountdownBottomLabelKey) ?? '').trim();
-    final countdownTextColor =
-        (prefs.getString(_kCountdownTextColorKey) ?? '').trim();
+    final countdownTextColor = (prefs.getString(_kCountdownTextColorKey) ?? '')
+        .trim();
     final fontKey =
         (prefs.getString(_kFontKey) ?? UiPrefsState.defaults.fontKey).trim();
-    final homeBlockToneKey = (prefs.getString(_kHomeBlockToneKey) ??
-            UiPrefsState.defaults.homeBlockToneKey)
-        .trim();
-    final graphicsQualityKey = (prefs.getString(_kGraphicsQualityKey) ??
-            UiPrefsState.defaults.graphicsQualityKey)
-        .trim();
+    final homeBlockToneKey =
+        (prefs.getString(_kHomeBlockToneKey) ??
+                UiPrefsState.defaults.homeBlockToneKey)
+            .trim();
+    final graphicsQualityKey =
+        (prefs.getString(_kGraphicsQualityKey) ??
+                UiPrefsState.defaults.graphicsQualityKey)
+            .trim();
     final customBackgroundUrl =
         (prefs.getString(_kCustomBackgroundUrlKey) ?? '').trim();
-    final homeBlockOrder = prefs.getStringList(_kHomeBlockOrderKey) ??
+    final homeBlockOrder =
+        prefs.getStringList(_kHomeBlockOrderKey) ??
         const ['highlight', 'map', 'insight'];
-    final homeLayoutKey = (prefs.getString(_kHomeLayoutKey) ??
-            UiPrefsState.defaults.homeLayoutKey)
-        .trim();
+    final homeLayoutKey =
+        (prefs.getString(_kHomeLayoutKey) ??
+                UiPrefsState.defaults.homeLayoutKey)
+            .trim();
 
     notifier.value = _normalizeState(
       UiPrefsState(
@@ -433,39 +444,49 @@ class UiPrefs {
             prefs.getBool(_kTouchSoundKey) ?? UiPrefsState.defaults.touchSound,
         confettiFx:
             prefs.getBool(_kConfettiFxKey) ?? UiPrefsState.defaults.confettiFx,
-        musicAutoplay: prefs.getBool(_kMusicAutoplayKey) ??
+        musicAutoplay:
+            prefs.getBool(_kMusicAutoplayKey) ??
             UiPrefsState.defaults.musicAutoplay,
-        vaultTimeoutMins: prefs.getInt(_kVaultTimeoutKey) ??
+        vaultTimeoutMins:
+            prefs.getInt(_kVaultTimeoutKey) ??
             UiPrefsState.defaults.vaultTimeoutMins,
-        vaultHomeEnabled: prefs.getBool(_kVaultHomeEnabledKey) ??
+        vaultHomeEnabled:
+            prefs.getBool(_kVaultHomeEnabledKey) ??
             UiPrefsState.defaults.vaultHomeEnabled,
-        vaultHomeStyle: (prefs.getString(_kVaultHomeStyleKey) ??
-                UiPrefsState.defaults.vaultHomeStyle)
-            .trim(),
-        vaultHomeBadgeEnabled: prefs.getBool(_kVaultHomeBadgeEnabledKey) ??
+        vaultHomeStyle:
+            (prefs.getString(_kVaultHomeStyleKey) ??
+                    UiPrefsState.defaults.vaultHomeStyle)
+                .trim(),
+        vaultHomeBadgeEnabled:
+            prefs.getBool(_kVaultHomeBadgeEnabledKey) ??
             UiPrefsState.defaults.vaultHomeBadgeEnabled,
-        vaultHomePreviewEnabled: prefs.getBool(_kVaultHomePreviewEnabledKey) ??
+        vaultHomePreviewEnabled:
+            prefs.getBool(_kVaultHomePreviewEnabledKey) ??
             UiPrefsState.defaults.vaultHomePreviewEnabled,
         vaultHomeHidePreviewWhenLocked:
             prefs.getBool(_kVaultHomeHidePreviewWhenLockedKey) ??
-                UiPrefsState.defaults.vaultHomeHidePreviewWhenLocked,
-        transparentMode: prefs.getBool(_kTransparentModeKey) ??
+            UiPrefsState.defaults.vaultHomeHidePreviewWhenLocked,
+        transparentMode:
+            prefs.getBool(_kTransparentModeKey) ??
             UiPrefsState.defaults.transparentMode,
         brandMarkKey: SoulLocketBrand.normalizeStyleKey(
           prefs.getString(_kBrandMarkKey) ?? UiPrefsState.defaults.brandMarkKey,
         ),
         homeBlockOrder: homeBlockOrder,
         homeLayoutKey: homeLayoutKey,
-        homeShowTimer: prefs.getBool(_kHomeShowTimerKey) ??
+        homeShowTimer:
+            prefs.getBool(_kHomeShowTimerKey) ??
             UiPrefsState.defaults.homeShowTimer,
-        showAvatarFrameIcon: prefs.getBool(_kShowAvatarFrameIconKey) ??
+        showAvatarFrameIcon:
+            prefs.getBool(_kShowAvatarFrameIconKey) ??
             UiPrefsState.defaults.showAvatarFrameIcon,
-        friendlyChatPersona: (prefs.getString(_kFriendlyChatPersonaKey) ??
-                UiPrefsState.defaults.friendlyChatPersona)
-            .trim(),
-        uiVersion: (prefs.getString(_kUiVersionKey) ??
-            UiPrefsState.defaults.uiVersion)
-            .trim(),
+        friendlyChatPersona:
+            (prefs.getString(_kFriendlyChatPersonaKey) ??
+                    UiPrefsState.defaults.friendlyChatPersona)
+                .trim(),
+        uiVersion:
+            (prefs.getString(_kUiVersionKey) ?? UiPrefsState.defaults.uiVersion)
+                .trim(),
       ),
     );
   }
@@ -503,14 +524,17 @@ class UiPrefs {
         'setAppIcon',
         <String, String>{'iconKey': key},
       );
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[SuppressedError] lib/views/ui_prefs.dart: $error');
+    }
   }
 
   static Future<void> saveState(UiPrefsState state) async {
     await ensureLoaded();
     final normalized = _normalizeState(state);
     notifier.value = normalized;
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     await prefs.setString(_kThemeKey, normalized.themeKey);
     await prefs.setString(_kFallingEffectKey, normalized.fallingEffectKey);
@@ -521,9 +545,13 @@ class UiPrefs {
     await prefs.setString(_kCountdownStyleKey, normalized.countdownStyleKey);
     await prefs.setString(_kCountdownTopLabelKey, normalized.countdownTopLabel);
     await prefs.setString(
-        _kCountdownBottomLabelKey, normalized.countdownBottomLabel);
+      _kCountdownBottomLabelKey,
+      normalized.countdownBottomLabel,
+    );
     await prefs.setString(
-        _kCountdownTextColorKey, normalized.countdownTextColor);
+      _kCountdownTextColorKey,
+      normalized.countdownTextColor,
+    );
     await prefs.setString(_kFontKey, normalized.fontKey);
     await prefs.setString(_kHomeBlockToneKey, normalized.homeBlockToneKey);
     await prefs.setBool(_kLiteModeKey, normalized.liteMode);
@@ -535,13 +563,21 @@ class UiPrefs {
     await prefs.setBool(_kVaultHomeEnabledKey, normalized.vaultHomeEnabled);
     await prefs.setString(_kVaultHomeStyleKey, normalized.vaultHomeStyle);
     await prefs.setBool(
-        _kVaultHomeBadgeEnabledKey, normalized.vaultHomeBadgeEnabled);
+      _kVaultHomeBadgeEnabledKey,
+      normalized.vaultHomeBadgeEnabled,
+    );
     await prefs.setBool(
-        _kVaultHomePreviewEnabledKey, normalized.vaultHomePreviewEnabled);
-    await prefs.setBool(_kVaultHomeHidePreviewWhenLockedKey,
-        normalized.vaultHomeHidePreviewWhenLocked);
+      _kVaultHomePreviewEnabledKey,
+      normalized.vaultHomePreviewEnabled,
+    );
+    await prefs.setBool(
+      _kVaultHomeHidePreviewWhenLockedKey,
+      normalized.vaultHomeHidePreviewWhenLocked,
+    );
     await prefs.setString(
-        _kCustomBackgroundUrlKey, normalized.customBackgroundUrl);
+      _kCustomBackgroundUrlKey,
+      normalized.customBackgroundUrl,
+    );
     await prefs.setBool(_kTransparentModeKey, normalized.transparentMode);
     await prefs.setString(_kBrandMarkKey, normalized.brandMarkKey);
     await prefs.setStringList(_kHomeBlockOrderKey, normalized.homeBlockOrder);
@@ -550,7 +586,9 @@ class UiPrefs {
 
     try {
       unawaited(SettingsSyncService().backupSettingsToCloud());
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[SuppressedError] lib/views/ui_prefs.dart: $error');
+    }
   }
 
   static Future<void> resetToDefaults() async {
@@ -633,7 +671,8 @@ class UiPrefs {
   static Future<void> setFriendlyChatPersona(String persona) async {
     await ensureLoaded();
     await saveState(
-        notifier.value.copyWith(friendlyChatPersona: persona.trim()));
+      notifier.value.copyWith(friendlyChatPersona: persona.trim()),
+    );
   }
 
   static String _normalizeUiVersion(String value) {

@@ -3,9 +3,7 @@ part of '../../love_card_screen.dart';
 class _LoveCardHistoryView extends StatelessWidget {
   final _LoveCardScreenState state;
 
-  const _LoveCardHistoryView({
-    required this.state,
-  });
+  const _LoveCardHistoryView({required this.state});
 
   @override
   Widget build(BuildContext context) {
@@ -22,10 +20,7 @@ class _LoveCardHistoryView extends StatelessWidget {
             ),
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
             children: [
-              _LoveCardHistoryHero(
-                state: state,
-                cards: cards,
-              ),
+              _LoveCardHistoryHero(state: state, cards: cards),
               const SizedBox(height: 18),
               const _LoveCardHistoryErrorState(),
             ],
@@ -39,10 +34,7 @@ class _LoveCardHistoryView extends StatelessWidget {
             ),
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
             children: [
-              _LoveCardHistoryHero(
-                state: state,
-                cards: cards,
-              ),
+              _LoveCardHistoryHero(state: state, cards: cards),
               const SizedBox(height: 18),
               const _LoveCardHistoryEmptyState(),
             ],
@@ -58,16 +50,10 @@ class _LoveCardHistoryView extends StatelessWidget {
           separatorBuilder: (_, __) => const SizedBox(height: 14),
           itemBuilder: (context, index) {
             if (index == 0) {
-              return _LoveCardHistoryHero(
-                state: state,
-                cards: cards,
-              );
+              return _LoveCardHistoryHero(state: state, cards: cards);
             }
 
-            return _LoveCardHistoryItem(
-              state: state,
-              card: cards[index - 1],
-            );
+            return _LoveCardHistoryItem(state: state, card: cards[index - 1]);
           },
         );
       },
@@ -85,9 +71,7 @@ class _LoveCardHistoryErrorState extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.14),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
       ),
       child: Column(
         children: [
@@ -125,15 +109,13 @@ class _LoveCardHistoryHero extends StatelessWidget {
   final _LoveCardScreenState state;
   final List<Map<dynamic, dynamic>> cards;
 
-  const _LoveCardHistoryHero({
-    required this.state,
-    required this.cards,
-  });
+  const _LoveCardHistoryHero({required this.state, required this.cards});
 
   @override
   Widget build(BuildContext context) {
-    final mine =
-        cards.where((card) => card['fromUid'] == state.widget.myUid).length;
+    final mine = cards
+        .where((card) => card['fromUid'] == state.widget.myUid)
+        .length;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -191,16 +173,15 @@ class _LoveCardHistoryHero extends StatelessWidget {
               Expanded(
                 child: _LoveCardHistoryMetric(
                   label: context.tr('util_sphthn_bb4223'),
-                  value: '${cards.where((card) {
-                    final expiresAt = _timestampFromValue(card['expiresAt']);
-                    if (expiresAt <= 0) {
-                      return false;
-                    }
-                    final remaining =
-                        expiresAt - DateTime.now().millisecondsSinceEpoch;
-                    return remaining > 0 &&
-                        remaining <= const Duration(days: 7).inMilliseconds;
-                  }).length}',
+                  value:
+                      '${cards.where((card) {
+                        final expiresAt = _timestampFromValue(card['expiresAt']);
+                        if (expiresAt <= 0) {
+                          return false;
+                        }
+                        final remaining = expiresAt - DateTime.now().millisecondsSinceEpoch;
+                        return remaining > 0 && remaining <= const Duration(days: 7).inMilliseconds;
+                      }).length}',
                 ),
               ),
               const SizedBox(width: 10),
@@ -228,16 +209,11 @@ class _LoveCardHistoryEmptyState extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.14),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
       ),
       child: Column(
         children: [
-          const _LoveCardGlassIcon(
-            icon: Icons.mail_outline_rounded,
-            size: 52,
-          ),
+          const _LoveCardGlassIcon(icon: Icons.mail_outline_rounded, size: 52),
           const SizedBox(height: 14),
           Text(
             context.tr('util_chacthipno_e7e271'),
@@ -268,10 +244,7 @@ class _LoveCardHistoryItem extends StatelessWidget {
   final _LoveCardScreenState state;
   final Map<dynamic, dynamic> card;
 
-  const _LoveCardHistoryItem({
-    required this.state,
-    required this.card,
-  });
+  const _LoveCardHistoryItem({required this.state, required this.card});
 
   @override
   Widget build(BuildContext context) {
@@ -303,9 +276,7 @@ class _LoveCardHistoryItem extends StatelessWidget {
             builder: (BuildContext dialogContext) {
               return AlertDialog(
                 title: Text(context.tr('util_xalinktthi_8b9f9b')),
-                content: Text(
-                  context.tr('util_linktnysbg_b62df1'),
-                ),
+                content: Text(context.tr('util_linktnysbg_b62df1')),
                 actions: <Widget>[
                   TextButton(
                     onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -367,8 +338,8 @@ class _LoveCardHistoryItem extends StatelessWidget {
                       isMine
                           ? Icons.send_rounded
                           : isUnread
-                              ? Icons.mark_email_unread_rounded
-                              : Icons.drafts_rounded,
+                          ? Icons.mark_email_unread_rounded
+                          : Icons.drafts_rounded,
                       color: Colors.white,
                       size: 24,
                     ),
@@ -477,7 +448,9 @@ class _LoveCardHistoryItem extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Hết hạn: $expiryText',
+                    L10nService().format('love_card_expires_at', {
+                      'time': expiryText,
+                    }),
                     style: SLTheme.quicksand(
                       color: Colors.white.withValues(alpha: 0.66),
                       fontSize: 11,

@@ -4,14 +4,16 @@ extension _MainHomeListeners on _MainHomeTabState {
   void _listenHighlights(String houseId) {
     _noteSubscription?.cancel();
 
-    _noteSubscription = _noteService.streamRecentNotes(houseId, limit: 10).listen((items) {
-      final nextNoteHighlights = items.take(4).toList(growable: false);
-      if (_sameNoteHighlights(_noteHighlights, nextNoteHighlights)) {
-        return;
-      }
-      _noteHighlights = nextNoteHighlights;
-      _refreshSmartInteraction();
-    });
+    _noteSubscription = _noteService
+        .streamRecentNotes(houseId, limit: 10)
+        .listen((items) {
+          final nextNoteHighlights = items.take(4).toList(growable: false);
+          if (_sameNoteHighlights(_noteHighlights, nextNoteHighlights)) {
+            return;
+          }
+          _noteHighlights = nextNoteHighlights;
+          _refreshSmartInteraction();
+        });
   }
 
   void _listenHomeCalendarEvents(String houseId) {
@@ -177,7 +179,11 @@ extension _MainHomeListeners on _MainHomeTabState {
                   _dbRef
                       .child('houses/$houseId/reaction_flights/$key')
                       .remove()
-                      .catchError((_) {}),
+                      .catchError((error) {
+                        debugPrint(
+                          '[SuppressedError] lib/views/home/tabs/main_home/controllers/main_home_listeners.dart: $error',
+                        );
+                      }),
                 );
               }
               return;

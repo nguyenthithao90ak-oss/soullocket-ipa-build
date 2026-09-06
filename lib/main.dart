@@ -155,7 +155,11 @@ void main() {
       await Hive.initFlutter();
       unawaited(OfflineSyncQueue.instance.startListening());
       setupLocator();
-      FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+      // Web không có luồng remove splash tương ứng; defer first frame tại đây
+      // sẽ khiến toàn bộ ứng dụng chỉ hiển thị màn hình trắng.
+      if (!kIsWeb) {
+        FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+      }
       _configureRenderingDefaults();
       await _configureSystemUiForEdgeToEdge();
       GoogleFonts.config.allowRuntimeFetching = true;

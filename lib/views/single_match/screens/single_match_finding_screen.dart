@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/single_match_service.dart';
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 class SingleMatchFindingScreen extends StatefulWidget {
   final String currentHouseId;
@@ -37,9 +38,10 @@ class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen>
   @override
   void initState() {
     super.initState();
-    _animCtrl =
-        AnimationController(vsync: this, duration: const Duration(seconds: 2))
-          ..repeat();
+    _animCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) setState(() => _seconds++);
     });
@@ -54,10 +56,12 @@ class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen>
       final cameras = await availableCameras();
       if (cameras.isEmpty) return;
 
-      final frontCameraIndex = cameras
-          .indexWhere((c) => c.lensDirection == CameraLensDirection.front);
-      final camera =
-          frontCameraIndex != -1 ? cameras[frontCameraIndex] : cameras.first;
+      final frontCameraIndex = cameras.indexWhere(
+        (c) => c.lensDirection == CameraLensDirection.front,
+      );
+      final camera = frontCameraIndex != -1
+          ? cameras[frontCameraIndex]
+          : cameras.first;
 
       _cameraController = CameraController(
         camera,
@@ -118,16 +122,14 @@ class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen>
             if (_isCameraReady && _cameraController != null)
               Positioned.fill(
                 child: Transform.scale(
-                  scale: size.aspectRatio *
-                              _cameraController!.value.aspectRatio <
+                  scale:
+                      size.aspectRatio * _cameraController!.value.aspectRatio <
                           1
                       ? 1 /
-                          (size.aspectRatio *
-                              _cameraController!.value.aspectRatio)
+                            (size.aspectRatio *
+                                _cameraController!.value.aspectRatio)
                       : size.aspectRatio * _cameraController!.value.aspectRatio,
-                  child: Center(
-                    child: CameraPreview(_cameraController!),
-                  ),
+                  child: Center(child: CameraPreview(_cameraController!)),
                 ),
               ),
 
@@ -156,179 +158,257 @@ class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen>
             ),
 
             SafeArea(
-              child: Column(
-                children: [
-                  const SizedBox(height: 24),
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: IconButton(
-                        onPressed: () {
-                          Navigator.pop(context, 'cancelled');
-                        },
-                        icon: const Icon(Icons.close_rounded,
-                            color: Colors.white, size: 28),
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.black26,
-                          padding: const EdgeInsets.all(12),
-                        ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final compactHeight = constraints.maxHeight < 620;
+                  final compactWidth = constraints.maxWidth < 360;
+                  final visualHeight = compactHeight ? 136.0 : 180.0;
+                  final pulseBase = compactHeight ? 78.0 : 100.0;
+                  final pulseRange = compactHeight ? 100.0 : 140.0;
+                  final title = widget.isChat
+                      ? context.tr('p9_match_finding_chat_title')
+                      : context.tr(
+                          widget.isVideo
+                              ? 'p9_match_finding_video_title'
+                              : 'p9_match_finding_voice_title',
+                        );
+
+                  return SingleChildScrollView(
+                    physics: SLResponsive.scrollPhysicsForPlatform(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
                       ),
-                    ),
-                  ),
-                  const Spacer(),
-                  SizedBox(
-                    height: 180,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        AnimatedBuilder(
-                          animation: _animCtrl,
-                          builder: (context, child) {
-                            return Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Container(
-                                  width: 100 + (_animCtrl.value * 140),
-                                  height: 100 + (_animCtrl.value * 140),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: accentColor.withValues(
-                                          alpha: 1.0 - _animCtrl.value),
-                                      width: 2,
-                                    ),
-                                    color: accentColor.withValues(
-                                        alpha: 0.15 - (_animCtrl.value * 0.15)),
-                                  ),
-                                ),
-                                Container(
-                                  width: 100 +
-                                      (((_animCtrl.value + 0.5) % 1.0) * 140),
-                                  height: 100 +
-                                      (((_animCtrl.value + 0.5) % 1.0) * 140),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: accentColor.withValues(
-                                          alpha: 1.0 -
-                                              ((_animCtrl.value + 0.5) % 1.0)),
-                                      width: 2,
-                                    ),
-                                    color: accentColor.withValues(
-                                        alpha: 0.15 -
-                                            (((_animCtrl.value + 0.5) % 1.0) *
-                                                0.15)),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: accentColor,
-                            boxShadow: [
-                              BoxShadow(
-                                color: accentColor.withValues(alpha: 0.5),
-                                blurRadius: 24,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            widget.isChat
-                                ? Icons.chat_rounded
-                                : (widget.isVideo
-                                    ? Icons.videocam_rounded
-                                    : Icons.call_rounded),
-                            color: Colors.white,
-                            size: 48,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  Text(
-                    widget.isChat
-                        ? 'SOUL MATCH'
-                        : (widget.isVideo ? 'VIDEO MATCH' : 'VOICE MATCH'),
-                    style: SLTheme.quicksand(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: 2.0,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40),
-                    child: Text(
-                      'Đang tìm kiếm tần số phù hợp nhất\nvới bạn trong vũ trụ SoulLocket...',
-                      textAlign: TextAlign.center,
-                      style: SLTheme.quicksand(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white70,
-                        height: 1.5,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 50),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(30),
-                    child: FastBackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 32, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(30),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: accentColor.withValues(alpha: 0.15),
-                              blurRadius: 24,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                      child: IntrinsicHeight(
+                        child: Column(
                           children: [
-                            Icon(
-                                widget.isChat
-                                    ? Icons.chat_rounded
-                                    : (widget.isVideo
-                                        ? Icons.videocam_rounded
-                                        : Icons.radar_rounded),
-                                color: Colors.white,
-                                size: 22),
-                            const SizedBox(width: 10),
+                            SizedBox(height: compactHeight ? 8 : 24),
+                            Align(
+                              alignment: Alignment.topLeft,
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: compactWidth ? 12 : 20,
+                                ),
+                                child: IconButton(
+                                  tooltip: context.tr(
+                                    'p9_match_finding_cancel_tooltip',
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pop(context, 'cancelled');
+                                  },
+                                  icon: const Icon(
+                                    Icons.close_rounded,
+                                    color: Colors.white,
+                                    size: 28,
+                                  ),
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: Colors.black26,
+                                    padding: const EdgeInsets.all(12),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const Spacer(),
+                            SizedBox(
+                              height: visualHeight,
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  AnimatedBuilder(
+                                    animation: _animCtrl,
+                                    builder: (context, child) {
+                                      return Stack(
+                                        alignment: Alignment.center,
+                                        children: [
+                                          Container(
+                                            width:
+                                                pulseBase +
+                                                (_animCtrl.value * pulseRange),
+                                            height:
+                                                pulseBase +
+                                                (_animCtrl.value * pulseRange),
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: accentColor.withValues(
+                                                  alpha: 1.0 - _animCtrl.value,
+                                                ),
+                                                width: 2,
+                                              ),
+                                              color: accentColor.withValues(
+                                                alpha:
+                                                    0.15 -
+                                                    (_animCtrl.value * 0.15),
+                                              ),
+                                            ),
+                                          ),
+                                          Container(
+                                            width:
+                                                pulseBase +
+                                                (((_animCtrl.value + 0.5) %
+                                                        1.0) *
+                                                    pulseRange),
+                                            height:
+                                                pulseBase +
+                                                (((_animCtrl.value + 0.5) %
+                                                        1.0) *
+                                                    pulseRange),
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: accentColor.withValues(
+                                                  alpha:
+                                                      1.0 -
+                                                      ((_animCtrl.value + 0.5) %
+                                                          1.0),
+                                                ),
+                                                width: 2,
+                                              ),
+                                              color: accentColor.withValues(
+                                                alpha:
+                                                    0.15 -
+                                                    (((_animCtrl.value + 0.5) %
+                                                            1.0) *
+                                                        0.15),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                  Container(
+                                    width: pulseBase,
+                                    height: pulseBase,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: accentColor,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: accentColor.withValues(
+                                            alpha: 0.5,
+                                          ),
+                                          blurRadius: 24,
+                                          offset: const Offset(0, 8),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Icon(
+                                      widget.isChat
+                                          ? Icons.chat_rounded
+                                          : (widget.isVideo
+                                                ? Icons.videocam_rounded
+                                                : Icons.call_rounded),
+                                      color: Colors.white,
+                                      size: compactHeight ? 40 : 48,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: compactHeight ? 16 : 32),
                             Text(
-                              '00:${_seconds.toString().padLeft(2, '0')}',
+                              title,
                               style: SLTheme.quicksand(
-                                fontSize: 24,
+                                fontSize: compactWidth ? 24 : 28,
                                 fontWeight: FontWeight.w900,
                                 color: Colors.white,
-                                letterSpacing: 1.5,
+                                letterSpacing: 2.0,
                               ),
                             ),
+                            SizedBox(height: compactHeight ? 8 : 12),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: compactWidth ? 24 : 40,
+                              ),
+                              child: Text(
+                                context.tr('p9_match_finding_description'),
+                                textAlign: TextAlign.center,
+                                style: SLTheme.quicksand(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white70,
+                                  height: 1.5,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: compactHeight ? 24 : 50),
+                            Semantics(
+                              label: L10nService().format(
+                                'p9_match_finding_elapsed_semantics',
+                                {'seconds': _seconds},
+                              ),
+                              liveRegion: true,
+                              child: ExcludeSemantics(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(30),
+                                  child: FastBackdropFilter(
+                                    filter: ImageFilter.blur(
+                                      sigmaX: 10,
+                                      sigmaY: 10,
+                                    ),
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: compactWidth ? 20 : 32,
+                                        vertical: 14,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                        borderRadius: BorderRadius.circular(30),
+                                        border: Border.all(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.2,
+                                          ),
+                                          width: 1.5,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: accentColor.withValues(
+                                              alpha: 0.15,
+                                            ),
+                                            blurRadius: 24,
+                                            offset: const Offset(0, 8),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            widget.isChat
+                                                ? Icons.chat_rounded
+                                                : (widget.isVideo
+                                                      ? Icons.videocam_rounded
+                                                      : Icons.radar_rounded),
+                                            color: Colors.white,
+                                            size: 22,
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Text(
+                                            '00:${_seconds.toString().padLeft(2, '0')}',
+                                            style: SLTheme.quicksand(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.w900,
+                                              color: Colors.white,
+                                              letterSpacing: 1.5,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const Spacer(),
                           ],
                         ),
                       ),
                     ),
-                  ),
-                  const Spacer(),
-                ],
+                  );
+                },
               ),
             ),
           ],

@@ -8,18 +8,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'offline_cache_service.dart';
 
-enum SecurityProtectionRiskLevel {
-  allow,
-  warn,
-  block,
-}
+enum SecurityProtectionRiskLevel { allow, warn, block }
 
 extension SecurityProtectionRiskLevelX on SecurityProtectionRiskLevel {
   String get key => switch (this) {
-        SecurityProtectionRiskLevel.allow => 'allow',
-        SecurityProtectionRiskLevel.warn => 'warn',
-        SecurityProtectionRiskLevel.block => 'block',
-      };
+    SecurityProtectionRiskLevel.allow => 'allow',
+    SecurityProtectionRiskLevel.warn => 'warn',
+    SecurityProtectionRiskLevel.block => 'block',
+  };
 
   static SecurityProtectionRiskLevel fromKey(String? raw) {
     switch ((raw ?? '').trim().toLowerCase()) {
@@ -33,34 +29,30 @@ extension SecurityProtectionRiskLevelX on SecurityProtectionRiskLevel {
   }
 }
 
-enum SecurityProtectionRolloutStage {
-  logOnly,
-  warnOnly,
-  blockSensitive,
-}
+enum SecurityProtectionRolloutStage { logOnly, warnOnly, blockSensitive }
 
 extension SecurityProtectionRolloutStageX on SecurityProtectionRolloutStage {
   String get key => switch (this) {
-        SecurityProtectionRolloutStage.logOnly => 'log_only',
-        SecurityProtectionRolloutStage.warnOnly => 'warn_only',
-        SecurityProtectionRolloutStage.blockSensitive => 'block_sensitive',
-      };
+    SecurityProtectionRolloutStage.logOnly => 'log_only',
+    SecurityProtectionRolloutStage.warnOnly => 'warn_only',
+    SecurityProtectionRolloutStage.blockSensitive => 'block_sensitive',
+  };
 
   String get adminLabel => switch (this) {
-        SecurityProtectionRolloutStage.logOnly => 'Tuần 1 - Chỉ log',
-        SecurityProtectionRolloutStage.warnOnly => 'Tuần 2 - Chỉ cảnh báo',
-        SecurityProtectionRolloutStage.blockSensitive =>
-          'Tuần 3 - Chặn thao tác nhạy cảm',
-      };
+    SecurityProtectionRolloutStage.logOnly => 'Tuần 1 - Chỉ log',
+    SecurityProtectionRolloutStage.warnOnly => 'Tuần 2 - Chỉ cảnh báo',
+    SecurityProtectionRolloutStage.blockSensitive =>
+      'Tuần 3 - Chặn thao tác nhạy cảm',
+  };
 
   String get adminDescription => switch (this) {
-        SecurityProtectionRolloutStage.logOnly =>
-          'Chỉ ghi nhận sự kiện, không cảnh báo và không chặn người dùng.',
-        SecurityProtectionRolloutStage.warnOnly =>
-          'Risk warn/block đều hạ xuống mức cảnh báo để theo dõi block nhầm.',
-        SecurityProtectionRolloutStage.blockSensitive =>
-          'Áp dụng đúng risk allow/warn/block cho các thao tác nhạy cảm.',
-      };
+    SecurityProtectionRolloutStage.logOnly =>
+      'Chỉ ghi nhận sự kiện, không cảnh báo và không chặn người dùng.',
+    SecurityProtectionRolloutStage.warnOnly =>
+      'Risk warn/block đều hạ xuống mức cảnh báo để theo dõi block nhầm.',
+    SecurityProtectionRolloutStage.blockSensitive =>
+      'Áp dụng đúng risk allow/warn/block cho các thao tác nhạy cảm.',
+  };
 
   static SecurityProtectionRolloutStage fromKey(String? raw) {
     switch ((raw ?? '').trim().toLowerCase()) {
@@ -90,29 +82,28 @@ enum SecurityProtectionReason {
 
 extension SecurityProtectionReasonX on SecurityProtectionReason {
   String get key => switch (this) {
-        SecurityProtectionReason.screenCapture => 'screen_capture',
-        SecurityProtectionReason.overlay => 'overlay',
-        SecurityProtectionReason.controlApp => 'control_app',
-        SecurityProtectionReason.unofficialBuild => 'unofficial_build',
-        SecurityProtectionReason.unlicensed => 'unlicensed',
-        SecurityProtectionReason.malware => 'malware',
-        SecurityProtectionReason.rootIntegrity => 'root_integrity',
-        SecurityProtectionReason.playProtect => 'play_protect',
-        SecurityProtectionReason.unknown => 'unknown',
-      };
+    SecurityProtectionReason.screenCapture => 'screen_capture',
+    SecurityProtectionReason.overlay => 'overlay',
+    SecurityProtectionReason.controlApp => 'control_app',
+    SecurityProtectionReason.unofficialBuild => 'unofficial_build',
+    SecurityProtectionReason.unlicensed => 'unlicensed',
+    SecurityProtectionReason.malware => 'malware',
+    SecurityProtectionReason.rootIntegrity => 'root_integrity',
+    SecurityProtectionReason.playProtect => 'play_protect',
+    SecurityProtectionReason.unknown => 'unknown',
+  };
 
   String get adminLabel => switch (this) {
-        SecurityProtectionReason.screenCapture => 'Quay/chia sẻ màn hình',
-        SecurityProtectionReason.overlay => 'Overlay/tapjacking',
-        SecurityProtectionReason.controlApp => 'Auto click/điều khiển màn hình',
-        SecurityProtectionReason.unofficialBuild =>
-          'Bản build không chính thức',
-        SecurityProtectionReason.unlicensed => 'Bản không được cấp phép',
-        SecurityProtectionReason.malware => 'Malware/app access risk',
-        SecurityProtectionReason.rootIntegrity => 'Root/fake integrity/modded',
-        SecurityProtectionReason.playProtect => 'Play Protect verdict',
-        SecurityProtectionReason.unknown => 'Khác/không xác định',
-      };
+    SecurityProtectionReason.screenCapture => 'Quay/chia sẻ màn hình',
+    SecurityProtectionReason.overlay => 'Overlay/tapjacking',
+    SecurityProtectionReason.controlApp => 'Auto click/điều khiển màn hình',
+    SecurityProtectionReason.unofficialBuild => 'Bản build không chính thức',
+    SecurityProtectionReason.unlicensed => 'Bản không được cấp phép',
+    SecurityProtectionReason.malware => 'Malware/app access risk',
+    SecurityProtectionReason.rootIntegrity => 'Root/fake integrity/modded',
+    SecurityProtectionReason.playProtect => 'Play Protect verdict',
+    SecurityProtectionReason.unknown => 'Khác/không xác định',
+  };
 
   static SecurityProtectionReason fromKey(String? raw) {
     switch ((raw ?? '').trim().toLowerCase()) {
@@ -263,9 +254,7 @@ class SecurityProtectionRolloutConfig {
     );
   }
 
-  Map<String, dynamic> toStorageMap({
-    required String actorId,
-  }) {
+  Map<String, dynamic> toStorageMap({required String actorId}) {
     return {
       'stage': stage.key,
       'note': note,
@@ -339,7 +328,8 @@ class SecurityProtectionRolloutService {
   SharedPreferences? _prefs;
 
   Future<SharedPreferences> _getPrefs() async {
-    return _prefs ??= OfflineCacheService.getPrefsSync() ??
+    return _prefs ??=
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
   }
 
@@ -371,10 +361,8 @@ class SecurityProtectionRolloutService {
           }
         } catch (e) {
           debugPrint(
-              'Security rollout cache decode failed: ${AppErrorMapper.resolve(
-            e,
-            fallbackMessage: 'Không thể đọc cache bảo vệ bảo mật.',
-          ).message}');
+            'Security rollout cache decode failed: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể đọc cache bảo vệ bảo mật.').message}',
+          );
         }
       }
     }
@@ -390,10 +378,8 @@ class SecurityProtectionRolloutService {
       return config;
     } catch (e) {
       debugPrint(
-          'Security rollout fetch failed, fallback cache: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể tải cấu hình bảo vệ bảo mật.',
-      ).message}');
+        'Security rollout fetch failed, fallback cache: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể tải cấu hình bảo vệ bảo mật.').message}',
+      );
       if (cachedJson != null && cachedJson.trim().isNotEmpty) {
         try {
           final cachedMap = jsonDecode(cachedJson);
@@ -402,7 +388,11 @@ class SecurityProtectionRolloutService {
             _rememberConfig(config);
             return config;
           }
-        } catch (_) {}
+        } catch (cacheError) {
+          debugPrint(
+            'Security rollout fallback cache decode failed: $cacheError',
+          );
+        }
       }
       final fallback = SecurityProtectionRolloutConfig.fallback();
       _rememberConfig(fallback);
@@ -426,9 +416,7 @@ class SecurityProtectionRolloutService {
     SecurityProtectionRolloutConfig config, {
     required String actorId,
   }) async {
-    await _db.child(configPath).set(
-          config.toStorageMap(actorId: actorId),
-        );
+    await _db.child(configPath).set(config.toStorageMap(actorId: actorId));
     final hydrated = config.copyWith(
       updatedAtMs: DateTime.now().millisecondsSinceEpoch,
       updatedBy: actorId,
@@ -514,7 +502,8 @@ class SecurityProtectionRolloutService {
   }
 
   Future<void> _persistCache(SecurityProtectionRolloutConfig config) async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     await prefs.setString(_prefsCacheKey, jsonEncode(config.toCacheMap()));
     await prefs.setInt(

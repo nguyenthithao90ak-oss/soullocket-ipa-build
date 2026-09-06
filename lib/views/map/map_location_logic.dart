@@ -584,6 +584,8 @@ extension _MapLocationLogicExt on _MapScreenState {
           (event) {
             myGpsDebounce?.cancel();
             myGpsDebounce = Timer(const Duration(milliseconds: 140), () {
+              if (!mounted) return;
+              _setGpsSyncError(mine: false);
               _setRoleLocationState(
                 widget.myRole,
                 _parseLocationNodeState(event.snapshot.value),
@@ -597,6 +599,7 @@ extension _MapLocationLogicExt on _MapScreenState {
               fallbackMessage: msgMyGpsListenFail,
             ).message;
             debugPrint('Map live GPS listen failed: $message');
+            _setGpsSyncError(mine: true);
           },
         );
 
@@ -607,6 +610,8 @@ extension _MapLocationLogicExt on _MapScreenState {
           (event) {
             partnerGpsDebounce?.cancel();
             partnerGpsDebounce = Timer(const Duration(milliseconds: 140), () {
+              if (!mounted) return;
+              _setGpsSyncError(partner: false);
               _setRoleLocationState(
                 widget.partnerRole,
                 _parseLocationNodeState(event.snapshot.value),
@@ -620,6 +625,7 @@ extension _MapLocationLogicExt on _MapScreenState {
               fallbackMessage: msgPartnerGpsListenFail,
             ).message;
             debugPrint('Map partner GPS listen failed: $message');
+            _setGpsSyncError(partner: true);
           },
         );
 
@@ -1171,7 +1177,11 @@ extension _MapLocationLogicExt on _MapScreenState {
       }
 
       _refreshLiveDataSmart();
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/map/map_location_logic.dart: $error',
+      );
+    }
   }
 
   Future<_RouteSnapshot?> _fetchRouteSnapshot(
@@ -1327,10 +1337,6 @@ extension _MapLocationLogicExt on _MapScreenState {
     final myLive = myLivePoint != null;
     final partnerLive = partnerLivePoint != null;
     final myHasHistory = _hasRoleLocationHistory(widget.myRole);
-    final partnerHasHistory = _isSingleRelationship
-        ? false
-        : _hasRoleLocationHistory(widget.partnerRole);
-
     final myAddressText = _locationLabel(
       explicitAddress: myPoint?.address,
       lat: myPoint?.lat,
@@ -1364,9 +1370,8 @@ extension _MapLocationLogicExt on _MapScreenState {
         mapInsightText = context.tr('map_bnanghinth_652b9f');
         mapAlert = context.tr('map_angdngvtrc_9a3510');
       } else {
-        distanceText = context.tr('map_chabtgps_aa3568');
-        mapInsightText = context.tr('map_btgpsbnhin_4d7d3f');
-        mapAlert = context.tr('map_chabtgpsbm_b329bb');
+        distanceText = '--';
+        mapInsightText = context.tr('map_refresh_no_positions');
       }
     } else if (myPoint != null && partnerPoint != null) {
       final directMeters = _distance
@@ -1386,7 +1391,11 @@ extension _MapLocationLogicExt on _MapScreenState {
           : (_isFetchingRoute
                 ? context.tr('map_angtnhqung_7529aa')
                 : context.tr('map_chacqungng_38c097'));
-      etaText = hasExactRoute ? '${_routeSnapshot!.etaMinutes} phút' : '--';
+      etaText = hasExactRoute
+          ? L10nService().format('map_refresh_minutes', {
+              'minutes': '${_routeSnapshot!.etaMinutes}',
+            })
+          : '--';
 
       if (myLive && partnerLive) {
         mapInsightText = hasExactRoute
@@ -1418,38 +1427,11 @@ extension _MapLocationLogicExt on _MapScreenState {
             : context.tr('map_khongcchan_3d172e');
       }
     } else if (myPoint != null || partnerPoint != null) {
-      if (!partnerHasHistory) {
-        distanceText = context.tr('map_ngiychabtg_defe08');
-        mapInsightText = L10nService().format(
-          'partner_location_not_enabled_map',
-          {'partnerName': widget.partnerName},
-        );
-        mapAlert = L10nService().format('partner_gps_not_enabled_map', {
-          'partnerName': widget.partnerName,
-        });
-      } else if (!myHasHistory) {
-        distanceText = context.tr('map_bnchabtgps_fc6f46');
-        mapInsightText = L10nService().format('you_location_not_enabled_map', {
-          'partnerName': widget.partnerName,
-        });
-        mapAlert = context.tr('map_bnchabtgps_2de829');
-      } else if (!partnerLive) {
-        distanceText = context.tr('map_vtrcuilu_b4c8ee');
-        mapInsightText =
-            '${widget.partnerName} đã tắt vị trí. Bản đồ đang giữ lại vị trí cuối cùng đã lưu.';
-        mapAlert = '${widget.partnerName} đã tắt GPS. Bản đồ giữ vị trí cuối.';
-      } else if (!myLive) {
-        distanceText = context.tr('map_vtrcuilu_b4c8ee');
-        mapInsightText = context.tr('map_bnangdngvt_3c6c9e');
-        mapAlert = context.tr('map_gpscabnang_6101f9');
-      } else {
-        distanceText = context.tr('map_angcpnht_f4c117');
-        mapInsightText = context.tr('map_bnangngbli_a9747b');
-      }
+      distanceText = '--';
+      mapInsightText = context.tr('map_refresh_no_positions');
     } else {
-      distanceText = context.tr('map_angnhv_ea3669');
-      mapInsightText = context.tr('map_btgpsbnhin_b8be56');
-      mapAlert = context.tr('map_btgpsbtucp_89df3c');
+      distanceText = '--';
+      mapInsightText = context.tr('map_refresh_no_positions');
     }
 
     _myAddressText = myAddressText;

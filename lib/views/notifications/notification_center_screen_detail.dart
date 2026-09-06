@@ -23,10 +23,12 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
             ),
             decoration: const BoxDecoration(
               color: SLColors.bgCard,
-              borderRadius:
-                  BorderRadius.vertical(top: Radius.circular(SLRadius.xl)),
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(SLRadius.xl),
+              ),
             ),
             child: SingleChildScrollView(
+              physics: SLResponsive.scrollPhysicsForPlatform(),
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -134,8 +136,9 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
                             if (locked)
                               _buildMetaChip(
                                 icon: Icons.lock_rounded,
-                                label: context
-                                    .tr('notifications_system_notification'),
+                                label: context.tr(
+                                  'notifications_system_notification',
+                                ),
                                 accent: SLColors.warning,
                                 highlighted: true,
                               )
@@ -226,15 +229,15 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
                               icon: locked
                                   ? Icons.lock_rounded
                                   : isRead
-                                      ? Icons.mark_email_read_outlined
-                                      : Icons.mark_email_unread_outlined,
+                                  ? Icons.mark_email_read_outlined
+                                  : Icons.mark_email_unread_outlined,
                               label: context.tr('notifications_summary_status'),
                               value: _statusText(n),
                               accent: locked
                                   ? SLColors.warning
                                   : isRead
-                                      ? SLColors.success
-                                      : tone.accent,
+                                  ? SLColors.success
+                                  : tone.accent,
                             ),
                           ),
                         ],
@@ -262,7 +265,7 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
                         ),
                       ),
                       child: Text(
-                        'Thông báo hệ thống và cảnh báo được giữ lại, không thể xoá hoặc ghim.',
+                        context.tr('p5_notif_locked_explanation'),
                         style: SLTheme.quicksand(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -286,7 +289,11 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
                                   ? Icons.push_pin_outlined
                                   : Icons.push_pin_rounded,
                             ),
-                            label: Text(isPinned ? 'Bỏ ghim' : 'Ghim'),
+                            label: Text(
+                              isPinned
+                                  ? context.tr('p5_notif_unpin')
+                                  : context.tr('p5_notif_pin'),
+                            ),
                           ),
                         ),
                         SLSpacing.w8,
@@ -297,7 +304,7 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
                               _deleteOne(n.id);
                             },
                             icon: const Icon(Icons.delete_outline_rounded),
-                            label: const Text('Xoá'),
+                            label: Text(context.tr('p5_delete')),
                             style: TextButton.styleFrom(
                               foregroundColor: SLColors.danger,
                               backgroundColor: SLColors.dangerLight,
@@ -463,10 +470,7 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
     );
   }
 
-  Widget _buildSectionTitle({
-    required IconData icon,
-    required String label,
-  }) {
+  Widget _buildSectionTitle({required IconData icon, required String label}) {
     return Row(
       children: [
         Container(
@@ -500,22 +504,52 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
       rows.add(_buildDetailRow(label, safeValue));
     }
 
-    addRow('Mã thông báo', n.id);
-    addRow('Mã loại', n.type);
-    addRow('Nguồn ID', n.rawFrom ?? '');
-    addRow('Post ID', n.postId ?? '');
-    addRow('Thiết bị', n.raw['deviceModel']?.toString() ?? '');
-    addRow('Hệ điều hành', n.raw['deviceOs']?.toString() ?? '');
-    addRow('Nền tảng', n.raw['devicePlatform']?.toString() ?? '');
-    addRow('Vai trò mới', n.raw['role']?.toString() ?? '');
-    addRow('Vai trò cũ', n.raw['previousRole']?.toString() ?? '');
-    addRow('Sự kiện', n.raw['eventTitle']?.toString() ?? '');
-    addRow('Ngày sự kiện', n.raw['eventDate']?.toString() ?? '');
-    addRow('Nhóm', n.raw['category']?.toString() ?? '');
-    addRow('Mục', n.raw['section']?.toString() ?? '');
-    addRow('Ngữ cảnh', n.raw['context']?.toString() ?? '');
+    addRow(context.tr('p5_notif_detail_id'), n.id);
+    addRow(context.tr('p5_notif_detail_type_id'), n.type);
+    addRow(context.tr('p5_notif_detail_source_id'), n.rawFrom ?? '');
+    addRow(context.tr('p5_notif_detail_post_id'), n.postId ?? '');
+    addRow(
+      context.tr('p5_notif_detail_device'),
+      n.raw['deviceModel']?.toString() ?? '',
+    );
+    addRow(
+      context.tr('p5_notif_detail_os'),
+      n.raw['deviceOs']?.toString() ?? '',
+    );
+    addRow(
+      context.tr('p5_notif_detail_platform'),
+      n.raw['devicePlatform']?.toString() ?? '',
+    );
+    addRow(
+      context.tr('p5_notif_detail_new_role'),
+      n.raw['role']?.toString() ?? '',
+    );
+    addRow(
+      context.tr('p5_notif_detail_previous_role'),
+      n.raw['previousRole']?.toString() ?? '',
+    );
+    addRow(
+      context.tr('p5_notif_detail_event'),
+      n.raw['eventTitle']?.toString() ?? '',
+    );
+    addRow(
+      context.tr('p5_notif_detail_event_date'),
+      n.raw['eventDate']?.toString() ?? '',
+    );
+    addRow(
+      context.tr('p5_notif_detail_category'),
+      n.raw['category']?.toString() ?? '',
+    );
+    addRow(
+      context.tr('p5_notif_detail_section'),
+      n.raw['section']?.toString() ?? '',
+    );
+    addRow(
+      context.tr('p5_notif_detail_context'),
+      n.raw['context']?.toString() ?? '',
+    );
     if (n.readAt != null) {
-      addRow('Đã đọc lúc', _fmtDateTime(n.readAt!));
+      addRow(context.tr('p5_notif_detail_read_at'), _fmtDateTime(n.readAt!));
     }
     return rows;
   }

@@ -2,10 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/pairing_service.dart';
-import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_invite_qr_codec.dart';
+import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_qr_scanner_screen.dart';
 
 class PairingEnterCodeSheet extends StatefulWidget {
   const PairingEnterCodeSheet({super.key});
@@ -15,52 +18,65 @@ class PairingEnterCodeSheet extends StatefulWidget {
 }
 
 class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
-  final _codeCtrl = TextEditingController();
+  final TextEditingController _codeCtrl = TextEditingController();
+  final FocusNode _codeFocus = FocusNode();
+  StreamSubscription<String>? _statusSub;
+
   bool _isLoading = false;
+  bool _isRestoring = true;
+  bool _isFinalizing = false;
   String? _errorMsg;
-  String _status = 'input'; // 'input', 'waiting', 'accepted', 'rejected'
-  StreamSubscription? _statusSub;
+  String _status = 'input';
+
+  String _t(String key) => context.tr(key);
 
   @override
   void initState() {
     super.initState();
-    _restoreState();
-  }
-
-  Future<void> _restoreState() async {
-    setState(() => _isLoading = true);
-    try {
-      final req = await PairingService.instance.getMyPendingOrAcceptedRequest();
-      if (mounted) {
-        if (req != null) {
-          final houseId = req['houseId']?.toString();
-          final status = req['status']?.toString();
-          if (status == 'pending') {
-            setState(() {
-              _status = 'waiting';
-            });
-            _listenToStatusBase(houseId: houseId);
-          } else if (status == 'accepted') {
-            _handleAcceptedState(houseId: houseId);
-          }
-        }
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    unawaited(_restoreState());
   }
 
   @override
   void dispose() {
     _codeCtrl.dispose();
+    _codeFocus.dispose();
     _statusSub?.cancel();
     super.dispose();
   }
 
+  Future<void> _restoreState() async {
+    try {
+      final request = await PairingService.instance
+          .getMyPendingOrAcceptedRequest();
+      if (!mounted || request == null) {
+        return;
+      }
+
+      final houseId = request['houseId']?.toString();
+      final status = request['status']?.toString();
+      if (status == 'pending') {
+        setState(() => _status = 'waiting');
+        _listenToStatus(houseId: houseId);
+      } else if (status == 'accepted') {
+        unawaited(_handleAcceptedState(houseId: houseId));
+      }
+    } catch (error) {
+      debugPrint('[PairingEnterCode] Cannot restore request state: $error');
+    } finally {
+      if (mounted) {
+        setState(() => _isRestoring = false);
+      }
+    }
+  }
+
   Future<void> _sendRequest() async {
-    final code = _codeCtrl.text.replaceAll('-', '').replaceAll(' ', '');
-    if (code.length != 12) {
-      setState(() => _errorMsg = 'Vui lòng nhập đủ 12 số.');
+    if (_isLoading || _isFinalizing) {
+      return;
+    }
+    final code = PairingInviteQrCodec.normalizeCode(_codeCtrl.text);
+    if (code == null) {
+      setState(() => _errorMsg = _t('pairing_ui_code_invalid'));
+      _codeFocus.requestFocus();
       return;
     }
 
@@ -68,119 +84,238 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
       _isLoading = true;
       _errorMsg = null;
     });
-
     try {
       await PairingService.instance.sendPairingRequest(code);
-      if (mounted) {
-        setState(() {
-          _status = 'waiting';
-          _isLoading = false;
-        });
-        _listenToStatus(code);
+      if (!mounted) {
+        return;
       }
-    } catch (e) {
+      setState(() => _status = 'waiting');
+      _listenToStatus(code: code);
+    } catch (error) {
       if (mounted) {
         setState(() {
           _errorMsg = AppErrorMapper.resolve(
-            e,
-            fallbackMessage: 'Mã không hợp lệ.',
+            error,
+            fallbackMessage: _t('pairing_ui_request_error'),
           ).message;
-          _isLoading = false;
         });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
   }
 
-  void _listenToStatus(String code) {
-    _listenToStatusBase(code: code);
-  }
-
-  void _listenToStatusBase({String? code, String? houseId}) {
+  void _listenToStatus({String? code, String? houseId}) {
     _statusSub?.cancel();
     _statusSub = PairingService.instance.listenToMyRequestStatus().listen((
       status,
-    ) async {
-      if (!mounted) return;
-      if (status == 'accepted') {
-        _handleAcceptedState(code: code, houseId: houseId);
-      } else if (status == 'rejected') {
-        setState(() {
-          _status = 'rejected';
-        });
-      } else if (status == 'pending') {
-        setState(() {
-          _status = 'waiting';
-        });
+    ) {
+      if (!mounted) {
+        return;
+      }
+      switch (status) {
+        case 'accepted':
+          unawaited(_handleAcceptedState(code: code, houseId: houseId));
+          break;
+        case 'rejected':
+          if (!_isFinalizing) {
+            setState(() => _status = 'rejected');
+          }
+          break;
+        case 'pending':
+          if (!_isFinalizing) {
+            setState(() => _status = 'waiting');
+          }
+          break;
+        default:
+          break;
       }
     });
   }
 
   Future<void> _handleAcceptedState({String? code, String? houseId}) async {
+    if (_isFinalizing || !mounted) {
+      return;
+    }
+    _isFinalizing = true;
     setState(() {
       _status = 'accepted';
+      _errorMsg = null;
     });
     try {
       await PairingService.instance.finalizeMerge(
         code: code,
         targetHouseId: houseId,
       );
+      if (!mounted) {
+        return;
+      }
+      setState(() => _status = 'success');
+      await Future<void>.delayed(const Duration(milliseconds: 1900));
+      if (mounted) {
+        Navigator.of(context).pop(true);
+      }
+    } catch (error) {
       if (mounted) {
         setState(() {
-          _status = 'success_animation';
+          _status = 'input';
+          _errorMsg = AppErrorMapper.resolve(
+            error,
+            fallbackMessage: _t('pairing_ui_finalize_error'),
+          ).message;
         });
-        await Future.delayed(const Duration(milliseconds: 2500));
-        if (mounted) {
-          Navigator.of(context).pop(); // Close sheet
-        }
       }
-    } catch (e) {
+    } finally {
+      _isFinalizing = false;
+    }
+  }
+
+  Future<void> _cancelRequest() async {
+    if (_isLoading) {
+      return;
+    }
+    setState(() => _isLoading = true);
+    try {
+      await PairingService.instance.cancelMyRequest();
+      if (mounted) {
+        setState(() {
+          _status = 'input';
+          _errorMsg = null;
+        });
+      }
+    } catch (error) {
       if (mounted) {
         setState(() {
           _errorMsg = AppErrorMapper.resolve(
-            e,
-            fallbackMessage: 'Lỗi đồng bộ.',
+            error,
+            fallbackMessage: _t('pairing_ui_cancel_error'),
           ).message;
-          _status = 'input';
         });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
   }
 
+  Future<void> _scanCode() async {
+    final code = await Navigator.of(context).push<String>(
+      MaterialPageRoute<String>(
+        builder: (_) => const PairingQrScannerScreen(),
+        fullscreenDialog: true,
+      ),
+    );
+    if (!mounted || code == null) {
+      return;
+    }
+    _setCode(code);
+  }
+
+  Future<void> _pasteCode() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (!mounted) {
+      return;
+    }
+    final code = PairingInviteQrCodec.normalizeCode(data?.text);
+    if (code == null) {
+      if (mounted) {
+        setState(() => _errorMsg = _t('pairing_ui_clipboard_invalid'));
+      }
+      return;
+    }
+    _setCode(code);
+  }
+
+  void _setCode(String code) {
+    _codeCtrl.value = TextEditingValue(
+      text: PairingInviteQrCodec.formatCode(code),
+      selection: TextSelection.collapsed(
+        offset: PairingInviteQrCodec.formatCode(code).length,
+      ),
+    );
+    setState(() => _errorMsg = null);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final maxHeight = MediaQuery.sizeOf(context).height * 0.90;
     return Container(
       decoration: const BoxDecoration(
-        color: SLColors.paper,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-        border: Border(top: BorderSide(color: SLColors.border, width: 1.2)),
-      ),
-      padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        color: Color(0xFFFCFAF9),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: SLColors.thread.withValues(alpha: 0.38),
-                  borderRadius: BorderRadius.circular(2),
+        top: false,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: EdgeInsets.fromLTRB(
+              24,
+              10,
+              24,
+              MediaQuery.viewInsetsOf(context).bottom + 28,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 540),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 42,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: SLColors.ink.withValues(alpha: 0.16),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (_isRestoring) _buildRestoringState(),
+                    if (!_isRestoring && _status == 'input') _buildInputState(),
+                    if (!_isRestoring && _status == 'waiting')
+                      _buildWaitingState(),
+                    if (!_isRestoring && _status == 'accepted')
+                      _buildAcceptedState(),
+                    if (!_isRestoring && _status == 'rejected')
+                      _buildRejectedState(),
+                    if (!_isRestoring && _status == 'success')
+                      _buildSuccessState(),
+                    if (_errorMsg != null) ...[
+                      const SizedBox(height: 12),
+                      _EntryErrorNotice(message: _errorMsg!),
+                    ],
+                  ],
                 ),
               ),
             ),
-            SLSpacing.h24,
-            if (_status == 'input') _buildInputState(),
-            if (_status == 'waiting') _buildWaitingState(),
-            if (_status == 'accepted') _buildAcceptedState(),
-            if (_status == 'rejected') _buildRejectedState(),
-            if (_status == 'success_animation') _buildSuccessAnimationState(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRestoringState() {
+    return SizedBox(
+      height: 280,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(color: SLColors.primary),
+            const SizedBox(height: 14),
+            Text(
+              _t('pairing_ui_loading'),
+              style: SLTheme.quicksand(
+                color: SLColors.textSecond,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           ],
         ),
       ),
@@ -189,367 +324,475 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
 
   Widget _buildInputState() {
     return Column(
+      key: const ValueKey<String>('input'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          L10nService().translate('Nhập mã ghép nối'),
-          textAlign: TextAlign.center,
-          style: SLTheme.textStyleForKey(
-            'dancingScript',
-            fontSize: 25,
-            fontWeight: FontWeight.w700,
-            color: SLColors.ink,
-          ),
+        _buildHeader(
+          icon: Icons.qr_code_scanner_rounded,
+          title: _t('pairing_ui_enter_title'),
+          subtitle: _t('pairing_ui_enter_subtitle'),
         ),
-        SLSpacing.h8,
-        Text(
-          L10nService().translate(
-            'Nhập mã 12 số mà người ấy đã tạo để tiến hành ghép nối dữ liệu.',
-          ),
-          textAlign: TextAlign.center,
-          style: SLTheme.quicksand(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: SLColors.textSecond,
-          ),
-        ),
-        SLSpacing.h16,
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: SLColors.warningLight,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: SLColors.warning.withValues(alpha: 0.38),
-              width: 1.1,
-            ),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(
-                Icons.warning_amber_rounded,
-                color: Color(0xFFE65100),
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  L10nService().translate(
-                    'CẢNH BÁO: Bạn là NGƯỜI NHẬP MÃ. Khi quá trình liên kết hoàn tất, toàn bộ hình ảnh và dữ liệu ở tài khoản hiện tại của bạn sẽ bị thay thế hoàn toàn bởi dữ liệu của người tạo mã.',
-                  ),
-                  style: SLTheme.quicksand(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFFE65100),
-                    height: 1.4,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        SLSpacing.h24,
-        TextField(
-          controller: _codeCtrl,
-          autofocus: true,
-          keyboardType: TextInputType.number,
-          inputFormatters: [_PairingCodeInputFormatter()],
-          style: SLTheme.quicksand(
-            fontSize: 24,
-            fontWeight: FontWeight.w900,
-            color: const Color(0xFF2C1B22),
-            letterSpacing: 4,
-          ),
-          textAlign: TextAlign.center,
-          decoration: InputDecoration(
-            hintText: 'XXXX-XXXX-XXXX',
-            hintStyle: SLTheme.quicksand(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Colors.grey.shade400,
-              letterSpacing: 4,
-            ),
-            filled: true,
-            fillColor: SLColors.paperBlush,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 20,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: const BorderSide(color: SLColors.border),
-            ),
-          ),
-        ),
-        if (_errorMsg != null) ...[
-          SLSpacing.h12,
-          Text(
-            _errorMsg!,
-            textAlign: TextAlign.center,
-            style: SLTheme.quicksand(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: Colors.red.shade600,
-            ),
-          ),
-        ],
-        SLSpacing.h24,
-        ElevatedButton(
-          onPressed: _isLoading ? null : _sendRequest,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFD81B60),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
+        const SizedBox(height: 16),
+        _buildRecipientNotice(),
+        const SizedBox(height: 20),
+        OutlinedButton.icon(
+          onPressed: _isLoading ? null : _scanCode,
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size.fromHeight(48),
+            foregroundColor: const Color(0xFFB9516D),
+            side: const BorderSide(color: Color(0xFFEACDD5)),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(13),
             ),
-            elevation: 0,
           ),
-          child: _isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: Colors.white,
-                  ),
-                )
-              : Text(
-                  L10nService().translate('Gửi yêu cầu'),
-                  style: SLTheme.quicksand(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWaitingState() {
-    return Column(
-      children: [
-        const Icon(Icons.send_rounded, size: 48, color: Color(0xFF4CAF50)),
-        SLSpacing.h16,
-        Text(
-          'Đã gửi yêu cầu!',
-          style: SLTheme.quicksand(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            color: const Color(0xFF4CAF50),
+          icon: const Icon(Icons.qr_code_scanner_rounded, size: 21),
+          label: Text(
+            _t('pairing_ui_scan_action'),
+            style: SLTheme.quicksand(fontSize: 14, fontWeight: FontWeight.w700),
           ),
         ),
-        SLSpacing.h8,
-        Text(
-          'Vui lòng bảo người ấy mở app và chọn "Chấp nhận" để hoàn tất nhé.',
-          textAlign: TextAlign.center,
-          style: SLTheme.quicksand(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: Colors.grey.shade600,
-          ),
-        ),
-        SLSpacing.h24,
-        const SizedBox(
-          width: 32,
-          height: 32,
-          child: CircularProgressIndicator(
-            strokeWidth: 3,
-            color: Color(0xFF4CAF50),
-          ),
-        ),
-        SLSpacing.h24,
+        const SizedBox(height: 12),
         Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            TextButton(
-              onPressed: () {
-                PairingService.instance.cancelMyRequest();
-                setState(() => _status = 'input');
-              },
+            Expanded(
               child: Text(
-                'Hủy yêu cầu',
+                _t('pairing_ui_code_label'),
                 style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w800,
-                  color: Colors.red,
+                  color: SLColors.ink,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-            const SizedBox(width: 24),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                'Đóng',
+            TextButton.icon(
+              onPressed: _isLoading ? null : _pasteCode,
+              icon: const Icon(Icons.content_paste_rounded, size: 15),
+              label: Text(
+                _t('pairing_ui_paste'),
                 style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w800,
-                  color: Colors.grey,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                 ),
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFFB9516D),
+                minimumSize: const Size(48, 48),
               ),
             ),
           ],
         ),
+        Semantics(
+          label: _t('pairing_ui_code_label'),
+          child: TextField(
+            controller: _codeCtrl,
+            focusNode: _codeFocus,
+            readOnly: _isLoading,
+            autofocus: false,
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _sendRequest(),
+            onChanged: (_) {
+              if (_errorMsg != null) {
+                setState(() => _errorMsg = null);
+              }
+            },
+            inputFormatters: const <TextInputFormatter>[
+              _PairingCodeInputFormatter(),
+            ],
+            textAlign: TextAlign.center,
+            style: SLTheme.quicksand(
+              color: SLColors.ink,
+              fontSize: 21,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.8,
+            ),
+            decoration: InputDecoration(
+              hintText: _t('pairing_ui_code_hint'),
+              hintStyle: SLTheme.quicksand(
+                color: SLColors.textTertiary,
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 1.6,
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 16,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(13),
+                borderSide: const BorderSide(color: Color(0xFFE8DDDC)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(13),
+                borderSide: const BorderSide(
+                  color: Color(0xFFB9516D),
+                  width: 1.5,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 18),
+        FilledButton.icon(
+          onPressed: _isLoading ? null : _sendRequest,
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(50),
+            backgroundColor: const Color(0xFFB9516D),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(13),
+            ),
+          ),
+          icon: _isLoading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2.2,
+                  ),
+                )
+              : const Icon(Icons.arrow_forward_rounded, size: 19),
+          label: Text(
+            _t('pairing_ui_request_action'),
+            style: SLTheme.quicksand(fontSize: 14, fontWeight: FontWeight.w700),
+          ),
+        ),
       ],
+    );
+  }
+
+  Widget _buildHeader({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFCEDF0),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: const Color(0xFFB9516D), size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: SLTheme.quicksand(
+                  color: SLColors.ink,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            IconButton(
+              tooltip: _t('pairing_ui_close'),
+              onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+              icon: const Icon(
+                Icons.close_rounded,
+                color: SLColors.textSecond,
+                size: 21,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Text(
+          subtitle,
+          style: SLTheme.quicksand(
+            color: SLColors.textSecond,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            height: 1.45,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecipientNotice() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF4EEED),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.shield_outlined, color: Color(0xFF714352), size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              _t('pairing_ui_recipient_notice'),
+              style: SLTheme.quicksand(
+                color: SLColors.textSecond,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                height: 1.42,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWaitingState() {
+    return _StatusPanel(
+      key: const ValueKey<String>('waiting'),
+      icon: Icons.mark_email_read_outlined,
+      iconColor: const Color(0xFF714352),
+      title: _t('pairing_ui_wait_title'),
+      body: _t('pairing_ui_wait_body'),
+      footer: Column(
+        children: [
+          const SizedBox(
+            width: 30,
+            height: 30,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.8,
+              color: Color(0xFF714352),
+            ),
+          ),
+          const SizedBox(height: 20),
+          OutlinedButton(
+            onPressed: _isLoading ? null : _cancelRequest,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: SLColors.textSecond,
+              side: const BorderSide(color: SLColors.border),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+            ),
+            child: Text(
+              _t('pairing_ui_cancel_request'),
+              style: SLTheme.quicksand(fontWeight: FontWeight.w800),
+            ),
+          ),
+          TextButton(
+            onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+            child: Text(
+              _t('pairing_ui_close'),
+              style: SLTheme.quicksand(
+                color: SLColors.textSecond,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildAcceptedState() {
-    return Column(
-      children: [
-        const Icon(
-          Icons.check_circle_rounded,
-          size: 48,
-          color: Color(0xFF4CAF50),
-        ),
-        SLSpacing.h16,
-        Text(
-          'Yêu cầu được chấp nhận!',
-          style: SLTheme.quicksand(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            color: const Color(0xFF4CAF50),
-          ),
-        ),
-        SLSpacing.h8,
-        Text(
-          'Đang đồng bộ dữ liệu tổ ấm, vui lòng chờ trong giây lát...',
-          textAlign: TextAlign.center,
-          style: SLTheme.quicksand(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: Colors.grey.shade600,
-          ),
-        ),
-        SLSpacing.h24,
-        const SizedBox(
+    return _StatusPanel(
+      key: const ValueKey<String>('accepted'),
+      icon: Icons.sync_rounded,
+      iconColor: const Color(0xFF4C9A79),
+      title: _t('pairing_ui_accepting_title'),
+      body: _t('pairing_ui_accepting_body'),
+      footer: const Padding(
+        padding: EdgeInsets.only(top: 8),
+        child: SizedBox(
           width: 32,
           height: 32,
           child: CircularProgressIndicator(
             strokeWidth: 3,
-            color: Color(0xFF4CAF50),
+            color: Color(0xFF4C9A79),
           ),
         ),
-      ],
+      ),
     );
   }
 
   Widget _buildRejectedState() {
-    return Column(
-      children: [
-        const Icon(Icons.cancel_rounded, size: 48, color: Colors.red),
-        SLSpacing.h16,
-        Text(
-          'Yêu cầu bị từ chối!',
-          style: SLTheme.quicksand(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            color: Colors.red,
+    return _StatusPanel(
+      key: const ValueKey<String>('rejected'),
+      icon: Icons.person_off_outlined,
+      iconColor: const Color(0xFFC9576E),
+      title: _t('pairing_ui_rejected_title'),
+      body: _t('pairing_ui_rejected_body'),
+      footer: FilledButton(
+        onPressed: _isLoading
+            ? null
+            : () {
+                setState(() {
+                  _status = 'input';
+                  _errorMsg = null;
+                });
+              },
+        style: FilledButton.styleFrom(
+          backgroundColor: SLColors.primary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
         ),
-        SLSpacing.h8,
-        Text(
-          'Người ấy đã từ chối yêu cầu ghép nối của bạn.',
-          textAlign: TextAlign.center,
-          style: SLTheme.quicksand(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: Colors.grey.shade600,
-          ),
+        child: Text(
+          _t('pairing_ui_try_again'),
+          style: SLTheme.quicksand(fontWeight: FontWeight.w800),
         ),
-        SLSpacing.h24,
-        ElevatedButton(
-          onPressed: () {
-            PairingService.instance.cancelMyRequest();
-            setState(() {
-              _status = 'input';
-            });
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.grey.shade200,
-            foregroundColor: Colors.black87,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            elevation: 0,
-          ),
-          child: Text(
-            'Thử lại',
-            style: SLTheme.quicksand(fontWeight: FontWeight.w800),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
-  Widget _buildSuccessAnimationState() {
+  Widget _buildSuccessState() {
     return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 1.0, end: 0.0),
-      duration: const Duration(milliseconds: 2500),
-      curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
-      builder: (context, opacity, child) {
-        return Opacity(
-          opacity: opacity,
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE91E63).withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.favorite_rounded,
-                  size: 64,
-                  color: Color(0xFFE91E63),
-                ),
-              ),
-              SLSpacing.h24,
-              Text(
-                'Ghép Nối Thành Công!',
-                style: SLTheme.quicksand(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFFE91E63),
-                ),
-              ),
-              SLSpacing.h8,
-              Text(
-                'Tổ ấm của hai bạn đã sẵn sàng.',
-                textAlign: TextAlign.center,
-                style: SLTheme.quicksand(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-              SLSpacing.h32,
-            ],
+      key: const ValueKey<String>('success'),
+      tween: Tween<double>(begin: 0.88, end: 1),
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeOutBack,
+      builder: (context, scale, child) =>
+          Transform.scale(scale: scale, child: child),
+      child: _StatusPanel(
+        icon: Icons.favorite_rounded,
+        iconColor: SLColors.primary,
+        title: _t('pairing_ui_success_title'),
+        body: _t('pairing_ui_success_body'),
+        footer: const SizedBox.shrink(),
+      ),
+    );
+  }
+}
+
+class _StatusPanel extends StatelessWidget {
+  const _StatusPanel({
+    super.key,
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.body,
+    required this.footer,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String body;
+  final Widget footer;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 30, 24, 22),
+      decoration: BoxDecoration(
+        color: SLColors.bgSubtle,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: SLColors.borderLight),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Icon(icon, color: iconColor, size: 31),
           ),
-        );
-      },
+          const SizedBox(height: 16),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: SLTheme.quicksand(
+              color: SLColors.ink,
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            body,
+            textAlign: TextAlign.center,
+            style: SLTheme.quicksand(
+              color: SLColors.textSecond,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 20),
+          footer,
+        ],
+      ),
+    );
+  }
+}
+
+class _EntryErrorNotice extends StatelessWidget {
+  const _EntryErrorNotice({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: SLColors.dangerLight,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: SLColors.danger.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.error_outline_rounded,
+            color: SLColors.danger,
+            size: 18,
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Text(
+              message,
+              style: SLTheme.quicksand(
+                color: const Color(0xFF9A344C),
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
 class _PairingCodeInputFormatter extends TextInputFormatter {
+  const _PairingCodeInputFormatter();
+
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    var text = newValue.text.replaceAll(RegExp(r'\D'), '');
-    if (text.length > 12) text = text.substring(0, 12);
-
-    var formatted = '';
-    for (var i = 0; i < text.length; i++) {
-      if (i > 0 && i % 4 == 0) formatted += '-';
-      formatted += text[i];
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    final limited = digits.length > PairingInviteQrCodec.codeLength
+        ? digits.substring(0, PairingInviteQrCodec.codeLength)
+        : digits;
+    final grouped = StringBuffer();
+    for (var index = 0; index < limited.length; index++) {
+      if (index > 0 && index % 4 == 0) {
+        grouped.write('-');
+      }
+      grouped.write(limited[index]);
     }
 
+    final text = grouped.toString();
     return TextEditingValue(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
     );
   }
 }

@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:permission_handler/permission_handler.dart' as app_permission;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -34,8 +35,9 @@ class LocationService {
   static const double _kMaxPlausibleSpeedMps = 70;
 
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
-  static const MethodChannel _deviceInfoChannel =
-      MethodChannel('soul_locket/device_info');
+  static const MethodChannel _deviceInfoChannel = MethodChannel(
+    'soul_locket/device_info',
+  );
   static StreamSubscription<Position>? _positionStream;
   static String? _activeHouseId;
   static String? _activeRole;
@@ -46,10 +48,13 @@ class LocationService {
   static StreamSubscription? _partnerMapVisibilitySub;
   static bool _partnerIsViewingMap = false;
 
-  Future<bool> requestPermission(
-      {BuildContext? context, bool forcePrompt = false}) async {
+  Future<bool> requestPermission({
+    BuildContext? context,
+    bool forcePrompt = false,
+  }) async {
     try {
-      final prefs = OfflineCacheService.getPrefsSync() ??
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
 
       final permission = await Geolocator.checkPermission().timeout(
@@ -64,9 +69,8 @@ class LocationService {
         }
         final granted = await PermissionHelper.requestLocationWithDisclosure(
           context,
-          title: 'Cho phép truy cập vị trí',
-          disclosure:
-              'SoulLocket thu thập vị trí của bạn để hiển thị bản đồ chung, khoảng cách giữa hai bạn, vị trí hiện tại và các kỷ niệm/check-in gắn địa điểm trong ngôi nhà của bạn. Dữ liệu vị trí chỉ dùng cho các tính năng bản đồ của SoulLocket.',
+          title: context.tr('map_refresh_permission_title'),
+          disclosure: context.tr('map_refresh_disclosure'),
         );
         await prefs.setBool('il_gps_prompted', true);
         if (!granted) {
@@ -86,8 +90,10 @@ class LocationService {
       // Đợi tối đa 3 giây để hệ thống phản hồi trạng thái dịch vụ (đề phòng delay)
       bool serviceEnabled = false;
       for (int i = 0; i < 3; i++) {
-        serviceEnabled = await Geolocator.isLocationServiceEnabled()
-            .timeout(const Duration(seconds: 2), onTimeout: () => kIsWeb);
+        serviceEnabled = await Geolocator.isLocationServiceEnabled().timeout(
+          const Duration(seconds: 2),
+          onTimeout: () => kIsWeb,
+        );
         if (serviceEnabled) break;
         await Future.delayed(const Duration(milliseconds: 800));
       }
@@ -100,10 +106,8 @@ class LocationService {
     } catch (e) {
       if (kDebugMode) {
         debugPrint(
-            'LocationService.requestPermission error: ${AppErrorMapper.resolve(
-          e,
-          fallbackMessage: 'Không thể xin quyền vị trí lúc này.',
-        ).message}');
+          'LocationService.requestPermission error: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể xin quyền vị trí lúc này.').message}',
+        );
       }
       return false;
     }
@@ -134,19 +138,26 @@ class LocationService {
     return status == LocationPermission.always;
   }
 
-  Future<bool> startTracking(String houseId, String role,
-      {BuildContext? context, bool forcePrompt = false}) async {
+  Future<bool> startTracking(
+    String houseId,
+    String role, {
+    BuildContext? context,
+    bool forcePrompt = false,
+  }) async {
     final normalizedHouseId = houseId.trim();
     final normalizedRole = role.trim();
     if (normalizedHouseId.isEmpty || normalizedRole.isEmpty) {
       return false;
     }
 
-    final hasPermission =
-        await requestPermission(context: context, forcePrompt: forcePrompt);
+    final hasPermission = await requestPermission(
+      context: context,
+      forcePrompt: forcePrompt,
+    );
     if (!hasPermission) return false;
 
-    final sameTarget = _activeHouseId == normalizedHouseId &&
+    final sameTarget =
+        _activeHouseId == normalizedHouseId &&
         _activeRole == normalizedRole &&
         _positionStream != null;
     if (sameTarget) {
@@ -169,16 +180,19 @@ class LocationService {
         .child('houses/$normalizedHouseId/presence/$oppositeRole/isViewingMap')
         .onValue
         .listen((event) {
-      _partnerIsViewingMap = event.snapshot.value == true;
-    });
+          _partnerIsViewingMap = event.snapshot.value == true;
+        });
 
     try {
       final initialPosition = await Geolocator.getCurrentPosition(
         locationSettings: LocationSettings(accuracy: _bestForegroundAccuracy),
       ).timeout(_kInitialPositionTimeout);
       await _handlePositionUpdate(
-          normalizedHouseId, normalizedRole, initialPosition,
-          forceWrite: true);
+        normalizedHouseId,
+        normalizedRole,
+        initialPosition,
+        forceWrite: true,
+      );
     } catch (e) {
       if (kDebugMode) {
         final errorMsg = AppErrorMapper.resolve(
@@ -193,38 +207,41 @@ class LocationService {
         final lastKnown = await Geolocator.getLastKnownPosition();
         if (lastKnown != null && _isFreshEnoughLastKnown(lastKnown)) {
           await _handlePositionUpdate(
-              normalizedHouseId, normalizedRole, lastKnown,
-              forceWrite: true);
+            normalizedHouseId,
+            normalizedRole,
+            lastKnown,
+            forceWrite: true,
+          );
         }
       } catch (e) {
         if (kDebugMode) {
           debugPrint(
-              'LocationService.getLastKnownPosition error: ${AppErrorMapper.resolve(
-            e,
-            fallbackMessage: 'Không thể đọc vị trí gần nhất lúc này.',
-          ).message}');
+            'LocationService.getLastKnownPosition error: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể đọc vị trí gần nhất lúc này.').message}',
+          );
         }
       }
     }
 
     final useBackgroundSettings = await hasBackgroundPermission();
-    _positionStream = Geolocator.getPositionStream(
-      locationSettings: useBackgroundSettings
-          ? _backgroundCapableLocationSettings
-          : _foregroundLocationSettings,
-    ).listen(
-      (Position position) =>
-          _handlePositionUpdate(normalizedHouseId, normalizedRole, position),
-      onError: (e, st) {
-        if (kDebugMode) {
-          debugPrint(
-              'LocationService.positionStream error: ${AppErrorMapper.resolve(
-            e,
-            fallbackMessage: 'Luồng vị trí gặp lỗi.',
-          ).message}');
-        }
-      },
-    );
+    _positionStream =
+        Geolocator.getPositionStream(
+          locationSettings: useBackgroundSettings
+              ? _backgroundCapableLocationSettings
+              : _foregroundLocationSettings,
+        ).listen(
+          (Position position) => _handlePositionUpdate(
+            normalizedHouseId,
+            normalizedRole,
+            position,
+          ),
+          onError: (e, st) {
+            if (kDebugMode) {
+              debugPrint(
+                'LocationService.positionStream error: ${AppErrorMapper.resolve(e, fallbackMessage: 'Luồng vị trí gặp lỗi.').message}',
+              );
+            }
+          },
+        );
 
     return true;
   }
@@ -267,7 +284,8 @@ class LocationService {
       if (errStr.contains('permission-denied') ||
           errStr.contains('permission denied')) {
         debugPrint(
-            'Location stop write blocked (permission-denied). Silently failing.');
+          'Location stop write blocked (permission-denied). Silently failing.',
+        );
       } else {
         ErrorLoggerService.instance.logError(
           e,
@@ -285,9 +303,14 @@ class LocationService {
       kIsWeb ? LocationAccuracy.high : LocationAccuracy.best;
 
   LocationSettings get _foregroundLocationSettings {
-    final isRealtime = _partnerIsViewingMap || MapScreen.isMapScreenActive.value;
-    final accuracy = isRealtime ? LocationAccuracy.high : LocationAccuracy.medium;
-    final interval = isRealtime ? const Duration(seconds: 10) : const Duration(seconds: 30);
+    final isRealtime =
+        _partnerIsViewingMap || MapScreen.isMapScreenActive.value;
+    final accuracy = isRealtime
+        ? LocationAccuracy.high
+        : LocationAccuracy.medium;
+    final interval = isRealtime
+        ? const Duration(seconds: 10)
+        : const Duration(seconds: 30);
     final distanceFilter = isRealtime ? 15 : 50;
 
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
@@ -307,16 +330,18 @@ class LocationService {
         showBackgroundLocationIndicator: true,
       );
     }
-    return LocationSettings(
-      accuracy: accuracy,
-      distanceFilter: distanceFilter,
-    );
+    return LocationSettings(accuracy: accuracy, distanceFilter: distanceFilter);
   }
 
   LocationSettings get _backgroundCapableLocationSettings {
-    final isRealtime = _partnerIsViewingMap || MapScreen.isMapScreenActive.value;
-    final accuracy = isRealtime ? LocationAccuracy.high : LocationAccuracy.medium;
-    final interval = isRealtime ? const Duration(seconds: 15) : const Duration(seconds: 45);
+    final isRealtime =
+        _partnerIsViewingMap || MapScreen.isMapScreenActive.value;
+    final accuracy = isRealtime
+        ? LocationAccuracy.high
+        : LocationAccuracy.medium;
+    final interval = isRealtime
+        ? const Duration(seconds: 15)
+        : const Duration(seconds: 45);
     final distanceFilter = isRealtime ? 20 : 60;
 
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
@@ -328,7 +353,8 @@ class LocationService {
           notificationTitle: 'SoulLocket đang chia sẻ vị trí nền',
           notificationText:
               'Vị trí của bạn đang được cập nhật cho bản đồ chung.',
-          enableWakeLock: false, // ⚡ Không giữ WakeLock liên tục để tiết kiệm 85% pin
+          enableWakeLock:
+              false, // ⚡ Không giữ WakeLock liên tục để tiết kiệm 85% pin
         ),
       );
     }
@@ -394,7 +420,8 @@ class LocationService {
       position.longitude,
     );
     final speedMps = movedMeters / elapsedSeconds;
-    final significantlyBetter = previous.accuracy.isFinite &&
+    final significantlyBetter =
+        previous.accuracy.isFinite &&
         position.accuracy.isFinite &&
         previous.accuracy - position.accuracy >= _kAccuracyImprovementMeters;
 
@@ -429,7 +456,8 @@ class LocationService {
       position.latitude,
       position.longitude,
     );
-    final accuracyImproved = previous.accuracy.isFinite &&
+    final accuracyImproved =
+        previous.accuracy.isFinite &&
         position.accuracy.isFinite &&
         previous.accuracy - position.accuracy >= _kAccuracyImprovementMeters;
 
@@ -494,7 +522,8 @@ class LocationService {
       'ts': now,
       'acc': position.accuracy,
       'quality': _locationQuality(position.accuracy),
-      'isLowAccuracy': position.accuracy.isFinite &&
+      'isLowAccuracy':
+          position.accuracy.isFinite &&
           position.accuracy > _kFairAccuracyMeters,
       if (_positionSourceTs(position) != null)
         'sourceTs': _positionSourceTs(position),
@@ -511,7 +540,7 @@ class LocationService {
         '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
     final historyKey =
         _dbRef.child('gps_history/$houseId/$role/$dateStr').push().key ??
-            now.toString();
+        now.toString();
 
     final isBackground =
         WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed;
@@ -538,7 +567,8 @@ class LocationService {
     } on FirebaseException catch (e) {
       if (e.code == 'permission-denied') {
         debugPrint(
-            'Location write blocked (permission-denied). Silently failing.');
+          'Location write blocked (permission-denied). Silently failing.',
+        );
       } else {
         rethrow;
       }
@@ -551,11 +581,7 @@ class LocationService {
     }
 
     unawaited(
-      _maybeTrimGpsHistory(
-        houseId: houseId,
-        role: role,
-        dateKey: dateStr,
-      ),
+      _maybeTrimGpsHistory(houseId: houseId, role: role, dateKey: dateStr),
     );
   }
 
@@ -621,10 +647,8 @@ class LocationService {
     } catch (e) {
       if (kDebugMode) {
         debugPrint(
-            'LocationService._maybeTrimGpsHistory error: ${AppErrorMapper.resolve(
-          e,
-          fallbackMessage: 'Không thể dọn lịch sử GPS lúc này.',
-        ).message}');
+          'LocationService._maybeTrimGpsHistory error: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể dọn lịch sử GPS lúc này.').message}',
+        );
       }
     }
   }
@@ -634,10 +658,12 @@ class LocationService {
     required String role,
   }) async {
     final historyRoot = _dbRef.child('gps_history/$houseId/$role');
-    final oldestKeptDay = DateTime.now()
-        .subtract(const Duration(days: _kGpsHistoryRetentionDays - 1));
-    final deleteThroughKey =
-        _formatDateKey(oldestKeptDay.subtract(const Duration(days: 1)));
+    final oldestKeptDay = DateTime.now().subtract(
+      const Duration(days: _kGpsHistoryRetentionDays - 1),
+    );
+    final deleteThroughKey = _formatDateKey(
+      oldestKeptDay.subtract(const Duration(days: 1)),
+    );
     final snap = await historyRoot
         .orderByKey()
         .endAt(deleteThroughKey)
@@ -660,24 +686,27 @@ class LocationService {
     required String dateKey,
   }) async {
     final dayPath = 'gps_history/$houseId/$role/$dateKey';
-    final snap =
-        await _dbRef.child(dayPath).get().timeout(const Duration(seconds: 10));
+    final snap = await _dbRef
+        .child(dayPath)
+        .get()
+        .timeout(const Duration(seconds: 10));
     final raw = _toStringDynamicMap(snap.value);
     if (raw.length <= _kGpsHistoryMaxPointsPerDay) {
       return;
     }
 
-    final rankedEntries = raw.entries
-        .map(
-          (entry) => MapEntry(
-            entry.key,
-            _readTimestamp(_toStringDynamicMap(entry.value)['ts']),
-          ),
-        )
-        .where((entry) => entry.value != null)
-        .cast<MapEntry<String, int>>()
-        .toList()
-      ..sort((a, b) => a.value.compareTo(b.value));
+    final rankedEntries =
+        raw.entries
+            .map(
+              (entry) => MapEntry(
+                entry.key,
+                _readTimestamp(_toStringDynamicMap(entry.value)['ts']),
+              ),
+            )
+            .where((entry) => entry.value != null)
+            .cast<MapEntry<String, int>>()
+            .toList()
+          ..sort((a, b) => a.value.compareTo(b.value));
 
     if (rankedEntries.length <= _kGpsHistoryMaxPointsPerDay) {
       return;

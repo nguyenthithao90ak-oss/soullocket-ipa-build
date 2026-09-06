@@ -32,6 +32,7 @@ import 'diary/controllers/diary_composer_controller.dart';
 import 'diary/controllers/diary_feed_controller.dart';
 import 'diary/controllers/diary_guard_controller.dart';
 import 'diary/controllers/diary_memory_controller.dart';
+import 'diary/utils/diary_memory_media.dart';
 import 'diary_item.dart';
 import 'diary_list.dart';
 import 'diary/widgets/diary_memory_section.dart';
@@ -159,7 +160,8 @@ class _DiaryTabState extends State<DiaryTab>
   }
 
   void _syncSelectionOverlayVisibility() {
-    final bool visible = _isTabActive &&
+    final bool visible =
+        _isTabActive &&
         _currentTab == 'memory' &&
         _memoryController.isSelectionMode &&
         _memoryController.selectedMemories.isNotEmpty;
@@ -176,11 +178,7 @@ class _DiaryTabState extends State<DiaryTab>
     _handleControllerChange();
   }
 
-
-
-  Future<void> _createMemoryShareLink(
-    List<Map<String, dynamic>> photos,
-  ) async {
+  Future<void> _createMemoryShareLink(List<Map<String, dynamic>> photos) async {
     final houseId = _houseId?.trim() ?? '';
     if (houseId.isEmpty) {
       _showDiarySnackBar(
@@ -366,27 +364,27 @@ class _DiaryTabState extends State<DiaryTab>
       (
         days: 7,
         label: context.tr('home_7ngy_d51ffb'),
-        subtitle: context.tr('home_mcnh_a57a8e')
+        subtitle: context.tr('home_mcnh_a57a8e'),
       ),
       (
         days: 14,
         label: context.tr('home_14ngy_b98056'),
-        subtitle: context.tr('home_thm1tun_2da196')
+        subtitle: context.tr('home_thm1tun_2da196'),
       ),
       (
         days: 30,
         label: context.tr('home_30ngy_06199c'),
-        subtitle: context.tr('home_khong1thng_5fa21c')
+        subtitle: context.tr('home_khong1thng_5fa21c'),
       ),
       (
         days: 90,
         label: context.tr('home_3thng_f220f0'),
-        subtitle: context.tr('home_giluhn_238ae5')
+        subtitle: context.tr('home_giluhn_238ae5'),
       ),
       (
         days: 183,
         label: context.tr('home_6thng_06506c'),
-        subtitle: context.tr('home_tia_9b8ce7')
+        subtitle: context.tr('home_tia_9b8ce7'),
       ),
     ];
 
@@ -468,8 +466,9 @@ class _DiaryTabState extends State<DiaryTab>
       barrierDismissible: true,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           backgroundColor: Colors.white,
           title: Text(
             'Mật khẩu bảo vệ (Tùy chọn)',
@@ -533,15 +532,19 @@ class _DiaryTabState extends State<DiaryTab>
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide:
-                        const BorderSide(color: Color(0xFFD81B60), width: 1.8),
+                    borderSide: const BorderSide(
+                      color: Color(0xFFD81B60),
+                      width: 1.8,
+                    ),
                   ),
                 ),
               ),
             ],
           ),
-          actionsPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          actionsPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
@@ -560,9 +563,12 @@ class _DiaryTabState extends State<DiaryTab>
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFFD81B60),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
               ),
               child: Text(
                 controller.text.trim().isEmpty
@@ -686,8 +692,6 @@ class _DiaryTabState extends State<DiaryTab>
     }
   }
 
-
-
   @override
   void initState() {
     super.initState();
@@ -800,9 +804,7 @@ class _DiaryTabState extends State<DiaryTab>
     }
     _handleFeedControllerChange();
 
-    await _guardController.prepareAccessState(
-      houseId: resolvedHouseId,
-    );
+    await _guardController.prepareAccessState(houseId: resolvedHouseId);
     if (!mounted) {
       return;
     }
@@ -910,7 +912,11 @@ class _DiaryTabState extends State<DiaryTab>
         houseId: houseId,
         role: role,
       );
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/home/tabs/diary_tab.dart: $error',
+      );
+    }
   }
 
   void _showDiarySnackBar(String message, {Color? backgroundColor}) {
@@ -1002,7 +1008,8 @@ class _DiaryTabState extends State<DiaryTab>
       if (!mounted) return;
       _handleFeedControllerChange();
       _showDiarySnackBar(
-          L10nService().translate(context.tr('home_xatms_0872c5')));
+        L10nService().translate(context.tr('home_xatms_0872c5')),
+      );
     } catch (error) {
       if (!mounted) return;
       _showDiarySnackBar(
@@ -1042,13 +1049,16 @@ class _DiaryTabState extends State<DiaryTab>
     List<Map<String, dynamic>> allPhotos,
   ) {
     // Refresh signed URL cho item hiện tại trước khi mở viewer
-    unawaited(_memoryController.ensureMemoryPhotoUrl(
-      houseId: _houseId ?? '',
-      item: initialItem,
-    ));
+    unawaited(
+      _memoryController.ensureMemoryPhotoUrl(
+        houseId: _houseId ?? '',
+        item: initialItem,
+      ),
+    );
 
-    final initialIndex =
-        allPhotos.indexWhere((photo) => photo['id'] == initialItem['id']);
+    final initialIndex = allPhotos.indexWhere(
+      (photo) => photo['id'] == initialItem['id'],
+    );
     int currentIndex = initialIndex < 0 ? 0 : initialIndex;
     final pageController = PageController(initialPage: currentIndex);
     _warmMemoryViewerAroundIndex(allPhotos, currentIndex);
@@ -1069,8 +1079,9 @@ class _DiaryTabState extends State<DiaryTab>
 
           return StatefulBuilder(
             builder: (context, setState) {
-              final currentItem =
-                  allPhotos.isNotEmpty ? allPhotos[currentIndex] : initialItem;
+              final currentItem = allPhotos.isNotEmpty
+                  ? allPhotos[currentIndex]
+                  : initialItem;
 
               return Stack(
                 children: [
@@ -1117,10 +1128,12 @@ class _DiaryTabState extends State<DiaryTab>
                                 isZoomedInNotifier.value = false;
                                 _warmMemoryViewerAroundIndex(allPhotos, index);
                                 // Refresh signed URL cho item mới
-                                unawaited(_memoryController.ensureMemoryPhotoUrl(
-                                  houseId: _houseId ?? '',
-                                  item: allPhotos[index],
-                                ));
+                                unawaited(
+                                  _memoryController.ensureMemoryPhotoUrl(
+                                    houseId: _houseId ?? '',
+                                    item: allPhotos[index],
+                                  ),
+                                );
                               },
                               itemBuilder: (context, index) {
                                 return _MemoryViewerPage(
@@ -1129,7 +1142,9 @@ class _DiaryTabState extends State<DiaryTab>
                                   dragScaleNotifier: dragScaleNotifier,
                                   isZoomedInNotifier: isZoomedInNotifier,
                                   onLongPress: () => _showMemoryViewerActions(
-                                      dialogContext, allPhotos[index]),
+                                    dialogContext,
+                                    allPhotos[index],
+                                  ),
                                   imageProviderBuilder: _memoryImageProvider,
                                 );
                               },
@@ -1142,7 +1157,9 @@ class _DiaryTabState extends State<DiaryTab>
                                 dragScaleNotifier: dragScaleNotifier,
                                 isZoomedInNotifier: isZoomedInNotifier,
                                 onLongPress: () => _showMemoryViewerActions(
-                                    dialogContext, initialItem),
+                                  dialogContext,
+                                  initialItem,
+                                ),
                                 imageProviderBuilder: _memoryImageProvider,
                               ),
                             ),
@@ -1153,8 +1170,10 @@ class _DiaryTabState extends State<DiaryTab>
                                 valueListenable: bgOpacityNotifier,
                                 builder: (context, dragOpacity, _) {
                                   final double baseUiOpacity =
-                                      ((dragOpacity - 0.82) / 0.18)
-                                          .clamp(0.0, 1.0);
+                                      ((dragOpacity - 0.82) / 0.18).clamp(
+                                        0.0,
+                                        1.0,
+                                      );
                                   final double uiOpacity =
                                       baseUiOpacity * animation.value;
                                   return Opacity(
@@ -1172,17 +1191,19 @@ class _DiaryTabState extends State<DiaryTab>
                                                     end: Alignment.bottomCenter,
                                                     colors: [
                                                       Colors.black.withValues(
-                                                          alpha: 0.45),
+                                                        alpha: 0.45,
+                                                      ),
                                                       Colors.transparent,
                                                       Colors.transparent,
                                                       Colors.black.withValues(
-                                                          alpha: 0.45),
+                                                        alpha: 0.45,
+                                                      ),
                                                     ],
                                                     stops: const [
                                                       0.0,
                                                       0.15,
                                                       0.85,
-                                                      1.0
+                                                      1.0,
                                                     ],
                                                   ),
                                                 ),
@@ -1192,17 +1213,18 @@ class _DiaryTabState extends State<DiaryTab>
                                           Positioned(
                                             left: 18,
                                             right: 86,
-                                            bottom: MediaQuery.of(context)
-                                                    .padding
-                                                    .bottom +
+                                            bottom:
+                                                MediaQuery.of(
+                                                  context,
+                                                ).padding.bottom +
                                                 18,
                                             child: IgnorePointer(
                                               child: Container(
                                                 padding:
                                                     const EdgeInsets.symmetric(
-                                                  horizontal: 14,
-                                                  vertical: 12,
-                                                ),
+                                                      horizontal: 14,
+                                                      vertical: 12,
+                                                    ),
                                                 decoration: BoxDecoration(
                                                   color: Colors.black
                                                       .withValues(alpha: 0.42),
@@ -1211,7 +1233,8 @@ class _DiaryTabState extends State<DiaryTab>
                                                   border: Border.all(
                                                     color: Colors.white
                                                         .withValues(
-                                                            alpha: 0.10),
+                                                          alpha: 0.10,
+                                                        ),
                                                   ),
                                                 ),
                                                 child: Row(
@@ -1222,14 +1245,19 @@ class _DiaryTabState extends State<DiaryTab>
                                                       decoration: BoxDecoration(
                                                         gradient:
                                                             const LinearGradient(
-                                                          colors: [
-                                                            Color(0xFFFF6F91),
-                                                            Color(0xFF7C8BFF)
-                                                          ],
-                                                        ),
+                                                              colors: [
+                                                                Color(
+                                                                  0xFFFF6F91,
+                                                                ),
+                                                                Color(
+                                                                  0xFF7C8BFF,
+                                                                ),
+                                                              ],
+                                                            ),
                                                         borderRadius:
-                                                            BorderRadius
-                                                                .circular(12),
+                                                            BorderRadius.circular(
+                                                              12,
+                                                            ),
                                                       ),
                                                       child: const Icon(
                                                         Icons.favorite_rounded,
@@ -1252,32 +1280,33 @@ class _DiaryTabState extends State<DiaryTab>
                                                             overflow:
                                                                 TextOverflow
                                                                     .ellipsis,
-                                                            style: SLTheme
-                                                                .quicksand(
-                                                              color:
-                                                                  Colors.white,
-                                                              fontSize: 13,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w900,
-                                                            ),
+                                                            style:
+                                                                SLTheme.quicksand(
+                                                                  color: Colors
+                                                                      .white,
+                                                                  fontSize: 13,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w900,
+                                                                ),
                                                           ),
                                                           const SizedBox(
-                                                              height: 2),
+                                                            height: 2,
+                                                          ),
                                                           Text(
                                                             _formatMemoryTimestamp(
-                                                                currentItem),
+                                                              currentItem,
+                                                            ),
                                                             maxLines: 1,
                                                             overflow:
                                                                 TextOverflow
                                                                     .ellipsis,
-                                                            style: SLTheme
-                                                                .quicksand(
+                                                            style: SLTheme.quicksand(
                                                               color: Colors
                                                                   .white
                                                                   .withValues(
-                                                                      alpha:
-                                                                          0.68),
+                                                                    alpha: 0.68,
+                                                                  ),
                                                               fontSize: 11,
                                                               fontWeight:
                                                                   FontWeight
@@ -1293,14 +1322,16 @@ class _DiaryTabState extends State<DiaryTab>
                                             ),
                                           ),
                                           Positioned(
-                                            top: MediaQuery.of(context)
-                                                    .padding
-                                                    .top +
+                                            top:
+                                                MediaQuery.of(
+                                                  context,
+                                                ).padding.top +
                                                 16,
                                             left: 12,
                                             child: IconButton(
-                                              tooltip:
-                                                  context.tr('home_ng_f63d1e'),
+                                              tooltip: context.tr(
+                                                'home_ng_f63d1e',
+                                              ),
                                               onPressed: () =>
                                                   Navigator.pop(dialogContext),
                                               icon: const Icon(
@@ -1311,14 +1342,16 @@ class _DiaryTabState extends State<DiaryTab>
                                             ),
                                           ),
                                           Positioned(
-                                            top: MediaQuery.of(context)
-                                                    .padding
-                                                    .top +
+                                            top:
+                                                MediaQuery.of(
+                                                  context,
+                                                ).padding.top +
                                                 16,
                                             right: 12,
                                             child: PopupMenuButton<String>(
-                                              tooltip: context
-                                                  .tr('home_tychnnh_5e18e0'),
+                                              tooltip: context.tr(
+                                                'home_tychnnh_5e18e0',
+                                              ),
                                               padding: const EdgeInsets.all(11),
                                               icon: const Icon(
                                                 Icons.more_vert_rounded,
@@ -1326,8 +1359,9 @@ class _DiaryTabState extends State<DiaryTab>
                                                 size: 23,
                                               ),
                                               color: const Color(0xFF171A21),
-                                              surfaceTintColor:
-                                                  const Color(0xFF171A21),
+                                              surfaceTintColor: const Color(
+                                                0xFF171A21,
+                                              ),
                                               shape: RoundedRectangleBorder(
                                                 borderRadius:
                                                     BorderRadius.circular(20),
@@ -1345,13 +1379,16 @@ class _DiaryTabState extends State<DiaryTab>
                                                       const SizedBox(width: 12),
                                                       Text(
                                                         context.tr(
-                                                            'home_lunh_9088ba'),
+                                                          'home_lunh_9088ba',
+                                                        ),
                                                         style:
                                                             SLTheme.quicksand(
-                                                          color: Colors.white,
-                                                          fontWeight:
-                                                              FontWeight.w800,
-                                                        ),
+                                                              color:
+                                                                  Colors.white,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w800,
+                                                            ),
                                                       ),
                                                     ],
                                                   ),
@@ -1368,13 +1405,16 @@ class _DiaryTabState extends State<DiaryTab>
                                                       const SizedBox(width: 12),
                                                       Text(
                                                         context.tr(
-                                                            'home_chiasnh_003604'),
+                                                          'home_chiasnh_003604',
+                                                        ),
                                                         style:
                                                             SLTheme.quicksand(
-                                                          color: Colors.white,
-                                                          fontWeight:
-                                                              FontWeight.w800,
-                                                        ),
+                                                              color:
+                                                                  Colors.white,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w800,
+                                                            ),
                                                       ),
                                                     ],
                                                   ),
@@ -1392,13 +1432,16 @@ class _DiaryTabState extends State<DiaryTab>
                                                       const SizedBox(width: 12),
                                                       Text(
                                                         context.tr(
-                                                            'home_chititnh_958bbd'),
+                                                          'home_chititnh_958bbd',
+                                                        ),
                                                         style:
                                                             SLTheme.quicksand(
-                                                          color: Colors.white,
-                                                          fontWeight:
-                                                              FontWeight.w800,
-                                                        ),
+                                                              color:
+                                                                  Colors.white,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w800,
+                                                            ),
                                                       ),
                                                     ],
                                                   ),
@@ -1410,21 +1453,26 @@ class _DiaryTabState extends State<DiaryTab>
                                                       const Icon(
                                                         Icons
                                                             .delete_outline_rounded,
-                                                        color:
-                                                            Color(0xFFFF6B6B),
+                                                        color: Color(
+                                                          0xFFFF6B6B,
+                                                        ),
                                                         size: 19,
                                                       ),
                                                       const SizedBox(width: 12),
                                                       Text(
                                                         context.tr(
-                                                            'home_xanh_0b98d1'),
+                                                          'home_xanh_0b98d1',
+                                                        ),
                                                         style:
                                                             SLTheme.quicksand(
-                                                          color: const Color(
-                                                              0xFFFF6B6B),
-                                                          fontWeight:
-                                                              FontWeight.w800,
-                                                        ),
+                                                              color:
+                                                                  const Color(
+                                                                    0xFFFF6B6B,
+                                                                  ),
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w800,
+                                                            ),
                                                       ),
                                                     ],
                                                   ),
@@ -1434,24 +1482,30 @@ class _DiaryTabState extends State<DiaryTab>
                                                 switch (value) {
                                                   case 'save':
                                                     await _downloadSingleImage(
-                                                        currentItem['url']);
+                                                      currentItem['url'],
+                                                    );
                                                     break;
                                                   case 'share':
                                                     Navigator.pop(
-                                                        dialogContext);
+                                                      dialogContext,
+                                                    );
                                                     await _shareSingleMemory(
-                                                        currentItem);
+                                                      currentItem,
+                                                    );
                                                     break;
                                                   case 'info':
                                                     await _showMemoryInfoSheet(
-                                                        dialogContext,
-                                                        currentItem);
+                                                      dialogContext,
+                                                      currentItem,
+                                                    );
                                                     break;
                                                   case 'delete':
                                                     Navigator.pop(
-                                                        dialogContext);
+                                                      dialogContext,
+                                                    );
                                                     await _deleteMemory(
-                                                        currentItem);
+                                                      currentItem,
+                                                    );
                                                     break;
                                                 }
                                               },
@@ -1475,10 +1529,7 @@ class _DiaryTabState extends State<DiaryTab>
           );
         },
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
+          return FadeTransition(opacity: animation, child: child);
         },
       ),
     );
@@ -1486,9 +1537,9 @@ class _DiaryTabState extends State<DiaryTab>
 
   String _formatMemoryTimestamp(Map<String, dynamic> item) {
     final timestamp = item['ts'] as int? ?? 0;
-    return DateFormat('dd/MM/yyyy • HH:mm').format(
-      DateTime.fromMillisecondsSinceEpoch(timestamp),
-    );
+    return DateFormat(
+      'dd/MM/yyyy • HH:mm',
+    ).format(DateTime.fromMillisecondsSinceEpoch(timestamp));
   }
 
   Future<void> _showMemoryInfoSheet(
@@ -1578,9 +1629,10 @@ class _DiaryTabState extends State<DiaryTab>
 
   int _postImageCacheWidth(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
-    return (mediaQuery.size.width * mediaQuery.devicePixelRatio)
-        .round()
-        .clamp(720, 1600);
+    return (mediaQuery.size.width * mediaQuery.devicePixelRatio).round().clamp(
+      720,
+      1600,
+    );
   }
 
   ImageProvider<Object> _memoryImageProvider(String url, {int? maxWidth}) {
@@ -1601,7 +1653,13 @@ class _DiaryTabState extends State<DiaryTab>
     final int start = (index - 1).clamp(0, allPhotos.length - 1);
     final int end = (index + 1).clamp(0, allPhotos.length - 1);
     for (int i = start; i <= end; i++) {
-      final url = (allPhotos[i]['url']?.toString() ?? '').trim();
+      final item = allPhotos[i];
+      final url =
+          (isDiaryMemoryVideo(item)
+                  ? resolveDiaryMemoryVideoThumbnailUrl(item)
+                  : resolveDiaryMemoryMediaUrl(item))
+              ?.trim() ??
+          '';
       if (url.isEmpty) {
         continue;
       }
@@ -1610,10 +1668,7 @@ class _DiaryTabState extends State<DiaryTab>
         continue;
       }
       unawaited(
-        precacheImage(
-          _memoryImageProvider(url, maxWidth: 2200),
-          context,
-        ),
+        precacheImage(_memoryImageProvider(url, maxWidth: 2200), context),
       );
     }
   }
@@ -1668,7 +1723,9 @@ class _MemoryZoomDraggableWrapperState
   void initState() {
     super.initState();
     _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 280));
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+    );
     _controller.addListener(() {
       setState(() {
         final double curveValue = CurvedAnimation(
@@ -1732,7 +1789,7 @@ class _MemoryViewerPage extends StatefulWidget {
   final ValueNotifier<bool> isZoomedInNotifier;
   final VoidCallback onLongPress;
   final ImageProvider<Object> Function(String, {int? maxWidth})
-      imageProviderBuilder;
+  imageProviderBuilder;
 
   const _MemoryViewerPage({
     required this.item,
@@ -1763,6 +1820,11 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
   }
 
   void _resolveImageProvider() {
+    if (isDiaryMemoryVideo(widget.item)) {
+      _lastResolvedUrl = '';
+      _imageProvider = null;
+      return;
+    }
     final url = widget.item['url']?.toString() ?? '';
     if (url.isNotEmpty && url != _lastResolvedUrl) {
       _lastResolvedUrl = url;
@@ -1780,18 +1842,7 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
     }
   }
 
-  bool get _isVideo {
-    final type = widget.item['type']?.toString().toLowerCase();
-    if (type == 'video') return true;
-    final url = (widget.item['url']?.toString() ?? '').toLowerCase();
-    return url.endsWith('.mp4') ||
-        url.endsWith('.mov') ||
-        url.endsWith('.webm') ||
-        url.endsWith('.m4v') ||
-        url.endsWith('.3gp') ||
-        url.endsWith('.mkv') ||
-        url.endsWith('.avi');
-  }
+  bool get _isVideo => isDiaryMemoryVideo(widget.item);
 
   @override
   void dispose() {
@@ -1815,8 +1866,10 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
         valueListenable: _panEnabledVN,
         builder: (context, panEnabled, _) {
           return AnimatedBuilder(
-            animation: Listenable.merge(
-                [widget.dragOffsetNotifier, widget.dragScaleNotifier]),
+            animation: Listenable.merge([
+              widget.dragOffsetNotifier,
+              widget.dragScaleNotifier,
+            ]),
             builder: (context, child) {
               return Transform.translate(
                 offset: widget.dragOffsetNotifier.value,
@@ -1827,39 +1880,41 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
                     panEnabled: panEnabled,
                     minScale: 1.0,
                     maxScale: 4.5,
-                    boundaryMargin:
-                        panEnabled ? const EdgeInsets.all(24) : EdgeInsets.zero,
+                    boundaryMargin: panEnabled
+                        ? const EdgeInsets.all(24)
+                        : EdgeInsets.zero,
                     clipBehavior: Clip.none,
                     interactionEndFrictionCoefficient: 0.00008,
                     child: _isVideo
                         ? _MemoryVideoWidget(
                             url: url,
-                            houseId: widget.item['houseId']?.toString() ??
+                            houseId:
+                                widget.item['houseId']?.toString() ??
                                 widget.item['house_id']?.toString(),
                             memoryId: widget.item['id']?.toString(),
                           )
                         : _imageProvider != null
-                            ? Hero(
-                                tag: 'memory_image_${widget.item['id']}',
-                                child: Image(
-                                  image: _imageProvider!,
-                                  fit: BoxFit.contain,
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                  filterQuality: FilterQuality.medium,
-                                  gaplessPlayback: true,
-                                  errorBuilder:
-                                      (context, error, stackTrace) =>
-                                          const Icon(
+                        ? Hero(
+                            tag: 'memory_image_${widget.item['id']}',
+                            child: Image(
+                              image: _imageProvider!,
+                              fit: BoxFit.contain,
+                              width: double.infinity,
+                              height: double.infinity,
+                              filterQuality: FilterQuality.medium,
+                              gaplessPlayback: true,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(
                                     Icons.broken_image,
                                     color: Colors.grey,
                                   ),
-                                ),
-                              )
-                            : const Center(
-                                child: CircularProgressIndicator(
-                                    color: Colors.white),
-                              ),
+                            ),
+                          )
+                        : const Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                            ),
+                          ),
                   ),
                 ),
               );
@@ -1869,7 +1924,6 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
       ),
     );
   }
-
 }
 
 class _MemoryVideoWidget extends StatefulWidget {
@@ -1877,11 +1931,7 @@ class _MemoryVideoWidget extends StatefulWidget {
   final String? houseId;
   final String? memoryId;
 
-  const _MemoryVideoWidget({
-    required this.url,
-    this.houseId,
-    this.memoryId,
-  });
+  const _MemoryVideoWidget({required this.url, this.houseId, this.memoryId});
 
   @override
   State<_MemoryVideoWidget> createState() => _MemoryVideoWidgetState();
@@ -1913,7 +1963,11 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
             kind: 'memory_image',
           );
           playUrl = res.url;
-        } catch (_) {}
+        } catch (error) {
+          debugPrint(
+            '[SuppressedError] lib/views/home/tabs/diary_tab.dart: $error',
+          );
+        }
       }
 
       if (playUrl.isEmpty) {
@@ -1955,7 +2009,11 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
             controller.play();
             return;
           }
-        } catch (_) {}
+        } catch (error) {
+          debugPrint(
+            '[SuppressedError] lib/views/home/tabs/diary_tab.dart: $error',
+          );
+        }
       }
       if (mounted) setState(() => _hasError = true);
     }
@@ -1974,11 +2032,18 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.white, size: 48),
+            const Icon(
+              Icons.error_outline_rounded,
+              color: Colors.white,
+              size: 48,
+            ),
             const SizedBox(height: 8),
             const Text(
               'Không thể phát video',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 12),
             ElevatedButton.icon(
@@ -2012,11 +2077,18 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline_rounded, color: Colors.white, size: 48),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: Colors.white,
+                  size: 48,
+                ),
                 const SizedBox(height: 8),
                 const Text(
                   'Không thể phát video',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 ElevatedButton.icon(
@@ -2065,8 +2137,9 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
                       )
                     : Center(
                         child: AspectRatio(
-                          aspectRatio:
-                              value.aspectRatio > 0 ? value.aspectRatio : 16 / 9,
+                          aspectRatio: value.aspectRatio > 0
+                              ? value.aspectRatio
+                              : 16 / 9,
                           child: VideoPlayer(controller),
                         ),
                       ),

@@ -32,14 +32,20 @@ class _HabitScreenState extends State<HabitScreen> {
   @override
   void initState() {
     super.initState();
-    _habitsStream = _dbRef.child('houses/${widget.houseId}/habits').limitToLast(25).onValue;
+    _habitsStream = _dbRef
+        .child('houses/${widget.houseId}/habits')
+        .limitToLast(25)
+        .onValue;
   }
 
   @override
   void didUpdateWidget(covariant HabitScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.houseId != widget.houseId) {
-      _habitsStream = _dbRef.child('houses/${widget.houseId}/habits').limitToLast(25).onValue;
+      _habitsStream = _dbRef
+          .child('houses/${widget.houseId}/habits')
+          .limitToLast(25)
+          .onValue;
     }
   }
 
@@ -50,9 +56,7 @@ class _HabitScreenState extends State<HabitScreen> {
       builder: (context, child) {
         return Theme(
           data: ThemeData.light().copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFFD81B60),
-            ),
+            colorScheme: const ColorScheme.light(primary: Color(0xFFD81B60)),
           ),
           child: child!,
         );
@@ -69,17 +73,19 @@ class _HabitScreenState extends State<HabitScreen> {
     final text = _habitController.text.trim();
     if (text.isEmpty) return;
 
-    final habitSnap =
-        await _dbRef.child('houses/${widget.houseId}/habits').get();
+    final habitSnap = await _dbRef
+        .child('houses/${widget.houseId}/habits')
+        .get();
     if (habitSnap.exists && habitSnap.value is Map) {
       final habitMap = habitSnap.value as Map;
       if (habitMap.length >= 25) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-              'Danh sách thói quen đã đạt giới hạn (tối đa 25 mục). Vui lòng xoá bớt trước khi thêm mới.'),
-          backgroundColor: SLColors.danger,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.tr('p3_habit_limit_reached')),
+            backgroundColor: SLColors.danger,
+          ),
+        );
         return;
       }
     }
@@ -101,7 +107,10 @@ class _HabitScreenState extends State<HabitScreen> {
 
     if (!ConnectivityService().isOnline) {
       ConnectivityService().enqueueOfflineData(
-          'houses/${widget.houseId}/habits/$key', 'set', payload);
+        'houses/${widget.houseId}/habits/$key',
+        'set',
+        payload,
+      );
     }
     await newRef.set(payload);
 
@@ -125,12 +134,15 @@ class _HabitScreenState extends State<HabitScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xoá thói quen'),
-        content: const Text(
-            'Bạn có chắc chắn muốn xoá thói quen này? Dữ liệu điểm danh sẽ mất.'),
+        backgroundColor: SLColors.paper,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(context.tr('p3_habit_delete_title')),
+        content: Text(context.tr('p3_habit_delete_message')),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(context.tr('p3_cancel')),
+          ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -141,7 +153,7 @@ class _HabitScreenState extends State<HabitScreen> {
               _dbRef.child(path).remove();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Xoá'),
+            child: Text(context.tr('p3_delete')),
           ),
         ],
       ),
@@ -156,8 +168,9 @@ class _HabitScreenState extends State<HabitScreen> {
       if (currentValue) {
         ConnectivityService().enqueueOfflineData(exactPath, 'remove', {});
       } else {
-        ConnectivityService()
-            .enqueueOfflineData(parentPath, 'update', {dateStr: true});
+        ConnectivityService().enqueueOfflineData(parentPath, 'update', {
+          dateStr: true,
+        });
       }
     }
 
@@ -171,7 +184,9 @@ class _HabitScreenState extends State<HabitScreen> {
   List<DateTime> _getLast7Days() {
     final today = DateTime.now();
     return List.generate(
-        7, (index) => today.subtract(Duration(days: 6 - index)));
+      7,
+      (index) => today.subtract(Duration(days: 6 - index)),
+    );
   }
 
   String _formatDateKey(DateTime d) {
@@ -237,7 +252,8 @@ class _HabitScreenState extends State<HabitScreen> {
     final parts = <String>[];
     if (creator != null && creator.isNotEmpty) {
       parts.add(
-          L10nService().format('util_habit_created_by', {'name': creator}));
+        L10nService().format('util_habit_created_by', {'name': creator}),
+      );
     }
     if (time != null && time.isNotEmpty) {
       parts.add('⏰ $time');
@@ -265,21 +281,26 @@ class _HabitScreenState extends State<HabitScreen> {
         flexibleSpace: ClipRect(
           child: FastBackdropFilter(
             filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.2),
-            ),
+            child: Container(color: Colors.black.withValues(alpha: 0.2)),
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new,
-              color: Colors.white, size: 20),
+          tooltip: context.tr('p3_back'),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
             tooltip: context.tr('util_giithiuthe_3c2cfe'),
-            icon: const Icon(Icons.info_outline_rounded,
-                color: Colors.white, size: 22),
+            icon: const Icon(
+              Icons.info_outline_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
             onPressed: _showHabitInfo,
           ),
         ],
@@ -293,11 +314,19 @@ class _HabitScreenState extends State<HabitScreen> {
           ),
         ),
         child: SafeArea(
-          child: Column(
-            children: [
-              _buildInputArea(),
-              Expanded(child: _buildHabitsList()),
-            ],
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 760),
+              child: SizedBox(
+                width: double.infinity,
+                child: Column(
+                  children: [
+                    _buildInputArea(),
+                    Expanded(child: _buildHabitsList()),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -342,50 +371,72 @@ class _HabitScreenState extends State<HabitScreen> {
                       border: InputBorder.none,
                       counterText: '',
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 15, vertical: 12),
+                        horizontal: 15,
+                        vertical: 12,
+                      ),
                     ),
                     onSubmitted: (_) => _addHabit(),
                   ),
                 ),
               ),
               SLSpacing.w8,
-              GestureDetector(
-                onTap: () => _selectTime(context),
-                child: Container(
-                  padding: SLSpacing.all12,
-                  decoration: BoxDecoration(
-                    color: _selectedTime != null
-                        ? Colors.amber[700]
-                        : Colors.white.withValues(alpha: 0.15),
-                    borderRadius: SLRadius.lgAll,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.access_time,
-                          color: Colors.white, size: 20),
-                      if (_selectedTime != null)
-                        Text(
-                          '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold),
-                        ),
-                    ],
+              Tooltip(
+                message: context.tr('p3_habit_pick_reminder_time'),
+                child: Semantics(
+                  button: true,
+                  label: context.tr('p3_habit_pick_reminder_time'),
+                  child: GestureDetector(
+                    onTap: () => _selectTime(context),
+                    child: Container(
+                      padding: SLSpacing.all12,
+                      decoration: BoxDecoration(
+                        color: _selectedTime != null
+                            ? Colors.amber[700]
+                            : Colors.white.withValues(alpha: 0.15),
+                        borderRadius: SLRadius.lgAll,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.access_time,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          if (_selectedTime != null)
+                            Text(
+                              '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
               SLSpacing.w8,
-              GestureDetector(
-                onTap: _addHabit,
-                child: Container(
-                  padding: SLSpacing.all12,
-                  decoration: const BoxDecoration(
-                      color: Color(0xFFD81B60), shape: BoxShape.circle),
-                  child: const Icon(Icons.add, color: Colors.white),
+              Tooltip(
+                message: context.tr('p3_habit_add_action'),
+                child: Semantics(
+                  button: true,
+                  label: context.tr('p3_habit_add_action'),
+                  child: GestureDetector(
+                    onTap: _addHabit,
+                    child: Container(
+                      padding: SLSpacing.all12,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFD81B60),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.add, color: Colors.white),
+                    ),
+                  ),
                 ),
-              )
+              ),
             ],
           ),
         ],
@@ -420,10 +471,10 @@ class _HabitScreenState extends State<HabitScreen> {
     final weekTarget = items.length * last7Days.length;
     final weekProgress = weekTarget == 0 ? 0.0 : weekDone / weekTarget;
     final badge = weekProgress >= 0.85
-        ? 'Tuần rất đều'
+        ? context.tr('p3_habit_badge_great')
         : weekProgress >= 0.5
-            ? 'Đang giữ nhịp'
-            : 'Cần nhắc thêm';
+        ? context.tr('p3_habit_badge_steady')
+        : context.tr('p3_habit_badge_needs_attention');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -446,8 +497,11 @@ class _HabitScreenState extends State<HabitScreen> {
                   borderRadius: SLRadius.lgAll,
                   border: Border.all(color: Colors.white24),
                 ),
-                child: const Icon(Icons.emoji_events_rounded,
-                    color: Colors.amberAccent, size: 23),
+                child: const Icon(
+                  Icons.emoji_events_rounded,
+                  color: Colors.amberAccent,
+                  size: 23,
+                ),
               ),
               SLSpacing.w12,
               Expanded(
@@ -464,7 +518,11 @@ class _HabitScreenState extends State<HabitScreen> {
                     ),
                     SLSpacing.h4,
                     Text(
-                      'Hôm nay $doneToday/${items.length} • Streak tốt nhất $bestStreak ngày',
+                      L10nService().format('p3_habit_today_summary', {
+                        'done': doneToday,
+                        'total': items.length,
+                        'streak': bestStreak,
+                      }),
                       style: SLTheme.quicksand(
                         color: Colors.white70,
                         fontWeight: FontWeight.w700,
@@ -483,13 +541,17 @@ class _HabitScreenState extends State<HabitScreen> {
               value: weekProgress.clamp(0.0, 1.0),
               minHeight: 7,
               backgroundColor: Colors.white.withValues(alpha: 0.16),
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(Colors.greenAccent),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Colors.greenAccent,
+              ),
             ),
           ),
           SLSpacing.h8,
           Text(
-            'Tiến độ 7 ngày: $weekDone/$weekTarget lượt check-in.',
+            L10nService().format('p3_habit_week_summary', {
+              'done': weekDone,
+              'total': weekTarget,
+            }),
             style: SLTheme.quicksand(
               color: Colors.white70,
               fontWeight: FontWeight.w700,
@@ -507,6 +569,7 @@ class _HabitScreenState extends State<HabitScreen> {
       builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return ListView.builder(
+            physics: SLResponsive.scrollPhysicsForPlatform(),
             padding: const EdgeInsets.symmetric(horizontal: 20),
             itemCount: 4,
             itemBuilder: (context, index) {
@@ -514,13 +577,17 @@ class _HabitScreenState extends State<HabitScreen> {
                 return const Padding(
                   padding: EdgeInsets.only(bottom: 16),
                   child: SkeletonContainer.rounded(
-                      width: double.infinity, height: 130),
+                    width: double.infinity,
+                    height: 130,
+                  ),
                 );
               }
               return const Padding(
                 padding: EdgeInsets.only(bottom: 20),
                 child: SkeletonContainer.rounded(
-                    width: double.infinity, height: 160),
+                  width: double.infinity,
+                  height: 160,
+                ),
               );
             },
           );
@@ -531,7 +598,9 @@ class _HabitScreenState extends State<HabitScreen> {
             child: Text(
               context.tr('util_khngticthi_a88c58'),
               style: SLTheme.quicksand(
-                  color: Colors.white70, fontWeight: FontWeight.w600),
+                color: Colors.white70,
+                fontWeight: FontWeight.w600,
+              ),
               textAlign: TextAlign.center,
             ),
           );
@@ -542,7 +611,9 @@ class _HabitScreenState extends State<HabitScreen> {
             child: Text(
               context.tr('util_chacthique_191171'),
               style: SLTheme.quicksand(
-                  color: Colors.white70, fontWeight: FontWeight.w600),
+                color: Colors.white70,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           );
         }
@@ -554,13 +625,16 @@ class _HabitScreenState extends State<HabitScreen> {
         final data = Map<dynamic, dynamic>.from(raw);
         final items = data.entries
             .where((e) => e.value is Map)
-            .map((e) => {
-                  'key': e.key,
-                  ...Map<String, dynamic>.from(e.value as Map),
-                })
+            .map(
+              (e) => {
+                'key': e.key,
+                ...Map<String, dynamic>.from(e.value as Map),
+              },
+            )
             .toList();
         items.sort(
-            (a, b) => (a['ts'] as int? ?? 0).compareTo(b['ts'] as int? ?? 0));
+          (a, b) => (a['ts'] as int? ?? 0).compareTo(b['ts'] as int? ?? 0),
+        );
 
         final last7Days = _getLast7Days();
         final todayKey = _formatDateKey(DateTime.now());
@@ -577,8 +651,9 @@ class _HabitScreenState extends State<HabitScreen> {
               final timeParts = item['time'].toString().split(':');
               if (timeParts.length == 2) {
                 final habitTime = TimeOfDay(
-                    hour: int.parse(timeParts[0]),
-                    minute: int.parse(timeParts[1]));
+                  hour: int.parse(timeParts[0]),
+                  minute: int.parse(timeParts[1]),
+                );
                 final now = TimeOfDay.now();
 
                 final habitMinutes = habitTime.hour * 60 + habitTime.minute;
@@ -588,10 +663,13 @@ class _HabitScreenState extends State<HabitScreen> {
                 if (nowMinutes >= habitMinutes - 30 &&
                     item['last_reminded_date'] != todayKey) {
                   NotificationService().sendHabitReminderNotification(
-                      widget.houseId, item['name']);
+                    widget.houseId,
+                    item['name'],
+                  );
                   _dbRef
                       .child(
-                          'houses/${widget.houseId}/habits/${item['key']}/last_reminded_date')
+                        'houses/${widget.houseId}/habits/${item['key']}/last_reminded_date',
+                      )
                       .set(todayKey);
                 }
               }
@@ -600,6 +678,7 @@ class _HabitScreenState extends State<HabitScreen> {
         });
 
         return ListView.builder(
+          physics: SLResponsive.scrollPhysicsForPlatform(),
           padding: const EdgeInsets.symmetric(horizontal: 20),
           itemCount: items.length + 1,
           itemBuilder: (context, index) {
@@ -639,9 +718,10 @@ class _HabitScreenState extends State<HabitScreen> {
                             Text(
                               item['name'] ?? '',
                               style: SLTheme.quicksand(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 18),
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 18,
+                              ),
                             ),
                             if (item['creator'] != null || item['time'] != null)
                               Padding(
@@ -649,9 +729,10 @@ class _HabitScreenState extends State<HabitScreen> {
                                 child: Text(
                                   _habitMetaLabel(item),
                                   style: SLTheme.quicksand(
-                                      color: Colors.white70,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 12),
+                                    color: Colors.white70,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ),
                           ],
@@ -659,32 +740,44 @@ class _HabitScreenState extends State<HabitScreen> {
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.orange.withValues(alpha: 0.3),
                           borderRadius: SLRadius.mdAll,
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.local_fire_department,
-                                color: Colors.orangeAccent, size: 16),
+                            const Icon(
+                              Icons.local_fire_department,
+                              color: Colors.orangeAccent,
+                              size: 16,
+                            ),
                             SLSpacing.w4,
                             Text(
-                              L10nService().format(
-                                  'util_habit_streak_days', {'count': streak}),
+                              L10nService().format('util_habit_streak_days', {
+                                'count': streak,
+                              }),
                               style: SLTheme.quicksand(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 12),
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 12,
+                              ),
                             ),
                           ],
                         ),
                       ),
                       SLSpacing.w8,
-                      GestureDetector(
-                        onTap: () => _deleteHabit(item['key']),
-                        child: const Icon(Icons.close,
-                            color: Colors.white54, size: 20),
+                      IconButton(
+                        tooltip: context.tr('p3_habit_delete_tooltip'),
+                        onPressed: () => _deleteHabit(item['key']),
+                        visualDensity: VisualDensity.compact,
+                        icon: const Icon(
+                          Icons.close,
+                          color: Colors.white70,
+                          size: 20,
+                        ),
                       ),
                     ],
                   ),
@@ -694,49 +787,69 @@ class _HabitScreenState extends State<HabitScreen> {
                     children: last7Days.map((date) {
                       final dateKey = _formatDateKey(date);
                       final isCompleted = completedMap[dateKey] == true;
-                      final isToday = date.day == DateTime.now().day &&
+                      final isToday =
+                          date.day == DateTime.now().day &&
                           date.month == DateTime.now().month;
 
-                      return GestureDetector(
-                        onTap: () =>
-                            _toggleHabitDay(item['key'], dateKey, isCompleted),
-                        child: Column(
-                          children: [
-                            Text(
-                              isToday ? 'Nay' : '${date.day}/${date.month}',
-                              style: SLTheme.quicksand(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: isToday ? Colors.white : Colors.white60,
-                              ),
-                            ),
-                            SLSpacing.h8,
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              width: 38,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                color: isCompleted
-                                    ? Colors.greenAccent.withValues(alpha: 0.8)
-                                    : Colors.white.withValues(alpha: 0.1),
-                                borderRadius: SLRadius.mdAll,
-                                border: Border.all(
-                                  color: isCompleted
-                                      ? Colors.greenAccent
-                                      : Colors.white24,
-                                  width: 1.5,
+                      return Semantics(
+                        button: true,
+                        checked: isCompleted,
+                        label: L10nService().format('p3_habit_day_check', {
+                          'date': '${date.day}/${date.month}',
+                        }),
+                        child: GestureDetector(
+                          onTap: () => _toggleHabitDay(
+                            item['key'],
+                            dateKey,
+                            isCompleted,
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                isToday
+                                    ? context.tr('p3_today_short')
+                                    : '${date.day}/${date.month}',
+                                style: SLTheme.quicksand(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: isToday
+                                      ? Colors.white
+                                      : Colors.white60,
                                 ),
                               ),
-                              child: isCompleted
-                                  ? const Icon(Icons.check,
-                                      color: Colors.white, size: 20)
-                                  : null,
-                            ),
-                          ],
+                              SLSpacing.h8,
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color: isCompleted
+                                      ? Colors.greenAccent.withValues(
+                                          alpha: 0.8,
+                                        )
+                                      : Colors.white.withValues(alpha: 0.1),
+                                  borderRadius: SLRadius.mdAll,
+                                  border: Border.all(
+                                    color: isCompleted
+                                        ? Colors.greenAccent
+                                        : Colors.white24,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: isCompleted
+                                    ? const Icon(
+                                        Icons.check,
+                                        color: Colors.white,
+                                        size: 20,
+                                      )
+                                    : null,
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     }).toList(),
-                  )
+                  ),
                 ],
               ),
             );

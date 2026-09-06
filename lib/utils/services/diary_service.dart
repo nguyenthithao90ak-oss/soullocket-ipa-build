@@ -1,6 +1,7 @@
 import 'package:firebase_database/firebase_database.dart'
     hide Query, Transaction;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/models/diary_post.dart';
 import 'connectivity_service.dart';
 
@@ -28,28 +29,30 @@ class DiaryService {
         .limit(limit)
         .snapshots()
         .map((snapshot) {
-      final posts = <DiaryPost>[];
-      for (var doc in snapshot.docs) {
-        try {
-          posts.add(DiaryPost.fromJson(doc.id, doc.data()));
-        } catch (_) {}
-      }
-      return posts;
-    });
+          final posts = <DiaryPost>[];
+          for (var doc in snapshot.docs) {
+            try {
+              posts.add(DiaryPost.fromJson(doc.id, doc.data()));
+            } catch (error) {
+              debugPrint('[DiaryService] Bỏ qua bản ghi lỗi ${doc.id}: $error');
+            }
+          }
+          return posts;
+        });
   }
 
   // ── LISTEN bài viết được ghim realtime ───────────────────────────────────
   Stream<List<DiaryPost>> streamPinnedDiary(String houseId) {
-    return _diariesRef(houseId)
-        .where('pinned', isEqualTo: true)
-        .limit(1)
-        .snapshots()
-        .map((snapshot) {
+    return _diariesRef(
+      houseId,
+    ).where('pinned', isEqualTo: true).limit(1).snapshots().map((snapshot) {
       final posts = <DiaryPost>[];
       for (var doc in snapshot.docs) {
         try {
           posts.add(DiaryPost.fromJson(doc.id, doc.data()));
-        } catch (_) {}
+        } catch (error) {
+          debugPrint('[DiaryService] Bản ghi ghim lỗi ${doc.id}: $error');
+        }
       }
       return posts;
     });
@@ -131,7 +134,9 @@ class DiaryService {
     if (!ConnectivityService().isOnline) {
       try {
         return await query.get(const GetOptions(source: Source.cache));
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[DiaryService] Không đọc được cache offline: $error');
+      }
     }
 
     try {
@@ -142,10 +147,7 @@ class DiaryService {
   }
 
   // ── LẤY 1 lần (không stream) ──────────────────────────────────────────
-  Future<List<DiaryPost>> fetchDiary(
-    String houseId, {
-    int limit = 80,
-  }) async {
+  Future<List<DiaryPost>> fetchDiary(String houseId, {int limit = 80}) async {
     final snap = await _getQueryWithCacheFallback(
       _diariesRef(houseId).orderBy('timestamp', descending: true).limit(limit),
     );
@@ -154,25 +156,29 @@ class DiaryService {
     for (var doc in snap.docs) {
       try {
         posts.add(DiaryPost.fromJson(doc.id, doc.data()));
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[DiaryService] Bỏ qua bản ghi lỗi ${doc.id}: $error');
+      }
     }
     return posts;
   }
 
   // ── LẤY theo trang (phân trang) ─────────────────────────────────────────
   Future<
-      ({
-        List<DiaryPost> posts,
-        DocumentSnapshot<Map<String, dynamic>>? lastDoc,
-        bool hasMore
-      })> fetchDiaryPage(
+    ({
+      List<DiaryPost> posts,
+      DocumentSnapshot<Map<String, dynamic>>? lastDoc,
+      bool hasMore,
+    })
+  >
+  fetchDiaryPage(
     String houseId, {
     int limit = 10,
     DocumentSnapshot<Map<String, dynamic>>? startAfter,
   }) async {
-    Query<Map<String, dynamic>> query = _diariesRef(houseId)
-        .orderBy('timestamp', descending: true)
-        .limit(limit);
+    Query<Map<String, dynamic>> query = _diariesRef(
+      houseId,
+    ).orderBy('timestamp', descending: true).limit(limit);
 
     if (startAfter != null) {
       query = query.startAfterDocument(startAfter);
@@ -183,7 +189,9 @@ class DiaryService {
     for (var doc in snap.docs) {
       try {
         posts.add(DiaryPost.fromJson(doc.id, doc.data()));
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[DiaryService] Bỏ qua bản ghi trang lỗi ${doc.id}: $error');
+      }
     }
 
     final lastDoc = snap.docs.isNotEmpty ? snap.docs.last : null;
@@ -218,7 +226,9 @@ class DiaryService {
             .collection('_meta')
             .doc('diary_migration')
             .set({'done': true, 'ts': DateTime.now().millisecondsSinceEpoch});
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[DiaryService] Không ghi được cờ migration rỗng: $error');
+      }
       return;
     }
 
@@ -232,7 +242,10 @@ class DiaryService {
       if (value is Map) {
         final docRef = _diariesRef(houseId).doc(key.toString());
         batch.set(
-            docRef, Map<String, dynamic>.from(value), SetOptions(merge: true));
+          docRef,
+          Map<String, dynamic>.from(value),
+          SetOptions(merge: true),
+        );
         count++;
       }
     });
@@ -242,7 +255,9 @@ class DiaryService {
       // Xoá diary cũ trên RTDB để không tốn bandwidth nữa
       try {
         await _rtdb.child('houses/$houseId/diary').remove();
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[DiaryService] Không xóa được dữ liệu RTDB cũ: $error');
+      }
     }
     // Ghi flag
     try {
@@ -252,6 +267,8 @@ class DiaryService {
           .collection('_meta')
           .doc('diary_migration')
           .set({'done': true, 'ts': DateTime.now().millisecondsSinceEpoch});
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[DiaryService] Không ghi được cờ hoàn tất migration: $error');
+    }
   }
 }

@@ -21,9 +21,7 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
-  final Map<String, bool> _downloadedGames = {
-    'soul_block': false,
-  };
+  final Map<String, bool> _downloadedGames = {'soul_block': false};
 
   BannerAd? _bannerAd;
   bool _isBannerReady = false;
@@ -77,10 +75,7 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
       _bannerAd = banner;
     } catch (e) {
       debugPrint(
-        'GameTab banner load failed: ${AppErrorMapper.resolve(
-          e,
-          fallbackMessage: adErrorFallback,
-        ).message}',
+        'GameTab banner load failed: ${AppErrorMapper.resolve(e, fallbackMessage: adErrorFallback).message}',
       );
     }
   }
@@ -97,10 +92,7 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
       });
     } catch (e) {
       debugPrint(
-        'GameTab download status load failed: ${AppErrorMapper.resolve(
-          e,
-          fallbackMessage: L10nService().translate('home_khngthtitr_ff9207'),
-        ).message}',
+        'GameTab download status load failed: ${AppErrorMapper.resolve(e, fallbackMessage: L10nService().translate('home_khngthtitr_ff9207')).message}',
       );
     }
   }
@@ -208,7 +200,11 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
               ),
               const SizedBox(height: 8),
               Text(
-                '$name cần tải thêm ${disclosure.fileCount} tệp tài nguyên (${disclosure.sizeLabel}) để chơi mượt mà nhất. Bạn có muốn tải ngay không? 💕',
+                L10nScope.of(context).format('p9_game_download_description', {
+                  'game': name,
+                  'count': disclosure.fileCount,
+                  'size': disclosure.sizeLabel,
+                }),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontSize: 13,
@@ -251,7 +247,9 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
                         borderRadius: BorderRadius.circular(18),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFD81B60).withValues(alpha: 0.3),
+                            color: const Color(
+                              0xFFD81B60,
+                            ).withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -269,7 +267,7 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
                           ),
                         ),
                         child: Text(
-                          'Tải ngay 🚀',
+                          context.tr('p9_game_download_now'),
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w900,
                             fontSize: 14,
@@ -290,8 +288,14 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
   }
 
   Future<void> _confirmDeleteGame(
-      BuildContext context, String gameId, String name) async {
+    BuildContext context,
+    String gameId,
+    String name,
+  ) async {
     final messenger = ScaffoldMessenger.maybeOf(context);
+    final deleteSuccessMessage = L10nScope.of(
+      context,
+    ).format('p9_game_delete_success', {'game': name});
     final confirmed = await showDialog<bool>(
       context: context,
       useRootNavigator: true,
@@ -354,7 +358,9 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
               ),
               const SizedBox(height: 8),
               Text(
-                'Bạn muốn xóa dữ liệu đã tải của game $name để giải phóng bộ nhớ?',
+                L10nScope.of(
+                  context,
+                ).format('p9_game_delete_description', {'game': name}),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontSize: 13,
@@ -397,7 +403,9 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
                         borderRadius: BorderRadius.circular(18),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFD32F2F).withValues(alpha: 0.3),
+                            color: const Color(
+                              0xFFD32F2F,
+                            ).withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -415,7 +423,7 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
                           ),
                         ),
                         child: Text(
-                          'Xóa ngay 🗑️',
+                          context.tr('p9_game_delete_now'),
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w900,
                             fontSize: 14,
@@ -436,9 +444,7 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
       await GameDownloadService().deleteGameData(gameId);
       if (mounted) {
         await _loadDownloadStatus();
-        messenger?.showSnackBar(
-          SnackBar(content: Text('Đã xóa dữ liệu game $name.')),
-        );
+        messenger?.showSnackBar(SnackBar(content: Text(deleteSuccessMessage)));
       }
     }
   }
@@ -480,119 +486,135 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
       }
       messenger
         ..clearSnackBars()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(openGameErrorMsg),
-          ),
-        );
+        ..showSnackBar(SnackBar(content: Text(openGameErrorMsg)));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final downloadService = GameDownloadService();
+    final soulBlockDownloaded = _downloadedGames['soul_block'] ?? false;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
         bottom: false,
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(10, 0, 10, 120),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const _GameHeader(),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final crossAxisCount = constraints.maxWidth < 280 ? 2 : 3;
-                    final spacing = constraints.maxWidth < 360 ? 10.0 : 14.0;
-                    final downloadService = GameDownloadService();
-
-                    // Dùng _downloadedGames trực tiếp thay vì FutureBuilder
-                    // Để tránh tạo Future mới mỗi lần rebuild (gây flash loading)
-                    final soulBlockDownloaded =
-                        _downloadedGames['soul_block'] ?? false;
-
-                    return GridView.count(
-                      crossAxisCount: crossAxisCount,
-                      crossAxisSpacing: spacing,
-                      mainAxisSpacing: spacing + 2,
-                      childAspectRatio: crossAxisCount == 3 ? 0.68 : 0.75,
-                      physics: const NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      children: [
-                        _SoulBlockCard(
-                          isDownloaded: soulBlockDownloaded,
-                          downloadProgress:
-                              downloadService.getProgress('soul_block'),
-                          onTap: () => _onGameTap('soul_block', 'Soul Block',
-                              () => _openSoulBlockGame(context)),
-                          onLongPress: soulBlockDownloaded
-                              ? () => _confirmDeleteGame(
-                                  context, 'soul_block', 'Soul Block')
-                              : null,
-                          onDelete: soulBlockDownloaded
-                              ? () => _confirmDeleteGame(
-                                  context, 'soul_block', 'Soul Block')
-                              : null,
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-              if (_isBannerReady && _bannerAd != null)
-                ValueListenableBuilder<bool>(
-                  valueListenable: SLTheme.isTabSwiping,
-                  builder: (context, isSwiping, _) {
-                    if (isSwiping) {
-                      return SizedBox(
-                        height: _bannerAd!.size.height.toDouble() + 32,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1080),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 120),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const _GameHeader(),
+                  const SizedBox(height: 18),
+                  _GameLibrarySummary(isDownloaded: soulBlockDownloaded),
+                  const SizedBox(height: 18),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final cardWidth = math.min(
+                        constraints.maxWidth,
+                        constraints.maxWidth >= 720 ? 272.0 : 260.0,
                       );
-                    }
-                    return GestureDetector(
-                      behavior: HitTestBehavior.translucent,
-                      onTap: () {
-                        // Tap vùng ngoài ad → trigger interstitial (doanh thu cao hơn banner)
-                        AdMobService().showInterstitialAd();
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(10, 24, 10, 0),
-                        child: Center(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.6),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.4)),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
+
+                      return Align(
+                        alignment: Alignment.centerLeft,
+                        child: SizedBox(
+                          width: cardWidth,
+                          child: _SoulBlockCard(
+                            isDownloaded: soulBlockDownloaded,
+                            downloadProgress: downloadService.getProgress(
+                              'soul_block',
                             ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: SizedBox(
-                                width: _bannerAd!.size.width.toDouble(),
-                                height: _bannerAd!.size.height.toDouble(),
-                                child: AdWidget(ad: _bannerAd!),
+                            onTap: () => _onGameTap(
+                              'soul_block',
+                              'Soul Block',
+                              () => _openSoulBlockGame(context),
+                            ),
+                            onLongPress: soulBlockDownloaded
+                                ? () => _confirmDeleteGame(
+                                    context,
+                                    'soul_block',
+                                    'Soul Block',
+                                  )
+                                : null,
+                            onDelete: soulBlockDownloaded
+                                ? () => _confirmDeleteGame(
+                                    context,
+                                    'soul_block',
+                                    'Soul Block',
+                                  )
+                                : null,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  if (_isBannerReady && _bannerAd != null)
+                    ValueListenableBuilder<bool>(
+                      valueListenable: SLTheme.isTabSwiping,
+                      builder: (context, isSwiping, _) {
+                        if (isSwiping) {
+                          return SizedBox(
+                            height: _bannerAd!.size.height.toDouble() + 32,
+                          );
+                        }
+                        return Semantics(
+                          button: true,
+                          label: context.tr('p9_game_ad_semantics'),
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.translucent,
+                            onTap: () {
+                              // Tap vùng ngoài ad → trigger interstitial (doanh thu cao hơn banner)
+                              AdMobService().showInterstitialAd();
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(0, 24, 0, 0),
+                              child: Center(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.6),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.05,
+                                        ),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: SizedBox(
+                                      width: _bannerAd!.size.width.toDouble(),
+                                      height: _bannerAd!.size.height.toDouble(),
+                                      child: AdWidget(ad: _bannerAd!),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-            ],
+                        );
+                      },
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -607,12 +629,7 @@ class _GameHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(
-        20,
-        MediaQuery.paddingOf(context).top + 8,
-        20,
-        0,
-      ),
+      padding: const EdgeInsets.fromLTRB(4, 10, 4, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -630,7 +647,7 @@ class _GameHeader extends StatelessWidget {
                         fit: BoxFit.scaleDown,
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'GAME CENTER',
+                          context.tr('p9_game_title'),
                           maxLines: 1,
                           softWrap: false,
                           style: SLTheme.quicksand(
@@ -643,6 +660,18 @@ class _GameHeader extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
+                    Text(
+                      context.tr('p9_game_subtitle'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: SLTheme.quicksand(
+                        color: const Color(0xFF765D6D),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        height: 1.35,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
                     Container(
                       width: 100,
                       height: 3,
@@ -659,6 +688,98 @@ class _GameHeader extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _GameLibrarySummary extends StatelessWidget {
+  const _GameLibrarySummary({required this.isDownloaded});
+
+  final bool isDownloaded;
+
+  @override
+  Widget build(BuildContext context) {
+    final status = context.tr(
+      isDownloaded ? 'p9_game_ready_status' : 'p9_game_download_status',
+    );
+
+    return Semantics(
+      container: true,
+      label: L10nScope.of(
+        context,
+      ).format('p9_game_library_semantics', {'status': status}),
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(maxWidth: 560),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.74),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: const Color(0xFFFFD7E2)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFB84266).withValues(alpha: 0.09),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFE8EF),
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: const Icon(
+                Icons.favorite_rounded,
+                color: Color(0xFFE91E63),
+                size: 21,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.tr('p9_game_library_title'),
+                    style: SLTheme.quicksand(
+                      color: const Color(0xFF412A37),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    status,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: SLTheme.quicksand(
+                      color: const Color(0xFF765D6D),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              isDownloaded
+                  ? Icons.check_circle_rounded
+                  : Icons.cloud_download_outlined,
+              color: isDownloaded
+                  ? const Color(0xFF2E7D32)
+                  : const Color(0xFFE91E63),
+              size: 22,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -716,6 +837,7 @@ class _GameLauncherTile extends StatelessWidget {
   Widget build(BuildContext context) {
     const radius = 24.0;
     const previewSize = 66.0;
+    final progress = downloadProgress;
 
     return Semantics(
       button: true,
@@ -751,6 +873,28 @@ class _GameLauncherTile extends StatelessWidget {
                       children: [
                         preview,
                         const _TileGlossOverlay(),
+                        if (isDownloaded && onDelete != null)
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: Tooltip(
+                              message: context.tr('p9_game_delete_tooltip'),
+                              child: Material(
+                                color: Colors.black.withValues(alpha: 0.28),
+                                shape: const CircleBorder(),
+                                child: IconButton(
+                                  onPressed: onDelete,
+                                  icon: const Icon(
+                                    Icons.delete_outline_rounded,
+                                  ),
+                                  color: Colors.white,
+                                  iconSize: 16,
+                                  splashRadius: 20,
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -768,11 +912,12 @@ class _GameLauncherTile extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                GestureDetector(
-                  onTap: onTap,
+                ExcludeSemantics(
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 4,
+                      horizontal: 10,
+                    ),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: isDownloaded
@@ -782,27 +927,35 @@ class _GameLauncherTile extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: (isDownloaded
-                                  ? const Color(0xFFE91E63)
-                                  : borderColor)
-                              .withValues(alpha: 0.3),
+                          color:
+                              (isDownloaded
+                                      ? const Color(0xFFE91E63)
+                                      : borderColor)
+                                  .withValues(alpha: 0.3),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    child: downloadProgress != null
-                        ? SizedBox(
-                            width: 60,
-                            height: 10,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(5),
-                              child: LinearProgressIndicator(
-                                value: downloadProgress,
-                                backgroundColor:
-                                    Colors.white.withValues(alpha: 0.2),
-                                valueColor: const AlwaysStoppedAnimation<Color>(
-                                    Colors.white),
+                    child: progress != null
+                        ? Semantics(
+                            label: context.tr('p9_game_download_progress'),
+                            value: '${(progress * 100).round()}%',
+                            child: SizedBox(
+                              width: 60,
+                              height: 10,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(5),
+                                child: LinearProgressIndicator(
+                                  value: progress,
+                                  backgroundColor: Colors.white.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  valueColor:
+                                      const AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                ),
                               ),
                             ),
                           )
@@ -859,7 +1012,7 @@ class _SoulBlockCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _GameLauncherTile(
       label: 'Soul Block',
-      semanticsLabel: 'Soul Block',
+      semanticsLabel: context.tr('p9_game_soul_block_semantics'),
       onTap: onTap,
       onLongPress: onLongPress,
       onDelete: onDelete,
@@ -868,9 +1021,7 @@ class _SoulBlockCard extends StatelessWidget {
       borderColor: const Color(0xFFFFC857),
       shadowColor: const Color(0xFF8CFF98),
       preview: const SizedBox.expand(
-        child: CustomPaint(
-          painter: _SoulBlockCardPainter(),
-        ),
+        child: CustomPaint(painter: _SoulBlockCardPainter()),
       ),
     );
   }
@@ -893,15 +1044,18 @@ class _SoulBlockCardPainter extends CustomPainter {
     );
 
     final glowPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFFFFD166).withValues(alpha: 0.34),
-          Colors.transparent,
-        ],
-      ).createShader(Rect.fromCircle(
-        center: Offset(size.width * 0.72, size.height * 0.18),
-        radius: size.width * 0.7,
-      ));
+      ..shader =
+          RadialGradient(
+            colors: [
+              const Color(0xFFFFD166).withValues(alpha: 0.34),
+              Colors.transparent,
+            ],
+          ).createShader(
+            Rect.fromCircle(
+              center: Offset(size.width * 0.72, size.height * 0.18),
+              radius: size.width * 0.7,
+            ),
+          );
     canvas.drawRect(rect, glowPaint);
 
     final boardSize = math.min(size.width, size.height) * 0.78;
@@ -920,10 +1074,7 @@ class _SoulBlockCardPainter extends CustomPainter {
       ),
       Radius.circular(cellSize * 0.55),
     );
-    canvas.drawRRect(
-      boardRect,
-      Paint()..color = const Color(0x66061122),
-    );
+    canvas.drawRRect(boardRect, Paint()..color = const Color(0x66061122));
     canvas.drawRRect(
       boardRect,
       Paint()
@@ -986,29 +1137,46 @@ class _SoulBlockCardPainter extends CustomPainter {
       }
     }
 
-    drawBlock(const [Offset(0, 0), Offset(1, 0), Offset(0, 1)],
-        const Color(0xFFFF4D6D));
-    drawBlock(const [Offset(3, 0), Offset(4, 0), Offset(4, 1)],
-        const Color(0xFFFFD166));
-    drawBlock(const [Offset(1, 2), Offset(2, 2), Offset(3, 2)],
-        const Color(0xFF4D96FF));
-    drawBlock(const [Offset(0, 3), Offset(0, 4), Offset(1, 4)],
-        const Color(0xFF37E67F));
-    drawBlock(const [Offset(3, 3), Offset(4, 3), Offset(3, 4), Offset(4, 4)],
-        const Color(0xFFC77DFF));
+    drawBlock(const [
+      Offset(0, 0),
+      Offset(1, 0),
+      Offset(0, 1),
+    ], const Color(0xFFFF4D6D));
+    drawBlock(const [
+      Offset(3, 0),
+      Offset(4, 0),
+      Offset(4, 1),
+    ], const Color(0xFFFFD166));
+    drawBlock(const [
+      Offset(1, 2),
+      Offset(2, 2),
+      Offset(3, 2),
+    ], const Color(0xFF4D96FF));
+    drawBlock(const [
+      Offset(0, 3),
+      Offset(0, 4),
+      Offset(1, 4),
+    ], const Color(0xFF37E67F));
+    drawBlock(const [
+      Offset(3, 3),
+      Offset(4, 3),
+      Offset(3, 4),
+      Offset(4, 4),
+    ], const Color(0xFFC77DFF));
 
     final badgeRect = RRect.fromRectAndRadius(
       Rect.fromLTWH(
-          size.width * 0.18, size.height * 0.74, size.width * 0.64, 16),
+        size.width * 0.18,
+        size.height * 0.74,
+        size.width * 0.64,
+        16,
+      ),
       const Radius.circular(999),
     );
-    canvas.drawRRect(
-      badgeRect,
-      Paint()..color = const Color(0xCCFFFFFF),
-    );
+    canvas.drawRRect(badgeRect, Paint()..color = const Color(0xCCFFFFFF));
     final textPainter = TextPainter(
       text: const TextSpan(
-        text: 'COMBO x4',
+        text: '×4',
         style: TextStyle(
           color: Color(0xFF3B1453),
           fontSize: 8,
@@ -1020,10 +1188,7 @@ class _SoulBlockCardPainter extends CustomPainter {
     )..layout();
     textPainter.paint(
       canvas,
-      Offset(
-        size.width * 0.5 - textPainter.width / 2,
-        size.height * 0.74 + 3,
-      ),
+      Offset(size.width * 0.5 - textPainter.width / 2, size.height * 0.74 + 3),
     );
   }
 

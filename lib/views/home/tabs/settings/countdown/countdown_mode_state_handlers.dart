@@ -4,8 +4,9 @@ part of '../../settings_tab.dart';
 extension _CountdownModeIndependentScreenStatePart
     on _CountdownModeIndependentScreenState {
   DateTime? _resolveInitialAnchorDate(bool singleMode) {
-    final primary =
-        DateInputUtils.parse(singleMode ? widget.birthDate : widget.loveDate);
+    final primary = DateInputUtils.parse(
+      singleMode ? widget.birthDate : widget.loveDate,
+    );
     if (primary != null) {
       return primary;
     }
@@ -96,8 +97,9 @@ extension _CountdownModeIndependentScreenStatePart
     final nextSnapshots = <String, _CountdownSpaceSnapshot>{};
     final pendingSnapshotsToSync =
         <CountdownSpaceRequestInfo, _CountdownSpaceSnapshot>{};
-    final activeRequestIds =
-        requests.map((request) => request.requestId).toSet();
+    final activeRequestIds = requests
+        .map((request) => request.requestId)
+        .toSet();
     final sortedRequests = requests.toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
@@ -154,9 +156,7 @@ extension _CountdownModeIndependentScreenStatePart
           _spaceSnapshots[houseId] = snapshot;
         }
       });
-      _optimisticPendingSpaceHouseIds.removeWhere(
-        outgoingStatuses.containsKey,
-      );
+      _optimisticPendingSpaceHouseIds.removeWhere(outgoingStatuses.containsKey);
       _spaceRequestActionIds.removeWhere(
         (requestId) => !activeRequestIds.contains(requestId),
       );
@@ -217,9 +217,7 @@ extension _CountdownModeIndependentScreenStatePart
           _spaceSnapshots[houseId] = snapshot;
         }
       });
-      _optimisticPendingSpaceHouseIds.removeWhere(
-        nextSharedSpaces.containsKey,
-      );
+      _optimisticPendingSpaceHouseIds.removeWhere(nextSharedSpaces.containsKey);
       final openedSpaceId = _openedSpaceHouseId;
       if (openedSpaceId != null && openedSpaceId != _selfSpaceHouseId) {
         if (nextSnapshots.containsKey(openedSpaceId)) {
@@ -387,13 +385,19 @@ extension _CountdownModeIndependentScreenStatePart
       prefs.setString(_prefKey('style_key', scope: scope), snapshot.styleKey),
       prefs.setString(_prefKey('font_key', scope: scope), _fontKey),
       prefs.setString(
-          _prefKey('avatar_frame_key', scope: scope), _avatarFrameKey),
+        _prefKey('avatar_frame_key', scope: scope),
+        _avatarFrameKey,
+      ),
       prefs.setBool(
-          _prefKey('transparent_mode', scope: scope), _transparentMode),
+        _prefKey('transparent_mode', scope: scope),
+        _transparentMode,
+      ),
       prefs.setDouble(_prefKey('size_px', scope: scope), _countdownSizePx),
       prefs.setString(_prefKey('bg_url', scope: scope), _customBackgroundUrl),
       prefs.setString(
-          _prefKey('center_icon_type', scope: scope), _centerIconType),
+        _prefKey('center_icon_type', scope: scope),
+        _centerIconType,
+      ),
       prefs.setString(_prefKey('top_label', scope: scope), _topLabelText),
       prefs.setString(_prefKey('bottom_label', scope: scope), _bottomLabelText),
       prefs.setString(_prefKey('name_u1', scope: scope), _nameU1),
@@ -404,12 +408,11 @@ extension _CountdownModeIndependentScreenStatePart
         _prefKey('anchor_date', scope: scope),
         _anchorDate == null ? '' : DateInputUtils.formatIsoDate(_anchorDate!),
       ),
-      prefs.setString(
-        _prefKey('falling_effect_type', scope: scope),
-        'off',
-      ),
+      prefs.setString(_prefKey('falling_effect_type', scope: scope), 'off'),
       prefs.setInt(
-          _prefKey('updated_at_ms', scope: scope), snapshot.updatedAtMs),
+        _prefKey('updated_at_ms', scope: scope),
+        snapshot.updatedAtMs,
+      ),
     ]);
 
     if (mounted) {
@@ -436,8 +439,9 @@ extension _CountdownModeIndependentScreenStatePart
       if (_selfSpaceHouseId != 'local_self') {
         final houseId = _selfSpaceHouseId;
         final updates = <String, dynamic>{
-          'houses/$houseId/settings/relationshipMode':
-              _singleMode ? 'single' : 'couple',
+          'houses/$houseId/settings/relationshipMode': _singleMode
+              ? 'single'
+              : 'couple',
           'houses/$houseId/settings/theme': _themeKey,
           'houses/$houseId/settings/countdownStyle': snapshot.styleKey,
           'houses/$houseId/settings/font': _fontKey,
@@ -471,11 +475,12 @@ extension _CountdownModeIndependentScreenStatePart
             fatal: false,
           );
           if (mounted) {
-            _showMessage(AppErrorMapper.resolve(
-              e,
-              fallbackMessage:
-                  'Không thể đồng bộ cài đặt lên mạng. Hãy kiểm tra kết nối nhé!',
-            ).message);
+            _showMessage(
+              AppErrorMapper.resolve(
+                e,
+                fallbackMessage: context.tr('p7_countdown_sync_failed'),
+              ).message,
+            );
           }
         }
       }
@@ -486,14 +491,16 @@ extension _CountdownModeIndependentScreenStatePart
     if (_isSharedSpace(scope)) {
       final sharedSpace = _sharedSpaceFor(scope);
       if (sharedSpace == null) return;
-      unawaited(_countdownSpaceService
-          .updateSpaceSnapshot(
-        spaceId: sharedSpace.spaceId,
-        snapshot: serializedSnapshot,
-      )
-          .catchError((Object e) {
-        debugPrint('Failed to update space snapshot: $e');
-      }));
+      unawaited(
+        _countdownSpaceService
+            .updateSpaceSnapshot(
+              spaceId: sharedSpace.spaceId,
+              snapshot: serializedSnapshot,
+            )
+            .catchError((Object e) {
+              debugPrint('Failed to update space snapshot: $e');
+            }),
+      );
       return;
     }
 
@@ -501,15 +508,17 @@ extension _CountdownModeIndependentScreenStatePart
     if (pendingRequest == null) {
       return;
     }
-    unawaited(_countdownSpaceService
-        .updatePendingRequestSnapshot(
-      requestId: pendingRequest.requestId,
-      fromHouseId: _selfSpaceHouseId,
-      snapshot: serializedSnapshot,
-    )
-        .catchError((Object e) {
-      debugPrint('Failed to update pending request snapshot: $e');
-    }));
+    unawaited(
+      _countdownSpaceService
+          .updatePendingRequestSnapshot(
+            requestId: pendingRequest.requestId,
+            fromHouseId: _selfSpaceHouseId,
+            snapshot: serializedSnapshot,
+          )
+          .catchError((Object e) {
+            debugPrint('Failed to update pending request snapshot: $e');
+          }),
+    );
   }
 
   Future<void> _openSpace(String houseId) async {
@@ -603,7 +612,10 @@ extension _CountdownModeIndependentScreenStatePart
         return context.tr('home_ngykhnghpl_b660fe');
       }
       if (!inRange(parsed)) {
-        return 'Ngày phải trong khoảng ${DateInputUtils.formatDisplayDate(minDate)} - ${DateInputUtils.formatDisplayDate(maxDate)}.';
+        return context
+            .tr('p7_date_range')
+            .replaceAll('{start}', DateInputUtils.formatDisplayDate(minDate))
+            .replaceAll('{end}', DateInputUtils.formatDisplayDate(maxDate));
       }
       return context.tr('home_nhdngchang_9fbba2');
     }
@@ -729,18 +741,18 @@ extension _CountdownModeIndependentScreenStatePart
     }
   }
 
-  Future<void> _editCountdownLabel({
-    required bool editTopLabel,
-  }) async {
+  Future<void> _editCountdownLabel({required bool editTopLabel}) async {
     final controller = TextEditingController(
       text: editTopLabel ? _topLabelText : _bottomLabelText,
     );
     final nextValue = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(editTopLabel
-            ? context.tr('home_sachtrn_a2d51f')
-            : context.tr('home_sachdi_744600')),
+        title: Text(
+          editTopLabel
+              ? context.tr('home_sachtrn_a2d51f')
+              : context.tr('home_sachdi_744600'),
+        ),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -788,8 +800,9 @@ extension _CountdownModeIndependentScreenStatePart
     if (_didPromptPendingSpaceAvatarRetry || !mounted) {
       return;
     }
-    final pending =
-        await PendingUploadService.instance.load(_pendingSpaceAvatarUploadKey);
+    final pending = await PendingUploadService.instance.load(
+      _pendingSpaceAvatarUploadKey,
+    );
     if (pending == null || !mounted) {
       return;
     }
@@ -800,9 +813,7 @@ extension _CountdownModeIndependentScreenStatePart
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            context.tr('home_lnuploadav_949b24'),
-          ),
+          content: Text(context.tr('home_lnuploadav_949b24')),
           action: SnackBarAction(
             label: context.tr('home_thli_4dffdf'),
             onPressed: () {
@@ -815,8 +826,9 @@ extension _CountdownModeIndependentScreenStatePart
   }
 
   Future<void> _retryPendingSpaceAvatarUpload() async {
-    final pending =
-        await PendingUploadService.instance.load(_pendingSpaceAvatarUploadKey);
+    final pending = await PendingUploadService.instance.load(
+      _pendingSpaceAvatarUploadKey,
+    );
     if (pending == null || !mounted) {
       return;
     }
@@ -854,6 +866,7 @@ extension _CountdownModeIndependentScreenStatePart
     if (_uploadingAvatarRole != null) {
       return;
     }
+    final avatarChangeFailedTemplate = context.tr('p7_avatar_change_failed');
     XFile? file = presetFile ?? await _storageService.pickImage();
     if (file == null || !mounted) {
       return;
@@ -872,10 +885,7 @@ extension _CountdownModeIndependentScreenStatePart
       }
       await PendingUploadService.instance.save(
         _pendingSpaceAvatarUploadKey,
-        <String, dynamic>{
-          'role': role,
-          'filePath': file.path,
-        },
+        <String, dynamic>{'role': role, 'filePath': file.path},
       );
       final url = await _storageService.uploadImage(
         houseId,
@@ -902,7 +912,12 @@ extension _CountdownModeIndependentScreenStatePart
       await _saveLocalSettings();
       await PendingUploadService.instance.clear(_pendingSpaceAvatarUploadKey);
     } catch (e) {
-      _showMessage('Không thể đổi avatar: $e');
+      _showMessage(
+        avatarChangeFailedTemplate.replaceAll(
+          '{error}',
+          AppErrorMapper.resolve(e).message,
+        ),
+      );
     } finally {
       if (mounted) {
         _safeSetState(() {
@@ -975,8 +990,9 @@ extension _CountdownModeIndependentScreenStatePart
       return false;
     }
 
-    final publicSnap =
-        await _countdownSpaceDbRef.child('houses_public/$normalized').get();
+    final publicSnap = await _countdownSpaceDbRef
+        .child('houses_public/$normalized')
+        .get();
     return publicSnap.exists;
   }
 
@@ -1021,7 +1037,7 @@ extension _CountdownModeIndependentScreenStatePart
       return context.tr('home_bnchanhpmn_f6c560');
     }
     if (!RegExp(r'^[A-Z0-9_-]{4,40}$').hasMatch(code)) {
-      return 'Mã nhà chỉ gồm chữ, số, "_" hoặc "-". Ví dụ: NH_ABC123.';
+      return context.tr('p7_invalid_house_code');
     }
     if (_selfSpaceHouseId == 'local_self') {
       return context.tr('home_chaxcnhcmn_8d40ef');
@@ -1029,9 +1045,10 @@ extension _CountdownModeIndependentScreenStatePart
     if (code == _selfSpaceHouseId) {
       return context.tr('home_khngthghpv_ac8b30');
     }
-    if (_spaceHouseIds
-        .any((existing) => _normalizeSpaceCode(existing) == code)) {
-      return 'Không gian với mã nhà "$code" đã có trong danh sách.';
+    if (_spaceHouseIds.any(
+      (existing) => _normalizeSpaceCode(existing) == code,
+    )) {
+      return context.tr('p7_space_already_added').replaceAll('{code}', code);
     }
     return null;
   }
@@ -1055,12 +1072,11 @@ extension _CountdownModeIndependentScreenStatePart
     final selfMessage = context.tr('home_khngthghpv_ac8b30');
     final successRequestMessage = context.tr('home_giyucughpn_d6a258');
     final fallbackMessage = context.tr('home_khngththmk_0bb09e');
+    final alreadyAddedTemplate = context.tr('p7_space_already_added');
+    final requestSentTemplate = context.tr('p7_space_request_sent');
 
     if (_isAddingSpace) {
-      return _CountdownSpaceAddResult(
-        success: false,
-        message: busyMessage,
-      );
+      return _CountdownSpaceAddResult(success: false, message: busyMessage);
     }
 
     final lookupValue = _normalizeSpaceCode(rawCode);
@@ -1077,16 +1093,14 @@ extension _CountdownModeIndependentScreenStatePart
       if (showFeedback) {
         _showMessage(limitMessage);
       }
-      return _CountdownSpaceAddResult(
-        success: false,
-        message: limitMessage,
-      );
+      return _CountdownSpaceAddResult(success: false, message: limitMessage);
     }
 
     _safeSetState(() => _isAddingSpace = true);
     try {
-      final resolvedTargetHouseId =
-          await _resolveSpaceTargetHouseId(lookupValue);
+      final resolvedTargetHouseId = await _resolveSpaceTargetHouseId(
+        lookupValue,
+      );
       if (resolvedTargetHouseId == null) {
         if (showFeedback) {
           _showMessage(notFoundMessage);
@@ -1102,18 +1116,17 @@ extension _CountdownModeIndependentScreenStatePart
         if (showFeedback) {
           _showMessage(selfMessage);
         }
-        return _CountdownSpaceAddResult(
-          success: false,
-          message: selfMessage,
-        );
+        return _CountdownSpaceAddResult(success: false, message: selfMessage);
       }
 
       if (_spaceHouseIds.any(
         (existing) =>
             _normalizeResolvedSpaceHouseId(existing) == resolvedTargetHouseId,
       )) {
-        final duplicateMessage =
-            'Không gian với mã nhà "$resolvedTargetHouseId" đã có trong danh sách.';
+        final duplicateMessage = alreadyAddedTemplate.replaceAll(
+          '{code}',
+          resolvedTargetHouseId,
+        );
         if (showFeedback) {
           _showMessage(duplicateMessage);
         }
@@ -1158,23 +1171,16 @@ extension _CountdownModeIndependentScreenStatePart
       await _saveSpaceRegistry();
 
       final code = resolvedTargetHouseId;
-      final successMessage =
-          'Đã gửi yêu cầu ghép nối tới $code. Khi người kia chấp nhận, không gian này sẽ đồng bộ với bạn.';
+      final successMessage = requestSentTemplate.replaceAll('{code}', code);
       if (showFeedback) {
         _showMessage(successMessage);
       }
-      return _CountdownSpaceAddResult(
-        success: true,
-        message: successMessage,
-      );
+      return _CountdownSpaceAddResult(success: true, message: successMessage);
     } catch (_) {
       if (showFeedback) {
         _showMessage(fallbackMessage);
       }
-      return _CountdownSpaceAddResult(
-        success: false,
-        message: fallbackMessage,
-      );
+      return _CountdownSpaceAddResult(success: false, message: fallbackMessage);
     } finally {
       if (mounted) {
         _safeSetState(() => _isAddingSpace = false);
@@ -1211,10 +1217,7 @@ extension _CountdownModeIndependentScreenStatePart
   void _showMessage(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -1236,8 +1239,11 @@ extension _CountdownModeIndependentScreenStatePart
       builder: (dialogContext) => AlertDialog(
         title: Text(context.tr('home_yucughpni_6a3807')),
         content: Text(
-          '$senderLabel đang muốn ghép nối không gian đếm với nhà của bạn.\n\n'
-          'Mã nhà: ${request.fromHouseId}\n\n${context.tr('home_nuchpnhnha_5e7057')}',
+          context
+              .tr('p7_incoming_space_request_body')
+              .replaceAll('{sender}', senderLabel)
+              .replaceAll('{house_id}', request.fromHouseId)
+              .replaceAll('{note}', context.tr('home_nuchpnhnha_5e7057')),
         ),
         actions: [
           TextButton(
@@ -1320,7 +1326,10 @@ extension _CountdownModeIndependentScreenStatePart
       builder: (dialogContext) => AlertDialog(
         title: Text(context.tr('home_giyucuxa_d2e564')),
         content: Text(
-          'Yêu cầu này sẽ được gửi tới ${_spaceTitle(houseId)}.\n\n${context.tr('home_nubnkiaxcn_9458c0')}',
+          context
+              .tr('p7_delete_request_dialog_body')
+              .replaceAll('{space}', _spaceTitle(houseId))
+              .replaceAll('{note}', context.tr('home_nubnkiaxcn_9458c0')),
         ),
         actions: [
           TextButton(
@@ -1361,7 +1370,10 @@ extension _CountdownModeIndependentScreenStatePart
       builder: (dialogContext) => AlertDialog(
         title: Text(context.tr('home_xcnhnxakhn_2ac5a7')),
         content: Text(
-          'Không gian ${_spaceTitle(houseId)} sẽ bị xóa cho cả hai bên ngay sau khi bạn xác nhận.\n\n${context.tr('home_nubnchamun_57d743')}',
+          context
+              .tr('p7_delete_confirm_dialog_body')
+              .replaceAll('{space}', _spaceTitle(houseId))
+              .replaceAll('{note}', context.tr('home_nubnchamun_57d743')),
         ),
         actions: [
           TextButton(
@@ -1397,10 +1409,7 @@ extension _CountdownModeIndependentScreenStatePart
     _showMessage(result.message);
   }
 
-  InputDecoration _sheetDecoration({
-    required String label,
-    String? hint,
-  }) {
+  InputDecoration _sheetDecoration({required String label, String? hint}) {
     return InputDecoration(
       labelText: label,
       hintText: hint,
@@ -1463,7 +1472,12 @@ extension _CountdownModeIndependentScreenStatePart
       _spaceHouseIds.length >= _CountdownModeIndependentScreenState._maxSpaces;
 
   String _spaceLimitMessage() {
-    return 'Bạn chỉ có thể dùng tối đa ${_CountdownModeIndependentScreenState._maxSpaces} không gian. Hãy mở Cài đặt của một không gian đã ghép để gửi yêu cầu xóa. Không gian sẽ xóa ngay khi bên kia chấp nhận hoặc tự xóa sau 15 ngày.';
+    return context
+        .tr('p7_space_limit_message')
+        .replaceAll(
+          '{count}',
+          _CountdownModeIndependentScreenState._maxSpaces.toString(),
+        );
   }
 
   bool _hasDeleteRequest(String houseId) {
@@ -1479,7 +1493,10 @@ extension _CountdownModeIndependentScreenStatePart
     final month = dt.month.toString().padLeft(2, '0');
     final hour = dt.hour.toString().padLeft(2, '0');
     final minute = dt.minute.toString().padLeft(2, '0');
-    return '$day/$month/${dt.year} lúc $hour:$minute';
+    return context
+        .tr('p7_datetime_at')
+        .replaceAll('{date}', '$day/$month/${dt.year}')
+        .replaceAll('{time}', '$hour:$minute');
   }
 
   String _deleteStatusTitle(String houseId) {
@@ -1500,9 +1517,13 @@ extension _CountdownModeIndependentScreenStatePart
     }
     final deadlineLabel = _formatSpaceDeleteDateTime(request.deleteAt);
     if (request.isRequestedBy(_selfSpaceHouseId)) {
-      return 'Yêu cầu đã được gửi. Nếu bên kia chưa xác nhận, không gian sẽ tự xóa vào $deadlineLabel.';
+      return context
+          .tr('p7_delete_status_requested')
+          .replaceAll('{deadline}', deadlineLabel);
     }
-    return 'Bạn có thể xác nhận xóa ngay trong phần cài đặt. Nếu chưa xác nhận, không gian sẽ tự xóa vào $deadlineLabel.';
+    return context
+        .tr('p7_delete_status_incoming')
+        .replaceAll('{deadline}', deadlineLabel);
   }
 
   bool _hasIncomingSpaceRequest(String houseId) {
@@ -1591,32 +1612,32 @@ extension _CountdownModeIndependentScreenStatePart
   String _topLabel() {
     return _topLabelText.trim().isEmpty
         ? (_singleMode
-            ? context.tr('home_tuicati_5c654c')
-            : context.tr('home_yunhau_501102'))
+              ? context.tr('home_tuicati_5c654c')
+              : context.tr('home_yunhau_501102'))
         : _topLabelText.trim();
   }
 
   String _bottomLabel() {
     return _bottomLabelText.trim().isEmpty
         ? (_singleMode
-            ? context.tr('home_ngytui_22bed4')
-            : context.tr('home_ngy_41ec10'))
+              ? context.tr('home_ngytui_22bed4')
+              : context.tr('home_ngy_41ec10'))
         : _bottomLabelText.trim();
   }
 
   String _previewTopLabel(_CountdownSpaceSnapshot snapshot) {
     return snapshot.topLabel.trim().isEmpty
         ? (snapshot.singleMode
-            ? context.tr('home_tuicati_5c654c')
-            : context.tr('home_yunhau_501102'))
+              ? context.tr('home_tuicati_5c654c')
+              : context.tr('home_yunhau_501102'))
         : snapshot.topLabel.trim();
   }
 
   String _previewBottomLabel(_CountdownSpaceSnapshot snapshot) {
     return snapshot.bottomLabel.trim().isEmpty
         ? (snapshot.singleMode
-            ? context.tr('home_ngytui_22bed4')
-            : context.tr('home_ngy_41ec10'))
+              ? context.tr('home_ngytui_22bed4')
+              : context.tr('home_ngy_41ec10'))
         : snapshot.bottomLabel.trim();
   }
 
@@ -1624,7 +1645,9 @@ extension _CountdownModeIndependentScreenStatePart
     if (anchorDate == null) {
       return context.tr('home_chmvothchn_6b1d87');
     }
-    return 'Từ ${DateInputUtils.formatDisplayDate(anchorDate)}';
+    return context
+        .tr('p7_from_date')
+        .replaceAll('{date}', DateInputUtils.formatDisplayDate(anchorDate));
   }
 
   int _daysSince(DateTime startDate) {
@@ -1639,6 +1662,8 @@ extension _CountdownModeIndependentScreenStatePart
     if (_anchorDate == null) {
       return context.tr('home_chmvothchn_6b1d87');
     }
-    return 'Từ ${DateInputUtils.formatDisplayDate(_anchorDate!)}';
+    return context
+        .tr('p7_from_date')
+        .replaceAll('{date}', DateInputUtils.formatDisplayDate(_anchorDate!));
   }
 }

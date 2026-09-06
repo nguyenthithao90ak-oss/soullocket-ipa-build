@@ -82,9 +82,7 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
 
     if (result == null || result is! SingleMatchCandidate) {
       if (!mounted) return;
-      _showSnack(
-        'Hiện không có ai phù hợp để gọi lúc này. Vui lòng thử lại sau.',
-      );
+      _showSnack(context.tr('p4_match_no_candidate'));
       return;
     }
 
@@ -132,7 +130,11 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
               note: L10nService().translate('match_khitottabg_083000'),
             )
             .timeout(const Duration(seconds: 8));
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[SuppressedError] lib/views/single_match/tabs/single_match_calls_tab.dart: $error',
+        );
+      }
       if (mounted) setState(() => _callingHouseId = null);
     }
   }
@@ -154,24 +156,11 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.cloud_off_rounded,
-                size: 48,
-                color: SLColors.textTertiary,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                _error!,
-                textAlign: TextAlign.center,
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w700,
-                  color: SLColors.textSecondary,
-                ),
-              ),
-            ],
+          child: SLTheme.emptyStatePanel(
+            icon: Icons.cloud_off_rounded,
+            title: context.tr('p4_match_load_error_title'),
+            subtitle: _error!,
+            accentColor: SLColors.danger,
           ),
         ),
       );
@@ -183,168 +172,184 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
       (sum, e) => sum + e.durationSeconds ~/ 60,
     );
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 30),
-      children: [
-        // Nút gọi ngẫu nhiên
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xFFFFDCE7)),
-          ),
-          child: Column(
-            children: [
-              const Icon(
-                Icons.casino_rounded,
-                size: 40,
-                color: Color(0xFF7C61FF),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 760),
+        child: ListView(
+          physics: SLResponsive.scrollPhysicsForPlatform(),
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 30),
+          children: [
+            // Nút gọi ngẫu nhiên
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: SLColors.paper,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: const Color(0xFFFFDCE7)),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Gọi ngẫu nhiên',
-                style: SLTheme.quicksand(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF32203B),
-                ),
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.casino_rounded,
+                    size: 40,
+                    color: Color(0xFF7C61FF),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    context.tr('p4_match_random_title'),
+                    style: SLTheme.quicksand(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF32203B),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    context.tr('p4_match_random_subtitle'),
+                    textAlign: TextAlign.center,
+                    style: SLTheme.quicksand(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF8A798E),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () =>
+                              _startRandomCall(isVideo: false, isBlind: true),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF3B3B58),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          icon: const Text(
+                            '🎭',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                          label: Text(
+                            context.tr('p4_match_blind_call'),
+                            style: SLTheme.quicksand(
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () =>
+                              _startRandomCall(isVideo: true, isBlind: false),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFFFF5E7E),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          icon: const Text('⚡', style: TextStyle(fontSize: 18)),
+                          label: Text(
+                            context.tr('p4_match_direct_call'),
+                            style: SLTheme.quicksand(
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                'Hệ thống chọn người phù hợp và kết nối ngay',
-                textAlign: TextAlign.center,
-                style: SLTheme.quicksand(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF8A798E),
-                ),
-              ),
-              const SizedBox(height: 14),
+            ),
+
+            if (callEntries.isNotEmpty) ...[
+              const SizedBox(height: 18),
+              // Thống kê
               Row(
                 children: [
                   Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () =>
-                          _startRandomCall(isVideo: false, isBlind: true),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF3B3B58),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      icon: const Text('🎭', style: TextStyle(fontSize: 18)),
-                      label: Text(
-                        'Giấu mặt',
-                        style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-                      ),
+                    child: _StatTile(
+                      label: L10nService().translate('match_tngcucgi_8e041e'),
+                      value: '${callEntries.length}',
+                      icon: Icons.call_rounded,
+                      color: const Color(0xFFFF5E7E),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () =>
-                          _startRandomCall(isVideo: true, isBlind: false),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF5E7E),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      icon: const Text('⚡', style: TextStyle(fontSize: 18)),
-                      label: Text(
-                        'Gọi trực tiếp',
-                        style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-                      ),
+                    child: _StatTile(
+                      label: L10nService().translate('match_phttrchuyn_b7d1cd'),
+                      value: '$totalMinutes',
+                      icon: Icons.schedule_rounded,
+                      color: const Color(0xFF6366F1),
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Text(
+                    context.tr('p4_match_history_title'),
+                    style: SLTheme.quicksand(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF2E2427),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ...callEntries.map(_buildHistoryCard),
             ],
-          ),
+
+            if (callEntries.isEmpty && _history.isEmpty) ...[
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: SLColors.paper,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: const Color(0xFFF0E5DF),
+                    width: 1.2,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.call_end_rounded,
+                      size: 52,
+                      color: SLColors.textTertiary,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      context.tr('p4_match_empty_title'),
+                      style: SLTheme.quicksand(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: SLColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      context.tr('p4_match_empty_subtitle'),
+                      textAlign: TextAlign.center,
+                      style: SLTheme.quicksand(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: SLColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
         ),
-
-        if (callEntries.isNotEmpty) ...[
-          const SizedBox(height: 18),
-          // Thống kê
-          Row(
-            children: [
-              Expanded(
-                child: _StatTile(
-                  label: L10nService().translate('match_tngcucgi_8e041e'),
-                  value: '${callEntries.length}',
-                  icon: Icons.call_rounded,
-                  color: const Color(0xFFFF5E7E),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _StatTile(
-                  label: L10nService().translate('match_phttrchuyn_b7d1cd'),
-                  value: '$totalMinutes',
-                  icon: Icons.schedule_rounded,
-                  color: const Color(0xFF6366F1),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              Text(
-                'Lịch sử cuộc gọi',
-                style: SLTheme.quicksand(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF2E2427),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ...callEntries.map(_buildHistoryCard),
-        ],
-
-        if (callEntries.isEmpty && _history.isEmpty) ...[
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: const Color(0xFFF0E5DF), width: 1.2),
-            ),
-            child: Column(
-              children: [
-                const Icon(
-                  Icons.call_end_rounded,
-                  size: 52,
-                  color: SLColors.textTertiary,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Chưa có cuộc gọi nào',
-                  style: SLTheme.quicksand(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    color: SLColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Hãy bắt đầu ghép đôi và gọi cho người lạ.',
-                  textAlign: TextAlign.center,
-                  style: SLTheme.quicksand(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: SLColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
+      ),
     );
   }
 
@@ -366,7 +371,7 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: SLColors.paper,
           borderRadius: BorderRadius.circular(22),
           border: Border.all(color: Colors.white),
         ),
@@ -430,7 +435,10 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '${_formatRelativeTime(entry.startedAt)} • ${entry.compatibilityScore.toStringAsFixed(0)}% match',
+                    L10nService().format('p4_match_history_meta', {
+                      'time': _formatRelativeTime(entry.startedAt),
+                      'score': entry.compatibilityScore.toStringAsFixed(0),
+                    }),
                     style: SLTheme.quicksand(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -493,7 +501,13 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                               : Icons.call_made_rounded,
                           size: 17,
                         ),
-                        label: Text(isVideo ? 'Gọi video lại' : 'Gọi lại'),
+                        label: Text(
+                          context.tr(
+                            isVideo
+                                ? 'p4_match_call_video_again'
+                                : 'p4_match_call_again',
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -510,17 +524,37 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
     final dt = DateTime.fromMillisecondsSinceEpoch(ms);
     final now = DateTime.now();
     final diff = now.difference(dt);
-    if (diff.inMinutes < 60) return '${diff.inMinutes} phút trước';
-    if (diff.inHours < 24) return '${diff.inHours} giờ trước';
-    if (diff.inDays < 7) return '${diff.inDays} ngày trước';
+    if (diff.inMinutes < 1) {
+      return L10nService().translate('p4_match_just_now');
+    }
+    if (diff.inMinutes < 60) {
+      return L10nService().format('p4_match_minutes_ago', {
+        'count': diff.inMinutes,
+      });
+    }
+    if (diff.inHours < 24) {
+      return L10nService().format('p4_match_hours_ago', {
+        'count': diff.inHours,
+      });
+    }
+    if (diff.inDays < 7) {
+      return L10nService().format('p4_match_days_ago', {'count': diff.inDays});
+    }
     return '${dt.day}/${dt.month}/${dt.year}';
   }
 
   String _formatDuration(int seconds) {
-    if (seconds < 60) return '$seconds giây';
+    if (seconds < 60) {
+      return L10nService().format('p4_match_seconds', {'count': seconds});
+    }
     final min = seconds ~/ 60;
     final sec = seconds % 60;
-    return sec > 0 ? '$min phút $sec giây' : '$min phút';
+    return sec > 0
+        ? L10nService().format('p4_match_minutes_seconds', {
+            'minutes': min,
+            'seconds': sec,
+          })
+        : L10nService().format('p4_match_minutes', {'count': min});
   }
 }
 

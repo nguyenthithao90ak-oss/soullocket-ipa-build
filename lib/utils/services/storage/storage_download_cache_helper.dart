@@ -48,16 +48,14 @@ class StorageDownloadCacheHelper {
       await cacheDir.create(recursive: true);
     }
 
-    final keySource =
-        (cacheKey ?? '').trim().isNotEmpty ? '${cacheKey!.trim()}|$url' : url;
+    final keySource = (cacheKey ?? '').trim().isNotEmpty
+        ? '${cacheKey!.trim()}|$url'
+        : url;
     final fileName = '${stableCacheToken(keySource)}${cacheFileExtension(url)}';
     return File(p.join(cacheDir.path, fileName));
   }
 
-  Future<bool> hasFreshCache(
-    File cacheFile, {
-    required Duration ttl,
-  }) async {
+  Future<bool> hasFreshCache(File cacheFile, {required Duration ttl}) async {
     if (!await cacheFile.exists()) {
       return false;
     }
@@ -100,16 +98,12 @@ class StorageDownloadCacheHelper {
         return cacheFile;
       }
       debugPrint(
-        'Cached download failed ($namespace): ${AppErrorMapper.resolve(
-          response.statusCode,
-          fallbackMessage: 'Không thể tải cache từ mạng.',
-        ).message} $normalizedUrl',
+        'Cached download failed ($namespace): ${AppErrorMapper.resolve(response.statusCode, fallbackMessage: 'Không thể tải cache từ mạng.').message} $normalizedUrl',
       );
     } catch (e) {
-      debugPrint('Cached download error ($namespace): ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể tải cache từ mạng.',
-      ).message}');
+      debugPrint(
+        'Cached download error ($namespace): ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể tải cache từ mạng.').message}',
+      );
     }
 
     if (await cacheFile.exists() && await cacheFile.length() > 0) {
@@ -158,16 +152,15 @@ class StorageDownloadCacheHelper {
       return bytes;
     } catch (e) {
       debugPrint(
-          'Cached bytes read error ($namespace): ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể đọc cache đã tải.',
-      ).message}');
+        'Cached bytes read error ($namespace): ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể đọc cache đã tải.').message}',
+      );
       return null;
     }
   }
 
-  Future<void> purgeStaleCache(
-      {Duration staleThreshold = const Duration(days: 3)}) async {
+  Future<void> purgeStaleCache({
+    Duration staleThreshold = const Duration(days: 3),
+  }) async {
     try {
       final tempDir = await getTemporaryDirectory();
       final baseCacheDir = Directory(p.join(tempDir.path, 'soullocket_cache'));
@@ -179,8 +172,10 @@ class StorageDownloadCacheHelper {
       int deletedCount = 0;
       int freedBytes = 0;
 
-      await for (final entity
-          in baseCacheDir.list(recursive: true, followLinks: false)) {
+      await for (final entity in baseCacheDir.list(
+        recursive: true,
+        followLinks: false,
+      )) {
         if (entity is File) {
           try {
             final stat = await entity.stat();
@@ -189,13 +184,18 @@ class StorageDownloadCacheHelper {
               await entity.delete();
               deletedCount++;
             }
-          } catch (_) {}
+          } catch (error) {
+            debugPrint(
+              'StorageDownloadCacheHelper: Cannot inspect cached file: $error',
+            );
+          }
         }
       }
 
       if (deletedCount > 0) {
         debugPrint(
-            'StorageDownloadCacheHelper: Purged $deletedCount stale files, freed ${(freedBytes / 1024 / 1024).toStringAsFixed(2)} MB');
+          'StorageDownloadCacheHelper: Purged $deletedCount stale files, freed ${(freedBytes / 1024 / 1024).toStringAsFixed(2)} MB',
+        );
       }
     } catch (e) {
       debugPrint('StorageDownloadCacheHelper: Failed to purge stale cache: $e');

@@ -13,8 +13,9 @@ class SensitiveContentService {
 
   static final SensitiveContentService instance = SensitiveContentService._();
 
-  static const MethodChannel _channel =
-      MethodChannel('soul_locket/app_control');
+  static const MethodChannel _channel = MethodChannel(
+    'soul_locket/app_control',
+  );
   static const String _methodSetSensitiveProtection = 'setSensitiveProtection';
   static const String _methodProtectedTouchRejected =
       'onProtectedTouchRejected';
@@ -58,8 +59,13 @@ class SensitiveContentService {
   }
 
   Future<void> _enqueueApply() {
-    _operationQueue =
-        _operationQueue.catchError((_) {}).then((_) => _applyCurrentState());
+    _operationQueue = _operationQueue
+        .catchError((error) {
+          debugPrint(
+            '[SuppressedError] lib/utils/services/sensitive_content_service.dart: $error',
+          );
+        })
+        .then((_) => _applyCurrentState());
     return _operationQueue;
   }
 
@@ -70,16 +76,12 @@ class SensitiveContentService {
     try {
       await _channel.invokeMethod<void>(
         _methodSetSensitiveProtection,
-        <String, Object?>{
-          'enabled': enabled,
-          'hideOverlays': hideOverlays,
-        },
+        <String, Object?>{'enabled': enabled, 'hideOverlays': hideOverlays},
       );
     } on PlatformException catch (error) {
-      debugPrint('SensitiveContentService failed: ${AppErrorMapper.resolve(
-        error,
-        fallbackMessage: 'Không thể áp dụng bảo vệ nội dung.',
-      ).message}');
+      debugPrint(
+        'SensitiveContentService failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể áp dụng bảo vệ nội dung.').message}',
+      );
     }
   }
 
@@ -96,16 +98,17 @@ class SensitiveContentService {
 
     try {
       final rawArgs = call.arguments;
-      final args =
-          rawArgs is Map ? Map<Object?, Object?>.from(rawArgs) : const {};
+      final args = rawArgs is Map
+          ? Map<Object?, Object?>.from(rawArgs)
+          : const {};
       final reasonCode =
           (args['reasonCode']?.toString().trim().toLowerCase() ?? 'overlay');
       final rawSignals = args['signals'];
       final signals = rawSignals is List
           ? rawSignals
-              .map((item) => item.toString().trim())
-              .where((item) => item.isNotEmpty)
-              .toList(growable: false)
+                .map((item) => item.toString().trim())
+                .where((item) => item.isNotEmpty)
+                .toList(growable: false)
           : const <String>['obscured_touch'];
 
       final verdict = await _runtimeRiskService.resolveRisk(
@@ -136,10 +139,8 @@ class SensitiveContentService {
       );
     } catch (error) {
       debugPrint(
-          'SensitiveContentService signal handling failed: ${AppErrorMapper.resolve(
-        error,
-        fallbackMessage: 'Không thể xử lý tín hiệu bảo vệ nội dung.',
-      ).message}');
+        'SensitiveContentService signal handling failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể xử lý tín hiệu bảo vệ nội dung.').message}',
+      );
     }
   }
 }

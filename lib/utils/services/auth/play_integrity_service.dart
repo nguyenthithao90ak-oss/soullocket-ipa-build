@@ -185,16 +185,17 @@ class PlayIntegrityService {
     HttpPost? httpPost,
     NowProvider? nowProvider,
     MethodChannel? methodChannel,
-  })  : _httpPost = httpPost ?? http.post,
-        _nowProvider = nowProvider ?? DateTime.now,
-        _methodChannel = methodChannel ?? _defaultMethodChannel;
+  }) : _httpPost = httpPost ?? http.post,
+       _nowProvider = nowProvider ?? DateTime.now,
+       _methodChannel = methodChannel ?? _defaultMethodChannel;
 
   // Native contract for the Android owner:
   // channel: soul_locket/play_integrity
   // methods: prepareIntegrityToken(cloudProjectNumber),
   //          requestIntegrityToken(cloudProjectNumber, requestHash)
-  static const MethodChannel _defaultMethodChannel =
-      MethodChannel('soul_locket/play_integrity');
+  static const MethodChannel _defaultMethodChannel = MethodChannel(
+    'soul_locket/play_integrity',
+  );
   static const String _prepareMethod = 'prepareIntegrityToken';
   static const String _requestMethod = 'requestIntegrityToken';
   static const Duration _requestTimeout = Duration(seconds: 5);
@@ -219,12 +220,11 @@ class PlayIntegrityService {
     if (_markedUnsupported && !force) return false;
     if (_prepared && !force) return true;
     try {
-      await _methodChannel.invokeMethod<void>(
-        _prepareMethod,
-        <String, Object?>{
-          'cloudProjectNumber': AppConfig.playIntegrityCloudProjectNumber,
-        },
-      ).timeout(const Duration(seconds: 3));
+      await _methodChannel
+          .invokeMethod<void>(_prepareMethod, <String, Object?>{
+            'cloudProjectNumber': AppConfig.playIntegrityCloudProjectNumber,
+          })
+          .timeout(const Duration(seconds: 3));
       _prepared = true;
       return true;
     } on MissingPluginException {
@@ -239,10 +239,9 @@ class PlayIntegrityService {
     } on PlatformException catch (error) {
       _prepared = false;
       _markedUnsupported = true;
-      debugPrint('PlayIntegrity warmUp failed: ${AppErrorMapper.resolve(
-        error,
-        fallbackMessage: 'Không thể khởi tạo Play Integrity.',
-      ).message}');
+      debugPrint(
+        'PlayIntegrity warmUp failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể khởi tạo Play Integrity.').message}',
+      );
       return false;
     } catch (_) {
       _prepared = false;
@@ -283,8 +282,9 @@ class PlayIntegrityService {
         return null;
       }
     }
-    final integrityToken =
-        await _requestIntegrityToken(requestHash: requestHash);
+    final integrityToken = await _requestIntegrityToken(
+      requestHash: requestHash,
+    );
     if (integrityToken == null || integrityToken.isEmpty) {
       return null;
     }
@@ -336,8 +336,9 @@ class PlayIntegrityService {
         flow: normalizedFlow,
         requestHash: requestHash,
         requestId: requestId,
-        reason:
-            _markedUnsupported ? 'marked_unsupported' : 'unsupported_platform',
+        reason: _markedUnsupported
+            ? 'marked_unsupported'
+            : 'unsupported_platform',
         message: kDebugMode
             ? 'Play Integrity hiện không khả dụng.'
             : 'Tính năng kiểm tra an toàn hiện chưa áp dụng trên thiết bị này.',
@@ -389,9 +390,7 @@ class PlayIntegrityService {
     }
 
     try {
-      var authHeaders = <String, String>{
-        'Content-Type': 'application/json',
-      };
+      var authHeaders = <String, String>{'Content-Type': 'application/json'};
       String? idToken;
       if (currentUser != null) {
         idToken = await currentUser.getIdToken();
@@ -419,8 +418,10 @@ class PlayIntegrityService {
         return PlayIntegrityAssessment.fromJson(decoded);
       }
 
-      final reason =
-          _stringOrFallback(decoded['error'], 'verify_play_integrity_failed');
+      final reason = _stringOrFallback(
+        decoded['error'],
+        'verify_play_integrity_failed',
+      );
       unawaited(
         RevenueSecurityTelemetryService.instance.logEvent(
           type: 'play_integrity_failed',
@@ -453,9 +454,7 @@ class PlayIntegrityService {
           type: 'play_integrity_failed',
           reason: 'verify_timeout',
           severity: 'medium',
-          extra: <String, Object?>{
-            'flow': normalizedFlow,
-          },
+          extra: <String, Object?>{'flow': normalizedFlow},
         ),
       );
       return PlayIntegrityAssessment.failure(
@@ -468,10 +467,9 @@ class PlayIntegrityService {
             : 'Hệ thống kiểm tra an toàn phản hồi quá chậm. Hãy thử lại sau.',
       );
     } catch (error) {
-      debugPrint('PlayIntegrity assess failed: ${AppErrorMapper.resolve(
-        error,
-        fallbackMessage: 'Không thể kiểm tra Play Integrity.',
-      ).message}');
+      debugPrint(
+        'PlayIntegrity assess failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể kiểm tra Play Integrity.').message}',
+      );
       unawaited(
         RevenueSecurityTelemetryService.instance.logEvent(
           type: 'play_integrity_failed',
@@ -479,9 +477,7 @@ class PlayIntegrityService {
               ? 'missing_app_check'
               : 'verify_request_failed',
           severity: 'high',
-          extra: <String, Object?>{
-            'flow': normalizedFlow,
-          },
+          extra: <String, Object?>{'flow': normalizedFlow},
         ),
       );
       return PlayIntegrityAssessment.failure(
@@ -496,18 +492,15 @@ class PlayIntegrityService {
     }
   }
 
-  Future<String?> _requestIntegrityToken({
-    required String requestHash,
-  }) async {
+  Future<String?> _requestIntegrityToken({required String requestHash}) async {
     if (_markedUnsupported) return null;
     try {
-      final token = await _methodChannel.invokeMethod<String>(
-        _requestMethod,
-        <String, Object?>{
-          'cloudProjectNumber': AppConfig.playIntegrityCloudProjectNumber,
-          'requestHash': requestHash,
-        },
-      ).timeout(_requestTimeout);
+      final token = await _methodChannel
+          .invokeMethod<String>(_requestMethod, <String, Object?>{
+            'cloudProjectNumber': AppConfig.playIntegrityCloudProjectNumber,
+            'requestHash': requestHash,
+          })
+          .timeout(_requestTimeout);
       final normalized = token?.trim() ?? '';
       return normalized.isEmpty ? null : normalized;
     } on MissingPluginException {
@@ -548,11 +541,13 @@ class PlayIntegrityService {
         return decoded;
       }
       if (decoded is Map) {
-        return decoded.map(
-          (key, value) => MapEntry(key.toString(), value),
-        );
+        return decoded.map((key, value) => MapEntry(key.toString(), value));
       }
-    } catch (_) {}
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('[PlayIntegrity] Response JSON không hợp lệ: $error');
+      }
+    }
     return <String, dynamic>{};
   }
 
@@ -592,11 +587,13 @@ class PlayIntegrityService {
     }
     if (value is Map) {
       final keys = value.keys.map((key) => key.toString()).toList()..sort();
-      final entries = keys.map((key) {
-        final encodedKey = jsonEncode(key);
-        final encodedValue = _stableStringify(value[key]);
-        return '$encodedKey:$encodedValue';
-      }).join(',');
+      final entries = keys
+          .map((key) {
+            final encodedKey = jsonEncode(key);
+            final encodedValue = _stableStringify(value[key]);
+            return '$encodedKey:$encodedValue';
+          })
+          .join(',');
       return '{$entries}';
     }
     return jsonEncode(value.toString());

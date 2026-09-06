@@ -186,7 +186,13 @@ extension _SettingsTabSecurityLockHelpersPart on _SettingsTabState {
       final houseId = _houseId?.trim();
       if (houseId != null && houseId.isNotEmpty) {
         unawaited(
-          _clearRemoteAppLockSyncArtifacts(houseId: houseId).catchError((_) {}),
+          _clearRemoteAppLockSyncArtifacts(houseId: houseId).catchError((
+            error,
+          ) {
+            debugPrint(
+              '[SuppressedError] lib/views/home/tabs/settings/security/security_lock_helpers_part.dart: $error',
+            );
+          }),
         );
       }
 
@@ -288,7 +294,7 @@ extension _SettingsTabSecurityLockHelpersPart on _SettingsTabState {
                 ),
               ),
             ),
-            if (trailing != null) trailing,
+            ?trailing,
           ],
         ),
       ),

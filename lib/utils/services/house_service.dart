@@ -14,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/utils/services/device_manager_service.dart';
 import 'package:soullocket_app/utils/services/single_match_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'core/cloud_functions_helper.dart';
 import 'offline_cache_service.dart';
 import 'secure_storage_service.dart';
@@ -36,6 +37,8 @@ class HouseService {
   static Map<String, dynamic>? _cachedSettings;
   static String? _lastFirestoreMembershipSyncKey;
   static DateTime? _lastFirestoreMembershipSyncAt;
+  static String? _activeFirestoreMembershipSyncKey;
+  static Future<void>? _activeFirestoreMembershipSync;
   static const String _defaultHouseName = 'Chúng mình';
   static const String _defaultNameU1 = 'Bạn Nam';
   static const String _defaultNameU2 = 'Bạn Nữ';
@@ -72,19 +75,81 @@ class HouseService {
         DateTime.now().difference(lastSyncAt) < const Duration(minutes: 5)) {
       return;
     }
+
+    final activeSync = _activeFirestoreMembershipSync;
+    if (_activeFirestoreMembershipSyncKey == syncKey && activeSync != null) {
+      try {
+        await activeSync;
+      } catch (error) {
+        if (throwOnError) rethrow;
+      }
+      return;
+    }
+
+    final syncOperation = _ensureFirestoreMembershipOnServer(uid, houseId);
+    _activeFirestoreMembershipSyncKey = syncKey;
+    _activeFirestoreMembershipSync = syncOperation;
     try {
-      await CloudFunctionsHelper.callSecure<dynamic>(
-        'syncMyHouseMembership',
-        payload: <String, dynamic>{'houseId': houseId},
-        timeout: const Duration(seconds: 10),
-        fallbackErrorMessage: 'Không thể đồng bộ quyền truy cập nhà.',
-      );
+      await syncOperation;
       _lastFirestoreMembershipSyncKey = syncKey;
       _lastFirestoreMembershipSyncAt = DateTime.now();
     } catch (e) {
       debugPrint('[HouseService] Firestore houseId sync failed: $e');
       if (throwOnError) rethrow;
+    } finally {
+      if (identical(_activeFirestoreMembershipSync, syncOperation)) {
+        _activeFirestoreMembershipSyncKey = null;
+        _activeFirestoreMembershipSync = null;
+      }
     }
+  }
+
+  Future<void> _ensureFirestoreMembershipOnServer(
+    String uid,
+    String houseId,
+  ) async {
+    try {
+      final membership = await FirebaseFirestore.instance
+          .collection('house_memberships')
+          .doc(uid)
+          .get(const GetOptions(source: Source.server))
+          .timeout(const Duration(seconds: 5));
+      final verifiedHouseId = membership.data()?['houseId']?.toString().trim();
+      if (membership.exists && verifiedHouseId == houseId) {
+        return;
+      }
+    } catch (error) {
+      debugPrint(
+        '[HouseService] Firestore membership preflight skipped: '
+        '${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể kiểm tra quyền truy cập nhà.').message}',
+      );
+    }
+
+    await _refreshCallableSecurityContext(
+      force: false,
+      throwOnAppCheckError: true,
+    );
+    try {
+      await _callFirestoreMembershipSync(houseId);
+    } on FirebaseFunctionsException catch (error) {
+      if (!_shouldRetryCreateHouse(error)) rethrow;
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      await _refreshCallableSecurityContext(
+        force: true,
+        throwOnAppCheckError: true,
+      );
+      await _callFirestoreMembershipSync(houseId);
+    }
+  }
+
+  Future<void> _callFirestoreMembershipSync(String houseId) async {
+    await CloudFunctionsHelper.callSecure<dynamic>(
+      'syncMyHouseMembership',
+      payload: <String, dynamic>{'houseId': houseId},
+      timeout: const Duration(seconds: 15),
+      fallbackErrorMessage: 'Không thể đồng bộ quyền truy cập nhà.',
+      throwOriginalException: true,
+    );
   }
 
   /// Đảm bảo Firestore đã có membership do server xác minh trước khi
@@ -166,7 +231,10 @@ class HouseService {
     }
   }
 
-  Future<void> _refreshCallableSecurityContext({bool force = false}) async {
+  Future<void> _refreshCallableSecurityContext({
+    bool force = false,
+    bool throwOnAppCheckError = false,
+  }) async {
     await _waitForAuthenticatedSessionReady(forceRefreshToken: force);
     final user = _auth.currentUser;
     if (user == null) {
@@ -181,6 +249,16 @@ class HouseService {
       debugPrint(
         '[HouseService] App Check token warmup skipped: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể chuẩn bị App Check.').message}',
       );
+      if (throwOnAppCheckError) {
+        throw AppErrorInfo(
+          kind: AppErrorKind.server,
+          message: L10nService().translate(
+            kDebugMode
+                ? 'err_appcheck_debug_blocked'
+                : 'err_appcheck_verifying_device',
+          ),
+        );
+      }
     }
   }
 
@@ -767,7 +845,9 @@ class HouseService {
             return foundHouseId;
           }
         }
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[HouseService] Fallback house query failed: $error');
+      }
     } on TimeoutException {
       // Fallback cache below handles slow network without spamming logs.
     } catch (e) {
@@ -818,7 +898,6 @@ class HouseService {
       if (memberSnap.exists) {
         return true;
       }
-
     } catch (e) {
       debugPrint('[HouseService] Error validating house membership: $e');
       return false;
@@ -847,7 +926,10 @@ class HouseService {
             return data;
           }
         }
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[HouseService] Home settings cache hỏng: $error');
+        await prefs.remove('il_offline_cache_home_settings');
+      }
     }
 
     return await _fetchSettingsFromServerAndCache(houseId, prefs);
@@ -876,7 +958,9 @@ class HouseService {
           return data;
         }
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[HouseService] Không tải được settings từ server: $error');
+    }
     return null;
   }
 

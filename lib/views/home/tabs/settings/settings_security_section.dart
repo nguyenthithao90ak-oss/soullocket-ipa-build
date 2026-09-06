@@ -131,7 +131,9 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     Text(
                       _houseId == null
                           ? context.tr('home_mnhchac_a0dca8')
-                          : 'Mã nhà: $_houseId',
+                          : context
+                                .tr('p6_house_id_value')
+                                .replaceAll('{houseId}', _houseId!),
                       style: SLTextStyles.quicksand(
                         fontSize: 14,
                         fontWeight: FontWeight.w900,
@@ -148,7 +150,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                       ),
                       icon: const Icon(Icons.link_rounded, size: 18),
                       label: Text(
-                        'Ghép nối ngay',
+                        context.tr('p6_pair_now'),
                         style: SLTextStyles.quicksand(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
@@ -189,7 +191,12 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     ? _sendVerificationEmail
                     : null,
                 actionLabel: _emailVerifyWaitSeconds > 0
-                    ? 'Thử lại sau ${_emailVerifyWaitSeconds}s'
+                    ? context
+                          .tr('p6_retry_after_seconds')
+                          .replaceAll(
+                            '{seconds}',
+                            _emailVerifyWaitSeconds.toString(),
+                          )
                     : context.tr('home_xcthc_7e8a1b'),
                 onSecondaryAction: !_isMainEmailVerified
                     ? _changePrimaryEmailV2
@@ -761,7 +768,12 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
             Padding(
               padding: const EdgeInsets.only(left: 44, right: 16, bottom: 8),
               child: Text(
-                'Lưu ý: Khi bật sinh trắc học, app sẽ ưu tiên Face ID/Vân tay. Nếu hủy hoặc nhận diện thất bại, bạn vẫn cần nhập mã PIN ứng dụng hiện tại. Tùy chọn ${context.tr('home_dngmtkhu_281aff')} là mật khẩu/khóa màn hình của thiết bị.',
+                context
+                    .tr('p6_biometric_note')
+                    .replaceAll(
+                      '{deviceLock}',
+                      context.tr('home_dngmtkhu_281aff'),
+                    ),
                 style: SLTheme.quicksand(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,

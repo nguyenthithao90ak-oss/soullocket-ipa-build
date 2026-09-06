@@ -297,7 +297,11 @@ class _UtilitiesTabState extends State<UtilitiesTab>
           }
         }
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/home/tabs/utilities_tab.dart: $error',
+      );
+    }
   }
 
   @override
@@ -408,11 +412,19 @@ class _UtilitiesTabState extends State<UtilitiesTab>
           Future.delayed(const Duration(seconds: 2), () async {
             try {
               await inAppReview.requestReview();
-            } catch (_) {}
+            } catch (error) {
+              debugPrint(
+                '[SuppressedError] lib/views/home/tabs/utilities_tab.dart: $error',
+              );
+            }
           });
         }
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/home/tabs/utilities_tab.dart: $error',
+      );
+    }
   }
 
   static DateTime? _lastUtilityAdTime;

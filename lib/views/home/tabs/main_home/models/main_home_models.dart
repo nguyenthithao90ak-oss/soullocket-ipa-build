@@ -271,20 +271,27 @@ Widget _buildInteractionVisual({
       : (visual is String && visual.startsWith('assets/') ? visual : null);
 
   if (preferAsset && resolvedAssetPath != null) {
-    return R2StickerImage(
-      resolvedAssetPath,
-      width: size,
-      height: size,
-      fit: fit,
-      animateLocalSticker: true,
-      errorWidget: _buildInteractionVisual(
-        visual: visual,
-        size: size,
-        emojiSize: emojiSize,
-        iconColor: iconColor,
+    return HomeStickerMotion(
+      motion:
+          SoulLocketStickerCatalog.find(resolvedAssetPath)?.motion ??
+          SoulLocketStickerMotion.wobble,
+      motionSeed: resolvedAssetPath,
+      child: R2StickerImage(
+        resolvedAssetPath,
+        width: size,
+        height: size,
         fit: fit,
-        emojiShadows: emojiShadows,
-        preferAsset: false,
+        // Chỉ một lớp chuyển động, kể cả sticker atlas đã có sẵn animation.
+        animateLocalSticker: false,
+        errorWidget: _buildInteractionVisual(
+          visual: visual,
+          size: size,
+          emojiSize: emojiSize,
+          iconColor: iconColor,
+          fit: fit,
+          emojiShadows: emojiShadows,
+          preferAsset: false,
+        ),
       ),
     );
   }

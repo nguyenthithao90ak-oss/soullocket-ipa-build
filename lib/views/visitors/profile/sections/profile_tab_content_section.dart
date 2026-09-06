@@ -72,7 +72,7 @@ List<Widget> buildVisitorProfileTabContentSlivers({
   required Map<String, VisitorProfileTabContentData> tabContent,
   required Widget Function(SocialPost post) buildPostThumb,
   required void Function(int index, VisitorProfileTabContentData data)
-      onOpenPost,
+  onOpenPost,
 }) {
   final data = tabContent[activeTab];
   if (data == null) {
@@ -97,9 +97,7 @@ List<Widget> buildVisitorProfileTabContentSlivers({
 
   if (data.posts.isEmpty) {
     return [
-      SliverToBoxAdapter(
-        child: VisitorProfileEmptyPosts(text: data.emptyText),
-      ),
+      SliverToBoxAdapter(child: VisitorProfileEmptyPosts(text: data.emptyText)),
     ];
   }
 
@@ -128,10 +126,7 @@ List<Widget> buildVisitorProfileTabContentSlivers({
 class VisitorProfileEmptyPosts extends StatelessWidget {
   final String text;
 
-  const VisitorProfileEmptyPosts({
-    super.key,
-    this.text = 'Chưa có bài đăng nào',
-  });
+  const VisitorProfileEmptyPosts({super.key, required this.text});
 
   @override
   Widget build(BuildContext context) {

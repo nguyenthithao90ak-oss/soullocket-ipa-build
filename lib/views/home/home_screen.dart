@@ -88,10 +88,7 @@ class _NavItem {
   final String labelKey;
   final Color activeColor;
 
-  const _NavItem({
-    required this.labelKey,
-    required this.activeColor,
-  });
+  const _NavItem({required this.labelKey, required this.activeColor});
 }
 
 typedef _HomeTabBuilder = Widget Function(ValueNotifier<bool> isActiveNotifier);
@@ -240,10 +237,7 @@ class _TabActivationHostState extends State<_TabActivationHost> {
 class _KeepAliveTabPage extends StatefulWidget {
   final Widget child;
 
-  const _KeepAliveTabPage({
-    super.key,
-    required this.child,
-  });
+  const _KeepAliveTabPage({super.key, required this.child});
 
   @override
   State<_KeepAliveTabPage> createState() => _KeepAliveTabPageState();
@@ -351,14 +345,9 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
             slivers: [
               SliverFillViewport(
                 viewportFraction: widget.controller.viewportFraction,
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    return RepaintBoundary(
-                      child: widget.children[index],
-                    );
-                  },
-                  childCount: widget.children.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  return RepaintBoundary(child: widget.children[index]);
+                }, childCount: widget.children.length),
               ),
             ],
           );
@@ -373,7 +362,7 @@ class _HomeScreenState extends State<HomeScreen>
   int _currentIndex = 0;
   bool _navCollapsed =
       OfflineCacheService.getPrefsSync()?.getBool(_navCollapsedPrefsKey) ??
-          false;
+      false;
   bool _navHiddenUntilRestart = false;
   bool _hideNavForDiarySelection = false;
   late final ValueNotifier<bool> _navCollapsedNotifier;
@@ -393,7 +382,7 @@ class _HomeScreenState extends State<HomeScreen>
   int _homeReloadCounter = 0;
   late final ValueNotifier<int> _activeTabIndexNotifier;
   late final ValueNotifier<int>
-      _backgroundTabIndexNotifier; // ⚡ Thêm để tránh rebuild toàn bộ
+  _backgroundTabIndexNotifier; // ⚡ Thêm để tránh rebuild toàn bộ
   late final ValueNotifier<int> _vipThemeRotationTickNotifier;
   late final ValueNotifier<({int source, int target})?> _jumpNotifier;
   late final PageController _pageController;
@@ -435,10 +424,12 @@ class _HomeScreenState extends State<HomeScreen>
       'il_countdown_mode_pinned_launch_v1';
   static const int _notificationBadgeLimit = 30;
   static const Duration _homeStartupTaskDelay = Duration(milliseconds: 700);
-  static const Duration _homeStartupAnimationDelay =
-      Duration(milliseconds: 900);
-  static const MethodChannel _appControlChannel =
-      MethodChannel('soul_locket/app_control');
+  static const Duration _homeStartupAnimationDelay = Duration(
+    milliseconds: 900,
+  );
+  static const MethodChannel _appControlChannel = MethodChannel(
+    'soul_locket/app_control',
+  );
   static const List<String> _vipRotatingThemes = <String>[
     'theme-pink-glow',
     'theme-default',
@@ -464,8 +455,9 @@ class _HomeScreenState extends State<HomeScreen>
     RoleUtils.duplicateRoleNotifier.addListener(_handleDuplicateRoleWarning);
     _currentIndex = widget.initialTab.clamp(0, _navItems.length - 1);
     _activeTabIndexNotifier = ValueNotifier<int>(_currentIndex);
-    _backgroundTabIndexNotifier =
-        ValueNotifier<int>(_currentIndex); // ⚡ Init background notifier
+    _backgroundTabIndexNotifier = ValueNotifier<int>(
+      _currentIndex,
+    ); // ⚡ Init background notifier
     _vipThemeRotationTickNotifier = ValueNotifier<int>(0);
     _navCollapsedNotifier = ValueNotifier<bool>(_navCollapsed);
     _isUserTabSwipingNotifier = ValueNotifier<bool>(false);
@@ -474,15 +466,15 @@ class _HomeScreenState extends State<HomeScreen>
     _pageController = PageController(initialPage: _currentIndex);
     _tabBuilders = [
       (isActiveNotifier) => MainHomeTab(
-            isActiveListenable: isActiveNotifier,
-            onOpenSettings: _openSettings,
-            isSwipingListenable: _isUserTabSwipingNotifier,
-          ),
+        isActiveListenable: isActiveNotifier,
+        onOpenSettings: _openSettings,
+        isSwipingListenable: _isUserTabSwipingNotifier,
+      ),
       (isActiveNotifier) => DiaryTab(
-            isActiveListenable: isActiveNotifier,
-            onSelectionOverlayChanged: _handleDiarySelectionOverlayChanged,
-            isSwipingListenable: _isUserTabSwipingNotifier,
-          ),
+        isActiveListenable: isActiveNotifier,
+        onSelectionOverlayChanged: _handleDiarySelectionOverlayChanged,
+        isSwipingListenable: _isUserTabSwipingNotifier,
+      ),
       (_) => const UtilitiesTab(),
       (_) => const GameTab(),
       (_) => const UpdateTab(),
@@ -594,10 +586,14 @@ class _HomeScreenState extends State<HomeScreen>
               view.physicalSize.height / devicePixelRatio,
             )
           : const Size(430, 932);
-      final cacheWidth =
-          (logicalSize.width * devicePixelRatio).round().clamp(480, 1080);
-      final cacheHeight =
-          (logicalSize.height * devicePixelRatio).round().clamp(853, 1920);
+      final cacheWidth = (logicalSize.width * devicePixelRatio).round().clamp(
+        480,
+        1080,
+      );
+      final cacheHeight = (logicalSize.height * devicePixelRatio).round().clamp(
+        853,
+        1920,
+      );
 
       final provider = CachedNetworkImageProvider(
         backgroundUrl,
@@ -607,7 +603,8 @@ class _HomeScreenState extends State<HomeScreen>
       if (!mounted) return;
       await precacheImage(provider, context);
       _prewarmedBackgroundUrl = backgroundUrl;
-    } catch (_) {
+    } catch (error) {
+      debugPrint('[SuppressedError] lib/views/home/home_screen.dart: $error');
     } finally {
       _isPrewarmingShellMedia = false;
     }
@@ -726,7 +723,8 @@ class _HomeScreenState extends State<HomeScreen>
         : _resolveEffectKey(uiState.fallingEffectKey, resolvedThemeKey);
     final musicService = MusicService();
 
-    final hasAnimatedMusicButton = !kIsWeb &&
+    final hasAnimatedMusicButton =
+        !kIsWeb &&
         musicService.isVisibleNotifier.value &&
         musicService.isPlayingNotifier.value;
     final hasFallingEffect = resolvedEffectKey != 'off';
@@ -738,7 +736,8 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _syncMusicAnimationState() {
     final musicService = MusicService();
-    final shouldAnimate = mounted &&
+    final shouldAnimate =
+        mounted &&
         _allowStartupAnimations &&
         !kIsWeb &&
         !_isUserTabSwiping &&
@@ -799,13 +798,16 @@ class _HomeScreenState extends State<HomeScreen>
         .ref('notifications/$normalizedHouseId')
         .limitToLast(_notificationBadgeLimit)
         .onValue
-        .listen((event) {
-      NotificationBadgeCounter.instance.update(
-        _countUnreadNotifications(event.snapshot.value),
-      );
-    }, onError: (_) {
-      NotificationBadgeCounter.instance.update(0);
-    });
+        .listen(
+          (event) {
+            NotificationBadgeCounter.instance.update(
+              _countUnreadNotifications(event.snapshot.value),
+            );
+          },
+          onError: (_) {
+            NotificationBadgeCounter.instance.update(0);
+          },
+        );
   }
 
   void _detachNotificationBadgeListener({required bool resetCounter}) {
@@ -822,20 +824,21 @@ class _HomeScreenState extends State<HomeScreen>
     if (normalizedHouseId.isEmpty || _callSub != null) {
       return;
     }
-    _callSub = WebRTCService().listenForIncomingCalls(
-      normalizedHouseId,
-      (roomId, callerId, data) {
-        if (!mounted || _incomingCall != null) {
-          return;
-        }
-        _incomingCall = <String, dynamic>{
-          ...Map<String, dynamic>.from(data),
-          'roomId': roomId,
-          'callerId': callerId,
-        };
-        unawaited(_showIncomingCallDialog());
-      },
-    );
+    _callSub = WebRTCService().listenForIncomingCalls(normalizedHouseId, (
+      roomId,
+      callerId,
+      data,
+    ) {
+      if (!mounted || _incomingCall != null) {
+        return;
+      }
+      _incomingCall = <String, dynamic>{
+        ...Map<String, dynamic>.from(data),
+        'roomId': roomId,
+        'callerId': callerId,
+      };
+      unawaited(_showIncomingCallDialog());
+    });
   }
 
   Future<void> _showIncomingCallDialog() async {
@@ -843,11 +846,12 @@ class _HomeScreenState extends State<HomeScreen>
     if (!mounted || incoming == null) {
       return;
     }
-    final callerName = (incoming['callerName'] ??
-            incoming['callerId'] ??
-            context.tr('home_ngigi_f1117f'))
-        .toString()
-        .trim();
+    final callerName =
+        (incoming['callerName'] ??
+                incoming['callerId'] ??
+                context.tr('home_ngigi_f1117f'))
+            .toString()
+            .trim();
     final accepted = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -857,7 +861,7 @@ class _HomeScreenState extends State<HomeScreen>
           L10nService().format('home_incoming_call_from', {
             'name': callerName.isEmpty
                 ? context.tr('home_ngigi_f1117f')
-                : callerName
+                : callerName,
           }),
         ),
         actions: <Widget>[
@@ -885,8 +889,9 @@ class _HomeScreenState extends State<HomeScreen>
 
   Future<void> _acceptIncomingCall(Map<String, dynamic> incoming) async {
     final roomId = (incoming['roomId'] ?? '').toString().trim();
-    final callerHouseId =
-        (incoming['houseId'] ?? incoming['callerId'] ?? '').toString().trim();
+    final callerHouseId = (incoming['houseId'] ?? incoming['callerId'] ?? '')
+        .toString()
+        .trim();
     final callerName =
         (incoming['callerName'] ?? context.tr('home_ngigi_f1117f'))
             .toString()
@@ -903,8 +908,9 @@ class _HomeScreenState extends State<HomeScreen>
         builder: (_) => VideoCallScreen(
           houseId: myHouseId,
           targetHouseId: callerHouseId,
-          targetName:
-              callerName.isEmpty ? context.tr('home_ngigi_f1117f') : callerName,
+          targetName: callerName.isEmpty
+              ? context.tr('home_ngigi_f1117f')
+              : callerName,
           targetAvatarUrl: incoming['callerAvatar']?.toString(),
           isVideo: incoming['isVideo'] == true,
           roomId: roomId,
@@ -972,8 +978,9 @@ class _HomeScreenState extends State<HomeScreen>
     _inactivityTimer?.cancel();
     final musicService = MusicService();
     musicService.isPlayingNotifier.removeListener(_handleMusicPlaybackChanged);
-    musicService.isVisibleNotifier
-        .removeListener(_handleMusicVisibilityChanged);
+    musicService.isVisibleNotifier.removeListener(
+      _handleMusicVisibilityChanged,
+    );
     UiPrefs.notifier.removeListener(_handleUiPrefsChanged);
     _vipThemeRotateTimer?.cancel();
     _pageController.dispose();
@@ -1028,11 +1035,9 @@ class _HomeScreenState extends State<HomeScreen>
     await _switchToTab(0);
     if (!mounted) return;
 
-    await Navigator.of(context).push(
-      SLRoute(
-        builder: (_) => const SoulEventsScreen(),
-      ),
-    );
+    await Navigator.of(
+      context,
+    ).push(SLRoute(builder: (_) => const SoulEventsScreen()));
   }
 
   Future<void> _openHealthScreenFromWidget() async {
@@ -1046,13 +1051,9 @@ class _HomeScreenState extends State<HomeScreen>
     await _switchToTab(0);
     if (!mounted) return;
 
-    await Navigator.of(context).push(
-      SLRoute(
-        builder: (_) => HealthScreen(
-          houseId: houseId,
-        ),
-      ),
-    );
+    await Navigator.of(
+      context,
+    ).push(SLRoute(builder: (_) => HealthScreen(houseId: houseId)));
   }
 
   Future<void> _openLoveScreenFromWidget() async {
@@ -1100,15 +1101,17 @@ class _HomeScreenState extends State<HomeScreen>
     if (!mounted) return;
     final myName = role == 'user2'
         ? (settings?.nameU2.trim().isNotEmpty == true
-            ? settings!.nameU2.trim()
-            : context.tr('home_ngiy_5bab37'))
+              ? settings!.nameU2.trim()
+              : context.tr('home_ngiy_5bab37'))
         : (settings?.nameU1.trim().isNotEmpty == true
-            ? settings!.nameU1.trim()
-            : context.tr('home_bn_1fd75b'));
+              ? settings!.nameU1.trim()
+              : context.tr('home_bn_1fd75b'));
 
     final resolvedMyName = myName
         .replaceAll(
-            context.tr('home_ngiy_5bab37'), context.tr('home_ngiy_5bab37'))
+          context.tr('home_ngiy_5bab37'),
+          context.tr('home_ngiy_5bab37'),
+        )
         .replaceAll(context.tr('home_bn_1fd75b'), context.tr('home_bn_1fd75b'));
 
     if (!mounted) return;
@@ -1227,9 +1230,7 @@ class _HomeScreenState extends State<HomeScreen>
     if (!mounted) return;
     await Navigator.push(
       context,
-      SLRoute(
-        builder: (_) => const SettingsTab(autoOpenCountdownMode: true),
-      ),
+      SLRoute(builder: (_) => const SettingsTab(autoOpenCountdownMode: true)),
     );
   }
 
@@ -1247,7 +1248,8 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   bool _handlePageScrollNotification(ScrollNotification notification) {
-    if (notification is UserScrollNotification && notification.metrics.axis == Axis.vertical) {
+    if (notification is UserScrollNotification &&
+        notification.metrics.axis == Axis.vertical) {
       if (notification.direction == ScrollDirection.reverse) {
         if (_isBottomNavVisibleNotifier.value) {
           _isBottomNavVisibleNotifier.value = false;
@@ -1272,9 +1274,11 @@ class _HomeScreenState extends State<HomeScreen>
       }
     }
 
-    final shouldStartTracking = notification is ScrollStartNotification &&
+    final shouldStartTracking =
+        notification is ScrollStartNotification &&
         notification.dragDetails != null;
-    final shouldStopTracking = notification is ScrollEndNotification ||
+    final shouldStopTracking =
+        notification is ScrollEndNotification ||
         (notification is UserScrollNotification &&
             notification.direction == ScrollDirection.idle);
 
@@ -1325,10 +1329,7 @@ class _HomeScreenState extends State<HomeScreen>
   void _hideBottomNavForSession() {
     if (_navHiddenUntilRestart || !mounted) return;
     setState(() => _navHiddenUntilRestart = true);
-    SLNotice.showInfo(
-      context,
-      context.tr('home_nthanhtabm_68ae53'),
-    );
+    SLNotice.showInfo(context, context.tr('home_nthanhtabm_68ae53'));
   }
 
   Future<void> _hydrateLastTab() async {
@@ -1369,8 +1370,9 @@ class _HomeScreenState extends State<HomeScreen>
     var targetAvatar = '';
 
     try {
-      final snap =
-          await FirebaseDatabase.instance.ref('houses/$houseId/settings').get();
+      final snap = await FirebaseDatabase.instance
+          .ref('houses/$houseId/settings')
+          .get();
       final raw = snap.value;
       if (raw is Map) {
         final data = Map<dynamic, dynamic>.from(raw);
@@ -1381,7 +1383,9 @@ class _HomeScreenState extends State<HomeScreen>
         if (name.isNotEmpty) targetName = name;
         if (avatar.isNotEmpty) targetAvatar = avatar;
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[SuppressedError] lib/views/home/home_screen.dart: $error');
+    }
 
     if (!mounted) return;
     await slPush(
@@ -1548,13 +1552,15 @@ class _HomeScreenState extends State<HomeScreen>
                 final resolvedEffectKey = uiState.liteMode
                     ? 'off'
                     : _resolveEffectKey(
-                        uiState.fallingEffectKey, resolvedThemeKey);
+                        uiState.fallingEffectKey,
+                        resolvedThemeKey,
+                      );
                 final isDark = _isDarkTheme(resolvedThemeKey);
                 final shouldAnimateEffects =
                     effectProfile.premiumEffects && resolvedEffectKey == 'off';
                 final shouldAnimateFallingEffect =
                     effectProfile.animationEnabled &&
-                        resolvedEffectKey != 'off';
+                    resolvedEffectKey != 'off';
 
                 final shellChild = child ?? const SizedBox.shrink();
 
@@ -1577,14 +1583,16 @@ class _HomeScreenState extends State<HomeScreen>
                     final rotatedEffectKey = uiState.liteMode
                         ? 'off'
                         : _resolveEffectKey(
-                            uiState.fallingEffectKey, rotatedThemeKey);
+                            uiState.fallingEffectKey,
+                            rotatedThemeKey,
+                          );
                     final rotatedIsDark = _isDarkTheme(rotatedThemeKey);
                     final rotatedShouldAnimateEffects =
                         effectProfile.premiumEffects &&
-                            rotatedEffectKey == 'off';
+                        rotatedEffectKey == 'off';
                     final rotatedShouldAnimateFallingEffect =
                         effectProfile.animationEnabled &&
-                            rotatedEffectKey != 'off';
+                        rotatedEffectKey != 'off';
                     return _buildShellBody(
                       foregroundChild: shellChild,
                       isDark: rotatedIsDark,
@@ -1616,15 +1624,21 @@ class _HomeScreenState extends State<HomeScreen>
   IconData _getIconForTab(int index, {bool isActive = true}) {
     switch (index) {
       case 0:
-        return isActive ? Icons.favorite_rounded : Icons.favorite_outline_rounded;
+        return isActive
+            ? Icons.favorite_rounded
+            : Icons.favorite_outline_rounded;
       case 1:
         return isActive ? Icons.book_rounded : Icons.book_outlined;
       case 2:
         return isActive ? Icons.grid_view_rounded : Icons.grid_view_outlined;
       case 3:
-        return isActive ? Icons.sports_esports_rounded : Icons.sports_esports_outlined;
+        return isActive
+            ? Icons.sports_esports_rounded
+            : Icons.sports_esports_outlined;
       case 4:
-        return isActive ? Icons.auto_awesome_rounded : Icons.auto_awesome_outlined;
+        return isActive
+            ? Icons.auto_awesome_rounded
+            : Icons.auto_awesome_outlined;
       default:
         return Icons.circle;
     }
@@ -1634,7 +1648,8 @@ class _HomeScreenState extends State<HomeScreen>
     final key = themeKey.trim();
     if (key == 'off') return 'off';
     if (key == 'theme-vip-rotate') {
-      final slot = DateTime.now().millisecondsSinceEpoch ~/
+      final slot =
+          DateTime.now().millisecondsSinceEpoch ~/
           const Duration(seconds: 30).inMilliseconds;
       return _vipRotatingThemes[slot % _vipRotatingThemes.length];
     }

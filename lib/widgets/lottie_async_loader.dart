@@ -69,12 +69,12 @@ class _LottieAsyncLoaderState extends State<LottieAsyncLoader> {
     if (_ramCache.containsKey(cleanUrl)) return;
 
     try {
-      final file =
-          await const StorageDownloadCacheHelper().getCachedNetworkFile(
-        cleanUrl,
-        namespace: 'lottie_anims',
-        ttl: const Duration(days: 30),
-      );
+      final file = await const StorageDownloadCacheHelper()
+          .getCachedNetworkFile(
+            cleanUrl,
+            namespace: 'lottie_anims',
+            ttl: const Duration(days: 30),
+          );
       if (file != null && file.existsSync()) {
         _cacheRamFile(cleanUrl, file);
         if (mounted) {
@@ -83,7 +83,11 @@ class _LottieAsyncLoaderState extends State<LottieAsyncLoader> {
           });
         }
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/widgets/lottie_async_loader.dart: $error',
+      );
+    }
   }
 
   @override
@@ -102,9 +106,7 @@ class _LottieAsyncLoaderState extends State<LottieAsyncLoader> {
       return SizedBox(
         width: widget.width,
         height: widget.height,
-        child: const Center(
-          child: SizedBox.shrink(),
-        ),
+        child: const Center(child: SizedBox.shrink()),
       );
     }
 

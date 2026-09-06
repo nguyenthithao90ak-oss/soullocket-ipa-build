@@ -10,7 +10,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
   }) {
     return ValueListenableBuilder<Map<String, dynamic>>(
       valueListenable: _presenceDataNotifier,
-      builder: (context, _, __) {
+      builder: (context, _, _) {
         final compactMetaLayout = !isSingle && !_showStatus && !_showWeather;
         final dobU1 = _houseSettings?['dobU1']?.toString() ?? '';
         final dobU2 = _houseSettings?['dobU2']?.toString() ?? '';
@@ -25,6 +25,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
             radius: 28,
             accentColor: SLColors.thread,
             adornment: _HomeCardAdornment.photoCorners,
+            visualStyle: _HomeCardVisualStyle.couple,
             child: Padding(
               padding: EdgeInsets.fromLTRB(
                 20,
@@ -240,7 +241,11 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
             if (currentDob.isNotEmpty) {
               try {
                 initial = DateTime.parse(currentDob);
-              } catch (_) {}
+              } catch (error) {
+                debugPrint(
+                  '[SuppressedError] lib/views/home/tabs/main_home/widgets/main_home_presence_section.dart: $error',
+                );
+              }
             }
             final picked = await showDatePicker(
               context: context,

@@ -90,8 +90,9 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
       if (decoded is! List) {
         return;
       }
-      final cutoff =
-          DateTime.now().subtract(_localHistoryTtl).millisecondsSinceEpoch;
+      final cutoff = DateTime.now()
+          .subtract(_localHistoryTtl)
+          .millisecondsSinceEpoch;
       final history = decoded
           .whereType<Map>()
           .map((item) {
@@ -118,37 +119,52 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
           ..addAll(history.take(_localHistoryMaxMessages));
       });
       _scrollToBottom();
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/utilities/friendly_chat_screen.dart: $error',
+      );
+    }
   }
 
   Future<void> _saveCachedHistory() async {
     try {
-      final cutoff =
-          DateTime.now().subtract(_localHistoryTtl).millisecondsSinceEpoch;
+      final cutoff = DateTime.now()
+          .subtract(_localHistoryTtl)
+          .millisecondsSinceEpoch;
       final source = _messages
-          .where((message) =>
-              message.createdAt > cutoff && message.text.trim().isNotEmpty)
+          .where(
+            (message) =>
+                message.createdAt > cutoff && message.text.trim().isNotEmpty,
+          )
           .toList(growable: false);
       final start = source.length > _localHistoryMaxMessages
           ? source.length - _localHistoryMaxMessages
           : 0;
-      final payload = source.skip(start).map((message) {
-        return <String, dynamic>{
-          'text': message.text,
-          'isUser': message.isUser,
-          'createdAt': message.createdAt,
-        };
-      }).toList(growable: false);
+      final payload = source
+          .skip(start)
+          .map((message) {
+            return <String, dynamic>{
+              'text': message.text,
+              'isUser': message.isUser,
+              'createdAt': message.createdAt,
+            };
+          })
+          .toList(growable: false);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_cacheKey, jsonEncode(payload));
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/utilities/friendly_chat_screen.dart: $error',
+      );
+    }
   }
 
   List<_FriendlyChatMessage> _mergeHistory(
     List<_FriendlyChatMessage> incoming,
   ) {
-    final cutoff =
-        DateTime.now().subtract(_localHistoryTtl).millisecondsSinceEpoch;
+    final cutoff = DateTime.now()
+        .subtract(_localHistoryTtl)
+        .millisecondsSinceEpoch;
     final merged = <_FriendlyChatMessage>[];
     final seen = <String>{};
 
@@ -174,11 +190,12 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
   }
 
   Future<void> _loadRecentHistory() async {
-    final history =
-        await _aiService.loadChatHistory(memoryScope: 'friendly_chat').timeout(
-              const Duration(seconds: 10),
-              onTimeout: () => const <AiChatHistoryMessage>[],
-            );
+    final history = await _aiService
+        .loadChatHistory(memoryScope: 'friendly_chat')
+        .timeout(
+          const Duration(seconds: 10),
+          onTimeout: () => const <AiChatHistoryMessage>[],
+        );
     if (!mounted || history.isEmpty || _isSending || _hasUserInteracted) {
       return;
     }
@@ -238,10 +255,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.flag_rounded,
-                      color: Color(0xFFD81B60),
-                    ),
+                    const Icon(Icons.flag_rounded, color: Color(0xFFD81B60)),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -286,10 +300,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
           userText: _previousUserTextFor(index),
           houseId: widget.houseId,
         )
-        .timeout(
-          const Duration(seconds: 15),
-          onTimeout: () => false,
-        );
+        .timeout(const Duration(seconds: 15), onTimeout: () => false);
     if (!mounted) {
       return;
     }
@@ -375,8 +386,8 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
                     isReporting
                         ? context.tr('util_anggi_6b22c8')
                         : message.reported
-                            ? context.tr('util_boco_0f64d2')
-                            : context.tr('util_bocoai_2b42b4'),
+                        ? context.tr('util_boco_0f64d2')
+                        : context.tr('util_bocoai_2b42b4'),
                     style: SLTheme.quicksand(fontWeight: FontWeight.w800),
                   ),
                   onTap: canReport
@@ -475,8 +486,10 @@ Quy tắc:
 
         String displayText = finalReply;
 
-        final RegExp thinkComplete =
-            RegExp(r'<think>.*?</think>', dotAll: true);
+        final RegExp thinkComplete = RegExp(
+          r'<think>.*?</think>',
+          dotAll: true,
+        );
         displayText = displayText.replaceAll(thinkComplete, '');
 
         final int openIndex = displayText.lastIndexOf('<think>');
@@ -494,28 +507,34 @@ Quy tắc:
         }
 
         setState(() {
-          _messages[assistantMsgIndex] =
-              _messages[assistantMsgIndex].copyWith(text: displayText);
+          _messages[assistantMsgIndex] = _messages[assistantMsgIndex].copyWith(
+            text: displayText,
+          );
         });
         _scrollToBottom();
       }
     } catch (e) {
       if (!mounted) return;
       if (finalReply.isEmpty) {
-        finalReply = _aiService.lastErrorMessage ??
+        finalReply =
+            _aiService.lastErrorMessage ??
             'Mình đang gặp chút sự cố kết nối. Bạn đợi một lát rồi nói lại nhé!';
       }
     }
 
     if (!mounted) return;
 
-    final RegExp thinkCompleteFinal =
-        RegExp(r'<think>.*?</think>', dotAll: true);
+    final RegExp thinkCompleteFinal = RegExp(
+      r'<think>.*?</think>',
+      dotAll: true,
+    );
     finalReply = finalReply.replaceAll(thinkCompleteFinal, '');
     final int openIndexFinal = finalReply.lastIndexOf('<think>');
     if (openIndexFinal != -1) {
-      final int closeIndexFinal =
-          finalReply.indexOf('</think>', openIndexFinal);
+      final int closeIndexFinal = finalReply.indexOf(
+        '</think>',
+        openIndexFinal,
+      );
       if (closeIndexFinal == -1) {
         finalReply = finalReply.substring(0, openIndexFinal);
       }
@@ -523,7 +542,8 @@ Quy tắc:
     finalReply = finalReply.trimLeft();
 
     if (finalReply.trim().isEmpty) {
-      finalReply = _aiService.lastErrorMessage ??
+      finalReply =
+          _aiService.lastErrorMessage ??
           L10nService().translate('friendly_chat_connection_error');
     }
 
@@ -567,10 +587,12 @@ Quy tắc:
 
         if (navTarget == 101) {
           Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const SoulMergeScreen()));
+            MaterialPageRoute(builder: (_) => const SoulMergeScreen()),
+          );
         } else if (navTarget == 102) {
-          Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => SoulBlockGame()));
+          Navigator.of(
+            context,
+          ).pushReplacement(MaterialPageRoute(builder: (_) => SoulBlockGame()));
         } else {
           Navigator.of(context).pop();
           Future.delayed(const Duration(milliseconds: 100), () {
@@ -582,8 +604,9 @@ Quy tắc:
 
     setState(() {
       _isSending = false;
-      _messages[assistantMsgIndex] =
-          _messages[assistantMsgIndex].copyWith(text: finalReply.trim());
+      _messages[assistantMsgIndex] = _messages[assistantMsgIndex].copyWith(
+        text: finalReply.trim(),
+      );
     });
     _saveCachedHistory();
     _scrollToBottom();
@@ -638,16 +661,23 @@ Quy tắc:
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Hủy',
-                style: SLTheme.quicksand(
-                    color: Colors.grey, fontWeight: FontWeight.bold)),
+            child: Text(
+              'Hủy',
+              style: SLTheme.quicksand(
+                color: Colors.grey,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(L10nService().translate('friendly_chat_reset_confirm'),
-                style: SLTheme.quicksand(
-                    color: const Color(0xFFD81B60),
-                    fontWeight: FontWeight.bold)),
+            child: Text(
+              L10nService().translate('friendly_chat_reset_confirm'),
+              style: SLTheme.quicksand(
+                color: const Color(0xFFD81B60),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -670,8 +700,9 @@ Quy tắc:
   }
 
   void _showPersonaConfigSheet() {
-    final controller =
-        TextEditingController(text: UiPrefs.notifier.value.friendlyChatPersona);
+    final controller = TextEditingController(
+      text: UiPrefs.notifier.value.friendlyChatPersona,
+    );
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -721,8 +752,10 @@ Quy tắc:
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                 ),
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w700,
@@ -846,8 +879,10 @@ Quy tắc:
         ),
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(Icons.psychology_alt_rounded,
-                color: Color(0xFFD81B60)),
+            icon: const Icon(
+              Icons.psychology_alt_rounded,
+              color: Color(0xFFD81B60),
+            ),
             tooltip: 'Chọn Tính Cách AI',
             initialValue: _persona,
             onSelected: (value) {
@@ -857,7 +892,12 @@ Quy tắc:
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                      'Đã chuyển sang tính cách: ${value == 'funny' ? 'Hài hước 😆' : value == 'advice' ? 'Tư vấn 🧠' : 'Mặc định 💖'}'),
+                    'Đã chuyển sang tính cách: ${value == 'funny'
+                        ? 'Hài hước 😆'
+                        : value == 'advice'
+                        ? 'Tư vấn 🧠'
+                        : 'Mặc định 💖'}',
+                  ),
                   duration: const Duration(seconds: 2),
                 ),
               );
@@ -911,7 +951,8 @@ Quy tắc:
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.6),
             border: Border(
-                top: BorderSide(color: Colors.white.withValues(alpha: 0.8))),
+              top: BorderSide(color: Colors.white.withValues(alpha: 0.8)),
+            ),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -937,18 +978,24 @@ Quy tắc:
                     fillColor: Colors.white.withValues(alpha: 0.7),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(18),
-                      borderSide:
-                          const BorderSide(color: Colors.white, width: 1.5),
+                      borderSide: const BorderSide(
+                        color: Colors.white,
+                        width: 1.5,
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(18),
-                      borderSide:
-                          const BorderSide(color: Colors.white, width: 1.5),
+                      borderSide: const BorderSide(
+                        color: Colors.white,
+                        width: 1.5,
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(18),
                       borderSide: const BorderSide(
-                          color: Color(0xFFD81B60), width: 1.5),
+                        color: Color(0xFFD81B60),
+                        width: 1.5,
+                      ),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 14,
@@ -1048,10 +1095,14 @@ class _FriendlyChatBubble extends StatelessWidget {
             borderRadius: BorderRadius.circular(18),
             child: FastBackdropFilter(
               filter: ImageFilter.blur(
-                  sigmaX: isUser ? 0.001 : 12, sigmaY: isUser ? 0.001 : 12),
+                sigmaX: isUser ? 0.001 : 12,
+                sigmaY: isUser ? 0.001 : 12,
+              ),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 11,
+                ),
                 decoration: BoxDecoration(
                   gradient: isUser
                       ? const LinearGradient(
@@ -1066,7 +1117,8 @@ class _FriendlyChatBubble extends StatelessWidget {
                       ? null
                       : Border.all(
                           color: Colors.white.withValues(alpha: 0.9),
-                          width: 1.2),
+                          width: 1.2,
+                        ),
                 ),
                 child: Text(
                   message.text,
@@ -1106,7 +1158,9 @@ class _FriendlyChatBubble extends StatelessWidget {
                     width: 14,
                     height: 14,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Color(0xFFD81B60)),
+                      strokeWidth: 2,
+                      color: Color(0xFFD81B60),
+                    ),
                   ),
                 )
               else
@@ -1127,16 +1181,13 @@ class _FriendlyChatBubble extends StatelessWidget {
                     onPressed: message.reported ? null : onReport,
                   ),
                 ),
-            ]
+            ],
           ],
         ),
       );
     }
 
-    return Align(
-      alignment: Alignment.centerRight,
-      child: bubble,
-    );
+    return Align(alignment: Alignment.centerRight, child: bubble);
   }
 }
 
@@ -1247,13 +1298,17 @@ class _TypingBubbleState extends State<_TypingBubble>
               child: FastBackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 11,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.65),
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.9), width: 1.2),
+                      color: Colors.white.withValues(alpha: 0.9),
+                      width: 1.2,
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1345,7 +1400,8 @@ class _BotStickerAvatar extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.all(size * 0.12),
         child: const R2StickerImage(
-            'assets/images/anhtomau_stickers/sticker_28.gif'),
+          'assets/images/anhtomau_stickers/sticker_28.gif',
+        ),
       ),
     );
   }
@@ -1364,10 +1420,7 @@ class _FriendlyChatMessage {
   final int createdAt;
   final bool reported;
 
-  _FriendlyChatMessage copyWith({
-    String? text,
-    bool? reported,
-  }) {
+  _FriendlyChatMessage copyWith({String? text, bool? reported}) {
     return _FriendlyChatMessage(
       text: text ?? this.text,
       isUser: isUser,
@@ -1376,4 +1429,3 @@ class _FriendlyChatMessage {
     );
   }
 }
-

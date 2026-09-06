@@ -318,10 +318,7 @@ class ChatService {
     }
   }
 
-  Future<void> _assertNotBlocked(
-    String myHouseId,
-    String targetHouseId,
-  ) async {
+  Future<void> _assertNotBlocked(String myHouseId, String targetHouseId) async {
     try {
       final myBlockSnap = await _dbRef
           .child('houses/$myHouseId/blocked_users/$targetHouseId')
@@ -468,7 +465,8 @@ class ChatService {
   }
 
   Future<String> _resolvedActivityRole() async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     final role = RoleUtils.normalize(prefs.getString('il_role'));
     return role == 'user2' ? 'user2' : 'user1';
@@ -567,8 +565,12 @@ class ChatService {
     };
   }
 
-  Future<void> sendMessage(String myHouseId, String targetHouseId, String text,
-      {String type = 'text'}) async {
+  Future<void> sendMessage(
+    String myHouseId,
+    String targetHouseId,
+    String text, {
+    String type = 'text',
+  }) async {
     if (type == 'image') {
       throw Exception(
         'Ảnh chat phải gửi qua phiên upload bảo mật của máy chủ.',
@@ -601,18 +603,23 @@ class ChatService {
             .add(msgPayload);
         final messageId = docRef.id;
 
-        unawaited(_dbRef.update({
-          'chats/$roomId/lastMessage': _lastMessageWriteMap(
-            senderId: myHouseId,
-            type: type,
-            text: safeText,
-            messageId: messageId,
-          ),
-          'chats/$roomId/updatedAt': ServerValue.timestamp,
-        }).catchError((e) {
-          debugPrint(
-              '[ChatService] Failed to update chat metadata on RTDB: $e');
-        }));
+        unawaited(
+          _dbRef
+              .update({
+                'chats/$roomId/lastMessage': _lastMessageWriteMap(
+                  senderId: myHouseId,
+                  type: type,
+                  text: safeText,
+                  messageId: messageId,
+                ),
+                'chats/$roomId/updatedAt': ServerValue.timestamp,
+              })
+              .catchError((e) {
+                debugPrint(
+                  '[ChatService] Failed to update chat metadata on RTDB: $e',
+                );
+              }),
+        );
       },
       permissionMessage:
           'Không thể gửi tin nhắn lúc này. Có thể một trong hai bên đã chặn nhau hoặc quyền Firebase chưa đồng bộ.',
@@ -647,8 +654,9 @@ class ChatService {
           code != 'unauthenticated') {
         return false;
       }
-      final message =
-          '${error.message ?? ''} ${error.details ?? ''}'.trim().toLowerCase();
+      final message = '${error.message ?? ''} ${error.details ?? ''}'
+          .trim()
+          .toLowerCase();
       const appCheckMarkers = <String>[
         'app check',
         'appcheck',
@@ -791,8 +799,10 @@ class ChatService {
       await _ensureChatRoomStructure(myHouseId, targetHouseId, roomId);
       await _ensureChatRoomIndex(myHouseId, targetHouseId, roomId);
 
-      final welcomeText = _friendWelcomeTemplates[
-          math.Random().nextInt(_friendWelcomeTemplates.length)];
+      final welcomeText =
+          _friendWelcomeTemplates[math.Random().nextInt(
+            _friendWelcomeTemplates.length,
+          )];
 
       final docRef = FirebaseFirestore.instance
           .collection('chats')
@@ -852,8 +862,9 @@ class ChatService {
       final message = ChatMessage(
         id: '',
         senderId: myHouseId,
-        text:
-            isVideo ? 'Đã bắt đầu cuộc gọi video' : 'Đã bắt đầu cuộc gọi thoại',
+        text: isVideo
+            ? 'Đã bắt đầu cuộc gọi video'
+            : 'Đã bắt đầu cuộc gọi thoại',
         type: 'call_invite',
         timestamp: DateTime.fromMillisecondsSinceEpoch(0),
         callRoomId: roomId,
@@ -865,14 +876,14 @@ class ChatService {
           .doc(chatRoomId)
           .collection('messages')
           .add({
-        'senderId': myHouseId,
-        'text': message.text,
-        'type': message.type,
-        'ts': DateTime.now().millisecondsSinceEpoch,
-        'isRead': false,
-        'callRoomId': message.callRoomId,
-        'callMode': message.callMode,
-      });
+            'senderId': myHouseId,
+            'text': message.text,
+            'type': message.type,
+            'ts': DateTime.now().millisecondsSinceEpoch,
+            'isRead': false,
+            'callRoomId': message.callRoomId,
+            'callMode': message.callMode,
+          });
       final messageId = docRef.id;
 
       await _dbRef.update({
@@ -919,13 +930,13 @@ class ChatService {
           .doc(chatRoomId)
           .collection('messages')
           .add({
-        'senderId': myHouseId,
-        'text': message.text,
-        'type': message.type,
-        'ts': DateTime.now().millisecondsSinceEpoch,
-        'isRead': false,
-        'sharedUrl': message.sharedUrl,
-      });
+            'senderId': myHouseId,
+            'text': message.text,
+            'type': message.type,
+            'ts': DateTime.now().millisecondsSinceEpoch,
+            'isRead': false,
+            'sharedUrl': message.sharedUrl,
+          });
       final messageId = docRef.id;
 
       await _dbRef.update({
@@ -946,8 +957,12 @@ class ChatService {
     });
   }
 
-  Future<void> addReaction(String myHouseId, String targetHouseId,
-      String messageId, String emoji) async {
+  Future<void> addReaction(
+    String myHouseId,
+    String targetHouseId,
+    String messageId,
+    String emoji,
+  ) async {
     await _runExternalChatAction(
       () async {
         await _assertNotBlocked(myHouseId, targetHouseId);
@@ -1019,8 +1034,11 @@ class ChatService {
     int limit = 40,
     int? beforeTs,
   }) async {
-    return InternalChatService()
-        .fetchMessagesPage(houseId, limit: limit, beforeTs: beforeTs);
+    return InternalChatService().fetchMessagesPage(
+      houseId,
+      limit: limit,
+      beforeTs: beforeTs,
+    );
   }
 
   Stream<ChatMessage> streamNewMessages(
@@ -1031,8 +1049,9 @@ class ChatService {
     final roomId = _getRoomId(myHouseId, targetHouseId);
     final tsFilter = afterTs ?? 0;
 
-    return Stream.fromFuture(_ensureViewerRoomIndex(myHouseId, roomId))
-        .asyncExpand((allowed) {
+    return Stream.fromFuture(
+      _ensureViewerRoomIndex(myHouseId, roomId),
+    ).asyncExpand((allowed) {
       if (!allowed) return const Stream<ChatMessage>.empty();
       return FirebaseFirestore.instance
           .collection('chats')
@@ -1041,17 +1060,25 @@ class ChatService {
           .where('ts', isGreaterThan: tsFilter)
           .orderBy('ts')
           .snapshots()
-          .expand((snapshot) => snapshot.docChanges
-              .where((change) =>
-                  change.type == DocumentChangeType.added ||
-                  change.type == DocumentChangeType.modified)
-              .map((change) {
-            try {
-              return ChatMessage.fromMap(change.doc.id, change.doc.data()!);
-            } catch (_) {
-              return null;
-            }
-          }).whereType<ChatMessage>());
+          .expand(
+            (snapshot) => snapshot.docChanges
+                .where(
+                  (change) =>
+                      change.type == DocumentChangeType.added ||
+                      change.type == DocumentChangeType.modified,
+                )
+                .map((change) {
+                  try {
+                    return ChatMessage.fromMap(
+                      change.doc.id,
+                      change.doc.data()!,
+                    );
+                  } catch (_) {
+                    return null;
+                  }
+                })
+                .whereType<ChatMessage>(),
+          );
     });
   }
 
@@ -1059,8 +1086,10 @@ class ChatService {
     String houseId, {
     int? afterTs,
   }) {
-    return InternalChatService()
-        .streamNewMessages(houseId, afterTs: afterTs ?? 0);
+    return InternalChatService().streamNewMessages(
+      houseId,
+      afterTs: afterTs ?? 0,
+    );
   }
 
   String _readMetaString(Object? raw) => raw?.toString() ?? '';
@@ -1070,9 +1099,9 @@ class ChatService {
       return null;
     }
     return Map<String, dynamic>.from(
-      Map<dynamic, dynamic>.from(raw).map(
-        (key, value) => MapEntry(key.toString(), value),
-      ),
+      Map<dynamic, dynamic>.from(
+        raw,
+      ).map((key, value) => MapEntry(key.toString(), value)),
     );
   }
 
@@ -1112,25 +1141,22 @@ class ChatService {
       controller.add(next);
     }
 
-    void attachStringField(
-      String key,
-      void Function(String value) assign,
-    ) {
+    void attachStringField(String key, void Function(String value) assign) {
       subscriptions.add(
-        roomRef.child(key).onValue.listen(
-          (event) {
-            assign(_readMetaString(event.snapshot.value));
-            emitIfChanged();
-          },
-          onError: (Object error) {
-            debugPrint(
-              'Chat room field listener failed: ${AppErrorMapper.resolve(
-                error,
-                fallbackMessage: 'Không thể tải thông tin phòng chat.',
-              ).message}',
-            );
-          },
-        ),
+        roomRef
+            .child(key)
+            .onValue
+            .listen(
+              (event) {
+                assign(_readMetaString(event.snapshot.value));
+                emitIfChanged();
+              },
+              onError: (Object error) {
+                debugPrint(
+                  'Chat room field listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể tải thông tin phòng chat.').message}',
+                );
+              },
+            ),
       );
     }
 
@@ -1139,20 +1165,20 @@ class ChatService {
       started = true;
 
       subscriptions.add(
-        roomRef.child('lastMessage').onValue.listen(
-          (event) {
-            lastMessage = _readLastMessageMap(event.snapshot.value);
-            emitIfChanged();
-          },
-          onError: (Object error) {
-            debugPrint(
-              'Chat room lastMessage listener failed: ${AppErrorMapper.resolve(
-                error,
-                fallbackMessage: 'Không thể tải tin nhắn gần nhất.',
-              ).message}',
-            );
-          },
-        ),
+        roomRef
+            .child('lastMessage')
+            .onValue
+            .listen(
+              (event) {
+                lastMessage = _readLastMessageMap(event.snapshot.value);
+                emitIfChanged();
+              },
+              onError: (Object error) {
+                debugPrint(
+                  'Chat room lastMessage listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể tải tin nhắn gần nhất.').message}',
+                );
+              },
+            ),
       );
 
       if (includeStatus) {
@@ -1174,12 +1200,9 @@ class ChatService {
       );
       if (unreadCounterKey != null) {
         subscriptions.add(
-          roomRef.child(unreadCounterKey).onValue.listen(
-            (event) {
-              emitIfChanged();
-            },
-            onError: (_) {},
-          ),
+          roomRef.child(unreadCounterKey).onValue.listen((event) {
+            emitIfChanged();
+          }, onError: (_) {}),
         );
       }
     }
@@ -1217,26 +1240,26 @@ class ChatService {
 
     Future<void> start() async {
       controller.add(const ChatRoomMeta());
-      metaSub = _streamRoomMetaFields(
-        _dbRef.child('chats/$roomId'),
-        includeStatus: includeStatus,
-        includeClosedMessage: includeClosedMessage,
-        includeDeletedDisplayName: includeDeletedDisplayName,
-        unreadCounterKey: 'unread_$viewerHouseId',
-      ).listen(
-        controller.add,
-        onError: (Object error) {
-          debugPrint(
-            '[ChatService] room meta stream failed: ${AppErrorMapper.resolve(
-              error,
-              fallbackMessage: 'Không thể tải thông tin phòng chat.',
-            ).message}',
+      metaSub =
+          _streamRoomMetaFields(
+            _dbRef.child('chats/$roomId'),
+            includeStatus: includeStatus,
+            includeClosedMessage: includeClosedMessage,
+            includeDeletedDisplayName: includeDeletedDisplayName,
+            unreadCounterKey: 'unread_$viewerHouseId',
+          ).listen(
+            controller.add,
+            onError: (Object error) {
+              debugPrint(
+                '[ChatService] room meta stream failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể tải thông tin phòng chat.').message}',
+              );
+            },
           );
-        },
-      );
       try {
         await _ensureViewerRoomIndex(viewerHouseId, roomId);
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[ChatService] Không tạo được room index: $error');
+      }
     }
 
     controller = StreamController<ChatRoomMeta>(
@@ -1249,8 +1272,10 @@ class ChatService {
     return controller.stream;
   }
 
-  Stream<ChatRoomMeta> streamInternalRoomMeta(String houseId,
-      {String? viewerRole}) {
+  Stream<ChatRoomMeta> streamInternalRoomMeta(
+    String houseId, {
+    String? viewerRole,
+  }) {
     return _streamRoomMetaFields(
       _dbRef.child('houses/$houseId/chat_room'),
       includeStatus: false,
@@ -1306,7 +1331,9 @@ class ChatService {
         houseId: houseId,
         role: role,
       );
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[ChatService] Không ghi được activity nội bộ: $error');
+    }
   }
 
   Future<void> addInternalReaction(
@@ -1315,14 +1342,15 @@ class ChatService {
     String senderRole,
     String emoji,
   ) async {
-    await InternalChatService()
-        .addReaction(houseId, messageId, senderRole, emoji);
+    await InternalChatService().addReaction(
+      houseId,
+      messageId,
+      senderRole,
+      emoji,
+    );
   }
 
-  Future<void> clearConversation(
-    String myHouseId,
-    String targetHouseId,
-  ) async {
+  Future<void> clearConversation(String myHouseId, String targetHouseId) async {
     await _runExternalChatAction(() async {
       final roomId = _getRoomId(myHouseId, targetHouseId);
       await _dbRef.update({
@@ -1366,19 +1394,24 @@ class ChatService {
       throw Exception('Thiếu targetHouseId để lưu nền chat.');
     }
 
-    await _runExternalChatAction(() async {
-      final roomId = _getRoomId(myHouseId, normalizedTargetHouseId);
-      await _ensureChatRoomStructure(
-          myHouseId, normalizedTargetHouseId, roomId);
-      await _ensureChatRoomIndex(myHouseId, normalizedTargetHouseId, roomId);
-      await _dbRef.update({
-        'chats/$roomId/backgroundUrl': normalizedUrl,
-        'chats/$roomId/backgroundStoragePath': normalizedStoragePath,
-        'chats/$roomId/backgroundUpdatedAt': ServerValue.timestamp,
-      });
-    },
-        permissionMessage:
-            'Không cập nhật được nền chat: có thể bạn không còn quyền sửa hoặc đoạn chat chưa sẵn sàng.');
+    await _runExternalChatAction(
+      () async {
+        final roomId = _getRoomId(myHouseId, normalizedTargetHouseId);
+        await _ensureChatRoomStructure(
+          myHouseId,
+          normalizedTargetHouseId,
+          roomId,
+        );
+        await _ensureChatRoomIndex(myHouseId, normalizedTargetHouseId, roomId);
+        await _dbRef.update({
+          'chats/$roomId/backgroundUrl': normalizedUrl,
+          'chats/$roomId/backgroundStoragePath': normalizedStoragePath,
+          'chats/$roomId/backgroundUpdatedAt': ServerValue.timestamp,
+        });
+      },
+      permissionMessage:
+          'Không cập nhật được nền chat: có thể bạn không còn quyền sửa hoặc đoạn chat chưa sẵn sàng.',
+    );
   }
 
   Future<void> clearChatBackground({
@@ -1401,19 +1434,24 @@ class ChatService {
       throw Exception('Thiếu targetHouseId để xóa nền chat.');
     }
 
-    await _runExternalChatAction(() async {
-      final roomId = _getRoomId(myHouseId, normalizedTargetHouseId);
-      await _ensureChatRoomStructure(
-          myHouseId, normalizedTargetHouseId, roomId);
-      await _ensureChatRoomIndex(myHouseId, normalizedTargetHouseId, roomId);
-      await _dbRef.update({
-        'chats/$roomId/backgroundUrl': null,
-        'chats/$roomId/backgroundStoragePath': null,
-        'chats/$roomId/backgroundUpdatedAt': ServerValue.timestamp,
-      });
-    },
-        permissionMessage:
-            'Không xóa được nền chat: có thể bạn không còn quyền sửa hoặc đoạn chat chưa sẵn sàng.');
+    await _runExternalChatAction(
+      () async {
+        final roomId = _getRoomId(myHouseId, normalizedTargetHouseId);
+        await _ensureChatRoomStructure(
+          myHouseId,
+          normalizedTargetHouseId,
+          roomId,
+        );
+        await _ensureChatRoomIndex(myHouseId, normalizedTargetHouseId, roomId);
+        await _dbRef.update({
+          'chats/$roomId/backgroundUrl': null,
+          'chats/$roomId/backgroundStoragePath': null,
+          'chats/$roomId/backgroundUpdatedAt': ServerValue.timestamp,
+        });
+      },
+      permissionMessage:
+          'Không xóa được nền chat: có thể bạn không còn quyền sửa hoặc đoạn chat chưa sẵn sàng.',
+    );
   }
 
   Future<void> deleteChatBackgroundAsset({
@@ -1430,7 +1468,9 @@ class ChatService {
       if (user == null) return;
       final idToken = await user.getIdToken() ?? '';
       final response = await http.post(
-        Uri.parse('${AppConfig.cloudflareWorkerUrl}/api/deleteChatBackgroundAsset'),
+        Uri.parse(
+          '${AppConfig.cloudflareWorkerUrl}/api/deleteChatBackgroundAsset',
+        ),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $idToken',

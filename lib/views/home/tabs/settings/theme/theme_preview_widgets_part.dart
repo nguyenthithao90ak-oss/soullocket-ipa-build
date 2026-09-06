@@ -11,8 +11,10 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
     final ui = UiPrefs.notifier.value;
     final resolvedThemeKey = _resolvePreviewThemeKey(themeKey);
     final isDark = _isPreviewDarkTheme(resolvedThemeKey);
-    final resolvedEffectKey =
-        _resolvePreviewEffectKey(effectKey, resolvedThemeKey);
+    final resolvedEffectKey = _resolvePreviewEffectKey(
+      effectKey,
+      resolvedThemeKey,
+    );
     final accent = _previewThemeAccent(resolvedThemeKey);
     final gradient = _previewThemeGradient(resolvedThemeKey, isDark);
 
@@ -59,7 +61,7 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
                         imageUrl: imageUrl,
                         fit: BoxFit.cover,
                         memCacheWidth: 600,
-                        errorWidget: (_, __, ___) => const SizedBox.shrink(),
+                        errorWidget: (_, _, _) => const SizedBox.shrink(),
                       ),
                     ),
                   ),
@@ -120,16 +122,17 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
                             : 110.0,
                         fontKey: _draftFontKey ?? ui.fontKey,
                         visual: _themePreviewCountdownVisual(
-                            _draftCountdownStyleKey ?? ui.countdownStyleKey),
+                          _draftCountdownStyleKey ?? ui.countdownStyleKey,
+                        ),
                         topLabel: _themePreviewLabel(
                           ui.countdownTopLabel,
-                          fallback: 'NGÀY BÊN NHAU',
+                          fallback: context.tr('p7_days_together_upper'),
                           uppercase: true,
                         ),
                         valueText: '240',
                         bottomLabel: _themePreviewLabel(
                           ui.countdownBottomLabel,
-                          fallback: 'LOVE',
+                          fallback: context.tr('p7_love_upper'),
                           uppercase: true,
                         ),
                         styleKey:
@@ -200,18 +203,23 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
     required bool isSingle,
   }) {
     if (isSingle) {
-      return 'Nền và bố cục sẽ hiện đúng như ở trang chủ của bạn.';
+      return context.tr('p7_theme_preview_single_description');
     }
     if (days <= 0) {
-      return 'Bắt đầu lưu ngày bên nhau ngay từ hôm nay.';
+      return context.tr('p7_theme_preview_start_today');
     }
     final nextMonth = (days ~/ 30) + 1;
     final nextMilestoneDays = nextMonth * 30;
     final daysLeft = nextMilestoneDays - days;
     if (daysLeft <= 0) {
-      return 'Hôm nay là kỷ niệm tròn ${nextMonth - 1} tháng bên nhau.';
+      return context
+          .tr('p7_theme_preview_anniversary_today')
+          .replaceAll('{months}', (nextMonth - 1).toString());
     }
-    return 'Còn $daysLeft ngày nữa tới kỷ niệm tròn $nextMonth tháng bên nhau';
+    return context
+        .tr('p7_theme_preview_anniversary_countdown')
+        .replaceAll('{days}', daysLeft.toString())
+        .replaceAll('{months}', nextMonth.toString());
   }
 
   _ThemePreviewCountdownVisual _themePreviewCountdownVisual(String styleKey) {
@@ -256,7 +264,9 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
               end: Alignment.bottomRight,
             ),
             border: Border.all(
-                color: Colors.white.withValues(alpha: 0.82), width: 3),
+              color: Colors.white.withValues(alpha: 0.82),
+              width: 3,
+            ),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF8EC5FC).withValues(alpha: 0.34),
@@ -269,7 +279,9 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
             shape: BoxShape.circle,
             color: Colors.white.withValues(alpha: 0.16),
             border: Border.all(
-                color: Colors.white.withValues(alpha: 0.42), width: 1.2),
+              color: Colors.white.withValues(alpha: 0.42),
+              width: 1.2,
+            ),
           ),
           numberGradient: const [Color(0xFF27B4FF), Color(0xFFD81B60)],
           topLabelColor: const Color(0xFF2378A8),
@@ -297,7 +309,9 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
               end: Alignment.bottomRight,
             ),
             border: Border.all(
-                color: Colors.white.withValues(alpha: 0.82), width: 4),
+              color: Colors.white.withValues(alpha: 0.82),
+              width: 4,
+            ),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFFFF5E92).withValues(alpha: 0.34),
@@ -343,7 +357,9 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
               end: Alignment.bottomRight,
             ),
             border: Border.all(
-                color: Colors.white.withValues(alpha: 0.88), width: 4),
+              color: Colors.white.withValues(alpha: 0.88),
+              width: 4,
+            ),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFFFF77C8).withValues(alpha: 0.24),
@@ -356,7 +372,9 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
             shape: BoxShape.circle,
             color: Colors.white.withValues(alpha: 0.20),
             border: Border.all(
-                color: Colors.white.withValues(alpha: 0.58), width: 1),
+              color: Colors.white.withValues(alpha: 0.58),
+              width: 1,
+            ),
           ),
           numberGradient: const [Color(0xFFFF3D9A), Color(0xFF36C9FF)],
           topLabelColor: const Color(0xFFE6378D),
@@ -388,7 +406,9 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
               ],
             ),
             border: Border.all(
-                color: Colors.white.withValues(alpha: 0.88), width: 4),
+              color: Colors.white.withValues(alpha: 0.88),
+              width: 4,
+            ),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFFFF00A8).withValues(alpha: 0.42),
@@ -401,12 +421,14 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
             shape: BoxShape.circle,
             color: Colors.black.withValues(alpha: 0.16),
             border: Border.all(
-                color: Colors.white.withValues(alpha: 0.38), width: 1.4),
+              color: Colors.white.withValues(alpha: 0.38),
+              width: 1.4,
+            ),
           ),
           numberGradient: const [
             Colors.white,
             Color(0xFFFFF176),
-            Color(0xFF00F5FF)
+            Color(0xFF00F5FF),
           ],
           topLabelColor: Colors.white,
           bottomLabelColor: const Color(0xFFFFF59D),
@@ -440,21 +462,24 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
               colors: isLava
                   ? const [Color(0xFF1A0502), Color(0xFF4A1103)]
                   : isAurora
-                      ? const [Color(0xFF001B2E), Color(0xFF021A10)]
-                      : const [Color(0xFF120024), Color(0xFF05000F)],
+                  ? const [Color(0xFF001B2E), Color(0xFF021A10)]
+                  : const [Color(0xFF120024), Color(0xFF05000F)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             border: Border.all(
-                color: Colors.white.withValues(alpha: 0.22), width: 3),
+              color: Colors.white.withValues(alpha: 0.22),
+              width: 3,
+            ),
             boxShadow: [
               BoxShadow(
-                color: (isLava
-                        ? const Color(0xFFFF5A00)
-                        : isAurora
+                color:
+                    (isLava
+                            ? const Color(0xFFFF5A00)
+                            : isAurora
                             ? const Color(0xFF00FFC8)
                             : const Color(0xFF8A2BFF))
-                    .withValues(alpha: 0.42),
+                        .withValues(alpha: 0.42),
                 blurRadius: 54,
                 offset: const Offset(0, 16),
               ),
@@ -464,24 +489,19 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
             shape: BoxShape.circle,
             color: Colors.black.withValues(alpha: 0.12),
             border: Border.all(
-                color: Colors.white.withValues(alpha: 0.18), width: 1),
+              color: Colors.white.withValues(alpha: 0.18),
+              width: 1,
+            ),
           ),
           numberGradient: isLava
               ? const [Color(0xFFFFF176), Color(0xFFFF5A00), Color(0xFFFF1744)]
               : isAurora
-                  ? const [
-                      Color(0xFFE6FFF9),
-                      Color(0xFF00FFC8),
-                      Color(0xFF7C4DFF)
-                    ]
-                  : const [
-                      Color(0xFFFFFFFF),
-                      Color(0xFF00E5FF),
-                      Color(0xFFFF4EBB)
-                    ],
+              ? const [Color(0xFFE6FFF9), Color(0xFF00FFC8), Color(0xFF7C4DFF)]
+              : const [Color(0xFFFFFFFF), Color(0xFF00E5FF), Color(0xFFFF4EBB)],
           topLabelColor: Colors.white,
-          bottomLabelColor:
-              isLava ? const Color(0xFFFFD180) : const Color(0xFFBDEBFF),
+          bottomLabelColor: isLava
+              ? const Color(0xFFFFD180)
+              : const Color(0xFFBDEBFF),
           labelShadows: [
             Shadow(color: Colors.black.withValues(alpha: 0.48), blurRadius: 10),
           ],
@@ -548,6 +568,7 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
         padding: const EdgeInsets.all(7),
         child: Container(
           decoration: visual.innerDecoration,
+          clipBehavior: Clip.antiAlias,
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -570,15 +591,16 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
                       child: Text(
                         topLabel,
                         maxLines: 1,
-                        style: _themeFontStyle(
-                          fontKey,
-                          fontSize: size * 0.085,
-                          fontWeight: FontWeight.w900,
-                          color: visual.topLabelColor,
-                        ).copyWith(
-                          letterSpacing: 1.0,
-                          shadows: visual.labelShadows,
-                        ),
+                        style:
+                            _themeFontStyle(
+                              fontKey,
+                              fontSize: size * 0.085,
+                              fontWeight: FontWeight.w900,
+                              color: visual.topLabelColor,
+                            ).copyWith(
+                              letterSpacing: 1.0,
+                              shadows: visual.labelShadows,
+                            ),
                       ),
                     ),
                     SizedBox(height: size * 0.05),
@@ -605,15 +627,16 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
                       child: Text(
                         bottomLabel,
                         maxLines: 1,
-                        style: _themeFontStyle(
-                          fontKey,
-                          fontSize: size * 0.09,
-                          fontWeight: FontWeight.w900,
-                          color: visual.bottomLabelColor,
-                        ).copyWith(
-                          letterSpacing: 0.4,
-                          shadows: visual.labelShadows,
-                        ),
+                        style:
+                            _themeFontStyle(
+                              fontKey,
+                              fontSize: size * 0.09,
+                              fontWeight: FontWeight.w900,
+                              color: visual.bottomLabelColor,
+                            ).copyWith(
+                              letterSpacing: 0.4,
+                              shadows: visual.labelShadows,
+                            ),
                       ),
                     ),
                   ],
@@ -725,18 +748,23 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
     required String homeToneKey,
     required bool isDark,
   }) {
-    final leftName = _nameU1.trim().isEmpty ? 'Bạn' : _nameU1.trim();
-    final rightName = _nameU2.trim().isEmpty ? 'Người ấy' : _nameU2.trim();
-    final status1 = _showStatus ? 'Off 26 phút trước' : '';
-    final status2 = _showStatus ? 'Đang hoạt động' : '';
+    final leftName = _nameU1.trim().isEmpty
+        ? context.tr('p7_preview_you')
+        : _nameU1.trim();
+    final rightName = _nameU2.trim().isEmpty
+        ? context.tr('p7_preview_partner')
+        : _nameU2.trim();
+    final status1 = _showStatus ? context.tr('p7_preview_offline_26m') : '';
+    final status2 = _showStatus ? context.tr('p7_preview_active_now') : '';
     final weather1 = _showWeather ? '☀ 27°C' : '';
     final weather2 = _showWeather ? '☀ 27°C' : '';
 
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 12, 10, 10),
-      decoration: _previewHomeCardDecoration(homeToneKey, isDark).copyWith(
-        borderRadius: BorderRadius.circular(18),
-      ),
+      decoration: _previewHomeCardDecoration(
+        homeToneKey,
+        isDark,
+      ).copyWith(borderRadius: BorderRadius.circular(18)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -752,29 +780,30 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
               weather: weather1,
               fontKey: fontKey,
               isUser1: true,
+              isActive: false,
             ),
           ),
           const Padding(
             padding: EdgeInsets.only(top: 18, left: 6, right: 6),
-            child: Text(
-              '💖',
-              style: TextStyle(fontSize: 24, height: 1),
-            ),
+            child: Text('💖', style: TextStyle(fontSize: 24, height: 1)),
           ),
           Expanded(
             child: _buildThemePreviewProfileColumn(
-              name: _relationshipMode == 'single' ? 'Chờ kết nối' : rightName,
+              name: _relationshipMode == 'single'
+                  ? context.tr('p7_preview_waiting_connection')
+                  : rightName,
               avatarUrl: _relationshipMode == 'single' ? '' : _avatarUrl2,
               avatarFrameKey: avatarFrameKey,
               ageBadge: _relationshipMode == 'single'
                   ? ''
                   : (_themePreviewAgeDays(_dobU2) > 0
-                      ? '${_themePreviewAgeDays(_dobU2)}'
-                      : ''),
+                        ? '${_themePreviewAgeDays(_dobU2)}'
+                        : ''),
               status: _relationshipMode == 'single' ? '' : status2,
               weather: _relationshipMode == 'single' ? '' : weather2,
               fontKey: fontKey,
               isUser1: false,
+              isActive: _relationshipMode != 'single' && _showStatus,
             ),
           ),
         ],
@@ -791,14 +820,11 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
     required String weather,
     required String fontKey,
     required bool isUser1,
+    required bool isActive,
   }) {
     const avatarSize = 44.0;
     final accent = isUser1 ? const Color(0xFF2563EB) : const Color(0xFFFF4D79);
-    final avatarImage = _buildThemePreviewAvatarImage(
-      avatarUrl,
-      accent,
-      name,
-    );
+    final avatarImage = _buildThemePreviewAvatarImage(avatarUrl, accent, name);
 
     return Column(
       children: [
@@ -858,7 +884,7 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
               fontKey,
               fontSize: 6.9,
               fontWeight: FontWeight.w800,
-              color: status.contains('Đang')
+              color: isActive
                   ? const Color(0xFF22C55E)
                   : const Color(0xFF94A3B8),
             ),
@@ -899,7 +925,7 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
         fit: BoxFit.cover,
         filterQuality: FilterQuality.medium,
         memCacheWidth: 600,
-        errorWidget: (_, __, ___) =>
+        errorWidget: (_, _, _) =>
             _buildThemePreviewAvatarFallback(accent, name),
       );
     }
@@ -960,14 +986,20 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
             Positioned(
               left: 24,
               top: 96,
-              child:
-                  Icon(Icons.auto_awesome_rounded, size: 9, color: faintColor),
+              child: Icon(
+                Icons.auto_awesome_rounded,
+                size: 9,
+                color: faintColor,
+              ),
             ),
             Positioned(
               right: 30,
               top: 142,
-              child:
-                  Icon(Icons.auto_awesome_rounded, size: 10, color: faintColor),
+              child: Icon(
+                Icons.auto_awesome_rounded,
+                size: 10,
+                color: faintColor,
+              ),
             ),
             Positioned(
               left: 40,
@@ -990,15 +1022,30 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
     required bool isDark,
   }) {
     final items = <(IconData, String, Color, bool)>[
-      (Icons.home_rounded, 'Home', accent, true),
-      (Icons.public_rounded, 'Xã hội', const Color(0xFF38BDF8), false),
-      (Icons.menu_book_rounded, 'Nhật ký', const Color(0xFF22C55E), false),
-      (Icons.widgets_rounded, 'Tiện ích', const Color(0xFFA78BFA), false),
+      (Icons.home_rounded, context.tr('p7_preview_home'), accent, true),
+      (
+        Icons.public_rounded,
+        context.tr('p7_preview_social'),
+        const Color(0xFF38BDF8),
+        false,
+      ),
+      (
+        Icons.menu_book_rounded,
+        context.tr('p7_preview_diary'),
+        const Color(0xFF22C55E),
+        false,
+      ),
+      (
+        Icons.widgets_rounded,
+        context.tr('p7_preview_utilities'),
+        const Color(0xFFA78BFA),
+        false,
+      ),
       (
         Icons.sports_esports_rounded,
-        'Vui chơi',
+        context.tr('p7_preview_fun'),
         const Color(0xFFF59E0B),
-        false
+        false,
       ),
     ];
 
@@ -1060,7 +1107,8 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
         'theme-ocean',
         'theme-night',
       ];
-      final slot = DateTime.now().millisecondsSinceEpoch ~/
+      final slot =
+          DateTime.now().millisecondsSinceEpoch ~/
           const Duration(seconds: 30).inMilliseconds;
       return rotatingThemes[slot % rotatingThemes.length];
     }
@@ -1206,11 +1254,7 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
         ];
       default:
         return isDark
-            ? const [
-                Color(0xFF1A1430),
-                Color(0xFF241C3E),
-                Color(0xFF302552),
-              ]
+            ? const [Color(0xFF1A1430), Color(0xFF241C3E), Color(0xFF302552)]
             : const [
                 Color(0xFFFFF0F3),
                 Color(0xFFFFD6E0),

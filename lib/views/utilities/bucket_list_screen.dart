@@ -17,8 +17,11 @@ class BucketListScreen extends StatefulWidget {
   final String houseId;
   final String myName;
 
-  const BucketListScreen(
-      {super.key, required this.houseId, required this.myName});
+  const BucketListScreen({
+    super.key,
+    required this.houseId,
+    required this.myName,
+  });
 
   @override
   State<BucketListScreen> createState() => _BucketListScreenState();
@@ -28,9 +31,12 @@ class _BucketListScreenState extends State<BucketListScreen>
     with TickerProviderStateMixin {
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
-      tooltip: 'Hướng dẫn',
-      icon: const Icon(Icons.info_outline_rounded,
-          color: SLColors.primary, size: 22),
+      tooltip: context.tr('p3_bucket_help_tooltip'),
+      icon: const Icon(
+        Icons.info_outline_rounded,
+        color: SLColors.primary,
+        size: 22,
+      ),
       onPressed: () => _showInfoDialog(context),
     );
   }
@@ -39,34 +45,40 @@ class _BucketListScreenState extends State<BucketListScreen>
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: SLColors.paper,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text(
-          'Danh sách Bucket 100',
+          context.tr('p3_bucket_help_title'),
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
-        content: const SingleChildScrollView(
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
               Text(
-                  '- Gợi ý và lưu trữ 100 điều các cặp đôi nên làm cùng nhau.\n- Theo dõi tiến độ hoàn thành (0/100).\n- Chia sẻ cảm xúc khi hoàn thành từng mục.'),
-              SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
+                context.tr('p3_help_features_label'),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Text(context.tr('p3_bucket_help_features')),
+              const SizedBox(height: 12),
               Text(
-                  '- Bấm dấu + để tự thêm điều muốn làm hoặc chọn từ gợi ý có sẵn.\n- Khi cả hai cùng hoàn thành một mục, hãy đánh dấu "Hoàn thành" để lưu lại kỷ niệm.'),
+                context.tr('p3_help_how_to_label'),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Text(context.tr('p3_bucket_help_how_to')),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu',
-                style: TextStyle(color: SLColors.primary)),
+            child: Text(
+              context.tr('p3_understood'),
+              style: const TextStyle(color: SLColors.primary),
+            ),
           ),
         ],
       ),
@@ -84,7 +96,10 @@ class _BucketListScreenState extends State<BucketListScreen>
   @override
   void initState() {
     super.initState();
-    _bucketStream = _dbRef.child('houses/${widget.houseId}/bucket').limitToLast(50).onValue;
+    _bucketStream = _dbRef
+        .child('houses/${widget.houseId}/bucket')
+        .limitToLast(50)
+        .onValue;
     _confettiCtrl =
         AnimationController(vsync: this, duration: const Duration(seconds: 2))
           ..addStatusListener((s) {
@@ -98,7 +113,10 @@ class _BucketListScreenState extends State<BucketListScreen>
   void didUpdateWidget(covariant BucketListScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.houseId != widget.houseId) {
-      _bucketStream = _dbRef.child('houses/${widget.houseId}/bucket').limitToLast(50).onValue;
+      _bucketStream = _dbRef
+          .child('houses/${widget.houseId}/bucket')
+          .limitToLast(50)
+          .onValue;
     }
   }
 
@@ -113,43 +131,48 @@ class _BucketListScreenState extends State<BucketListScreen>
     final rng = Random();
     setState(() {
       _confetti = List.generate(
-          45,
-          (_) => _ConfettiPiece(
-                x: rng.nextDouble(),
-                color: [
-                  Colors.pink,
-                  Colors.yellow,
-                  Colors.cyan,
-                  Colors.green,
-                  Colors.orange,
-                  Colors.purple
-                ][rng.nextInt(6)],
-                size: 6 + rng.nextDouble() * 8,
-                speed: 0.3 + rng.nextDouble() * 0.7,
-              ));
+        45,
+        (_) => _ConfettiPiece(
+          x: rng.nextDouble(),
+          color: [
+            Colors.pink,
+            Colors.yellow,
+            Colors.cyan,
+            Colors.green,
+            Colors.orange,
+            Colors.purple,
+          ][rng.nextInt(6)],
+          size: 6 + rng.nextDouble() * 8,
+          speed: 0.3 + rng.nextDouble() * 0.7,
+        ),
+      );
       _showConfetti = true;
     });
     _confettiCtrl.forward(from: 0);
     HapticFeedback.heavyImpact();
     Future.delayed(
-        const Duration(milliseconds: 200), () => HapticFeedback.mediumImpact());
+      const Duration(milliseconds: 200),
+      () => HapticFeedback.mediumImpact(),
+    );
   }
 
   Future<void> _addItem() async {
     final text = _itemController.text.trim();
     if (text.isEmpty) return;
 
-    final currentSnap =
-        await _dbRef.child('houses/${widget.houseId}/bucket').get();
+    final currentSnap = await _dbRef
+        .child('houses/${widget.houseId}/bucket')
+        .get();
     if (currentSnap.exists && currentSnap.value is Map) {
       final currentMap = currentSnap.value as Map;
       if (currentMap.length >= 50) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-              'Danh sách mong muốn đã đạt giới hạn (tối đa 50 mục). Vui lòng xoá bớt trước khi thêm mới.'),
-          backgroundColor: SLColors.danger,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.tr('p3_bucket_limit_reached')),
+            backgroundColor: SLColors.danger,
+          ),
+        );
         return;
       }
     }
@@ -178,9 +201,9 @@ class _BucketListScreenState extends State<BucketListScreen>
   }
 
   void _toggleItem(String key, bool currentDone) {
-    _dbRef
-        .child('houses/${widget.houseId}/bucket/$key')
-        .update({'done': !currentDone});
+    _dbRef.child('houses/${widget.houseId}/bucket/$key').update({
+      'done': !currentDone,
+    });
     if (!currentDone) _triggerCelebration();
   }
 
@@ -188,18 +211,22 @@ class _BucketListScreenState extends State<BucketListScreen>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xoá mục bucket list'),
-        content: const Text('Bạn có chắc chắn muốn xoá mục này?'),
+        backgroundColor: SLColors.paper,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(context.tr('p3_bucket_delete_title')),
+        content: Text(context.tr('p3_bucket_delete_message')),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(context.tr('p3_cancel')),
+          ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               _doDeleteItem(key);
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Xoá'),
+            child: Text(context.tr('p3_delete')),
           ),
         ],
       ),
@@ -236,8 +263,11 @@ class _BucketListScreenState extends State<BucketListScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(context, context.tr('util_danhschcng_153531'),
-          actions: [_buildInfoIcon(context)]),
+      appBar: SLTheme.appBar(
+        context,
+        context.tr('util_danhschcng_153531'),
+        actions: [_buildInfoIcon(context)],
+      ),
       body: Stack(
         children: <Widget>[
           SLTheme.softCanvasBackdrop(
@@ -246,89 +276,113 @@ class _BucketListScreenState extends State<BucketListScreen>
             secondaryAccent: const Color(0xFF8B5CF6),
             motif: SLCanvasBackdropMotif.sparkles,
             child: SafeArea(
-              child: StreamBuilder(
-                stream: _bucketStream,
-                builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(color: SLColors.primary),
-                    );
-                  }
-                  if (snapshot.hasError) {
-                    return Padding(
-                      padding: SLSpacing.all16,
-                      child: Center(
-                        child: SLTheme.emptyStatePanel(
-                          icon: Icons.error_outline_rounded,
-                          title: context.tr('util_khngticbuc_cb9126'),
-                          subtitle:
-                              AppErrorMapper.resolve(snapshot.error).message,
-                          accentColor: SLColors.danger,
-                        ),
-                      ),
-                    );
-                  }
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 760),
+                  child: StreamBuilder(
+                    stream: _bucketStream,
+                    builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(
+                            color: SLColors.primary,
+                          ),
+                        );
+                      }
+                      if (snapshot.hasError) {
+                        return Padding(
+                          padding: SLSpacing.all16,
+                          child: Center(
+                            child: SLTheme.emptyStatePanel(
+                              icon: Icons.error_outline_rounded,
+                              title: context.tr('util_khngticbuc_cb9126'),
+                              subtitle: AppErrorMapper.resolve(
+                                snapshot.error,
+                              ).message,
+                              accentColor: SLColors.danger,
+                            ),
+                          ),
+                        );
+                      }
 
-                  List<Map<String, dynamic>> items = <Map<String, dynamic>>[];
-                  if (snapshot.hasData &&
-                      snapshot.data?.snapshot.value != null) {
-                    final raw = snapshot.data!.snapshot.value;
-                    if (raw is Map) {
-                      final data = Map<dynamic, dynamic>.from(raw);
-                      items = data.entries
-                          .where((e) => e.value is Map)
-                          .map((e) => {
-                                'key': e.key,
-                                ...Map<String, dynamic>.from(e.value as Map)
-                              })
-                          .toList();
-                    }
-                    items.sort((a, b) => (a['done'] == true ? 1 : 0)
-                        .compareTo(b['done'] == true ? 1 : 0));
-                  }
-
-                  final doneCount =
-                      items.where((i) => i['done'] == true).length;
-                  final total = items.length;
-                  final progress = total == 0 ? 0.0 : doneCount / total;
-
-                  return Column(
-                    children: <Widget>[
-                      _buildProgressCard(
-                        doneCount: doneCount,
-                        total: total,
-                        progress: progress,
-                      ),
-                      _buildComposer(),
-                      Expanded(
-                        child: items.isEmpty
-                            ? Padding(
-                                padding: SLSpacing.all16,
-                                child: Center(
-                                  child: SLTheme.emptyStatePanel(
-                                    icon: Icons.flag_rounded,
-                                    title: context.tr('util_chaccnguyn_5c63b7'),
-                                    subtitle:
-                                        context.tr('util_hythmmtiuc_67a421'),
-                                    accentColor: const Color(0xFFEC4899),
-                                  ),
-                                ),
-                              )
-                            : ListView.separated(
-                                padding:
-                                    const EdgeInsets.fromLTRB(16, 6, 16, 24),
-                                itemCount: items.length,
-                                separatorBuilder: (_, __) => SLSpacing.h12,
-                                itemBuilder: (ctx, i) {
-                                  final item = items[i];
-                                  final isDone = item['done'] == true;
-                                  return _buildListItem(item, isDone);
+                      List<Map<String, dynamic>> items =
+                          <Map<String, dynamic>>[];
+                      if (snapshot.hasData &&
+                          snapshot.data?.snapshot.value != null) {
+                        final raw = snapshot.data!.snapshot.value;
+                        if (raw is Map) {
+                          final data = Map<dynamic, dynamic>.from(raw);
+                          items = data.entries
+                              .where((e) => e.value is Map)
+                              .map(
+                                (e) => {
+                                  'key': e.key,
+                                  ...Map<String, dynamic>.from(e.value as Map),
                                 },
-                              ),
-                      ),
-                    ],
-                  );
-                },
+                              )
+                              .toList();
+                        }
+                        items.sort(
+                          (a, b) => (a['done'] == true ? 1 : 0).compareTo(
+                            b['done'] == true ? 1 : 0,
+                          ),
+                        );
+                      }
+
+                      final doneCount = items
+                          .where((i) => i['done'] == true)
+                          .length;
+                      final total = items.length;
+                      final progress = total == 0 ? 0.0 : doneCount / total;
+
+                      return Column(
+                        children: <Widget>[
+                          _buildProgressCard(
+                            doneCount: doneCount,
+                            total: total,
+                            progress: progress,
+                          ),
+                          _buildComposer(),
+                          Expanded(
+                            child: items.isEmpty
+                                ? Padding(
+                                    padding: SLSpacing.all16,
+                                    child: Center(
+                                      child: SLTheme.emptyStatePanel(
+                                        icon: Icons.flag_rounded,
+                                        title: context.tr(
+                                          'util_chaccnguyn_5c63b7',
+                                        ),
+                                        subtitle: context.tr(
+                                          'util_hythmmtiuc_67a421',
+                                        ),
+                                        accentColor: const Color(0xFFEC4899),
+                                      ),
+                                    ),
+                                  )
+                                : ListView.separated(
+                                    physics:
+                                        SLResponsive.scrollPhysicsForPlatform(),
+                                    padding: const EdgeInsets.fromLTRB(
+                                      16,
+                                      6,
+                                      16,
+                                      24,
+                                    ),
+                                    itemCount: items.length,
+                                    separatorBuilder: (_, _) => SLSpacing.h12,
+                                    itemBuilder: (ctx, i) {
+                                      final item = items[i];
+                                      final isDone = item['done'] == true;
+                                      return _buildListItem(item, isDone);
+                                    },
+                                  ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
           ),
@@ -382,8 +436,10 @@ class _BucketListScreenState extends State<BucketListScreen>
                     ),
                     SLSpacing.h4,
                     Text(
-                      L10nService().format('util_bucket_done_count',
-                          {'done': doneCount, 'total': total}),
+                      L10nService().format('util_bucket_done_count', {
+                        'done': doneCount,
+                        'total': total,
+                      }),
                       style: SLTheme.quicksand(
                         fontSize: 12.2,
                         fontWeight: FontWeight.w700,
@@ -395,8 +451,10 @@ class _BucketListScreenState extends State<BucketListScreen>
               ),
               SLSpacing.w12,
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: <Color>[Color(0xFFEC4899), Color(0xFF8B5CF6)],
@@ -468,17 +526,27 @@ class _BucketListScreenState extends State<BucketListScreen>
               onSubmitted: (_) => _addItem(),
             ),
           ),
-          GestureDetector(
-            onTap: _addItem,
-            child: Container(
-              width: 42,
-              height: 42,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(colors: SLTheme.btnGradient),
-                shape: BoxShape.circle,
+          Tooltip(
+            message: context.tr('p3_bucket_add_action'),
+            child: Semantics(
+              button: true,
+              label: context.tr('p3_bucket_add_action'),
+              child: GestureDetector(
+                onTap: _addItem,
+                child: Container(
+                  width: 42,
+                  height: 42,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(colors: SLTheme.btnGradient),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.add_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
               ),
-              child:
-                  const Icon(Icons.add_rounded, color: Colors.white, size: 22),
             ),
           ),
         ],
@@ -511,29 +579,36 @@ class _BucketListScreenState extends State<BucketListScreen>
       ),
       child: Row(
         children: <Widget>[
-          GestureDetector(
-            onTap: () => _toggleItem(item['key'], isDone),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: isDone
-                    ? const LinearGradient(
-                        colors: <Color>[Color(0xFF4CAF50), Color(0xFF2E7D32)],
-                      )
-                    : null,
-                color: isDone ? null : const Color(0xFFFFF6FA),
-                border: isDone
-                    ? null
-                    : Border.all(color: SLTheme.primary, width: 2),
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.check_rounded,
-                  size: 18,
-                  color: isDone ? Colors.white : Colors.transparent,
+          Semantics(
+            button: true,
+            checked: isDone,
+            label: context.tr(
+              isDone ? 'p3_bucket_mark_incomplete' : 'p3_bucket_mark_complete',
+            ),
+            child: GestureDetector(
+              onTap: () => _toggleItem(item['key'], isDone),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: isDone
+                      ? const LinearGradient(
+                          colors: <Color>[Color(0xFF4CAF50), Color(0xFF2E7D32)],
+                        )
+                      : null,
+                  color: isDone ? null : const Color(0xFFFFF6FA),
+                  border: isDone
+                      ? null
+                      : Border.all(color: SLTheme.primary, width: 2),
+                ),
+                child: Center(
+                  child: Icon(
+                    Icons.check_rounded,
+                    size: 18,
+                    color: isDone ? Colors.white : Colors.transparent,
+                  ),
                 ),
               ),
             ),
@@ -574,13 +649,21 @@ class _BucketListScreenState extends State<BucketListScreen>
           if (isDone)
             const Padding(
               padding: EdgeInsets.only(right: 4),
-              child: Icon(Icons.celebration_rounded,
-                  color: Color(0xFF16A34A), size: 18),
+              child: Icon(
+                Icons.celebration_rounded,
+                color: Color(0xFF16A34A),
+                size: 18,
+              ),
             ),
-          GestureDetector(
-            onTap: () => _deleteItem(item['key']),
-            child: const Icon(Icons.delete_outline_rounded,
-                color: SLTheme.textLight, size: 20),
+          IconButton(
+            tooltip: context.tr('p3_bucket_delete_tooltip'),
+            onPressed: () => _deleteItem(item['key']),
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(
+              Icons.delete_outline_rounded,
+              color: SLTheme.textLight,
+              size: 20,
+            ),
           ),
         ],
       ),
@@ -593,11 +676,12 @@ class _ConfettiPiece {
   final Color color;
   final double size;
   final double speed;
-  _ConfettiPiece(
-      {required this.x,
-      required this.color,
-      required this.size,
-      required this.speed});
+  _ConfettiPiece({
+    required this.x,
+    required this.color,
+    required this.size,
+    required this.speed,
+  });
 }
 
 class _ConfettiPainter extends CustomPainter {
@@ -612,11 +696,16 @@ class _ConfettiPainter extends CustomPainter {
       final y = p.speed * progress * size.height * 1.5;
       final x = p.x * size.width + sin(progress * pi * 4 + p.x * 10) * 20;
       canvas.drawRRect(
-          RRect.fromRectAndRadius(
-              Rect.fromCenter(
-                  center: Offset(x, y), width: p.size, height: p.size * 0.5),
-              const Radius.circular(2)),
-          paint);
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: Offset(x, y),
+            width: p.size,
+            height: p.size * 0.5,
+          ),
+          const Radius.circular(2),
+        ),
+        paint,
+      );
     }
   }
 

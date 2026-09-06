@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../../core/constants/app_config.dart';
@@ -95,9 +96,8 @@ class MemoryShareResult {
 }
 
 class MemoryShareService {
-  MemoryShareService({
-    FirebaseAuth? auth,
-  }) : _auth = auth ?? FirebaseAuth.instance;
+  MemoryShareService({FirebaseAuth? auth})
+    : _auth = auth ?? FirebaseAuth.instance;
 
   static int get maxPhotosPerShare => fallbackMemoryLimits.shareMaxItems;
   static const String defaultShareTitle = 'Kỷ niệm của chúng mình';
@@ -113,7 +113,8 @@ class MemoryShareService {
 
   Future<MemoryLimits> fetchLimits() async {
     if (_cachedLimits != null && _lastFetchTime != null) {
-      if (DateTime.now().difference(_lastFetchTime!) < const Duration(hours: 1)) {
+      if (DateTime.now().difference(_lastFetchTime!) <
+          const Duration(hours: 1)) {
         return _cachedLimits!;
       }
     }
@@ -125,7 +126,9 @@ class MemoryShareService {
         _lastFetchTime = DateTime.now();
         return _cachedLimits!;
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[MemoryShareService] Cannot load sharing limits: $error');
+    }
     return fallbackMemoryLimits;
   }
 
@@ -145,13 +148,16 @@ class MemoryShareService {
     final maxItems = isPro ? limits.shareProMaxItems : limits.shareFreeMaxItems;
     if (photos.length > maxItems) {
       throw Exception(
-          'Mỗi liên kết chỉ hỗ trợ tối đa $maxItems ảnh đối với tài khoản ${isPro ? 'PRO' : 'thường'}.');
+        'Mỗi liên kết chỉ hỗ trợ tối đa $maxItems ảnh đối với tài khoản ${isPro ? 'PRO' : 'thường'}.',
+      );
     }
     final safePhotos = _sanitizePhotos(photos, maxItems);
     if (safePhotos.isEmpty) {
       throw Exception('Chưa có ảnh hợp lệ để tạo liên kết.');
     }
-    final resolvedExpiryDays = expiryDays.clamp(1, limits.shareMaxTtlDays).toInt();
+    final resolvedExpiryDays = expiryDays
+        .clamp(1, limits.shareMaxTtlDays)
+        .toInt();
 
     final payload = <String, dynamic>{
       'houseId': normalizedHouseId,
@@ -161,7 +167,8 @@ class MemoryShareService {
       'description': defaultShareDescription,
       'brandLabel': defaultBrandLabel,
       'theme': defaultTheme,
-      if (password != null && password.trim().isNotEmpty) 'password': password.trim(),
+      if (password != null && password.trim().isNotEmpty)
+        'password': password.trim(),
     };
     final response = await _workerPost('/api/createMemoryShareLink', payload);
     final raw = response['result'];
@@ -180,11 +187,15 @@ class MemoryShareService {
 
   Future<void> revokeShareLink(String token) async {
     final normalizedToken = token.trim();
-    if (normalizedToken.isEmpty) throw Exception('Thiếu token liên kết để thu hồi.');
+    if (normalizedToken.isEmpty)
+      throw Exception('Thiếu token liên kết để thu hồi.');
     await _workerPost('/api/revokeMemoryShareLink', {'token': normalizedToken});
   }
 
-  List<Map<String, dynamic>> _sanitizePhotos(List<Map<String, dynamic>> photos, int maxItems) {
+  List<Map<String, dynamic>> _sanitizePhotos(
+    List<Map<String, dynamic>> photos,
+    int maxItems,
+  ) {
     final sanitized = <Map<String, dynamic>>[];
     for (final photo in photos) {
       if (sanitized.length >= maxItems) break;
@@ -202,10 +213,19 @@ class MemoryShareService {
     return sanitized;
   }
 
-  String _firstShareableUrl(Map<String, dynamic> photo, {bool preferPreview = false}) {
+  String _firstShareableUrl(
+    Map<String, dynamic> photo, {
+    bool preferPreview = false,
+  }) {
     final keys = preferPreview
         ? const ['previewUrl', 'thumbUrl', 'thumbnailUrl', 'url', 'downloadUrl']
-        : const ['url', 'downloadUrl', 'previewUrl', 'thumbUrl', 'thumbnailUrl'];
+        : const [
+            'url',
+            'downloadUrl',
+            'previewUrl',
+            'thumbUrl',
+            'thumbnailUrl',
+          ];
     for (final key in keys) {
       final value = photo[key]?.toString().trim() ?? '';
       if (_isShareableUrl(value)) return value;
@@ -229,11 +249,15 @@ class MemoryShareService {
 
   Future<String> _getIdToken() async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Phiên đăng nhập đã hết. Vui lòng đăng nhập lại.');
+    if (user == null)
+      throw Exception('Phiên đăng nhập đã hết. Vui lòng đăng nhập lại.');
     return await user.getIdToken() ?? '';
   }
 
-  Future<Map<String, dynamic>> _workerPost(String path, Map<String, dynamic> body) async {
+  Future<Map<String, dynamic>> _workerPost(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
     final idToken = await _getIdToken();
     final response = await http.post(
       Uri.parse('${AppConfig.cloudflareWorkerUrl}$path'),
@@ -245,7 +269,8 @@ class MemoryShareService {
     );
     final decoded = jsonDecode(response.body) as Map<String, dynamic>;
     if (response.statusCode != 200) {
-      final msg = (decoded['error'] as Map?)?['message'] ?? 'Lỗi không xác định.';
+      final msg =
+          (decoded['error'] as Map?)?['message'] ?? 'Lỗi không xác định.';
       throw Exception(msg);
     }
     return decoded;

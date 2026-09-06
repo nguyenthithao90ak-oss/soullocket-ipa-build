@@ -424,70 +424,80 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
         final isPremium = item.$4;
         final locked = isPremium && !_isVipActive && !hasAdPass;
         final selected = selectedKey == key && !locked;
-        return GestureDetector(
-          onTap: () {
-            unawaited(_handleCountdownStyleChange(key));
-          },
-          child: AnimatedScale(
-            scale: selected ? 1.08 : 1.0,
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutBack,
-            child: AnimatedContainer(
+        return Semantics(
+          button: true,
+          selected: selected,
+          label: item.$1,
+          excludeSemantics: true,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(999),
+            onTap: () {
+              unawaited(_handleCountdownStyleChange(key));
+            },
+            child: AnimatedScale(
+              scale: selected ? 1.08 : 1.0,
               duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOut,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                gradient: locked
-                    ? LinearGradient(
-                        colors: item.$3
-                            .map((c) => c.withValues(alpha: 0.50))
-                            .toList(),
-                      )
-                    : LinearGradient(colors: item.$3),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(
-                  color: selected
-                      ? const Color(0xFFD81B60)
-                      : Colors.white.withValues(alpha: 0.7),
-                  width: selected ? 2.2 : 1,
+              curve: Curves.easeOutBack,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOut,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
                 ),
-                boxShadow: selected
-                    ? [
-                        BoxShadow(
-                          color: const Color(
-                            0xFFD81B60,
-                          ).withValues(alpha: 0.28),
-                          blurRadius: 20,
-                          spreadRadius: 1,
-                          offset: const Offset(0, 6),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    item.$1,
-                    style: SLTheme.quicksand(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w900,
-                      color: locked
-                          ? const Color(0xFF9E9E9E)
-                          : selected
-                          ? const Color(0xFFD81B60)
-                          : const Color(0xFF5C4B58),
-                    ),
+                decoration: BoxDecoration(
+                  gradient: locked
+                      ? LinearGradient(
+                          colors: item.$3
+                              .map((c) => c.withValues(alpha: 0.50))
+                              .toList(),
+                        )
+                      : LinearGradient(colors: item.$3),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: selected
+                        ? const Color(0xFFD81B60)
+                        : Colors.white.withValues(alpha: 0.7),
+                    width: selected ? 2.2 : 1,
                   ),
-                  if (locked) ...[
-                    const SizedBox(width: 4),
-                    const Icon(
-                      Icons.play_circle_fill_rounded,
-                      size: 14,
-                      color: Color(0xFFD81B60),
+                  boxShadow: selected
+                      ? [
+                          BoxShadow(
+                            color: const Color(
+                              0xFFD81B60,
+                            ).withValues(alpha: 0.28),
+                            blurRadius: 20,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 6),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      item.$1,
+                      style: SLTheme.quicksand(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w900,
+                        color: locked
+                            ? const Color(0xFF9E9E9E)
+                            : selected
+                            ? const Color(0xFFD81B60)
+                            : const Color(0xFF5C4B58),
+                      ),
                     ),
+                    if (locked) ...[
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.play_circle_fill_rounded,
+                        size: 14,
+                        color: Color(0xFFD81B60),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),
@@ -498,25 +508,60 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
 
   Widget _buildEffectPresetStrip(String selectedKey) {
     final items = [
-      ('Auto', 'auto', Icons.auto_awesome_rounded, const Color(0xFFFF77A8)),
+      (
+        context.tr('p7_effect_auto'),
+        'auto',
+        Icons.auto_awesome_rounded,
+        const Color(0xFFFF77A8),
+      ),
       (
         context.tr('effect_sparkles'),
         'sparkles',
         Icons.auto_fix_high_rounded,
         const Color(0xFFFFC857),
       ),
-      ('Sao', 'stars', Icons.star_rounded, const Color(0xFFFFD54F)),
-      ('Tim', 'hearts', Icons.favorite_rounded, const Color(0xFFFF5E92)),
-      ('Sao băng', 'meteors', Icons.flash_on_rounded, const Color(0xFF64B5F6)),
+      (
+        context.tr('p7_effect_stars'),
+        'stars',
+        Icons.star_rounded,
+        const Color(0xFFFFD54F),
+      ),
+      (
+        context.tr('p7_effect_hearts'),
+        'hearts',
+        Icons.favorite_rounded,
+        const Color(0xFFFF5E92),
+      ),
+      (
+        context.tr('p7_effect_meteors'),
+        'meteors',
+        Icons.flash_on_rounded,
+        const Color(0xFF64B5F6),
+      ),
       (
         context.tr('effect_bubbles'),
         'bubbles',
         Icons.bubble_chart_rounded,
         const Color(0xFF4DD0E1),
       ),
-      ('Tuyết', 'snow', Icons.ac_unit_rounded, const Color(0xFF90CAF9)),
-      ('Lá', 'leaves', Icons.park_rounded, const Color(0xFFFFA726)),
-      ('Tắt', 'off', Icons.block_rounded, const Color(0xFFBDBDBD)),
+      (
+        context.tr('p7_effect_snow'),
+        'snow',
+        Icons.ac_unit_rounded,
+        const Color(0xFF90CAF9),
+      ),
+      (
+        context.tr('p7_effect_leaves'),
+        'leaves',
+        Icons.park_rounded,
+        const Color(0xFFFFA726),
+      ),
+      (
+        context.tr('p7_off'),
+        'off',
+        Icons.block_rounded,
+        const Color(0xFFBDBDBD),
+      ),
     ];
 
     return Wrap(
@@ -524,50 +569,60 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
       runSpacing: 8,
       children: items.map((item) {
         final selected = selectedKey == item.$2;
-        return GestureDetector(
-          onTap: () => _updateThemeDraft(() => _draftEffectKey = item.$2),
-          child: AnimatedScale(
-            scale: selected ? 1.06 : 1.0,
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOutBack,
-            child: AnimatedContainer(
+        return Semantics(
+          button: true,
+          selected: selected,
+          label: item.$1,
+          excludeSemantics: true,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(999),
+            onTap: () => _updateThemeDraft(() => _draftEffectKey = item.$2),
+            child: AnimatedScale(
+              scale: selected ? 1.06 : 1.0,
               duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOut,
-              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
-              decoration: BoxDecoration(
-                color: selected
-                    ? item.$4.withValues(alpha: 0.16)
-                    : Colors.white.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(
-                  color: selected ? item.$4 : const Color(0xFFF1D4E1),
-                  width: selected ? 1.8 : 1.1,
+              curve: Curves.easeOutBack,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOut,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 11,
+                  vertical: 8,
                 ),
-                boxShadow: selected
-                    ? [
-                        BoxShadow(
-                          color: item.$4.withValues(alpha: 0.30),
-                          blurRadius: 14,
-                          spreadRadius: 0.5,
-                          offset: const Offset(0, 4),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(item.$3, size: 15, color: item.$4),
-                  const SizedBox(width: 5),
-                  Text(
-                    item.$1,
-                    style: SLTheme.quicksand(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      color: selected ? item.$4 : const Color(0xFF6C5A66),
-                    ),
+                decoration: BoxDecoration(
+                  color: selected
+                      ? item.$4.withValues(alpha: 0.16)
+                      : Colors.white.withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: selected ? item.$4 : const Color(0xFFF1D4E1),
+                    width: selected ? 1.8 : 1.1,
                   ),
-                ],
+                  boxShadow: selected
+                      ? [
+                          BoxShadow(
+                            color: item.$4.withValues(alpha: 0.30),
+                            blurRadius: 14,
+                            spreadRadius: 0.5,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(item.$3, size: 15, color: item.$4),
+                    const SizedBox(width: 5),
+                    Text(
+                      item.$1,
+                      style: SLTheme.quicksand(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        color: selected ? item.$4 : const Color(0xFF6C5A66),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -778,10 +833,20 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
 
   Widget _buildAvatarFrameStrip(String selectedKey) {
     final items = <(String, String, IconData, Color)>[
-      ('Không', 'off', Icons.block_rounded, const Color(0xFFBDBDBD)),
-      ('Tròn', 'circle', Icons.circle_rounded, const Color(0xFF2563EB)),
       (
-        'Bo góc',
+        context.tr('p7_frame_none'),
+        'off',
+        Icons.block_rounded,
+        const Color(0xFFBDBDBD),
+      ),
+      (
+        context.tr('p7_frame_circle'),
+        'circle',
+        Icons.circle_rounded,
+        const Color(0xFF2563EB),
+      ),
+      (
+        context.tr('p7_frame_rounded'),
         'rounded',
         Icons.rounded_corner_rounded,
         const Color(0xFFEC4899),
@@ -793,12 +858,17 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
         const Color(0xFF8B5CF6),
       ),
       (
-        'Ngọc trai',
+        context.tr('p7_frame_pearl'),
         'pearl',
         Icons.blur_circular_rounded,
         const Color(0xFFD4A520),
       ),
-      ('Thủy tinh', 'glass', Icons.water_drop_rounded, const Color(0xFF06B6D4)),
+      (
+        context.tr('p7_frame_glass'),
+        'glass',
+        Icons.water_drop_rounded,
+        const Color(0xFF06B6D4),
+      ),
       if (AppConfig.isPurchaseEnabled)
         (
           _isVipActive ? 'VIP ✨' : 'VIP 🔒',
@@ -818,78 +888,85 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
         final color = item.$4;
         final previewRadius = _avatarFramePreviewRadius(key);
 
-        return GestureDetector(
-          onTap: () => _handleAvatarFrameSelection(key),
-          child: AnimatedScale(
-            scale: selected ? 1.08 : 1.0,
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutBack,
-            child: SizedBox(
-              width: 58,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeOut,
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? color.withValues(alpha: 0.14)
-                          : Colors.white.withValues(alpha: 0.92),
-                      borderRadius: previewRadius,
-                      border: Border.all(
-                        color: selected ? color : const Color(0xFFDDD0D6),
-                        width: selected ? 2.2 : 1.2,
+        return Semantics(
+          button: true,
+          selected: selected,
+          label: item.$1,
+          excludeSemantics: true,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () => _handleAvatarFrameSelection(key),
+            child: AnimatedScale(
+              scale: selected ? 1.08 : 1.0,
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutBack,
+              child: SizedBox(
+                width: 58,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOut,
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? color.withValues(alpha: 0.14)
+                            : Colors.white.withValues(alpha: 0.92),
+                        borderRadius: previewRadius,
+                        border: Border.all(
+                          color: selected ? color : const Color(0xFFDDD0D6),
+                          width: selected ? 2.2 : 1.2,
+                        ),
+                        boxShadow: selected
+                            ? [
+                                BoxShadow(
+                                  color: color.withValues(alpha: 0.30),
+                                  blurRadius: 14,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ]
+                            : [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                       ),
-                      boxShadow: selected
-                          ? [
-                              BoxShadow(
-                                color: color.withValues(alpha: 0.30),
-                                blurRadius: 14,
-                                offset: const Offset(0, 4),
-                              ),
-                            ]
-                          : [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                    ),
-                    child: Center(
-                      child: SlAvatarFrame(
-                        frameKey: key,
-                        size: 36,
-                        accentColor: selected
-                            ? color
-                            : (locked
-                                  ? const Color(0xFFE2E8F0)
-                                  : const Color(0xFF94A3B8)),
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFF1F5F9),
-                            shape: BoxShape.circle,
+                      child: Center(
+                        child: SlAvatarFrame(
+                          frameKey: key,
+                          size: 36,
+                          accentColor: selected
+                              ? color
+                              : (locked
+                                    ? const Color(0xFFE2E8F0)
+                                    : const Color(0xFF94A3B8)),
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF1F5F9),
+                              shape: BoxShape.circle,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    item.$1,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: SLTheme.quicksand(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      color: selected ? color : const Color(0xFF6B7280),
+                    const SizedBox(height: 5),
+                    Text(
+                      item.$1,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: SLTheme.quicksand(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        color: selected ? color : const Color(0xFF6B7280),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

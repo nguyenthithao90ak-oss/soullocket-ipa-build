@@ -19,9 +19,9 @@ class DiaryFeedController extends ChangeNotifier {
     FirebaseAuth? auth,
     DatabaseReference? dbRef,
     HouseService? houseService,
-  })  : _auth = auth ?? FirebaseAuth.instance,
-        _dbRef = dbRef ?? FirebaseDatabase.instance.ref(),
-        _houseService = houseService ?? HouseService();
+  }) : _auth = auth ?? FirebaseAuth.instance,
+       _dbRef = dbRef ?? FirebaseDatabase.instance.ref(),
+       _houseService = houseService ?? HouseService();
 
   static const int _webDiaryCacheLimit = 28;
   static const int _appDiaryCacheLimit = 60;
@@ -192,10 +192,7 @@ class DiaryFeedController extends ChangeNotifier {
     return trimmed;
   }
 
-  String _resolveAuthorRole({
-    required String authorId,
-    String? authorRole,
-  }) {
+  String _resolveAuthorRole({required String authorId, String? authorRole}) {
     final normalizedRole = _normalizeRole(authorRole);
     if (normalizedRole.isNotEmpty) {
       return normalizedRole;
@@ -223,12 +220,15 @@ class DiaryFeedController extends ChangeNotifier {
       }
 
       _activeRoleKey = _memberRoleByUid[_auth.currentUser?.uid ?? ''] ?? role;
-      _nameU1 = settingsMap['nameU1']?.toString() ??
+      _nameU1 =
+          settingsMap['nameU1']?.toString() ??
           L10nService().translate('home_bnnam_123ef2');
-      _nameU2 = settingsMap['nameU2']?.toString() ??
+      _nameU2 =
+          settingsMap['nameU2']?.toString() ??
           L10nService().translate('home_bnn_babaec');
-      _relationshipMode =
-          HouseSettings.inferRelationshipModeFromSettingsMap(settingsMap);
+      _relationshipMode = HouseSettings.inferRelationshipModeFromSettingsMap(
+        settingsMap,
+      );
       final sdRaw = settingsMap['startDate'];
       _startDate = sdRaw == null ? null : DateTime.tryParse(sdRaw.toString());
       _notifySafely();
@@ -296,17 +296,12 @@ class DiaryFeedController extends ChangeNotifier {
     return fallback;
   }
 
-  Future<String> _resolveAccountNameByUid(
-    String uid, {
-    User? authUser,
-  }) async {
+  Future<String> _resolveAccountNameByUid(String uid, {User? authUser}) async {
     if (_normalizeRole(uid).isNotEmpty) {
       return '';
     }
 
-    final candidates = <String?>[
-      if (authUser != null) authUser.displayName,
-    ];
+    final candidates = <String?>[if (authUser != null) authUser.displayName];
 
     try {
       final snap = await _dbRef
@@ -327,9 +322,7 @@ class DiaryFeedController extends ChangeNotifier {
       debugPrint('[DiaryFeed] resolveAuthorName fallback parse error: $e');
     }
 
-    candidates.addAll([
-      if (authUser != null) _emailLocalPart(authUser.email),
-    ]);
+    candidates.addAll([if (authUser != null) _emailLocalPart(authUser.email)]);
 
     return _firstNameCandidate(candidates);
   }
@@ -354,27 +347,33 @@ class DiaryFeedController extends ChangeNotifier {
     final resolved = <String, String>{};
 
     try {
-      await Future.wait(uids.map((uid) async {
-        try {
-          final snap = await _dbRef
-              .child('users/$uid')
-              .get()
-              .timeout(const Duration(seconds: 3));
-          final userData = snap.value;
-          if (userData is Map) {
-            final name = _firstNameCandidate([
-              userData['displayName']?.toString(),
-              userData['name']?.toString(),
-              userData['fullName']?.toString(),
-              userData['username']?.toString(),
-              _emailLocalPart(userData['email']?.toString()),
-            ]);
-            if (name.isNotEmpty) {
-              resolved[uid] = name;
+      await Future.wait(
+        uids.map((uid) async {
+          try {
+            final snap = await _dbRef
+                .child('users/$uid')
+                .get()
+                .timeout(const Duration(seconds: 3));
+            final userData = snap.value;
+            if (userData is Map) {
+              final name = _firstNameCandidate([
+                userData['displayName']?.toString(),
+                userData['name']?.toString(),
+                userData['fullName']?.toString(),
+                userData['username']?.toString(),
+                _emailLocalPart(userData['email']?.toString()),
+              ]);
+              if (name.isNotEmpty) {
+                resolved[uid] = name;
+              }
             }
+          } catch (error) {
+            debugPrint(
+              '[SuppressedError] lib/views/home/tabs/diary/controllers/diary_feed_controller.dart: $error',
+            );
           }
-        } catch (_) {}
-      }));
+        }),
+      );
     } catch (e) {
       debugPrint('[DiaryFeed] resolve user names error: $e');
       // Fallback: resolve từ auth cho current user
@@ -651,57 +650,60 @@ class DiaryFeedController extends ChangeNotifier {
       // Auto migrate old RTDB diaries to Firestore in the background
       unawaited(DiaryService().migrateDiariesFromRTDB(houseId));
 
-      _pinnedSubscription =
-          DiaryService().streamPinnedDiary(houseId).listen((loadedPinned) {
-        if (_disposed) return;
-        _pinnedPosts = loadedPinned;
-        _updatePostsVN();
-      }, onError: (Object error) {
-        debugPrint('Pinned diary stream failed: $error');
-      });
-
-      _diarySubscription =
-          DiaryService().streamDiary(houseId, limit: 10).listen(
-        (loadedPosts) {
-          try {
-            if (_disposed) {
-              return;
-            }
-
-            if (loadedPosts.isEmpty) {
-              _latestPosts = const [];
+      _pinnedSubscription = DiaryService()
+          .streamPinnedDiary(houseId)
+          .listen(
+            (loadedPinned) {
+              if (_disposed) return;
+              _pinnedPosts = loadedPinned;
               _updatePostsVN();
-              _lastDiaryCacheSignature = '0';
-              unawaited(OfflineCacheService.saveCache('diary_$houseId', {
-                '_cachedAt': DateTime.now().millisecondsSinceEpoch,
-                'items': const <Map<String, dynamic>>[],
-              }));
-              return;
-            }
-
-            _latestPosts = loadedPosts;
-            _updatePostsVN();
-
-            final cacheList = loadedPosts.map((p) => p.toJson()).toList();
-            unawaited(_cacheDiaryPosts(houseId, cacheList));
-            unawaited(_hydrateAuthorNames(loadedPosts));
-          } catch (e, stack) {
-            debugPrint('Error processing diary realtime event: $e\n$stack');
-          } finally {
-            _setLoading(false);
-          }
-        },
-        onError: (Object error) {
-          debugPrint(
-            'Diary realtime listener failed: ${AppErrorMapper.resolve(
-              error,
-              fallbackMessage:
-                  L10nService().translate('home_khngthtinh_eb6eac'),
-            ).message}',
+            },
+            onError: (Object error) {
+              debugPrint('Pinned diary stream failed: $error');
+            },
           );
-          _setLoading(false);
-        },
-      );
+
+      _diarySubscription = DiaryService()
+          .streamDiary(houseId, limit: 10)
+          .listen(
+            (loadedPosts) {
+              try {
+                if (_disposed) {
+                  return;
+                }
+
+                if (loadedPosts.isEmpty) {
+                  _latestPosts = const [];
+                  _updatePostsVN();
+                  _lastDiaryCacheSignature = '0';
+                  unawaited(
+                    OfflineCacheService.saveCache('diary_$houseId', {
+                      '_cachedAt': DateTime.now().millisecondsSinceEpoch,
+                      'items': const <Map<String, dynamic>>[],
+                    }),
+                  );
+                  return;
+                }
+
+                _latestPosts = loadedPosts;
+                _updatePostsVN();
+
+                final cacheList = loadedPosts.map((p) => p.toJson()).toList();
+                unawaited(_cacheDiaryPosts(houseId, cacheList));
+                unawaited(_hydrateAuthorNames(loadedPosts));
+              } catch (e, stack) {
+                debugPrint('Error processing diary realtime event: $e\n$stack');
+              } finally {
+                _setLoading(false);
+              }
+            },
+            onError: (Object error) {
+              debugPrint(
+                'Diary realtime listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('home_khngthtinh_eb6eac')).message}',
+              );
+              _setLoading(false);
+            },
+          );
     } catch (e) {
       debugPrint('[DiaryFeed] fetchDiaryPosts error: $e');
       _setLoading(false);
@@ -718,8 +720,10 @@ class DiaryFeedController extends ChangeNotifier {
 
     try {
       if (_lastDocument == null) {
-        final firstPageResult =
-            await DiaryService().fetchDiaryPage(houseId, limit: 10);
+        final firstPageResult = await DiaryService().fetchDiaryPage(
+          houseId,
+          limit: 10,
+        );
         _lastDocument = firstPageResult.lastDoc;
         if (_lastDocument == null) {
           _hasMore = false;
@@ -782,16 +786,23 @@ class DiaryFeedController extends ChangeNotifier {
         .collection('diaries');
 
     if (post.pinned) {
-      batch
-          .update(diariesRef.doc(post.id), {'pinned': false, 'pinnedAt': null});
+      batch.update(diariesRef.doc(post.id), {
+        'pinned': false,
+        'pinnedAt': null,
+      });
     } else {
-      for (final item in postsVN.value
-          .where((entry) => entry.pinned && entry.id != post.id)) {
-        batch.update(
-            diariesRef.doc(item.id), {'pinned': false, 'pinnedAt': null});
+      for (final item in postsVN.value.where(
+        (entry) => entry.pinned && entry.id != post.id,
+      )) {
+        batch.update(diariesRef.doc(item.id), {
+          'pinned': false,
+          'pinnedAt': null,
+        });
       }
-      batch.update(diariesRef.doc(post.id),
-          {'pinned': true, 'pinnedAt': FieldValue.serverTimestamp()});
+      batch.update(diariesRef.doc(post.id), {
+        'pinned': true,
+        'pinnedAt': FieldValue.serverTimestamp(),
+      });
     }
 
     await batch.commit();

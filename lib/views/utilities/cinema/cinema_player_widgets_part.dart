@@ -19,7 +19,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                 fit: BoxFit.scaleDown,
                 filterQuality: FilterQuality.medium,
                 alignment: Alignment.center,
-                placeholder: (_, __) => const SizedBox(
+                placeholder: (_, _) => const SizedBox(
                   width: 36,
                   height: 36,
                   child: CircularProgressIndicator(
@@ -27,7 +27,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                     color: Color(0xFFFF6FA5),
                   ),
                 ),
-                errorWidget: (_, __, ___) => Icon(
+                errorWidget: (_, _, _) => Icon(
                   Icons.broken_image_outlined,
                   color: Colors.white70,
                   size: errorIconSize,
@@ -39,7 +39,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                 fit: BoxFit.scaleDown,
                 filterQuality: FilterQuality.medium,
                 alignment: Alignment.center,
-                errorBuilder: (_, __, ___) => Icon(
+                errorBuilder: (_, _, _) => Icon(
                   Icons.broken_image_outlined,
                   color: Colors.white70,
                   size: errorIconSize,
@@ -55,23 +55,36 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
         builder: (context, constraints) {
           final viewport = constraints.biggest;
           final safeViewportWidth = viewport.width > 0 ? viewport.width : 400.0;
-          final safeViewportHeight =
-              viewport.height > 0 ? viewport.height : 800.0;
+          final safeViewportHeight = viewport.height > 0
+              ? viewport.height
+              : 800.0;
 
-          final maxTitleWidth =
-              (safeViewportWidth - 24.0).clamp(250.0, double.infinity);
-          final titleWidth =
-              (safeViewportWidth * 0.72).clamp(250.0, maxTitleWidth);
+          final maxTitleWidth = (safeViewportWidth - 24.0).clamp(
+            250.0,
+            double.infinity,
+          );
+          final titleWidth = (safeViewportWidth * 0.72).clamp(
+            250.0,
+            maxTitleWidth,
+          );
 
-          final maxLeft = (safeViewportWidth - titleWidth - 12.0)
-              .clamp(12.0, double.infinity);
-          final left =
-              (_titleAnchor.dx * safeViewportWidth).clamp(12.0, maxLeft);
+          final maxLeft = (safeViewportWidth - titleWidth - 12.0).clamp(
+            12.0,
+            double.infinity,
+          );
+          final left = (_titleAnchor.dx * safeViewportWidth).clamp(
+            12.0,
+            maxLeft,
+          );
 
-          final maxTop =
-              (safeViewportHeight - 220.0).clamp(92.0, double.infinity);
-          final top =
-              (_titleAnchor.dy * safeViewportHeight).clamp(92.0, maxTop);
+          final maxTop = (safeViewportHeight - 220.0).clamp(
+            92.0,
+            double.infinity,
+          );
+          final top = (_titleAnchor.dy * safeViewportHeight).clamp(
+            92.0,
+            maxTop,
+          );
 
           return Stack(
             children: <Widget>[
@@ -81,12 +94,15 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                 child: IgnorePointer(
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.34),
                       borderRadius: BorderRadius.circular(999),
                       border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.12)),
+                        color: Colors.white.withValues(alpha: 0.12),
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -101,7 +117,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'SoulLocket Cinema',
+                          context.tr('p8_cinema_brand_label'),
                           style: SLTheme.quicksand(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w800,
@@ -127,7 +143,10 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                     behavior: HitTestBehavior.translucent,
                     onPanUpdate: _isAdjustingTitlePosition
                         ? (details) => _updateTitleAnchor(
-                            details.delta, viewport, titleWidth)
+                            details.delta,
+                            viewport,
+                            titleWidth,
+                          )
                         : null,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
@@ -210,8 +229,9 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                                     style: SLTheme.quicksand(
                                       fontSize: 11.5,
                                       fontWeight: FontWeight.w700,
-                                      color:
-                                          Colors.white.withValues(alpha: 0.82),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.82,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -236,7 +256,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
     final statusText = _isAdjustingTitlePosition
         ? context.tr('util_kokhitiuti_9b7acb')
         : (_videoStatus ??
-            (exportAvailable ? null : context.tr('util_tnhnngxutv_f2e071')));
+              (exportAvailable ? null : context.tr('util_tnhnngxutv_f2e071')));
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -273,8 +293,9 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                 label: _hasFreshExport
                     ? context.tr('util_tolivideo_5701c9')
                     : context.tr('util_tovideo_db7d4b'),
-                onTap:
-                    !exportAvailable || _isExportingVideo ? null : _createVideo,
+                onTap: !exportAvailable || _isExportingVideo
+                    ? null
+                    : _createVideo,
                 accent: accent,
                 emphasized: true,
               ),
@@ -416,48 +437,61 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
             runSpacing: 6,
             children: CinemaVideoQualityPreset.values.map((preset) {
               final isSelected = _qualityPreset == preset;
-              return GestureDetector(
-                onTap: () => _commitState(() {
-                  _qualityPreset = preset;
-                  _videoStatus = null;
-                  _exportedVideoPath = null;
-                }),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 11,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? accent.withValues(alpha: 0.28)
-                        : Colors.white.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: isSelected
-                          ? accent.withValues(alpha: 0.5)
-                          : Colors.white.withValues(alpha: 0.1),
+              final qualityLabel = L10nScope.of(context).format(
+                'p8_cinema_select_quality',
+                <String, Object?>{'label': preset.label},
+              );
+              return Tooltip(
+                message: qualityLabel,
+                child: Semantics(
+                  button: true,
+                  label: qualityLabel,
+                  selected: isSelected,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => _commitState(() {
+                      _qualityPreset = preset;
+                      _videoStatus = null;
+                      _exportedVideoPath = null;
+                    }),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 11,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? accent.withValues(alpha: 0.28)
+                            : Colors.white.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: isSelected
+                              ? accent.withValues(alpha: 0.5)
+                              : Colors.white.withValues(alpha: 0.1),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            preset.label,
+                            style: SLTheme.quicksand(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            '~${preset.estimatedMbPer30Sec.toStringAsFixed(1)}MB/30s • ${preset.fps}fps',
+                            style: SLTheme.quicksand(
+                              fontSize: 9,
+                              color: Colors.white.withValues(alpha: 0.48),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        preset.label,
-                        style: SLTheme.quicksand(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        '~${preset.estimatedMbPer30Sec.toStringAsFixed(1)}MB/30s • ${preset.fps}fps',
-                        style: SLTheme.quicksand(
-                          fontSize: 9,
-                          color: Colors.white.withValues(alpha: 0.48),
-                        ),
-                      ),
-                    ],
                   ),
                 ),
               );
@@ -521,22 +555,30 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
 
   Widget _playerArrow({
     required IconData icon,
+    required String tooltip,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(26),
-        child: Ink(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.34),
+    return Tooltip(
+      message: tooltip,
+      child: Semantics(
+        button: true,
+        label: tooltip,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
             borderRadius: BorderRadius.circular(26),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+            child: Ink(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.34),
+                borderRadius: BorderRadius.circular(26),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+              ),
+              child: Icon(icon, color: Colors.white),
+            ),
           ),
-          child: Icon(icon, color: Colors.white),
         ),
       ),
     );

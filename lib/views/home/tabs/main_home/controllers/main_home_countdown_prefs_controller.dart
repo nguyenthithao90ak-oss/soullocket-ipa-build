@@ -5,8 +5,7 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
     final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now().millisecondsSinceEpoch;
     final result = <String>{};
-    for (final styleKey
-        in _MainHomeTabState._kCountdownQuickPremiumStyleKeys) {
+    for (final styleKey in _MainHomeTabState._kCountdownQuickPremiumStyleKeys) {
       final expiryKey = 'il_countdown_style_unlock_expiry_$styleKey';
       final expiry = prefs.getInt(expiryKey) ?? 0;
       if (expiry > now) {
@@ -20,7 +19,8 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
     } else {
       final legacyTs = prefs.getInt('il_countdown_unlock_ad_ts') ?? 0;
       if (legacyTs > 0) {
-        final fallbackExpiry = legacyTs +
+        final fallbackExpiry =
+            legacyTs +
             _MainHomeTabState._kCountdownQuickUnlockWindow.inMilliseconds;
         if (fallbackExpiry > now) {
           result.addAll(_MainHomeTabState._kCountdownQuickPremiumStyleKeys);
@@ -124,8 +124,9 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
 
     final resolvedIsVip = isVip ?? await PurchaseService().isVip();
     if (countdownStyleKey != null &&
-        _MainHomeTabState._kCountdownQuickPremiumStyleKeys
-            .contains(resolvedCountdownStyleKey) &&
+        _MainHomeTabState._kCountdownQuickPremiumStyleKeys.contains(
+          resolvedCountdownStyleKey,
+        ) &&
         !resolvedIsVip) {
       final resolvedUnlockedStyles =
           prevalidatedUnlockedStyles ?? await _getUnlockedCountdownStyles();
@@ -157,8 +158,9 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
     final normalizedCountdownTextColor =
         countdownTextColor ?? current.countdownTextColor;
 
-    final newTransparentMode =
-        (countdownStyleKey != null) ? false : current.transparentMode;
+    final newTransparentMode = (countdownStyleKey != null)
+        ? false
+        : current.transparentMode;
 
     if (normalizedCountdownShapeKey == current.countdownShapeKey &&
         normalizedCountdownStyleKey == current.countdownStyleKey &&
@@ -184,13 +186,17 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
       transparentMode: newTransparentMode,
     );
 
-    unawaited(UiPrefs.saveState(nextState).catchError((_) {}));
+    unawaited(
+      UiPrefs.saveState(nextState).catchError((error) {
+        debugPrint(
+          '[SuppressedError] lib/views/home/tabs/main_home/controllers/main_home_countdown_prefs_controller.dart: $error',
+        );
+      }),
+    );
 
     final houseId = (_houseId ?? '').trim();
     if (houseId.isNotEmpty) {
-      final updates = <String, dynamic>{
-        'updatedAt': ServerValue.timestamp,
-      };
+      final updates = <String, dynamic>{'updatedAt': ServerValue.timestamp};
       if (normalizedCountdownShapeKey != current.countdownShapeKey) {
         updates['countdownShape'] = normalizedCountdownShapeKey;
       }
@@ -220,16 +226,17 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
         updates['transparentMode'] = newTransparentMode;
       }
 
-      unawaited(_dbRef
-          .child('houses/$houseId/settings')
-          .update(updates)
-          .catchError((e) {
-        if (mounted) {
-          _showLatestSnackBar(
-            'Đã lưu trên máy. Chưa thể đồng bộ lúc này, vui lòng thử lại sau.',
-          );
-        }
-      }));
+      unawaited(
+        _dbRef.child('houses/$houseId/settings').update(updates).catchError((
+          e,
+        ) {
+          if (mounted) {
+            _showLatestSnackBar(
+              'Đã lưu trên máy. Chưa thể đồng bộ lúc này, vui lòng thử lại sau.',
+            );
+          }
+        }),
+      );
     }
   }
 

@@ -49,59 +49,70 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
       final List<Map<String, dynamic>> loaded = [];
 
       if (snapshot.docs.isNotEmpty) {
-        final entries =
-            snapshot.docs.map((d) => MapEntry(d.id, d.data())).toList();
+        final entries = snapshot.docs
+            .map((d) => MapEntry(d.id, d.data()))
+            .toList();
 
         // Fetch post data for each report concurrently
-        await Future.wait(entries.map((entry) async {
-          final key = entry.key;
-          final value = entry.value;
+        await Future.wait(
+          entries.map((entry) async {
+            final key = entry.key;
+            final value = entry.value;
 
-          final reportData = Map<String, dynamic>.from(value);
-          reportData['id'] = key.toString();
+            final reportData = Map<String, dynamic>.from(value);
+            reportData['id'] = key.toString();
 
-          final postId = reportData['postId']?.toString() ??
-              reportData['post']?.toString() ??
-              '';
-          final commentId = reportData['commentId']?.toString() ?? '';
-          final isCommentReport = reportData['type'] == 'comment_report' ||
-              reportData['type'] == 'comment';
+            final postId =
+                reportData['postId']?.toString() ??
+                reportData['post']?.toString() ??
+                '';
+            final commentId = reportData['commentId']?.toString() ?? '';
+            final isCommentReport =
+                reportData['type'] == 'comment_report' ||
+                reportData['type'] == 'comment';
 
-          if (postId.isNotEmpty) {
-            try {
-              var postSnap = await FirebaseFirestore.instance
-                  .collection('social_posts')
-                  .doc(postId)
-                  .get();
-              if (!postSnap.exists || postSnap.data() == null) {
-                postSnap = await FirebaseFirestore.instance
-                    .collection('social_feed')
+            if (postId.isNotEmpty) {
+              try {
+                var postSnap = await FirebaseFirestore.instance
+                    .collection('social_posts')
                     .doc(postId)
                     .get();
-              }
-              if (postSnap.exists && postSnap.data() != null) {
-                final postData =
-                    Map<String, dynamic>.from(postSnap.data() as Map);
-                reportData['postData'] = postData;
-
-                if (isCommentReport && commentId.isNotEmpty) {
-                  final commentSnap = await FirebaseFirestore.instance
-                      .collection('social_posts')
+                if (!postSnap.exists || postSnap.data() == null) {
+                  postSnap = await FirebaseFirestore.instance
+                      .collection('social_feed')
                       .doc(postId)
-                      .collection('comments')
-                      .doc(commentId)
                       .get();
-                  if (commentSnap.exists && commentSnap.data() != null) {
-                    reportData['commentData'] =
-                        Map<String, dynamic>.from(commentSnap.data()!);
+                }
+                if (postSnap.exists && postSnap.data() != null) {
+                  final postData = Map<String, dynamic>.from(
+                    postSnap.data() as Map,
+                  );
+                  reportData['postData'] = postData;
+
+                  if (isCommentReport && commentId.isNotEmpty) {
+                    final commentSnap = await FirebaseFirestore.instance
+                        .collection('social_posts')
+                        .doc(postId)
+                        .collection('comments')
+                        .doc(commentId)
+                        .get();
+                    if (commentSnap.exists && commentSnap.data() != null) {
+                      reportData['commentData'] = Map<String, dynamic>.from(
+                        commentSnap.data()!,
+                      );
+                    }
                   }
                 }
+              } catch (error) {
+                debugPrint(
+                  '[SuppressedError] lib/views/admin/admin_content_screen.dart: $error',
+                );
               }
-            } catch (_) {}
-          }
+            }
 
-          loaded.add(reportData);
-        }));
+            loaded.add(reportData);
+          }),
+        );
       }
 
       for (var r in loaded) {
@@ -168,24 +179,25 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('admin_xabivit_92d4ec'))));
+        SnackBar(content: Text(context.tr('admin_xabivit_92d4ec'))),
+      );
       _loadData(refresh: true);
     } catch (e) {
-      debugPrint('Delete post failed: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: context.tr('admin_chathxabiv_907048'),
-      ).message}');
+      debugPrint(
+        'Delete post failed: ${AppErrorMapper.resolve(e, fallbackMessage: context.tr('admin_chathxabiv_907048')).message}',
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.tr('admin_chathxabiv_72f417')),
-        ),
+        SnackBar(content: Text(context.tr('admin_chathxabiv_72f417'))),
       );
     }
   }
 
   Future<void> _deleteComment(
-      String postId, String commentId, String reportId) async {
+    String postId,
+    String commentId,
+    String reportId,
+  ) async {
     try {
       await FirebaseFirestore.instance
           .collection('social_posts')
@@ -208,18 +220,16 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('admin_xabnhlun_f398ed'))));
+        SnackBar(content: Text(context.tr('admin_xabnhlun_f398ed'))),
+      );
       _loadData(refresh: true);
     } catch (e) {
-      debugPrint('Delete comment failed: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: context.tr('admin_chathxabnh_e82b92'),
-      ).message}');
+      debugPrint(
+        'Delete comment failed: ${AppErrorMapper.resolve(e, fallbackMessage: context.tr('admin_chathxabnh_e82b92')).message}',
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.tr('admin_chathxabnh_44e3be')),
-        ),
+        SnackBar(content: Text(context.tr('admin_chathxabnh_44e3be'))),
       );
     }
   }
@@ -232,18 +242,16 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
           .delete();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('admin_bquaboco_cc6fa6'))));
+        SnackBar(content: Text(context.tr('admin_bquaboco_cc6fa6'))),
+      );
       _loadData(refresh: true);
     } catch (e) {
-      debugPrint('Dismiss report failed: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: context.tr('admin_chathbquab_cc5d96'),
-      ).message}');
+      debugPrint(
+        'Dismiss report failed: ${AppErrorMapper.resolve(e, fallbackMessage: context.tr('admin_chathbquab_cc5d96')).message}',
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.tr('admin_chathbquab_36dbb8')),
-        ),
+        SnackBar(content: Text(context.tr('admin_chathbquab_36dbb8'))),
       );
     }
   }
@@ -277,8 +285,8 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                       isAiReport
                           ? context.tr('admin_chititboco_c42261')
                           : isCommentReport
-                              ? context.tr('admin_chititbnhl_8c9bc7')
-                              : context.tr('admin_chititbivi_a4cabd'),
+                          ? context.tr('admin_chititbnhl_8c9bc7')
+                          : context.tr('admin_chititbivi_a4cabd'),
                       style: SLTheme.quicksand(
                         color: Colors.white,
                         fontSize: 18,
@@ -288,7 +296,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.grey),
                       onPressed: () => Navigator.pop(ctx),
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -299,18 +307,23 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildInfoRow(
-                          context.tr('admin_ldoreport_25f7cf'),
-                          r['reason'] ?? context.tr('admin_khngr_b18ff7'),
-                          Colors.redAccent),
-                      _buildInfoRow(context.tr('admin_ngireport_0d8b07'),
-                          r['by'] ?? r['reporterId'] ?? 'Unknown', Colors.grey),
+                        context.tr('admin_ldoreport_25f7cf'),
+                        r['reason'] ?? context.tr('admin_khngr_b18ff7'),
+                        Colors.redAccent,
+                      ),
+                      _buildInfoRow(
+                        context.tr('admin_ngireport_0d8b07'),
+                        r['by'] ?? r['reporterId'] ?? 'Unknown',
+                        Colors.grey,
+                      ),
                       SLSpacing.h20,
                       if (isAiReport) ...[
                         Text(
                           context.tr('admin_tinnhnngid_d15860'),
                           style: SLTheme.quicksand(
-                              color: SLColors.brandPink,
-                              fontWeight: FontWeight.bold),
+                            color: SLColors.brandPink,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         SLSpacing.h8,
                         Text(
@@ -318,14 +331,17 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                               ? r['userText'].toString()
                               : context.tr('admin_khngc_6c5fcb'),
                           style: const TextStyle(
-                              color: Colors.white70, fontSize: 14),
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
                         ),
                         SLSpacing.h20,
                         Text(
                           context.tr('admin_cutrliai_d21f89'),
                           style: SLTheme.quicksand(
-                              color: SLColors.brandPink,
-                              fontWeight: FontWeight.bold),
+                            color: SLColors.brandPink,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         SLSpacing.h8,
                         Container(
@@ -340,15 +356,18 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                             r['assistantText']?.toString() ??
                                 context.tr('admin_khngc_6c5fcb'),
                             style: const TextStyle(
-                                color: Colors.white, fontSize: 15),
+                              color: Colors.white,
+                              fontSize: 15,
+                            ),
                           ),
                         ),
                       ] else if (postData != null) ...[
                         Text(
                           context.tr('admin_nidungbivi_bf8a19'),
                           style: SLTheme.quicksand(
-                              color: SLColors.brandPink,
-                              fontWeight: FontWeight.bold),
+                            color: SLColors.brandPink,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         SLSpacing.h8,
                         Container(
@@ -365,14 +384,18 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                               Text(
                                 'Author: ${postData['authorName'] ?? 'Unknown'} (House: ${postData['houseId'] ?? 'Unknown'})',
                                 style: const TextStyle(
-                                    color: Colors.grey, fontSize: 12),
+                                  color: Colors.grey,
+                                  fontSize: 12,
+                                ),
                               ),
                               SLSpacing.h8,
                               Text(
                                 postData['content']?.toString() ??
                                     context.tr('admin_khngcch_130283'),
                                 style: const TextStyle(
-                                    color: Colors.white, fontSize: 15),
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                ),
                               ),
                               SLSpacing.h12,
                               _buildImages(postData),
@@ -380,16 +403,19 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                           ),
                         ),
                       ] else ...[
-                        Text(context.tr('admin_khngtmthyd_865265'),
-                            style: const TextStyle(color: Colors.grey)),
+                        Text(
+                          context.tr('admin_khngtmthyd_865265'),
+                          style: const TextStyle(color: Colors.grey),
+                        ),
                       ],
                       if (isCommentReport) ...[
                         SLSpacing.h20,
                         Text(
                           context.tr('admin_nidungbnhl_1b0dd9'),
                           style: SLTheme.quicksand(
-                              color: SLColors.brandPink,
-                              fontWeight: FontWeight.bold),
+                            color: SLColors.brandPink,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         SLSpacing.h8,
                         if (commentData != null) ...[
@@ -400,8 +426,8 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                               color: const Color(0xFF10182A),
                               borderRadius: SLRadius.mdAll,
                               border: Border.all(
-                                  color:
-                                      Colors.redAccent.withValues(alpha: 0.5)),
+                                color: Colors.redAccent.withValues(alpha: 0.5),
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -409,23 +435,29 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                                 Text(
                                   'Author: ${commentData['authorName'] ?? 'Unknown'}',
                                   style: const TextStyle(
-                                      color: Colors.grey, fontSize: 12),
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
                                 ),
                                 SLSpacing.h8,
                                 Text(
                                   commentData['content']?.toString() ??
                                       context.tr('admin_khngcch_130283'),
                                   style: const TextStyle(
-                                      color: Colors.white, fontSize: 15),
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
                         ] else ...[
-                          Text(context.tr('admin_khngtmthyd_1f0f9f'),
-                              style: const TextStyle(color: Colors.grey)),
-                        ]
-                      ]
+                          Text(
+                            context.tr('admin_khngtmthyd_1f0f9f'),
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ],
                     ],
                   ),
                 ),
@@ -440,36 +472,48 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx),
-                      child: Text(context.tr('admin_ng_f63d1e'),
-                          style: const TextStyle(color: Colors.grey)),
+                      child: Text(
+                        context.tr('admin_ng_f63d1e'),
+                        style: const TextStyle(color: Colors.grey),
+                      ),
                     ),
                     if (!isAiReport) ...[
                       SLSpacing.w12,
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red),
+                          backgroundColor: Colors.red,
+                        ),
                         onPressed: () {
                           Navigator.pop(ctx);
                           if (isCommentReport) {
-                            _deleteComment(r['postId'] ?? r['post'] ?? '',
-                                r['commentId'] ?? '', r['id']);
+                            _deleteComment(
+                              r['postId'] ?? r['post'] ?? '',
+                              r['commentId'] ?? '',
+                              r['id'],
+                            );
                           } else {
                             _deletePost(
-                                r['postId'] ?? r['post'] ?? '', r['id']);
+                              r['postId'] ?? r['post'] ?? '',
+                              r['id'],
+                            );
                           }
                         },
-                        icon: const Icon(Icons.delete_forever,
-                            color: Colors.white, size: 18),
+                        icon: const Icon(
+                          Icons.delete_forever,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                         label: Text(
-                            isCommentReport
-                                ? context.tr('admin_xabnhlun_479f8e')
-                                : context.tr('admin_xabivit_29f643'),
-                            style: const TextStyle(color: Colors.white)),
+                          isCommentReport
+                              ? context.tr('admin_xabnhlun_479f8e')
+                              : context.tr('admin_xabivit_29f643'),
+                          style: const TextStyle(color: Colors.white),
+                        ),
                       ),
                     ],
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -484,14 +528,21 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-              width: 100,
-              child: Text(label,
-                  style: const TextStyle(
-                      color: Colors.grey, fontWeight: FontWeight.bold))),
+            width: 100,
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Colors.grey,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
           Expanded(
-              child: Text(value,
-                  style: TextStyle(
-                      color: valueColor, fontWeight: FontWeight.w600))),
+            child: Text(
+              value,
+              style: TextStyle(color: valueColor, fontWeight: FontWeight.w600),
+            ),
+          ),
         ],
       ),
     );
@@ -515,24 +566,28 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
 
     return Column(
       children: images
-          .map((url) => Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: ClipRRect(
-                  borderRadius: SLRadius.smAll,
-                  child: CachedNetworkImage(
-                    imageUrl: url,
-                    fit: BoxFit.cover,
-                    filterQuality: FilterQuality.medium,
-                    errorWidget: (context, error, stackTrace) => Container(
-                      height: 100,
-                      color: Colors.grey[800],
-                      alignment: Alignment.center,
-                      child: Text(context.tr('admin_litinh_5110a3'),
-                          style: const TextStyle(color: Colors.white)),
+          .map(
+            (url) => Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: ClipRRect(
+                borderRadius: SLRadius.smAll,
+                child: CachedNetworkImage(
+                  imageUrl: url,
+                  fit: BoxFit.cover,
+                  filterQuality: FilterQuality.medium,
+                  errorWidget: (context, error, stackTrace) => Container(
+                    height: 100,
+                    color: Colors.grey[800],
+                    alignment: Alignment.center,
+                    child: Text(
+                      context.tr('admin_litinh_5110a3'),
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ),
                 ),
-              ))
+              ),
+            ),
+          )
           .toList(),
     );
   }
@@ -558,150 +613,173 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                   ),
                   SLSpacing.h24,
                   if (_errorText != null)
-                    Text(_errorText!,
-                        style: const TextStyle(color: Colors.red)),
+                    Text(
+                      _errorText!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
                   Expanded(
                     child: _isLoading && _reports.isEmpty
                         ? const Center(child: CircularProgressIndicator())
                         : _reports.isEmpty
-                            ? Center(
-                                child: Text(
-                                    context.tr('admin_khngcbocon_b28c2e'),
-                                    style:
-                                        const TextStyle(color: Colors.white)))
-                            : AdminGlassCard(
-                                padding: const EdgeInsets.all(0),
-                                child: ListView.separated(
-                                  itemCount: _reports.length,
-                                  separatorBuilder: (context, index) =>
-                                      const Divider(
-                                          color: Color(0xFF2A364E), height: 1),
-                                  itemBuilder: (context, index) {
-                                    final r = _reports[index];
-                                    final postId = r['postId']?.toString() ??
-                                        r['post']?.toString() ??
-                                        '';
-                                    final commentId =
-                                        r['commentId']?.toString() ?? '';
-                                    final targetHouseId =
-                                        r['targetHouseId']?.toString() ??
-                                            r['target']?.toString() ??
-                                            '';
-                                    final isCommentReport =
-                                        r['type'] == 'comment_report' ||
-                                            r['type'] == 'comment';
-                                    final isUserReport =
-                                        r['type'] == 'user_report';
-                                    final isAiReport =
-                                        r['type'] == 'ai_reply_report';
+                        ? Center(
+                            child: Text(
+                              context.tr('admin_khngcbocon_b28c2e'),
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          )
+                        : AdminGlassCard(
+                            padding: const EdgeInsets.all(0),
+                            child: ListView.separated(
+                              itemCount: _reports.length,
+                              separatorBuilder: (context, index) =>
+                                  const Divider(
+                                    color: Color(0xFF2A364E),
+                                    height: 1,
+                                  ),
+                              itemBuilder: (context, index) {
+                                final r = _reports[index];
+                                final postId =
+                                    r['postId']?.toString() ??
+                                    r['post']?.toString() ??
+                                    '';
+                                final commentId =
+                                    r['commentId']?.toString() ?? '';
+                                final targetHouseId =
+                                    r['targetHouseId']?.toString() ??
+                                    r['target']?.toString() ??
+                                    '';
+                                final isCommentReport =
+                                    r['type'] == 'comment_report' ||
+                                    r['type'] == 'comment';
+                                final isUserReport = r['type'] == 'user_report';
+                                final isAiReport =
+                                    r['type'] == 'ai_reply_report';
 
-                                    String targetIdStr = '';
-                                    if (isAiReport) {
-                                      targetIdStr =
-                                          context.tr('admin_chatthnthi_6c9f71');
-                                    } else if (isUserReport) {
-                                      targetIdStr = 'User: $targetHouseId';
-                                    } else if (isCommentReport) {
-                                      targetIdStr =
-                                          'Post: $postId\nComment: $commentId';
-                                    } else {
-                                      targetIdStr = 'Post: $postId';
-                                    }
+                                String targetIdStr = '';
+                                if (isAiReport) {
+                                  targetIdStr = context.tr(
+                                    'admin_chatthnthi_6c9f71',
+                                  );
+                                } else if (isUserReport) {
+                                  targetIdStr = 'User: $targetHouseId';
+                                } else if (isCommentReport) {
+                                  targetIdStr =
+                                      'Post: $postId\nComment: $commentId';
+                                } else {
+                                  targetIdStr = 'Post: $postId';
+                                }
 
-                                    return ListTile(
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              horizontal: 24, vertical: 8),
-                                      title: Text('Target ID: $targetIdStr',
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold)),
-                                      subtitle: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                              'Loại: ${r['type'] ?? 'post_report'}',
-                                              style: const TextStyle(
-                                                  color: Colors.orangeAccent)),
-                                          Text(
-                                              'Lý do: ${r['reason'] ?? context.tr('admin_khngcldo_4c7b39')}',
-                                              style: const TextStyle(
-                                                  color: Colors.redAccent)),
-                                          Text(
-                                              'Người báo cáo: ${r['by'] ?? r['reporterId'] ?? 'Unknown'}',
-                                              style: const TextStyle(
-                                                  color: Colors.grey)),
-                                          SLSpacing.h8,
-                                          if (r['postData'] != null)
-                                            Container(
-                                              padding: SLSpacing.all8,
-                                              decoration: BoxDecoration(
-                                                color: Colors.black26,
-                                                borderRadius: SLRadius.smAll,
-                                              ),
-                                              child: Text(
-                                                'Trích dẫn: ${r['postData']['content']?.toString() ?? context.tr('admin_chcnh_f0b82e')}',
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(
-                                                    color: Colors.white70,
-                                                    fontSize: 13,
-                                                    fontStyle:
-                                                        FontStyle.italic),
-                                              ),
-                                            )
-                                        ],
+                                return ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 8,
+                                  ),
+                                  title: Text(
+                                    'Target ID: $targetIdStr',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Loại: ${r['type'] ?? 'post_report'}',
+                                        style: const TextStyle(
+                                          color: Colors.orangeAccent,
+                                        ),
                                       ),
-                                      trailing: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          IconButton(
-                                            icon: const Icon(
-                                                Icons.remove_red_eye_rounded,
-                                                color: Colors.blue),
-                                            onPressed: () =>
-                                                _showPostDetails(r),
-                                            tooltip: context
-                                                .tr('admin_xemchititn_abe496'),
-                                          ),
-                                          IconButton(
-                                            icon: const Icon(
-                                                Icons.delete_forever_rounded,
-                                                color: Colors.red),
-                                            onPressed: isAiReport
-                                                ? null
-                                                : () {
-                                                    if (isCommentReport) {
-                                                      _deleteComment(postId,
-                                                          commentId, r['id']);
-                                                    } else {
-                                                      _deletePost(
-                                                          postId, r['id']);
-                                                    }
-                                                  },
-                                            tooltip: isCommentReport
-                                                ? context
-                                                    .tr('admin_xabnhlun_0e12a1')
-                                                : context
-                                                    .tr('admin_xabivit_2c7199'),
-                                          ),
-                                          IconButton(
-                                            icon: const Icon(
-                                                Icons
-                                                    .check_circle_outline_rounded,
-                                                color: Colors.green),
-                                            onPressed: () =>
-                                                _dismissReport(r['id']),
-                                            tooltip: context
-                                                .tr('admin_bquaboco_1f67bf'),
-                                          ),
-                                        ],
+                                      Text(
+                                        'Lý do: ${r['reason'] ?? context.tr('admin_khngcldo_4c7b39')}',
+                                        style: const TextStyle(
+                                          color: Colors.redAccent,
+                                        ),
                                       ),
-                                    );
-                                  },
-                                ),
-                              ),
+                                      Text(
+                                        'Người báo cáo: ${r['by'] ?? r['reporterId'] ?? 'Unknown'}',
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                      SLSpacing.h8,
+                                      if (r['postData'] != null)
+                                        Container(
+                                          padding: SLSpacing.all8,
+                                          decoration: BoxDecoration(
+                                            color: Colors.black26,
+                                            borderRadius: SLRadius.smAll,
+                                          ),
+                                          child: Text(
+                                            'Trích dẫn: ${r['postData']['content']?.toString() ?? context.tr('admin_chcnh_f0b82e')}',
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              color: Colors.white70,
+                                              fontSize: 13,
+                                              fontStyle: FontStyle.italic,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.remove_red_eye_rounded,
+                                          color: Colors.blue,
+                                        ),
+                                        onPressed: () => _showPostDetails(r),
+                                        tooltip: context.tr(
+                                          'admin_xemchititn_abe496',
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.delete_forever_rounded,
+                                          color: Colors.red,
+                                        ),
+                                        onPressed: isAiReport
+                                            ? null
+                                            : () {
+                                                if (isCommentReport) {
+                                                  _deleteComment(
+                                                    postId,
+                                                    commentId,
+                                                    r['id'],
+                                                  );
+                                                } else {
+                                                  _deletePost(postId, r['id']);
+                                                }
+                                              },
+                                        tooltip: isCommentReport
+                                            ? context.tr(
+                                                'admin_xabnhlun_0e12a1',
+                                              )
+                                            : context.tr(
+                                                'admin_xabivit_2c7199',
+                                              ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.check_circle_outline_rounded,
+                                          color: Colors.green,
+                                        ),
+                                        onPressed: () =>
+                                            _dismissReport(r['id']),
+                                        tooltip: context.tr(
+                                          'admin_bquaboco_1f67bf',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
                   ),
                 ],
               ),

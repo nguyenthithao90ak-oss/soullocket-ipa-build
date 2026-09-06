@@ -199,7 +199,11 @@ class LocalDatabaseService {
     for (final statement in statements) {
       try {
         await db.execute(statement);
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[LocalDatabaseService] V2 migration statement failed: $error',
+        );
+      }
     }
 
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -231,7 +235,11 @@ class LocalDatabaseService {
     for (final statement in statements) {
       try {
         await db.execute(statement);
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[LocalDatabaseService] V3 migration statement failed: $error',
+        );
+      }
     }
   }
 
@@ -266,16 +274,12 @@ class LocalDatabaseService {
     final db = await _requireDatabase();
     if (db == null) return;
     final now = DateTime.now().millisecondsSinceEpoch;
-    await db.insert(
-      'cache_entries',
-      {
-        'cache_key': key,
-        'data': jsonEncode(data),
-        'cached_at': now,
-        'expires_at': now + resolvedTtl.inMilliseconds,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('cache_entries', {
+      'cache_key': key,
+      'data': jsonEncode(data),
+      'cached_at': now,
+      'expires_at': now + resolvedTtl.inMilliseconds,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Đọc từ cache (RAM → SQLite). Trả về null nếu miss.
@@ -302,8 +306,11 @@ class LocalDatabaseService {
     final expiresAt = row['expires_at'] as int? ?? 0;
     final now = DateTime.now().millisecondsSinceEpoch;
     if (expiresAt > 0 && now > expiresAt) {
-      await db
-          .delete('cache_entries', where: 'cache_key = ?', whereArgs: [key]);
+      await db.delete(
+        'cache_entries',
+        where: 'cache_key = ?',
+        whereArgs: [key],
+      );
       return null;
     }
 
@@ -335,8 +342,11 @@ class LocalDatabaseService {
     final db = await _requireDatabase();
     if (db == null) return;
     final now = DateTime.now().millisecondsSinceEpoch;
-    await db.delete('cache_entries',
-        where: 'expires_at > 0 AND expires_at < ?', whereArgs: [now]);
+    await db.delete(
+      'cache_entries',
+      where: 'expires_at > 0 AND expires_at < ?',
+      whereArgs: [now],
+    );
     // Xoá luôn RAM entries hết hạn
     _readCache.removeWhere((_, entry) => entry.isExpired);
   }
@@ -356,18 +366,14 @@ class LocalDatabaseService {
     final db = await _requireDatabase();
     if (db == null) return;
 
-    await db.insert(
-      'messages',
-      {
-        'id': msgData['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
-        'houseId': houseId,
-        'text': msgData['text'] ?? '',
-        'senderId': msgData['senderId'] ?? '',
-        'timestamp':
-            msgData['timestamp'] ?? DateTime.now().millisecondsSinceEpoch,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('messages', {
+      'id': msgData['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      'houseId': houseId,
+      'text': msgData['text'] ?? '',
+      'senderId': msgData['senderId'] ?? '',
+      'timestamp':
+          msgData['timestamp'] ?? DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<List<Map<String, dynamic>>> getCachedMessages(String houseId) async {
@@ -396,24 +402,20 @@ class LocalDatabaseService {
     final resolvedId = (operationId?.trim().isNotEmpty ?? false)
         ? operationId!.trim()
         : '$now';
-    await db.insert(
-      'sync_queue',
-      {
-        'id': resolvedId,
-        'path': path,
-        'action': action.toUpperCase(),
-        'payload': payload,
-        'timestamp': now,
-        'operationId': resolvedId,
-        'entityType': (entityType ?? 'generic').trim(),
-        'status': _queueStatusPending,
-        'retryCount': 0,
-        'lastError': null,
-        'createdAt': now,
-        'syncedAt': null,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('sync_queue', {
+      'id': resolvedId,
+      'path': path,
+      'action': action.toUpperCase(),
+      'payload': payload,
+      'timestamp': now,
+      'operationId': resolvedId,
+      'entityType': (entityType ?? 'generic').trim(),
+      'status': _queueStatusPending,
+      'retryCount': 0,
+      'lastError': null,
+      'createdAt': now,
+      'syncedAt': null,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
 
     await _publishQueueSummary();
     unawaited(syncPendingData());
@@ -515,8 +517,9 @@ class LocalDatabaseService {
         await _publishQueueSummary();
 
         try {
-          final dynamic data =
-              payloadStr.isEmpty ? null : json.decode(payloadStr);
+          final dynamic data = payloadStr.isEmpty
+              ? null
+              : json.decode(payloadStr);
 
           switch (action) {
             case 'SET':
@@ -564,7 +567,8 @@ class LocalDatabaseService {
             whereArgs: [id],
           );
           debugPrint(
-              '[SyncQueue] Failed $action -> $taskPath: ${AppErrorMapper.cleanMessage(e)}');
+            '[SyncQueue] Failed $action -> $taskPath: ${AppErrorMapper.cleanMessage(e)}',
+          );
           if (!retryable || reachedRetryLimit) {
             shouldStopProcessing = _isBlockingQueueError(e);
           }
@@ -632,11 +636,7 @@ class LocalDatabaseService {
 
     final overflow = syncedRows.skip(120);
     for (final row in overflow) {
-      await db.delete(
-        'sync_queue',
-        where: 'id = ?',
-        whereArgs: [row['id']],
-      );
+      await db.delete('sync_queue', where: 'id = ?', whereArgs: [row['id']]);
     }
   }
 

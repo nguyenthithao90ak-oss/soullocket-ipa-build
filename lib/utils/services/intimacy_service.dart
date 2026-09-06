@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
@@ -185,7 +185,6 @@ class IntimacyService {
     final snap = await intimacyRef.get();
 
     var currentExp = 0;
-    var currentLevel = 1;
     if (snap.exists && snap.value is Map) {
       final map = snap.value as Map;
       currentExp = (map['totalExp'] as num?)?.toInt() ?? 0;

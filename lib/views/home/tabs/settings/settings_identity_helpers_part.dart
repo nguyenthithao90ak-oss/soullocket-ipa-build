@@ -8,10 +8,11 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
     final currentUid = _auth.currentUser?.uid ?? 'guest';
     final houseIdKey = _houseId ?? 'local';
     final accountKey = '${currentUid}_$houseIdKey';
-    final localGreetingQuote = (prefs.getString('il_greeting_quote_text') ??
-            prefs.getString('il_auto_reply_text') ??
-            '')
-        .trim();
+    final localGreetingQuote =
+        (prefs.getString('il_greeting_quote_text') ??
+                prefs.getString('il_auto_reply_text') ??
+                '')
+            .trim();
     final localLoveUnit = (prefs.getString('il_love_unit_text') ?? '').trim();
     if (!mounted) return;
     setState(() {
@@ -25,13 +26,17 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
               .map((e) => MusicTrack.fromJson(e))
               .where((t) => MusicService.isLocalAudioPath(t.url))
               .toList();
-        } catch (_) {}
+        } catch (error) {
+          debugPrint(
+            '[SuppressedError] lib/views/home/tabs/settings/settings_identity_helpers_part.dart: $error',
+          );
+        }
       }
       if (_playlist.isEmpty) {
         final localUrl = (prefs.getString('il_local_music_url') ?? '').trim();
         if (MusicService.isLocalAudioPath(localUrl)) {
-          final type =
-              (prefs.getString('il_local_music_type') ?? 'audio').trim();
+          final type = (prefs.getString('il_local_music_type') ?? 'audio')
+              .trim();
           final title = (prefs.getString('il_local_music_title') ?? '').trim();
           _playlist = [MusicTrack(url: localUrl, title: title, type: type)];
         }
@@ -73,7 +78,8 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
       _draftHomeBlockToneKey ??= ui.homeBlockToneKey;
       _draftGraphicsQualityKey ??= ui.graphicsQualityKey;
 
-      _draftWidgetThemeKey ??= prefs.getString('il_widget_theme_$accountKey') ??
+      _draftWidgetThemeKey ??=
+          prefs.getString('il_widget_theme_$accountKey') ??
           prefs.getString('il_widget_theme') ??
           'pink';
       _widgetStyleKey = WidgetService.normalizeWidgetStyleKey(
@@ -82,13 +88,14 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
             WidgetService.defaultWidgetStyleKey,
       );
       _widgetPanelTabKey = _widgetStyleKey;
-      _showDiaryOnWidget = prefs.getBool('il_widget_show_diary_$accountKey') ??
+      _showDiaryOnWidget =
+          prefs.getBool('il_widget_show_diary_$accountKey') ??
           prefs.getBool('il_widget_show_diary') ??
           true;
       _widgetHeartAnimated =
           prefs.getBool('il_widget_heart_animated_$accountKey') ??
-              prefs.getBool('il_widget_heart_animated') ??
-              true;
+          prefs.getBool('il_widget_heart_animated') ??
+          true;
       final widgetDisplayMode = WidgetService.normalizeWidgetDisplayMode(
         showDiaryOnWidget: _showDiaryOnWidget,
         heartAnimated: _widgetHeartAnimated,
@@ -102,20 +109,20 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
       );
       _widgetHeartColorKey =
           prefs.getString('il_widget_heart_color_$accountKey') ??
-              prefs.getString('il_widget_heart_color') ??
-              'rose';
+          prefs.getString('il_widget_heart_color') ??
+          'rose';
       _widgetPreviewSizeKey =
           prefs.getString('il_widget_preview_size_$accountKey') ??
-              prefs.getString('il_widget_preview_size') ??
-              'medium';
+          prefs.getString('il_widget_preview_size') ??
+          'medium';
       _widgetDiaryLayoutKey =
           prefs.getString('il_widget_diary_layout_$accountKey') ??
-              prefs.getString('il_widget_diary_layout') ??
-              'single';
+          prefs.getString('il_widget_diary_layout') ??
+          'single';
       _widgetSeasonModeKey =
           prefs.getString('il_widget_season_mode_$accountKey') ??
-              prefs.getString('il_widget_season_mode') ??
-              'auto';
+          prefs.getString('il_widget_season_mode') ??
+          'auto';
       _draftCustomBackgroundUrl ??= ui.customBackgroundUrl;
       _draftTransparentMode ??= ui.transparentMode;
       _draftLiteMode = ui.liteMode;
@@ -129,7 +136,7 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
           prefs.getString('il_widget_custom_event_date_$accountKey') ?? '';
       _customWidgetEventColorHex =
           prefs.getString('il_widget_custom_event_color_$accountKey') ??
-              '#EC4899';
+          '#EC4899';
 
       final now = DateTime.now().millisecondsSinceEpoch;
       final storedUnlockExpiry =
@@ -146,10 +153,12 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
       }
 
       final hasCountdownAdPass = resolvedUnlockExpiry > now;
-      _countdownAdUnlockExpiryMs =
-          hasCountdownAdPass ? resolvedUnlockExpiry : 0;
-      _unlockedCountdownStyles =
-          hasCountdownAdPass ? _countdownPremiumStyleKeys.toSet() : <String>{};
+      _countdownAdUnlockExpiryMs = hasCountdownAdPass
+          ? resolvedUnlockExpiry
+          : 0;
+      _unlockedCountdownStyles = hasCountdownAdPass
+          ? _countdownPremiumStyleKeys.toSet()
+          : <String>{};
     });
 
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -160,8 +169,8 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
         prefs.getStringList('il_unlocked_countdown_styles') ?? [];
     final shouldPersistResolvedUnlock =
         normalizedUnlockExpiry != _countdownAdUnlockExpiryMs ||
-            (legacyUnlockedRaw.isNotEmpty && _countdownAdUnlockExpiryMs == 0) ||
-            (legacyUnlockTs > 0 && _countdownAdUnlockExpiryMs == 0);
+        (legacyUnlockedRaw.isNotEmpty && _countdownAdUnlockExpiryMs == 0) ||
+        (legacyUnlockTs > 0 && _countdownAdUnlockExpiryMs == 0);
     if (shouldPersistResolvedUnlock) {
       if (_countdownAdUnlockExpiryMs > now) {
         await prefs.setInt(
@@ -195,7 +204,9 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
     );
     await prefs.setInt('il_countdown_unlock_ad_ts', now);
     await prefs.setStringList(
-        'il_unlocked_countdown_styles', _countdownPremiumStyleKeys);
+      'il_unlocked_countdown_styles',
+      _countdownPremiumStyleKeys,
+    );
   }
 
   bool _isThemeDraftDirty(UiPrefsState ui) {
@@ -208,8 +219,8 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
         (_draftCountdownStyleKey ?? ui.countdownStyleKey).trim();
     final draftFont = (_draftFontKey ?? ui.fontKey).trim();
     final draftTone = (_draftHomeBlockToneKey ?? ui.homeBlockToneKey).trim();
-    final draftQuality =
-        (_draftGraphicsQualityKey ?? ui.graphicsQualityKey).trim();
+    final draftQuality = (_draftGraphicsQualityKey ?? ui.graphicsQualityKey)
+        .trim();
     final draftBackground =
         (_draftCustomBackgroundUrl ?? ui.customBackgroundUrl).trim();
 
@@ -248,12 +259,13 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
     final avatarSizePx = _draftAvatarSizePx ?? ui.avatarSizePx;
     final countdownSizePx = _draftCountdownSizePx ?? ui.countdownSizePx;
     final avatarFrameKey = _resolveAllowedAvatarFrameKey(
-        (_draftAvatarFrameKey ?? ui.avatarFrameKey).trim());
-    final countdownStyleKey =
-        (_draftCountdownStyleKey ?? ui.countdownStyleKey).trim();
+      (_draftAvatarFrameKey ?? ui.avatarFrameKey).trim(),
+    );
+    final countdownStyleKey = (_draftCountdownStyleKey ?? ui.countdownStyleKey)
+        .trim();
     final fontKey = (_draftFontKey ?? ui.fontKey).trim();
-    final homeBlockToneKey =
-        (_draftHomeBlockToneKey ?? ui.homeBlockToneKey).trim();
+    final homeBlockToneKey = (_draftHomeBlockToneKey ?? ui.homeBlockToneKey)
+        .trim();
     final graphicsQualityKey =
         (_draftGraphicsQualityKey ?? ui.graphicsQualityKey).trim();
     final customBackgroundUrl =
@@ -322,7 +334,11 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
       if (oldSavedUrl.isNotEmpty && oldSavedUrl != customBackgroundUrl) {
         try {
           _storageService.deleteImageByUrl(oldSavedUrl);
-        } catch (_) {}
+        } catch (error) {
+          debugPrint(
+            '[SuppressedError] lib/views/home/tabs/settings/settings_identity_helpers_part.dart: $error',
+          );
+        }
       }
 
       if (!mounted) return;
@@ -342,10 +358,7 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
         });
 
         UiPrefs.notifier.value = UiPrefs.notifier.value.copyWith();
-        _showToast(
-          successMsg,
-          success: true,
-        );
+        _showToast(successMsg, success: true);
       } else {
         // Silent save: update drafts without triggering rebuild
         _draftThemeKey = themeKey;
@@ -363,10 +376,7 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
     } catch (e) {
       if (!mounted) return;
       if (!silent) {
-        _showToast(
-          errorMsg,
-          success: false,
-        );
+        _showToast(errorMsg, success: false);
       }
     } finally {
       if (mounted) {

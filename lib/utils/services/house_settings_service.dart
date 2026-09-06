@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'single_match_service.dart';
@@ -63,7 +64,8 @@ class HouseSettingsService {
   }
 
   Future<String> _resolvedActivityRole() async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     return _normalizeRole(prefs.getString('il_role'));
   }
@@ -76,7 +78,9 @@ class HouseSettingsService {
         houseId: houseId,
         role: role,
       );
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[HouseSettings] Không ghi được activity: $error');
+    }
   }
 
   Stream<HouseSettings?> streamSettings(String houseId) {
@@ -106,7 +110,10 @@ class HouseSettingsService {
     if (raw is! Map) return null;
     final settings = HouseSettings.fromMap(raw);
     OfflineCacheService.setMemoryCache(
-        cacheKey, settings, const Duration(minutes: 5));
+      cacheKey,
+      settings,
+      const Duration(minutes: 5),
+    );
     return settings;
   }
 
@@ -435,10 +442,7 @@ class HouseSettingsService {
       rethrow;
     }
 
-    await _recordSpaceActivity(
-      houseId,
-      'đã cập nhật mốc ngày của không gian',
-    );
+    await _recordSpaceActivity(houseId, 'đã cập nhật mốc ngày của không gian');
   }
 
   Future<void> updateCountdownLabels({
@@ -485,8 +489,8 @@ class HouseSettingsService {
     final activityText = hasTopLabel && hasBottomLabel
         ? 'đã chỉnh lại chữ ở vòng đếm ngày'
         : hasTopLabel
-            ? 'đã chỉnh dòng chữ phía trên vòng đếm ngày'
-            : 'đã chỉnh dòng chữ phía dưới vòng đếm ngày';
+        ? 'đã chỉnh dòng chữ phía trên vòng đếm ngày'
+        : 'đã chỉnh dòng chữ phía dưới vòng đếm ngày';
     await _recordSpaceActivity(houseId, activityText);
   }
 
@@ -541,7 +545,10 @@ class HouseSettingsService {
       if (!snap.exists || snap.value == null) return null;
       final profile = _asStringDynamicMap(snap.value);
       OfflineCacheService.setMemoryCache(
-          cacheKey, profile, const Duration(minutes: 5));
+        cacheKey,
+        profile,
+        const Duration(minutes: 5),
+      );
       return profile;
     } catch (_) {
       return null;
@@ -588,17 +595,12 @@ class HouseSettingsService {
           if (count >= 15) {
             throw 'Bạn đã thay đổi quá nhiều, vui lòng đợi hôm sau';
           }
-          await ref.update({
-            'count': count + 1,
-          });
+          await ref.update({'count': count + 1});
           return;
         }
       }
     }
 
-    await ref.set({
-      'date': todayStr,
-      'count': 1,
-    });
+    await ref.set({'date': todayStr, 'count': 1});
   }
 }

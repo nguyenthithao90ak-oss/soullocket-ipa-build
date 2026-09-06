@@ -65,10 +65,10 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              SLColors.bgMain.withValues(alpha: 0.8),
+              SLColors.bgMain.withValues(alpha: 0.32),
               Colors.transparent,
               Colors.transparent,
-              SLColors.bgMain.withValues(alpha: 0.6),
+              Colors.transparent,
             ],
             stops: const [0, 0.22, 0.62, 1],
             begin: Alignment.topCenter,
@@ -81,64 +81,26 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
 
   Widget _buildMapStatusChips() {
     return Positioned(
-      top: MediaQuery.paddingOf(context).top + 12,
-      left: 68,
-      right: 72,
-      child: ValueListenableBuilder<_LiveUiSnapshot>(
-        valueListenable: _liveUiVN,
-        builder: (context, uiSnap, _) {
-          final chips = <Widget>[
-            _buildTopChip(
-              icon: Icons.route_rounded,
-              label: uiSnap.distanceText,
-              accent: _kMapPinkDeep,
-            ),
-          ];
-
-          if (!_isSingleRelationship) {
-            if (uiSnap.isFetchingRoute || uiSnap.routeDistanceText != '--') {
-              chips.add(
-                _buildTopChip(
-                  icon: Icons.alt_route_rounded,
-                  label:
-                      uiSnap.isFetchingRoute && uiSnap.routeDistanceText == '--'
-                      ? context.tr('map_angtnhng_143257')
-                      : uiSnap.routeDistanceText,
-                  accent: _kMapBlue,
-                ),
-              );
-            }
-
-            if (uiSnap.isFetchingRoute || uiSnap.etaText != '--') {
-              chips.add(
-                _buildTopChip(
-                  icon: Icons.schedule_rounded,
-                  label: uiSnap.etaText == '--'
-                      ? (uiSnap.isFetchingRoute
-                            ? context.tr('map_angctnh_9fd8b3')
-                            : context.tr('map_chacthigia_2ba794'))
-                      : uiSnap.etaText,
-                  accent: const Color(0xFF7C3AED),
-                ),
-              );
-            }
-          }
-
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            clipBehavior: Clip.none,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (int i = 0; i < chips.length; i++) ...[
-                  chips[i],
-                  if (i < chips.length - 1) const SizedBox(width: 8),
-                ],
-              ],
-            ),
-          );
-        },
+      top: MediaQuery.paddingOf(context).top + 74,
+      left: 16,
+      right: 78,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: ValueListenableBuilder<_LiveUiSnapshot>(
+          valueListenable: _liveUiVN,
+          builder: (context, data, _) {
+            final hasPoints = data.myPoint != null || data.partnerPoint != null;
+            return _buildTopChip(
+              icon: hasPoints ? Icons.people_outline : Icons.map_outlined,
+              label: context.tr(
+                hasPoints
+                    ? 'map_refresh_positions_available'
+                    : 'map_refresh_no_positions',
+              ),
+              accent: mapRose,
+            );
+          },
+        ),
       ),
     );
   }
@@ -197,7 +159,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
 
   Widget _buildMapInitializingBanner() {
     return Positioned(
-      top: 68,
+      top: MediaQuery.paddingOf(context).top + 130,
       left: 16,
       right: 16,
       child: Center(
@@ -253,7 +215,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
   Widget _buildMapActionButtons() {
     return Positioned(
       right: 16,
-      bottom: MediaQuery.paddingOf(context).bottom + 188,
+      top: MediaQuery.paddingOf(context).top + 74,
       child: Column(
         children: [
           _buildFloatingAction(
@@ -268,62 +230,129 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
   }
 
   Widget _buildMapBottomSheet() {
-    return DraggableScrollableSheet(
-      initialChildSize: 0.20,
-      minChildSize: 0.10,
-      maxChildSize: 0.78,
-      builder: (context, scrollController) {
-        return Align(
-          alignment: Alignment.bottomCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(30),
-              ),
-              child: Container(
+    return NotificationListener<DraggableScrollableNotification>(
+      onNotification: (notification) {
+        _panelExtent.value = notification.extent;
+        return false;
+      },
+      child: DraggableScrollableSheet(
+        controller: _panelController,
+        initialChildSize: .42,
+        minChildSize: .20,
+        maxChildSize: .84,
+        snap: true,
+        snapSizes: const [.20, .42, .84],
+        builder: (context, scrollController) {
+          final colors = Theme.of(context).colorScheme;
+          return Align(
+            alignment: Alignment.bottomCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: SLColors.paper.withValues(alpha: 0.96),
-                  border: const Border(
-                    top: BorderSide(color: SLColors.borderLight),
+                  color: colors.surface,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(28),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 18,
-                      offset: const Offset(0, -7),
+                      color: Colors.black.withValues(alpha: .10),
+                      blurRadius: 28,
+                      offset: const Offset(0, -4),
                     ),
                   ],
                 ),
-                child: ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 54,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: SLColors.border,
-                          borderRadius: SLRadius.pillAll,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(28),
+                  ),
+                  child: ListView(
+                    controller: scrollController,
+                    padding: EdgeInsets.fromLTRB(
+                      18,
+                      10,
+                      18,
+                      MediaQuery.paddingOf(context).bottom + 24,
+                    ),
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 36,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: colors.outlineVariant,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                       ),
-                    ),
-                    SLSpacing.h12,
-                    _buildSummaryCard(),
-                    SLSpacing.h8,
-                    _buildPeopleStatusRow(),
-                    SLSpacing.h8,
-                    _buildHistoryCard(),
-                    SLSpacing.h8,
-                    _buildMemoryAndCheckinCard(),
-                  ],
+                      const SizedBox(height: 16),
+                      ValueListenableBuilder<double>(
+                        valueListenable: _panelExtent,
+                        builder: (context, extent, _) => MapPanelHeading(
+                          single: _isSingleRelationship,
+                          expanded: extent > .55,
+                          onToggle: _toggleMapPanel,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      _buildSummaryCard(),
+                      _buildLocationAccessCard(),
+                      const SizedBox(height: 14),
+                      _buildPeopleStatusRow(),
+                      const SizedBox(height: 14),
+                      Divider(
+                        color: colors.outlineVariant.withValues(alpha: .6),
+                      ),
+                      MapDetailsSection(
+                        title: context.tr('map_lchsdichuy_2cc14d'),
+                        icon: Icons.route_outlined,
+                        child: _buildHistoryCard(),
+                      ),
+                      MapDetailsSection(
+                        title: context.tr('map_refresh_memories'),
+                        icon: Icons.bookmark_border_rounded,
+                        child: _buildMemoryAndCheckinCard(),
+                      ),
+                      MapDetailsSection(
+                        title: context.tr('map_refresh_privacy'),
+                        icon: Icons.shield_outlined,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              context.tr(
+                                kIsWeb
+                                    ? 'map_refresh_browser_body'
+                                    : 'map_refresh_privacy_body',
+                              ),
+                              style: TextStyle(
+                                fontSize: 12,
+                                height: 1.6,
+                                color: colors.onSurfaceVariant,
+                              ),
+                            ),
+                            if (!kIsWeb)
+                              TextButton.icon(
+                                onPressed: _openLocationAppSettings,
+                                icon: const Icon(
+                                  Icons.settings_outlined,
+                                  size: 18,
+                                ),
+                                label: Text(
+                                  context.tr('map_refresh_open_settings'),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 

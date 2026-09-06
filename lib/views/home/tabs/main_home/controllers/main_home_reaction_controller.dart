@@ -3,7 +3,8 @@ part of '../../main_home_tab.dart';
 extension MainHomeReactionController on _MainHomeTabState {
   Future<void> _cleanupOldReactionFlights(String houseId) async {
     try {
-      final cutoff = DateTime.now().millisecondsSinceEpoch -
+      final cutoff =
+          DateTime.now().millisecondsSinceEpoch -
           const Duration(minutes: 2).inMilliseconds;
       final snapshot = await _dbRef
           .child('houses/$houseId/reaction_flights')
@@ -21,7 +22,9 @@ extension MainHomeReactionController on _MainHomeTabState {
       if (updates.isNotEmpty) {
         await _dbRef.update(updates);
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[MainHome] Cannot prune stale reaction data: $error');
+    }
   }
 
   void triggerShootingHeartState({String? emoji, String? fromRole}) {
@@ -48,7 +51,7 @@ extension MainHomeReactionController on _MainHomeTabState {
       final oldest = _localReactionThrowMs.first;
       final remainingMs =
           _MainHomeTabState._kReactionThrowWindow.inMilliseconds -
-              (nowMs - oldest);
+          (nowMs - oldest);
       final seconds = (remainingMs / 1000).ceil();
       return seconds < 1 ? 1 : seconds;
     }
@@ -70,8 +73,9 @@ extension MainHomeReactionController on _MainHomeTabState {
 
     var waitMs = 0;
     try {
-      final ref =
-          _dbRef.child('houses/$houseId/reaction_throw_limits/$_currentRole');
+      final ref = _dbRef.child(
+        'houses/$houseId/reaction_throw_limits/$_currentRole',
+      );
       final tx = await ref.runTransaction((Object? current) {
         final data = current is Map
             ? _toStringDynamicMap(current)
@@ -79,10 +83,10 @@ extension MainHomeReactionController on _MainHomeTabState {
         final windowStartMs = asInt(data['windowStartMs']);
         final count = asInt(data['count']);
         final elapsedMs = nowMs - windowStartMs;
-        final shouldStartNewWindow = windowStartMs <= 0 ||
+        final shouldStartNewWindow =
+            windowStartMs <= 0 ||
             elapsedMs < 0 ||
-            elapsedMs >=
-                _MainHomeTabState._kReactionThrowWindow.inMilliseconds;
+            elapsedMs >= _MainHomeTabState._kReactionThrowWindow.inMilliseconds;
 
         if (shouldStartNewWindow) {
           return Transaction.success({
@@ -95,7 +99,7 @@ extension MainHomeReactionController on _MainHomeTabState {
         if (count >= _MainHomeTabState._kReactionThrowBurstLimit) {
           waitMs =
               _MainHomeTabState._kReactionThrowWindow.inMilliseconds -
-                  elapsedMs;
+              elapsedMs;
           return Transaction.abort();
         }
 
@@ -109,14 +113,16 @@ extension MainHomeReactionController on _MainHomeTabState {
       if (tx.committed) return 0;
       final seconds = (waitMs / 1000).ceil();
       return seconds < 1 ? 1 : seconds;
-    } catch (_) {
+    } catch (error) {
+      debugPrint('[MainHome] Remote reaction throttle failed: $error');
       return _consumeLocalReactionThrowWaitSeconds(nowMs);
     }
   }
 
   Future<void> _handleSendInteraction(String type, String emoji) async {
-    final cleanEmoji =
-        emoji.trim().isEmpty ? _emojiForInteractionType(type) : emoji;
+    final cleanEmoji = emoji.trim().isEmpty
+        ? _emojiForInteractionType(type)
+        : emoji;
 
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     final localWait = _consumeLocalReactionThrowWaitSeconds(nowMs);
@@ -141,20 +147,22 @@ extension MainHomeReactionController on _MainHomeTabState {
         ? null
         : preset.messages[_random.nextInt(preset.messages.length)];
 
-    unawaited(Future(() async {
-      final waitSeconds = await _consumeReactionThrowWaitSeconds();
-      if (waitSeconds > 0) {
-        _showReactionThrowLimitSnack();
-        return;
-      }
-      _sendPartnerInteraction(
-        type,
-        showSentNotice: false,
-        emoji: cleanEmoji,
-        customTitle: randomTitle,
-        customMessage: randomMessage,
-      );
-    }));
+    unawaited(
+      Future(() async {
+        final waitSeconds = await _consumeReactionThrowWaitSeconds();
+        if (waitSeconds > 0) {
+          _showReactionThrowLimitSnack();
+          return;
+        }
+        _sendPartnerInteraction(
+          type,
+          showSentNotice: false,
+          emoji: cleanEmoji,
+          customTitle: randomTitle,
+          customMessage: randomMessage,
+        );
+      }),
+    );
 
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {

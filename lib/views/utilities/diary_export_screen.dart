@@ -15,10 +15,7 @@ import '../../core/sl_theme.dart';
 class DiaryExportScreen extends StatefulWidget {
   final String houseId;
 
-  const DiaryExportScreen({
-    super.key,
-    required this.houseId,
-  });
+  const DiaryExportScreen({super.key, required this.houseId});
 
   @override
   State<DiaryExportScreen> createState() => _DiaryExportScreenState();
@@ -87,7 +84,11 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
     final record = _history[index];
     try {
       io.File(record.filePath).deleteSync();
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/utilities/diary_export_screen.dart: $error',
+      );
+    }
     _history.removeAt(index);
     _saveHistory();
     setState(() {});
@@ -96,8 +97,11 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
       tooltip: 'Hướng dẫn',
-      icon: const Icon(Icons.info_outline_rounded,
-          color: Color(0xFFD81B60), size: 22),
+      icon: const Icon(
+        Icons.info_outline_rounded,
+        color: Color(0xFFD81B60),
+        size: 22,
+      ),
       onPressed: () => _showInfoDialog(context),
     );
   }
@@ -107,8 +111,10 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text('Xuất nhật ký',
-            style: SLTheme.quicksand(fontWeight: FontWeight.w900)),
+        title: Text(
+          'Xuất nhật ký',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
         content: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,21 +123,27 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
               Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
               Text(
-                  '- Đóng gói toàn bộ nhật ký tình yêu thành một file duy nhất để lưu trữ Offline vĩnh viễn.\n- Dễ dàng in thành sách nếu muốn lưu giữ kỷ niệm cầm tay.'),
+                '- Đóng gói toàn bộ nhật ký tình yêu thành một file duy nhất để lưu trữ Offline vĩnh viễn.\n- Dễ dàng in thành sách nếu muốn lưu giữ kỷ niệm cầm tay.',
+              ),
               SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                'Cách sử dụng:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               SizedBox(height: 4),
               Text(
-                  '- Bấm "Bắt đầu xuất dữ liệu", hệ thống sẽ thu thập bài viết, ảnh, và sticker.\n- File tải về được lưu trong ứng dụng, bạn có thể mở lại bất cứ lúc nào.'),
+                '- Bấm "Bắt đầu xuất dữ liệu", hệ thống sẽ thu thập bài viết, ảnh, và sticker.\n- File tải về được lưu trong ứng dụng, bạn có thể mở lại bất cứ lúc nào.',
+              ),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu',
-                style: TextStyle(color: SLColors.primary)),
+            child: const Text(
+              'Đã hiểu',
+              style: TextStyle(color: SLColors.primary),
+            ),
           ),
         ],
       ),
@@ -170,8 +182,9 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text(context.tr('util_chathxutdl_223d08')),
-            behavior: SnackBarBehavior.floating),
+          content: Text(context.tr('util_chathxutdl_223d08')),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     } finally {
       if (mounted) setState(() => _isExportingHtml = false);
@@ -212,7 +225,9 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 4),
             action: SnackBarAction(
-                label: 'Mở', onPressed: () => _openFile(filePath)),
+              label: 'Mở',
+              onPressed: () => _openFile(filePath),
+            ),
           ),
         );
       }
@@ -220,8 +235,9 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('Lỗi: ${e.toString()}'),
-            behavior: SnackBarBehavior.floating),
+          content: Text('Lỗi: ${e.toString()}'),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     } finally {
       if (mounted) {
@@ -241,16 +257,18 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Không thể mở file: ${result.message}'),
-              behavior: SnackBarBehavior.floating),
+            content: Text('Không thể mở file: ${result.message}'),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('Không thể mở file: $e'),
-            behavior: SnackBarBehavior.floating),
+          content: Text('Không thể mở file: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
   }
@@ -262,8 +280,9 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('File không tồn tại'),
-              behavior: SnackBarBehavior.floating),
+            content: Text('File không tồn tại'),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
         return;
       }
@@ -288,8 +307,9 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('Lỗi lưu file: $e'),
-            behavior: SnackBarBehavior.floating),
+          content: Text('Lỗi lưu file: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
   }
@@ -307,8 +327,9 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('Không thể chia sẻ: $e'),
-            behavior: SnackBarBehavior.floating),
+          content: Text('Không thể chia sẻ: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
   }
@@ -324,20 +345,23 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
         title: Text(
           context.tr('util_xutnhtk_c6feb9'),
           style: SLTheme.quicksand(
-              fontWeight: FontWeight.w900, color: const Color(0xFFD81B60)),
+            fontWeight: FontWeight.w900,
+            color: const Color(0xFFD81B60),
+          ),
         ),
         actions: [_buildInfoIcon(context)],
       ),
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFFD81B60)))
+              child: CircularProgressIndicator(color: Color(0xFFD81B60)),
+            )
           : Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
                     Color(0xFFFFFBFD),
                     Color(0xFFFDFDFF),
-                    Color(0xFFFFF1F6)
+                    Color(0xFFFFF1F6),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -398,24 +422,36 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(_houseName,
-              style: SLTheme.quicksand(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFFD81B60))),
+          Text(
+            _houseName,
+            style: SLTheme.quicksand(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFFD81B60),
+            ),
+          ),
           SLSpacing.h8,
-          Text(context.tr('util_xutnhtklul_13b3fb'),
-              style: SLTheme.quicksand(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF7A5C69),
-                  height: 1.5)),
+          Text(
+            context.tr('util_xutnhtklul_13b3fb'),
+            style: SLTheme.quicksand(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF7A5C69),
+              height: 1.5,
+            ),
+          ),
           SLSpacing.h16,
-          _buildFeatureLine(Icons.language_rounded, 'HTML',
-              context.tr('util_bnwebnhmli_d0d399')),
+          _buildFeatureLine(
+            Icons.language_rounded,
+            'HTML',
+            context.tr('util_bnwebnhmli_d0d399'),
+          ),
           SLSpacing.h8,
-          _buildFeatureLine(Icons.folder_zip_rounded, 'ZIP',
-              'Gói tất cả diary + ảnh kỷ niệm thành file ZIP'),
+          _buildFeatureLine(
+            Icons.folder_zip_rounded,
+            'ZIP',
+            'Gói tất cả diary + ảnh kỷ niệm thành file ZIP',
+          ),
         ],
       ),
     );
@@ -435,11 +471,14 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
             borderRadius: BorderRadius.circular(3),
           ),
           SLSpacing.h8,
-          Text(_exportStatus,
-              style: SLTheme.quicksand(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF7A5C69))),
+          Text(
+            _exportStatus,
+            style: SLTheme.quicksand(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF7A5C69),
+            ),
+          ),
         ],
       ),
     );
@@ -454,21 +493,29 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Row(
             children: [
-              Icon(Icons.history_rounded,
-                  size: 18,
-                  color: const Color(0xFF7A5C69).withValues(alpha: 0.7)),
+              Icon(
+                Icons.history_rounded,
+                size: 18,
+                color: const Color(0xFF7A5C69).withValues(alpha: 0.7),
+              ),
               SLSpacing.w8,
-              Text('Đã xuất gần đây',
-                  style: SLTheme.quicksand(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF47303B))),
+              Text(
+                'Đã xuất gần đây',
+                style: SLTheme.quicksand(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF47303B),
+                ),
+              ),
               SLSpacing.w8,
-              Text('${_history.length} file',
-                  style: SLTheme.quicksand(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF7A5C69))),
+              Text(
+                '${_history.length} file',
+                style: SLTheme.quicksand(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF7A5C69),
+                ),
+              ),
             ],
           ),
         ),
@@ -492,14 +539,18 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border:
-              Border.all(color: const Color(0xFFF7D3E1).withValues(alpha: 0.6)),
+          border: Border.all(
+            color: const Color(0xFFF7D3E1).withValues(alpha: 0.6),
+          ),
         ),
         child: ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 4,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           leading: Container(
             width: 44,
             height: 44,
@@ -509,55 +560,75 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
             ),
             child: Icon(icon, color: color, size: 22),
           ),
-          title: Text(fileName,
-              style: SLTheme.quicksand(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF47303B))),
-          subtitle: Text(dateStr,
-              style: SLTheme.quicksand(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF7A5C69))),
+          title: Text(
+            fileName,
+            style: SLTheme.quicksand(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF47303B),
+            ),
+          ),
+          subtitle: Text(
+            dateStr,
+            style: SLTheme.quicksand(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF7A5C69),
+            ),
+          ),
           trailing: SizedBox(
             width: 140,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 _actionIcon(
-                    Icons.file_download_rounded,
-                    const Color(0xFF15803D),
-                    'Lưu xuống',
-                    () => _saveToDownloads(record.filePath, fileName)),
-                _actionIcon(Icons.open_in_new_rounded, const Color(0xFF7C4DFF),
-                    'Mở file', () => _openFile(record.filePath)),
-                _actionIcon(Icons.share_rounded, const Color(0xFF5DA9FF),
-                    'Chia sẻ', () => _shareFile(record.filePath)),
+                  Icons.file_download_rounded,
+                  const Color(0xFF15803D),
+                  'Lưu xuống',
+                  () => _saveToDownloads(record.filePath, fileName),
+                ),
                 _actionIcon(
-                    Icons.delete_outline_rounded, Colors.red[300]!, 'Xoá file',
-                    () {
-                  showDialog(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: const Text('Xoá file xuất'),
-                      content: Text('Xoá "$fileName" khỏi thiết bị?'),
-                      actions: [
-                        TextButton(
+                  Icons.open_in_new_rounded,
+                  const Color(0xFF7C4DFF),
+                  'Mở file',
+                  () => _openFile(record.filePath),
+                ),
+                _actionIcon(
+                  Icons.share_rounded,
+                  const Color(0xFF5DA9FF),
+                  'Chia sẻ',
+                  () => _shareFile(record.filePath),
+                ),
+                _actionIcon(
+                  Icons.delete_outline_rounded,
+                  Colors.red[300]!,
+                  'Xoá file',
+                  () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Xoá file xuất'),
+                        content: Text('Xoá "$fileName" khỏi thiết bị?'),
+                        actions: [
+                          TextButton(
                             onPressed: () => Navigator.pop(ctx),
-                            child: const Text('Huỷ')),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(ctx);
-                            _removeFromHistory(index);
-                          },
-                          style:
-                              TextButton.styleFrom(foregroundColor: Colors.red),
-                          child: const Text('Xoá'),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
+                            child: const Text('Huỷ'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(ctx);
+                              _removeFromHistory(index);
+                            },
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.red,
+                            ),
+                            child: const Text('Xoá'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -567,7 +638,11 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
   }
 
   Widget _actionIcon(
-      IconData icon, Color color, String tooltip, VoidCallback onPressed) {
+    IconData icon,
+    Color color,
+    String tooltip,
+    VoidCallback onPressed,
+  ) {
     return SizedBox(
       width: 32,
       height: 32,
@@ -590,7 +665,9 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-              color: const Color(0xFFFFF4F8), borderRadius: SLRadius.mdAll),
+            color: const Color(0xFFFFF4F8),
+            borderRadius: SLRadius.mdAll,
+          ),
           child: Icon(icon, color: const Color(0xFFD81B60)),
         ),
         SLSpacing.w12,
@@ -598,18 +675,24 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title,
-                  style: SLTheme.quicksand(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF47303B))),
+              Text(
+                title,
+                style: SLTheme.quicksand(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF47303B),
+                ),
+              ),
               SLSpacing.gapH(2),
-              Text(desc,
-                  style: SLTheme.quicksand(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF7A5C69),
-                      height: 1.4)),
+              Text(
+                desc,
+                style: SLTheme.quicksand(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF7A5C69),
+                  height: 1.4,
+                ),
+              ),
             ],
           ),
         ),
@@ -636,7 +719,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
             gradient: LinearGradient(
               colors: [
                 colors.first.withValues(alpha: 0.10),
-                colors.last.withValues(alpha: 0.18)
+                colors.last.withValues(alpha: 0.18),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -657,7 +740,9 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
                     ? const Padding(
                         padding: SLSpacing.all12,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2.2, color: Colors.white),
+                          strokeWidth: 2.2,
+                          color: Colors.white,
+                        ),
                       )
                     : Icon(icon, color: Colors.white),
               ),
@@ -666,18 +751,24 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title,
-                        style: SLTheme.quicksand(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF47303B))),
+                    Text(
+                      title,
+                      style: SLTheme.quicksand(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF47303B),
+                      ),
+                    ),
                     SLSpacing.h4,
-                    Text(description,
-                        style: SLTheme.quicksand(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF7A5C69),
-                            height: 1.4)),
+                    Text(
+                      description,
+                      style: SLTheme.quicksand(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF7A5C69),
+                        height: 1.4,
+                      ),
+                    ),
                   ],
                 ),
               ),

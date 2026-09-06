@@ -20,9 +20,9 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
   }
 
   String _syncModeLabel() {
-    if (_playlist.isEmpty) return 'Chưa có nhạc nền';
-    if (_isVipActive) return 'Âm nhạc đang được đồng bộ qua đám mây.';
-    return 'File nhạc chỉ được lưu trên thiết bị này. Dùng PRO để đồng bộ.';
+    if (_playlist.isEmpty) return context.tr('p7_music_none');
+    if (_isVipActive) return context.tr('p7_music_cloud_sync');
+    return context.tr('p7_music_local_only');
   }
 
   void _showVipAccountDetail() {
@@ -31,14 +31,14 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
 
   Future<void> _pickAndStoreMultipleMusicFilesLocally() async {
     if (_playlist.length >= 5) {
-      _showToast('Đã đạt giới hạn tối đa 5 bài hát trong danh sách phát.',
-          success: false);
+      _showToast(context.tr('p7_music_limit_reached'), success: false);
       return;
     }
 
     final int maxAllowed = 5 - _playlist.length;
-    final pickedFiles =
-        await _storageService.pickMultipleMusicFiles(maxFiles: maxAllowed);
+    final pickedFiles = await _storageService.pickMultipleMusicFiles(
+      maxFiles: maxAllowed,
+    );
     if (pickedFiles.isEmpty) {
       return;
     }
@@ -81,8 +81,10 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
       }
 
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('il_local_music_playlist',
-          jsonEncode(_playlist.map((e) => e.toJson()).toList()));
+      await prefs.setString(
+        'il_local_music_playlist',
+        jsonEncode(_playlist.map((e) => e.toJson()).toList()),
+      );
       await prefs.setBool('il_music_autoplay', false);
 
       final ui = UiPrefs.notifier.value;
@@ -99,8 +101,12 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
       });
       _showToast(
         _isVipActive && anyCloudSynced
-            ? 'Đã lưu và đồng bộ ${pickedFiles.length} bài hát lên đám mây.'
-            : 'Đã lưu ${pickedFiles.length} bài hát trên thiết bị này.',
+            ? context
+                  .tr('p7_music_saved_and_synced')
+                  .replaceAll('{count}', '${pickedFiles.length}')
+            : context
+                  .tr('p7_music_saved_locally')
+                  .replaceAll('{count}', '${pickedFiles.length}'),
         success: true,
       );
     } catch (e) {
@@ -115,8 +121,10 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
     final prefs = await SharedPreferences.getInstance();
 
     _playlist.removeAt(index);
-    await prefs.setString('il_local_music_playlist',
-        jsonEncode(_playlist.map((e) => e.toJson()).toList()));
+    await prefs.setString(
+      'il_local_music_playlist',
+      jsonEncode(_playlist.map((e) => e.toJson()).toList()),
+    );
 
     if (MusicService.isLocalAudioPath(track.url)) {
       await _storageService.deleteLocalFile(track.url);
@@ -137,7 +145,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
 
     if (!mounted) return;
     setState(() {});
-    _showToast('Đã xóa bài hát khỏi danh sách phát.');
+    _showToast(context.tr('p7_music_removed'));
   }
 
   Future<void> _saveMusicSettingsToFirebase() async {
@@ -161,10 +169,13 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
       updates['musicSyncMode'] = 'local';
     }
 
-    await _dbRef
-        .child('houses/$houseId/settings')
-        .update(updates)
-        .catchError((_) {});
+    await _dbRef.child('houses/$houseId/settings').update(updates).catchError((
+      error,
+    ) {
+      debugPrint(
+        '[SuppressedError] lib/views/home/tabs/settings/theme/theme_music_panel_part.dart: $error',
+      );
+    });
   }
 
   Widget _buildMusicPanel({bool hideBackButton = false}) {
@@ -175,7 +186,9 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
         title: context.tr('theme_music_panel'),
         description: _playlist.isEmpty
             ? context.tr('theme_music_no_music')
-            : '${_playlist.length} bài hát trong danh sách phát',
+            : context
+                  .tr('p7_music_playlist_count')
+                  .replaceAll('{count}', '${_playlist.length}'),
         themeColor: const Color(0xFFFF8F00),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,7 +201,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
               onSwitchChanged: (v) async {
                 if (_playlist.isEmpty && v) {
                   _showToast(
-                    'Hãy lưu file nhạc trên máy trước khi bật tự phát.',
+                    context.tr('p7_music_autoplay_requires_file'),
                     success: false,
                   );
                   return;
@@ -204,8 +217,10 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                 if (!v) {
                   await MusicService().stop(keepPlaylist: true);
                 } else if (_playlist.isNotEmpty) {
-                  await MusicService()
-                      .play(_playlist.first.url, type: _playlist.first.type);
+                  await MusicService().play(
+                    _playlist.first.url,
+                    type: _playlist.first.type,
+                  );
                 }
                 if (!mounted) return;
                 _showToast(
@@ -247,8 +262,12 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.delete_outline_rounded,
-                                  color: Colors.redAccent, size: 20),
+                              tooltip: context.tr('p7_music_remove_track'),
+                              icon: const Icon(
+                                Icons.delete_outline_rounded,
+                                color: Colors.redAccent,
+                                size: 20,
+                              ),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
                               onPressed: () => _removeTrack(i),
@@ -267,33 +286,50 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                       ),
                     ),
                     if (AppConfig.isPurchaseEnabled)
-                      GestureDetector(
-                        onTap: () => _showVipAccountDetail(),
-                        child: Container(
-                          margin: const EdgeInsets.only(top: 8),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFFFD54F), Color(0xFFFF8F00)],
-                            ),
+                      Semantics(
+                        button: true,
+                        label: context.tr('p7_music_open_pro_details'),
+                        child: Tooltip(
+                          message: context.tr('p7_music_open_pro_details'),
+                          excludeFromSemantics: true,
+                          child: InkWell(
                             borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.star_rounded,
-                                  size: 12, color: Color(0xFF3E2723)),
-                              const SizedBox(width: 3),
-                              Text(
-                                'PRO',
-                                style: SLTextStyles.quicksand(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF3E2723),
-                                ),
+                            onTap: _showVipAccountDetail,
+                            child: Container(
+                              margin: const EdgeInsets.only(top: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
                               ),
-                            ],
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFFFFD54F),
+                                    Color(0xFFFF8F00),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.star_rounded,
+                                    size: 12,
+                                    color: Color(0xFF3E2723),
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    'PRO',
+                                    style: SLTextStyles.quicksand(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFF3E2723),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -303,10 +339,12 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
             SLSpacing.h8,
             _buildGradientBtn(
               label: _isLoading
-                  ? 'Đang tải file...'
+                  ? context.tr('p7_music_loading_file')
                   : (_playlist.length < 5
-                      ? 'Thêm bài hát (${_playlist.length}/5)'
-                      : 'Đã đạt giới hạn 5 bài'),
+                        ? context
+                              .tr('p7_music_add_tracks')
+                              .replaceAll('{count}', '${_playlist.length}')
+                        : context.tr('p7_music_limit_button')),
               gradient: const [Color(0xFF8E24AA), Color(0xFFD81B60)],
               onTap: _isLoading || _playlist.length >= 5
                   ? () {}
@@ -322,64 +360,94 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                   context: context,
                   builder: (context) => AlertDialog(
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     title: Text(
-                      'Hướng dẫn Âm nhạc',
+                      context.tr('p7_music_guide_title'),
                       style: SLTextStyles.quicksand(
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF6A1B4D)),
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF6A1B4D),
+                      ),
                     ),
                     content: SingleChildScrollView(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('• Số lượng:',
-                              style: SLTextStyles.quicksand(
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF6A1B4D))),
-                          Text('Tối đa 5 bài hát trong danh sách phát.',
-                              style: SLTextStyles.quicksand(
-                                  color: const Color(0xFF3E2723))),
-                          const SizedBox(height: 8),
-                          Text('• Dung lượng:',
-                              style: SLTextStyles.quicksand(
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF6A1B4D))),
-                          Text('Tối đa 20MB cho mỗi bài hát.',
-                              style: SLTextStyles.quicksand(
-                                  color: const Color(0xFF3E2723))),
-                          const SizedBox(height: 8),
-                          Text('• Định dạng hỗ trợ:',
-                              style: SLTextStyles.quicksand(
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF6A1B4D))),
-                          Text('mp3, m4a, aac, wav, ogg, flac, mp4.',
-                              style: SLTextStyles.quicksand(
-                                  color: const Color(0xFF3E2723))),
-                          const SizedBox(height: 8),
-                          Text('• Cơ chế đồng bộ:',
-                              style: SLTextStyles.quicksand(
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF6A1B4D))),
                           Text(
-                              '- Tài khoản PRO: Bài hát tự động được tải lên đám mây và đồng bộ sang máy của đối tác.',
-                              style: SLTextStyles.quicksand(
-                                  color: const Color(0xFF3E2723))),
+                            context.tr('p7_music_guide_quantity_label'),
+                            style: SLTextStyles.quicksand(
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF6A1B4D),
+                            ),
+                          ),
                           Text(
-                              '- Tài khoản Thường: Nhạc chỉ được lưu và phát trên thiết bị hiện tại của bạn.',
-                              style: SLTextStyles.quicksand(
-                                  color: const Color(0xFF3E2723))),
+                            context.tr('p7_music_guide_quantity_body'),
+                            style: SLTextStyles.quicksand(
+                              color: const Color(0xFF3E2723),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            context.tr('p7_music_guide_size_label'),
+                            style: SLTextStyles.quicksand(
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF6A1B4D),
+                            ),
+                          ),
+                          Text(
+                            context.tr('p7_music_guide_size_body'),
+                            style: SLTextStyles.quicksand(
+                              color: const Color(0xFF3E2723),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            context.tr('p7_music_guide_formats_label'),
+                            style: SLTextStyles.quicksand(
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF6A1B4D),
+                            ),
+                          ),
+                          Text(
+                            context.tr('p7_music_guide_formats_body'),
+                            style: SLTextStyles.quicksand(
+                              color: const Color(0xFF3E2723),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            context.tr('p7_music_guide_sync_label'),
+                            style: SLTextStyles.quicksand(
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF6A1B4D),
+                            ),
+                          ),
+                          Text(
+                            context.tr('p7_music_guide_pro_body'),
+                            style: SLTextStyles.quicksand(
+                              color: const Color(0xFF3E2723),
+                            ),
+                          ),
+                          Text(
+                            context.tr('p7_music_guide_regular_body'),
+                            style: SLTextStyles.quicksand(
+                              color: const Color(0xFF3E2723),
+                            ),
+                          ),
                         ],
                       ),
                     ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        child: Text('Đã hiểu',
-                            style: SLTextStyles.quicksand(
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFFD81B60))),
+                        child: Text(
+                          context.tr('p7_understood'),
+                          style: SLTextStyles.quicksand(
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFFD81B60),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -408,7 +476,9 @@ class _AnimatedMusicButtonState extends State<_AnimatedMusicButton>
   void initState() {
     super.initState();
     _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 2500));
+      vsync: this,
+      duration: const Duration(milliseconds: 2500),
+    );
     MusicService().isPlayingNotifier.addListener(_syncAnimation);
     _syncAnimation();
   }
@@ -436,62 +506,73 @@ class _AnimatedMusicButtonState extends State<_AnimatedMusicButton>
       valueListenable: MusicService().isPlayingNotifier,
       builder: (context, isPlaying, child) {
         if (!isPlaying) return const SizedBox.shrink();
-        return GestureDetector(
-          onTap: MusicService().toggle,
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              final val = _controller.value;
-              final scale = 1.0 + (val * 0.05);
-              return Transform.scale(
-                scale: scale,
-                child: Container(
-                  width: 58,
-                  height: 58,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [SLTheme.primary, SLTheme.accentPurple],
+        return Semantics(
+          button: true,
+          label: context.tr('p7_music_toggle_playback'),
+          child: Tooltip(
+            message: context.tr('p7_music_toggle_playback'),
+            excludeFromSemantics: true,
+            child: GestureDetector(
+              onTap: MusicService().toggle,
+              child: AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  final val = _controller.value;
+                  final scale = 1.0 + (val * 0.05);
+                  return Transform.scale(
+                    scale: scale,
+                    child: Container(
+                      width: 58,
+                      height: 58,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          colors: [SLTheme.primary, SLTheme.accentPurple],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: SLTheme.primary.withValues(alpha: 0.4),
+                            blurRadius: 15,
+                            spreadRadius: val * 3,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(4, (index) {
+                              final baseHeights = [10.0, 18.0, 14.0, 22.0];
+                              final animatedHeight =
+                                  baseHeights[index] +
+                                  ((index.isEven ? 1 : -1) * val * 8);
+                              return Container(
+                                width: 3,
+                                height: animatedHeight,
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 1.5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.45),
+                                  borderRadius: SLRadius.smAll,
+                                ),
+                              );
+                            }),
+                          ),
+                          const Icon(
+                            Icons.music_note,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ],
+                      ),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: SLTheme.primary.withValues(alpha: 0.4),
-                        blurRadius: 15,
-                        spreadRadius: val * 3,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(4, (index) {
-                          final baseHeights = [10.0, 18.0, 14.0, 22.0];
-                          final animatedHeight = baseHeights[index] +
-                              ((index.isEven ? 1 : -1) * val * 8);
-                          return Container(
-                            width: 3,
-                            height: animatedHeight,
-                            margin: const EdgeInsets.symmetric(horizontal: 1.5),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.45),
-                              borderRadius: SLRadius.smAll,
-                            ),
-                          );
-                        }),
-                      ),
-                      const Icon(
-                        Icons.music_note,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
+                  );
+                },
+              ),
+            ),
           ),
         );
       },

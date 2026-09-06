@@ -805,7 +805,12 @@ extension _SettingsDataHealthSection on _SettingsTabState {
 
     SLNotice.showInfo(
       context,
-      'Đang tạo bản tải xuống dữ liệu ${_dataExportRangeLabel(rangeDays).toLowerCase()}...',
+      context
+          .tr('p6_data_export_progress')
+          .replaceAll(
+            '{range}',
+            _dataExportRangeLabel(rangeDays).toLowerCase(),
+          ),
     );
     try {
       final result = await DataExportService().requestUserDataExport(
@@ -1082,13 +1087,15 @@ extension _SettingsDataHealthSection on _SettingsTabState {
             ),
           ],
         ),
-        content: Text(
-          'SoulLocket sẽ tạo một bản tải xuống gồm dữ liệu tài khoản, nhà/ghép đôi, nhật ký, kỷ niệm, chat, vị trí, gói dịch vụ và lựa chọn quyền riêng tư của bạn.\n\nFile tải về có index.html để xem ảnh và các phần dữ liệu dạng .txt dễ đọc hơn. Ảnh trong Kỷ niệm được giới hạn tối đa 100 ảnh trong mỗi lần export và dùng link tải tạm thời để tránh file quá nặng.\n\nTrước khi tạo file, bạn cần xác minh bằng vân tay/Face ID hoặc mã PIN nếu đã bật Khóa app. Nếu chưa bật Khóa app, ứng dụng sẽ yêu cầu mật khẩu đăng nhập.\n\nFile có thể chứa dữ liệu nhạy cảm, đặc biệt là vị trí và tin nhắn. Chỉ chia sẻ với người bạn tin tưởng.',
-          style: SLTheme.quicksand(
-            fontSize: 13.5,
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF445064),
-            height: 1.45,
+        content: SingleChildScrollView(
+          child: Text(
+            context.tr('p6_data_export_intro'),
+            style: SLTheme.quicksand(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF445064),
+              height: 1.45,
+            ),
           ),
         ),
         actions: [
@@ -1137,7 +1144,21 @@ extension _SettingsDataHealthSection on _SettingsTabState {
           ),
         ),
         content: Text(
-          'Link tải có hiệu lực trong 7 ngày. Khoảng dữ liệu: ${_dataExportRangeLabel(rangeDays)}. Có thể mở HTML để xem ảnh Kỷ niệm nhanh, hoặc tải ZIP để lấy đầy đủ file .txt. Đã thêm ${result.memoryImagesIncluded} ảnh Kỷ niệm vào trang HTML${result.memoryImagesSkipped > 0 ? ', bỏ qua ${result.memoryImagesSkipped} ảnh vượt giới hạn' : ''}.',
+          context
+              .tr('p6_data_export_ready_details')
+              .replaceAll('{range}', _dataExportRangeLabel(rangeDays))
+              .replaceAll('{included}', result.memoryImagesIncluded.toString())
+              .replaceAll(
+                '{skippedDetails}',
+                result.memoryImagesSkipped > 0
+                    ? context
+                          .tr('p6_data_export_skipped_details')
+                          .replaceAll(
+                            '{count}',
+                            result.memoryImagesSkipped.toString(),
+                          )
+                    : '',
+              ),
           style: SLTheme.quicksand(
             fontSize: 13.5,
             fontWeight: FontWeight.w700,
@@ -1162,8 +1183,9 @@ extension _SettingsDataHealthSection on _SettingsTabState {
               Navigator.pop(ctx);
               SharePlus.instance.share(
                 ShareParams(
-                  text:
-                      'Bản tải xuống dữ liệu SoulLocket của tôi: ${result.downloadUrl}',
+                  text: context
+                      .tr('p6_data_export_share_text')
+                      .replaceAll('{url}', result.downloadUrl),
                 ),
               );
             },

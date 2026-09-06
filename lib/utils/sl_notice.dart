@@ -124,7 +124,9 @@ class SLNotice {
           ),
         ),
       );
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[SuppressedError] lib/utils/sl_notice.dart: $error');
+    }
   }
 
   static ScaffoldMessengerState? _resolveMessenger(BuildContext context) {
@@ -135,7 +137,9 @@ class SLNotice {
         if (messenger != null) {
           return messenger;
         }
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[SuppressedError] lib/utils/sl_notice.dart: $error');
+      }
     }
 
     try {

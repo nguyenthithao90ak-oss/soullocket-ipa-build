@@ -15,18 +15,24 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
   String _countdownUnlockRemainingText() {
     final remainingMs =
         _countdownAdUnlockExpiryMs - DateTime.now().millisecondsSinceEpoch;
-    if (remainingMs <= 0) return 'Đã hết hạn';
+    if (remainingMs <= 0) return context.tr('p7_ad_unlock_expired');
     final remaining = Duration(milliseconds: remainingMs);
     if (remaining.inDays >= 1) {
-      return 'Còn ${remaining.inDays} ngày';
+      return context
+          .tr('p7_remaining_days')
+          .replaceAll('{count}', remaining.inDays.toString());
     }
     if (remaining.inHours >= 1) {
-      return 'Còn ${remaining.inHours} giờ';
+      return context
+          .tr('p7_remaining_hours')
+          .replaceAll('{count}', remaining.inHours.toString());
     }
     if (remaining.inMinutes >= 1) {
-      return 'Còn ${remaining.inMinutes} phút';
+      return context
+          .tr('p7_remaining_minutes')
+          .replaceAll('{count}', remaining.inMinutes.toString());
     }
-    return 'Sắp hết hạn';
+    return context.tr('p7_expiring_soon');
   }
 
   // ignore: unused_element
@@ -51,21 +57,22 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
     if (premiumStyles.isEmpty) return const SizedBox.shrink();
 
     final summaryText = hasCountdownAdPass
-        ? 'Bạn đã mở toàn bộ giao diện Quảng cáo tới '
-            '${_formatCountdownUnlockExpiry(_countdownAdUnlockExpiryMs)}. '
-            'Sau thời điểm này app sẽ yêu cầu xem quảng cáo lại.'
-        : 'Xem 1 quảng cáo để mở toàn bộ ${premiumStyles.length} giao diện '
-            'Quảng cáo trong 5 tiếng. Hết hạn sẽ reset và cần xem lại.';
+        ? context
+              .tr('p7_ad_styles_unlocked_summary')
+              .replaceAll(
+                '{date}',
+                _formatCountdownUnlockExpiry(_countdownAdUnlockExpiryMs),
+              )
+        : context
+              .tr('p7_ad_styles_locked_summary')
+              .replaceAll('{count}', premiumStyles.length.toString());
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: <Color>[
-            Color(0xFFFFFCFE),
-            Color(0xFFFFF3F7),
-          ],
+          colors: <Color>[Color(0xFFFFFCFE), Color(0xFFFFF3F7)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -98,7 +105,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Giao diện Quảng cáo',
+                      context.tr('p7_ad_styles_title'),
                       style: SLTheme.quicksand(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w900,
@@ -108,7 +115,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
                     Text(
                       hasCountdownAdPass
                           ? _countdownUnlockRemainingText()
-                          : 'Đang khóa',
+                          : context.tr('p7_locked'),
                       style: SLTheme.quicksand(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
@@ -138,19 +145,33 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
             final isLocked = !hasCountdownAdPass;
             final buttonLabel = isLocked
                 ? (_isUnlockingStyle
-                    ? 'Đang tải quảng cáo...'
-                    : 'Xem quảng cáo')
-                : (isActive ? 'Đang dùng' : 'Dùng ngay');
+                      ? context.tr('p7_ad_loading')
+                      : context.tr('p7_watch_ad'))
+                : (isActive
+                      ? context.tr('p7_in_use')
+                      : context.tr('p7_use_now'));
             final buttonIcon = isLocked
                 ? Icons.ondemand_video_rounded
                 : (isActive ? Icons.check_rounded : Icons.play_arrow_rounded);
             final subtitle = isLocked
-                ? 'Mở khóa 5 tiếng cho toàn bộ giao diện quảng cáo.'
+                ? context.tr('p7_ad_unlock_all_five_hours')
                 : isActive
-                    ? 'Đang dùng • Hết hạn '
-                        '${_formatCountdownUnlockExpiry(_countdownAdUnlockExpiryMs)}.'
-                    : 'Đã mở khóa • Dùng đến '
-                        '${_formatCountdownUnlockExpiry(_countdownAdUnlockExpiryMs)}.';
+                ? context
+                      .tr('p7_in_use_expires')
+                      .replaceAll(
+                        '{date}',
+                        _formatCountdownUnlockExpiry(
+                          _countdownAdUnlockExpiryMs,
+                        ),
+                      )
+                : context
+                      .tr('p7_unlocked_until')
+                      .replaceAll(
+                        '{date}',
+                        _formatCountdownUnlockExpiry(
+                          _countdownAdUnlockExpiryMs,
+                        ),
+                      );
 
             return Container(
               margin: const EdgeInsets.only(top: 8),
@@ -214,7 +235,9 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: Text(
-                                isLocked ? 'Quảng cáo' : 'Đã mở',
+                                isLocked
+                                    ? context.tr('p7_ad_label')
+                                    : context.tr('p7_unlocked'),
                                 style: SLTheme.quicksand(
                                   fontSize: 10.4,
                                   fontWeight: FontWeight.w900,
@@ -243,11 +266,11 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
                   ElevatedButton.icon(
                     onPressed: isLocked
                         ? (_isUnlockingStyle
-                            ? null
-                            : () => _handleCountdownStyleChange(style.$2))
+                              ? null
+                              : () => _handleCountdownStyleChange(style.$2))
                         : (isActive
-                            ? null
-                            : () => _updateThemeDraft(
+                              ? null
+                              : () => _updateThemeDraft(
                                   () => _draftCountdownStyleKey = style.$2,
                                 )),
                     icon: Icon(buttonIcon, size: 16),
@@ -261,8 +284,9 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
                       disabledBackgroundColor: isActive
                           ? const Color(0xFF9E9E9E)
                           : const Color(0xFFE0E0E0),
-                      disabledForegroundColor:
-                          isActive ? Colors.white : const Color(0xFF7A7A7A),
+                      disabledForegroundColor: isActive
+                          ? Colors.white
+                          : const Color(0xFF7A7A7A),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 10,
@@ -313,7 +337,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
         SnackBar(
           content: Text(context.tr('upload_background_interrupted')),
           action: SnackBarAction(
-            label: 'Thử lại',
+            label: context.tr('p7_retry'),
             onPressed: () {
               unawaited(_retryPendingThemeBackgroundUpload());
             },
@@ -398,7 +422,9 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
           return;
         }
         await prefs.setString(
-            'last_bg_ad_time', DateTime.now().toIso8601String());
+          'last_bg_ad_time',
+          DateTime.now().toIso8601String(),
+        );
       }
 
       final pickedFile = presetFile ?? await _storageService.pickImage();
@@ -417,7 +443,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
             maxHeight: 3200,
             uiSettings: [
               IOSUiSettings(
-                title: 'Chỉnh sửa ảnh nền',
+                title: context.tr('p7_edit_background_image'),
                 aspectRatioPresets: const [_themeBackgroundAspectRatioPreset],
                 aspectRatioLockEnabled: true,
                 aspectRatioPickerButtonHidden: true,
@@ -446,10 +472,9 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
       final previousDraftUrl = _draftCustomBackgroundUrl;
       final pendingKey = _pendingThemeBackgroundUploadKey;
       if (pendingKey != null) {
-        await PendingUploadService.instance.save(
-          pendingKey,
-          <String, dynamic>{'filePath': file.path},
-        );
+        await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
+          'filePath': file.path,
+        });
       }
 
       final url = await _storageService.uploadImage(
@@ -478,7 +503,11 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
           previousDraftUrl != UiPrefs.notifier.value.customBackgroundUrl) {
         try {
           _storageService.deleteImageByUrl(previousDraftUrl);
-        } catch (_) {}
+        } catch (error) {
+          debugPrint(
+            '[SuppressedError] lib/views/home/tabs/settings/theme/theme_panel_actions_part.dart: $error',
+          );
+        }
       }
 
       _updateThemeDraft(() => _draftCustomBackgroundUrl = url.trim());
@@ -507,7 +536,11 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
         oldDraft != UiPrefs.notifier.value.customBackgroundUrl) {
       try {
         _storageService.deleteImageByUrl(oldDraft);
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[SuppressedError] lib/views/home/tabs/settings/theme/theme_panel_actions_part.dart: $error',
+        );
+      }
     }
     _updateThemeDraft(() => _draftCustomBackgroundUrl = '');
     _showToast(context.tr('theme_success_bg_removed'), success: true);

@@ -15,8 +15,11 @@ class SharedNotesScreen extends StatefulWidget {
   final String houseId;
   final String myName;
 
-  const SharedNotesScreen(
-      {super.key, required this.houseId, required this.myName});
+  const SharedNotesScreen({
+    super.key,
+    required this.houseId,
+    required this.myName,
+  });
 
   @override
   State<SharedNotesScreen> createState() => _SharedNotesScreenState();
@@ -26,8 +29,11 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
       tooltip: 'Hướng dẫn',
-      icon:
-          const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
+      icon: const Icon(
+        Icons.info_outline_rounded,
+        color: Colors.white,
+        size: 22,
+      ),
       onPressed: () => _showInfoDialog(context),
     );
   }
@@ -49,21 +55,27 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
               Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
               Text(
-                  '- Đồng bộ hóa ghi chú theo thời gian thực giữa hai người.\n- Phân loại ghi chú bằng màu sắc và ghim lên màn hình chính (Widget).\n- Cùng nhau chỉnh sửa một danh sách chung.'),
+                '- Đồng bộ hóa ghi chú theo thời gian thực giữa hai người.\n- Phân loại ghi chú bằng màu sắc và ghim lên màn hình chính (Widget).\n- Cùng nhau chỉnh sửa một danh sách chung.',
+              ),
               SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                'Cách sử dụng:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               SizedBox(height: 4),
               Text(
-                  '- Bấm nút Tạo ghi chú để bắt đầu.\n- Gõ nội dung, chọn màu sắc để dễ phân biệt.\n- Vuốt một ghi chú để xóa hoặc bấm vào biểu tượng ghim để đưa lên Widget ngoài màn hình chính.'),
+                '- Bấm nút Tạo ghi chú để bắt đầu.\n- Gõ nội dung, chọn màu sắc để dễ phân biệt.\n- Vuốt một ghi chú để xóa hoặc bấm vào biểu tượng ghim để đưa lên Widget ngoài màn hình chính.',
+              ),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu',
-                style: TextStyle(color: SLColors.primary)),
+            child: const Text(
+              'Đã hiểu',
+              style: TextStyle(color: SLColors.primary),
+            ),
           ),
         ],
       ),
@@ -95,7 +107,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     L10nService().translate('util_cngvic_7086cb'),
     L10nService().translate('util_muasm_5176f4'),
     L10nService().translate('util_tng_af71f6'),
-    L10nService().translate('util_quantrng_edade9')
+    L10nService().translate('util_quantrng_edade9'),
   ];
 
   @override
@@ -148,13 +160,21 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   }
 
   Future<void> _saveNotesToCache(
-      Map<String, Map<String, dynamic>> notes, int version) async {
+    Map<String, Map<String, dynamic>> notes,
+    int version,
+  ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
-          'il_cached_notes_data_${widget.houseId}', jsonEncode(notes));
+        'il_cached_notes_data_${widget.houseId}',
+        jsonEncode(notes),
+      );
       await prefs.setInt('il_cached_notes_ver_${widget.houseId}', version);
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/utilities/shared_notes_screen.dart: $error',
+      );
+    }
   }
 
   void _listenToNotesMetadata() {
@@ -163,26 +183,28 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
         .child('houses/${widget.houseId}/metadata/last_updated_notes')
         .onValue
         .listen((event) async {
-      final val = event.snapshot.value;
-      final serverVersion =
-          val is int ? val : (int.tryParse(val?.toString() ?? '') ?? 0);
+          final val = event.snapshot.value;
+          final serverVersion = val is int
+              ? val
+              : (int.tryParse(val?.toString() ?? '') ?? 0);
 
-      if (serverVersion != _cachedNotesVersion || _cachedNotes.isEmpty) {
-        await _fetchNotesFromServer(serverVersion);
-      } else {
-        if (mounted && _isLoadingNotes) {
-          setState(() {
-            _isLoadingNotes = false;
-          });
-        }
-      }
-    });
+          if (serverVersion != _cachedNotesVersion || _cachedNotes.isEmpty) {
+            await _fetchNotesFromServer(serverVersion);
+          } else {
+            if (mounted && _isLoadingNotes) {
+              setState(() {
+                _isLoadingNotes = false;
+              });
+            }
+          }
+        });
   }
 
   Future<void> _fetchNotesFromServer(int serverVersion) async {
     try {
-      final snapshot =
-          await _dbRef.child('houses/${widget.houseId}/note').get();
+      final snapshot = await _dbRef
+          .child('houses/${widget.houseId}/note')
+          .get();
       final raw = snapshot.value;
       final nextNotes = <String, Map<String, dynamic>>{};
       if (raw is Map) {
@@ -214,9 +236,9 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
 
   Future<void> _touchMetadata() async {
     final now = DateTime.now().millisecondsSinceEpoch;
-    await _dbRef
-        .child('houses/${widget.houseId}/metadata')
-        .update({'last_updated_notes': now});
+    await _dbRef.child('houses/${widget.houseId}/metadata').update({
+      'last_updated_notes': now,
+    });
   }
 
   Future<void> _addNote() async {
@@ -224,11 +246,14 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     if (text.isEmpty) return;
 
     if (_cachedNotes.length >= 50) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text(
-            'Danh sách ghi chú đã đạt giới hạn (tối đa 50 ghi chú). Vui lòng xoá bớt trước khi thêm mới.'),
-        backgroundColor: SLColors.danger,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Danh sách ghi chú đã đạt giới hạn (tối đa 50 ghi chú). Vui lòng xoá bớt trước khi thêm mới.',
+          ),
+          backgroundColor: SLColors.danger,
+        ),
+      );
       return;
     }
 
@@ -262,13 +287,15 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   void _togglePinned(String key, bool currentPinned) {
     _dbRef
         .child('houses/${widget.houseId}/note/$key')
-        .update({'pinned': !currentPinned}).then((_) => _touchMetadata());
+        .update({'pinned': !currentPinned})
+        .then((_) => _touchMetadata());
   }
 
   void _toggleDone(String key, bool currentDone) {
     _dbRef
         .child('houses/${widget.houseId}/note/$key')
-        .update({'done': !currentDone}).then((_) => _touchMetadata());
+        .update({'done': !currentDone})
+        .then((_) => _touchMetadata());
   }
 
   void _deleteNote(String key) {
@@ -279,7 +306,9 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
         content: const Text('Bạn có chắc chắn muốn xoá ghi chú này?'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Huỷ'),
+          ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -336,7 +365,14 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
         backgroundColor: const Color(0xFFE26A8D),
         elevation: 4,
         icon: const Icon(Icons.edit, color: Colors.white, size: 20),
-        label: Text('Viết trang mới', style: SLTheme.quicksand(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14)),
+        label: Text(
+          'Viết trang mới',
+          style: SLTheme.quicksand(
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+            fontSize: 14,
+          ),
+        ),
       ),
       body: SLTheme.softCanvasBackdrop(
         baseColor: const Color(0xFFFFFBF8),
@@ -369,7 +405,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
             color: const Color(0xFFF59EBA).withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Row(
@@ -389,7 +425,11 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                       color: const Color(0xFFBBDEFB),
                       border: Border.all(color: Colors.white, width: 2),
                     ),
-                    child: const Icon(Icons.face, color: Color(0xFF1976D2), size: 26),
+                    child: const Icon(
+                      Icons.face,
+                      color: Color(0xFF1976D2),
+                      size: 26,
+                    ),
                   ),
                 ),
                 Positioned(
@@ -402,7 +442,11 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                       color: const Color(0xFFF8BBD0),
                       border: Border.all(color: Colors.white, width: 2),
                     ),
-                    child: const Icon(Icons.face_3, color: Color(0xFFD81B60), size: 26),
+                    child: const Icon(
+                      Icons.face_3,
+                      color: Color(0xFFD81B60),
+                      size: 26,
+                    ),
                   ),
                 ),
               ],
@@ -415,14 +459,39 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
               children: [
                 Row(
                   children: [
-                    Text('Hp Bênh Nhau', style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 17, color: SLColors.textPrimary)),
+                    Text(
+                      'Hp Bênh Nhau',
+                      style: SLTheme.quicksand(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 17,
+                        color: SLColors.textPrimary,
+                      ),
+                    ),
                     const SizedBox(width: 4),
-                    const Icon(Icons.favorite, color: Color(0xFFF36398), size: 16),
+                    const Icon(
+                      Icons.favorite,
+                      color: Color(0xFFF36398),
+                      size: 16,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text('Những điều nhỏ bé, nhưng đầy yêu thương', style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 11, color: SLTheme.textMuted)),
-                Text('6 TỪ • ${DateFormat('dd/MM/yyyy').format(DateTime.now())}', style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 10, color: const Color(0xFFD95C8A))),
+                Text(
+                  'Những điều nhỏ bé, nhưng đầy yêu thương',
+                  style: SLTheme.quicksand(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                    color: SLTheme.textMuted,
+                  ),
+                ),
+                Text(
+                  '6 TỪ • ${DateFormat('dd/MM/yyyy').format(DateTime.now())}',
+                  style: SLTheme.quicksand(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 10,
+                    color: const Color(0xFFD95C8A),
+                  ),
+                ),
               ],
             ),
           ),
@@ -434,12 +503,20 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.calendar_month_rounded, color: Color(0xFFD95C8A), size: 16),
+                const Icon(
+                  Icons.calendar_month_rounded,
+                  color: Color(0xFFD95C8A),
+                  size: 16,
+                ),
                 const SizedBox(width: 2),
-                const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFFD95C8A), size: 16),
+                const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: Color(0xFFD95C8A),
+                  size: 16,
+                ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -458,7 +535,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
             color: const Color(0xFFF59EBA).withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -473,7 +550,11 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                   shape: BoxShape.circle,
                   color: Color(0xFFE26A8D),
                 ),
-                child: const Icon(Icons.sticky_note_2_rounded, color: Colors.white, size: 21),
+                child: const Icon(
+                  Icons.sticky_note_2_rounded,
+                  color: Colors.white,
+                  size: 21,
+                ),
               ),
               SLSpacing.w12,
               Expanded(
@@ -556,8 +637,11 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.send_rounded,
-                      color: Colors.white, size: 20),
+                  child: const Icon(
+                    Icons.send_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
               ),
             ],
@@ -593,8 +677,11 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                           ],
                         ),
                         child: _selectedColor == e.key
-                            ? const Icon(Icons.check_rounded,
-                                size: 15, color: Colors.white)
+                            ? const Icon(
+                                Icons.check_rounded,
+                                size: 15,
+                                color: Colors.white,
+                              )
                             : null,
                       ),
                     ),
@@ -619,8 +706,11 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
         value: _selectedTag,
         dropdownColor: Colors.white,
         underline: const SizedBox(),
-        icon: const Icon(Icons.keyboard_arrow_down_rounded,
-            color: SLColors.textPrimary, size: 18),
+        icon: const Icon(
+          Icons.keyboard_arrow_down_rounded,
+          color: SLColors.textPrimary,
+          size: 18,
+        ),
         style: SLTheme.quicksand(
           fontSize: 11.5,
           color: SLColors.textPrimary,
@@ -639,16 +729,19 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   Widget _buildNotesList() {
     if (_isLoadingNotes && _cachedNotes.isEmpty) {
       final uiState = UiPrefs.notifier.value;
-      final isDark = uiState.themeKey == 'theme-night' ||
+      final isDark =
+          uiState.themeKey == 'theme-night' ||
           uiState.themeKey == 'theme-dark' ||
           uiState.themeKey == 'theme-true-black';
       final cardColor = isDark
           ? Colors.white.withValues(alpha: 0.06)
           : Colors.black.withValues(alpha: 0.03);
-      final baseColor =
-          isDark ? const Color(0xFF262626) : const Color(0xFFF2F3F5);
-      final highlightColor =
-          isDark ? const Color(0xFF333333) : const Color(0xFFE2E4E8);
+      final baseColor = isDark
+          ? const Color(0xFF262626)
+          : const Color(0xFFF2F3F5);
+      final highlightColor = isDark
+          ? const Color(0xFF333333)
+          : const Color(0xFFE2E4E8);
 
       return ListView.builder(
         shrinkWrap: true,
@@ -664,9 +757,10 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                 color: cardColor,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.04)
-                        : Colors.black.withValues(alpha: 0.02)),
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.04)
+                      : Colors.black.withValues(alpha: 0.02),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -674,35 +768,40 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                   Row(
                     children: [
                       SkeletonContainer.circle(
-                          size: 24,
-                          baseColor: baseColor,
-                          highlightColor: highlightColor),
+                        size: 24,
+                        baseColor: baseColor,
+                        highlightColor: highlightColor,
+                      ),
                       const SizedBox(width: 8),
                       SkeletonContainer.rounded(
-                          width: 80,
-                          height: 14,
-                          baseColor: baseColor,
-                          highlightColor: highlightColor),
+                        width: 80,
+                        height: 14,
+                        baseColor: baseColor,
+                        highlightColor: highlightColor,
+                      ),
                       const Spacer(),
                       SkeletonContainer.rounded(
-                          width: 50,
-                          height: 12,
-                          baseColor: baseColor,
-                          highlightColor: highlightColor),
+                        width: 50,
+                        height: 12,
+                        baseColor: baseColor,
+                        highlightColor: highlightColor,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 10),
                   SkeletonContainer.rounded(
-                      width: double.infinity,
-                      height: 16,
-                      baseColor: baseColor,
-                      highlightColor: highlightColor),
+                    width: double.infinity,
+                    height: 16,
+                    baseColor: baseColor,
+                    highlightColor: highlightColor,
+                  ),
                   const SizedBox(height: 6),
                   SkeletonContainer.rounded(
-                      width: 150,
-                      height: 14,
-                      baseColor: baseColor,
-                      highlightColor: highlightColor),
+                    width: 150,
+                    height: 14,
+                    baseColor: baseColor,
+                    highlightColor: highlightColor,
+                  ),
                 ],
               ),
             ),
@@ -726,10 +825,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     }
 
     final items = _cachedNotes.entries
-        .map((e) => {
-              'key': e.key,
-              ...e.value,
-            })
+        .map((e) => {'key': e.key, ...e.value})
         .toList();
 
     items.sort((a, b) {
@@ -739,9 +835,6 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     });
 
     final int doneCount = items.where((item) => item['done'] == true).length;
-    final int pinnedCount =
-        items.where((item) => item['pinned'] == true).length;
-    final int pendingCount = items.length - doneCount;
     final visibleItems = items.where((item) {
       switch (_noteFilter) {
         case 'pinned':
@@ -754,7 +847,12 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     }).toList();
 
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 80), // extra padding for FAB
+      padding: const EdgeInsets.fromLTRB(
+        16,
+        6,
+        16,
+        80,
+      ), // extra padding for FAB
       itemCount: visibleItems.length + (visibleItems.isEmpty ? 2 : 2),
       separatorBuilder: (_, __) => SLSpacing.h12,
       itemBuilder: (context, index) {
@@ -774,9 +872,9 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
             accentColor: const Color(0xFFF59EBA),
           );
         }
-        
+
         if (visibleItems.isEmpty && index == 2) {
-            return _buildPromptCard();
+          return _buildPromptCard();
         }
 
         final item = visibleItems[index - 1];
@@ -806,12 +904,25 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
               color: Color(0xFFFDE8EE),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.library_books_rounded, color: Color(0xFFD95C8A), size: 16),
+            child: const Icon(
+              Icons.library_books_rounded,
+              color: Color(0xFFD95C8A),
+              size: 16,
+            ),
           ),
           const SizedBox(width: 12),
-          Text('Những ghi chú đã lưu', style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 16, color: SLColors.textPrimary)),
+          Text(
+            'Những ghi chú đã lưu',
+            style: SLTheme.quicksand(
+              fontWeight: FontWeight.w900,
+              fontSize: 16,
+              color: SLColors.textPrimary,
+            ),
+          ),
           const SizedBox(width: 12),
-          Expanded(child: Container(height: 1.5, color: const Color(0xFFFDE8EE))),
+          Expanded(
+            child: Container(height: 1.5, color: const Color(0xFFFDE8EE)),
+          ),
           const SizedBox(width: 8),
           const Icon(Icons.favorite_border, color: Color(0xFFFDE8EE), size: 16),
         ],
@@ -836,20 +947,42 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
               color: Color(0xFFFDE8EE),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.lightbulb, color: Color(0xFFE26A8D), size: 24),
+            child: const Icon(
+              Icons.lightbulb,
+              color: Color(0xFFE26A8D),
+              size: 24,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Prompt gợi nhớ ✨', style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 15, color: SLColors.textPrimary)),
+                Text(
+                  'Prompt gợi nhớ ✨',
+                  style: SLTheme.quicksand(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15,
+                    color: SLColors.textPrimary,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text('Hãy thêm một chi tiết nhỏ để ghi nhớ lâu hơn.', style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 12, color: SLTheme.textMuted)),
+                Text(
+                  'Hãy thêm một chi tiết nhỏ để ghi nhớ lâu hơn.',
+                  style: SLTheme.quicksand(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    color: SLTheme.textMuted,
+                  ),
+                ),
               ],
             ),
           ),
-          const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFFE26A8D), size: 16),
+          const Icon(
+            Icons.arrow_forward_ios_rounded,
+            color: Color(0xFFE26A8D),
+            size: 16,
+          ),
         ],
       ),
     );
@@ -865,7 +998,10 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     final lines = content.split('\n');
     final title = lines.isNotEmpty ? lines.first : '';
     final subtitle = lines.length > 1 ? lines.skip(1).join('\n') : content;
-    final wordCount = content.split(RegExp(r'\s+')).where((e) => e.isNotEmpty).length;
+    final wordCount = content
+        .split(RegExp(r'\s+'))
+        .where((e) => e.isNotEmpty)
+        .length;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -878,7 +1014,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
             color: const Color(0xFFF59EBA).withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Row(
@@ -915,7 +1051,10 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFF4F8),
                         borderRadius: BorderRadius.circular(999),
@@ -945,7 +1084,11 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Icon(Icons.access_time_rounded, color: Color(0xFFE26A8D), size: 12),
+                    const Icon(
+                      Icons.access_time_rounded,
+                      color: Color(0xFFE26A8D),
+                      size: 12,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '${item['time']}  •  $wordCount từ',
@@ -958,13 +1101,17 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                     const Spacer(),
                     GestureDetector(
                       onTap: () => _deleteNote(item['key']),
-                      child: const Icon(Icons.more_vert_rounded, color: Color(0xFFE26A8D), size: 16),
-                    )
+                      child: const Icon(
+                        Icons.more_vert_rounded,
+                        color: Color(0xFFE26A8D),
+                        size: 16,
+                      ),
+                    ),
                   ],
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );

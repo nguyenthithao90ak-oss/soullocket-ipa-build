@@ -87,48 +87,58 @@ extension _MainHomeLoadController on _MainHomeTabState {
         .orderByChild('type')
         .equalTo('new_device')
         .onChildAdded
-        .listen((event) {
-      if (!mounted || !_isTabActive || event.snapshot.value == null) return;
+        .listen(
+          (event) {
+            if (!mounted || !_isTabActive || event.snapshot.value == null)
+              return;
 
-      final notificationId = event.snapshot.key?.trim() ?? '';
-      if (notificationId.isEmpty ||
-          !_seenNewDeviceNotificationIds.add(notificationId)) {
-        return;
-      }
-      if (_seenNewDeviceNotificationIds.length > 120) {
-        _seenNewDeviceNotificationIds.remove(
-          _seenNewDeviceNotificationIds.first,
+            final notificationId = event.snapshot.key?.trim() ?? '';
+            if (notificationId.isEmpty ||
+                !_seenNewDeviceNotificationIds.add(notificationId)) {
+              return;
+            }
+            if (_seenNewDeviceNotificationIds.length > 120) {
+              _seenNewDeviceNotificationIds.remove(
+                _seenNewDeviceNotificationIds.first,
+              );
+            }
+
+            final data = _toStringDynamicMap(event.snapshot.value);
+            final readAt = data['readAt'];
+            if (readAt != null) return;
+
+            final createdAt =
+                _readEpochMs(data['ts']) ??
+                _readEpochMs(data['timestamp']) ??
+                0;
+            final isReplayFromBeforeListen =
+                createdAt > 0 &&
+                createdAt <
+                    listenStartedAt - const Duration(seconds: 3).inMilliseconds;
+            if (isReplayFromBeforeListen) return;
+
+            final title = (data['title']?.toString().trim().isNotEmpty ?? false)
+                ? data['title'].toString().trim()
+                : msgNewDeviceTitle;
+            final body = (data['msg']?.toString().trim().isNotEmpty ?? false)
+                ? data['msg'].toString().trim()
+                : msgNewDeviceBody;
+
+            _showLatestSnackBarImpl('âš ï¸ $title: $body');
+          },
+          onError: (Object error) {
+            if (error.toString().contains('permission-denied')) {
+              debugPrint(
+                '[MainHome] new device notification listener: permission-denied (ignored)',
+              );
+              _newDeviceNotificationSubscription?.cancel();
+            } else {
+              debugPrint(
+                '[MainHome] new device notification listener error: $error',
+              );
+            }
+          },
         );
-      }
-
-      final data = _toStringDynamicMap(event.snapshot.value);
-      final readAt = data['readAt'];
-      if (readAt != null) return;
-
-      final createdAt =
-          _readEpochMs(data['ts']) ?? _readEpochMs(data['timestamp']) ?? 0;
-      final isReplayFromBeforeListen = createdAt > 0 &&
-          createdAt <
-              listenStartedAt - const Duration(seconds: 3).inMilliseconds;
-      if (isReplayFromBeforeListen) return;
-
-      final title = (data['title']?.toString().trim().isNotEmpty ?? false)
-          ? data['title'].toString().trim()
-          : msgNewDeviceTitle;
-      final body = (data['msg']?.toString().trim().isNotEmpty ?? false)
-          ? data['msg'].toString().trim()
-          : msgNewDeviceBody;
-
-      _showLatestSnackBarImpl('âš ï¸ $title: $body');
-    }, onError: (Object error) {
-      if (error.toString().contains('permission-denied')) {
-        debugPrint(
-            '[MainHome] new device notification listener: permission-denied (ignored)');
-        _newDeviceNotificationSubscription?.cancel();
-      } else {
-        debugPrint('[MainHome] new device notification listener error: $error');
-      }
-    });
   }
 
   bool _readBoolSettingFlagImpl(dynamic raw, {required bool fallback}) {
@@ -152,18 +162,10 @@ extension _MainHomeLoadController on _MainHomeTabState {
     messenger
       ..clearSnackBars()
       ..removeCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          duration: duration,
-        ),
-      );
+      ..showSnackBar(SnackBar(content: Text(message), duration: duration));
   }
 
-  String _presenceRoleUiSignatureImpl(
-    String role,
-    Map<String, dynamic>? data,
-  ) {
+  String _presenceRoleUiSignatureImpl(String role, Map<String, dynamic>? data) {
     if (data == null || data.isEmpty) {
       return 'none';
     }
@@ -240,8 +242,9 @@ extension _MainHomeLoadController on _MainHomeTabState {
         ..sort((a, b) => a.key.toString().compareTo(b.key.toString()));
       return <String, dynamic>{
         for (final entry in entries)
-          entry.key.toString():
-              _normalizeInsightSignatureValueImpl(entry.value),
+          entry.key.toString(): _normalizeInsightSignatureValueImpl(
+            entry.value,
+          ),
       };
     }
     if (value is List) {
@@ -261,8 +264,9 @@ extension _MainHomeLoadController on _MainHomeTabState {
       'startDate': settings['startDate'],
       'nameU1': settings['nameU1'],
       'nameU2': settings['nameU2'],
-      'customEvents':
-          _normalizeInsightSignatureValueImpl(settings['customEvents']),
+      'customEvents': _normalizeInsightSignatureValueImpl(
+        settings['customEvents'],
+      ),
     });
   }
 
@@ -297,8 +301,10 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _pendingInsightSettingsKey = settingsKey;
     final requestId = ++_insightRequestSerial;
     try {
-      final insight =
-          await _insightService.computeInsights(houseId, relationshipMode);
+      final insight = await _insightService.computeInsights(
+        houseId,
+        relationshipMode,
+      );
       if (!mounted || requestId != _insightRequestSerial) {
         return;
       }
@@ -331,7 +337,10 @@ extension _MainHomeLoadController on _MainHomeTabState {
   }
 
   void _startDelayedListeners(
-      String houseId, int sessionId, bool Function() isStale) {
+    String houseId,
+    int sessionId,
+    bool Function() isStale,
+  ) {
     _delayedListenersTimer?.cancel();
     _delayedListenersTimer = Timer(const Duration(seconds: 3), () {
       if (!mounted || isStale()) return;
@@ -343,7 +352,10 @@ extension _MainHomeLoadController on _MainHomeTabState {
   }
 
   void _startDelayedMapAndWeather(
-      String houseId, int sessionId, bool Function() isStale) {
+    String houseId,
+    int sessionId,
+    bool Function() isStale,
+  ) {
     _delayedMapWeatherTimer?.cancel();
     _delayedMapWeatherTimer = Timer(const Duration(seconds: 6), () {
       if (!mounted || isStale()) return;
@@ -382,10 +394,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
       _isLoading = false;
     }
     if (warmMedia) {
-      _warmHomeMedia(
-        delayMotion: delayMotion,
-        force: forceWarmMedia,
-      );
+      _warmHomeMedia(delayMotion: delayMotion, force: forceWarmMedia);
     }
 
     // Cập nhật persistent notification hiển thị avatar + ngày yêu
@@ -393,8 +402,10 @@ extension _MainHomeLoadController on _MainHomeTabState {
       LoveStatusNotificationService.instance.updateIfNeeded(
         nameU1: (settings['nameU1'] ?? '').toString(),
         nameU2: (settings['nameU2'] ?? '').toString(),
-        avatarU1: (settings['avtUser1'] ?? settings['avatarU1'] ?? '').toString(),
-        avatarU2: (settings['avtUser2'] ?? settings['avatarU2'] ?? '').toString(),
+        avatarU1: (settings['avtUser1'] ?? settings['avatarU1'] ?? '')
+            .toString(),
+        avatarU2: (settings['avtUser2'] ?? settings['avatarU2'] ?? '')
+            .toString(),
         startDate: (settings['startDate'] ?? '').toString(),
       ),
     );
@@ -437,16 +448,14 @@ extension _MainHomeLoadController on _MainHomeTabState {
         _houseSettings = Map<String, dynamic>.from(
           Map<dynamic, dynamic>.from(initialSettingsSnap.value as Map),
         );
-        final msgCacheSettingsFail =
-            L10nService().translate('home_clixyra_775791');
+        final msgCacheSettingsFail = L10nService().translate(
+          'home_clixyra_775791',
+        );
         try {
           await OfflineCacheService.saveCache(cacheKey, _houseSettings);
         } catch (e) {
           debugPrint(
-            'Error saving settings to cache: ${AppErrorMapper.resolve(
-              e,
-              fallbackMessage: msgCacheSettingsFail,
-            ).message}',
+            'Error saving settings to cache: ${AppErrorMapper.resolve(e, fallbackMessage: msgCacheSettingsFail).message}',
           );
         }
       } else {
@@ -464,39 +473,38 @@ extension _MainHomeLoadController on _MainHomeTabState {
     String msgMembersFail,
   ) {
     _membersSubscription?.cancel();
-    _membersSubscription =
-        _dbRef.child('houses/$houseId/members').onValue.listen(
-      (event) {
-        if (isStale() || !_isTabActive) return;
-        if (event.snapshot.value != null && mounted) {
-          final raw = event.snapshot.value;
-          if (raw is Map) {
-            final nextConnected = raw.length >= 2;
-            if (_isCoupleConnected != nextConnected) {
-              if (isStale()) return;
-              setState(() {
-                _isCoupleConnected = nextConnected;
-              });
+    _membersSubscription = _dbRef
+        .child('houses/$houseId/members')
+        .onValue
+        .listen(
+          (event) {
+            if (isStale() || !_isTabActive) return;
+            if (event.snapshot.value != null && mounted) {
+              final raw = event.snapshot.value;
+              if (raw is Map) {
+                final nextConnected = raw.length >= 2;
+                if (_isCoupleConnected != nextConnected) {
+                  if (isStale()) return;
+                  setState(() {
+                    _isCoupleConnected = nextConnected;
+                  });
+                }
+              }
+            } else if (mounted) {
+              if (_isCoupleConnected) {
+                if (isStale()) return;
+                setState(() {
+                  _isCoupleConnected = false;
+                });
+              }
             }
-          }
-        } else if (mounted) {
-          if (_isCoupleConnected) {
-            if (isStale()) return;
-            setState(() {
-              _isCoupleConnected = false;
-            });
-          }
-        }
-      },
-      onError: (Object error) {
-        debugPrint(
-          'Home members listener failed: ${AppErrorMapper.resolve(
-            error,
-            fallbackMessage: msgMembersFail,
-          ).message}',
+          },
+          onError: (Object error) {
+            debugPrint(
+              'Home members listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: msgMembersFail).message}',
+            );
+          },
         );
-      },
-    );
   }
 
   void _updatePresenceField(
@@ -507,7 +515,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
   }) {
     if (isStale()) return;
     final roleData = Map<String, dynamic>.from(
-        _presenceData[role] is Map ? _presenceData[role] as Map : {});
+      _presenceData[role] is Map ? _presenceData[role] as Map : {},
+    );
     roleData[field] = value;
     final nextPresence = Map<String, dynamic>.from(_presenceData);
     nextPresence[role] = roleData;
@@ -531,10 +540,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
     }
 
     if (didUpdatePresence && _houseSettings != null) {
-      _scheduleLoveWidgetSync(
-        _houseSettings!,
-        includeDiaryMedia: false,
-      );
+      _scheduleLoveWidgetSync(_houseSettings!, includeDiaryMedia: false);
     }
   }
 
@@ -556,7 +562,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
       'device',
       'weather',
       'city',
-      'activeSessionCount'
+      'activeSessionCount',
     ];
 
     for (final role in roles) {
@@ -565,36 +571,41 @@ extension _MainHomeLoadController on _MainHomeTabState {
             .child('houses/$houseId/presence/$role/$field')
             .onValue
             .listen(
-          (event) {
-            if (isStale() || !_isTabActive) return;
-            _pendingPresenceUpdates['$role/$field'] = () {
-              _updatePresenceField(role, field, event.snapshot.value,
-                  isStale: isStale);
-            };
-            _presenceBatchTimer?.cancel();
-            _presenceBatchTimer = Timer(const Duration(milliseconds: 80), () {
-              final updates = Map<String, VoidCallback>.from(
-                  _pendingPresenceUpdates);
-              _pendingPresenceUpdates.clear();
-              for (final update in updates.values) {
-                update();
-              }
-            });
-          },
-          onError: (Object error) {
-            debugPrint(
-              'Home presence field $role/$field listener failed: ${AppErrorMapper.resolve(
-                error,
-                fallbackMessage: msgPresenceFail,
-              ).message}',
+              (event) {
+                if (isStale() || !_isTabActive) return;
+                _pendingPresenceUpdates['$role/$field'] = () {
+                  _updatePresenceField(
+                    role,
+                    field,
+                    event.snapshot.value,
+                    isStale: isStale,
+                  );
+                };
+                _presenceBatchTimer?.cancel();
+                _presenceBatchTimer = Timer(
+                  const Duration(milliseconds: 80),
+                  () {
+                    final updates = Map<String, VoidCallback>.from(
+                      _pendingPresenceUpdates,
+                    );
+                    _pendingPresenceUpdates.clear();
+                    for (final update in updates.values) {
+                      update();
+                    }
+                  },
+                );
+              },
+              onError: (Object error) {
+                debugPrint(
+                  'Home presence field $role/$field listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: msgPresenceFail).message}',
+                );
+                if (mounted) {
+                  setState(() {
+                    _hasLoadedPresenceSnapshot = true;
+                  });
+                }
+              },
             );
-            if (mounted) {
-              setState(() {
-                _hasLoadedPresenceSnapshot = true;
-              });
-            }
-          },
-        );
         _presenceSubList.add(sub);
       }
     }
@@ -610,77 +621,90 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _alertSubscription = _dbRef
         .child('houses/$houseId/alerts')
         .onChildAdded
-        .listen((event) async {
-      if (isStale()) return;
-      if (event.snapshot.value == null || !mounted) return;
-      final data = _toStringDynamicMap(event.snapshot.value);
-      final payload = _MissYouAlertPayload.fromMap(data);
-      final sentAt = payload.sentAtMs;
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final isExpired =
-          sentAt > 0 && now - sentAt > const Duration(hours: 24).inMilliseconds;
+        .listen(
+          (event) async {
+            if (isStale()) return;
+            if (event.snapshot.value == null || !mounted) return;
+            final data = _toStringDynamicMap(event.snapshot.value);
+            final payload = _MissYouAlertPayload.fromMap(data);
+            final sentAt = payload.sentAtMs;
+            final now = DateTime.now().millisecondsSinceEpoch;
+            final isExpired =
+                sentAt > 0 &&
+                now - sentAt > const Duration(hours: 24).inMilliseconds;
 
-      if (isExpired) {
-        final key = event.snapshot.key;
-        if (key != null) {
-          _dbRef.child('houses/$houseId/alerts/$key').remove().catchError(
-                (_) {},
-              );
-        }
-        return;
-      }
+            if (isExpired) {
+              final key = event.snapshot.key;
+              if (key != null) {
+                _dbRef
+                    .child('houses/$houseId/alerts/$key')
+                    .remove()
+                    .catchError((_) {});
+              }
+              return;
+            }
 
-      if (!_shouldDisplayIncomingAlert(payload, currentUid: userUid)) {
-        return;
-      }
+            if (!_shouldDisplayIncomingAlert(payload, currentUid: userUid)) {
+              return;
+            }
 
-      final key = event.snapshot.key;
-      await _deliverIncomingAlert(
-        payload,
-        removalPath: key == null ? null : 'houses/$houseId/alerts/$key',
-      );
-    }, onError: (Object error) {
-      debugPrint('Home alerts listener failed: $error');
-    });
+            final key = event.snapshot.key;
+            await _deliverIncomingAlert(
+              payload,
+              removalPath: key == null ? null : 'houses/$houseId/alerts/$key',
+            );
+          },
+          onError: (Object error) {
+            debugPrint('Home alerts listener failed: $error');
+          },
+        );
 
     _partnerInboxSubscription?.cancel();
     _partnerInboxSubscription = _dbRef
         .child('houses/$houseId/partner_inbox/$_currentRole')
         .onChildAdded
-        .listen((event) async {
-      if (isStale()) return;
-      if (event.snapshot.value == null || !mounted) return;
-      final data = _toStringDynamicMap(event.snapshot.value);
-      final payload = _MissYouAlertPayload.fromMap(data);
-      final sentAt = payload.sentAtMs;
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final isExpired =
-          sentAt > 0 && now - sentAt > const Duration(hours: 24).inMilliseconds;
+        .listen(
+          (event) async {
+            if (isStale()) return;
+            if (event.snapshot.value == null || !mounted) return;
+            final data = _toStringDynamicMap(event.snapshot.value);
+            final payload = _MissYouAlertPayload.fromMap(data);
+            final sentAt = payload.sentAtMs;
+            final now = DateTime.now().millisecondsSinceEpoch;
+            final isExpired =
+                sentAt > 0 &&
+                now - sentAt > const Duration(hours: 24).inMilliseconds;
 
-      final key = event.snapshot.key;
-      if (isExpired) {
-        if (key != null) {
-          _dbRef
-              .child('houses/$houseId/partner_inbox/$_currentRole/$key')
-              .remove()
-              .catchError((_) {});
-        }
-        return;
-      }
+            final key = event.snapshot.key;
+            if (isExpired) {
+              if (key != null) {
+                _dbRef
+                    .child('houses/$houseId/partner_inbox/$_currentRole/$key')
+                    .remove()
+                    .catchError((error) {
+                      debugPrint(
+                        '[SuppressedError] lib/views/home/tabs/main_home/controllers/main_home_load_controller.dart: $error',
+                      );
+                    });
+              }
+              return;
+            }
 
-      if (!_shouldDisplayIncomingAlert(payload, currentUid: userUid)) {
-        return;
-      }
+            if (!_shouldDisplayIncomingAlert(payload, currentUid: userUid)) {
+              return;
+            }
 
-      await _deliverIncomingAlert(
-        payload,
-        removalPath: key == null
-            ? null
-            : 'houses/$houseId/partner_inbox/$_currentRole/$key',
-      );
-    }, onError: (Object error) {
-      debugPrint('Home partner inbox listener failed: $error');
-    });
+            await _deliverIncomingAlert(
+              payload,
+              removalPath: key == null
+                  ? null
+                  : 'houses/$houseId/partner_inbox/$_currentRole/$key',
+            );
+          },
+          onError: (Object error) {
+            debugPrint('Home partner inbox listener failed: $error');
+          },
+        );
   }
 
   void _setupMissInteractionSubscription(
@@ -693,24 +717,27 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _missInteractionSubscription = _dbRef
         .child('houses/$houseId/interactions/miss')
         .onValue
-        .listen((event) {
-      if (isStale()) return;
-      if (event.snapshot.value != null && mounted) {
-        final data = _toStringDynamicMap(event.snapshot.value);
-        final payload = _MissYouAlertPayload.fromMap(data);
-        final sentAt = payload.sentAtMs;
+        .listen(
+          (event) {
+            if (isStale()) return;
+            if (event.snapshot.value != null && mounted) {
+              final data = _toStringDynamicMap(event.snapshot.value);
+              final payload = _MissYouAlertPayload.fromMap(data);
+              final sentAt = payload.sentAtMs;
 
-        if (sentAt > 0) {
-          final now = DateTime.now().millisecondsSinceEpoch;
-          if (now - sentAt < const Duration(seconds: 15).inMilliseconds &&
-              _shouldDisplayIncomingAlert(payload, currentUid: userUid)) {
-            _showMissYouScreen(payload);
-          }
-        }
-      }
-    }, onError: (Object error) {
-      debugPrint('Home miss interaction listener failed: $error');
-    });
+              if (sentAt > 0) {
+                final now = DateTime.now().millisecondsSinceEpoch;
+                if (now - sentAt < const Duration(seconds: 15).inMilliseconds &&
+                    _shouldDisplayIncomingAlert(payload, currentUid: userUid)) {
+                  _showMissYouScreen(payload);
+                }
+              }
+            }
+          },
+          onError: (Object error) {
+            debugPrint('Home miss interaction listener failed: $error');
+          },
+        );
   }
 
   void _setupSettingsSubscription(
@@ -723,133 +750,144 @@ extension _MainHomeLoadController on _MainHomeTabState {
     String msgLoadDataFail,
   ) {
     _settingsSubscription?.cancel();
-    _settingsSubscription =
-        _dbRef.child('houses/$houseId/settings').onValue.listen((event) async {
-      if (isStale()) return;
-      final snapshot = event.snapshot;
-      if (snapshot.value is Map && mounted) {
-        final settings = Map<String, dynamic>.from(
-          Map<dynamic, dynamic>.from(snapshot.value as Map),
-        );
-        final nextShowStatus = settings.containsKey('showStatus')
-            ? _readBoolSettingFlagImpl(
-                settings['showStatus'],
-                fallback: _showStatus,
-              )
-            : _showStatus;
-        final nextShowWeather = settings.containsKey('showWeather')
-            ? _readBoolSettingFlagImpl(
-                settings['showWeather'],
-                fallback: _showWeather,
-              )
-            : _showWeather;
-        final visibilityPrefsChanged =
-            nextShowStatus != _showStatus || nextShowWeather != _showWeather;
-        final relMode = (settings['relationshipMode'] ?? 'single').toString();
-        final settingsKey = _buildInsightSettingsKeyImpl(settings, relMode);
-        final payloadSignature =
-            _buildCanonicalSettingsPayloadSignatureImpl(settings);
-        final widgetSettingsKey = _buildWidgetSettingsSyncKeyImpl(settings);
-        final shouldApplySettings =
-            _lastHomeSettingsPayloadSignature != payloadSignature;
-        final shouldSyncWidget =
-            _lastWidgetSettingsSyncKey != widgetSettingsKey;
+    _settingsSubscription = _dbRef
+        .child('houses/$houseId/settings')
+        .onValue
+        .listen(
+          (event) async {
+            if (isStale()) return;
+            final snapshot = event.snapshot;
+            if (snapshot.value is Map && mounted) {
+              final settings = Map<String, dynamic>.from(
+                Map<dynamic, dynamic>.from(snapshot.value as Map),
+              );
+              final nextShowStatus = settings.containsKey('showStatus')
+                  ? _readBoolSettingFlagImpl(
+                      settings['showStatus'],
+                      fallback: _showStatus,
+                    )
+                  : _showStatus;
+              final nextShowWeather = settings.containsKey('showWeather')
+                  ? _readBoolSettingFlagImpl(
+                      settings['showWeather'],
+                      fallback: _showWeather,
+                    )
+                  : _showWeather;
+              final visibilityPrefsChanged =
+                  nextShowStatus != _showStatus ||
+                  nextShowWeather != _showWeather;
+              final relMode = (settings['relationshipMode'] ?? 'single')
+                  .toString();
+              final settingsKey = _buildInsightSettingsKeyImpl(
+                settings,
+                relMode,
+              );
+              final payloadSignature =
+                  _buildCanonicalSettingsPayloadSignatureImpl(settings);
+              final widgetSettingsKey = _buildWidgetSettingsSyncKeyImpl(
+                settings,
+              );
+              final shouldApplySettings =
+                  _lastHomeSettingsPayloadSignature != payloadSignature;
+              final shouldSyncWidget =
+                  _lastWidgetSettingsSyncKey != widgetSettingsKey;
 
-        if (visibilityPrefsChanged) {
-          final prefs = OfflineCacheService.getPrefsSync() ??
-              await SharedPreferences.getInstance();
-          if (isStale()) return;
-          await prefs.setBool('il_show_status', nextShowStatus);
-          await prefs.setBool('il_show_weather', nextShowWeather);
-          if (isStale()) return;
-        }
+              if (visibilityPrefsChanged) {
+                final prefs =
+                    OfflineCacheService.getPrefsSync() ??
+                    await SharedPreferences.getInstance();
+                if (isStale()) return;
+                await prefs.setBool('il_show_status', nextShowStatus);
+                await prefs.setBool('il_show_weather', nextShowWeather);
+                if (isStale()) return;
+              }
 
-        if (shouldApplySettings) {
-          _lastHomeSettingsPayloadSignature = payloadSignature;
+              if (shouldApplySettings) {
+                _lastHomeSettingsPayloadSignature = payloadSignature;
 
-          try {
-            await OfflineCacheService.saveCache(cacheKey, settings);
-          } catch (e) {
+                try {
+                  await OfflineCacheService.saveCache(cacheKey, settings);
+                } catch (e) {
+                  debugPrint(
+                    'Error saving settings to cache: ${AppErrorMapper.resolve(e, fallbackMessage: msgCacheSettingsFail).message}',
+                  );
+                }
+
+                if (isStale()) return;
+                if (!mounted) return;
+                setState(() {
+                  _houseSettings = settings;
+                  _showStatus = nextShowStatus;
+                  _showWeather = nextShowWeather;
+                  _isLoading = false;
+                });
+                unawaited(_maybeShowFirstSetupGuide());
+                _warmHomeMedia();
+
+                // Cập nhật persistent notification khi settings thay đổi realtime
+                unawaited(
+                  LoveStatusNotificationService.instance.updateIfNeeded(
+                    nameU1: (settings['nameU1'] ?? '').toString(),
+                    nameU2: (settings['nameU2'] ?? '').toString(),
+                    avatarU1:
+                        (settings['avtUser1'] ?? settings['avatarU1'] ?? '')
+                            .toString(),
+                    avatarU2:
+                        (settings['avtUser2'] ?? settings['avatarU2'] ?? '')
+                            .toString(),
+                    startDate: (settings['startDate'] ?? '').toString(),
+                  ),
+                );
+              } else if (visibilityPrefsChanged && mounted) {
+                if (isStale()) return;
+                setState(() {
+                  _showStatus = nextShowStatus;
+                  _showWeather = nextShowWeather;
+                });
+              } else if (_isLoading && mounted) {
+                if (isStale()) return;
+                setState(() => _isLoading = false);
+                unawaited(_maybeShowFirstSetupGuide());
+              }
+
+              if (visibilityPrefsChanged) {
+                if (nextShowWeather && _isTabActive) {
+                  _startWeatherRefreshLoop(houseId);
+                } else {
+                  _weatherRefreshTimer?.cancel();
+                  _weatherRefreshTimer = null;
+                }
+              }
+              if (_insightData == null ||
+                  (_lastInsightSettingsKey != settingsKey &&
+                      _pendingInsightSettingsKey != settingsKey)) {
+                unawaited(
+                  _refreshHomeInsightsImpl(
+                    houseId: houseId,
+                    relationshipMode: relMode,
+                    settingsKey: settingsKey,
+                  ),
+                );
+              }
+              if (shouldSyncWidget) {
+                _lastWidgetSettingsSyncKey = widgetSettingsKey;
+                _scheduleLoveWidgetSync(settings, includeDiaryMedia: true);
+              }
+            } else if (mounted) {
+              setState(() => _isLoading = false);
+            }
+          },
+          onError: (Object error) {
             debugPrint(
-              'Error saving settings to cache: ${AppErrorMapper.resolve(
-                e,
-                fallbackMessage: msgCacheSettingsFail,
-              ).message}',
+              'Home settings listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: msgLoadDataFail).message}',
             );
-          }
-
-          if (isStale()) return;
-          if (!mounted) return;
-          setState(() {
-            _houseSettings = settings;
-            _showStatus = nextShowStatus;
-            _showWeather = nextShowWeather;
-            _isLoading = false;
-          });
-          unawaited(_maybeShowFirstSetupGuide());
-          _warmHomeMedia();
-
-          // Cập nhật persistent notification khi settings thay đổi realtime
-          unawaited(
-            LoveStatusNotificationService.instance.updateIfNeeded(
-              nameU1: (settings['nameU1'] ?? '').toString(),
-              nameU2: (settings['nameU2'] ?? '').toString(),
-              avatarU1: (settings['avtUser1'] ?? settings['avatarU1'] ?? '').toString(),
-              avatarU2: (settings['avtUser2'] ?? settings['avatarU2'] ?? '').toString(),
-              startDate: (settings['startDate'] ?? '').toString(),
-            ),
-          );
-        } else if (visibilityPrefsChanged && mounted) {
-          if (isStale()) return;
-          setState(() {
-            _showStatus = nextShowStatus;
-            _showWeather = nextShowWeather;
-          });
-        } else if (_isLoading && mounted) {
-          if (isStale()) return;
-          setState(() => _isLoading = false);
-          unawaited(_maybeShowFirstSetupGuide());
-        }
-
-        if (visibilityPrefsChanged) {
-          if (nextShowWeather && _isTabActive) {
-            _startWeatherRefreshLoop(houseId);
-          } else {
-            _weatherRefreshTimer?.cancel();
-            _weatherRefreshTimer = null;
-          }
-        }
-        if (_insightData == null ||
-            (_lastInsightSettingsKey != settingsKey &&
-                _pendingInsightSettingsKey != settingsKey)) {
-          unawaited(
-            _refreshHomeInsightsImpl(
-              houseId: houseId,
-              relationshipMode: relMode,
-              settingsKey: settingsKey,
-            ),
-          );
-        }
-        if (shouldSyncWidget) {
-          _lastWidgetSettingsSyncKey = widgetSettingsKey;
-          _scheduleLoveWidgetSync(settings, includeDiaryMedia: true);
-        }
-      } else if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }, onError: (Object error) {
-      debugPrint(
-        'Home settings listener failed: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: msgLoadDataFail,
-        ).message}',
-      );
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    });
+            if (mounted) {
+              setState(() {
+                _isLoading = false;
+              });
+            }
+          },
+        );
   }
 
   Future<void> _fetchHouseDataImpl({
@@ -865,11 +903,14 @@ extension _MainHomeLoadController on _MainHomeTabState {
     }
 
     final previousHouseId = _houseId;
-    final houseId = await _houseService.getCurrentHouseId();
+    final houseId = await _houseService.getCurrentHouseId().timeout(
+      const Duration(seconds: 8),
+    );
 
     final normalizedPreviousHouseId = previousHouseId?.trim() ?? '';
     final normalizedNewHouseId = houseId?.trim() ?? '';
-    final isNewHouseContext = normalizedNewHouseId.isEmpty ||
+    final isNewHouseContext =
+        normalizedNewHouseId.isEmpty ||
         normalizedPreviousHouseId != normalizedNewHouseId;
 
     if (!isNewHouseContext &&
@@ -888,10 +929,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
     }
 
     bool isStale() {
-      return _isLiveWorkSessionStaleImpl(
-        sessionId,
-        allowInactive: preloadOnly,
-      );
+      return _isLiveWorkSessionStaleImpl(sessionId, allowInactive: preloadOnly);
     }
 
     if (!preserveVisibleState) {
@@ -927,7 +965,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _setupTimeoutFallback(sessionId, isStale);
 
     try {
-      final prefs = OfflineCacheService.getPrefsSync() ??
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
       if (isStale()) return;
       _currentRole = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
@@ -940,7 +979,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
         _houseId = houseId;
         final cacheKey = _homeSettingsCacheKey(houseId);
         final normalizedPreviousHouseId = previousHouseId?.trim() ?? '';
-        final isNewHouseContext = normalizedPreviousHouseId.isEmpty ||
+        final isNewHouseContext =
+            normalizedPreviousHouseId.isEmpty ||
             normalizedPreviousHouseId != houseId.trim();
         final shouldKeepVisibleState =
             preserveVisibleState && _houseSettings != null;
@@ -981,8 +1021,9 @@ extension _MainHomeLoadController on _MainHomeTabState {
           _pinnedApps = await _utilityService.getPinnedApps();
           if (isStale()) return;
 
-          final connected =
-              await _houseSettingsService.isCoupleConnected(houseId);
+          final connected = await _houseSettingsService.isCoupleConnected(
+            houseId,
+          );
           if (isStale()) return;
 
           if (mounted) {
@@ -1001,7 +1042,9 @@ extension _MainHomeLoadController on _MainHomeTabState {
         _wrapSetup(() => _listenHighlights(houseId), 'Highlights');
         _wrapSetup(() => _listenHomeCalendarEvents(houseId), 'Calendar');
         _wrapSetup(
-            () => _listenHealthCycleForWidgetSync(houseId), 'HealthCycle');
+          () => _listenHealthCycleForWidgetSync(houseId),
+          'HealthCycle',
+        );
 
         // 3. Delayed bindings setup
         _startDelayedListeners(houseId, sessionId, isStale);
@@ -1010,22 +1053,31 @@ extension _MainHomeLoadController on _MainHomeTabState {
         _pinnedApps = await _utilityService.getPinnedApps();
         if (isStale()) return;
 
-        final connected =
-            await _houseSettingsService.isCoupleConnected(houseId);
+        final connected = await _houseSettingsService.isCoupleConnected(
+          houseId,
+        );
         if (isStale()) return;
         if (mounted) setState(() => _isCoupleConnected = connected);
 
         // 4. Stream subscriptions setup
         _setupMembersSubscription(houseId, sessionId, isStale, msgMembersFail);
         _setupPresenceSubscription(
-            houseId, sessionId, isStale, msgPresenceFail);
+          houseId,
+          sessionId,
+          isStale,
+          msgPresenceFail,
+        );
 
         // Setup presence fallback timer
         _startPresenceSnapshotFallback(sessionId, isStale);
 
         _setupAlertsAndPartnerInbox(houseId, sessionId, isStale, user.uid);
         _setupMissInteractionSubscription(
-            houseId, sessionId, isStale, user.uid);
+          houseId,
+          sessionId,
+          isStale,
+          user.uid,
+        );
         _setupSettingsSubscription(
           houseId,
           sessionId,
@@ -1050,10 +1102,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
       }
     } catch (e) {
       debugPrint(
-        'Home data load failed: ${AppErrorMapper.resolve(
-          e,
-          fallbackMessage: msgLoadDataFail,
-        ).message}',
+        'Home data load failed: ${AppErrorMapper.resolve(e, fallbackMessage: msgLoadDataFail).message}',
       );
       if (mounted) setState(() => _isLoading = false);
     }

@@ -50,9 +50,10 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
-    _likeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _likeCtrl, curve: Curves.elasticOut),
-    );
+    _likeAnim = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _likeCtrl, curve: Curves.elasticOut));
     _syncPostState();
 
     if (_isVideo && widget.isActive) {
@@ -88,25 +89,16 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
     final loadToken = ++_videoLoadToken;
     _isPreparingVideo = true;
 
-    VideoPlayerController controller;
-    File? cachedFile;
+    VideoPlayerController? cachedController;
     try {
-      final fileInfo =
-          await AppCacheManager.instance.getFileFromCache(_mediaUrl);
-      if (fileInfo != null) {
-        cachedFile = fileInfo.file;
-      } else {
-        cachedFile = await AppCacheManager.instance.getSingleFile(_mediaUrl);
-      }
+      cachedController = await createCachedVideoController(_mediaUrl);
     } catch (e) {
       debugPrint('Failed to cache video: $e');
     }
 
-    if (cachedFile != null) {
-      controller = VideoPlayerController.file(cachedFile);
-    } else {
-      controller = VideoPlayerController.networkUrl(Uri.parse(_mediaUrl));
-    }
+    final controller =
+        cachedController ??
+        VideoPlayerController.networkUrl(Uri.parse(_mediaUrl));
 
     try {
       await controller.initialize();
@@ -138,17 +130,18 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
     final postId = widget.post.id;
     if (postId.isEmpty) return;
     try {
-      final isLiked = await SocialService().hasLiked(
-        postId,
-        widget.houseId,
-      );
+      final isLiked = await SocialService().hasLiked(postId, widget.houseId);
 
       if (isLiked && mounted) {
         setState(() {
           _liked = true;
         });
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/home/tabs/short_video_feed_post_card.dart: $error',
+      );
+    }
   }
 
   @override
@@ -164,7 +157,8 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
   @override
   void didUpdateWidget(covariant _ShortVideoFeedPostCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final didPostChange = widget.post.id != oldWidget.post.id ||
+    final didPostChange =
+        widget.post.id != oldWidget.post.id ||
         _mediaUrlFor(widget.post) != _mediaUrlFor(oldWidget.post) ||
         _isVideoPost(widget.post) != _isVideoPost(oldWidget.post);
 
@@ -289,8 +283,10 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
               if (widget.post.houseId == widget.houseId)
                 ListTile(
                   leading: const Icon(Icons.delete_outline, color: Colors.red),
-                  title: Text(context.tr('home_xabivit_2c7199'),
-                      style: SLTheme.quicksand()),
+                  title: Text(
+                    context.tr('home_xabivit_2c7199'),
+                    style: SLTheme.quicksand(),
+                  ),
                   onTap: () async {
                     Navigator.pop(context);
                     try {
@@ -300,13 +296,12 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                       );
                       if (!mounted || !context.mounted) return;
                       SLNotice.showSuccess(
-                          context, context.tr('home_xabivit_55f95f'));
+                        context,
+                        context.tr('home_xabivit_55f95f'),
+                      );
                     } catch (e) {
                       debugPrint(
-                        'Delete post failed: ${AppErrorMapper.resolve(
-                          e,
-                          fallbackMessage: context.tr('home_clixyra_775791'),
-                        ).message}',
+                        'Delete post failed: ${AppErrorMapper.resolve(e, fallbackMessage: context.tr('home_clixyra_775791')).message}',
                       );
                       if (!mounted || !context.mounted) return;
                       SLNotice.showError(
@@ -318,10 +313,14 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                 )
               else ...[
                 ListTile(
-                  leading:
-                      const Icon(Icons.flag_outlined, color: Colors.orange),
-                  title: Text(context.tr('home_bocobivit_08313a'),
-                      style: SLTheme.quicksand()),
+                  leading: const Icon(
+                    Icons.flag_outlined,
+                    color: Colors.orange,
+                  ),
+                  title: Text(
+                    context.tr('home_bocobivit_08313a'),
+                    style: SLTheme.quicksand(),
+                  ),
                   onTap: () async {
                     Navigator.pop(context);
                     try {
@@ -337,10 +336,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                       );
                     } catch (e) {
                       debugPrint(
-                        'Report post failed: ${AppErrorMapper.resolve(
-                          e,
-                          fallbackMessage: context.tr('home_clixyra_775791'),
-                        ).message}',
+                        'Report post failed: ${AppErrorMapper.resolve(e, fallbackMessage: context.tr('home_clixyra_775791')).message}',
                       );
                       if (!mounted || !context.mounted) return;
                       SLNotice.showError(
@@ -352,32 +348,41 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                 ),
                 ListTile(
                   leading: const Icon(Icons.block_rounded, color: Colors.red),
-                  title: Text(context.tr('home_chnngidngn_27d0c8'),
-                      style: SLTheme.quicksand(color: Colors.red)),
+                  title: Text(
+                    context.tr('home_chnngidngn_27d0c8'),
+                    style: SLTheme.quicksand(color: Colors.red),
+                  ),
                   onTap: () async {
                     Navigator.pop(context);
                     final targetHouseId = widget.post.houseId;
                     if (targetHouseId.isEmpty) return;
-                    final genericErrorMessage =
-                        context.tr('home_clixyra_775791');
+                    final genericErrorMessage = context.tr(
+                      'home_clixyra_775791',
+                    );
 
                     final ok = await showDialog<bool>(
                       context: context,
                       builder: (ctx) => AlertDialog(
-                        title: Text(context.tr('home_xcnhnchn_ae00a6'),
-                            style:
-                                SLTheme.quicksand(fontWeight: FontWeight.w900)),
+                        title: Text(
+                          context.tr('home_xcnhnchn_ae00a6'),
+                          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+                        ),
                         content: Text(
-                            'Bạn có chắc muốn chặn người này không?\nHọ sẽ không thể xem nhà bạn nữa.',
-                            style: SLTheme.quicksand()),
+                          'Bạn có chắc muốn chặn người này không?\nHọ sẽ không thể xem nhà bạn nữa.',
+                          style: SLTheme.quicksand(),
+                        ),
                         actions: [
                           TextButton(
-                              onPressed: () => Navigator.pop(ctx, false),
-                              child: Text(context.tr('home_hy_1e4050'))),
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: Text(context.tr('home_hy_1e4050')),
+                          ),
                           TextButton(
-                              onPressed: () => Navigator.pop(ctx, true),
-                              child: Text(context.tr('home_chn_483b6f'),
-                                  style: const TextStyle(color: Colors.red))),
+                            onPressed: () => Navigator.pop(ctx, true),
+                            child: Text(
+                              context.tr('home_chn_483b6f'),
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          ),
                         ],
                       ),
                     );
@@ -390,10 +395,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                       );
                     } catch (e) {
                       debugPrint(
-                        'Block house failed: ${AppErrorMapper.resolve(
-                          e,
-                          fallbackMessage: genericErrorMessage,
-                        ).message}',
+                        'Block house failed: ${AppErrorMapper.resolve(e, fallbackMessage: genericErrorMessage).message}',
                       );
                       if (!mounted || !context.mounted) return;
                       SLNotice.showError(
@@ -405,7 +407,9 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
 
                     if (!mounted || !context.mounted) return;
                     SLNotice.showSuccess(
-                        context, context.tr('home_chnngidngn_adcaff'));
+                      context,
+                      context.tr('home_chnngidngn_adcaff'),
+                    );
                   },
                 ),
               ],
@@ -430,9 +434,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
             child: SizedBox(
               width: _videoCtrl!.value.size.width,
               height: _videoCtrl!.value.size.height,
-              child: RepaintBoundary(
-                child: VideoPlayer(_videoCtrl!),
-              ),
+              child: RepaintBoundary(child: VideoPlayer(_videoCtrl!)),
             ),
           ),
         );
@@ -454,16 +456,17 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
     final graphicsQuality = uiState.liteMode
         ? 'low'
         : (uiState.graphicsQualityKey == 'auto'
-            ? UiPrefs.getAutoGraphicsQuality()
-            : uiState.graphicsQualityKey);
+              ? UiPrefs.getAutoGraphicsQuality()
+              : uiState.graphicsQualityKey);
     final useLiteBackdrop = kIsWeb || graphicsQuality == 'low';
     final mediaCacheWidth = switch (graphicsQuality) {
       'high' => 1800,
       'low' => 900,
       _ => 1280,
     };
-    final mediaFilterQuality =
-        graphicsQuality == 'low' ? FilterQuality.low : FilterQuality.medium;
+    final mediaFilterQuality = graphicsQuality == 'low'
+        ? FilterQuality.low
+        : FilterQuality.medium;
 
     return Stack(
       fit: StackFit.expand,
@@ -478,8 +481,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
           fadeInDuration: const Duration(milliseconds: 150),
           fadeOutDuration: Duration.zero,
           placeholder: (_, _) => Container(color: const Color(0xFF120716)),
-          errorWidget: (_, _, _) =>
-              Container(color: const Color(0xFF120716)),
+          errorWidget: (_, _, _) => Container(color: const Color(0xFF120716)),
         ),
         if (!useLiteBackdrop)
           Positioned.fill(
@@ -509,18 +511,18 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
           Positioned(
             top: -110,
             right: -50,
-            child: _buildAmbientOrb(
-              const [Color(0xFFFF729D), Color(0x00FF729D)],
-              220,
-            ),
+            child: _buildAmbientOrb(const [
+              Color(0xFFFF729D),
+              Color(0x00FF729D),
+            ], 220),
           ),
           Positioned(
             bottom: 120,
             left: -70,
-            child: _buildAmbientOrb(
-              const [Color(0xFF7BE0FF), Color(0x007BE0FF)],
-              240,
-            ),
+            child: _buildAmbientOrb(const [
+              Color(0xFF7BE0FF),
+              Color(0x007BE0FF),
+            ], 240),
           ),
         ],
         Positioned.fill(
@@ -583,11 +585,13 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                           ],
                         ),
                         border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.14)),
+                          color: Colors.white.withValues(alpha: 0.14),
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color:
-                                const Color(0xFFFF6F9F).withValues(alpha: 0.22),
+                            color: const Color(
+                              0xFFFF6F9F,
+                            ).withValues(alpha: 0.22),
                             blurRadius: 28,
                             offset: const Offset(0, 18),
                           ),
@@ -604,8 +608,9 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                           Positioned.fill(
                             child: DecoratedBox(
                               decoration: BoxDecoration(
-                                color: const Color(0xFF09060A)
-                                    .withValues(alpha: 0.96),
+                                color: const Color(
+                                  0xFF09060A,
+                                ).withValues(alpha: 0.96),
                                 borderRadius: BorderRadius.circular(26),
                               ),
                             ),
@@ -644,19 +649,21 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                                           fit: BoxFit.contain,
                                           alignment: Alignment.center,
                                           filterQuality: FilterQuality.medium,
-                                          placeholder: (context, url) => const Center(
-                                            child: CircularProgressIndicator(
-                                              color: Color(0xFFFF7EA8),
-                                            ),
-                                          ),
+                                          placeholder: (context, url) =>
+                                              const Center(
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      color: Color(0xFFFF7EA8),
+                                                    ),
+                                              ),
                                           errorWidget: (context, url, error) =>
                                               const Center(
-                                            child: Icon(
-                                              Icons.broken_image_rounded,
-                                              color: Colors.white30,
-                                              size: 60,
-                                            ),
-                                          ),
+                                                child: Icon(
+                                                  Icons.broken_image_rounded,
+                                                  color: Colors.white30,
+                                                  size: 60,
+                                                ),
+                                              ),
                                         ),
                                       ),
                                     ),
@@ -700,8 +707,11 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                 radius: 18,
                 backgroundColor: const Color(0xFFE91E8C),
                 backgroundImage: _avatar.isNotEmpty
-                    ? CachedNetworkImageProvider(_avatar,
-                        maxWidth: 128, maxHeight: 128)
+                    ? CachedNetworkImageProvider(
+                        _avatar,
+                        maxWidth: 128,
+                        maxHeight: 128,
+                      )
                     : null,
                 child: _avatar.isEmpty
                     ? const Icon(Icons.home, size: 18, color: Colors.white)
@@ -852,8 +862,11 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
             Center(
               child: ScaleTransition(
                 scale: _likeAnim,
-                child:
-                    const Icon(Icons.favorite, color: Colors.white, size: 100),
+                child: const Icon(
+                  Icons.favorite,
+                  color: Colors.white,
+                  size: 100,
+                ),
               ),
             ),
           Positioned(

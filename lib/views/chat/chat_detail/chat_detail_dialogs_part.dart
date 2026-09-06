@@ -282,8 +282,10 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
               required Color color,
             }) {
               return Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.88),
                   borderRadius: BorderRadius.circular(16),
@@ -340,8 +342,10 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
               required Color color,
             }) {
               return Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
@@ -378,9 +382,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: const Color(0xFFE2E8F0),
-                      ),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
                     ),
                     child: Row(
                       children: [
@@ -626,7 +628,8 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                                             child: summaryCard(
                                               icon: Icons.wallpaper_rounded,
                                               label: 'Nền chat',
-                                              value: currentBackgroundUrl
+                                              value:
+                                                  currentBackgroundUrl
                                                       .trim()
                                                       .isEmpty
                                                   ? 'Mặc định'
@@ -673,17 +676,15 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                         actionTile(shortcutById['quick_reaction']!),
                         SLSpacing.h16,
                         sectionTitle('Quản lý chat'),
-                        ...managementActions.expand((shortcut) => [
-                              actionTile(shortcut),
-                              SLSpacing.h8,
-                            ]),
+                        ...managementActions.expand(
+                          (shortcut) => [actionTile(shortcut), SLSpacing.h8],
+                        ),
                         if (safetyActions.isNotEmpty) ...[
                           SLSpacing.h8,
                           sectionTitle('An toàn'),
-                          ...safetyActions.expand((shortcut) => [
-                                actionTile(shortcut),
-                                SLSpacing.h8,
-                              ]),
+                          ...safetyActions.expand(
+                            (shortcut) => [actionTile(shortcut), SLSpacing.h8],
+                          ),
                         ],
                       ],
                     ),
@@ -710,9 +711,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
           content: TextField(
             controller: ctrl,
             maxLength: 28,
-            decoration: const InputDecoration(
-              hintText: 'Nhập biệt danh...',
-            ),
+            decoration: const InputDecoration(hintText: 'Nhập biệt danh...'),
           ),
           actions: [
             TextButton(
@@ -792,8 +791,10 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                 const SizedBox(height: 14),
                 Container(
                   width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(18),
@@ -850,8 +851,9 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                           boxShadow: selected
                               ? [
                                   BoxShadow(
-                                    color: const Color(0xFF0A7CFF)
-                                        .withValues(alpha: 0.12),
+                                    color: const Color(
+                                      0xFF0A7CFF,
+                                    ).withValues(alpha: 0.12),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -959,8 +961,8 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                             final selected = selectedIds.contains(friendId);
                             final label =
                                 friendId == widget.targetHouseId && !_isInternal
-                                    ? widget.targetName
-                                    : friendId;
+                                ? widget.targetName
+                                : friendId;
                             return InkWell(
                               onTap: () {
                                 setSheetState(() {
@@ -1077,7 +1079,11 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
             }
           }
         }
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[SuppressedError] lib/views/chat/chat_detail/chat_detail_dialogs_part.dart: $error',
+        );
+      }
     }
     nextDrafts.insert(0, draft);
     await prefs.setString(_groupDraftPrefsKey, jsonEncode(nextDrafts));
@@ -1123,8 +1129,10 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
       _showNotice('Đã chặn người dùng.');
       Navigator.of(context).pop();
     } catch (e) {
-      _showNotice('Chưa thể chặn người dùng lúc này. Vui lòng thử lại.',
-          error: true);
+      _showNotice(
+        'Chưa thể chặn người dùng lúc này. Vui lòng thử lại.',
+        error: true,
+      );
     }
   }
 
@@ -1156,8 +1164,10 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
       return;
     }
     if (!mounted) return;
-    if (!await SecurityService()
-        .guardAction(context, 'chat_delete_conversation')) {
+    if (!await SecurityService().guardAction(
+      context,
+      'chat_delete_conversation',
+    )) {
       return;
     }
     try {
@@ -1173,8 +1183,10 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
       _replaceMessageState(const []);
       _showNotice('Đã xóa lịch sử cuộc trò chuyện.');
     } catch (e) {
-      _showNotice('Chưa thể xóa đoạn chat lúc này. Vui lòng thử lại.',
-          error: true);
+      _showNotice(
+        'Chưa thể xóa đoạn chat lúc này. Vui lòng thử lại.',
+        error: true,
+      );
     }
   }
 
@@ -1199,10 +1211,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                         value: 'harassment',
                         child: Text('Quấy rối'),
                       ),
-                      DropdownMenuItem(
-                        value: 'scam',
-                        child: Text('Lừa đảo'),
-                      ),
+                      DropdownMenuItem(value: 'scam', child: Text('Lừa đảo')),
                       DropdownMenuItem(
                         value: 'inappropriate_content',
                         child: Text('Nội dung không phù hợp'),
@@ -1231,8 +1240,9 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                 ElevatedButton(
                   onPressed: () {
                     final extra = reasonCtrl.text.trim();
-                    Navigator.of(dialogContext)
-                        .pop(extra.isEmpty ? selected : '$selected: $extra');
+                    Navigator.of(
+                      dialogContext,
+                    ).pop(extra.isEmpty ? selected : '$selected: $extra');
                   },
                   child: const Text('Gửi báo cáo'),
                 ),
@@ -1258,8 +1268,10 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
       );
       _showNotice('Đã gửi báo cáo. Cảm ơn bạn đã phản hồi.');
     } catch (e) {
-      _showNotice('Chưa thể gửi báo cáo lúc này. Vui lòng thử lại.',
-          error: true);
+      _showNotice(
+        'Chưa thể gửi báo cáo lúc này. Vui lòng thử lại.',
+        error: true,
+      );
     }
   }
 
@@ -1271,9 +1283,9 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
       builder: (context) {
         final stickerGroups = {
           'B? 1': List.generate(
-              35,
-              (i) =>
-                  'assets/images/anhtomau_stickers/sticker_${i + 1}.gif'),
+            35,
+            (i) => 'assets/images/anhtomau_stickers/sticker_${i + 1}.gif',
+          ),
         };
         final labels = stickerGroups.keys.toList();
 
@@ -1336,10 +1348,10 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                         clipBehavior: Clip.none,
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 4,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                        ),
+                              crossAxisCount: 4,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                            ),
                         itemCount: stickers.length,
                         itemBuilder: (context, index) {
                           final sticker = stickers[index];
@@ -1354,8 +1366,9 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFFF4F8),
                                 borderRadius: SLRadius.lgAll,
-                                border:
-                                    Border.all(color: const Color(0x1AD81B60)),
+                                border: Border.all(
+                                  color: const Color(0x1AD81B60),
+                                ),
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.all(8),
@@ -1402,7 +1415,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 10,
-              )
+              ),
             ],
           ),
           child: Column(
@@ -1461,4 +1474,3 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
     );
   }
 }
-

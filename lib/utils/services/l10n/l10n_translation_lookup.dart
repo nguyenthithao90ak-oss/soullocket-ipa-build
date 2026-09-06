@@ -8,6 +8,11 @@ class _L10nTranslationLookup {
   final LinkedHashMap<String, String> _resultCache =
       LinkedHashMap<String, String>();
 
+  /// Bỏ các giá trị fallback đã tra trước khi file dịch từ assets tải xong.
+  /// Nếu giữ cache cũ, một key mới có thể bị hiển thị nguyên tên key cho đến
+  /// khi ứng dụng được khởi động lại.
+  void clearCache() => _resultCache.clear();
+
   String _cacheKey(String lang, String rawKey, bool isSingle) =>
       '$lang|$rawKey|$isSingle';
 

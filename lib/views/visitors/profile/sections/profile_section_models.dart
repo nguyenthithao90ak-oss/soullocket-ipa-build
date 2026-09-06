@@ -4,13 +4,13 @@ import '../../../../models/social_post.dart';
 
 class VisitorProfileHeaderThemeData {
   final String key;
-  final String label;
+  final String labelKey;
   final IconData icon;
   final List<Color> colors;
 
   const VisitorProfileHeaderThemeData({
     required this.key,
-    required this.label,
+    required this.labelKey,
     required this.icon,
     required this.colors,
   });
@@ -64,40 +64,40 @@ class VisitorProfileTabContentData {
 
 const VisitorProfileHeaderThemeData visitorProfileHeaderFallbackTheme =
     VisitorProfileHeaderThemeData(
-  key: 'soft_default',
-  label: 'Mặc định',
-  icon: Icons.wallpaper_rounded,
-  colors: [Color(0xFFD97996), Color(0xFF8C6EA6), Color(0xFF4B5E86)],
-);
+      key: 'soft_default',
+      labelKey: 'p5_profile_theme_default',
+      icon: Icons.wallpaper_rounded,
+      colors: [Color(0xFFD97996), Color(0xFF8C6EA6), Color(0xFF4B5E86)],
+    );
 
 const List<VisitorProfileHeaderThemeData> visitorProfileHeaderThemes = [
   VisitorProfileHeaderThemeData(
     key: 'rose_blush',
-    label: 'Hồng dịu',
+    labelKey: 'p5_profile_theme_rose',
     icon: Icons.favorite_rounded,
     colors: [Color(0xFFE5719C), Color(0xFFCF4D80), Color(0xFF8A0D54)],
   ),
   VisitorProfileHeaderThemeData(
     key: 'sunset_glow',
-    label: 'Hoàng hôn',
+    labelKey: 'p5_profile_theme_sunset',
     icon: Icons.wb_sunny_rounded,
     colors: [Color(0xFFFFA76B), Color(0xFFF06292), Color(0xFF8B1E5A)],
   ),
   VisitorProfileHeaderThemeData(
     key: 'ocean_breeze',
-    label: 'Biển mát',
+    labelKey: 'p5_profile_theme_ocean',
     icon: Icons.water_drop_rounded,
     colors: [Color(0xFF59C1FF), Color(0xFF3282F6), Color(0xFF0B4F9F)],
   ),
   VisitorProfileHeaderThemeData(
     key: 'mint_cloud',
-    label: 'Mint sáng',
+    labelKey: 'p5_profile_theme_mint',
     icon: Icons.eco_rounded,
     colors: [Color(0xFF7ED7C1), Color(0xFF3AB49A), Color(0xFF136F63)],
   ),
   VisitorProfileHeaderThemeData(
     key: 'midnight_velvet',
-    label: 'Đêm êm',
+    labelKey: 'p5_profile_theme_midnight',
     icon: Icons.nights_stay_rounded,
     colors: [Color(0xFF445173), Color(0xFF28324F), Color(0xFF12192B)],
   ),

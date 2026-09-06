@@ -34,8 +34,10 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFEEF5),
                   borderRadius: BorderRadius.circular(999),
@@ -69,7 +71,8 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
                 ],
               ),
               child: AspectRatio(
-                aspectRatio: _themeBackgroundAspectRatio.ratioX /
+                aspectRatio:
+                    _themeBackgroundAspectRatio.ratioX /
                     _themeBackgroundAspectRatio.ratioY,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(24),
@@ -187,11 +190,11 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
                                   ShaderMask(
                                     shaderCallback: (bounds) =>
                                         const LinearGradient(
-                                      colors: [
-                                        Color(0xFFFF8A65),
-                                        Color(0xFFFF5E92),
-                                      ],
-                                    ).createShader(bounds),
+                                          colors: [
+                                            Color(0xFFFF8A65),
+                                            Color(0xFFFF5E92),
+                                          ],
+                                        ).createShader(bounds),
                                     child: Text(
                                       '55',
                                       style: SLTheme.quicksand(
@@ -204,7 +207,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    'ngày rồi',
+                                    context.tr('p7_days_elapsed'),
                                     style: SLTheme.quicksand(
                                       fontSize: 8,
                                       fontWeight: FontWeight.w900,
@@ -287,11 +290,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
       return DecoratedBox(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFFFFF3F8),
-              Color(0xFFFFE3EC),
-              Color(0xFFF6D7FF),
-            ],
+            colors: [Color(0xFFFFF3F8), Color(0xFFFFE3EC), Color(0xFFF6D7FF)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -320,14 +319,10 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
       fadeInDuration: const Duration(milliseconds: 180),
       maxWidthDiskCache: 1080,
       memCacheWidth: 1080,
-      placeholder: (_, __) => const DecoratedBox(
+      placeholder: (_, _) => const DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFFFFF3F8),
-              Color(0xFFFFE3EC),
-              Color(0xFFF6D7FF),
-            ],
+            colors: [Color(0xFFFFF3F8), Color(0xFFFFE3EC), Color(0xFFF6D7FF)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -339,7 +334,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
           ),
         ),
       ),
-      errorWidget: (_, __, ___) => Container(
+      errorWidget: (_, _, _) => Container(
         color: const Color(0xFFFFEEF5),
         alignment: Alignment.center,
         child: const Icon(

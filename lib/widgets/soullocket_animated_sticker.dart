@@ -476,7 +476,7 @@ abstract final class SoulLocketStickerCatalog {
   }
 }
 
-class SoulLocketAnimatedSticker extends StatefulWidget {
+class SoulLocketAnimatedSticker extends StatelessWidget {
   final SoulLocketStickerSpec sticker;
   final double size;
   final bool animate;
@@ -493,22 +493,63 @@ class SoulLocketAnimatedSticker extends StatefulWidget {
   });
 
   @override
-  State<SoulLocketAnimatedSticker> createState() =>
-      _SoulLocketAnimatedStickerState();
+  Widget build(BuildContext context) {
+    final visual = SoulLocketStickerMotionView(
+      motion: sticker.motion,
+      duration: sticker.duration,
+      animate: animate,
+      child: _SoulLocketAtlasCell(
+        sticker: sticker,
+        size: size,
+        filterQuality: filterQuality,
+      ),
+    );
+    if (semanticLabel == null) return visual;
+    return Semantics(
+      image: true,
+      label: semanticLabel,
+      child: ExcludeSemantics(child: visual),
+    );
+  }
 }
 
-class _SoulLocketAnimatedStickerState extends State<SoulLocketAnimatedSticker>
-    with SingleTickerProviderStateMixin {
+/// Dùng chung chuyển động cho sticker atlas và hình tĩnh, không đổi asset gốc.
+class SoulLocketStickerMotionView extends StatefulWidget {
+  final Widget child;
+  final SoulLocketStickerMotion motion;
+  final Duration duration;
+  final bool animate;
+  final double phaseOffset;
+
+  const SoulLocketStickerMotionView({
+    super.key,
+    required this.child,
+    this.motion = SoulLocketStickerMotion.gentleFloat,
+    this.duration = const Duration(milliseconds: 2800),
+    this.animate = true,
+    this.phaseOffset = 0,
+  }) : assert(duration > Duration.zero),
+       assert(phaseOffset >= 0 && phaseOffset < 1);
+
+  @override
+  State<SoulLocketStickerMotionView> createState() =>
+      _SoulLocketStickerMotionViewState();
+}
+
+class _SoulLocketStickerMotionViewState
+    extends State<SoulLocketStickerMotionView>
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _controller;
   bool _motionEnabled = false;
+  bool _foreground = true;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.sticker.duration,
-    );
+    _controller = AnimationController(vsync: this, duration: widget.duration);
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    _foreground = lifecycle == null || lifecycle == AppLifecycleState.resumed;
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
@@ -518,16 +559,31 @@ class _SoulLocketAnimatedStickerState extends State<SoulLocketAnimatedSticker>
   }
 
   @override
-  void didUpdateWidget(covariant SoulLocketAnimatedSticker oldWidget) {
+  void didUpdateWidget(covariant SoulLocketStickerMotionView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.sticker.duration != widget.sticker.duration) {
-      _controller.duration = widget.sticker.duration;
+    if (oldWidget.duration != widget.duration) {
+      _controller.duration = widget.duration;
+      if (_motionEnabled) _controller.repeat();
     }
     _syncMotion();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final foreground = state == AppLifecycleState.resumed;
+    if (_foreground == foreground) return;
+    setState(() {
+      _foreground = foreground;
+      _syncMotion();
+    });
+  }
+
   void _syncMotion() {
-    final enabled = widget.animate && !MediaQuery.disableAnimationsOf(context);
+    final enabled =
+        widget.animate &&
+        _foreground &&
+        TickerMode.valuesOf(context).enabled &&
+        !MediaQuery.disableAnimationsOf(context);
     if (_motionEnabled == enabled) return;
     _motionEnabled = enabled;
     if (enabled) {
@@ -541,30 +597,26 @@ class _SoulLocketAnimatedStickerState extends State<SoulLocketAnimatedSticker>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final sprite = RepaintBoundary(
-      child: _SoulLocketAtlasCell(
-        sticker: widget.sticker,
-        size: widget.size,
-        filterQuality: widget.filterQuality,
-      ),
-    );
-    final visual = _motionEnabled
+    final sprite = RepaintBoundary(child: widget.child);
+    return _motionEnabled
         ? AnimatedBuilder(
             animation: _controller,
             child: sprite,
             builder: (context, child) {
-              final phase = _controller.value * math.pi * 2;
+              final phase =
+                  (_controller.value + widget.phaseOffset) * math.pi * 2;
               var scale = 1.0;
               var rotation = 0.0;
               var offset = Offset.zero;
 
-              switch (widget.sticker.motion) {
+              switch (widget.motion) {
                 case SoulLocketStickerMotion.gentleFloat:
                   offset = Offset(math.cos(phase) * 0.8, math.sin(phase) * 2.4);
                   rotation = math.sin(phase) * 0.018;
@@ -613,13 +665,6 @@ class _SoulLocketAnimatedStickerState extends State<SoulLocketAnimatedSticker>
             },
           )
         : sprite;
-
-    if (widget.semanticLabel == null) return visual;
-    return Semantics(
-      image: true,
-      label: widget.semanticLabel,
-      child: ExcludeSemantics(child: visual),
-    );
   }
 }
 

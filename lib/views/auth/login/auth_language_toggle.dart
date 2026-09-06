@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'auth_visual_style.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../utils/services/l10n_service.dart';
@@ -54,7 +55,10 @@ class AuthLanguageToggle extends StatelessWidget {
               type: MaterialType.transparency,
               child: Container(
                 margin: const EdgeInsets.only(top: 50, right: 16, left: 16),
-                constraints: const BoxConstraints(maxWidth: 275, maxHeight: 430),
+                constraints: const BoxConstraints(
+                  maxWidth: 275,
+                  maxHeight: 430,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFFBFD),
                   borderRadius: BorderRadius.circular(22),
@@ -83,7 +87,9 @@ class AuthLanguageToggle extends StatelessWidget {
                       // Header bar
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         decoration: const BoxDecoration(
                           color: Color(0xFFFFF0F5),
                           border: Border(
@@ -95,8 +101,11 @@ class AuthLanguageToggle extends StatelessWidget {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.language_rounded,
-                                size: 18, color: SLColors.brandPink),
+                            const Icon(
+                              Icons.language_rounded,
+                              size: 18,
+                              color: SLColors.brandPink,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               l10n.translate('language'),
@@ -209,8 +218,9 @@ class AuthLanguageToggle extends StatelessWidget {
                     title,
                     style: TextStyle(
                       fontSize: 13.5,
-                      fontWeight:
-                          isSelected ? FontWeight.w900 : FontWeight.w600,
+                      fontWeight: isSelected
+                          ? FontWeight.w900
+                          : FontWeight.w600,
                       color: isSelected
                           ? SLColors.brandPink
                           : const Color(0xFF334155),
@@ -246,54 +256,24 @@ class AuthLanguageToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = L10nScope.of(context);
-    final isAuto = l10n.isAutoSystem;
-    final flag = isAuto ? '🌐' : (_languages[currentLocale]?.split(' ')[0] ?? '🌐');
-    final displayCode = currentLocale.toUpperCase();
-
-    return GestureDetector(
-      onTap: () => _showLanguagePicker(context),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.75),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: SLColors.brandPink.withValues(alpha: 0.10),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-          border: Border.all(
-            color: const Color(0xFFFFD6E0),
-            width: 1.2,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              flag,
-              style: const TextStyle(fontSize: 15),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              displayCode,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
-                color: SLColors.brandPink,
-              ),
-            ),
-            const SizedBox(width: 2),
-            const Icon(
-              Icons.arrow_drop_down_rounded,
-              size: 20,
-              color: SLColors.brandPink,
-            ),
-          ],
-        ),
+    final style = AuthVisualStyle.of(context);
+    return TextButton(
+      onPressed: () => _showLanguagePicker(context),
+      style: TextButton.styleFrom(
+        foregroundColor: style.muted,
+        minimumSize: const Size(48, 48),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        textStyle: style.text(size: 12, weight: FontWeight.w500),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.language_rounded, size: 18),
+          const SizedBox(width: 8),
+          Text(currentLocale.toUpperCase()),
+          const SizedBox(width: 4),
+          const Icon(Icons.expand_more_rounded, size: 16),
+        ],
       ),
     );
   }

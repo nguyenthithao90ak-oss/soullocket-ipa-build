@@ -33,8 +33,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
   final TextEditingController _savingsGoalAmountController =
       TextEditingController();
   final TextEditingController _splitAmountController = TextEditingController();
-  final TextEditingController _splitPeopleController =
-      TextEditingController(text: '2');
+  final TextEditingController _splitPeopleController = TextEditingController(
+    text: '2',
+  );
 
   String _transactionType = 'out';
   String _category = L10nService().translate('util_nung_ee6149');
@@ -56,17 +57,19 @@ class _FinanceScreenState extends State<FinanceScreen> {
     L10nService().translate('util_sinhhot_f4ce1b'),
     L10nService().translate('util_dulch_c7cc56'),
     L10nService().translate('util_thucmen_ba87cf'),
-    L10nService().translate('util_khc_dd4bad')
+    L10nService().translate('util_khc_dd4bad'),
   ];
   final _fmt = NumberFormat.currency(
-      locale: 'vi_VN',
-      symbol: L10nService().translate('util_txt_b5407d'),
-      decimalDigits: 0);
+    locale: 'vi_VN',
+    symbol: L10nService().translate('util_txt_b5407d'),
+    decimalDigits: 0,
+  );
 
   @override
   void initState() {
     super.initState();
-    _budgetStream = _dbRef.child('houses/${widget.houseId}/budget')
+    _budgetStream = _dbRef
+        .child('houses/${widget.houseId}/budget')
         .limitToLast(200)
         .onValue;
     _loadBudgetPlan();
@@ -79,17 +82,17 @@ class _FinanceScreenState extends State<FinanceScreen> {
         .child('houses/${widget.houseId}/finance_plan')
         .onValue
         .listen((event) {
-      final raw = event.snapshot.value;
-      if (event.snapshot.exists && raw is Map && mounted) {
-        setState(() {
-          _budgetPlan = Map<String, dynamic>.from(raw);
+          final raw = event.snapshot.value;
+          if (event.snapshot.exists && raw is Map && mounted) {
+            setState(() {
+              _budgetPlan = Map<String, dynamic>.from(raw);
+            });
+          } else if (mounted) {
+            setState(() {
+              _budgetPlan = null;
+            });
+          }
         });
-      } else if (mounted) {
-        setState(() {
-          _budgetPlan = null;
-        });
-      }
-    });
   }
 
   void _loadSavingsGoal() {
@@ -98,22 +101,23 @@ class _FinanceScreenState extends State<FinanceScreen> {
         .child('houses/${widget.houseId}/savings_goal')
         .onValue
         .listen((event) {
-      final raw = event.snapshot.value;
-      if (event.snapshot.exists && raw is Map && mounted) {
-        setState(() {
-          _savingsGoal = Map<String, dynamic>.from(raw);
+          final raw = event.snapshot.value;
+          if (event.snapshot.exists && raw is Map && mounted) {
+            setState(() {
+              _savingsGoal = Map<String, dynamic>.from(raw);
+            });
+          } else if (mounted) {
+            setState(() {
+              _savingsGoal = null;
+            });
+          }
         });
-      } else if (mounted) {
-        setState(() {
-          _savingsGoal = null;
-        });
-      }
-    });
   }
 
   void _saveBudgetPlan() {
     final amount = int.tryParse(
-        _goalAmountController.text.replaceAll(RegExp(r'[^0-9]'), ''));
+      _goalAmountController.text.replaceAll(RegExp(r'[^0-9]'), ''),
+    );
     final days = int.tryParse(_goalDaysController.text);
     if (amount == null || days == null || days <= 0) return;
 
@@ -131,7 +135,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
   void _saveSavingsGoal() {
     final amount = int.tryParse(
-        _savingsGoalAmountController.text.replaceAll(RegExp(r'[^0-9]'), ''));
+      _savingsGoalAmountController.text.replaceAll(RegExp(r'[^0-9]'), ''),
+    );
     final name = _savingsGoalNameController.text.trim();
     if (amount == null || amount <= 0 || name.isEmpty) return;
 
@@ -150,21 +155,28 @@ class _FinanceScreenState extends State<FinanceScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(context.tr('util_xaqu_086ff0'),
-            style: SLTheme.quicksand(fontWeight: FontWeight.w900)),
-        content: Text(context.tr('util_bncchcchnm_fd1095'),
-            style: SLTheme.quicksand(fontWeight: FontWeight.w600)),
+        title: Text(
+          context.tr('util_xaqu_086ff0'),
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: Text(
+          context.tr('util_bncchcchnm_fd1095'),
+          style: SLTheme.quicksand(fontWeight: FontWeight.w600),
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(context.tr('util_hy_1e4050'))),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(context.tr('util_hy_1e4050')),
+          ),
           TextButton(
             onPressed: () {
               _dbRef.child('houses/${widget.houseId}/savings_goal').remove();
               Navigator.pop(ctx);
             },
-            child: Text(L10nService().translate(context.tr('util_xa_4ed187')),
-                style: const TextStyle(color: Colors.red)),
+            child: Text(
+              L10nService().translate(context.tr('util_xa_4ed187')),
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -175,21 +187,28 @@ class _FinanceScreenState extends State<FinanceScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(context.tr('util_xakhoch_ba0a75'),
-            style: SLTheme.quicksand(fontWeight: FontWeight.w900)),
-        content: Text(context.tr('util_bncchcchnm_ed97cc'),
-            style: SLTheme.quicksand(fontWeight: FontWeight.w600)),
+        title: Text(
+          context.tr('util_xakhoch_ba0a75'),
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: Text(
+          context.tr('util_bncchcchnm_ed97cc'),
+          style: SLTheme.quicksand(fontWeight: FontWeight.w600),
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(context.tr('util_hy_1e4050'))),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(context.tr('util_hy_1e4050')),
+          ),
           TextButton(
             onPressed: () {
               _dbRef.child('houses/${widget.houseId}/finance_plan').remove();
               Navigator.pop(ctx);
             },
-            child: Text(L10nService().translate(context.tr('util_xa_4ed187')),
-                style: const TextStyle(color: Colors.red)),
+            child: Text(
+              L10nService().translate(context.tr('util_xa_4ed187')),
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -204,17 +223,19 @@ class _FinanceScreenState extends State<FinanceScreen> {
       return;
     }
 
-    final currentSnap =
-        await _dbRef.child('houses/${widget.houseId}/budget').get();
+    final currentSnap = await _dbRef
+        .child('houses/${widget.houseId}/budget')
+        .get();
     if (currentSnap.exists && currentSnap.value is Map) {
       final currentMap = currentSnap.value as Map;
       if (currentMap.length >= 100) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-              'Nhật ký thu chi đã đạt giới hạn (tối đa 100 mục). Vui lòng xoá bớt trước khi thêm mới.'),
-          backgroundColor: SLColors.danger,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.tr('p8_finance_transaction_limit')),
+            backgroundColor: SLColors.danger,
+          ),
+        );
         return;
       }
     }
@@ -240,18 +261,20 @@ class _FinanceScreenState extends State<FinanceScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xoá giao dịch'),
-        content: const Text('Bạn có chắc chắn muốn xoá giao dịch này?'),
+        title: Text(context.tr('p8_finance_delete_transaction_title')),
+        content: Text(context.tr('p8_finance_delete_transaction_body')),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(context.tr('p8_finance_cancel')),
+          ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               _dbRef.child('houses/${widget.houseId}/budget/$key').remove();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Xoá'),
+            child: Text(context.tr('p8_finance_delete')),
           ),
         ],
       ),
@@ -267,24 +290,31 @@ class _FinanceScreenState extends State<FinanceScreen> {
             final mediaQuery = MediaQuery.of(dialogContext);
             final availableHeight =
                 mediaQuery.size.height - mediaQuery.viewInsets.bottom;
-            final amount = int.tryParse(_splitAmountController.text
-                    .replaceAll(RegExp(r'[^0-9]'), '')) ??
+            final amount =
+                int.tryParse(
+                  _splitAmountController.text.replaceAll(RegExp(r'[^0-9]'), ''),
+                ) ??
                 0;
             final people = int.tryParse(_splitPeopleController.text) ?? 2;
             final splitResult = people > 0 ? amount / people : 0;
 
             return AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
-              insetPadding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 20,
+              ),
               scrollable: true,
-              title: Text(context.tr('util_chiatinspl_820857'),
-                  style: SLTheme.quicksand(fontWeight: FontWeight.w900)),
+              title: Text(
+                context.tr('util_chiatinspl_820857'),
+                style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+              ),
               content: ConstrainedBox(
                 constraints: BoxConstraints(
                   maxWidth: 360,
-                  maxHeight:
-                      (availableHeight * 0.45).clamp(180.0, 320.0).toDouble(),
+                  maxHeight: (availableHeight * 0.45)
+                      .clamp(180.0, 320.0)
+                      .toDouble(),
                 ),
                 child: SingleChildScrollView(
                   child: Column(
@@ -298,8 +328,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
                         autofocus: true,
                         maxLength: 12,
                         decoration: InputDecoration(
-                            labelText: context.tr('util_tngstinvnd_59805c'),
-                            counterText: ''),
+                          labelText: context.tr('util_tngstinvnd_59805c'),
+                          counterText: '',
+                        ),
                         scrollPadding: const EdgeInsets.only(bottom: 24),
                         onChanged: (_) => setDialogState(() {}),
                         onSubmitted: (_) =>
@@ -312,8 +343,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
                         textInputAction: TextInputAction.done,
                         maxLength: 4,
                         decoration: InputDecoration(
-                            labelText: context.tr('util_sngichia_91ed4e'),
-                            counterText: ''),
+                          labelText: context.tr('util_sngichia_91ed4e'),
+                          counterText: '',
+                        ),
                         scrollPadding: const EdgeInsets.only(bottom: 24),
                         onChanged: (_) => setDialogState(() {}),
                         onSubmitted: (_) =>
@@ -329,8 +361,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
                             borderRadius: SLRadius.mdAll,
                           ),
                           child: Text(
-                            L10nService().format('util_finance_each_pays',
-                                {'amount': _fmt.format(splitResult)}),
+                            L10nService().format('util_finance_each_pays', {
+                              'amount': _fmt.format(splitResult),
+                            }),
                             textAlign: TextAlign.center,
                             style: SLTheme.quicksand(
                               color: SLTheme.primary,
@@ -345,8 +378,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
               ),
               actions: [
                 TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: Text(context.tr('util_ng_f63d1e'))),
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text(context.tr('util_ng_f63d1e')),
+                ),
               ],
             );
           },
@@ -377,38 +411,52 @@ class _FinanceScreenState extends State<FinanceScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: Colors.white,
         title: Text(
-          'Quỹ chung',
+          context.tr('p8_finance_info_title'),
           style: SLTheme.quicksand(
-              fontWeight: FontWeight.w900, color: SLTheme.textMain),
+            fontWeight: FontWeight.w900,
+            color: SLTheme.textMain,
+          ),
         ),
-        content: const SingleChildScrollView(
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tính năng:',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold, color: SLTheme.textMain)),
-              SizedBox(height: 4),
               Text(
-                  '- Ghi chép chi tiêu chung của hai người (đi ăn, xem phim, du lịch).\n- Thống kê biểu đồ trực quan xem tiền đang được tiêu vào mục nào nhiều nhất.\n- Theo dõi số dư quỹ chung nếu có đóng góp.',
-                  style: TextStyle(color: SLTheme.textLight)),
-              SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold, color: SLTheme.textMain)),
-              SizedBox(height: 4),
+                context.tr('p8_finance_info_features_title'),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: SLTheme.textMain,
+                ),
+              ),
+              const SizedBox(height: 4),
               Text(
-                  '- Bấm + Giao dịch mới mỗi khi phát sinh chi tiêu.\n- Nhập số tiền, chọn hạng mục và ghi chú ai là người trả tiền.\n- Xem mục Thống kê để cân đối lại tài chính vào cuối tháng.',
-                  style: TextStyle(color: SLTheme.textLight)),
+                context.tr('p8_finance_info_features_body'),
+                style: const TextStyle(color: SLTheme.textLight),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                context.tr('p8_finance_info_how_to_title'),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: SLTheme.textMain,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                context.tr('p8_finance_info_how_to_body'),
+                style: const TextStyle(color: SLTheme.textLight),
+              ),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu',
-                style: TextStyle(color: SLColors.primary)),
+            child: Text(
+              context.tr('p8_finance_info_dismiss'),
+              style: const TextStyle(color: SLColors.primary),
+            ),
           ),
         ],
       ),
@@ -423,20 +471,28 @@ class _FinanceScreenState extends State<FinanceScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: Text(context.tr('finance_title'),
-            style: SLTheme.quicksand(
-                color: SLTheme.textMain,
-                fontWeight: FontWeight.w900,
-                fontSize: 20)),
+        title: Text(
+          context.tr('finance_title'),
+          style: SLTheme.quicksand(
+            color: SLTheme.textMain,
+            fontWeight: FontWeight.w900,
+            fontSize: 20,
+          ),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: SLTheme.textMain),
           onPressed: () => Navigator.pop(context),
+          tooltip: context.tr('p8_finance_back_tooltip'),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.info_outline_rounded,
-                color: SLTheme.textMain, size: 22),
+            icon: const Icon(
+              Icons.info_outline_rounded,
+              color: SLTheme.textMain,
+              size: 22,
+            ),
             onPressed: () => _showInfoDialog(context),
+            tooltip: context.tr('p8_finance_info_tooltip'),
           ),
           IconButton(
             icon: const Icon(Icons.calculate_outlined, color: SLTheme.textMain),
@@ -447,14 +503,38 @@ class _FinanceScreenState extends State<FinanceScreen> {
       ),
       body: SLTheme.background(
         child: SafeArea(
-            child: CustomScrollView(slivers: [
-          SliverToBoxAdapter(child: _buildBalanceCard()),
-          SliverToBoxAdapter(child: _buildBudgetPlanSection()),
-          SliverToBoxAdapter(child: _buildSavingsGoalSection()),
-          SliverToBoxAdapter(child: _buildChartSection()),
-          SliverToBoxAdapter(child: _buildInputArea()),
-          _buildTransactionList(),
-        ])),
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(child: _buildBalanceCard()),
+              SliverToBoxAdapter(child: _buildBudgetPlanSection()),
+              SliverToBoxAdapter(child: _buildSavingsGoalSection()),
+              SliverToBoxAdapter(child: _buildChartSection()),
+              SliverToBoxAdapter(child: _buildInputArea()),
+              _buildTransactionList(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _cardIconButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onPressed,
+    Color? color,
+  }) {
+    return Semantics(
+      button: true,
+      label: tooltip,
+      child: Tooltip(
+        message: tooltip,
+        child: IconButton(
+          icon: Icon(icon, size: 20, color: color),
+          onPressed: onPressed,
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+          padding: EdgeInsets.zero,
+        ),
       ),
     );
   }
@@ -472,7 +552,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
     final target = _budgetPlan!['targetAmount'] as int? ?? 0;
     final days = _budgetPlan!['targetDays'] as int? ?? 1;
-    final createdAt = _budgetPlan!['createdAt'] as int? ??
+    final createdAt =
+        _budgetPlan!['createdAt'] as int? ??
         DateTime.now().millisecondsSinceEpoch;
     final startTime = DateTime.fromMillisecondsSinceEpoch(createdAt);
     final endTime = startTime.add(Duration(days: days));
@@ -480,8 +561,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
     final passedDays = now.difference(startTime).inDays;
     final remainingDays = days - passedDays;
     final isExpired = now.isAfter(endTime);
-    final double percent =
-        target > 0 ? (_totalOut / target).clamp(0.0, 1.0) : 0.0;
+    final double percent = target > 0
+        ? (_totalOut / target).clamp(0.0, 1.0)
+        : 0.0;
     final isOverBudget = _totalOut > target;
 
     return Container(
@@ -491,80 +573,98 @@ class _FinanceScreenState extends State<FinanceScreen> {
         color: isOverBudget ? const Color(0xFFFFF0F0) : const Color(0xFFF0FFF4),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
-            color: isOverBudget
-                ? Colors.red.withValues(alpha: 0.3)
-                : Colors.green.withValues(alpha: 0.3),
-            width: 2),
+          color: isOverBudget
+              ? Colors.red.withValues(alpha: 0.3)
+              : Colors.green.withValues(alpha: 0.3),
+          width: 2,
+        ),
         boxShadow: [
           BoxShadow(
-              color: (isOverBudget ? Colors.red : Colors.green)
-                  .withValues(alpha: 0.05),
-              blurRadius: 15,
-              offset: const Offset(0, 5))
+            color: (isOverBudget ? Colors.red : Colors.green).withValues(
+              alpha: 0.05,
+            ),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Text(isOverBudget ? '⚠️' : '🎯',
-                      style: const TextStyle(fontSize: 20)),
-                  SLSpacing.w8,
-                  Text(
-                    isOverBudget
-                        ? context.tr('util_vtngnsch_937fb7')
-                        : context.tr('util_khochchiti_f81032'),
-                    style: SLTheme.quicksand(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 12,
-                        color: isOverBudget ? Colors.red : Colors.green[800],
-                        letterSpacing: 1.1),
-                  ),
-                ],
+              Expanded(
+                child: Row(
+                  children: [
+                    Text(
+                      isOverBudget ? '⚠️' : '🎯',
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                    SLSpacing.w8,
+                    Expanded(
+                      child: Text(
+                        isOverBudget
+                            ? context.tr('util_vtngnsch_937fb7')
+                            : context.tr('util_khochchiti_f81032'),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: SLTheme.quicksand(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12,
+                          color: isOverBudget ? Colors.red : Colors.green[800],
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined, size: 18),
-                    onPressed: _showPlanDialog,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                  SLSpacing.w12,
-                  IconButton(
-                    icon: const Icon(Icons.delete_sweep_outlined,
-                        size: 18, color: Colors.red),
-                    onPressed: _resetBudgetPlan,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
+              _cardIconButton(
+                icon: Icons.edit_outlined,
+                tooltip: context.tr('p8_finance_edit_budget_plan'),
+                onPressed: _showPlanDialog,
+              ),
+              const SizedBox(width: 4),
+              _cardIconButton(
+                icon: Icons.delete_sweep_outlined,
+                color: Colors.red,
+                tooltip: context.tr('p8_finance_delete_budget_plan'),
+                onPressed: _resetBudgetPlan,
               ),
             ],
           ),
           SLSpacing.h12,
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                L10nService().format('util_finance_used_amount',
-                    {'amount': _fmt.format(_totalOut)}),
-                style: SLTheme.quicksand(
+              Expanded(
+                child: Text(
+                  L10nService().format('util_finance_used_amount', {
+                    'amount': _fmt.format(_totalOut),
+                  }),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: SLTheme.quicksand(
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
-                    color: SLTheme.textMain),
+                    color: SLTheme.textMain,
+                  ),
+                ),
               ),
-              Text(
-                L10nService().format('util_finance_target_amount',
-                    {'amount': _fmt.format(target)}),
-                style: SLTheme.quicksand(
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  L10nService().format('util_finance_target_amount', {
+                    'amount': _fmt.format(target),
+                  }),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: SLTheme.quicksand(
                     fontWeight: FontWeight.w800,
                     fontSize: 13,
-                    color: SLTheme.textMuted),
+                    color: SLTheme.textMuted,
+                  ),
+                ),
               ),
             ],
           ),
@@ -576,40 +676,60 @@ class _FinanceScreenState extends State<FinanceScreen> {
               minHeight: 10,
               backgroundColor: Colors.white,
               valueColor: AlwaysStoppedAnimation(
-                  isOverBudget ? Colors.red : Colors.green),
+                isOverBudget ? Colors.red : Colors.green,
+              ),
             ),
           ),
           SLSpacing.h12,
           Row(
             children: [
-              const Icon(Icons.timer_outlined,
-                  size: 14, color: Colors.blueGrey),
+              const Icon(
+                Icons.timer_outlined,
+                size: 14,
+                color: Colors.blueGrey,
+              ),
               SLSpacing.w8,
-              Text(
-                isExpired
-                    ? context.tr('util_ktthckhoch_635af9')
-                    : L10nService().format('util_finance_days_left',
-                        {'remaining': remainingDays, 'days': days}),
-                style: SLTheme.quicksand(
+              Expanded(
+                child: Text(
+                  isExpired
+                      ? context.tr('util_ktthckhoch_635af9')
+                      : L10nService().format('util_finance_days_left', {
+                          'remaining': remainingDays,
+                          'days': days,
+                        }),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: SLTheme.quicksand(
                     color: Colors.blueGrey,
                     fontWeight: FontWeight.w700,
-                    fontSize: 11),
-              ),
-              const Spacer(),
-              if (!isExpired && !isOverBudget)
-                Text(
-                  L10nService().format('util_finance_can_spend_more_daily', {
-                    'amount': _fmt.format(((target - _totalOut) /
-                            (remainingDays > 0 ? remainingDays : 1))
-                        .floor())
-                  }),
-                  style: SLTheme.quicksand(
-                      color: Colors.green[700],
-                      fontWeight: FontWeight.w800,
-                      fontSize: 11),
+                    fontSize: 11,
+                  ),
                 ),
+              ),
             ],
           ),
+          if (!isExpired && !isOverBudget) ...[
+            const SizedBox(height: 6),
+            Padding(
+              padding: const EdgeInsets.only(left: 22),
+              child: Text(
+                L10nService().format('util_finance_can_spend_more_daily', {
+                  'amount': _fmt.format(
+                    ((target - _totalOut) /
+                            (remainingDays > 0 ? remainingDays : 1))
+                        .floor(),
+                  ),
+                }),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: SLTheme.quicksand(
+                  color: Colors.green[700],
+                  fontWeight: FontWeight.w800,
+                  fontSize: 11,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -638,8 +758,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
     // Để đơn giản, ta dùng _totalBalance để so sánh với mục tiêu quỹ.
     final currentSaved = _totalBalance > 0 ? _totalBalance : 0;
 
-    final double percent =
-        target > 0 ? (currentSaved / target).clamp(0.0, 1.0) : 0.0;
+    final double percent = target > 0
+        ? (currentSaved / target).clamp(0.0, 1.0)
+        : 0.0;
     final isReached = currentSaved >= target;
 
     return Container(
@@ -648,74 +769,90 @@ class _FinanceScreenState extends State<FinanceScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFFFF8E1),
         borderRadius: BorderRadius.circular(28),
-        border:
-            Border.all(color: Colors.amber.withValues(alpha: 0.4), width: 2),
+        border: Border.all(
+          color: Colors.amber.withValues(alpha: 0.4),
+          width: 2,
+        ),
         boxShadow: [
           BoxShadow(
-              color: Colors.amber.withValues(alpha: 0.1),
-              blurRadius: 15,
-              offset: const Offset(0, 5))
+            color: Colors.amber.withValues(alpha: 0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const Text('💍', style: TextStyle(fontSize: 20)),
-                  SLSpacing.w8,
-                  Text(
-                    name.toUpperCase(),
-                    style: SLTheme.quicksand(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 12,
-                        color: Colors.amber[800],
-                        letterSpacing: 1.1),
-                  ),
-                ],
+              Expanded(
+                child: Row(
+                  children: [
+                    const Text('💍', style: TextStyle(fontSize: 20)),
+                    SLSpacing.w8,
+                    Expanded(
+                      child: Text(
+                        name.toUpperCase(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: SLTheme.quicksand(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12,
+                          color: Colors.amber[800],
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined, size: 18),
-                    onPressed: _showSavingsGoalDialog,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                  SLSpacing.w12,
-                  IconButton(
-                    icon: const Icon(Icons.delete_sweep_outlined,
-                        size: 18, color: Colors.red),
-                    onPressed: _resetSavingsGoal,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
+              _cardIconButton(
+                icon: Icons.edit_outlined,
+                tooltip: context.tr('p8_finance_edit_savings_goal'),
+                onPressed: _showSavingsGoalDialog,
+              ),
+              const SizedBox(width: 4),
+              _cardIconButton(
+                icon: Icons.delete_sweep_outlined,
+                color: Colors.red,
+                tooltip: context.tr('p8_finance_delete_savings_goal'),
+                onPressed: _resetSavingsGoal,
               ),
             ],
           ),
           SLSpacing.h12,
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                L10nService().format('util_finance_saved_amount',
-                    {'amount': _fmt.format(currentSaved)}),
-                style: SLTheme.quicksand(
+              Expanded(
+                child: Text(
+                  L10nService().format('util_finance_saved_amount', {
+                    'amount': _fmt.format(currentSaved),
+                  }),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: SLTheme.quicksand(
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
-                    color: SLTheme.textMain),
+                    color: SLTheme.textMain,
+                  ),
+                ),
               ),
-              Text(
-                L10nService().format('util_finance_target_amount',
-                    {'amount': _fmt.format(target)}),
-                style: SLTheme.quicksand(
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  L10nService().format('util_finance_target_amount', {
+                    'amount': _fmt.format(target),
+                  }),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: SLTheme.quicksand(
                     fontWeight: FontWeight.w800,
                     fontSize: 13,
-                    color: SLTheme.textMuted),
+                    color: SLTheme.textMuted,
+                  ),
+                ),
               ),
             ],
           ),
@@ -727,7 +864,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
               minHeight: 10,
               backgroundColor: Colors.white,
               valueColor: AlwaysStoppedAnimation(
-                  isReached ? Colors.green : Colors.amber),
+                isReached ? Colors.green : Colors.amber,
+              ),
             ),
           ),
           SLSpacing.h12,
@@ -738,12 +876,14 @@ class _FinanceScreenState extends State<FinanceScreen> {
               Text(
                 isReached
                     ? context.tr('util_tmctiu_d4d469')
-                    : L10nService().format('util_finance_goal_percent',
-                        {'percent': (percent * 100).toStringAsFixed(1)}),
+                    : L10nService().format('util_finance_goal_percent', {
+                        'percent': (percent * 100).toStringAsFixed(1),
+                      }),
                 style: SLTheme.quicksand(
-                    color: Colors.amber[800],
-                    fontWeight: FontWeight.w800,
-                    fontSize: 12),
+                  color: Colors.amber[800],
+                  fontWeight: FontWeight.w800,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
@@ -757,38 +897,51 @@ class _FinanceScreenState extends State<FinanceScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
-        title: Text(context.tr('util_toqumi_e38258'),
-            style: SLTheme.quicksand(fontWeight: FontWeight.w900)),
-        content: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(
-            controller: _savingsGoalNameController,
-            maxLength: 50,
-            decoration: InputDecoration(
+        title: Text(
+          context.tr('util_toqumi_e38258'),
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _savingsGoalNameController,
+              maxLength: 50,
+              decoration: InputDecoration(
                 labelText: context.tr('util_tnquvdquci_811553'),
-                counterText: ''),
-          ),
-          SLSpacing.h8,
-          TextField(
-            controller: _savingsGoalAmountController,
-            keyboardType: TextInputType.number,
-            maxLength: 12,
-            decoration: InputDecoration(
+                counterText: '',
+              ),
+            ),
+            SLSpacing.h8,
+            TextField(
+              controller: _savingsGoalAmountController,
+              keyboardType: TextInputType.number,
+              maxLength: 12,
+              decoration: InputDecoration(
                 labelText: context.tr('util_stinmctiuv_e1bc2d'),
-                counterText: ''),
-          ),
-        ]),
+                counterText: '',
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(context.tr('util_hy_1e4050'))),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(context.tr('util_hy_1e4050')),
+          ),
           ElevatedButton(
             onPressed: _saveSavingsGoal,
             style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber[700],
-                shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll)),
-            child: Text(context.tr('util_luqu_163328'),
-                style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
+              backgroundColor: Colors.amber[700],
+              shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
+            ),
+            child: Text(
+              context.tr('util_luqu_163328'),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -799,8 +952,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
     if (_allTransactions.isEmpty) return const SizedBox.shrink();
 
     // Lọc các giao dịch chi tiêu (out) để vẽ biểu đồ
-    final outTransactions =
-        _allTransactions.where((t) => t['type'] == 'out').toList();
+    final outTransactions = _allTransactions
+        .where((t) => t['type'] == 'out')
+        .toList();
     if (outTransactions.isEmpty) return const SizedBox.shrink();
 
     // Tính tổng theo danh mục
@@ -831,17 +985,19 @@ class _FinanceScreenState extends State<FinanceScreen> {
     categoryTotals.forEach((cat, amt) {
       final percent = (amt / totalOut * 100);
       if (percent > 0) {
-        pieSections.add(PieChartSectionData(
-          color: colors[colorIndex % colors.length],
-          value: percent,
-          title: '${percent.toStringAsFixed(1)}%',
-          radius: 40,
-          titleStyle: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+        pieSections.add(
+          PieChartSectionData(
+            color: colors[colorIndex % colors.length],
+            value: percent,
+            title: '${percent.toStringAsFixed(1)}%',
+            radius: 40,
+            titleStyle: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
-        ));
+        );
         colorIndex++;
       }
     });
@@ -852,70 +1008,92 @@ class _FinanceScreenState extends State<FinanceScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.90),
         borderRadius: BorderRadius.circular(28),
-        border:
-            Border.all(color: Colors.white.withValues(alpha: 0.85), width: 2.5),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.85),
+          width: 2.5,
+        ),
         boxShadow: SLTheme.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(context.tr('util_phntchchit_1737cd'),
-              style: SLTheme.quicksand(
-                  color: SLTheme.textMain,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16)),
-          SLSpacing.h16,
-          SizedBox(
-            height: 150,
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: PieChart(
-                    PieChartData(
-                      sections: pieSections,
-                      centerSpaceRadius: 30,
-                      sectionsSpace: 2,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: ListView(
-                    padding: EdgeInsets.zero,
-                    children: categoryTotals.entries.map((e) {
-                      final idx = categoryTotals.keys.toList().indexOf(e.key);
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 12,
-                              height: 12,
-                              decoration: BoxDecoration(
-                                color: colors[idx % colors.length],
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            SLSpacing.w8,
-                            Expanded(
-                              child: Text(
-                                e.key,
-                                overflow: TextOverflow.ellipsis,
-                                style: SLTheme.quicksand(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
+          Text(
+            context.tr('util_phntchchit_1737cd'),
+            style: SLTheme.quicksand(
+              color: SLTheme.textMain,
+              fontWeight: FontWeight.w900,
+              fontSize: 16,
             ),
+          ),
+          SLSpacing.h16,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < 430;
+              final chart = Semantics(
+                label: context.tr('p8_finance_expense_chart_semantics'),
+                child: PieChart(
+                  PieChartData(
+                    sections: pieSections,
+                    centerSpaceRadius: 30,
+                    sectionsSpace: 2,
+                  ),
+                ),
+              );
+              final legend = ListView(
+                padding: EdgeInsets.zero,
+                children: categoryTotals.entries.map((e) {
+                  final idx = categoryTotals.keys.toList().indexOf(e.key);
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: colors[idx % colors.length],
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        SLSpacing.w8,
+                        Expanded(
+                          child: Text(
+                            e.key,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: SLTheme.quicksand(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              );
+
+              if (isCompact) {
+                return Column(
+                  children: [
+                    SizedBox(height: 150, child: chart),
+                    const SizedBox(height: 12),
+                    SizedBox(height: 112, child: legend),
+                  ],
+                );
+              }
+
+              return SizedBox(
+                height: 150,
+                child: Row(
+                  children: [
+                    Expanded(child: chart),
+                    const SizedBox(width: 12),
+                    Expanded(child: legend),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -927,38 +1105,49 @@ class _FinanceScreenState extends State<FinanceScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
-        title: Text(context.tr('util_lpkhoch_eb08e6'),
-            style: SLTheme.quicksand(fontWeight: FontWeight.w900)),
-        content: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(
-            controller: _goalAmountController,
-            keyboardType: TextInputType.number,
-            maxLength: 12,
-            decoration: InputDecoration(
+        title: Text(
+          context.tr('util_lpkhoch_eb08e6'),
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _goalAmountController,
+              keyboardType: TextInputType.number,
+              maxLength: 12,
+              decoration: InputDecoration(
                 labelText: context.tr('util_tngngnschd_7447b3'),
-                counterText: ''),
-          ),
-          SLSpacing.h8,
-          TextField(
-            controller: _goalDaysController,
-            keyboardType: TextInputType.number,
-            maxLength: 5,
-            decoration: InputDecoration(
+                counterText: '',
+              ),
+            ),
+            SLSpacing.h8,
+            TextField(
+              controller: _goalDaysController,
+              keyboardType: TextInputType.number,
+              maxLength: 5,
+              decoration: InputDecoration(
                 labelText: context.tr('util_sngypdngvd_78fb41'),
-                counterText: ''),
-          ),
-        ]),
+                counterText: '',
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(context.tr('util_hy_1e4050'))),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(context.tr('util_hy_1e4050')),
+          ),
           ElevatedButton(
             onPressed: _saveBudgetPlan,
             style: ElevatedButton.styleFrom(
-                backgroundColor: SLTheme.primary,
-                shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll)),
-            child: Text(context.tr('util_lukhoch_f05771'),
-                style: const TextStyle(color: Colors.white)),
+              backgroundColor: SLTheme.primary,
+              shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
+            ),
+            child: Text(
+              context.tr('util_lukhoch_f05771'),
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -972,64 +1161,104 @@ class _FinanceScreenState extends State<FinanceScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.90),
         borderRadius: BorderRadius.circular(28),
-        border:
-            Border.all(color: Colors.white.withValues(alpha: 0.85), width: 2.5),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.85),
+          width: 2.5,
+        ),
         boxShadow: SLTheme.cardShadow,
       ),
-      child: Column(children: [
-        Text(context.tr('total_balance'),
+      child: Column(
+        children: [
+          Text(
+            context.tr('total_balance'),
             style: SLTheme.quicksand(
-                color: SLTheme.textMuted,
-                fontWeight: FontWeight.w700,
-                fontSize: 13)),
-        SLSpacing.h8,
-        ShaderMask(
-          shaderCallback: (b) => LinearGradient(
-            colors: _totalBalance >= 0
-                ? const [Color(0xFFD81B60), Color(0xFF9C27B0)]
-                : const [Colors.red, Colors.deepOrange],
-          ).createShader(b),
-          child: Text(_fmt.format(_totalBalance),
+              color: SLTheme.textMuted,
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
+          ),
+          SLSpacing.h8,
+          ShaderMask(
+            shaderCallback: (b) => LinearGradient(
+              colors: _totalBalance >= 0
+                  ? const [Color(0xFFD81B60), Color(0xFF9C27B0)]
+                  : const [Colors.red, Colors.deepOrange],
+            ).createShader(b),
+            child: Text(
+              _fmt.format(_totalBalance),
               style: SLTheme.quicksand(
-                  color: Colors.white,
-                  fontSize: 34,
-                  fontWeight: FontWeight.w900)),
-        ),
-        SLSpacing.h16,
-        Row(children: [
-          _balanceMiniBar('💚 ${context.tr('income')}', _totalIn, Colors.green,
-              const Color(0xFF2E7D32)),
-          SLSpacing.w12,
-          _balanceMiniBar('❤️ ${context.tr('expense')}', _totalOut,
-              const Color(0xFFD81B60), Colors.red),
-        ]),
-      ]),
+                color: Colors.white,
+                fontSize: 34,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+          SLSpacing.h16,
+          Row(
+            children: [
+              _balanceMiniBar(
+                '💚 ${context.tr('income')}',
+                _totalIn,
+                Colors.green,
+                const Color(0xFF2E7D32),
+              ),
+              SLSpacing.w12,
+              _balanceMiniBar(
+                '❤️ ${context.tr('expense')}',
+                _totalOut,
+                const Color(0xFFD81B60),
+                Colors.red,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
   Widget _balanceMiniBar(
-      String label, int amount, Color barColor, Color textColor) {
-    final ratio =
-        _totalIn + _totalOut == 0 ? 0.0 : amount / (_totalIn + _totalOut);
+    String label,
+    int amount,
+    Color barColor,
+    Color textColor,
+  ) {
+    final ratio = _totalIn + _totalOut == 0
+        ? 0.0
+        : amount / (_totalIn + _totalOut);
     return Expanded(
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label,
-          style: SLTheme.quicksand(
-              color: textColor, fontWeight: FontWeight.w800, fontSize: 11)),
-      SLSpacing.h4,
-      ClipRRect(
-          borderRadius: SLRadius.smAll,
-          child: LinearProgressIndicator(
-            value: ratio,
-            minHeight: 8,
-            backgroundColor: const Color(0xFFE8D5DF),
-            valueColor: AlwaysStoppedAnimation(barColor),
-          )),
-      SLSpacing.h4,
-      Text(_fmt.format(amount),
-          style: TextStyle(
-              color: textColor, fontSize: 11, fontWeight: FontWeight.w800)),
-    ]));
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: SLTheme.quicksand(
+              color: textColor,
+              fontWeight: FontWeight.w800,
+              fontSize: 11,
+            ),
+          ),
+          SLSpacing.h4,
+          ClipRRect(
+            borderRadius: SLRadius.smAll,
+            child: LinearProgressIndicator(
+              value: ratio,
+              minHeight: 8,
+              backgroundColor: const Color(0xFFE8D5DF),
+              valueColor: AlwaysStoppedAnimation(barColor),
+            ),
+          ),
+          SLSpacing.h4,
+          Text(
+            _fmt.format(amount),
+            style: TextStyle(
+              color: textColor,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildInputArea() {
@@ -1039,26 +1268,35 @@ class _FinanceScreenState extends State<FinanceScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.90),
         borderRadius: BorderRadius.circular(28),
-        border:
-            Border.all(color: Colors.white.withValues(alpha: 0.85), width: 2.5),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.85),
+          width: 2.5,
+        ),
         boxShadow: SLTheme.cardShadow,
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        // Thu/Chi toggle - clone .mood-wrap
-        Row(children: [
-          _typeBtn('💚 ${context.tr('income')}', 'in', Colors.green),
-          SLSpacing.w8,
-          _typeBtn('❤️ ${context.tr('expense')}', 'out', SLTheme.primary),
-        ]),
-        SLSpacing.h12,
-        // Category chips
-        Text('${context.tr('category')}:',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Thu/Chi toggle - clone .mood-wrap
+          Row(
+            children: [
+              _typeBtn('💚 ${context.tr('income')}', 'in', Colors.green),
+              SLSpacing.w8,
+              _typeBtn('❤️ ${context.tr('expense')}', 'out', SLTheme.primary),
+            ],
+          ),
+          SLSpacing.h12,
+          // Category chips
+          Text(
+            '${context.tr('category')}:',
             style: SLTheme.quicksand(
-                color: SLTheme.textMuted,
-                fontWeight: FontWeight.w700,
-                fontSize: 12)),
-        SLSpacing.h8,
-        SizedBox(
+              color: SLTheme.textMuted,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
+          ),
+          SLSpacing.h8,
+          SizedBox(
             height: 36,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
@@ -1071,8 +1309,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
                     margin: const EdgeInsets.only(right: 8),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       gradient: isSelected
                           ? const LinearGradient(colors: SLTheme.btnGradient)
@@ -1080,116 +1320,156 @@ class _FinanceScreenState extends State<FinanceScreen> {
                       color: isSelected ? null : const Color(0xFFF5F5F5),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: isSelected
-                              ? Colors.transparent
-                              : const Color(0xFFE8D5DF),
-                          width: 1.5),
+                        color: isSelected
+                            ? Colors.transparent
+                            : const Color(0xFFE8D5DF),
+                        width: 1.5,
+                      ),
                     ),
-                    child: Text(cat,
-                        style: TextStyle(
-                            fontSize: 11,
-                            color:
-                                isSelected ? Colors.white : SLTheme.textMuted,
-                            fontWeight: isSelected
-                                ? FontWeight.w800
-                                : FontWeight.w600)),
+                    child: Text(
+                      cat,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isSelected ? Colors.white : SLTheme.textMuted,
+                        fontWeight: isSelected
+                            ? FontWeight.w800
+                            : FontWeight.w600,
+                      ),
+                    ),
                   ),
                 );
               },
-            )),
-        SLSpacing.h12,
-        // Amount input
-        TextField(
-          controller: _amountController,
-          keyboardType: TextInputType.number,
-          style: SLTheme.quicksand(
+            ),
+          ),
+          SLSpacing.h12,
+          // Amount input
+          TextField(
+            controller: _amountController,
+            keyboardType: TextInputType.number,
+            style: SLTheme.quicksand(
               color: SLTheme.textMain,
               fontWeight: FontWeight.w700,
-              fontSize: 16),
-          maxLength: 12,
-          decoration: InputDecoration(
-            hintText: '${context.tr('amount')} (VND)...',
-            hintStyle: SLTheme.quicksand(color: SLTheme.textLight),
-            prefixIcon: Icon(Icons.attach_money,
-                color: SLTheme.primary.withValues(alpha: 0.6), size: 20),
-            filled: true,
-            fillColor: const Color(0xFFFFF5F7),
-            enabledBorder: OutlineInputBorder(
+              fontSize: 16,
+            ),
+            maxLength: 12,
+            decoration: InputDecoration(
+              hintText: context.tr('p8_finance_amount_hint'),
+              hintStyle: SLTheme.quicksand(color: SLTheme.textLight),
+              prefixIcon: Icon(
+                Icons.attach_money,
+                color: SLTheme.primary.withValues(alpha: 0.6),
+                size: 20,
+              ),
+              filled: true,
+              fillColor: const Color(0xFFFFF5F7),
+              enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
-                borderSide:
-                    const BorderSide(color: Color(0xFFE8D5DF), width: 2.5)),
-            focusedBorder: OutlineInputBorder(
+                borderSide: const BorderSide(
+                  color: Color(0xFFE8D5DF),
+                  width: 2.5,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
-                borderSide:
-                    const BorderSide(color: Color(0xFFD81B60), width: 2.5)),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            counterText: '',
+                borderSide: const BorderSide(
+                  color: Color(0xFFD81B60),
+                  width: 2.5,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+              counterText: '',
+            ),
           ),
-        ),
-        SLSpacing.h8,
-        TextField(
-          controller: _noteController,
-          style: SLTheme.quicksand(
+          SLSpacing.h8,
+          TextField(
+            controller: _noteController,
+            style: SLTheme.quicksand(
               color: SLTheme.textMain,
               fontWeight: FontWeight.w700,
-              fontSize: 16),
-          maxLength: 100,
-          decoration: InputDecoration(
-            hintText: context.tr('util_tychn_9aa32e'),
-            hintStyle: SLTheme.quicksand(color: SLTheme.textLight),
-            prefixIcon: Icon(Icons.notes,
-                color: SLTheme.primary.withValues(alpha: 0.6), size: 20),
-            filled: true,
-            fillColor: const Color(0xFFFFF5F7),
-            enabledBorder: OutlineInputBorder(
+              fontSize: 16,
+            ),
+            maxLength: 100,
+            decoration: InputDecoration(
+              hintText: context.tr('util_tychn_9aa32e'),
+              hintStyle: SLTheme.quicksand(color: SLTheme.textLight),
+              prefixIcon: Icon(
+                Icons.notes,
+                color: SLTheme.primary.withValues(alpha: 0.6),
+                size: 20,
+              ),
+              filled: true,
+              fillColor: const Color(0xFFFFF5F7),
+              enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
-                borderSide:
-                    const BorderSide(color: Color(0xFFE8D5DF), width: 2.5)),
-            focusedBorder: OutlineInputBorder(
+                borderSide: const BorderSide(
+                  color: Color(0xFFE8D5DF),
+                  width: 2.5,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
-                borderSide:
-                    const BorderSide(color: Color(0xFFD81B60), width: 2.5)),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            counterText: '',
+                borderSide: const BorderSide(
+                  color: Color(0xFFD81B60),
+                  width: 2.5,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+              counterText: '',
+            ),
           ),
-        ),
-        SLSpacing.h12,
-        SLTheme.primaryButton(
-          label:
-              '${context.tr('save')} ${_transactionType == 'in' ? context.tr('income') : context.tr('expense')} • $_category',
-          onPressed: _addTransaction,
-        ),
-      ]),
+          SLSpacing.h12,
+          SLTheme.primaryButton(
+            label:
+                '${context.tr('save')} ${_transactionType == 'in' ? context.tr('income') : context.tr('expense')} • $_category',
+            onPressed: _addTransaction,
+          ),
+        ],
+      ),
     );
   }
 
   Widget _typeBtn(String label, String type, Color color) {
     final isSelected = _transactionType == type;
     return Expanded(
-        child: GestureDetector(
-      onTap: () => setState(() => _transactionType = type),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? color : const Color(0xFFF5F5F5),
-          borderRadius: SLRadius.lgAll,
-          border: Border.all(
-              color: isSelected ? color : const Color(0xFFE8D5DF), width: 1.5),
-          boxShadow: isSelected
-              ? [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 10)]
-              : null,
-        ),
-        alignment: Alignment.center,
-        child: Text(label,
+      child: GestureDetector(
+        onTap: () => setState(() => _transactionType = type),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected ? color : const Color(0xFFF5F5F5),
+            borderRadius: SLRadius.lgAll,
+            border: Border.all(
+              color: isSelected ? color : const Color(0xFFE8D5DF),
+              width: 1.5,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.3),
+                      blurRadius: 10,
+                    ),
+                  ]
+                : null,
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
             style: SLTheme.quicksand(
-                color: isSelected ? Colors.white : SLTheme.textMuted,
-                fontWeight: FontWeight.w800,
-                fontSize: 13)),
+              color: isSelected ? Colors.white : SLTheme.textMuted,
+              fontWeight: FontWeight.w800,
+              fontSize: 13,
+            ),
+          ),
+        ),
       ),
-    ));
+    );
   }
 
   void _syncTransactionSummary({
@@ -1198,8 +1478,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
     required int totalOut,
   }) {
     final signature = items
-        .map((item) =>
-            '${item['key']}:${item['type']}:${item['amount']}:${item['ts']}:${item['category']}:${item['note']}')
+        .map(
+          (item) =>
+              '${item['key']}:${item['type']}:${item['amount']}:${item['ts']}:${item['category']}:${item['note']}',
+        )
         .join('|');
     final balance = totalIn - totalOut;
 
@@ -1234,27 +1516,29 @@ class _FinanceScreenState extends State<FinanceScreen> {
       builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  child: SkeletonContainer.rounded(
-                      width: double.infinity, height: 75),
-                );
-              },
-              childCount: 5,
-            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                child: SkeletonContainer.rounded(
+                  width: double.infinity,
+                  height: 75,
+                ),
+              );
+            }, childCount: 5),
           );
         }
         if (snapshot.hasError) {
           return SliverToBoxAdapter(
             child: Center(
               child: Text(
-                L10nService().format('util_finance_load_tx_error',
-                    {'error': AppErrorMapper.resolve(snapshot.error).message}),
+                L10nService().format('util_finance_load_tx_error', {
+                  'error': AppErrorMapper.resolve(snapshot.error).message,
+                }),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
-                    color: SLTheme.textMain, fontWeight: FontWeight.w700),
+                  color: SLTheme.textMain,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           );
@@ -1266,29 +1550,39 @@ class _FinanceScreenState extends State<FinanceScreen> {
             totalOut: 0,
           );
           return SliverToBoxAdapter(
-              child: Center(
-                  child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                const Text('💸',
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    '💸',
                     style: TextStyle(fontSize: 50),
-                    textScaler: TextScaler.linear(1.0)),
-                SLSpacing.h8,
-                Text(context.tr('util_finance_empty_transactions'),
+                    textScaler: TextScaler.linear(1.0),
+                  ),
+                  SLSpacing.h8,
+                  Text(
+                    context.tr('util_finance_empty_transactions'),
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
-                        color: SLTheme.textMain,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14)),
-              ])));
+                      color: SLTheme.textMain,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
         }
-        final data =
-            Map<dynamic, dynamic>.from(snapshot.data!.snapshot.value as Map);
+        final data = Map<dynamic, dynamic>.from(
+          snapshot.data!.snapshot.value as Map,
+        );
         final items = data.entries
             .map((e) => {'key': e.key, ...Map<String, dynamic>.from(e.value)})
             .toList();
         items.sort(
-            (a, b) => (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0));
+          (a, b) => (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0),
+        );
 
         int tempIn = 0, tempOut = 0;
         for (var item in items) {
@@ -1308,105 +1602,131 @@ class _FinanceScreenState extends State<FinanceScreen> {
         return SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
           sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (ctx, i) {
-                final item = items[i];
-                final isIncome = item['type'] == 'in';
-                final catEmoji =
-                    item['category']?.toString().split(' ').first ??
-                        (isIncome ? '💚' : '❤️');
+            delegate: SliverChildBuilderDelegate((ctx, i) {
+              final item = items[i];
+              final isIncome = item['type'] == 'in';
+              final catEmoji =
+                  item['category']?.toString().split(' ').first ??
+                  (isIncome ? '💚' : '❤️');
 
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: SLSpacing.all16,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                        colors: [Color(0xFFF8F9FA), Color(0xFFE9ECEF)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight),
-                    borderRadius: SLRadius.xlAll,
-                    border: Border(
-                        left: BorderSide(
-                            color: isIncome ? Colors.green : SLTheme.primary,
-                            width: 5)),
-                    boxShadow: [
-                      BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4))
-                    ],
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: SLSpacing.all16,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFF8F9FA), Color(0xFFE9ECEF)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: Row(children: [
+                  borderRadius: SLRadius.xlAll,
+                  border: Border(
+                    left: BorderSide(
+                      color: isIncome ? Colors.green : SLTheme.primary,
+                      width: 5,
+                    ),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
                     Container(
                       width: 46,
                       height: 46,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                            colors: isIncome
-                                ? [
-                                    const Color(0xFFE8F5E9),
-                                    const Color(0xFFC8E6C9)
-                                  ]
-                                : [
-                                    const Color(0xFFFFE4EB),
-                                    const Color(0xFFFFB3D9)
-                                  ]),
+                          colors: isIncome
+                              ? [
+                                  const Color(0xFFE8F5E9),
+                                  const Color(0xFFC8E6C9),
+                                ]
+                              : [
+                                  const Color(0xFFFFE4EB),
+                                  const Color(0xFFFFB3D9),
+                                ],
+                        ),
                         borderRadius: SLRadius.mdAll,
                       ),
                       child: Center(
-                          child: Text(catEmoji,
-                              style: const TextStyle(fontSize: 22))),
+                        child: Text(
+                          catEmoji,
+                          style: const TextStyle(fontSize: 22),
+                        ),
+                      ),
                     ),
                     SLSpacing.w12,
                     Expanded(
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                          Text(
-                              item['category'] ??
-                                  (isIncome
-                                      ? context.tr('util_thunhp_63c92e')
-                                      : context.tr('util_chitiu_fbc1f6')),
-                              style: SLTheme.quicksand(
-                                  color: SLTheme.textMain,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 14)),
-                          if ((item['note'] ?? '').toString().isNotEmpty)
-                            Text(item['note'],
-                                style: SLTheme.quicksand(
-                                    color: SLTheme.textMuted, fontSize: 12)),
-                          Row(children: [
-                            SLTheme.authorTag(item['from'] ?? ''),
-                            SLSpacing.w8,
-                            Text(item['time'] ?? '',
-                                style: SLTheme.quicksand(
-                                    color: SLTheme.textLight, fontSize: 10)),
-                          ]),
-                        ])),
-                    Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                              '${isIncome ? '+' : '-'}${_fmt.format(item['amount'] ?? 0)}',
-                              style: SLTheme.quicksand(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 14,
-                                color: isIncome
-                                    ? const Color(0xFF2E7D32)
-                                    : SLTheme.primary,
-                              )),
-                          SLSpacing.h4,
-                          GestureDetector(
-                            onTap: () => _deleteTransaction(item['key']),
-                            child: const Icon(Icons.delete_outline,
-                                color: SLTheme.textLight, size: 18),
+                            item['category'] ??
+                                (isIncome
+                                    ? context.tr('util_thunhp_63c92e')
+                                    : context.tr('util_chitiu_fbc1f6')),
+                            style: SLTheme.quicksand(
+                              color: SLTheme.textMain,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
+                            ),
                           ),
-                        ]),
-                  ]),
-                );
-              },
-              childCount: items.length,
-            ),
+                          if ((item['note'] ?? '').toString().isNotEmpty)
+                            Text(
+                              item['note'],
+                              style: SLTheme.quicksand(
+                                color: SLTheme.textMuted,
+                                fontSize: 12,
+                              ),
+                            ),
+                          Row(
+                            children: [
+                              SLTheme.authorTag(item['from'] ?? ''),
+                              SLSpacing.w8,
+                              Text(
+                                item['time'] ?? '',
+                                style: SLTheme.quicksand(
+                                  color: SLTheme.textLight,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '${isIncome ? '+' : '-'}${_fmt.format(item['amount'] ?? 0)}',
+                          style: SLTheme.quicksand(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 14,
+                            color: isIncome
+                                ? const Color(0xFF2E7D32)
+                                : SLTheme.primary,
+                          ),
+                        ),
+                        SLSpacing.h4,
+                        GestureDetector(
+                          onTap: () => _deleteTransaction(item['key']),
+                          child: const Icon(
+                            Icons.delete_outline,
+                            color: SLTheme.textLight,
+                            size: 18,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }, childCount: items.length),
           ),
         );
       },

@@ -2,6 +2,7 @@
 import 'package:lottie/lottie.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
+import 'package:soullocket_app/views/home/widgets/home_sticker_motion.dart';
 import 'package:soullocket_app/views/utilities/tarot/tarot_screen.dart';
 import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/map_tilt_card.dart';
@@ -22,7 +23,7 @@ import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/foundation.dart'
-    show kDebugMode, kIsWeb, ValueListenable;
+    show kDebugMode, kIsWeb, listEquals, ValueListenable;
 import 'package:http/http.dart' as http;
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart' show XFile;
@@ -146,6 +147,7 @@ part 'main_home/sections/main_home_body_section.dart';
 part 'main_home/widgets/main_home_state_views.dart';
 part '../widgets/main_home/hero/main_home_animated_wave_background.dart';
 part '../widgets/main_home/hero/main_home_countdown_visual_spec.dart';
+part '../widgets/main_home/hero/main_home_countdown_sticker_overlay.dart';
 part '../widgets/main_home/hero/main_home_hero_badges.dart';
 part '../widgets/main_home/hero/main_home_hero_countdown.dart';
 part '../widgets/main_home/hero/main_home_hero_counters.dart';
@@ -188,6 +190,14 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
 
   static const Duration _kCountdownQuickUnlockWindow = Duration(hours: 24);
   static const Set<String> _kCountdownQuickPremiumStyleKeys = {
+    'floating_hearts',
+    'galaxy',
+    'aurora',
+    'crystal',
+    'fireworks',
+    'lava',
+    'cherry_blossom',
+    'meteor_shower',
     'deep_ocean',
     'golden_sunset',
     'neon_pulse',
@@ -251,7 +261,13 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     if (!mounted) return;
     _showMissYouScreen(payload);
     if (removalPath != null) {
-      unawaited(_dbRef.child(removalPath).remove().catchError((_) {}));
+      unawaited(
+        _dbRef.child(removalPath).remove().catchError((error) {
+          debugPrint(
+            '[MainHome] Cannot acknowledge partner interaction: $error',
+          );
+        }),
+      );
     }
   }
 
@@ -575,7 +591,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
           if (isLegacyGif) await prefs.setString(prefsKey, defaultPath);
         }
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[MainHome] Cannot migrate interaction presets: $error');
+    }
   }
 
   _PartnerInteractionPreset get _displayInteractionPreset {
@@ -609,7 +627,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
           GoogleFonts.comfortaa(fontWeight: FontWeight.w900),
           selectedUiFont,
         ]);
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[MainHome] Font warm-up failed: $error');
+      }
     }());
     // Pre-cache sticker assets deferred and chunked to avoid startup stutter
     Timer(const Duration(seconds: 4), () async {
@@ -971,6 +991,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       },
       onError: (_) {
         _activeFetchFuture = null;
+        if (mounted) setState(() => _isLoading = false);
       },
     );
   }
@@ -1046,7 +1067,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       if (updates.isNotEmpty) {
         await _dbRef.update(updates);
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[MainHome] Cannot prune stale sync data: $error');
+    }
   }
 
   static final _accentRegexMap = {
@@ -1277,6 +1300,10 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     return _MainHomeStateView(
       isLoading: _isLoading,
       hasVisibleContent: _houseSettings != null,
+      onRetry: () {
+        setState(() => _isLoading = true);
+        unawaited(_fetchHouseData(preserveVisibleState: true));
+      },
       child: ValueListenableBuilder<UiPrefsState>(
         valueListenable: UiPrefs.notifier,
         builder: (context, uiState, _) => Stack(

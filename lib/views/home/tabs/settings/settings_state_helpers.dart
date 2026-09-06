@@ -20,8 +20,9 @@ String _sanitizeSettingsDialogError(Object error) {
 }
 
 bool _looksLikeSettingsEmail(String value) {
-  return RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
-      .hasMatch(value.trim().toLowerCase());
+  return RegExp(
+    r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
+  ).hasMatch(value.trim().toLowerCase());
 }
 
 bool _isSupportedSettingsEmail(String value) {
@@ -109,20 +110,22 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
               children: [
                 Text(
                   isSending
-                      ? L10nService()
-                          .format('home_sending_otp_email', {'email': email})
+                      ? L10nService().format('home_sending_otp_email', {
+                          'email': email,
+                        })
                       : isVerifying
-                          ? context.tr('home_angkimtram_b80b59')
-                          : sendError != null
-                              ? L10nService().format(
-                                  'home_send_otp_failed', {'error': sendError!})
-                              : verifyError != null
-                                  ? L10nService().format(
-                                      'home_otp_invalid_or_expired',
-                                      {'error': verifyError!})
-                                  : L10nService().format(
-                                      'home_otp_sent_to_email',
-                                      {'email': email}),
+                      ? context.tr('home_angkimtram_b80b59')
+                      : sendError != null
+                      ? L10nService().format('home_send_otp_failed', {
+                          'error': sendError!,
+                        })
+                      : verifyError != null
+                      ? L10nService().format('home_otp_invalid_or_expired', {
+                          'error': verifyError!,
+                        })
+                      : L10nService().format('home_otp_sent_to_email', {
+                          'email': email,
+                        }),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
@@ -190,16 +193,16 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
                 ),
                 onPressed: canConfirm
                     ? () async {
-                        final verifyTimeoutMsg =
-                            context.tr('home_kimtramxcn_cd2cff');
-                        final invalidOtpMsg =
-                            context.tr('home_vuilngnhp6_526103');
+                        final verifyTimeoutMsg = context.tr(
+                          'home_kimtramxcn_cd2cff',
+                        );
+                        final invalidOtpMsg = context.tr(
+                          'home_vuilngnhp6_526103',
+                        );
                         final otp = otpCtrl.text.trim();
                         if (otp.length != 6) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(invalidOtpMsg),
-                            ),
+                            SnackBar(content: Text(invalidOtpMsg)),
                           );
                           return;
                         }
@@ -212,9 +215,7 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
                         try {
                           await verifyCode(otp).timeout(
                             _kSettingsOtpVerifyTimeout,
-                            onTimeout: () => throw Exception(
-                              verifyTimeoutMsg,
-                            ),
+                            onTimeout: () => throw Exception(verifyTimeoutMsg),
                           );
                           if (ctx.mounted) Navigator.pop(ctx, true);
                         } catch (error) {
@@ -231,8 +232,8 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
                   isSending
                       ? context.tr('home_anggi_6b22c8')
                       : isVerifying
-                          ? context.tr('home_angkimtra_92e8dd')
-                          : context.tr('home_xcnhn_1e2eb2'),
+                      ? context.tr('home_angkimtra_92e8dd')
+                      : context.tr('home_xcnhn_1e2eb2'),
                   style: SLTheme.quicksand(
                     color: canConfirm ? Colors.white : Colors.black54,
                     fontWeight: FontWeight.bold,
@@ -281,9 +282,7 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
     try {
       await sendCode().timeout(
         _kSettingsOtpSendTimeout,
-        onTimeout: () => throw Exception(
-          timeoutMsg,
-        ),
+        onTimeout: () => throw Exception(timeoutMsg),
       );
       if (!dialogContext.mounted) return;
       setDialogState(() => isSending = false);
@@ -333,19 +332,21 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                     isSending
                         ? L10nService().format(
                             'home_sending_reset_password_email',
-                            {'email': email})
+                            {'email': email},
+                          )
                         : isVerifying
-                            ? context.tr('home_angkimtram_9b5339')
-                            : sendError != null
-                                ? L10nService().format('home_send_otp_failed',
-                                    {'error': sendError!})
-                                : verifyError != null
-                                    ? L10nService().format(
-                                        'home_reset_password_failed',
-                                        {'error': verifyError!})
-                                    : L10nService().format(
-                                        'home_reset_otp_sent',
-                                        {'email': email}),
+                        ? context.tr('home_angkimtram_9b5339')
+                        : sendError != null
+                        ? L10nService().format('home_send_otp_failed', {
+                            'error': sendError!,
+                          })
+                        : verifyError != null
+                        ? L10nService().format('home_reset_password_failed', {
+                            'error': verifyError!,
+                          })
+                        : L10nService().format('home_reset_otp_sent', {
+                            'email': email,
+                          }),
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
@@ -403,9 +404,7 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                               : Icons.visibility_rounded,
                         ),
                         onPressed: canConfirm
-                            ? () => setDialogState(
-                                  () => isObscure = !isObscure,
-                                )
+                            ? () => setDialogState(() => isObscure = !isObscure)
                             : null,
                       ),
                     ),
@@ -444,29 +443,26 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                 ),
                 onPressed: canConfirm
                     ? () async {
-                        final invalidOtpMsg =
-                            context.tr('home_vuilngnhp6_526103');
-                        final invalidPasswordMsg =
-                            context.tr('home_mtkhumiphi_472132');
-                        final verifyTimeoutMsg =
-                            context.tr('home_imtkhuqulu_bfeb3a');
+                        final invalidOtpMsg = context.tr(
+                          'home_vuilngnhp6_526103',
+                        );
+                        final invalidPasswordMsg = context.tr(
+                          'home_mtkhumiphi_472132',
+                        );
+                        final verifyTimeoutMsg = context.tr(
+                          'home_imtkhuqulu_bfeb3a',
+                        );
                         final otp = otpCtrl.text.trim();
                         final newPassword = newPasswordCtrl.text;
                         if (otp.length != 6) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(invalidOtpMsg),
-                            ),
+                            SnackBar(content: Text(invalidOtpMsg)),
                           );
                           return;
                         }
                         if (newPassword.length < 6) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                invalidPasswordMsg,
-                              ),
-                            ),
+                            SnackBar(content: Text(invalidPasswordMsg)),
                           );
                           return;
                         }
@@ -479,9 +475,7 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                         try {
                           await verifyCode(otp, newPassword).timeout(
                             _kSettingsOtpVerifyTimeout,
-                            onTimeout: () => throw Exception(
-                              verifyTimeoutMsg,
-                            ),
+                            onTimeout: () => throw Exception(verifyTimeoutMsg),
                           );
                           if (ctx.mounted) Navigator.pop(ctx, true);
                         } catch (error) {
@@ -498,8 +492,8 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                   isSending
                       ? context.tr('home_anggi_6b22c8')
                       : isVerifying
-                          ? context.tr('home_angkimtra_92e8dd')
-                          : context.tr('home_imtkhu_ff6fe7'),
+                      ? context.tr('home_angkimtra_92e8dd')
+                      : context.tr('home_imtkhu_ff6fe7'),
                   style: SLTheme.quicksand(
                     color: canConfirm ? Colors.white : Colors.black54,
                     fontWeight: FontWeight.bold,
@@ -585,10 +579,15 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
       setState(() {
         _pendingAccountDeletionAtMs =
             deletionAt > DateTime.now().millisecondsSinceEpoch ? deletionAt : 0;
-        _pendingAccountDeletionUid =
-            _pendingAccountDeletionAtMs > 0 ? deletionUid : '';
+        _pendingAccountDeletionUid = _pendingAccountDeletionAtMs > 0
+            ? deletionUid
+            : '';
       });
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/home/tabs/settings/settings_state_helpers.dart: $error',
+      );
+    }
   }
 
   int _loveDayCounter() {
@@ -597,8 +596,11 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
       final startDate = DateTime.parse(_loveDate);
       final today = DateTime.now();
       final normalizedToday = DateTime(today.year, today.month, today.day);
-      final normalizedStart =
-          DateTime(startDate.year, startDate.month, startDate.day);
+      final normalizedStart = DateTime(
+        startDate.year,
+        startDate.month,
+        startDate.day,
+      );
       final days = normalizedToday.difference(normalizedStart).inDays;
       return days < 0 ? 0 : days;
     } catch (_) {
@@ -686,15 +688,18 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
                   .child('houses/$_houseId/members/${user.uid}')
                   .get();
               if (memberSnap.exists && memberSnap.value is Map) {
-                final memberData =
-                    Map<String, dynamic>.from(memberSnap.value as Map);
+                final memberData = Map<String, dynamic>.from(
+                  memberSnap.value as Map,
+                );
                 final role = memberData['role']?.toString().trim();
                 if (role == 'user1' || role == 'user2') {
                   final cleanRole = role == 'user2' ? 'user2' : 'user1';
                   storedRole = cleanRole;
                   await localPrefs.setString('il_role', cleanRole);
-                  await SecureStorageService.instance
-                      .write(SecureStorageService.keyRole, cleanRole);
+                  await SecureStorageService.instance.write(
+                    SecureStorageService.keyRole,
+                    cleanRole,
+                  );
                   RoleUtils.roleNotifier.value = cleanRole;
                 }
               }
@@ -708,24 +713,26 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
             storedRole: storedRole,
           );
           final shouldHideRoleSwitch = relMode.trim().toLowerCase() == 'single';
-          final resolvedActiveRoleKey =
-              shouldHideRoleSwitch ? 'user1' : activeRoleKey;
+          final resolvedActiveRoleKey = shouldHideRoleSwitch
+              ? 'user1'
+              : activeRoleKey;
           final resolvedGreetingQuote =
               (data['countdownTopLabel'] ?? data['greetingQuote'] ?? '')
                   .toString()
                   .trim();
-          final resolvedLoveUnit = (data['countdownBottomLabel'] ??
-                  data['dayUnit'] ??
-                  loveDaysUnitMsg)
-              .toString()
-              .trim();
+          final resolvedLoveUnit =
+              (data['countdownBottomLabel'] ??
+                      data['dayUnit'] ??
+                      loveDaysUnitMsg)
+                  .toString()
+                  .trim();
           if (mounted) {
             setState(() {
               _houseIdChanged = data['houseIdChanged'] == true;
               _houseName = data['houseName'] ?? loveHouseDefaultName;
               _homeShowHouseName = data.containsKey('homeShowHouseName')
                   ? (data['homeShowHouseName'] == true ||
-                      data['homeShowHouseName'] == 'true')
+                        data['homeShowHouseName'] == 'true')
                   : false;
               _loveDate = data['startDate'] ?? '';
               _nameU1 = data['nameU1'] ?? maleRoleName;
@@ -734,8 +741,9 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
               _avatarUrl2 = data['avtUser2'] ?? '';
               _dobU1 = data['dobU1'] ?? '';
               _dobU2 = data['dobU2'] ?? '';
-              _loveUnit =
-                  resolvedLoveUnit.isEmpty ? loveDaysUnitMsg : resolvedLoveUnit;
+              _loveUnit = resolvedLoveUnit.isEmpty
+                  ? loveDaysUnitMsg
+                  : resolvedLoveUnit;
               _relationshipMode = relMode;
               _activeRoleKey = resolvedActiveRoleKey;
               _musicAutoplay = _musicAutoplay;
@@ -744,42 +752,44 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
                   : (data['theme'] ?? '').toString().trim();
               _draftEffectKey ??=
                   (data['fallingEffect'] ?? '').toString().trim().isEmpty
-                      ? null
-                      : (data['fallingEffect'] ?? '').toString().trim();
+                  ? null
+                  : (data['fallingEffect'] ?? '').toString().trim();
               _draftAvatarSizePx ??=
                   _toDoubleOrNull(data['avatarSizePx']) ?? _draftAvatarSizePx;
               _draftCountdownSizePx ??=
                   _toDoubleOrNull(data['countdownSizePx']) ??
-                      _draftCountdownSizePx;
+                  _draftCountdownSizePx;
               _draftAvatarFrameKey ??=
                   (data['avatarFrame'] ?? '').toString().trim().isEmpty
-                      ? null
-                      : (data['avatarFrame'] ?? '').toString().trim();
+                  ? null
+                  : (data['avatarFrame'] ?? '').toString().trim();
               _draftCountdownStyleKey ??=
                   (data['countdownStyle'] ?? '').toString().trim().isEmpty
-                      ? null
-                      : (data['countdownStyle'] ?? '').toString().trim();
+                  ? null
+                  : (data['countdownStyle'] ?? '').toString().trim();
               _draftFontKey ??= (data['font'] ?? '').toString().trim().isEmpty
                   ? null
                   : (data['font'] ?? '').toString().trim();
               _draftHomeBlockToneKey ??=
                   (data['homeBlockTone'] ?? '').toString().trim().isEmpty
-                      ? null
-                      : (data['homeBlockTone'] ?? '').toString().trim();
+                  ? null
+                  : (data['homeBlockTone'] ?? '').toString().trim();
 
-              _draftCustomBackgroundUrl ??= (data['customBackgroundUrl'] ??
-                      data['customHomeBackground'] ??
-                      '')
-                  .toString()
-                  .trim();
-              _draftTransparentMode = (data['transparentMode'] is bool
+              _draftCustomBackgroundUrl ??=
+                  (data['customBackgroundUrl'] ??
+                          data['customHomeBackground'] ??
+                          '')
+                      .toString()
+                      .trim();
+              _draftTransparentMode =
+                  (data['transparentMode'] is bool
                       ? data['transparentMode'] as bool
                       : null) ??
                   _draftTransparentMode;
 
               _notificationsEnabled =
                   _toBoolOrNull(data['notificationsEnabled']) ??
-                      _notificationsEnabled;
+                  _notificationsEnabled;
               NotificationService().hasPermission().then((hasPerm) {
                 if (mounted && !hasPerm && _notificationsEnabled) {
                   setState(() => _notificationsEnabled = false);
@@ -791,15 +801,17 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
               _notifChat = _toBoolOrNull(data['notifChat']) ?? _notifChat;
               _notifFriend = _toBoolOrNull(data['notifFriend']) ?? _notifFriend;
               _notifHeart = _toBoolOrNull(data['notifHeart']) ?? _notifHeart;
-              _smartDiaryReminder = _toBoolOrNull(data['smartReminderDiary']) ??
+              _smartDiaryReminder =
+                  _toBoolOrNull(data['smartReminderDiary']) ??
                   _smartDiaryReminder;
               _smartCapsuleReminder =
                   _toBoolOrNull(data['smartReminderCapsule']) ??
-                      _smartCapsuleReminder;
+                  _smartCapsuleReminder;
               _smartLoveNoteReminder =
                   _toBoolOrNull(data['smartReminderLoveNote']) ??
-                      _smartLoveNoteReminder;
-              _smartSleepReminder = _toBoolOrNull(data['smartReminderSleep']) ??
+                  _smartLoveNoteReminder;
+              _smartSleepReminder =
+                  _toBoolOrNull(data['smartReminderSleep']) ??
                   _smartSleepReminder;
               final dbMorningTime =
                   data['goodMorningTime']?.toString().trim() ?? '';
@@ -824,28 +836,31 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
               _nameU1Ctrl.text = _nameU1;
               _nameU2Ctrl.text = _nameU2;
               _loveUnitCtrl.text = _loveUnit;
-              _musicLinkCtrl.text =
-                  _playlist.isNotEmpty ? _playlist.first.url : '';
+              _musicLinkCtrl.text = _playlist.isNotEmpty
+                  ? _playlist.first.url
+                  : '';
             });
           }
           _markSettingsBootstrapComplete();
 
           // Chạy song song sau khi UI đã mở — không chặn màn hình Cài đặt
-          unawaited(Future.wait([
-            if (relMode == 'couple' && _houseId != null)
-              _houseSettingsService
-                  .isCoupleConnected(_houseId!)
-                  .then((connected) {
-                if (mounted) setState(() => _isCoupleConnected = connected);
-              })
-            else
-              Future(() {
-                if (mounted) setState(() => _isCoupleConnected = false);
-              }),
-            _loadSecurityDetails(),
-            _refreshBreakupRequestState(),
-            _loadVipStatus(),
-          ]));
+          unawaited(
+            Future.wait([
+              if (relMode == 'couple' && _houseId != null)
+                _houseSettingsService.isCoupleConnected(_houseId!).then((
+                  connected,
+                ) {
+                  if (mounted) setState(() => _isCoupleConnected = connected);
+                })
+              else
+                Future(() {
+                  if (mounted) setState(() => _isCoupleConnected = false);
+                }),
+              _loadSecurityDetails(),
+              _refreshBreakupRequestState(),
+              _loadVipStatus(),
+            ]),
+          );
         } else {
           _clearBreakupRequestState();
           if (mounted) {
@@ -960,10 +975,7 @@ extension _SettingsTabSecurityStateHelpers on _SettingsTabState {
       return false;
     } catch (error) {
       debugPrint(
-        '_ensureManagedSharedInfoWriteAccess failed: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: L10nService().translate('home_clixyra_775791'),
-        ).message}',
+        '_ensureManagedSharedInfoWriteAccess failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('home_clixyra_775791')).message}',
       );
       final message = _buildManagedPendingDeviceMessage();
       if (mounted) {
@@ -981,11 +993,12 @@ extension _SettingsTabSecurityStateHelpers on _SettingsTabState {
   }
 
   Future<void> _checkManagedSecurityScopeLock() async {
-    final effectiveSettings =
-        await _militaryLockService.getEffectiveLockSettings(houseId: _houseId);
+    final effectiveSettings = await _militaryLockService
+        .getEffectiveLockSettings(houseId: _houseId);
     final isAppLockEnabled = effectiveSettings.enabled;
-    final isScopeSecurityEnabled =
-        effectiveSettings.isScopeEnabled(LockScope.security);
+    final isScopeSecurityEnabled = effectiveSettings.isScopeEnabled(
+      LockScope.security,
+    );
 
     if (!isAppLockEnabled || !isScopeSecurityEnabled) {
       if (mounted) {
@@ -1019,10 +1032,7 @@ extension _SettingsTabSecurityStateHelpers on _SettingsTabState {
         isTrusted = trustState.isTrusted;
       } catch (error) {
         debugPrint(
-          'isCurrentDeviceTrusted failed: ${AppErrorMapper.resolve(
-            error,
-            fallbackMessage: L10nService().translate('home_clixyra_775791'),
-          ).message}',
+          'isCurrentDeviceTrusted failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('home_clixyra_775791')).message}',
         );
         isTrusted = false;
       }
@@ -1064,10 +1074,7 @@ extension _SettingsTabSecurityStateHelpers on _SettingsTabState {
           : false;
     } catch (error) {
       debugPrint(
-        'security scope unlock failed: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: L10nService().translate('home_clixyra_775791'),
-        ).message}',
+        'security scope unlock failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('home_clixyra_775791')).message}',
       );
       authSuccess = false;
     }

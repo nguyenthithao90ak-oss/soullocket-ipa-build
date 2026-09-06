@@ -15,7 +15,24 @@ extension _MapSearchSheetExt on _MapScreenState {
 
 class MapSearchDelegate extends SearchDelegate<ll.LatLng?> {
   @override
-  String get searchFieldLabel => 'Tìm kiếm địa điểm...';
+  String get searchFieldLabel =>
+      L10nService().translate('p9_map_search_field_label');
+
+  @override
+  ThemeData appBarTheme(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return theme.copyWith(
+      scaffoldBackgroundColor: colors.surface,
+      appBarTheme: theme.appBarTheme.copyWith(
+        backgroundColor: colors.surface,
+        foregroundColor: colors.onSurface,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+      ),
+    );
+  }
 
   @override
   List<Widget> buildActions(BuildContext context) {
@@ -23,6 +40,7 @@ class MapSearchDelegate extends SearchDelegate<ll.LatLng?> {
       if (query.isNotEmpty)
         IconButton(
           icon: const Icon(Icons.clear_rounded),
+          tooltip: context.tr('p9_map_search_clear'),
           onPressed: () {
             query = '';
             showSuggestions(context);
@@ -35,6 +53,7 @@ class MapSearchDelegate extends SearchDelegate<ll.LatLng?> {
   Widget buildLeading(BuildContext context) {
     return IconButton(
       icon: const Icon(Icons.arrow_back_rounded),
+      tooltip: context.tr('p9_map_search_back'),
       onPressed: () => close(context, null),
     );
   }
@@ -50,10 +69,24 @@ class MapSearchDelegate extends SearchDelegate<ll.LatLng?> {
   @override
   Widget buildSuggestions(BuildContext context) {
     if (query.trim().isEmpty) {
-      return Center(
-        child: Text(
-          'Nhập tên đường, địa điểm để tìm kiếm...',
-          style: TextStyle(color: Colors.grey.shade500),
+      final colors = Theme.of(context).colorScheme;
+      final padding = SLResponsive.horizontalPaddingForWidth(
+        MediaQuery.sizeOf(context).width,
+      );
+      return Semantics(
+        liveRegion: true,
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: padding),
+            child: Text(
+              context.tr('p9_map_search_hint'),
+              textAlign: TextAlign.center,
+              style: SLTheme.quicksand(
+                color: colors.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
         ),
       );
     }
@@ -78,8 +111,10 @@ class _SearchResultsWidget extends StatefulWidget {
 }
 
 class _SearchResultsWidgetState extends State<_SearchResultsWidget> {
-  List<NominatimPlace> _results = [];
+  List<NominatimPlace> _results = const <NominatimPlace>[];
   bool _isLoading = false;
+  String? _errorMessage;
+  int _requestId = 0;
 
   @override
   void initState() {
@@ -97,59 +132,178 @@ class _SearchResultsWidgetState extends State<_SearchResultsWidget> {
 
   Future<void> _fetchResults() async {
     final q = widget.searchQuery.trim();
-    if (q.isEmpty) return;
+    final requestId = ++_requestId;
+    if (q.isEmpty) {
+      if (!mounted) return;
+      setState(() {
+        _results = const <NominatimPlace>[];
+        _isLoading = false;
+        _errorMessage = null;
+      });
+      return;
+    }
+
+    final genericError = context.tr('p9_map_search_error');
 
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
-    final res = await NominatimService.search(q);
-
-    if (mounted) {
+    try {
+      final res = await NominatimService.search(q);
+      if (!mounted || requestId != _requestId) return;
       setState(() {
         _results = res;
         _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted || requestId != _requestId) return;
+      setState(() {
+        _results = const <NominatimPlace>[];
+        _isLoading = false;
+        _errorMessage = genericError;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final horizontalPadding = SLResponsive.horizontalPaddingForWidth(
+      MediaQuery.sizeOf(context).width,
+    );
+
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: Colors.pinkAccent),
+      return Semantics(
+        label: context.tr('p9_map_search_loading'),
+        liveRegion: true,
+        child: Center(child: CircularProgressIndicator(color: colors.primary)),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return _SearchFeedbackState(
+        icon: Icons.wifi_off_rounded,
+        message: _errorMessage!,
+        actionLabel: context.tr('p9_map_search_retry'),
+        onAction: _fetchResults,
       );
     }
 
     if (_results.isEmpty) {
-      return Center(
-        child: Text(
-          'Không tìm thấy kết quả nào.',
-          style: TextStyle(color: Colors.grey.shade600),
-        ),
+      return _SearchFeedbackState(
+        icon: Icons.location_off_rounded,
+        message: context.tr('p9_map_search_empty'),
       );
     }
 
-    return ListView.builder(
+    return ListView.separated(
+      padding: EdgeInsets.fromLTRB(
+        horizontalPadding,
+        12,
+        horizontalPadding,
+        24,
+      ),
       itemCount: _results.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 4),
       itemBuilder: (context, index) {
         final place = _results[index];
+        final title = place.name.isNotEmpty ? place.name : place.displayName;
         return ListTile(
-          leading: const Icon(Icons.location_on_rounded, color: Colors.blueAccent),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 4,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          tileColor: colors.surfaceContainerHighest.withValues(alpha: 0.56),
+          leading: Icon(Icons.location_on_rounded, color: colors.primary),
           title: Text(
-            place.name.isNotEmpty ? place.name : place.displayName,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            title,
+            style: SLTheme.quicksand(
+              fontWeight: FontWeight.w900,
+              color: colors.onSurface,
+            ),
           ),
           subtitle: place.name.isNotEmpty
               ? Text(
                   place.displayName,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
+                  style: SLTheme.quicksand(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: colors.onSurfaceVariant,
+                  ),
                 )
               : null,
+          trailing: Icon(
+            Icons.north_east_rounded,
+            size: 18,
+            color: colors.onSurfaceVariant,
+          ),
           onTap: () => widget.onSelected(place.latLng),
         );
       },
+    );
+  }
+}
+
+class _SearchFeedbackState extends StatelessWidget {
+  const _SearchFeedbackState({
+    required this.icon,
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final IconData icon;
+  final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final horizontalPadding = SLResponsive.horizontalPaddingForWidth(
+      MediaQuery.sizeOf(context).width,
+    );
+    return Semantics(
+      liveRegion: true,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 36, color: colors.onSurfaceVariant),
+                const SizedBox(height: 12),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: SLTheme.quicksand(
+                    color: colors.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                    height: 1.35,
+                  ),
+                ),
+                if (onAction != null && actionLabel != null) ...[
+                  const SizedBox(height: 16),
+                  FilledButton.icon(
+                    onPressed: onAction,
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: Text(actionLabel!),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

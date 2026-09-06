@@ -13,6 +13,8 @@ import 'package:flutter_map/flutter_map.dart' as fm;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
+import 'map_location_access.dart';
+import 'widgets/map_refresh_widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart' as ll;
 import 'package:permission_handler/permission_handler.dart' as app_permission;
@@ -137,6 +139,30 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   bool _didAutoFit = false;
   bool _isMapReady = false;
   bool _isBootstrappingLocation = false;
+  MapLocationAccess _locationAccess = const MapLocationAccess(
+    MapLocationAccessStatus.checking,
+  );
+  bool _myGpsSyncError = false;
+  bool _partnerGpsSyncError = false;
+  bool get _gpsSyncError =>
+      _myGpsSyncError || (!_isSingleRelationship && _partnerGpsSyncError);
+
+  void _setGpsSyncError({bool? mine, bool? partner}) {
+    final nextMine = mine ?? _myGpsSyncError;
+    final nextPartner = partner ?? _partnerGpsSyncError;
+    if (!mounted ||
+        (nextMine == _myGpsSyncError && nextPartner == _partnerGpsSyncError)) {
+      return;
+    }
+    setState(() {
+      _myGpsSyncError = nextMine;
+      _partnerGpsSyncError = nextPartner;
+    });
+  }
+
+  final DraggableScrollableController _panelController =
+      DraggableScrollableController();
+  final ValueNotifier<double> _panelExtent = ValueNotifier(0.42);
   bool _didQueueMapIntroNotice = false;
   bool _isSelectingCheckinLocation = false;
   String? _mapInitError;
@@ -158,10 +184,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   List<_MapMemoryItem> _memories = [];
   List<_MapCheckinItem> _checkins = [];
 
-  String _distanceText = L10nService().translate('map_angnhv_ea3669');
+  String _distanceText = '--';
   String _routeDistanceText = '--';
   String _etaText = '--';
-  String _mapInsightText = L10nService().translate('map_angqutdliu_8eeb1b');
+  String _mapInsightText = L10nService().translate('map_refresh_no_positions');
   String? _mapAlert;
   String _memorySummary = L10nService().translate('map_chacghimkn_c6823f');
   String _checkinSummary = L10nService().translate('map_chacchecki_51b108');
@@ -234,7 +260,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
             'houses/${widget.houseId}/presence/${widget.myRole}/isViewingMap',
           )
           .set(active ? true : null);
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[SuppressedError] lib/views/map/map_screen.dart: $error');
+    }
   }
 
   @override
@@ -264,6 +292,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     _sleepModeSub?.cancel();
     _musicSub?.cancel();
     _mapController.dispose();
+    _panelController.dispose();
+    _panelExtent.dispose();
     _staticMarkersVN.dispose();
     _historyPolylinesVN.dispose();
     _checkinPolylinesVN.dispose();
@@ -284,14 +314,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         _scheduleMapReadyWatchdog();
       }
       _scheduleLiveRefresh();
-      unawaited(
-        _locationService.startTracking(
-          widget.houseId,
-          widget.myRole,
-          context: context,
-          forcePrompt: false,
-        ),
-      );
+      unawaited(_bootstrapLocationTracking(requestAccess: false));
       return;
     }
 
@@ -308,7 +331,6 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       _setPartnerListenerActive(false);
       if (!mounted) return;
       setState(() {
-        _isBootstrappingLocation = false;
         _locationStatusMessage = context.tr('map_soullocket_ece6e9');
       });
     }
@@ -455,7 +477,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       _setRealtimePipelinesActive(true);
 
       // Automatically bootstrap location when entering the map screen
-      unawaited(_bootstrapLocationTracking());
+      unawaited(_bootstrapLocationTracking(requestAccess: false));
 
       await Future.wait([
         _primeMemoryPipeline().timeout(
@@ -560,58 +582,155 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     return context.tr('map_btvtrchnhx_dbd0e8');
   }
 
-  Future<void> _bootstrapLocationTracking() async {
+  Future<void> _bootstrapLocationTracking({bool requestAccess = true}) async {
+    if (_isBootstrappingLocation || !mounted) return;
+    setState(() => _isBootstrappingLocation = true);
+    try {
+      var access = await MapLocationAccess.inspect();
+      if (!mounted) return;
+      if (requestAccess &&
+          access.status == MapLocationAccessStatus.permissionRequired) {
+        // Không đặt timeout quanh hộp thoại: người dùng có quyền đọc và quyết định.
+        await _locationService.requestPermission(
+          context: context,
+          forcePrompt: true,
+        );
+        if (!mounted) return;
+        access = await MapLocationAccess.inspect();
+        if (!mounted) return;
+      }
+      setState(() => _locationAccess = access);
+      if (!access.canTrack) return;
+      // Không truyền context: resume chỉ kiểm tra quyền đã có, không xin lại.
+      final started = await _locationService.startTracking(
+        widget.houseId,
+        widget.myRole,
+      );
+      if (!mounted) return;
+      if (!started) {
+        final refreshed = await MapLocationAccess.inspect();
+        if (!mounted) return;
+        setState(
+          () => _locationAccess = refreshed.canTrack
+              ? const MapLocationAccess(MapLocationAccessStatus.unavailable)
+              : refreshed,
+        );
+      } else {
+        _locationStatusMessage = null;
+        unawaited(_fitToVisibleData(includeHistory: false));
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _locationAccess = const MapLocationAccess(
+            MapLocationAccessStatus.unavailable,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isBootstrappingLocation = false);
+        _scheduleLiveRefresh();
+      }
+    }
+  }
+
+  Future<void> _openLocationAppSettings() async {
+    if (kIsWeb) return;
+    final opened = await AppLifecyclePresenceGuard.guard(
+      Geolocator.openAppSettings,
+    );
+    if (!mounted) return;
+    if (!opened) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr('map_refresh_settings_unavailable'))),
+      );
+    }
+  }
+
+  Future<void> _handleLocationAction() async {
     if (_isBootstrappingLocation) return;
-    if (mounted) {
-      setState(() {
-        _isBootstrappingLocation = true;
-        _locationStatusMessage = context.tr('map_angxinquyn_ef9d31');
-      });
-    }
-
-    final hasPerm = await _locationService
-        .requestPermission(context: context)
-        .timeout(const Duration(seconds: 15), onTimeout: () => false);
-    if (!mounted) return;
-    if (!hasPerm) {
-      setState(() {
-        _isBootstrappingLocation = false;
-        _locationStatusMessage = kIsWeb
-            ? context.tr('map_chacpquynl_36c63d')
-            : context.tr('map_chacpquynv_efd5c3');
-      });
+    if (_locationAccess.status == MapLocationAccessStatus.deniedForever &&
+        !kIsWeb) {
+      await _openLocationAppSettings();
       return;
     }
-
-    setState(() {
-      _locationStatusMessage = context.tr('map_angbtcpnht_1f1aeb');
-    });
-
-    final started = await _locationService
-        .startTracking(widget.houseId, widget.myRole, context: context)
-        .timeout(const Duration(seconds: 12), onTimeout: () => false);
-
-    if (!mounted) return;
-
-    if (!started) {
-      // Kiểm tra xem thực sự là do tắt GPS hay do lỗi khác
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      setState(() {
-        _isBootstrappingLocation = false;
-        _locationStatusMessage = serviceEnabled
-            ? context.tr('map_gpschasnsn_4ffc6e')
-            : context.tr('map_bnchabtnhv_df0da5');
-      });
+    if (_locationAccess.status == MapLocationAccessStatus.serviceDisabled &&
+        !kIsWeb) {
+      final opened = await AppLifecyclePresenceGuard.guard(
+        Geolocator.openLocationSettings,
+      );
+      if (!mounted) return;
+      if (!opened) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.tr('map_refresh_settings_unavailable')),
+          ),
+        );
+      }
       return;
     }
+    if (_gpsSyncError) {
+      _setRealtimePipelinesActive(false);
+      _setRealtimePipelinesActive(true);
+    }
+    await _bootstrapLocationTracking();
+  }
 
-    setState(() {
-      _isBootstrappingLocation = false;
-      _locationStatusMessage = null;
-    });
+  Future<void> _toggleMapPanel() async {
+    if (!_panelController.isAttached) return;
+    await _panelController.animateTo(
+      _panelController.size > .55 ? .20 : .84,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
+  }
 
-    // Thêm hiệu ứng zoom nhẹ tới vị trí của mình khi vừa bật thành công
-    _fitToVisibleData(includeHistory: false);
+  Future<void> _focusMapPoint(_GpsPoint? point) async {
+    if (point == null || !_isMapReady) return;
+    if (_panelController.isAttached) {
+      await _panelController.animateTo(
+        .20,
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeOutCubic,
+      );
+    }
+    if (!mounted || !_isMapReady) return;
+    _mapController.fitCamera(
+      fm.CameraFit.coordinates(
+        coordinates: [ll.LatLng(point.lat, point.lng)],
+        padding: _mapCameraPadding,
+        maxZoom: 16,
+      ),
+    );
+  }
+
+  EdgeInsets get _mapCameraPadding {
+    final size = MediaQuery.sizeOf(context);
+    final top = MediaQuery.paddingOf(context).top + 126;
+    final bottom = (size.height * _panelExtent.value + 28).clamp(
+      0.0,
+      math.max(0.0, size.height - top - 120),
+    );
+    return EdgeInsets.fromLTRB(40, top, 40, bottom.toDouble());
+  }
+
+  Future<void> _handleMyLocationTap() async {
+    final point = _effectiveGpsForRole(widget.myRole);
+    if (point != null) {
+      await _focusMapPoint(point);
+    } else {
+      if (_panelController.isAttached) {
+        unawaited(
+          _panelController.animateTo(
+            .84,
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+          ),
+        );
+      }
+      await _handleLocationAction();
+    }
   }
 
   void _scheduleMapReadyWatchdog() {
@@ -1395,7 +1514,12 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         foregroundColor: SLColors.textPrimary,
         surfaceTintColor: Colors.transparent,
         titleSpacing: 0,
-        title: const SizedBox.shrink(),
+        title: Text(
+          context.tr('map_refresh_nav_title'),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 10),
@@ -1437,7 +1561,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               ),
               child: IconButton(
                 tooltip: context.tr('map_vvtrcabn_bc0bdb'),
-                onPressed: _focusCameraNearMe,
+                onPressed: _handleMyLocationTap,
                 color: SLColors.textPrimary,
                 icon: const Icon(Icons.my_location_rounded),
               ),
@@ -1975,10 +2099,10 @@ class _LiveUiSnapshot {
     partnerAddressText: L10nService().translate('map_chacvtr_a02989'),
     myUpdatedText: L10nService().translate('map_chacthigia_2ba794'),
     partnerUpdatedText: L10nService().translate('map_chacthigia_2ba794'),
-    distanceText: L10nService().translate('map_angnhv_ea3669'),
+    distanceText: '--',
     routeDistanceText: '--',
     etaText: '--',
-    mapInsightText: L10nService().translate('map_angqutdliu_8eeb1b'),
+    mapInsightText: L10nService().translate('map_refresh_no_positions'),
     mapAlert: null,
   );
 }

@@ -80,7 +80,11 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
       if (mounted) {
         SLNotice.showInfo(context, context.tr('settings_copied_share'));
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/home/tabs/settings/settings_support_legal_section.dart: $error',
+      );
+    }
 
     unawaited(
       Future<void>.delayed(const Duration(milliseconds: 50), () async {
@@ -495,14 +499,14 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
         if (email == null || email.trim().isEmpty) {
           SLNotice.showError(
             context,
-            'Không tìm thấy email của tài khoản để gửi mã xác thực.',
+            context.tr('p6_delete_account_email_missing'),
           );
           return;
         }
 
         final otpVerified = await showSettingsEmailOtpDialog(
           context: context,
-          title: 'Xác thực xóa tài khoản',
+          title: context.tr('p6_delete_account_verify_title'),
           email: email,
           sendCode: () async {
             await _authService.sendOtpEmail(email);
@@ -538,7 +542,11 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
 
           try {
             await _authService.signOut();
-          } catch (_) {}
+          } catch (error) {
+            debugPrint(
+              '[SuppressedError] lib/views/home/tabs/settings/settings_support_legal_section.dart: $error',
+            );
+          }
           if (!mounted) return;
           // AppEntry automatically handles routing to LoginScreen via auth state.
         } catch (e) {
@@ -614,7 +622,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
           ),
           _buildLegalBtn(
             icon: Icons.verified_user_rounded,
-            label: L10nService().translate('Bản quyền và cảnh báo'),
+            label: context.tr('p6_copyright_and_warning'),
             color: const Color(0xFFC62828),
             onTap: _openAboutDocument,
           ),
@@ -641,9 +649,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
                 Expanded(
                   child: Text(
                     L10nService()
-                        .translate(
-                          'SoulLocket © {year} Tame Trương Việt Hoàng. Mọi hành vi crack, mod, can thiệp trái phép đều vi phạm bản quyền và sẽ bị xử lý.',
-                        )
+                        .translate('p6_copyright_notice')
                         .replaceAll('{year}', DateTime.now().year.toString()),
                     style: SLTheme.quicksand(
                       fontSize: 11,

@@ -55,15 +55,20 @@ class _CountdownModeIndependentScreenState
     MapEntry(L10nService().translate('home_honghn_ab7dad'), 'theme-sunset'),
     MapEntry(L10nService().translate('home_idng_b4a250'), 'theme-ocean'),
     MapEntry(L10nService().translate('home_msu_573436'), 'theme-night'),
-    const MapEntry('Dark', 'theme-dark'),
-    const MapEntry('Mystic Dark', 'theme-mystic-dark'),
+    MapEntry(L10nService().translate('p7_theme_dark'), 'theme-dark'),
+    MapEntry(
+      L10nService().translate('p7_theme_mystic_dark'),
+      'theme-mystic-dark',
+    ),
     MapEntry(L10nService().translate('home_ttch_1676a7'), 'off'),
   ];
 
   // Keep the most useful styles on top for a cleaner, faster settings flow.
   static final List<MapEntry<String, String>> _countdownStyleOptions = [
-    MapEntry(L10nService().translate('countdown_floating_hearts'),
-        'floating_hearts'),
+    MapEntry(
+      L10nService().translate('countdown_floating_hearts'),
+      'floating_hearts',
+    ),
     MapEntry(L10nService().translate('countdown_glass'), 'glass'),
     MapEntry(L10nService().translate('countdown_default'), 'default'),
     MapEntry(L10nService().translate('countdown_glow'), 'glow'),
@@ -74,12 +79,18 @@ class _CountdownModeIndependentScreenState
     MapEntry(L10nService().translate('countdown_fireworks'), 'fireworks'),
     MapEntry(L10nService().translate('countdown_lava'), 'lava'),
     MapEntry(
-        L10nService().translate('countdown_cherry_blossom'), 'cherry_blossom'),
+      L10nService().translate('countdown_cherry_blossom'),
+      'cherry_blossom',
+    ),
     MapEntry(
-        L10nService().translate('countdown_meteor_shower'), 'meteor_shower'),
+      L10nService().translate('countdown_meteor_shower'),
+      'meteor_shower',
+    ),
     MapEntry(L10nService().translate('countdown_deep_ocean'), 'deep_ocean'),
     MapEntry(
-        L10nService().translate('countdown_golden_sunset'), 'golden_sunset'),
+      L10nService().translate('countdown_golden_sunset'),
+      'golden_sunset',
+    ),
     MapEntry(L10nService().translate('countdown_neon_pulse'), 'neon_pulse'),
   ];
 
@@ -110,8 +121,9 @@ class _CountdownModeIndependentScreenState
     required bool hasAdUnlock,
   }) {
     final normalized = styleKey.trim().toLowerCase();
-    final exists =
-        _countdownStyleOptions.any((item) => item.value == normalized);
+    final exists = _countdownStyleOptions.any(
+      (item) => item.value == normalized,
+    );
     if (!exists) {
       return 'default';
     }
@@ -154,23 +166,23 @@ class _CountdownModeIndependentScreenState
 
   static final List<MapEntry<String, String>> _avatarFrameOptions = [
     MapEntry(L10nService().translate('home_khngkhung_e37077'), 'off'),
-    const MapEntry('Circle', 'circle'),
-    const MapEntry('Rounded', 'rounded'),
-    const MapEntry('Squircle', 'squircle'),
-    const MapEntry('Pearl', 'pearl'),
-    const MapEntry('Glass', 'glass'),
-    const MapEntry('Aurora', 'vip'),
+    MapEntry(L10nService().translate('p7_frame_circle'), 'circle'),
+    MapEntry(L10nService().translate('p7_frame_rounded'), 'rounded'),
+    MapEntry(L10nService().translate('p7_frame_squircle'), 'squircle'),
+    MapEntry(L10nService().translate('p7_frame_pearl'), 'pearl'),
+    MapEntry(L10nService().translate('p7_frame_glass'), 'glass'),
+    MapEntry(L10nService().translate('p7_frame_aurora'), 'vip'),
   ];
 
   final CountdownSpaceService _countdownSpaceService = CountdownSpaceService();
   final FriendsService _spaceLookupService = FriendsService();
   final StorageService _storageService = StorageService();
-  final DatabaseReference _countdownSpaceDbRef =
-      FirebaseDatabase.instance.ref();
+  final DatabaseReference _countdownSpaceDbRef = FirebaseDatabase.instance
+      .ref();
   StreamSubscription<List<CountdownSpaceRequestInfo>>? _countdownRequestsSub;
   StreamSubscription<List<CountdownSpaceInfo>>? _countdownSpacesSub;
   StreamSubscription<List<CountdownSpaceDeleteRequestInfo>>?
-      _countdownDeleteRequestsSub;
+  _countdownDeleteRequestsSub;
   StreamSubscription<Map<String, dynamic>>? _interactiveEventsSub;
   Timer? _countdownDeleteEvaluationTimer;
 
@@ -224,34 +236,37 @@ class _CountdownModeIndependentScreenState
     unawaited(_loadSpaces());
     _listenCountdownSpaces();
     if (widget.relationshipMode.trim() != 'single') {
-      _interactiveEventsSub =
-          SoulMergeService().watchInteractiveEvents().listen((event) async {
-        if (!mounted || event.isEmpty) return;
-        final prefs = await SharedPreferences.getInstance();
-        final myRole = prefs.getString('il_role') ?? 'user1';
-        final sender = event['sender']?.toString();
-        if (sender == myRole) return;
+      _interactiveEventsSub = SoulMergeService()
+          .watchInteractiveEvents()
+          .listen((event) async {
+            if (!mounted || event.isEmpty) return;
+            final prefs = await SharedPreferences.getInstance();
+            final myRole = prefs.getString('il_role') ?? 'user1';
+            final sender = event['sender']?.toString();
+            if (sender == myRole) return;
 
-        final type = event['type']?.toString() ?? '';
-        final emoji = event['emoji']?.toString() ??
-            event['customData']?['emoji']?.toString() ??
-            '❤️';
+            final type = event['type']?.toString() ?? '';
+            final emoji =
+                event['emoji']?.toString() ??
+                event['customData']?['emoji']?.toString() ??
+                '❤️';
 
-        if (!mounted) return;
-        if (type == 'photo_shot') {
-          final size = MediaQuery.sizeOf(context);
-          _heartsKey.currentState?.spawnLocalExplosion(
-            Offset(size.width / 2, size.height * 0.74),
-            count: 8,
-          );
-        } else {
-          final exists =
-              _kCountdownModeCenterIconPresets.any((p) => p.type == type);
-          if (exists) {
-            _sendReactionFlight(type, emoji, isIncoming: true);
-          }
-        }
-      });
+            if (!mounted) return;
+            if (type == 'photo_shot') {
+              final size = MediaQuery.sizeOf(context);
+              _heartsKey.currentState?.spawnLocalExplosion(
+                Offset(size.width / 2, size.height * 0.74),
+                count: 8,
+              );
+            } else {
+              final exists = _kCountdownModeCenterIconPresets.any(
+                (p) => p.type == type,
+              );
+              if (exists) {
+                _sendReactionFlight(type, emoji, isIncoming: true);
+              }
+            }
+          });
     }
     unawaited(_promptPendingSpaceAvatarRetryIfNeeded());
   }
@@ -338,10 +353,13 @@ class _CountdownModeIndependentScreenState
       );
     }
 
-    final themeData =
-        _CountdownModeThemeData.resolve(_resolveThemeKey(_themeKey));
-    final styleData =
-        _CountdownModeStyleData.resolve(_countdownStyleKey, _transparentMode);
+    final themeData = _CountdownModeThemeData.resolve(
+      _resolveThemeKey(_themeKey),
+    );
+    final styleData = _CountdownModeStyleData.resolve(
+      _countdownStyleKey,
+      _transparentMode,
+    );
 
     return PopScope(
       canPop: _openedSpaceHouseId == null,
@@ -377,7 +395,7 @@ class _CountdownModeIndependentScreenState
                       fadeInDuration: const Duration(milliseconds: 180),
                       maxWidthDiskCache: 1080,
                       memCacheWidth: 400,
-                      placeholder: (_, __) => DecoratedBox(
+                      placeholder: (_, _) => DecoratedBox(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
@@ -389,7 +407,7 @@ class _CountdownModeIndependentScreenState
                           ),
                         ),
                       ),
-                      errorWidget: (_, __, ___) => const SizedBox.shrink(),
+                      errorWidget: (_, _, _) => const SizedBox.shrink(),
                     ),
                   ),
                 ),
@@ -452,7 +470,8 @@ class _CountdownModeIndependentScreenState
                                         .toDouble();
                                   })(),
                                   minHeight: (() {
-                                    final minHeight = constraints.maxHeight -
+                                    final minHeight =
+                                        constraints.maxHeight -
                                         (constraints.maxHeight < 720
                                             ? 28
                                             : 36) -
@@ -474,33 +493,41 @@ class _CountdownModeIndependentScreenState
                                     _CountdownModeAvatarCardStatic(
                                       isSingleMode: _singleMode,
                                       leftName: _nameU1.trim().isEmpty
-                                          ? L10nService()
-                                              .translate('home_bn_1fd75b')
+                                          ? L10nService().translate(
+                                              'home_bn_1fd75b',
+                                            )
                                           : _nameU1.trim(),
                                       rightName: rightName,
                                       leftAvatarUrl: _avatarUrl1,
-                                      rightAvatarUrl:
-                                          _singleMode ? '' : _avatarUrl2,
+                                      rightAvatarUrl: _singleMode
+                                          ? ''
+                                          : _avatarUrl2,
                                       avatarFrameKey: _avatarFrameKey,
                                       fontKey: _fontKey,
                                       foreground: themeData.foreground,
                                       isDark: themeData.isDark,
                                       centerIconType: _centerIconType,
                                       onCenterIconChanged: (type) => unawaited(
-                                          _updateCenterIconType(type)),
+                                        _updateCenterIconType(type),
+                                      ),
                                       onCenterIconTap: () {
                                         final preset =
                                             _countdownModeCenterIconPresetFor(
-                                                _centerIconType);
+                                              _centerIconType,
+                                            );
                                         if (!_singleMode) {
-                                          unawaited(SoulMergeService()
-                                              .sendInteractiveEvent(
-                                            type: preset.type,
-                                          ));
+                                          unawaited(
+                                            SoulMergeService()
+                                                .sendInteractiveEvent(
+                                                  type: preset.type,
+                                                ),
+                                          );
                                         }
                                         _sendReactionFlight(
-                                            preset.type, preset.emoji,
-                                            isIncoming: false);
+                                          preset.type,
+                                          preset.emoji,
+                                          isIncoming: false,
+                                        );
                                         HapticFeedback.mediumImpact();
                                       },
                                       onLeftAvatarTap: () => unawaited(
@@ -524,9 +551,9 @@ class _CountdownModeIndependentScreenState
                                                   RoleUtils.currentRoleSync(),
                                               targetRole:
                                                   RoleUtils.currentRoleSync() ==
-                                                          'user1'
-                                                      ? 'user2'
-                                                      : 'user1',
+                                                      'user1'
+                                                  ? 'user2'
+                                                  : 'user1',
                                             ),
                                           ),
                                         );
@@ -556,8 +583,9 @@ class _CountdownModeIndependentScreenState
                                     foreground: themeData.foreground,
                                     isDark: themeData.isDark,
                                     onTap: _openSettingsSheet,
-                                    tooltip: L10nService()
-                                        .translate('home_citkhnggia_09f866'),
+                                    tooltip: L10nService().translate(
+                                      'home_citkhnggia_09f866',
+                                    ),
                                   ),
                                 ],
                               ),
@@ -595,10 +623,7 @@ class _CountdownModeIndependentScreenState
                 ),
               ),
               Positioned.fill(
-                child: TapHeartsOverlay(
-                  key: _heartsKey,
-                  style: 'basic',
-                ),
+                child: TapHeartsOverlay(key: _heartsKey, style: 'basic'),
               ),
             ],
           ),
@@ -610,12 +635,16 @@ class _CountdownModeIndependentScreenState
   final ValueNotifier<List<_CountdownReactionFlight>> _reactionFlightsNotifier =
       ValueNotifier<List<_CountdownReactionFlight>>([]);
 
-  void _sendReactionFlight(String type, String emoji,
-      {required bool isIncoming}) async {
+  void _sendReactionFlight(
+    String type,
+    String emoji, {
+    required bool isIncoming,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final myRole = prefs.getString('il_role') ?? 'user1';
-    final bool shootToRight =
-        isIncoming ? (myRole == 'user2') : (myRole == 'user1');
+    final bool shootToRight = isIncoming
+        ? (myRole == 'user2')
+        : (myRole == 'user1');
 
     String? assetPath;
     for (final preset in _kCountdownModeCenterIconPresets) {
@@ -635,7 +664,7 @@ class _CountdownModeIndependentScreenState
     _safeSetState(() {
       _reactionFlightsNotifier.value = [
         ..._reactionFlightsNotifier.value,
-        flight
+        flight,
       ];
     });
   }
@@ -643,8 +672,9 @@ class _CountdownModeIndependentScreenState
   void _removeReactionFlight(String id) {
     if (!mounted) return;
     _safeSetState(() {
-      _reactionFlightsNotifier.value =
-          _reactionFlightsNotifier.value.where((f) => f.id != id).toList();
+      _reactionFlightsNotifier.value = _reactionFlightsNotifier.value
+          .where((f) => f.id != id)
+          .toList();
     });
   }
 }

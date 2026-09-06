@@ -3,16 +3,15 @@ part of '../../../settings_tab.dart';
 
 extension BackgroundEditorExt on _CountdownModeEditorScreenState {
   List<Widget> _buildEditorBackground(
-      BuildContext context, _CountdownModeThemeData themeData) {
+    BuildContext context,
+    _CountdownModeThemeData themeData,
+  ) {
     return [
       _sectionCard(
         icon: Icons.palette_rounded,
         title: L10nService().translate('home_giaodinvng_2311dc'),
         subtitle: context.tr('home_kiuhinthny_15f695'),
-        iconGradient: const [
-          Color(0xFFFF9A9E),
-          Color(0xFFFECF6A),
-        ],
+        iconGradient: const [Color(0xFFFF9A9E), Color(0xFFFECF6A)],
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -34,27 +33,29 @@ extension BackgroundEditorExt on _CountdownModeEditorScreenState {
               value: _styleKey,
               options: _CountdownModeEditorScreenState._countdownStyleOptions
                   .map((entry) {
-                final locked = !widget.isVipActive &&
-                    _CountdownModeIndependentScreenState
-                        ._isPremiumCountdownStyleKey(
+                    final locked =
+                        !widget.isVipActive &&
+                        _CountdownModeIndependentScreenState._isPremiumCountdownStyleKey(
+                          entry.value,
+                        ) &&
+                        !_unlockedStyles.contains(entry.value);
+                    return MapEntry(
+                      locked
+                          ? '${entry.key} • ${context.tr('p7_ad_label')}'
+                          : entry.key,
                       entry.value,
-                    ) &&
-                    !_unlockedStyles.contains(entry.value);
-                return MapEntry(
-                  locked ? '${entry.key} • Quảng cáo' : entry.key,
-                  entry.value,
-                );
-              }).toList(growable: false),
-              onChanged: (value) => unawaited(
-                _handleCountdownStyleSelection(value),
-              ),
+                    );
+                  })
+                  .toList(growable: false),
+              onChanged: (value) =>
+                  unawaited(_handleCountdownStyleSelection(value)),
             ),
             const SizedBox(height: 12),
             _CountdownModeSheetDropdown(
-              label: 'Khung avatar',
+              label: context.tr('p7_avatar_frame'),
               value: _frameKey,
               options: _CountdownModeEditorScreenState._avatarFrameOptions,
-              onChanged: (value) => setState(() => _frameKey = value),
+              onChanged: (value) => _safeSetState(() => _frameKey = value),
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
@@ -87,7 +88,7 @@ extension BackgroundEditorExt on _CountdownModeEditorScreenState {
                   .toList(),
               onChanged: (value) {
                 if (value != null) {
-                  setState(() => _fontKey = value);
+                  _safeSetState(() => _fontKey = value);
                 }
               },
             ),
@@ -112,9 +113,8 @@ extension BackgroundEditorExt on _CountdownModeEditorScreenState {
                   color: const Color(0xFF7C6D76),
                 ),
               ),
-              onChanged: (value) => setState(
-                () => _transparentMode = value,
-              ),
+              onChanged: (value) =>
+                  _safeSetState(() => _transparentMode = value),
             ),
             const SizedBox(height: 6),
             StatefulBuilder(
@@ -123,7 +123,9 @@ extension BackgroundEditorExt on _CountdownModeEditorScreenState {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Kích thước vòng đếm: ${_sizePx.round()}px',
+                      context
+                          .tr('p7_countdown_size_label')
+                          .replaceAll('{size}', _sizePx.round().toString()),
                       style: SLTheme.quicksand(
                         fontSize: 12.8,
                         fontWeight: FontWeight.w800,
@@ -135,10 +137,7 @@ extension BackgroundEditorExt on _CountdownModeEditorScreenState {
                       max: UiPrefs.maxCountdownSizePx,
                       activeColor: const Color(0xFFD81B60),
                       inactiveColor: const Color(0xFFF2C3D7),
-                      value: _sizePx.clamp(
-                        200.0,
-                        UiPrefs.maxCountdownSizePx,
-                      ),
+                      value: _sizePx.clamp(200.0, UiPrefs.maxCountdownSizePx),
                       onChanged: (value) {
                         setStateSlider(() {
                           _sizePx = value;
@@ -148,23 +147,23 @@ extension BackgroundEditorExt on _CountdownModeEditorScreenState {
                     Align(
                       alignment: Alignment.centerRight,
                       child: ElevatedButton.icon(
-                        onPressed: () => Navigator.of(context).pop(
-                          _buildResult(
-                            _CountdownModeSettingsAction.save,
-                          ),
+                        onPressed: () => Navigator.of(
+                          context,
+                        ).pop(_buildResult(_CountdownModeSettingsAction.save)),
+                        icon: const Icon(
+                          Icons.check_circle_outline_rounded,
+                          size: 18,
                         ),
-                        icon: const Icon(Icons.check_circle_outline_rounded,
-                            size: 18),
                         label: Text(
-                          'Lưu kích thước',
-                          style: SLTheme.quicksand(
-                            fontWeight: FontWeight.w800,
-                          ),
+                          context.tr('p7_save_countdown_size'),
+                          style: SLTheme.quicksand(fontWeight: FontWeight.w800),
                         ),
                         style: ElevatedButton.styleFrom(
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),

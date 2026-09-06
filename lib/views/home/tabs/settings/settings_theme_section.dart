@@ -152,7 +152,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
         (context.tr('home_ttkhngckhu_37eb33'), 'off'),
         (context.tr('frame_circle'), 'circle'),
         (context.tr('frame_rounded'), 'rounded'),
-        ('Squircle', 'squircle'),
+        (context.tr('p7_frame_squircle'), 'squircle'),
         (context.tr('frame_pearl'), 'pearl'),
         (context.tr('frame_glass'), 'glass'),
         if (AppConfig.isPurchaseEnabled)
@@ -201,7 +201,12 @@ extension _SettingsTabThemeSection on _SettingsTabState {
         (context.tr('theme_ocean'), 'green'),
         (context.tr('widget_red'), 'red'),
         if (AppConfig.isPurchaseEnabled)
-          (_isVipActive ? 'Aurora PRO' : 'Aurora PRO 🔒', 'premium'),
+          (
+            _isVipActive
+                ? context.tr('p7_aurora_pro')
+                : context.tr('p7_aurora_pro_locked'),
+            'premium',
+          ),
       ],
     );
   }
@@ -294,20 +299,29 @@ extension _SettingsTabThemeSection on _SettingsTabState {
       child: Row(
         children: [
           if (showBack) ...[
-            GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: SLColors.primarySoft,
+            Semantics(
+              button: true,
+              label: context.tr('p7_back'),
+              child: Tooltip(
+                message: context.tr('p7_back'),
+                excludeFromSemantics: true,
+                child: InkWell(
+                  onTap: () => Navigator.pop(context),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: SLColors.border),
-                ),
-                child: const Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  size: 15,
-                  color: SLColors.primaryActive,
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: SLColors.primarySoft,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: SLColors.border),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 15,
+                      color: SLColors.primaryActive,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -363,13 +377,11 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildLabel(L10nService().translate('Màu nền trang chủ')),
+                    _buildLabel(context.tr('p7_home_background_color')),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Text(
-                        L10nService().translate(
-                          'Đã đặt hình nền hình ảnh mặc định. Màu nền chuyển sắc đã được xoá hoàn toàn.',
-                        ),
+                        context.tr('p7_default_image_background_note'),
                         style: const TextStyle(
                           fontSize: 13,
                           color: SLColors.primaryActive,

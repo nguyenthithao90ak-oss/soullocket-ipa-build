@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -33,8 +32,6 @@ const Color _accentGreen = Color(0xFF2C9B86);
 const Color _ink = Color(0xFF3B2830);
 const Color _muted = Color(0xFF79646D);
 const Color _panelBorder = Color(0xFFF0DDE3);
-const Color _dialogBg = Color(0xFFFFFDF9);
-const Color _surfaceBg = Color(0xFFFFF5F7);
 const Color _dialogBackgroundTop = Color(0xFFFFFDF9);
 const Color _dialogBackgroundBottom = Color(0xFFF4EEFF);
 const Color _cardBackground = Color(0xFFFFFEFC);
@@ -58,7 +55,6 @@ class _ConsentGateState extends State<ConsentGate> {
   );
 
   final ConsentService _consentService = ConsentService();
-  bool _ready = false;
   bool _running = false;
 
   @override
@@ -70,7 +66,6 @@ class _ConsentGateState extends State<ConsentGate> {
       if (_appReviewConsentBypass) {
         await _seedAppReviewConsent();
         if (!mounted) return;
-        setState(() => _ready = true);
         return;
       }
       _ensureConsent();
@@ -106,7 +101,6 @@ class _ConsentGateState extends State<ConsentGate> {
       }
 
       if (!mounted) return;
-      setState(() => _ready = true);
       Future<void>(() async {
         try {
           await widget.onReady?.call();
@@ -119,7 +113,6 @@ class _ConsentGateState extends State<ConsentGate> {
     } catch (e) {
       debugPrint('ConsentGate failed: ${AppErrorMapper.resolve(e).message}');
       if (!mounted) return;
-      setState(() => _ready = true);
     } finally {
       _running = false;
     }

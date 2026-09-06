@@ -27,6 +27,7 @@ import 'package:provider/provider.dart';
 import '../../ui_prefs.dart';
 import '../../../core/sl_theme.dart';
 import 'settings/theme/theme_preview_builder.dart';
+import 'settings/widget/widget_studio_components.dart';
 
 import 'dart:io';
 import '../../../utils/services/notification_service.dart';
@@ -256,10 +257,10 @@ String _widgetPreviewSizeLabel(String key) {
 String _widgetStyleLabel(String key) {
   switch (key) {
     case 'countdown':
-      return 'Đếm ngày';
+      return L10nService().translate('p6_widget_style_countdown');
     case 'classic':
     default:
-      return 'Mặc định';
+      return L10nService().translate('p6_widget_style_default');
   }
 }
 
@@ -1061,7 +1062,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
             Text(
               _devicePendingMessage.isNotEmpty
                   ? _devicePendingMessage
-                  : 'Thiết bị mới cần được duyệt bởi thiết bị quen (đã dùng lâu) trước khi chỉnh sửa các mục trong Cài đặt.\n\nBạn vẫn có thể đổi avatar ở màn hình chính. Các khu vực khác trong ứng dụng vẫn hoạt động bình thường. Nếu không có thiết bị cũ, thời điểm tự được tin cậy sẽ hiển thị bên dưới khi hệ thống trả về.',
+                  : context.tr('p6_device_trust_pending_description'),
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 fontSize: 13,
@@ -1112,7 +1113,12 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
                   const SizedBox(height: 6),
                   _buildStepRow(
                     '3',
-                    'Tìm thiết bị này trong danh sách và nhấn ${L10nService().translate('home_duyt_a4db4d')}.',
+                    context
+                        .tr('p6_device_trust_approve_step')
+                        .replaceAll(
+                          '{approve}',
+                          context.tr('home_duyt_a4db4d'),
+                        ),
                   ),
                   const SizedBox(height: 6),
                   _buildStepRow(
@@ -1120,7 +1126,14 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
                     _formatManagedPendingUnlockDate(
                           _devicePendingUnlockAtMs,
                         ).isNotEmpty
-                        ? 'Nếu không có thiết bị cũ, hãy đợi đến ${_formatManagedPendingUnlockDate(_devicePendingUnlockAtMs)} để thiết bị tự được tin cậy và có thể đăng nhập/chỉnh sửa bình thường.'
+                        ? context
+                              .tr('p6_device_trust_wait_until')
+                              .replaceAll(
+                                '{date}',
+                                _formatManagedPendingUnlockDate(
+                                  _devicePendingUnlockAtMs,
+                                ),
+                              )
                         : L10nService().translate('home_nukhngcthi_6bcda1'),
                   ),
                 ],

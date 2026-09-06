@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 const double _kUtilityStickerLogicalSize = 64;
 const Set<String> _kUtilityStickerIds = <String>{
   'age_zodiac',
@@ -117,13 +116,15 @@ Future<void> precacheUtilityStickerList(
   if (providers.isEmpty) return;
 
   await Future.wait<void>(
-    providers.map(
-      (provider) async {
-        try {
-          await precacheImage(provider, context);
-        } catch (_) {}
-      },
-    ),
+    providers.map((provider) async {
+      try {
+        await precacheImage(provider, context);
+      } catch (error) {
+        debugPrint(
+          '[SuppressedError] lib/views/utilities/utility_sticker_icon.dart: $error',
+        );
+      }
+    }),
     eagerError: false,
   );
 }
@@ -144,11 +145,7 @@ Widget buildUtilityStickerIcon({
   double? devicePixelRatio, // FIX #3: caller passes DPR → no Builder needed.
 }) {
   final fallback = Center(
-    child: Icon(
-      fallbackIcon,
-      size: fallbackSize,
-      color: fallbackColor,
-    ),
+    child: Icon(fallbackIcon, size: fallbackSize, color: fallbackColor),
   );
 
   final assetPath = utilityStickerAssetForId(utilityId);
@@ -215,4 +212,3 @@ Widget buildUtilityStickerIcon({
     },
   );
 }
-

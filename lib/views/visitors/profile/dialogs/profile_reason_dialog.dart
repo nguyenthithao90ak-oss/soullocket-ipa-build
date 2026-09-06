@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/sl_theme.dart';
+import '../../../../utils/services/l10n_service.dart';
 
 Future<String?> showVisitorProfileReasonDialog({
   required BuildContext context,
@@ -12,7 +13,7 @@ Future<String?> showVisitorProfileReasonDialog({
     builder: (_) => AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
       title: Text(
-        'Báo cáo',
+        context.tr('p5_profile_report'),
         style: SLTheme.quicksand(fontWeight: FontWeight.w900),
       ),
       content: TextField(
@@ -27,7 +28,7 @@ Future<String?> showVisitorProfileReasonDialog({
         TextButton(
           onPressed: () => Navigator.pop(context, null),
           child: Text(
-            'Hủy',
+            context.tr('p5_cancel'),
             style: SLTheme.quicksand(color: SLColors.textSecond),
           ),
         ),
@@ -38,7 +39,7 @@ Future<String?> showVisitorProfileReasonDialog({
           ),
           onPressed: () => Navigator.pop(context, controller.text),
           child: Text(
-            'Gửi',
+            context.tr('p5_send'),
             style: SLTheme.quicksand(
               fontWeight: FontWeight.w800,
               color: Colors.white,

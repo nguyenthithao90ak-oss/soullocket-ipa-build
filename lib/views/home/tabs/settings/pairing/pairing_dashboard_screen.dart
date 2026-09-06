@@ -12,6 +12,8 @@ import 'package:soullocket_app/core/constants/app_firebase_paths.dart';
 import 'package:soullocket_app/utils/services/storage/storage_picker_service.dart';
 import 'package:soullocket_app/utils/services/infrastructure/storage_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_connection_date.dart';
 
 class PairingDashboardScreen extends StatefulWidget {
   const PairingDashboardScreen({super.key});
@@ -29,208 +31,160 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   String? _nameU1;
   String? _nameU2;
   String? _startDateStr;
-  bool _hasCheckedMembers = false;
+  bool _settingsReceived = false;
+  bool _membersReceived = false;
+  bool _settingsPaired = false;
+  bool _membersPaired = false;
+  bool _hasResolvedPairing = false;
+  bool _loadError = false;
+  int _loadGeneration = 0;
+  Timer? _loadTimer;
   StreamSubscription? _settingsSub;
+  StreamSubscription? _membersSub;
+  StreamSubscription? _connectionDateSub;
   Stream<List<PairingRequest>>? _incomingRequestsStream;
-  Timer? _guideTimer;
+  String? _respondingRequestId;
+
+  String _t(String key) => context.tr(key);
 
   @override
   void initState() {
     super.initState();
     _loadHouseId();
-    _startGuideTimer();
-  }
-
-  void _startGuideTimer() {
-    _guideTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted && !_isPaired) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.help_outline_rounded, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Bạn cần ghép nối nhưng không biết cách?\nHãy ấn vào nút [?] ở góc trái nhé!',
-                    style: SLTheme.quicksand(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: const Color(0xFFD81B60),
-            duration: const Duration(seconds: 6),
-            action: SnackBarAction(
-              label: 'XEM',
-              textColor: Colors.white,
-              onPressed: _showDetailedGuide,
-            ),
-          ),
-        );
-      }
-    });
   }
 
   @override
   void dispose() {
+    _loadGeneration++;
+    _loadTimer?.cancel();
     _settingsSub?.cancel();
-    _guideTimer?.cancel();
+    _membersSub?.cancel();
+    _connectionDateSub?.cancel();
     super.dispose();
   }
 
   Future<void> _loadHouseId() async {
-    final houseId = await HouseService().getCurrentHouseId();
-    if (houseId == null) {
-      if (mounted) setState(() => _isLoading = false);
-      return;
-    }
-
-    if (mounted) {
+    final generation = ++_loadGeneration;
+    _loadTimer?.cancel();
+    unawaited(_settingsSub?.cancel());
+    unawaited(_membersSub?.cancel());
+    unawaited(_connectionDateSub?.cancel());
+    setState(() {
+      _isLoading = true;
+      _loadError = false;
+      _hasResolvedPairing = false;
+      _settingsReceived = false;
+      _membersReceived = false;
+      _settingsPaired = false;
+      _membersPaired = false;
+      _isPaired = false;
+      _startDateStr = null;
+      _myHouseId = null;
+      _nameU1 = null;
+      _nameU2 = null;
+      _avatarU1 = null;
+      _avatarU2 = null;
+      _incomingRequestsStream = null;
+    });
+    bool isCurrent() => mounted && generation == _loadGeneration;
+    void handleLoadError(Object error) {
+      if (!isCurrent() || _hasResolvedPairing) return;
       setState(() {
-        _myHouseId = houseId;
-        _incomingRequestsStream ??= PairingService.instance
-            .listenToIncomingRequests(houseId);
+        _isLoading = false;
+        _loadError = true;
       });
     }
 
-    // Safety fallback: Tắt loading sau 5s nếu mạng quá yếu hoặc không load được
-    Future.delayed(const Duration(seconds: 5), () {
-      if (mounted && _isLoading) setState(() => _isLoading = false);
+    _loadTimer = Timer(const Duration(seconds: 8), () {
+      handleLoadError(TimeoutException('Pairing state unavailable'));
     });
+    String? houseId;
+    try {
+      houseId = await HouseService().getCurrentHouseId();
+    } catch (error) {
+      handleLoadError(error);
+      return;
+    }
+    if (!isCurrent()) return;
+    if (houseId == null) {
+      _loadTimer?.cancel();
+      setState(() => _isLoading = false);
+      return;
+    }
+    _myHouseId = houseId;
+    _incomingRequestsStream = PairingService.instance.listenToIncomingRequests(
+      houseId,
+    );
 
-    // Tối ưu hóa: Đọc createdAt một lần duy nhất
-    unawaited(() async {
-      try {
-        final rawDateSnap = await FirebaseDatabase.instance
-            .ref('houses/$houseId/createdAt')
-            .get();
-        if (rawDateSnap.exists && rawDateSnap.value != null) {
-          final val = rawDateSnap.value;
-          final ms = val is num
-              ? val.toInt()
-              : (double.tryParse(val.toString())?.toInt() ??
-                    int.tryParse(val.toString()) ??
-                    0);
-          final startDate = DateTime.fromMillisecondsSinceEpoch(ms);
-          if (mounted) {
-            setState(() {
-              _startDateStr =
-                  '${startDate.day.toString().padLeft(2, '0')}/${startDate.month.toString().padLeft(2, '0')}/${startDate.year}';
-            });
-          }
-        }
-      } catch (_) {}
-    }());
-
-    _settingsSub?.cancel();
+    // Đây là màn đọc trạng thái. Không tự ghi isPaired hay sửa chế độ ghép nối.
     _settingsSub = FirebaseDatabase.instance
         .ref('houses/$houseId/settings')
         .onValue
-        .listen((event) async {
-          final snap = event.snapshot;
-          if (!snap.exists || snap.value == null) {
-            if (mounted) setState(() => _isLoading = false);
-            return;
-          }
-          final settings = Map<String, dynamic>.from(snap.value as Map);
-          bool isPaired = settings['isPaired'] == true;
+        .listen((event) {
+          if (!isCurrent()) return;
+          final value = event.snapshot.value;
+          final settings = value is Map ? value : const {};
+          setState(() {
+            _settingsReceived = true;
+            _settingsPaired = settings['isPaired'] == true;
+            _nameU1 = settings['nameU1']?.toString();
+            _nameU2 = settings['nameU2']?.toString();
+            _avatarU1 = settings['avatarU1']?.toString();
+            _avatarU2 = settings['avatarU2']?.toString();
+          });
+          _applyPairingStatus();
+        }, onError: handleLoadError);
 
-          // Check real members count to guarantee paired status (chỉ đọc members một lần duy nhất nếu chưa paired)
-          if (!isPaired && !_hasCheckedMembers) {
-            _hasCheckedMembers = true;
-            try {
-              final membersSnap = await FirebaseDatabase.instance
-                  .ref('houses/$houseId/members')
-                  .get();
-              if (membersSnap.exists && membersSnap.value is Map) {
-                final membersMap = membersSnap.value as Map;
-                if (membersMap.length >= 2) {
-                  isPaired = true;
-                  // Background update
-                  unawaited(
-                    FirebaseDatabase.instance
-                        .ref('houses/$houseId/settings/isPaired')
-                        .set(true),
-                  );
-                  unawaited(
-                    FirebaseDatabase.instance
-                        .ref('houses/$houseId/settings/relationshipMode')
-                        .set('couple'),
-                  );
-                  try {
-                    unawaited(
-                      FirebaseDatabase.instance
-                          .ref('single_match_active_pool/$houseId')
-                          .remove(),
-                    );
-                    unawaited(
-                      FirebaseDatabase.instance
-                          .ref('houses/$houseId/settings/singleMatch/enabled')
-                          .set(false),
-                    );
-                  } catch (_) {}
-                }
-              }
-            } catch (_) {}
-          }
+    // Theo dõi thành viên liên tục để trạng thái không bị lùi về chưa ghép
+    // khi settings được cập nhật nhưng cờ isPaired ở dữ liệu cũ còn thiếu.
+    _membersSub = FirebaseDatabase.instance
+        .ref('houses/$houseId/members')
+        .onValue
+        .listen((event) {
+          if (!isCurrent()) return;
+          final value = event.snapshot.value;
+          final members = value is Map ? value : const {};
+          _membersReceived = true;
+          _membersPaired = members.length >= 2;
+          _applyPairingStatus();
+        }, onError: handleLoadError);
 
-          if (mounted) {
-            if (!_isPaired && isPaired && !_isLoading) {
-              _showCongratulationDialog();
-            }
-
+    _connectionDateSub = FirebaseDatabase.instance
+        .ref('houses/$houseId/coupleConnectedAt')
+        .onValue
+        .listen(
+          (event) {
+            if (!isCurrent()) return;
+            final date = parsePairingConnectionDate(event.snapshot.value);
             setState(() {
-              _isPaired = isPaired;
-              _isLoading = false;
-              _nameU1 =
-                  settings['nameU1']?.toString() ??
-                  L10nService().translate('role_male');
-              _nameU2 =
-                  settings['nameU2']?.toString() ??
-                  L10nService().translate('role_female');
-              _avatarU1 = settings['avatarU1']?.toString();
-              _avatarU2 = settings['avatarU2']?.toString();
-
-              final rawDate = settings['createdAt'];
-              if (rawDate != null && _startDateStr == null) {
-                try {
-                  final ms = rawDate is num
-                      ? rawDate.toInt()
-                      : (double.tryParse(rawDate.toString())?.toInt() ??
-                            int.tryParse(rawDate.toString()) ??
-                            0);
-                  final startDate = DateTime.fromMillisecondsSinceEpoch(ms);
-                  _startDateStr =
-                      '${startDate.day.toString().padLeft(2, '0')}/${startDate.month.toString().padLeft(2, '0')}/${startDate.year}';
-                } catch (_) {}
-              }
-
-              if (_startDateStr == null || _startDateStr!.isEmpty) {
-                final startDateVal = settings['startDate']?.toString();
-                if (startDateVal != null && startDateVal.isNotEmpty) {
-                  try {
-                    final parsed = DateTime.parse(startDateVal);
-                    _startDateStr =
-                        '${parsed.day.toString().padLeft(2, '0')}/${parsed.month.toString().padLeft(2, '0')}/${parsed.year}';
-                  } catch (_) {}
-                }
-              }
+              _startDateStr = date == null
+                  ? null
+                  : '${date.day.toString().padLeft(2, '0')}/'
+                        '${date.month.toString().padLeft(2, '0')}/${date.year}';
             });
-          }
-        });
+          },
+          onError: (Object error) {
+            if (isCurrent()) setState(() => _startDateStr = null);
+          },
+        );
+  }
 
-    // Đã xoá logic đếm nhật ký ở đây
+  void _applyPairingStatus() {
+    final paired = _settingsPaired || _membersPaired;
+    if (!paired && (!_settingsReceived || !_membersReceived)) return;
+    final justConnected = _hasResolvedPairing && !_isPaired && paired;
+    _loadTimer?.cancel();
+    setState(() {
+      _isPaired = paired;
+      _hasResolvedPairing = true;
+      _isLoading = false;
+      _loadError = false;
+    });
+    if (justConnected) _showCongratulationDialog();
   }
 
   void _showCreateCodeSheet() {
-    if (_myHouseId == null) return;
+    if (_myHouseId == null || _isPaired || _isLoading || _loadError) return;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -245,6 +199,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   }
 
   void _showEnterCodeSheet() async {
+    if (_isPaired || _isLoading || _loadError) return;
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -252,14 +207,52 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       builder: (_) => const PairingEnterCodeSheet(),
     );
     // Reload if merged
-    _loadHouseId();
+    if (mounted) _loadHouseId();
+  }
+
+  Future<void> _respondToRequest(
+    PairingRequest request, {
+    required bool accept,
+  }) async {
+    if (_respondingRequestId != null) {
+      return;
+    }
+    setState(() => _respondingRequestId = request.requestId);
+    try {
+      if (accept) {
+        await PairingService.instance.acceptRequest(request.requestId);
+      } else {
+        await PairingService.instance.rejectRequest(request.requestId);
+      }
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      final fallbackKey = accept
+          ? 'pairing_ui_request_accept_error'
+          : 'pairing_ui_request_reject_error';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppErrorMapper.resolve(
+              error,
+              fallbackMessage: _t(fallbackKey),
+            ).message,
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _respondingRequestId = null);
+      }
+    }
   }
 
   void _showCongratulationDialog() {
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
-      barrierLabel: '',
+      barrierLabel: _t('pairing_ui_congrats_title'),
       barrierColor: Colors.black54,
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, anim1, anim2) {
@@ -302,7 +295,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'Chúc Mừng!',
+                    _t('pairing_ui_congrats_title'),
                     style: SLTheme.quicksand(
                       fontSize: 28,
                       fontWeight: FontWeight.w900,
@@ -311,7 +304,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Hai bạn đã ghép nối thành công.\nHãy cùng nhau lưu giữ những khoảnh khắc tuyệt vời nhé!',
+                    _t('pairing_ui_congrats_body'),
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
                       fontSize: 15,
@@ -336,7 +329,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                       elevation: 0,
                     ),
                     child: Text(
-                      'Tuyệt vời',
+                      _t('pairing_ui_congrats_action'),
                       style: SLTheme.quicksand(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
@@ -358,83 +351,79 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
-        height: MediaQuery.of(context).size.height * 0.85,
+        height: MediaQuery.of(context).size.height * 0.82,
         decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          color: Color(0xFFFFFCFA),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: Column(
           children: [
             Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 24),
-              width: 48,
-              height: 6,
+              margin: const EdgeInsets.only(top: 10, bottom: 20),
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(10),
+                color: SLColors.ink.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(999),
               ),
             ),
             Text(
-              'Hướng dẫn ghép nối',
+              _t('pairing_ui_guide_title'),
               style: SLTheme.quicksand(
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFF2C1B22),
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: SLColors.ink,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
+                padding: const EdgeInsets.fromLTRB(22, 14, 22, 4),
                 children: [
                   _buildGuideStep(
                     icon: Icons.person_add_alt_1_rounded,
-                    title: '1. Bạn chưa có nhà chung?',
-                    content:
-                        'Hãy chọn "Tạo mã ghép nối" để tạo một mã gồm 12 số. Sau đó, sao chép mã này và gửi cho người ấy qua tin nhắn (Zalo, Messenger, v.v.).',
+                    title: _t('pairing_ui_guide_step_1_title'),
+                    content: _t('pairing_ui_guide_step_1_body'),
                   ),
                   _buildGuideStep(
                     icon: Icons.login_rounded,
-                    title: '2. Người ấy cần làm gì?',
-                    content:
-                        'Người ấy mở ứng dụng, vào phần "Ghép nối", chọn "Nhập mã ghép nối" và dán mã 12 số mà bạn vừa gửi để xin ghép.',
+                    title: _t('pairing_ui_guide_step_2_title'),
+                    content: _t('pairing_ui_guide_step_2_body'),
                   ),
                   _buildGuideStep(
                     icon: Icons.check_circle_outline_rounded,
-                    title: '3. Phê duyệt yêu cầu',
-                    content:
-                        'Sau khi người ấy nhập mã, màn hình của bạn (ở mục "Yêu cầu đang chờ duyệt") sẽ hiện lên yêu cầu của họ. Bạn chỉ cần bấm "Chấp nhận"!',
+                    title: _t('pairing_ui_guide_step_3_title'),
+                    content: _t('pairing_ui_guide_step_3_body'),
                   ),
                   _buildGuideStep(
                     icon: Icons.favorite_rounded,
-                    title: '4. Tận hưởng không gian riêng',
-                    content:
-                        'Sau khi ghép nối thành công, cả hai có thể cùng viết nhật ký, chia sẻ kỷ niệm, và sử dụng đầy đủ các tính năng dành cho cặp đôi.',
+                    title: _t('pairing_ui_guide_step_4_title'),
+                    content: _t('pairing_ui_guide_step_4_body'),
                   ),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(24),
+            Container(
+              padding: const EdgeInsets.fromLTRB(22, 14, 22, 20),
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: Color(0xFFF0E7E2))),
+              ),
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFD81B60),
+                  backgroundColor: const Color(0xFF4A333D),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  minimumSize: const Size(double.infinity, 56),
+                  minimumSize: const Size(double.infinity, 52),
                 ),
                 child: Text(
-                  'ĐÃ HIỂU',
+                  _t('pairing_ui_guide_done'),
                   style: SLTheme.quicksand(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
@@ -451,19 +440,21 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     required String content,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.only(bottom: 20),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            width: 42,
+            height: 42,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF0F5),
-              borderRadius: BorderRadius.circular(16),
+              color: const Color(0xFFFFE9ED),
+              borderRadius: BorderRadius.circular(13),
             ),
-            child: Icon(icon, color: const Color(0xFFD81B60), size: 28),
+            child: Icon(icon, color: SLColors.primary, size: 21),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 13),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -471,19 +462,19 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                 Text(
                   title,
                   style: SLTheme.quicksand(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF2C1B22),
+                    color: SLColors.ink,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
                   content,
                   style: SLTheme.quicksand(
-                    fontSize: 14,
+                    fontSize: 12.5,
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade700,
-                    height: 1.5,
+                    color: SLColors.textSecond,
+                    height: 1.45,
                   ),
                 ),
               ],
@@ -497,345 +488,345 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: SLColors.paperCanvas,
-      extendBodyBehindAppBar: true,
+      backgroundColor: const Color(0xFFFCFAF9),
       appBar: AppBar(
-        backgroundColor: SLColors.paper.withValues(alpha: 0.94),
+        backgroundColor: const Color(0xFFFCFAF9),
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              L10nService().translate('settings_partner_connect'),
-              style: SLTheme.quicksand(
-                fontSize: 19,
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFF2C1B22),
-              ),
-            ),
-            const SizedBox(width: 6),
-            const Text('💖', style: TextStyle(fontSize: 16)),
-          ],
+        title: Text(
+          _t('pairing_ui_dashboard_nav_title'),
+          style: SLTheme.quicksand(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: SLColors.ink,
+          ),
         ),
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 12, top: 8, bottom: 8),
-          child: Container(
-            decoration: BoxDecoration(
-              color: SLColors.paper,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: SLShadow.subtle,
-              border: Border.all(color: SLColors.border, width: 1.1),
-            ),
-            child: IconButton(
-              padding: EdgeInsets.zero,
+        leading: IconButton(
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: SLColors.ink,
+            size: 19,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          if (!_isLoading && !_loadError && !_isPaired)
+            IconButton(
+              tooltip: _t('pairing_ui_dashboard_help'),
               icon: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: Color(0xFFD81B60),
-                size: 16,
+                Icons.help_outline_rounded,
+                color: SLColors.textSecond,
+                size: 22,
               ),
-              onPressed: () => Navigator.pop(context),
+              onPressed: _showDetailedGuide,
             ),
-          ),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-      floatingActionButton: _isPaired
-          ? null
-          : Container(
-              height: 48,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFF758C), Color(0xFFD81B60)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFD81B60).withValues(alpha: 0.35),
-                    blurRadius: 14,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Material(
-                type: MaterialType.transparency,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(24),
-                  onTap: _showDetailedGuide,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.help_outline_rounded,
-                        color: Colors.white,
-                        size: 22,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        L10nService().translate('Hướng dẫn'),
-                        style: SLTheme.quicksand(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    SLColors.paperCanvas,
-                    SLColors.paper,
-                    SLColors.paperPeach,
-                  ],
-                  stops: [0.0, 0.45, 1.0],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            top: -40,
-            right: -30,
-            child: Container(
-              width: 180,
-              height: 180,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: SLColors.washi.withValues(alpha: 0.22),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 100,
-            left: -50,
-            child: Container(
-              width: 220,
-              height: 220,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: SLColors.thread.withValues(alpha: 0.10),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFD81B60)),
-                  )
-                : _isPaired
-                ? _buildPairedState()
-                : ListView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
-                    ),
-                    children: [
-                      _buildActionCard(
-                        title: L10nService().translate('Tạo mã ghép nối'),
-                        subtitle: L10nService().translate(
-                          'Tạo mã gồm 12 số để gửi cho người ấy.',
-                        ),
-                        badgeText: L10nService().translate('Gửi mã 💌'),
-                        icon: Icons.qr_code_2_rounded,
-                        gradientColors: const [
-                          Color(0xFFFF758C),
-                          Color(0xFFFF7EB3),
-                        ],
-                        borderColor: const Color(0xFFFFD1DC),
-                        onTap: _showCreateCodeSheet,
-                      ),
-                      SLSpacing.h16,
-                      _buildActionCard(
-                        title: L10nService().translate('Nhập mã ghép nối'),
-                        subtitle: L10nService().translate(
-                          'Nhập mã do người ấy tạo để xin vào nhà chung.',
-                        ),
-                        badgeText: L10nService().translate('Vào nhà 🏡'),
-                        icon: Icons.mark_email_read_rounded,
-                        gradientColors: const [
-                          Color(0xFF42A5F5),
-                          Color(0xFF26C6DA),
-                        ],
-                        borderColor: const Color(0xFFB3E5FC),
-                        onTap: _showEnterCodeSheet,
-                      ),
-                      SLSpacing.h24,
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFFF0F5),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: const Color(0xFFFFD1DC),
-                                width: 1.5,
-                              ),
-                            ),
-                            child: const Icon(
-                              Icons.favorite_rounded,
-                              size: 14,
-                              color: Color(0xFFD81B60),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            L10nService().translate('Yêu cầu đang chờ duyệt'),
-                            style: SLTheme.quicksand(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFFD81B60),
-                              letterSpacing: 1.1,
-                            ),
-                          ),
-                          const Spacer(),
-                          const Text('✨', style: TextStyle(fontSize: 14)),
-                        ],
-                      ),
-                      SLSpacing.h12,
-                      _buildRequestsList(),
-                    ],
-                  ),
-          ),
         ],
+      ),
+      body: DecoratedBox(
+        decoration: const BoxDecoration(color: Color(0xFFFCFAF9)),
+        child: SafeArea(
+          top: false,
+          child: _isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(color: SLColors.primary),
+                )
+              : _loadError
+              ? _buildLoadError()
+              : _isPaired
+              ? _buildPairedState()
+              : _buildUnpairedState(),
+        ),
       ),
     );
   }
 
-  Widget _buildPairedState() {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            SLColors.paperCanvas,
-            SLColors.paperBlush,
-            SLColors.tertiarySoft,
-            SLColors.paper,
+  Widget _buildLoadError() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.cloud_off_outlined, color: SLColors.textSecond),
+            const SizedBox(height: 16),
+            Text(
+              _t('pairing_ui_state_load_error'),
+              textAlign: TextAlign.center,
+              style: SLTheme.quicksand(color: SLColors.textSecond, height: 1.4),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: _loadHouseId,
+              child: Text(_t('pairing_ui_state_retry')),
+            ),
           ],
-          stops: [0.0, 0.4, 0.7, 1.0],
         ),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildAvatarWidget(
-                _avatarU1,
-                _nameU1 ?? L10nService().translate('role_male'),
-                'user1',
+    );
+  }
+
+  Widget _buildUnpairedState() {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 560),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(24, 22, 24, 32),
+          children: [
+            _buildPairingIntro(),
+            const SizedBox(height: 26),
+            Material(
+              color: Colors.white,
+              clipBehavior: Clip.antiAlias,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: const BorderSide(color: Color(0xFFEEE5E4)),
               ),
-              const SizedBox(width: 16),
-              SizedBox(
-                width: 72,
-                height: 72,
-                child: Stack(
-                  alignment: Alignment.center,
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(
-                              0xFFD81B60,
-                            ).withValues(alpha: 0.2),
-                            blurRadius: 15,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.favorite_rounded,
-                        color: Color(0xFFD81B60),
-                        size: 36,
-                      ),
-                    ),
-                    const Positioned(
-                      top: -5,
-                      left: -5,
-                      child: Text('✨', style: TextStyle(fontSize: 20)),
-                    ),
-                    const Positioned(
-                      bottom: 5,
-                      right: -10,
-                      child: Text('🎀', style: TextStyle(fontSize: 18)),
-                    ),
-                    const Positioned(
-                      top: 10,
-                      right: -15,
-                      child: Text('💖', style: TextStyle(fontSize: 16)),
-                    ),
-                    const Positioned(
-                      bottom: -5,
-                      left: 10,
-                      child: Text('🌸', style: TextStyle(fontSize: 18)),
-                    ),
-                  ],
-                ),
+              child: Column(
+                children: [
+                  _buildActionRow(
+                    title: _t('pairing_ui_dashboard_create_action'),
+                    subtitle: _t('pairing_ui_dashboard_create_subtitle'),
+                    icon: Icons.add_link_rounded,
+                    onTap: _showCreateCodeSheet,
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.only(left: 74, right: 16),
+                    child: Divider(height: 1, color: Color(0xFFF1EBE9)),
+                  ),
+                  _buildActionRow(
+                    title: _t('pairing_ui_dashboard_enter_action'),
+                    subtitle: _t('pairing_ui_dashboard_enter_subtitle'),
+                    icon: Icons.qr_code_scanner_rounded,
+                    onTap: _showEnterCodeSheet,
+                  ),
+                ],
               ),
-              const SizedBox(width: 16),
-              _buildAvatarWidget(
-                _avatarU2,
-                _nameU2 ?? L10nService().translate('role_female'),
-                'user2',
-              ),
-            ],
-          ),
-          const SizedBox(height: 40),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 40),
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
-            decoration: BoxDecoration(
-              color: SLColors.paper.withValues(alpha: 0.92),
-              borderRadius: BorderRadius.circular(26),
-              border: Border.all(color: SLColors.border, width: 1.1),
-              boxShadow: SLShadow.paper,
             ),
-            child: Column(
+            const SizedBox(height: 14),
+            _buildSecurityNote(),
+            const SizedBox(height: 32),
+            Row(
               children: [
                 Text(
-                  L10nService().translate('pairing_start_date'),
+                  _t('pairing_ui_dashboard_requests_title'),
                   style: SLTheme.quicksand(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.grey.shade600,
-                    letterSpacing: 0.5,
+                    color: SLColors.ink,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                SLSpacing.h8,
-                Text(
-                  _startDateStr ?? L10nService().translate('pairing_no_info'),
-                  style: SLTheme.quicksand(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFFD81B60),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Divider(height: 1, color: Color(0xFFECE3E1)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            _buildRequestsList(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPairingIntro() {
+    return Column(
+      children: [
+        ExcludeSemantics(
+          child: SizedBox(
+            width: 126,
+            height: 52,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFBE8EB),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFFF4D9DF)),
+                    ),
+                    child: const Icon(
+                      Icons.person_outline_rounded,
+                      color: Color(0xFFAD516B),
+                      size: 27,
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3ECE7),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFFE8DDD5)),
+                    ),
+                    child: const Icon(
+                      Icons.person_outline_rounded,
+                      color: Color(0xFF947568),
+                      size: 27,
+                    ),
+                  ),
+                ),
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFCFAF9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.favorite_rounded,
+                    color: Color(0xFFC5637C),
+                    size: 17,
                   ),
                 ),
               ],
             ),
           ),
-        ],
+        ),
+        const SizedBox(height: 17),
+        Text(
+          _t('pairing_ui_dashboard_title'),
+          textAlign: TextAlign.center,
+          style: SLTheme.quicksand(
+            color: SLColors.ink,
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            height: 1.3,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 290),
+          child: Text(
+            _t('pairing_ui_dashboard_subtitle'),
+            textAlign: TextAlign.center,
+            style: SLTheme.quicksand(
+              color: SLColors.textSecond,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              height: 1.5,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSecurityNote() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(
+          Icons.lock_outline_rounded,
+          color: Color(0xFF927C82),
+          size: 14,
+        ),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            _t('pairing_ui_dashboard_security_short'),
+            textAlign: TextAlign.center,
+            style: SLTheme.quicksand(
+              color: SLColors.textSecond,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w500,
+              height: 1.4,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPairedState() {
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Center(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 520),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: _buildAvatarWidget(
+                          _avatarU1,
+                          _nameU1 ?? _t('role_male'),
+                          'user1',
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(8, 24, 8, 0),
+                        child: Icon(
+                          Icons.favorite_rounded,
+                          color: Color(0xFFB9516D),
+                          size: 28,
+                        ),
+                      ),
+                      Expanded(
+                        child: _buildAvatarWidget(
+                          _avatarU2,
+                          _nameU2 ?? _t('role_female'),
+                          'user2',
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 22,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFEEE5E4)),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          _t('pairing_start_date'),
+                          textAlign: TextAlign.center,
+                          style: SLTheme.quicksand(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: SLColors.textSecond,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          _startDateStr ?? _t('pairing_no_info'),
+                          textAlign: TextAlign.center,
+                          style: SLTheme.quicksand(
+                            fontSize: _startDateStr == null ? 16 : 26,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFFB9516D),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -876,8 +867,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
             alignment: Alignment.bottomRight,
             children: [
               Container(
-                width: 96,
-                height: 96,
+                width: 88,
+                height: 88,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -894,8 +885,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                 child: url != null && url.isNotEmpty
                     ? ClipOval(
                         child: SizedBox(
-                          width: 88,
-                          height: 88,
+                          width: 80,
+                          height: 80,
                           child: CachedNetworkImage(
                             imageUrl: url,
                             fit: BoxFit.cover,
@@ -937,6 +928,9 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           const SizedBox(height: 8),
           Text(
             label,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               fontSize: 16,
               fontWeight: FontWeight.w800,
@@ -948,126 +942,107 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     );
   }
 
-  Widget _buildActionCard({
+  Widget _buildActionRow({
     required String title,
     required String subtitle,
-    required String badgeText,
     required IconData icon,
-    required List<Color> gradientColors,
-    required Color borderColor,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return Semantics(
+      button: true,
+      excludeSemantics: true,
+      label: '$title. $subtitle',
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: SLColors.paper,
-          borderRadius: BorderRadius.circular(23),
-          border: Border.all(color: borderColor, width: 1.1),
-          boxShadow: SLShadow.paper,
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: gradientColors.first.withValues(alpha: 0.11),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: gradientColors.last.withValues(alpha: 0.28),
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFCEDF0),
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: Icon(icon, color: const Color(0xFFB9516D), size: 23),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: SLTheme.quicksand(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: SLColors.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: SLTheme.quicksand(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: SLColors.textSecond,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Icon(icon, color: gradientColors.first, size: 25),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        title,
-                        style: SLTheme.quicksand(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w900,
-                          color: SLColors.ink,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: gradientColors.first.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          badgeText,
-                          style: SLTheme.quicksand(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: gradientColors.first,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: SLTheme.quicksand(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: SLColors.textSecond,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: gradientColors.first.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
+              const SizedBox(width: 10),
+              const Icon(
                 Icons.chevron_right_rounded,
-                color: gradientColors.first,
+                color: Color(0xFFAE969E),
                 size: 20,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildRequestsList() {
-    if (_incomingRequestsStream == null) return const SizedBox.shrink();
+    if (_incomingRequestsStream == null) return _buildEmptyRequestsView();
 
     return StreamBuilder<List<PairingRequest>>(
       stream: _incomingRequestsStream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFEBEE),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFEF5350)),
-            ),
-            child: Text(
-              'Lỗi kết nối máy chủ: ${snapshot.error}',
-              textAlign: TextAlign.center,
-              style: SLTheme.quicksand(
-                color: const Color(0xFFC62828),
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
+              color: SLColors.dangerLight,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: SLColors.danger.withValues(alpha: 0.32),
               ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.cloud_off_outlined,
+                  size: 19,
+                  color: SLColors.danger,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    _t('pairing_ui_requests_error'),
+                    style: SLTheme.quicksand(
+                      color: const Color(0xFF9A344C),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
         }
@@ -1093,69 +1068,35 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   Widget _buildEmptyRequestsView() {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(top: 4),
-      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
       decoration: BoxDecoration(
-        color: SLColors.paper,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: SLColors.border, width: 1.1),
-        boxShadow: SLShadow.subtle,
+        color: const Color(0xFFF5F1EE),
+        borderRadius: BorderRadius.circular(14),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Row(
         children: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFFF0F5), Color(0xFFFFE4E1)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: const Color(0xFFFFD1DC),
-                    width: 1.5,
-                  ),
-                ),
-                child: const Center(
-                  child: Text('💌', style: TextStyle(fontSize: 32)),
-                ),
-              ),
-              const Positioned(
-                top: -2,
-                right: -2,
-                child: Text('✨', style: TextStyle(fontSize: 16)),
-              ),
-              const Positioned(
-                bottom: 0,
-                left: -2,
-                child: Text('🌸', style: TextStyle(fontSize: 14)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Chưa có yêu cầu nào 💕',
-            style: SLTheme.quicksand(
-              fontSize: 16,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF2C1B22),
+          Container(
+            width: 34,
+            height: 34,
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFFDFC),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.mark_email_read_outlined,
+              color: SLColors.textSecond,
+              size: 18,
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            'Khi người ấy nhập mã ghép nối của bạn, yêu cầu sẽ xuất hiện ngay tại đây để bạn duyệt nhé!',
-            textAlign: TextAlign.center,
-            style: SLTheme.quicksand(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade600,
-              height: 1.4,
+          const SizedBox(width: 11),
+          Expanded(
+            child: Text(
+              _t('pairing_ui_requests_empty_title'),
+              style: SLTheme.quicksand(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: SLColors.textSecond,
+              ),
             ),
           ),
         ],
@@ -1164,18 +1105,20 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   }
 
   Widget _buildRequestTile(PairingRequest request) {
+    final isResponding = _respondingRequestId == request.requestId;
+    final hasActiveResponse = _respondingRequestId != null;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFFFD1DC), width: 1.5),
+        color: SLColors.paper,
+        borderRadius: BorderRadius.circular(21),
+        border: Border.all(color: const Color(0xFFE8CBD4)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFD81B60).withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: SLColors.primary.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 7),
           ),
         ],
       ),
@@ -1189,7 +1132,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: const Color(0xFFFF8FB1),
+                        color: const Color(0xFFEAB4C1),
                         width: 2,
                       ),
                     ),
@@ -1214,11 +1157,6 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                             ),
                     ),
                   ),
-                  const Positioned(
-                    right: -2,
-                    bottom: -2,
-                    child: Text('💖', style: TextStyle(fontSize: 14)),
-                  ),
                 ],
               ),
               const SizedBox(width: 14),
@@ -1239,30 +1177,22 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                     const SizedBox(height: 3),
                     if (request.guestEmail.isNotEmpty) ...[
                       Text(
-                        'Email: ${request.guestEmail}',
+                        request.guestEmail,
                         style: SLTheme.quicksand(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade600,
+                          color: SLColors.textSecond,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                    ],
+                      const SizedBox(height: 5),
+                    ] else
+                      const SizedBox(height: 5),
                     Text(
-                      'UID: ${request.requestId}',
+                      _t('pairing_ui_request_from'),
                       style: SLTheme.quicksand(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey.shade400,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Đã gửi yêu cầu ghép nối 💌',
-                      style: SLTheme.quicksand(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFFD81B60),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        color: SLColors.primary,
                       ),
                     ),
                   ],
@@ -1274,62 +1204,50 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           Row(
             children: [
               Expanded(
-                child: InkWell(
-                  onTap: () =>
-                      PairingService.instance.rejectRequest(request.requestId),
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF5F7FA),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.grey.shade200),
+                child: OutlinedButton(
+                  onPressed: isResponding || hasActiveResponse
+                      ? null
+                      : () => _respondToRequest(request, accept: false),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(46),
+                    foregroundColor: SLColors.textSecond,
+                    side: const BorderSide(color: SLColors.border),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
                     ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      'Từ chối',
-                      style: SLTheme.quicksand(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
+                  ),
+                  child: Text(
+                    _t('pairing_ui_request_reject'),
+                    style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: InkWell(
-                  onTap: () =>
-                      PairingService.instance.acceptRequest(request.requestId),
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFFF758C), Color(0xFFD81B60)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFD81B60).withValues(alpha: 0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      '💖 Chấp nhận',
-                      style: SLTheme.quicksand(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
+                child: FilledButton(
+                  onPressed: isResponding || hasActiveResponse
+                      ? null
+                      : () => _respondToRequest(request, accept: true),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(46),
+                    backgroundColor: SLColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
                     ),
                   ),
+                  child: isResponding
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          _t('pairing_ui_request_accept'),
+                          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+                        ),
                 ),
               ),
             ],

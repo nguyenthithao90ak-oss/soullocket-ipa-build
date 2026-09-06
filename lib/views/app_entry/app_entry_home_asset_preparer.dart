@@ -14,8 +14,8 @@ class AppEntryHomeAssetPreparer {
   AppEntryHomeAssetPreparer({
     FirebaseDatabase? database,
     BaseCacheManager? cacheManager,
-  })  : _database = database ?? FirebaseDatabase.instance,
-        _cacheManager = cacheManager ?? AppCacheManager.instance;
+  }) : _database = database ?? FirebaseDatabase.instance,
+       _cacheManager = cacheManager ?? AppCacheManager.instance;
 
   final FirebaseDatabase _database;
   final BaseCacheManager _cacheManager;
@@ -54,31 +54,37 @@ class AppEntryHomeAssetPreparer {
         if (avatar2.isNotEmpty) urls.add(avatar2);
       }
 
-      await Future.wait(urls.map((url) async {
-        try {
-          final file = await _cacheManager.getSingleFile(url);
-          HomeStartupMediaCache.saveFile(url, file);
+      await Future.wait(
+        urls.map((url) async {
+          try {
+            final file = await _cacheManager.getSingleFile(url);
+            HomeStartupMediaCache.saveFile(url, file);
 
-          // Decode image vào bộ nhớ đệm (ImageCache) để frame đầu tiên hiển thị ngay lập tức,
-          // tránh tình trạng bị chớp màn hình nền cũ (transparent flash) trong 0.1s.
-          final provider = FileImage(file);
-          final stream = provider.resolve(ImageConfiguration.empty);
-          final completer = Completer<void>();
-          late final ImageStreamListener listener;
-          listener = ImageStreamListener(
-            (info, sync) {
-              stream.removeListener(listener);
-              if (!completer.isCompleted) completer.complete();
-            },
-            onError: (e, stack) {
-              stream.removeListener(listener);
-              if (!completer.isCompleted) completer.completeError(e);
-            },
-          );
-          stream.addListener(listener);
-          await completer.future.timeout(const Duration(milliseconds: 1500));
-        } catch (_) {}
-      }));
+            // Decode image vào bộ nhớ đệm (ImageCache) để frame đầu tiên hiển thị ngay lập tức,
+            // tránh tình trạng bị chớp màn hình nền cũ (transparent flash) trong 0.1s.
+            final provider = FileImage(file);
+            final stream = provider.resolve(ImageConfiguration.empty);
+            final completer = Completer<void>();
+            late final ImageStreamListener listener;
+            listener = ImageStreamListener(
+              (info, sync) {
+                stream.removeListener(listener);
+                if (!completer.isCompleted) completer.complete();
+              },
+              onError: (e, stack) {
+                stream.removeListener(listener);
+                if (!completer.isCompleted) completer.completeError(e);
+              },
+            );
+            stream.addListener(listener);
+            await completer.future.timeout(const Duration(milliseconds: 1500));
+          } catch (error) {
+            debugPrint(
+              '[SuppressedError] lib/views/app_entry/app_entry_home_asset_preparer.dart: $error',
+            );
+          }
+        }),
+      );
 
       // Preload active Google Fonts to prevent 1s blinking/flickering
       final selectedUiFont = SLTheme.textStyleForKey(
@@ -90,7 +96,11 @@ class AppEntryHomeAssetPreparer {
           GoogleFonts.comfortaa(fontWeight: FontWeight.w900),
           selectedUiFont,
         ]);
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[SuppressedError] lib/views/app_entry/app_entry_home_asset_preparer.dart: $error',
+        );
+      }
 
       _preparedHouseId = houseId;
     } finally {
@@ -112,19 +122,21 @@ class AppEntryHomeAssetPreparer {
     }
 
     try {
-      final settingsSnap =
-          await _database.ref('houses/$houseId/settings').get();
+      final settingsSnap = await _database
+          .ref('houses/$houseId/settings')
+          .get();
       if (settingsSnap.exists && settingsSnap.value is Map) {
         final settings = Map<String, dynamic>.from(
           Map<dynamic, dynamic>.from(settingsSnap.value as Map),
         );
-        await OfflineCacheService.saveCache(
-          'home_settings_$houseId',
-          settings,
-        );
+        await OfflineCacheService.saveCache('home_settings_$houseId', settings);
         return settings;
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/app_entry/app_entry_home_asset_preparer.dart: $error',
+      );
+    }
     return null;
   }
 }

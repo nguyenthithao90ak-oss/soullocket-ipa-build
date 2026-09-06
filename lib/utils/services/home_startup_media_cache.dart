@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+
 class HomeStartupMediaCache {
   HomeStartupMediaCache._();
 
@@ -23,7 +25,9 @@ class HomeStartupMediaCache {
       if (file.lengthSync() == 0) {
         try {
           file.deleteSync();
-        } catch (_) {}
+        } catch (error) {
+          debugPrint('[HomeMediaCache] Không xóa được file rỗng: $error');
+        }
         _files.remove(normalizedUrl);
         return null;
       }

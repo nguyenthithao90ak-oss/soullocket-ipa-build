@@ -1,37 +1,6 @@
 part of '../map_screen.dart';
 
 extension _MapPanelSectionsExt on _MapScreenState {
-  Widget _buildLiveStateBadge(_LiveUiSnapshot uiSnap) {
-    final hasAnyLive = uiSnap.myIsLive || uiSnap.partnerIsLive;
-    final hasAnyHistory = uiSnap.myHasHistory || uiSnap.partnerHasHistory;
-    final accent = hasAnyLive
-        ? const Color(0xFF22C55E)
-        : hasAnyHistory
-            ? const Color(0xFFF59E0B)
-            : _kMapTextMuted;
-    final label = hasAnyLive
-        ? context.tr('map_angtrctip_5ad65a')
-        : hasAnyHistory
-            ? context.tr('map_vtrgnnht_b0d47a')
-            : context.tr('map_chacdliu_08e970');
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.14),
-        borderRadius: SLRadius.pillAll,
-        border: Border.all(color: accent.withValues(alpha: 0.24)),
-      ),
-      child: Text(
-        label,
-        style: SLTheme.quicksand(
-          fontSize: 10.5,
-          fontWeight: FontWeight.w900,
-          color: accent,
-        ),
-      ),
-    );
-  }
-
   Widget _buildSectionTitle({
     required IconData icon,
     required Color accent,
@@ -63,88 +32,6 @@ extension _MapPanelSectionsExt on _MapScreenState {
     );
   }
 
-  Widget _buildPersonAvatar({
-    required String name,
-    required Color roleColor,
-    required String avatarUrl,
-    required bool isLive,
-    required bool hasHistory,
-    bool isMe = true,
-    String role = 'user1',
-  }) {
-    final statusColor = isLive
-        ? const Color(0xFF22C55E)
-        : hasHistory
-            ? const Color(0xFFF59E0B)
-            : _kMapTextMuted;
-    final initial =
-        name.trim().isEmpty ? '?' : name.trim().characters.first.toUpperCase();
-
-    // Chọn Lottie theo role (user1=Nam, user2=Nữ), không theo isMe
-    final String lottieUrl = role == 'user1'
-        ? 'https://lottie.host/cb0fd485-8335-4645-88da-ada1f1114f7c/FDBdYP1TRy.lottie'
-        : 'https://lottie.host/9ffe1940-6a8b-43a7-9d1a-87a928f65dd5/DIeMWZLkuO.lottie';
-
-    // Nền hồng nhạt cho avatar nữ để tránh trắng xác
-    final avatarBgColor = role == 'user2'
-        ? const Color(0xFFFCE4EC)
-        : Colors.transparent;
-
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-                color: roleColor.withValues(alpha: 0.34), width: 1.5),
-            color: avatarBgColor,
-          ),
-          child: Lottie.network(
-            lottieUrl,
-            fit: BoxFit.cover,
-            options: LottieOptions(enableMergePaths: true),
-            errorBuilder: (context, error, stackTrace) {
-               // Fallback nếu lỗi load lottie
-               return avatarUrl.trim().isEmpty
-                  ? Center(
-                      child: Text(
-                        initial,
-                        style: SLTheme.quicksand(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                          color: SLColors.textPrimary,
-                        ),
-                      ),
-                    )
-                  : ClipOval(
-                      child: Image.network(
-                        avatarUrl,
-                        fit: BoxFit.cover,
-                      ),
-                    );
-            },
-          ),
-        ),
-        Positioned(
-          right: -1,
-          bottom: -1,
-          child: Container(
-            width: 13,
-            height: 13,
-            decoration: BoxDecoration(
-              color: statusColor,
-              shape: BoxShape.circle,
-              border: Border.all(color: SLColors.borderLight, width: 2),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildInlineEmptyState({
     required IconData icon,
     required Color accent,
@@ -156,7 +43,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
-        color: SLColors.bgMuted,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: SLRadius.lgAll,
         border: Border.all(color: accent.withValues(alpha: 0.18)),
       ),
@@ -182,7 +69,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                   style: SLTheme.quicksand(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w900,
-                    color: _kMapTextSoft,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 SLSpacing.h4,
@@ -191,7 +78,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                   style: SLTheme.quicksand(
                     fontSize: 11.2,
                     fontWeight: FontWeight.w700,
-                    color: _kMapTextMuted,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     height: 1.38,
                   ),
                 ),
@@ -246,336 +133,93 @@ extension _MapPanelSectionsExt on _MapScreenState {
     );
   }
 
+  Widget _buildLocationAccessCard() {
+    return ValueListenableBuilder<_LiveUiSnapshot>(
+      valueListenable: _liveUiVN,
+      builder: (context, data, _) => MapAccessNotice(
+        access: _locationAccess,
+        busy: _isBootstrappingLocation,
+        hasLivePosition: data.myIsLive,
+        syncError: _gpsSyncError,
+        web: kIsWeb,
+        onAction: _handleLocationAction,
+        onSettings: kIsWeb ? null : _openLocationAppSettings,
+      ),
+    );
+  }
+
   Widget _buildSummaryCard() {
     return ValueListenableBuilder<_LiveUiSnapshot>(
       valueListenable: _liveUiVN,
-      builder: (context, uiSnap, child) {
-        final showGpsAction = !uiSnap.myIsLive && !_isBootstrappingLocation;
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          clipBehavior: Clip.antiAlias,
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Colors.white, Color(0xFFF8FAFC)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+      builder: (context, data, _) {
+        if (_isSingleRelationship ||
+            data.myPoint == null ||
+            data.partnerPoint == null) {
+          return const SizedBox.shrink();
+        }
+        final colors = Theme.of(context).colorScheme;
+        final live = data.myIsLive && data.partnerIsLive;
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: mapRose.withValues(alpha: .07),
+            borderRadius: BorderRadius.circular(22),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                context.tr('map_refresh_apart'),
+                style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
               ),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: SLColors.borderLight, width: 0.8),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
+              const SizedBox(height: 4),
+              Text(
+                data.distanceText,
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -1,
+                  color: colors.onSurface,
                 ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              ),
+              const SizedBox(height: 4),
+              Text(
+                context.tr(
+                  live
+                      ? 'map_refresh_straight_distance'
+                      : 'map_refresh_stale_distance',
+                ),
+                style: TextStyle(
+                  fontSize: 12,
+                  height: 1.4,
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+              if (data.etaText != '--') ...[
+                const SizedBox(height: 14),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [_kMapPinkSoft, _kMapPinkDeep],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Icon(Icons.explore_rounded,
-                          color: Colors.white),
-                    ),
-                    SLSpacing.w12,
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  _isSingleRelationship
-                                      ? context.tr('map_tngquanvtr_d8954d')
-                                      : context.tr('map_tngquandic_6b8ec0'),
-                                  style: SLTheme.quicksand(
-                                    fontSize: 15.5,
-                                    fontWeight: FontWeight.w900,
-                                    color: SLColors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                              _buildLiveStateBadge(uiSnap),
-                            ],
-                          ),
-                          SLSpacing.h4,
-                          Text(
-                            uiSnap.isFetchingRoute && !_isSingleRelationship
-                                ? context.tr('map_angcpnhtqu_4552d8')
-                                : uiSnap.mapInsightText,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: SLTheme.quicksand(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                              color: SLColors.textSecondary,
-                              height: 1.35,
-                            ),
-                          ),
-                        ],
+                      child: _buildMetricTile(
+                        label: context.tr('map_refresh_route'),
+                        value: data.routeDistanceText,
+                        accent: mapBlue,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildMetricTile(
+                        label: context.tr('map_refresh_eta'),
+                        value: data.etaText,
+                        accent: mapRose,
                       ),
                     ),
                   ],
                 ),
-                SLSpacing.h12,
-                Row(
-                  children: _isSingleRelationship
-                      ? [
-                          Expanded(
-                            child: _buildMetricTile(
-                              label: context.tr('map_trngthi_0fbc27'),
-                              value: uiSnap.distanceText,
-                              accent: _kMapPinkDeep,
-                            ),
-                          ),
-                        ]
-                      : [
-                          Expanded(
-                            child: _buildMetricTile(
-                              label: context.tr('map_khongcch_540478'),
-                              value: uiSnap.distanceText,
-                              accent: _kMapPinkDeep,
-                            ),
-                          ),
-                          SLSpacing.w8,
-                          Expanded(
-                            child: _buildMetricTile(
-                              label: context.tr('map_qungng_20de01'),
-                              value: uiSnap.routeDistanceText,
-                              accent: _kMapBlue,
-                            ),
-                          ),
-                          SLSpacing.w8,
-                          Expanded(
-                            child: _buildMetricTile(
-                              label: context.tr('map_thigian_84864f'),
-                              value: uiSnap.etaText,
-                              accent: const Color(0xFF8B5CF6),
-                            ),
-                          ),
-                        ],
-                ),
-                if (uiSnap.mapAlert != null &&
-                    uiSnap.mapAlert!.trim().isNotEmpty) ...[
-                  SLSpacing.h12,
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 13, vertical: 12),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFFFF8E1), Color(0xFFFFF1C7)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: SLRadius.lgAll,
-                      border: Border.all(color: const Color(0xFFFCD34D)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(
-                              Icons.auto_awesome_rounded,
-                              size: 18,
-                              color: Color(0xFFD97706),
-                            ),
-                            SLSpacing.w8,
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    showGpsAction
-                                        ? context.tr('map_gpscabnang_c7f5e2')
-                                        : context.tr('map_lubn_5eaf5e'),
-                                    style: SLTheme.quicksand(
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.w900,
-                                      color: const Color(0xFF92400E),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    uiSnap.mapAlert!,
-                                    style: SLTheme.quicksand(
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF92400E),
-                                      height: 1.35,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (showGpsAction) ...[
-                          SLSpacing.h10,
-                          OutlinedButton.icon(
-                            onPressed: _isBootstrappingLocation
-                                ? null
-                                : () => _bootstrapLocationTracking(),
-                            icon:
-                                const Icon(Icons.my_location_rounded, size: 16),
-                            label: Text(context.tr('map_btgpscabn_122e9b')),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-                if (_locationStatusMessage != null) ...[
-                  SLSpacing.h12,
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 14),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          const Color(0xFF10B981).withValues(alpha: 0.16),
-                          const Color(0xFF0F172A).withValues(alpha: 0.30),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: SLRadius.lgAll,
-                      border: Border.all(
-                          color:
-                              const Color(0xFF34D399).withValues(alpha: 0.34)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (_isBootstrappingLocation)
-                              const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: Color(0xFF34D399),
-                                ),
-                              )
-                            else
-                              const Icon(
-                                Icons.sensors_rounded,
-                                size: 18,
-                                color: Color(0xFF34D399),
-                              ),
-                            SLSpacing.w10,
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    context.tr('map_cuhnhgps_1db812'),
-                                    style: SLTheme.quicksand(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w900,
-                                      color: const Color(0xFF86EFAC),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    _locationStatusMessage!,
-                                    style: SLTheme.quicksand(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: SLColors.textPrimary,
-                                      height: 1.4,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (!_isBootstrappingLocation) ...[
-                          SLSpacing.h12,
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF10B981),
-                                    foregroundColor: Colors.white,
-                                    elevation: 0,
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 12),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: SLRadius.mdAll),
-                                  ),
-                                  onPressed: () => _bootstrapLocationTracking(),
-                                  icon: const Icon(Icons.gps_fixed_rounded,
-                                      size: 18),
-                                  label: Text(
-                                    context.tr('map_btcpnhtgps_66414d'),
-                                    style: SLTheme.quicksand(
-                                        fontWeight: FontWeight.w900,
-                                        fontSize: 13),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ),
-                              if (!kIsWeb) ...[
-                                SLSpacing.w8,
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF334155),
-                                      foregroundColor: Colors.white,
-                                      elevation: 0,
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 12),
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius: SLRadius.mdAll),
-                                    ),
-                                    onPressed: () =>
-                                        app_permission.openAppSettings(),
-                                    icon: const Icon(Icons.settings_rounded,
-                                        size: 18),
-                                    label: Text(
-                                      'Cài đặt quyền',
-                                      style: SLTheme.quicksand(
-                                          fontWeight: FontWeight.w900,
-                                          fontSize: 13),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
               ],
-            ),
+            ],
           ),
         );
       },
@@ -627,377 +271,117 @@ extension _MapPanelSectionsExt on _MapScreenState {
   Widget _buildPeopleStatusRow() {
     return ValueListenableBuilder<_LiveUiSnapshot>(
       valueListenable: _liveUiVN,
-      builder: (context, uiSnap, child) {
-        return Row(
-          children: _isSingleRelationship
-              ? [
-                  Expanded(
-                    child: _buildPeopleCard(
-                      name: widget.myName,
-                      isMe: true,
-                      role: widget.myRole,
-                      roleColor: _kMapBlue,
-                      avatarUrl: widget.myAvatarUrl,
-                      gpsPoint: uiSnap.myPoint,
-                      addressText: uiSnap.myAddressText,
-                      updatedText: uiSnap.myUpdatedText,
-                      isLive: uiSnap.myIsLive,
-                      hasHistory: uiSnap.myHasHistory,
-                    ),
-                  ),
-                ]
-              : [
-                  Expanded(
-                    child: _buildPeopleCard(
-                      name: widget.myName,
-                      isMe: true,
-                      role: widget.myRole,
-                      roleColor: _kMapBlue,
-                      avatarUrl: widget.myAvatarUrl,
-                      gpsPoint: uiSnap.myPoint,
-                      addressText: uiSnap.myAddressText,
-                      updatedText: uiSnap.myUpdatedText,
-                      isLive: uiSnap.myIsLive,
-                      hasHistory: uiSnap.myHasHistory,
-                    ),
-                  ),
-                  SLSpacing.w8,
-                  Expanded(
-                    child: _buildPeopleCard(
-                      name: widget.partnerName,
-                      isMe: false,
-                      role: widget.partnerRole,
-                      roleColor: _kMapPinkDeep,
-                      avatarUrl: widget.partnerAvatarUrl,
-                      gpsPoint: uiSnap.partnerPoint,
-                      addressText: uiSnap.partnerAddressText,
-                      updatedText: uiSnap.partnerUpdatedText,
-                      isLive: uiSnap.partnerIsLive,
-                      hasHistory: uiSnap.partnerHasHistory,
-                    ),
-                  ),
+      builder: (context, data, _) {
+        final people = [
+          MapPersonTile(
+            key: const ValueKey('map_person_me'),
+            name: widget.myName,
+            isMe: true,
+            role: widget.myRole,
+            avatarUrl: widget.myAvatarUrl,
+            isLive: data.myIsLive,
+            hasPosition: data.myPoint != null,
+            address: data.myAddressText,
+            updated: data.myUpdatedText,
+            accuracy: data.myPoint?.accuracy,
+            onFocus: () => _focusMapPoint(data.myPoint),
+          ),
+          if (!_isSingleRelationship)
+            MapPersonTile(
+              key: const ValueKey('map_person_partner'),
+              name: widget.partnerName,
+              isMe: false,
+              role: widget.partnerRole,
+              avatarUrl: widget.partnerAvatarUrl,
+              isLive: data.partnerIsLive,
+              hasPosition: data.partnerPoint != null,
+              address: data.partnerAddressText,
+              updated: data.partnerUpdatedText,
+              accuracy: data.partnerPoint?.accuracy,
+              onFocus: () => _focusMapPoint(data.partnerPoint),
+            ),
+        ];
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth >= 560 &&
+                people.length == 2 &&
+                MediaQuery.textScalerOf(context).scale(14) <= 20) {
+              return IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: people[0]),
+                    const SizedBox(width: 10),
+                    Expanded(child: people[1]),
+                  ],
+                ),
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < people.length; i++) ...[
+                  if (i > 0) const SizedBox(height: 10),
+                  people[i],
                 ],
+              ],
+            );
+          },
         );
       },
     );
   }
 
-  Widget _buildPeopleCard({
-    required String name,
-    required bool isMe,
-    required String role,
-    required Color roleColor,
-    required String avatarUrl,
-    required _GpsPoint? gpsPoint,
-    required String addressText,
-    required String updatedText,
-    required bool isLive,
-    required bool hasHistory,
-  }) {
-    final statusText = isLive
-        ? context.tr('map_gpsangbt_1f3553')
-        : hasHistory
-            ? context.tr('map_vtrcui_93fc06')
-            : context.tr('map_chabtgps_aa3568');
-    final statusColor = isLive
-        ? const Color(0xFF22C55E)
-        : hasHistory
-            ? const Color(0xFFF59E0B)
-            : const Color(0xFF475569); // Đậm hơn thay vì _kMapTextMuted
-
-    final accuracyUi = _gpsAccuracyPresentation(gpsPoint?.accuracy);
-    final accuracyHint = _gpsAccuracyHint(gpsPoint?.accuracy);
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: roleColor.withValues(alpha: 0.15), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: roleColor.withValues(alpha: 0.08),
-            blurRadius: 15,
-            offset: const Offset(0, 6),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildPersonAvatar(
-                name: name,
-                roleColor: roleColor,
-                avatarUrl: avatarUrl,
-                isLive: isLive,
-                hasHistory: hasHistory,
-                isMe: isMe,
-                role: role,
-              ),
-              SLSpacing.w10,
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: SLColors.textPrimary,
-                      ),
-                    ),
-                    SLSpacing.h4,
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.12),
-                        borderRadius: SLRadius.pillAll,
-                        border: Border.all(
-                            color: statusColor.withValues(alpha: 0.30)),
-                      ),
-                      child: Text(
-                        statusText,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: SLTheme.quicksand(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w900,
-                          color: statusColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SLSpacing.h10,
-          Text(
-            addressText,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-            style: SLTheme.quicksand(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF334155), // Slate 700 đậm hơn cho nền trắng
-              height: 1.38,
-            ),
-          ),
-          SLSpacing.h8,
-          Row(
-            children: [
-              Icon(
-                isLive ? Icons.bolt_rounded : Icons.history_rounded,
-                size: 13,
-                color: statusColor,
-              ),
-              const SizedBox(width: 5),
-              Expanded(
-                child: Text(
-                  isLive ? 'Live • $updatedText' : 'Gần nhất • $updatedText',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: SLTheme.quicksand(
-                    fontSize: 10.6,
-                    fontWeight: FontWeight.w900,
-                    color: statusColor,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (gpsPoint != null) ...[
-            SLSpacing.h8,
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: accuracyUi.color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(16),
-                border:
-                    Border.all(color: accuracyUi.color.withValues(alpha: 0.20)),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    accuracyUi.isLow
-                        ? Icons.gps_not_fixed_rounded
-                        : Icons.gps_fixed_rounded,
-                    size: 14,
-                    color: accuracyUi.color,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      accuracyUi.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w900,
-                        color: accuracyUi.color,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (accuracyHint != null) ...[
-              SLSpacing.h6,
-              Text(
-                accuracyHint,
-                style: SLTheme.quicksand(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFFFBBF24),
-                  height: 1.35,
-                ),
-              ),
-            ],
-          ],
-          if (isMe && !isLive) ...[
-            SLSpacing.h12,
-            SizedBox(
-              width: double.infinity,
-              height: 32,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: roleColor,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: EdgeInsets.zero,
-                  shape: RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
-                ),
-                onPressed: _isBootstrappingLocation
-                    ? null
-                    : () => _bootstrapLocationTracking(),
-                icon: const Icon(Icons.gps_fixed_rounded, size: 14),
-                label: Text(
-                  context.tr('map_btgpscabn_122e9b'),
-                  style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w900, fontSize: 11),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
   Widget _buildHistoryCard() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: SLRadius.xlAll,
-        border:
-            Border.all(color: _kMapBlue.withValues(alpha: 0.15), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: _kMapBlue.withValues(alpha: 0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 6),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSectionTitle(
-            icon: Icons.route_rounded,
-            accent: _kMapBlue,
-            title: context.tr('map_lchsdichuy_2cc14d'),
-          ),
-          SLSpacing.h12,
-          Row(
-            children: _isSingleRelationship
-                ? [
-                    Expanded(
-                      child: _buildMetricTile(
-                        label: widget.myName,
-                        value: _formatDistanceMeters(
-                            _historyBundle.myDistanceMeters),
-                        accent: _kMapBlue,
-                      ),
-                    ),
-                    SLSpacing.w8,
-                    Expanded(
-                      child: _buildMetricTile(
-                        label: context.tr('map_im_559d58'),
-                        value: '${_historyBundle.totalPoints}',
-                        accent: const Color(0xFF7C3AED),
-                      ),
-                    ),
-                  ]
-                : [
-                    Expanded(
-                      child: _buildMetricTile(
-                        label: widget.myName,
-                        value: _formatDistanceMeters(
-                            _historyBundle.myDistanceMeters),
-                        accent: _kMapBlue,
-                      ),
-                    ),
-                    SLSpacing.w8,
-                    Expanded(
-                      child: _buildMetricTile(
-                        label: widget.partnerName,
-                        value: _formatDistanceMeters(
-                            _historyBundle.partnerDistanceMeters),
-                        accent: _kMapPinkDeep,
-                      ),
-                    ),
-                    SLSpacing.w8,
-                    Expanded(
-                      child: _buildMetricTile(
-                        label: context.tr('map_im_559d58'),
-                        value: '${_historyBundle.totalPoints}',
-                        accent: const Color(0xFF7C3AED),
-                      ),
-                    ),
-                  ],
-          ),
-          SLSpacing.h12,
-          if (_historyBundle.isEmpty)
-            _buildInlineEmptyState(
-              icon: Icons.route_rounded,
-              accent: _kMapBlue,
-              title: context.tr('map_chacltrnhh_5732db'),
-              subtitle: _isSingleRelationship
-                  ? context.tr('map_btgpsvdich_53ab60')
-                  : context.tr('map_khichaibtg_168803'),
-            )
-          else
-            Text(
-              _isSingleRelationship
-                  ? 'Đã ghi lại lộ trình của bạn. Tổng quãng đường trong ngày: ${_formatDistanceMeters(_historyBundle.totalDistanceMeters)}.'
-                  : 'Đã vẽ lộ trình cho cả hai người. Tổng quãng đường trong ngày: ${_formatDistanceMeters(_historyBundle.totalDistanceMeters)}.',
-              style: SLTheme.quicksand(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: _kMapTextMuted,
-                height: 1.4,
-              ),
+    if (_historyBundle.isEmpty) {
+      return _buildInlineEmptyState(
+        icon: Icons.route_outlined,
+        accent: mapBlue,
+        title: context.tr('map_refresh_history_empty'),
+        subtitle: context.tr('map_refresh_history_empty_body'),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            _buildMetricTile(
+              label: widget.myName,
+              value: _formatDistanceMeters(_historyBundle.myDistanceMeters),
+              accent: mapBlue,
             ),
-        ],
-      ),
+            if (!_isSingleRelationship)
+              _buildMetricTile(
+                label: widget.partnerName,
+                value: _formatDistanceMeters(
+                  _historyBundle.partnerDistanceMeters,
+                ),
+                accent: mapRose,
+              ),
+            _buildMetricTile(
+              label: context.tr('map_im_559d58'),
+              value: _historyBundle.totalPoints.toString(),
+              accent: mapBlue,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Text(
+          L10nService().format('map_refresh_history_total', {
+            'distance': _formatDistanceMeters(
+              _historyBundle.totalDistanceMeters,
+            ),
+          }),
+          style: TextStyle(
+            fontSize: 12,
+            height: 1.5,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
     );
   }
 
@@ -1008,7 +392,9 @@ extension _MapPanelSectionsExt on _MapScreenState {
         color: Colors.white,
         borderRadius: SLRadius.xlAll,
         border: Border.all(
-            color: _kMapPinkDeep.withValues(alpha: 0.15), width: 1.2),
+          color: _kMapPinkDeep.withValues(alpha: 0.15),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
             color: _kMapPinkDeep.withValues(alpha: 0.05),
@@ -1061,7 +447,9 @@ extension _MapPanelSectionsExt on _MapScreenState {
               ),
             ),
             SLSpacing.h8,
-            ..._memories.take(3).map(
+            ..._memories
+                .take(3)
+                .map(
                   (memory) => _buildListItem(
                     icon: Icons.push_pin_rounded,
                     accent: _kMapPinkDeep,
@@ -1072,7 +460,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
                     trailing: memory.ts == null
                         ? null
                         : _timeFormat.format(
-                            DateTime.fromMillisecondsSinceEpoch(memory.ts!)),
+                            DateTime.fromMillisecondsSinceEpoch(memory.ts!),
+                          ),
                     onTap: () => _showMemoryDialog(memory),
                   ),
                 ),
@@ -1088,7 +477,9 @@ extension _MapPanelSectionsExt on _MapScreenState {
               ),
             ),
             SLSpacing.h8,
-            ..._checkins.take(3).map(
+            ..._checkins
+                .take(3)
+                .map(
                   (checkin) => _buildListItem(
                     icon: Icons.add_location_alt_rounded,
                     accent: _kMapBlue,
@@ -1216,10 +607,6 @@ extension _MapPanelSectionsExt on _MapScreenState {
     );
 
     if (onTap == null) return tile;
-    return InkWell(
-      borderRadius: SLRadius.lgAll,
-      onTap: onTap,
-      child: tile,
-    );
+    return InkWell(borderRadius: SLRadius.lgAll, onTap: onTap, child: tile);
   }
 }

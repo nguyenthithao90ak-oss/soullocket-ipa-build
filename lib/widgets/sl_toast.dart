@@ -171,15 +171,16 @@ class SLToast {
           icon: icon,
           title: title,
           message: message,
-          confirmLabel: confirmLabel ?? L10nService().translate('toast_confirm'),
+          confirmLabel:
+              confirmLabel ?? L10nService().translate('toast_confirm'),
           cancelLabel: cancelLabel ?? L10nService().translate('toast_cancel'),
         );
       },
       transitionBuilder: (ctx, anim, secondaryAnim, child) {
-        final scale = Tween<double>(begin: 0.92, end: 1.0).animate(
-          CurvedAnimation(
-              parent: anim, curve: Curves.easeOutCubic),
-        );
+        final scale = Tween<double>(
+          begin: 0.92,
+          end: 1.0,
+        ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic));
         final fade = Tween<double>(begin: 0, end: 1).animate(anim);
         return FadeTransition(
           opacity: fade,
@@ -215,9 +216,10 @@ class SLToast {
         cancelLabel: null,
       ),
       transitionBuilder: (ctx, anim, secondaryAnim, child) {
-        final scale = Tween<double>(begin: 0.92, end: 1.0).animate(
-          CurvedAnimation(parent: anim, curve: Curves.easeOutCubic),
-        );
+        final scale = Tween<double>(
+          begin: 0.92,
+          end: 1.0,
+        ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic));
         final fade = Tween<double>(begin: 0, end: 1).animate(anim);
         return FadeTransition(
           opacity: fade,
@@ -278,13 +280,14 @@ class _SLToastEntryState extends State<_SLToastEntry>
     vsync: this,
     duration: const Duration(milliseconds: 320),
   );
-  late final Animation<double> _slide =
-      Tween<double>(begin: -1.0, end: 0.0).animate(
-    CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic),
-  );
-  late final Animation<double> _fade = Tween<double>(begin: 0, end: 1).animate(
-    CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
-  );
+  late final Animation<double> _slide = Tween<double>(
+    begin: -1.0,
+    end: 0.0,
+  ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+  late final Animation<double> _fade = Tween<double>(
+    begin: 0,
+    end: 1,
+  ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
 
   @override
   void initState() {
@@ -343,108 +346,119 @@ class _SLToastEntryState extends State<_SLToastEntry>
                         child: BackdropFilter(
                           filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
                           child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.black.withValues(alpha: 0.55)
-                              : Colors.white.withValues(alpha: 0.92),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: widget.palette.accent.withValues(alpha: 0.35),
-                            width: 1,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color:
-                                  widget.palette.accent.withValues(alpha: 0.18),
-                              blurRadius: 24,
-                              spreadRadius: -2,
-                              offset: const Offset(0, 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
                             ),
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.06),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            // Icon tròn có glow
-                            Container(
-                              width: 38,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                color: widget.palette.iconBg
-                                    .withValues(alpha: 0.18),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: widget.palette.iconBg
-                                      .withValues(alpha: 0.35),
-                                  width: 1.2,
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.black.withValues(alpha: 0.55)
+                                  : Colors.white.withValues(alpha: 0.92),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: widget.palette.accent.withValues(
+                                  alpha: 0.35,
                                 ),
+                                width: 1,
                               ),
-                              alignment: Alignment.center,
-                              child: Icon(
-                                iconData,
-                                size: 22,
-                                color: widget.palette.accent,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            // Message
-                            Expanded(
-                              child: Text(
-                                widget.message,
-                                style: TextStyle(
-                                  color: isDark
-                                      ? Colors.white.withValues(alpha: 0.95)
-                                      : SLColors.textPrimary,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 14,
-                                  height: 1.35,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: widget.palette.accent.withValues(
+                                    alpha: 0.18,
+                                  ),
+                                  blurRadius: 24,
+                                  spreadRadius: -2,
+                                  offset: const Offset(0, 8),
                                 ),
-                              ),
-                            ),
-                            // Action button
-                            if (widget.actionLabel != null)
-                              TextButton(
-                                onPressed: widget.onAction,
-                                style: TextButton.styleFrom(
-                                  foregroundColor: widget.palette.accent,
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 4),
-                                  minimumSize: Size.zero,
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.06),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
                                 ),
-                                child: Text(
-                                  widget.actionLabel!,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 13,
-                                    letterSpacing: 0.4,
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                // Icon tròn có glow
+                                Container(
+                                  width: 38,
+                                  height: 38,
+                                  decoration: BoxDecoration(
+                                    color: widget.palette.iconBg.withValues(
+                                      alpha: 0.18,
+                                    ),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: widget.palette.iconBg.withValues(
+                                        alpha: 0.35,
+                                      ),
+                                      width: 1.2,
+                                    ),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Icon(
+                                    iconData,
+                                    size: 22,
+                                    color: widget.palette.accent,
                                   ),
                                 ),
-                              ),
-                            // Close button
-                            IconButton(
-                              icon: Icon(
-                                Icons.close_rounded,
-                                size: 18,
-                                color: isDark
-                                    ? Colors.white.withValues(alpha: 0.5)
-                                    : SLColors.textTertiary,
-                              ),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(
-                                  minWidth: 32, minHeight: 32),
-                              onPressed: _dismiss,
+                                const SizedBox(width: 12),
+                                // Message
+                                Expanded(
+                                  child: Text(
+                                    widget.message,
+                                    style: TextStyle(
+                                      color: isDark
+                                          ? Colors.white.withValues(alpha: 0.95)
+                                          : SLColors.textPrimary,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14,
+                                      height: 1.35,
+                                    ),
+                                  ),
+                                ),
+                                // Action button
+                                if (widget.actionLabel != null)
+                                  TextButton(
+                                    onPressed: widget.onAction,
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: widget.palette.accent,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      minimumSize: Size.zero,
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                    child: Text(
+                                      widget.actionLabel!,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 13,
+                                        letterSpacing: 0.4,
+                                      ),
+                                    ),
+                                  ),
+                                // Close button
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.close_rounded,
+                                    size: 18,
+                                    color: isDark
+                                        ? Colors.white.withValues(alpha: 0.5)
+                                        : SLColors.textTertiary,
+                                  ),
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(
+                                    minWidth: 32,
+                                    minHeight: 32,
+                                  ),
+                                  onPressed: _dismiss,
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
@@ -452,12 +466,10 @@ class _SLToastEntryState extends State<_SLToastEntry>
                 ),
               ),
             ),
-          ),
-        ),
-      );
-    },
-  ),
-);
+          );
+        },
+      ),
+    );
   }
 }
 
@@ -493,8 +505,6 @@ class _SLDialogShellState extends State<_SLDialogShell> {
     final brightness = Theme.of(context).brightness;
     final isDark = brightness == Brightness.dark;
     final iconData = widget.icon ?? widget.palette.icon;
-    final isDanger = widget.variant == SLToastVariant.danger;
-    final isWarning = widget.variant == SLToastVariant.warning;
 
     return Center(
       child: Padding(
@@ -519,8 +529,7 @@ class _SLDialogShellState extends State<_SLDialogShell> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color:
-                            widget.palette.accent.withValues(alpha: 0.18),
+                        color: widget.palette.accent.withValues(alpha: 0.18),
                         blurRadius: 32,
                         spreadRadius: -4,
                         offset: const Offset(0, 16),
@@ -559,8 +568,9 @@ class _SLDialogShellState extends State<_SLDialogShell> {
                                 gradient: LinearGradient(
                                   colors: [
                                     widget.palette.iconBg,
-                                    widget.palette.iconBg
-                                        .withValues(alpha: 0.7),
+                                    widget.palette.iconBg.withValues(
+                                      alpha: 0.7,
+                                    ),
                                   ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
@@ -568,8 +578,9 @@ class _SLDialogShellState extends State<_SLDialogShell> {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: widget.palette.iconBg
-                                        .withValues(alpha: 0.45),
+                                    color: widget.palette.iconBg.withValues(
+                                      alpha: 0.45,
+                                    ),
                                     blurRadius: 22,
                                     spreadRadius: 2,
                                   ),
@@ -602,8 +613,7 @@ class _SLDialogShellState extends State<_SLDialogShell> {
 
                       // ─── Body message ─────────────────────────────
                       Padding(
-                        padding:
-                            const EdgeInsets.fromLTRB(20, 18, 20, 8),
+                        padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
                         child: Text(
                           widget.message,
                           textAlign: TextAlign.center,
@@ -735,8 +745,7 @@ class _PrimaryButtonState extends State<_PrimaryButton>
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.2,
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
               : Text(
@@ -759,10 +768,7 @@ class _SecondaryButton extends StatelessWidget {
   final String label;
   final VoidCallback onPressed;
 
-  const _SecondaryButton({
-    required this.label,
-    required this.onPressed,
-  });
+  const _SecondaryButton({required this.label, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {

@@ -61,8 +61,9 @@ class _SettingsLinksManagerScreenState
     final confirmed = await SLNotice.showConfirmDialog(
       context,
       title: context.tr('home_thuhilinkt_0402df'),
-      message:
-          'Thu hồi liên kết album ${link.photoCount} ảnh này? Người nhận sẽ không mở được liên kết nữa.',
+      message: context
+          .tr('p6_revoke_album_link_confirmation')
+          .replaceAll('{count}', link.photoCount.toString()),
       confirmText: context.tr('home_thuhi_b8c669'),
       cancelText: context.tr('home_hy_1e4050'),
       isDanger: true,

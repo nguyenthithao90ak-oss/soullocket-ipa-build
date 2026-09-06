@@ -12,10 +12,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
 import 'package:soullocket_app/utils/web_helpers.dart';
 
-enum DiaryExportFormat {
-  pdf,
-  html,
-}
+enum DiaryExportFormat { pdf, html }
 
 /// ============================================================
 ///  ExportService — GRA (Hệ thống)
@@ -48,8 +45,9 @@ class ExportService {
     }
 
     try {
-      final snapshot =
-          await _dbRef.child('houses/$resolvedHouseId/settings').get();
+      final snapshot = await _dbRef
+          .child('houses/$resolvedHouseId/settings')
+          .get();
       if (snapshot.value is Map) {
         final settings = Map<dynamic, dynamic>.from(snapshot.value as Map);
         final houseName = (settings['houseName'] ?? '').toString().trim();
@@ -57,7 +55,9 @@ class ExportService {
           return houseName;
         }
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[ExportService] Không đọc được tên nhà: $error');
+    }
 
     return fallbackName;
   }
@@ -85,8 +85,9 @@ class ExportService {
       throw Exception('Chưa có mã nhà');
     }
 
-    final resolvedHouseName =
-        houseName.trim().isNotEmpty ? houseName.trim() : 'SoulHouse';
+    final resolvedHouseName = houseName.trim().isNotEmpty
+        ? houseName.trim()
+        : 'SoulHouse';
     final entries = await _loadDiaryEntries(resolvedHouseId);
     if (entries.isEmpty) {
       throw Exception('Chưa có nhật ký để xuất');
@@ -99,9 +100,13 @@ class ExportService {
         build: (context) => [
           pw.Header(
             level: 0,
-            child: pw.Text('NHAT KY TINH YEU - $resolvedHouseName',
-                style:
-                    const pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+            child: pw.Text(
+              'NHAT KY TINH YEU - $resolvedHouseName',
+              style: const pw.TextStyle(
+                fontSize: 24,
+                fontWeight: pw.FontWeight.bold,
+              ),
+            ),
           ),
           ...entries.map((entry) {
             final date = entry['time'] ?? '';
@@ -122,10 +127,13 @@ class ExportService {
                   pw.Row(
                     mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                     children: [
-                      pw.Text('$date | $author',
-                          style: const pw.TextStyle(
-                              fontWeight: pw.FontWeight.bold,
-                              color: PdfColors.pink)),
+                      pw.Text(
+                        '$date | $author',
+                        style: const pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.pink,
+                        ),
+                      ),
                       pw.Text(mood, style: const pw.TextStyle(fontSize: 16)),
                     ],
                   ),
@@ -171,8 +179,9 @@ class ExportService {
       throw Exception('Chưa có mã nhà');
     }
 
-    final resolvedHouseName =
-        houseName.trim().isNotEmpty ? houseName.trim() : 'SoulHouse';
+    final resolvedHouseName = houseName.trim().isNotEmpty
+        ? houseName.trim()
+        : 'SoulHouse';
     final entries = await _loadDiaryEntries(resolvedHouseId);
     if (entries.isEmpty) {
       throw Exception('Chưa có nhật ký để xuất');
@@ -218,8 +227,9 @@ class ExportService {
       }
     });
 
-    entries
-        .sort((a, b) => (a['ts'] as int? ?? 0).compareTo(b['ts'] as int? ?? 0));
+    entries.sort(
+      (a, b) => (a['ts'] as int? ?? 0).compareTo(b['ts'] as int? ?? 0),
+    );
     return entries;
   }
 
@@ -244,16 +254,20 @@ class ExportService {
       ..writeln('<head>')
       ..writeln('<meta charset="utf-8">')
       ..writeln(
-          '<meta name="viewport" content="width=device-width, initial-scale=1">')
+        '<meta name="viewport" content="width=device-width, initial-scale=1">',
+      )
       ..writeln('<title>Nhật ký $houseName</title>')
       ..writeln('<style>')
       ..writeln(
-          'body{font-family:Arial,sans-serif;background:#fff7fb;color:#3f3f46;padding:24px;}')
+        'body{font-family:Arial,sans-serif;background:#fff7fb;color:#3f3f46;padding:24px;}',
+      )
       ..writeln('.wrap{max-width:880px;margin:0 auto;}')
       ..writeln(
-          '.card{background:#fff;border:1px solid #f9a8d4;border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 8px 24px rgba(216,27,96,.08);}')
+        '.card{background:#fff;border:1px solid #f9a8d4;border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 8px 24px rgba(216,27,96,.08);}',
+      )
       ..writeln(
-          '.head{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px;font-weight:700;color:#d81b60;}')
+        '.head{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px;font-weight:700;color:#d81b60;}',
+      )
       ..writeln('.mood{font-size:24px;}')
       ..writeln('.content{white-space:pre-wrap;line-height:1.7;color:#27272a;}')
       ..writeln('</style>')
@@ -267,7 +281,8 @@ class ExportService {
       final date = timestamp > 0
           ? formatter.format(DateTime.fromMillisecondsSinceEpoch(timestamp))
           : (entry['time']?.toString() ?? '');
-      final author = entry['authorName']?.toString() ??
+      final author =
+          entry['authorName']?.toString() ??
           entry['author']?.toString() ??
           'Ẩn danh';
       final mood = entry['mood']?.toString() ?? '';
@@ -277,7 +292,8 @@ class ExportService {
       buffer
         ..writeln('<section class="card">')
         ..writeln(
-            '<div class="head"><span>${_escapeHtml(date)} • ${_escapeHtml(author)}</span><span class="mood">${_escapeHtml(mood)}</span></div>')
+          '<div class="head"><span>${_escapeHtml(date)} • ${_escapeHtml(author)}</span><span class="mood">${_escapeHtml(mood)}</span></div>',
+        )
         ..writeln('<div class="content">${_escapeHtml(content)}</div>')
         ..writeln('</section>');
     }
@@ -307,11 +323,13 @@ class ExportService {
     final resolvedHouseId = houseId.trim();
     if (resolvedHouseId.isEmpty) throw Exception('Chưa có mã nhà');
 
-    final resolvedHouseName =
-        houseName.trim().isNotEmpty ? houseName.trim() : 'SoulHouse';
+    final resolvedHouseName = houseName.trim().isNotEmpty
+        ? houseName.trim()
+        : 'SoulHouse';
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final exportDir = io.Directory(
-        '${(await getTemporaryDirectory()).path}/SoulLocket_Export_$timestamp');
+      '${(await getTemporaryDirectory()).path}/SoulLocket_Export_$timestamp',
+    );
     if (await exportDir.exists()) {
       await exportDir.delete(recursive: true);
     }
@@ -336,8 +354,9 @@ class ExportService {
 
     // 3. Load memories
     onProgress?.call(0.1, 'Đang thu thập ảnh kỷ niệm...');
-    final memoriesSnap =
-        await _dbRef.child('houses/$resolvedHouseId/memories').get();
+    final memoriesSnap = await _dbRef
+        .child('houses/$resolvedHouseId/memories')
+        .get();
     final memoriesList = <Map<String, dynamic>>[];
     if (memoriesSnap.exists && memoriesSnap.value is Map) {
       final data = Map<dynamic, dynamic>.from(memoriesSnap.value as Map);
@@ -349,7 +368,8 @@ class ExportService {
         }
       });
       memoriesList.sort(
-          (a, b) => (a['ts'] as int? ?? 0).compareTo(b['ts'] as int? ?? 0));
+        (a, b) => (a['ts'] as int? ?? 0).compareTo(b['ts'] as int? ?? 0),
+      );
     }
 
     if (memoriesList.isEmpty) {
@@ -395,8 +415,9 @@ class ExportService {
         'author': m['author'] ?? '',
         'ts': ts,
         'date': ts != null
-            ? DateFormat('dd/MM/yyyy HH:mm')
-                .format(DateTime.fromMillisecondsSinceEpoch(ts))
+            ? DateFormat(
+                'dd/MM/yyyy HH:mm',
+              ).format(DateTime.fromMillisecondsSinceEpoch(ts))
             : '',
       };
     }).toList();
@@ -433,7 +454,9 @@ class ExportService {
     // Cleanup temp export dir
     try {
       await exportDir.delete(recursive: true);
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[ExportService] Không xóa được thư mục tạm: $error');
+    }
 
     onProgress?.call(1.0, 'Hoàn tất!');
     return zipFile.path;

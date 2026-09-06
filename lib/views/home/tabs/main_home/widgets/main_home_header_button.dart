@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../core/sl_theme.dart';
+import '../../../widgets/home_sticker_motion.dart';
 
 class MainHomeHeaderButton extends StatelessWidget {
   final IconData? icon;
@@ -50,7 +51,7 @@ class MainHomeHeaderButton extends StatelessWidget {
                 if (imageAsset != null)
                   Padding(
                     padding: const EdgeInsets.all(7),
-                    child: Image.asset(imageAsset!, fit: BoxFit.contain),
+                    child: HomeStickerAsset(imageAsset!),
                   )
                 else
                   Icon(icon ?? Icons.favorite_rounded, color: color, size: 22),

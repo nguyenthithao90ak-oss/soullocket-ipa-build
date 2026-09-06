@@ -29,7 +29,9 @@ extension _SettingsTabPersistence on _SettingsTabState {
         'homeShowHouseName': _homeShowHouseName,
         'updatedAt': ServerValue.timestamp,
       });
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[Settings] Không đồng bộ được tùy chọn Home: $error');
+    }
   }
 
   void _updateThemeDraft(VoidCallback updateFn, {bool syncPreview = false}) {
@@ -77,15 +79,15 @@ extension _SettingsTabPersistence on _SettingsTabState {
       avatarFrameKey: _resolveAllowedAvatarFrameKey(
         (_draftAvatarFrameKey ?? ui.avatarFrameKey).trim(),
       ),
-      countdownStyleKey:
-          (_draftCountdownStyleKey ?? ui.countdownStyleKey).trim(),
+      countdownStyleKey: (_draftCountdownStyleKey ?? ui.countdownStyleKey)
+          .trim(),
       fontKey: (_draftFontKey ?? ui.fontKey).trim(),
       homeBlockToneKey: (_draftHomeBlockToneKey ?? ui.homeBlockToneKey).trim(),
       liteMode: _draftLiteMode,
-      graphicsQualityKey:
-          (_draftGraphicsQualityKey ?? ui.graphicsQualityKey).trim(),
-      customBackgroundUrl:
-          (_draftCustomBackgroundUrl ?? ui.customBackgroundUrl).trim(),
+      graphicsQualityKey: (_draftGraphicsQualityKey ?? ui.graphicsQualityKey)
+          .trim(),
+      customBackgroundUrl: (_draftCustomBackgroundUrl ?? ui.customBackgroundUrl)
+          .trim(),
       transparentMode: _draftTransparentMode ?? ui.transparentMode,
     );
     if (UiPrefs.notifier.value != nextState) {
@@ -97,22 +99,20 @@ extension _SettingsTabPersistence on _SettingsTabState {
   Future<void> _legacyLoadAppLockSettings() async {
     final prefs = await SharedPreferences.getInstance();
     final localCustomLock = (prefs.getString('il_custom_lock') ?? '').trim();
-    final localCustomLockSalt =
-        (prefs.getString('il_custom_lock_salt') ?? '').trim();
+    final localCustomLockSalt = (prefs.getString('il_custom_lock_salt') ?? '')
+        .trim();
     final localCustomLockLength = prefs.getInt('il_custom_lock_length');
     final localConfiguredAt = prefs.getInt('il_custom_lock_configured_at');
-    final localEnabled = (prefs.getBool('il_app_lock_enabled') ?? false) &&
+    final localEnabled =
+        (prefs.getBool('il_app_lock_enabled') ?? false) &&
         localCustomLock.isNotEmpty;
-    final localScopes = MilitaryLockService.normalizeScopeStorageConfig(
-      {
-        'app': prefs.getBool('il_lock_scope_app') ?? true,
-        'security': prefs.getBool('il_lock_scope_security') ?? false,
-        'diary': prefs.getBool('il_lock_scope_diary') ?? false,
-        'chat': prefs.getBool('il_lock_scope_chat') ?? false,
-        'private': prefs.getBool('il_lock_scope_private') ?? false,
-      },
-      enabled: localEnabled,
-    );
+    final localScopes = MilitaryLockService.normalizeScopeStorageConfig({
+      'app': prefs.getBool('il_lock_scope_app') ?? true,
+      'security': prefs.getBool('il_lock_scope_security') ?? false,
+      'diary': prefs.getBool('il_lock_scope_diary') ?? false,
+      'chat': prefs.getBool('il_lock_scope_chat') ?? false,
+      'private': prefs.getBool('il_lock_scope_private') ?? false,
+    }, enabled: localEnabled);
     if (mounted) {
       setState(() {
         _appLockSettingsLoaded = true;
@@ -144,21 +144,24 @@ extension _SettingsTabPersistence on _SettingsTabState {
       LockSecretRecord? storedSecretRecord;
       if (wantsAppLock) {
         if (enteredLock.isNotEmpty) {
-          final validationError =
-              _militaryLockService.validateCustomLock(enteredLock);
+          final validationError = _militaryLockService.validateCustomLock(
+            enteredLock,
+          );
           if (validationError != null) {
             _showToast(validationError, success: false);
             return;
           }
-          storedSecretRecord =
-              _militaryLockService.createStoredLockSecret(enteredLock);
+          storedSecretRecord = _militaryLockService.createStoredLockSecret(
+            enteredLock,
+          );
         } else if (existingLock.isNotEmpty) {
           if (_militaryLockService.canRevealPlaintextLock(
             secret: existingLock,
             salt: _storedLockSalt,
           )) {
-            storedSecretRecord =
-                _militaryLockService.createStoredLockSecret(existingLock);
+            storedSecretRecord = _militaryLockService.createStoredLockSecret(
+              existingLock,
+            );
           } else {
             storedSecretRecord = LockSecretRecord(
               secret: existingLock,
@@ -182,16 +185,19 @@ extension _SettingsTabPersistence on _SettingsTabState {
       );
       final persistedUseBiometrics = wantsAppLock ? _useBiometrics : false;
       final persistedMilitaryMode = wantsAppLock ? _isMilitaryMode : false;
-      final persistedCustomLock =
-          wantsAppLock ? (storedSecretRecord?.secret ?? '') : '';
-      final persistedCustomLockSalt =
-          wantsAppLock ? storedSecretRecord?.salt : null;
-      final persistedCustomLockLength =
-          wantsAppLock ? storedSecretRecord?.pinLength : null;
+      final persistedCustomLock = wantsAppLock
+          ? (storedSecretRecord?.secret ?? '')
+          : '';
+      final persistedCustomLockSalt = wantsAppLock
+          ? storedSecretRecord?.salt
+          : null;
+      final persistedCustomLockLength = wantsAppLock
+          ? storedSecretRecord?.pinLength
+          : null;
       final persistedConfiguredAt = wantsAppLock
           ? ((enteredLock.isNotEmpty || _lockConfiguredAtMs == null)
-              ? DateTime.now().millisecondsSinceEpoch
-              : _lockConfiguredAtMs)
+                ? DateTime.now().millisecondsSinceEpoch
+                : _lockConfiguredAtMs)
           : null;
 
       if (mounted) {
@@ -225,21 +231,19 @@ extension _SettingsTabPersistence on _SettingsTabState {
       final houseId = _houseId?.trim();
       if (houseId != null && houseId.isNotEmpty) {
         unawaited(
-          _clearRemoteAppLockSyncArtifacts(houseId: houseId).catchError((_) {}),
+          _clearRemoteAppLockSyncArtifacts(houseId: houseId).catchError(
+            (error) => debugPrint(
+              '[Settings] Không xóa được app-lock artifact cũ: $error',
+            ),
+          ),
         );
       }
 
       if (!mounted) return;
-      _showToast(
-        context.tr('home_lucitbomtt_c60175'),
-        success: true,
-      );
+      _showToast(context.tr('home_lucitbomtt_c60175'), success: true);
     } catch (e) {
       if (!mounted) return;
-      _showToast(
-        context.tr('home_khngthluci_eb591a'),
-        success: false,
-      );
+      _showToast(context.tr('home_khngthluci_eb591a'), success: false);
     }
   }
 
@@ -273,8 +277,9 @@ extension _SettingsTabPersistence on _SettingsTabState {
     }
 
     await _dbRef.update({
-      'house_private_security/$houseId/pinHash':
-          _authService.hashHousePin(trimmedPin),
+      'house_private_security/$houseId/pinHash': _authService.hashHousePin(
+        trimmedPin,
+      ),
       'house_private_security/$houseId/updatedAt': ServerValue.timestamp,
       'houses/$houseId/security/pin': null,
       'houses/$houseId/security/pinConfigured': true,
@@ -283,32 +288,32 @@ extension _SettingsTabPersistence on _SettingsTabState {
     });
   }
 
-//   Future<void> _saveAdvancedSettings({bool silent = false}) async {
-//     if (!silent) setState(() => _isSavingAdvanced = true);
-//     try {
-//       final prefs = await SharedPreferences.getInstance();
-//       await prefs.setBool('il_notifications_enabled', _notificationsEnabled);
-//       await prefs.setBool('il_notif_anniversary', _notifAnniversary);
-//       await prefs.setBool('il_notif_post', _notifPost);
-//       await prefs.setBool('il_notif_chat', _notifChat);
-//       await prefs.setBool('il_notif_friend', _notifFriend);
-//       await prefs.setBool('il_notif_heart', _notifHeart);
-//       await prefs.setBool('il_touch_sound', _touchSound);
-//       await prefs.setBool('il_confetti_fx', _confettiFx);
-//       await prefs.setBool('il_show_weather', _showWeather);
-//       await prefs.setBool('il_show_status', _showStatus);
-//       await prefs.setString('il_auto_reply_text', _autoReplyCtrl.text.trim());
-//       if (!silent) _showToast(context.tr('home_lucitnngca_14ab51'), success: true);
-//     } catch (e) {
-//       if (!silent) {
-//         _showToast('Không thể lưu cài đặt nâng cao: $e', success: false);
-//       }
-//     } finally {
-//       if (mounted) {
-//         if (!silent) setState(() => _isSavingAdvanced = false);
-//       }
-//     }
-//   }
+  //   Future<void> _saveAdvancedSettings({bool silent = false}) async {
+  //     if (!silent) setState(() => _isSavingAdvanced = true);
+  //     try {
+  //       final prefs = await SharedPreferences.getInstance();
+  //       await prefs.setBool('il_notifications_enabled', _notificationsEnabled);
+  //       await prefs.setBool('il_notif_anniversary', _notifAnniversary);
+  //       await prefs.setBool('il_notif_post', _notifPost);
+  //       await prefs.setBool('il_notif_chat', _notifChat);
+  //       await prefs.setBool('il_notif_friend', _notifFriend);
+  //       await prefs.setBool('il_notif_heart', _notifHeart);
+  //       await prefs.setBool('il_touch_sound', _touchSound);
+  //       await prefs.setBool('il_confetti_fx', _confettiFx);
+  //       await prefs.setBool('il_show_weather', _showWeather);
+  //       await prefs.setBool('il_show_status', _showStatus);
+  //       await prefs.setString('il_auto_reply_text', _autoReplyCtrl.text.trim());
+  //       if (!silent) _showToast(context.tr('home_lucitnngca_14ab51'), success: true);
+  //     } catch (e) {
+  //       if (!silent) {
+  //         _showToast('Không thể lưu cài đặt nâng cao: $e', success: false);
+  //       }
+  //     } finally {
+  //       if (mounted) {
+  //         if (!silent) setState(() => _isSavingAdvanced = false);
+  //       }
+  //     }
+  //   }
 
   Future<void> _loadVipStatus() async {
     final user = _auth.currentUser;
@@ -336,19 +341,22 @@ extension _SettingsTabPersistence on _SettingsTabState {
     }
 
     try {
-      final access = await PurchaseService()
-          .getVipAccessInfo()
-          .timeout(const Duration(seconds: 3), onTimeout: () {
-        throw Exception();
-      });
+      final access = await PurchaseService().getVipAccessInfo().timeout(
+        const Duration(seconds: 3),
+        onTimeout: () {
+          throw Exception();
+        },
+      );
 
       final vipActive = access.isVip;
       final planCode = access.planId;
       final isLifetimeVip = access.isLifetime;
-      final planLabel =
-          vipActive ? _labelForVipPlan(planCode) : basicAccountLabel;
-      final expiryLabel =
-          vipActive ? _formatVipExpiry(access.expiresAtMs) : nonVipExpiryLabel;
+      final planLabel = vipActive
+          ? _labelForVipPlan(planCode)
+          : basicAccountLabel;
+      final expiryLabel = vipActive
+          ? _formatVipExpiry(access.expiresAtMs)
+          : nonVipExpiryLabel;
 
       if (mounted) {
         setState(() {
@@ -360,7 +368,9 @@ extension _SettingsTabPersistence on _SettingsTabState {
         });
       }
       return;
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[Settings] PurchaseService VIP lookup failed: $error');
+    }
 
     bool vipActive = false;
     String planLabel = freePlanLabel;
@@ -370,8 +380,10 @@ extension _SettingsTabPersistence on _SettingsTabState {
       final userVipSnap = await _dbRef
           .child('users/${user.uid}/vip')
           .get()
-          .timeout(const Duration(seconds: 3),
-              onTimeout: () => throw Exception());
+          .timeout(
+            const Duration(seconds: 3),
+            onTimeout: () => throw Exception(),
+          );
       if (userVipSnap.exists && userVipSnap.value is Map) {
         final vip = Map<dynamic, dynamic>.from(userVipSnap.value as Map);
 
@@ -382,22 +394,27 @@ extension _SettingsTabPersistence on _SettingsTabState {
         final houseVipSnap = await _dbRef
             .child('houses/$_houseId/vip')
             .get()
-            .timeout(const Duration(seconds: 3),
-                onTimeout: () => throw Exception());
+            .timeout(
+              const Duration(seconds: 3),
+              onTimeout: () => throw Exception(),
+            );
         if (houseVipSnap.exists && houseVipSnap.value is Map) {
           final vip = Map<dynamic, dynamic>.from(houseVipSnap.value as Map);
 
           vipActive = vip['isVip'] == true;
           planLabel = _labelForVipPlan(vip['plan']?.toString());
-          expiryLabel =
-              vipActive ? activatedByPartnerLabel : inactiveVipExpiryLabel;
+          expiryLabel = vipActive
+              ? activatedByPartnerLabel
+              : inactiveVipExpiryLabel;
         }
         if (!vipActive) {
           final legacyProSnap = await _dbRef
               .child('houses/$_houseId/proUntil')
               .get()
-              .timeout(const Duration(seconds: 3),
-                  onTimeout: () => throw Exception());
+              .timeout(
+                const Duration(seconds: 3),
+                onTimeout: () => throw Exception(),
+              );
           final proUntil = _toIntOrNull(legacyProSnap.value);
           if (proUntil != null &&
               proUntil > DateTime.now().millisecondsSinceEpoch) {
@@ -407,7 +424,9 @@ extension _SettingsTabPersistence on _SettingsTabState {
           }
         }
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[Settings] VIP fallback lookup failed: $error');
+    }
 
     if (mounted) {
       setState(() {
@@ -439,26 +458,6 @@ extension _SettingsTabPersistence on _SettingsTabState {
       default:
         return 'SoulLocket PRO';
     }
-
-    // ignore: dead_code
-    switch (raw) {
-      case VipProduct.weekly:
-        return context.tr('vip_1_week');
-      case VipProduct.monthly:
-        return context.tr('vip_1_month');
-      case VipProduct.sixMonths:
-      case VipProduct.sixMonthsAlt:
-        return context.tr('vip_6_month');
-      case VipProduct.yearly:
-        return context.tr('vip_1_year');
-      case VipProduct.lifetime:
-      case VipProduct.lifetimeLegacy:
-        return context.tr('vip_lifetime');
-      default:
-        return raw == null || raw.isEmpty
-            ? context.tr('home_giminph_5edaf7')
-            : raw;
-    }
   }
 
   String _formatVipExpiry(dynamic raw) {
@@ -483,22 +482,22 @@ extension _SettingsTabPersistence on _SettingsTabState {
     if (daysLeft > 0) {
       return hoursLeft > 0
           ? context
-              .tr('vip_remaining_days_hours')
-              .replaceAll('{days}', daysLeft.toString())
-              .replaceAll('{hours}', hoursLeft.toString())
+                .tr('vip_remaining_days_hours')
+                .replaceAll('{days}', daysLeft.toString())
+                .replaceAll('{hours}', hoursLeft.toString())
           : context
-              .tr('vip_remaining_days')
-              .replaceAll('{days}', daysLeft.toString());
+                .tr('vip_remaining_days')
+                .replaceAll('{days}', daysLeft.toString());
     }
     if (hoursLeft > 0) {
       return minutesLeft > 0
           ? context
-              .tr('vip_remaining_hours_minutes')
-              .replaceAll('{hours}', hoursLeft.toString())
-              .replaceAll('{minutes}', minutesLeft.toString())
+                .tr('vip_remaining_hours_minutes')
+                .replaceAll('{hours}', hoursLeft.toString())
+                .replaceAll('{minutes}', minutesLeft.toString())
           : context
-              .tr('vip_remaining_hours')
-              .replaceAll('{hours}', hoursLeft.toString());
+                .tr('vip_remaining_hours')
+                .replaceAll('{hours}', hoursLeft.toString());
     }
     if (minutesLeft > 0) {
       return context
@@ -506,37 +505,6 @@ extension _SettingsTabPersistence on _SettingsTabState {
           .replaceAll('{minutes}', minutesLeft.toString());
     }
     return context.tr('home_sphthnhmna_470d6c');
-
-    // ignore: dead_code
-    int? ts;
-    if (raw is int) {
-      ts = raw;
-    } else if (raw is num) {
-      ts = raw.toInt();
-    } else if (raw != null) {
-      ts = int.tryParse('$raw');
-    }
-    if (ts == null) return context.tr('vip_unlimited_or_nodata');
-    final dt = DateTime.fromMillisecondsSinceEpoch(ts);
-    final now = DateTime.now();
-    final difference = dt.difference(now);
-
-    final formattedDate =
-        '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
-
-    if (difference.isNegative) {
-      return 'Đã hết hạn vào: $formattedDate';
-    } else {
-      final daysLeft = difference.inDays;
-      final hoursLeft = difference.inHours % 24;
-      if (daysLeft > 0) {
-        return 'Còn lại: $daysLeft ngày (Hạn: $formattedDate)';
-      } else if (hoursLeft > 0) {
-        return 'Còn lại: $hoursLeft giờ (Hạn hôm nay)';
-      } else {
-        return context.tr('home_sphthnhnhm_1ffe67');
-      }
-    }
   }
 
   Future<void> _restoreVipPurchases() async {
@@ -571,19 +539,13 @@ extension _SettingsTabPersistence on _SettingsTabState {
           );
         } else {
           if (!mounted) return;
-          _showToast(
-            noPackageMsg,
-            success: false,
-          );
+          _showToast(noPackageMsg, success: false);
         }
       }
     } catch (e) {
       if (!mounted) return;
       _showToast(
-        AppErrorMapper.resolve(
-          e,
-          fallbackMessage: fallbackErrorMsg,
-        ).message,
+        AppErrorMapper.resolve(e, fallbackMessage: fallbackErrorMsg).message,
         success: false,
       );
     } finally {
@@ -596,7 +558,9 @@ extension _SettingsTabPersistence on _SettingsTabState {
     try {
       try {
         await _auth.currentUser?.reload();
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[Settings] Không tải lại được tài khoản: $error');
+      }
       final currentUser = _auth.currentUser;
       final security = await _authService.getHouseSecurityData(_houseId!);
       final snaps = await Future.wait([
@@ -616,26 +580,20 @@ extension _SettingsTabPersistence on _SettingsTabState {
           ? Map<dynamic, dynamic>.from(securitySnap.value as Map)
           : <dynamic, dynamic>{};
 
-      final effectiveSecurity = {
-        ...security ?? <String, dynamic>{},
-        ...secMap,
-      };
-      final prefs = await SharedPreferences.getInstance();
-      // ⚡ KHÔNG ghi đè _activeRoleKey ở đây — _fetchSettingsData() đã set giá trị
-      //   chuẩn xác từ Firebase rồi. Dòng này chỉ để dùng local, không set state.
-      final localRole = // ignore: unused_local_variable
-          prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
+      final effectiveSecurity = {...security ?? <String, dynamic>{}, ...secMap};
       final legacyHousePin = (effectiveSecurity['pin'] ?? '').toString().trim();
       final pinConfiguredRaw = effectiveSecurity['pinConfigured'];
-      final hasHousePinConfigured = pinConfiguredRaw == true ||
+      final hasHousePinConfigured =
+          pinConfiguredRaw == true ||
           pinConfiguredRaw?.toString().toLowerCase() == 'true' ||
           legacyHousePin.isNotEmpty;
       final question = (effectiveSecurity['question'] ?? '').toString().trim();
-      final legacySecondaryEmail = (effectiveSecurity['backupEmail'] ??
-              effectiveSecurity['secondaryEmail'] ??
-              '')
-          .toString()
-          .trim();
+      final legacySecondaryEmail =
+          (effectiveSecurity['backupEmail'] ??
+                  effectiveSecurity['secondaryEmail'] ??
+                  '')
+              .toString()
+              .trim();
       var secondaryEmail = legacySecondaryEmail;
       if (currentUser != null) {
         try {
@@ -648,21 +606,25 @@ extension _SettingsTabPersistence on _SettingsTabState {
           if (loginAliasEmail.isNotEmpty) {
             secondaryEmail = loginAliasEmail;
           }
-        } catch (_) {}
+        } catch (error) {
+          debugPrint('[Settings] Không đọc được email đăng nhập phụ: $error');
+        }
       }
       final recoveryAnswerHash =
           (effectiveSecurity['answerHash'] ?? effectiveSecurity['answer'] ?? '')
               .toString()
               .trim();
       final linkedGoogle = await _authService.isGoogleLinkedCurrentUser();
-      final googleLinkedEmail =
-          linkedGoogle ? (_authService.getGoogleLinkedEmail() ?? '') : '';
+      final googleLinkedEmail = linkedGoogle
+          ? (_authService.getGoogleLinkedEmail() ?? '')
+          : '';
       final linkedPassword = await _authService.isPasswordLinkedCurrentUser();
       final settingsMap = settingsSnap.exists && settingsSnap.value is Map
           ? Map<dynamic, dynamic>.from(settingsSnap.value as Map)
           : <dynamic, dynamic>{};
       final lockMap = Map<dynamic, dynamic>.from(secMap['lock'] ?? {});
-      final hasLegacyRemoteLockArtifacts = lockMap.isNotEmpty ||
+      final hasLegacyRemoteLockArtifacts =
+          lockMap.isNotEmpty ||
           settingsMap['appLocked'] != null ||
           settingsMap['customLock'] != null ||
           settingsMap['customLockSalt'] != null ||
@@ -677,20 +639,28 @@ extension _SettingsTabPersistence on _SettingsTabState {
             user: currentUser,
             houseId: _houseId,
           );
-        } catch (_) {}
+        } catch (error) {
+          debugPrint('[Settings] Không đồng bộ được email bảo mật: $error');
+        }
       }
       if (legacyHousePin.isNotEmpty) {
         unawaited(
           _migrateLegacyHousePinToPrivate(
             houseId: _houseId!,
             rawPin: legacyHousePin,
-          ).catchError((_) {}),
+          ).catchError(
+            (error) =>
+                debugPrint('[Settings] Không migrate được PIN legacy: $error'),
+          ),
         );
       }
       if (hasLegacyRemoteLockArtifacts) {
         unawaited(
-          _clearRemoteAppLockSyncArtifacts(houseId: _houseId)
-              .catchError((_) {}),
+          _clearRemoteAppLockSyncArtifacts(houseId: _houseId).catchError(
+            (error) => debugPrint(
+              '[Settings] Không xóa được lock artifact legacy: $error',
+            ),
+          ),
         );
       }
 
@@ -702,7 +672,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
                 .trim();
         _secondaryEmail = secondaryEmail;
         _securityQuestion = question;
-        _housePin = hasHousePinConfigured ? 'â€¢â€¢â€¢â€¢' : '';
+        _housePin = hasHousePinConfigured ? '••••' : '';
         _hasRecoveryAnswer = recoveryAnswerHash.isNotEmpty;
         _googleLinked = linkedGoogle;
         _googleLinkedEmail = googleLinkedEmail;
@@ -713,11 +683,14 @@ extension _SettingsTabPersistence on _SettingsTabState {
             ? question
             : _selectedSecurityQuestion;
         _secondaryEmailCtrl.text = secondaryEmail;
-        _recoveryQuestionCtrl.text =
-            question.isNotEmpty ? question : _selectedSecurityQuestion;
+        _recoveryQuestionCtrl.text = question.isNotEmpty
+            ? question
+            : _selectedSecurityQuestion;
         _housePinCtrl.clear();
       });
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[Settings] Không tải được chi tiết bảo mật: $error');
+    }
   }
 
   Future<void> _saveSecondaryEmail() async {
@@ -748,14 +721,18 @@ extension _SettingsTabPersistence on _SettingsTabState {
 
     if (!_isSupportedSettingsEmail(normalized)) {
       _showToast(
-          supportedEmailsOnlyMsg.replaceAll(
-              '{domains}', _settingsSupportedEmailDomainsLabel()),
-          success: false);
+        supportedEmailsOnlyMsg.replaceAll(
+          '{domains}',
+          _settingsSupportedEmailDomainsLabel(),
+        ),
+        success: false,
+      );
       return;
     }
 
-    final mainEmail =
-        (_auth.currentUser?.email ?? _securityEmail).trim().toLowerCase();
+    final mainEmail = (_auth.currentUser?.email ?? _securityEmail)
+        .trim()
+        .toLowerCase();
     if (normalized == mainEmail) {
       _showToast(duplicateEmailErr, success: false);
       return;
@@ -835,18 +812,18 @@ extension _SettingsTabPersistence on _SettingsTabState {
     }
   }
 
-//   Future<void> _saveSecondaryEmailLegacy() async {
-//     if (_houseId == null) return;
-//     final value = _secondaryEmailCtrl.text.trim();
-//     await _dbRef.child('houses/$_houseId/security').update({
-//       'secondaryEmail': value,
-//       'updatedAt': ServerValue.timestamp,
-//     });
-//     if (mounted) {
-//       setState(() => _secondaryEmail = value);
-//       _showToast(context.tr('home_luemailph_7e403a'), success: true);
-//     }
-//   }
+  //   Future<void> _saveSecondaryEmailLegacy() async {
+  //     if (_houseId == null) return;
+  //     final value = _secondaryEmailCtrl.text.trim();
+  //     await _dbRef.child('houses/$_houseId/security').update({
+  //       'secondaryEmail': value,
+  //       'updatedAt': ServerValue.timestamp,
+  //     });
+  //     if (mounted) {
+  //       setState(() => _secondaryEmail = value);
+  //       _showToast(context.tr('home_luemailph_7e403a'), success: true);
+  //     }
+  //   }
 
   Future<void> _saveHousePin() async {
     if (_houseId == null) return;
@@ -867,8 +844,9 @@ extension _SettingsTabPersistence on _SettingsTabState {
     }
 
     await _dbRef.update({
-      'house_private_security/$_houseId/pinHash':
-          _authService.hashHousePin(pin),
+      'house_private_security/$_houseId/pinHash': _authService.hashHousePin(
+        pin,
+      ),
       'house_private_security/$_houseId/updatedAt': ServerValue.timestamp,
       'houses/$_houseId/security/pin': null,
       'houses/$_houseId/security/pinConfigured': true,
@@ -890,10 +868,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
     if (!await _ensureCanModifySharedInfo()) return;
     if (!mounted) return;
     if (_securityQuestion.isNotEmpty && _hasRecoveryAnswer) {
-      _showToast(
-        context.tr('err_security_q_locked'),
-        success: false,
-      );
+      _showToast(context.tr('err_security_q_locked'), success: false);
       return;
     }
 
@@ -952,57 +927,57 @@ extension _SettingsTabPersistence on _SettingsTabState {
     }
   }
 
-//   Future<void> _saveRecoveryInfoLegacy() async {
-//     if (_houseId == null) return;
-//     final question = _recoveryQuestionCtrl.text.trim();
-//     final answer = _recoveryAnswerCtrl.text.trim();
-//     if (question.isEmpty || answer.isEmpty) {
-//       _showToast(context.tr('err_fill_security_q'), success: false);
-//       return;
-//     }
-//     final hashedAnswer = _authService.hashRecoveryAnswer(answer);
-//     await _dbRef.child('houses/$_houseId/security').update({
-//       'question': question,
-//       'answer': hashedAnswer,
-//       'updatedAt': ServerValue.timestamp,
-//     });
-//     await _dbRef.child('houses/$_houseId').update({
-//       'recovery_q': question,
-//       'recovery_a': hashedAnswer,
-//     });
-//     if (mounted) {
-//       setState(() {
-//         _securityQuestion = question;
-//         _hasRecoveryAnswer = true;
-//         _recoveryAnswerCtrl.clear();
-//       });
-//       _showToast(context.tr('home_cpnhtcuhib_120aaf'), success: true);
-//     }
-//   }
+  //   Future<void> _saveRecoveryInfoLegacy() async {
+  //     if (_houseId == null) return;
+  //     final question = _recoveryQuestionCtrl.text.trim();
+  //     final answer = _recoveryAnswerCtrl.text.trim();
+  //     if (question.isEmpty || answer.isEmpty) {
+  //       _showToast(context.tr('err_fill_security_q'), success: false);
+  //       return;
+  //     }
+  //     final hashedAnswer = _authService.hashRecoveryAnswer(answer);
+  //     await _dbRef.child('houses/$_houseId/security').update({
+  //       'question': question,
+  //       'answer': hashedAnswer,
+  //       'updatedAt': ServerValue.timestamp,
+  //     });
+  //     await _dbRef.child('houses/$_houseId').update({
+  //       'recovery_q': question,
+  //       'recovery_a': hashedAnswer,
+  //     });
+  //     if (mounted) {
+  //       setState(() {
+  //         _securityQuestion = question;
+  //         _hasRecoveryAnswer = true;
+  //         _recoveryAnswerCtrl.clear();
+  //       });
+  //       _showToast(context.tr('home_cpnhtcuhib_120aaf'), success: true);
+  //     }
+  //   }
 
-//   Future<void> _saveIdentity() async {
-//     if (_houseId == null) return;
-//     try {
-//       await _dbRef.child('houses/$_houseId/settings').update({
-//         'houseName': _houseNameCtrl.text.trim(),
-//         'nameU1': _nameU1Ctrl.text.trim(),
-//         'nameU2': _nameU2Ctrl.text.trim(),
-//         'dobU1': _dobU1,
-//         'dobU2': _dobU2,
-//         'dayUnit': _loveUnitCtrl.text.trim(),
-//       });
-//       setState(() {
-//         _houseName = _houseNameCtrl.text.trim();
-//         _nameU1 = _nameU1Ctrl.text.trim();
-//         _nameU2 = _nameU2Ctrl.text.trim();
-//         _loveUnit = _loveUnitCtrl.text.trim();
-//         _openPanel = null;
-//       });
-//       if (mounted) _showToast(context.tr('saved_info'), success: true);
-//     } catch (e) {
-//       if (mounted) _showToast('Lỗi lưu: $e', success: false);
-//     }
-//   }
+  //   Future<void> _saveIdentity() async {
+  //     if (_houseId == null) return;
+  //     try {
+  //       await _dbRef.child('houses/$_houseId/settings').update({
+  //         'houseName': _houseNameCtrl.text.trim(),
+  //         'nameU1': _nameU1Ctrl.text.trim(),
+  //         'nameU2': _nameU2Ctrl.text.trim(),
+  //         'dobU1': _dobU1,
+  //         'dobU2': _dobU2,
+  //         'dayUnit': _loveUnitCtrl.text.trim(),
+  //       });
+  //       setState(() {
+  //         _houseName = _houseNameCtrl.text.trim();
+  //         _nameU1 = _nameU1Ctrl.text.trim();
+  //         _nameU2 = _nameU2Ctrl.text.trim();
+  //         _loveUnit = _loveUnitCtrl.text.trim();
+  //         _openPanel = null;
+  //       });
+  //       if (mounted) _showToast(context.tr('saved_info'), success: true);
+  //     } catch (e) {
+  //       if (mounted) _showToast('Lỗi lưu: $e', success: false);
+  //     }
+  //   }
 
   Future<void> _saveAdvancedSettingsV2({bool silent = false}) async {
     final houseId = _houseId?.trim();
@@ -1026,7 +1001,9 @@ extension _SettingsTabPersistence on _SettingsTabState {
       await prefs.setBool('il_smart_reminder_diary', _smartDiaryReminder);
       await prefs.setBool('il_smart_reminder_capsule', _smartCapsuleReminder);
       await prefs.setBool(
-          'il_smart_reminder_love_note', _smartLoveNoteReminder);
+        'il_smart_reminder_love_note',
+        _smartLoveNoteReminder,
+      );
       await prefs.setBool('il_smart_reminder_sleep', _smartSleepReminder);
       await prefs.setString('il_good_morning_time', _goodMorningTime);
       await prefs.setString('il_good_night_time', _goodNightTime);
@@ -1038,11 +1015,13 @@ extension _SettingsTabPersistence on _SettingsTabState {
       localSaved = true;
 
       final ui = UiPrefs.notifier.value;
-      await UiPrefs.saveState(ui.copyWith(
-        touchSound: _touchSound,
-        confettiFx: _confettiFx,
-        musicAutoplay: _musicAutoplay,
-      ));
+      await UiPrefs.saveState(
+        ui.copyWith(
+          touchSound: _touchSound,
+          confettiFx: _confettiFx,
+          musicAutoplay: _musicAutoplay,
+        ),
+      );
 
       if (_houseId != null) {
         await _dbRef.child('houses/$_houseId/settings').update({
@@ -1150,7 +1129,10 @@ extension _SettingsTabPersistence on _SettingsTabState {
           return false;
         }
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[Settings] Không kiểm tra được cooldown đổi tên: $error');
+      return false;
+    }
 
     return true;
   }

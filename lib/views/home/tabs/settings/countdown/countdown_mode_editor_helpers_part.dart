@@ -6,10 +6,7 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -54,12 +51,14 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
     String? hint,
     bool dark = false,
   }) {
-    final fillColor =
-        dark ? const Color(0xFF162136) : Colors.white.withValues(alpha: 0.88);
+    final fillColor = dark
+        ? const Color(0xFF162136)
+        : Colors.white.withValues(alpha: 0.88);
     final labelColor = dark ? Colors.white70 : const Color(0xFF8A5B76);
     final hintColor = dark ? Colors.white38 : const Color(0xFFB9A6B3);
-    final borderColor =
-        dark ? Colors.white.withValues(alpha: 0.12) : const Color(0xFFF3CBDD);
+    final borderColor = dark
+        ? Colors.white.withValues(alpha: 0.12)
+        : const Color(0xFFF3CBDD);
     return InputDecoration(
       labelText: label,
       hintText: hint,
@@ -96,21 +95,14 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
     List<Color>? iconGradient,
     required Widget child,
   }) {
-    final gradient = iconGradient ??
-        const [
-          Color(0xFFEC407A),
-          Color(0xFFD81B60),
-        ];
+    final gradient =
+        iconGradient ?? const [Color(0xFFEC407A), Color(0xFFD81B60)];
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [
-            Color(0xFFFFFFFF),
-            Color(0xFFFFF8FB),
-            Color(0xFFFDF0F6),
-          ],
+          colors: [Color(0xFFFFFFFF), Color(0xFFFFF8FB), Color(0xFFFDF0F6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -250,7 +242,10 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
         return context.tr('home_ngykhnghpl_b660fe');
       }
       if (!inRange(parsed)) {
-        return 'Ngày phải trong khoảng ${DateInputUtils.formatDisplayDate(minDate)} - ${DateInputUtils.formatDisplayDate(maxDate)}.';
+        return context
+            .tr('p7_date_range')
+            .replaceAll('{start}', DateInputUtils.formatDisplayDate(minDate))
+            .replaceAll('{end}', DateInputUtils.formatDisplayDate(maxDate));
       }
       return context.tr('home_nhdngchang_9fbba2');
     }
@@ -458,74 +453,99 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
         'theme-auto',
         [const Color(0xFF64748B), const Color(0xFF334155)],
         _CountdownModeIndependentScreenState._themeOptions
-            .firstWhere((o) => o.value == 'theme-auto',
-                orElse: () => const MapEntry('Tự động', 'theme-auto'))
-            .key
+            .firstWhere(
+              (o) => o.value == 'theme-auto',
+              orElse: () => MapEntry(context.tr('p7_theme_auto'), 'theme-auto'),
+            )
+            .key,
       ),
       (
         'theme-pink-glow',
         [const Color(0xFFFFB6CA), const Color(0xFFFF7098)],
         _CountdownModeIndependentScreenState._themeOptions
-            .firstWhere((o) => o.value == 'theme-pink-glow',
-                orElse: () => const MapEntry('Sáng hồng', 'theme-pink-glow'))
-            .key
+            .firstWhere(
+              (o) => o.value == 'theme-pink-glow',
+              orElse: () =>
+                  MapEntry(context.tr('p7_theme_pink_glow'), 'theme-pink-glow'),
+            )
+            .key,
       ),
       (
         'theme-default',
         [const Color(0xFFFBC02D), const Color(0xFFF57F17)],
         _CountdownModeIndependentScreenState._themeOptions
-            .firstWhere((o) => o.value == 'theme-default',
-                orElse: () => const MapEntry('Mặc định', 'theme-default'))
-            .key
+            .firstWhere(
+              (o) => o.value == 'theme-default',
+              orElse: () =>
+                  MapEntry(context.tr('p7_theme_default'), 'theme-default'),
+            )
+            .key,
       ),
       (
         'theme-ocean',
         [const Color(0xFF4FC3F7), const Color(0xFF0288D1)],
         _CountdownModeIndependentScreenState._themeOptions
-            .firstWhere((o) => o.value == 'theme-ocean',
-                orElse: () => const MapEntry('Đại dương', 'theme-ocean'))
-            .key
+            .firstWhere(
+              (o) => o.value == 'theme-ocean',
+              orElse: () =>
+                  MapEntry(context.tr('p7_theme_ocean'), 'theme-ocean'),
+            )
+            .key,
       ),
       (
         'theme-sunset',
         [const Color(0xFFFF8A65), const Color(0xFFD84315)],
         _CountdownModeIndependentScreenState._themeOptions
-            .firstWhere((o) => o.value == 'theme-sunset',
-                orElse: () => const MapEntry('Hoàng hôn', 'theme-sunset'))
-            .key
+            .firstWhere(
+              (o) => o.value == 'theme-sunset',
+              orElse: () =>
+                  MapEntry(context.tr('p7_theme_sunset'), 'theme-sunset'),
+            )
+            .key,
       ),
       (
         'theme-night',
         [const Color(0xFF7986CB), const Color(0xFF303F9F)],
         _CountdownModeIndependentScreenState._themeOptions
-            .firstWhere((o) => o.value == 'theme-night',
-                orElse: () => const MapEntry('Đêm thâu', 'theme-night'))
-            .key
+            .firstWhere(
+              (o) => o.value == 'theme-night',
+              orElse: () =>
+                  MapEntry(context.tr('p7_theme_night'), 'theme-night'),
+            )
+            .key,
       ),
       (
         'theme-dark',
         [const Color(0xFF616161), const Color(0xFF212121)],
         _CountdownModeIndependentScreenState._themeOptions
-            .firstWhere((o) => o.value == 'theme-dark',
-                orElse: () => const MapEntry('Tối', 'theme-dark'))
-            .key
+            .firstWhere(
+              (o) => o.value == 'theme-dark',
+              orElse: () => MapEntry(context.tr('p7_theme_dark'), 'theme-dark'),
+            )
+            .key,
       ),
       (
         'theme-mystic-dark',
         [const Color(0xFFB388FF), const Color(0xFF651FFF)],
         _CountdownModeIndependentScreenState._themeOptions
-            .firstWhere((o) => o.value == 'theme-mystic-dark',
-                orElse: () =>
-                    const MapEntry('Tối huyền bí', 'theme-mystic-dark'))
-            .key
+            .firstWhere(
+              (o) => o.value == 'theme-mystic-dark',
+              orElse: () => MapEntry(
+                context.tr('p7_theme_mystic_dark'),
+                'theme-mystic-dark',
+              ),
+            )
+            .key,
       ),
       (
         'off',
         [const Color(0xFFE0E0E0), const Color(0xFF9E9E9E)],
         _CountdownModeIndependentScreenState._themeOptions
-            .firstWhere((o) => o.value == 'off',
-                orElse: () => const MapEntry('Tắt', 'off'))
-            .key
+            .firstWhere(
+              (o) => o.value == 'off',
+              orElse: () => MapEntry(context.tr('p7_off'), 'off'),
+            )
+            .key,
       ),
     ];
 
@@ -545,207 +565,212 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
             ? Colors.white.withValues(alpha: 0.7)
             : Colors.white.withValues(alpha: 0.85);
 
-        return GestureDetector(
-          onTap: () => setState(() => _themeKey = key),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOut,
-            width: 76,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isSelected
-                    ? colors.last.withValues(alpha: 0.90)
-                    : const Color(0xFFE0E7EF),
-                width: isSelected ? 2.2 : 1.2,
+        return Semantics(
+          button: true,
+          selected: isSelected,
+          label: label,
+          excludeSemantics: true,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => _safeSetState(() => _themeKey = key),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOut,
+              width: 76,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isSelected
+                      ? colors.last.withValues(alpha: 0.90)
+                      : const Color(0xFFE0E7EF),
+                  width: isSelected ? 2.2 : 1.2,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: colors.first.withValues(alpha: 0.38),
+                          blurRadius: 14,
+                          spreadRadius: 1,
+                          offset: const Offset(0, 5),
+                        ),
+                        BoxShadow(
+                          color: colors.last.withValues(alpha: 0.18),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
               ),
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: colors.first.withValues(alpha: 0.38),
-                        blurRadius: 14,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 5),
-                      ),
-                      BoxShadow(
-                        color: colors.last.withValues(alpha: 0.18),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ]
-                  : [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    height: 52,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          colors.first,
-                          Color.lerp(colors.first, colors.last, 0.5)!,
-                          colors.last,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Positioned(
-                          top: -4,
-                          right: -4,
-                          child: Icon(
-                            themeIcon,
-                            size: 28,
-                            color: isDarkTheme
-                                ? Colors.white.withValues(alpha: 0.12)
-                                : Colors.white.withValues(alpha: 0.20),
-                          ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      height: 52,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            colors.first,
+                            Color.lerp(colors.first, colors.last, 0.5)!,
+                            colors.last,
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                        Positioned(
-                          bottom: 4,
-                          left: 6,
-                          child: Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white.withValues(alpha: 0.28),
+                      ),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Positioned(
+                            top: -4,
+                            right: -4,
+                            child: Icon(
+                              themeIcon,
+                              size: 28,
+                              color: isDarkTheme
+                                  ? Colors.white.withValues(alpha: 0.12)
+                                  : Colors.white.withValues(alpha: 0.20),
                             ),
                           ),
-                        ),
-                        if (!isDarkTheme)
                           Positioned(
-                            bottom: -22,
-                            left: -10,
-                            right: -10,
-                            child: Container(
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.16),
-                                borderRadius: const BorderRadius.vertical(
-                                  top: Radius.elliptical(50, 15),
-                                ),
-                              ),
-                            ),
-                          ),
-                        Center(
-                          child: isSelected
-                              ? Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      width: 22,
-                                      height: 22,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white
-                                            .withValues(alpha: 0.92),
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: colors.last
-                                                .withValues(alpha: 0.30),
-                                            blurRadius: 6,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Icon(
-                                        Icons.check_rounded,
-                                        size: 14,
-                                        color: colors.last,
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : Icon(
-                                  themeIcon,
-                                  size: 20,
-                                  color: iconColor,
-                                ),
-                        ),
-                        if (isSelected)
-                          Positioned(
-                            top: 5,
+                            bottom: 4,
                             left: 6,
                             child: Container(
-                              width: 7,
-                              height: 7,
+                              width: 6,
+                              height: 6,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                gradient: RadialGradient(
-                                  colors: [
-                                    Colors.white.withValues(alpha: 0.90),
-                                    Colors.white.withValues(alpha: 0.0),
-                                  ],
-                                ),
+                                color: Colors.white.withValues(alpha: 0.28),
                               ),
                             ),
                           ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: isSelected
-                            ? [
-                                colors.first.withValues(alpha: 0.08),
-                                Colors.white,
-                              ]
-                            : [Colors.white, Colors.white],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
+                          if (!isDarkTheme)
+                            Positioned(
+                              bottom: -22,
+                              left: -10,
+                              right: -10,
+                              child: Container(
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.16),
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.elliptical(50, 15),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          Center(
+                            child: isSelected
+                                ? Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: 22,
+                                        height: 22,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.92,
+                                          ),
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: colors.last.withValues(
+                                                alpha: 0.30,
+                                              ),
+                                              blurRadius: 6,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Icon(
+                                          Icons.check_rounded,
+                                          size: 14,
+                                          color: colors.last,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Icon(themeIcon, size: 20, color: iconColor),
+                          ),
+                          if (isSelected)
+                            Positioned(
+                              top: 5,
+                              left: 6,
+                              child: Container(
+                                width: 7,
+                                height: 7,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: RadialGradient(
+                                    colors: [
+                                      Colors.white.withValues(alpha: 0.90),
+                                      Colors.white.withValues(alpha: 0.0),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 5,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (isSelected) ...[
-                          Text(
-                            themeEmoji,
-                            style: const TextStyle(fontSize: 9),
-                          ),
-                          const SizedBox(width: 2),
-                        ],
-                        Flexible(
-                          child: Text(
-                            label,
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: SLTheme.quicksand(
-                              fontSize: 10.4,
-                              fontWeight: isSelected
-                                  ? FontWeight.w900
-                                  : FontWeight.w700,
-                              color: isSelected
-                                  ? colors.last
-                                  : const Color(0xFF64748B),
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: isSelected
+                              ? [
+                                  colors.first.withValues(alpha: 0.08),
+                                  Colors.white,
+                                ]
+                              : [Colors.white, Colors.white],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 5,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isSelected) ...[
+                            Text(
+                              themeEmoji,
+                              style: const TextStyle(fontSize: 9),
+                            ),
+                            const SizedBox(width: 2),
+                          ],
+                          Flexible(
+                            child: Text(
+                              label,
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: SLTheme.quicksand(
+                                fontSize: 10.4,
+                                fontWeight: isSelected
+                                    ? FontWeight.w900
+                                    : FontWeight.w700,
+                                color: isSelected
+                                    ? colors.last
+                                    : const Color(0xFF64748B),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

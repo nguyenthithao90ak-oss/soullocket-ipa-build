@@ -69,7 +69,10 @@ class SecurityService {
   bool get isProxyAtLogin => _isProxyAtLogin;
 
   Future<void> _logSecurityAlert(
-      String type, String detail, String level) async {
+    String type,
+    String detail,
+    String level,
+  ) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
@@ -78,17 +81,16 @@ class SecurityService {
           .ref('admin_system/security_alerts')
           .push()
           .set({
-        'ts': ServerValue.timestamp,
-        'type': type,
-        'detail': detail,
-        'level': level,
-        'uid': user.uid,
-      });
+            'ts': ServerValue.timestamp,
+            'type': type,
+            'detail': detail,
+            'level': level,
+            'uid': user.uid,
+          });
     } catch (e) {
-      debugPrint('Error logging security alert: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể ghi cảnh báo bảo mật.',
-      ).message}');
+      debugPrint(
+        'Error logging security alert: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể ghi cảnh báo bảo mật.').message}',
+      );
     }
   }
 
@@ -109,21 +111,24 @@ class SecurityService {
 
       // Method 1: Check Network Interfaces (Mobile)
       final interfaces = await NetworkInterface.list(
-              includeLoopback: false, type: InternetAddressType.any)
-          .timeout(const Duration(seconds: 2));
+        includeLoopback: false,
+        type: InternetAddressType.any,
+      ).timeout(const Duration(seconds: 2));
       for (var interface in interfaces) {
         final name = interface.name.toLowerCase();
 
         bool isVpn = false;
         if (Platform.isIOS) {
           // On iOS, utun, ipsec, ppp are often used for Cellular, Hotspot, Private Relay
-          isVpn = name.contains('tap') ||
+          isVpn =
+              name.contains('tap') ||
               (name.contains('tun') && !name.startsWith('utun')) ||
               name.contains('wireguard') ||
               name.contains('wg0') ||
               name.contains('ovpn');
         } else {
-          isVpn = name.contains('tun') ||
+          isVpn =
+              name.contains('tun') ||
               name.contains('tap') ||
               name.contains('ppp') ||
               name.contains('pptp') ||
@@ -144,7 +149,8 @@ class SecurityService {
       // Method 2: Check System Proxy Settings (Mobile)
       if (!isDetected) {
         final proxy = HttpClient.findProxyFromEnvironment(
-            Uri.parse('https://google.com'));
+          Uri.parse('https://google.com'),
+        );
         if (proxy.contains('PROXY')) {
           isDetected = true;
         }
@@ -154,10 +160,9 @@ class SecurityService {
       _lastProxyCheck = DateTime.now();
       return isDetected;
     } catch (e) {
-      debugPrint('Error checking VPN/Proxy: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể kiểm tra VPN/Proxy.',
-      ).message}');
+      debugPrint(
+        'Error checking VPN/Proxy: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể kiểm tra VPN/Proxy.').message}',
+      );
       return false;
     }
   }
@@ -206,17 +211,19 @@ class SecurityService {
     _actionHistory[actionType]!.add(now);
 
     // Remove actions older than 1 minute
-    _actionHistory[actionType]!
-        .removeWhere((time) => now.difference(time).inMinutes >= 1);
+    _actionHistory[actionType]!.removeWhere(
+      (time) => now.difference(time).inMinutes >= 1,
+    );
 
     // Check if count exceeds max
     if (_actionHistory[actionType]!.length > _maxActionsPerMinute) {
       _lastSpamReason =
           'Bạn đang thao tác quá nhanh. Vui lòng chờ một lát rồi thử lại.';
       _logSecurityAlert(
-          'spam_rate_limit',
-          'Hành động: $actionType. Vượt quá $_maxActionsPerMinute lần/phút.',
-          'high');
+        'spam_rate_limit',
+        'Hành động: $actionType. Vượt quá $_maxActionsPerMinute lần/phút.',
+        'high',
+      );
       return true;
     }
     return false;
@@ -267,7 +274,8 @@ class SecurityService {
         return _cachedDeviceId!;
       }
 
-      final storedId = (await _secureStorage
+      final storedId =
+          (await _secureStorage
                   .read(key: _deviceIdStorageKey)
                   .timeout(const Duration(seconds: 3), onTimeout: () => null))
               ?.trim() ??
@@ -279,7 +287,8 @@ class SecurityService {
           await _secureStorage
               .write(key: _deviceIdStorageKey, value: deviceId)
               .timeout(const Duration(seconds: 3), onTimeout: () => null);
-          final prefs = OfflineCacheService.getPrefsSync() ??
+          final prefs =
+              OfflineCacheService.getPrefsSync() ??
               await SharedPreferences.getInstance();
           await prefs.remove(_deviceIdStorageKey);
           _cachedDeviceId = deviceId;
@@ -287,10 +296,7 @@ class SecurityService {
         }
         if (sanitizedStoredId != storedId) {
           await _secureStorage
-              .write(
-                key: _deviceIdStorageKey,
-                value: sanitizedStoredId,
-              )
+              .write(key: _deviceIdStorageKey, value: sanitizedStoredId)
               .timeout(const Duration(seconds: 3), onTimeout: () => null);
         }
         _cachedDeviceId = sanitizedStoredId;
@@ -305,7 +311,8 @@ class SecurityService {
           .write(key: _deviceIdStorageKey, value: deviceId)
           .timeout(const Duration(seconds: 3), onTimeout: () => null);
 
-      final prefs = OfflineCacheService.getPrefsSync() ??
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
       await prefs.remove(_deviceIdStorageKey);
 
@@ -389,8 +396,9 @@ class SecurityService {
     return _generateFallbackDeviceId();
   }
 
-  static const MethodChannel _securityChannel =
-      MethodChannel('soul_locket/security');
+  static const MethodChannel _securityChannel = MethodChannel(
+    'soul_locket/security',
+  );
 
   /// Advanced Root/Jailbreak detection using native Kotlin layer.
   /// Native check is harder to patch than pure Dart file.exists() checks.
@@ -460,16 +468,20 @@ class SecurityService {
       }
 
       final checks = await Future.wait(
-        paths.map((path) => File(path).exists().timeout(
-              const Duration(milliseconds: 150),
-              onTimeout: () => false,
-            )),
+        paths.map(
+          (path) => File(path).exists().timeout(
+            const Duration(milliseconds: 150),
+            onTimeout: () => false,
+          ),
+        ),
       );
       if (checks.any((exists) => exists)) {
         _isRootedCache = true;
         return true;
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[SecurityService] Dart root checks failed: $error');
+    }
 
     _isRootedCache = false;
     return false;
@@ -477,8 +489,11 @@ class SecurityService {
 
   /// Guard critical action.
   /// Returns false if action should be blocked.
-  Future<bool> guardAction(BuildContext context, String actionType,
-      {String? content}) async {
+  Future<bool> guardAction(
+    BuildContext context,
+    String actionType, {
+    String? content,
+  }) async {
     final localTapAllowed = await _guardRapidTap(
       context,
       actionType,
@@ -540,8 +555,10 @@ class SecurityService {
     }
 
     if (throttle.isRapidRepeat) {
-      final remainingMs =
-          throttle.remainingCooldown.inMilliseconds.clamp(250, 5000);
+      final remainingMs = throttle.remainingCooldown.inMilliseconds.clamp(
+        250,
+        5000,
+      );
       if (remainingMs >= 0 && context.mounted) {
         _showSpamWarningDialog(
           context,
@@ -635,8 +652,11 @@ class SecurityService {
                 color: SLColors.danger.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.security_rounded,
-                  color: SLColors.danger, size: 24),
+              child: const Icon(
+                Icons.security_rounded,
+                color: SLColors.danger,
+                size: 24,
+              ),
             ),
             SLSpacing.w12,
             const Expanded(
@@ -659,10 +679,11 @@ class SecurityService {
             const Text(
               'Hệ thống phát hiện VPN/Proxy kèm thao tác gửi dữ liệu bất thường.\n\nĐể bảo vệ tài khoản và dữ liệu chung, vui lòng tắt VPN/Proxy rồi thử lại.',
               style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: SLColors.textSecondary,
-                  height: 1.5),
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: SLColors.textSecondary,
+                height: 1.5,
+              ),
             ),
             SLSpacing.h24,
             SLTheme.primaryButton(
@@ -695,7 +716,9 @@ class SecurityService {
 
     try {
       final interfaces = await NetworkInterface.list(
-          includeLoopback: false, type: InternetAddressType.any);
+        includeLoopback: false,
+        type: InternetAddressType.any,
+      );
       for (var interface in interfaces) {
         final name = interface.name.toLowerCase();
         final addr = interface.addresses.isNotEmpty
@@ -704,12 +727,14 @@ class SecurityService {
 
         bool isVpnIface = false;
         if (Platform.isIOS) {
-          isVpnIface = name.contains('tap') ||
+          isVpnIface =
+              name.contains('tap') ||
               (name.contains('tun') && !name.startsWith('utun')) ||
               name.contains('vpn') ||
               name.contains('wg');
         } else {
-          isVpnIface = name.contains('tun') ||
+          isVpnIface =
+              name.contains('tun') ||
               name.contains('tap') ||
               name.contains('vpn') ||
               name.contains('ppp') ||
@@ -726,7 +751,9 @@ class SecurityService {
           localIp = addr;
         }
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[SecurityService] Cannot inspect network interfaces: $error');
+    }
 
     final deviceId = await getDeviceId();
     final isCompromised = await isDeviceCompromised();

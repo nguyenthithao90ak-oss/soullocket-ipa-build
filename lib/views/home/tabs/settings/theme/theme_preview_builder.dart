@@ -1,4 +1,3 @@
-
 // lib/views/home/tabs/settings/theme/theme_preview_builder.dart
 //
 // ══════════════════════════════════════════════════════════════════════════════
@@ -20,6 +19,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/widgets/sl_toast.dart';
 
 class AuroraThemePreviewScreen extends StatefulWidget {
@@ -37,10 +37,12 @@ class _AuroraThemePreviewScreenState extends State<AuroraThemePreviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _isDark ? const Color(0xFF1A1625) : const Color(0xFFFFF8FA),
+      backgroundColor: _isDark
+          ? const Color(0xFF1A1625)
+          : const Color(0xFFFFF8FA),
       appBar: AppBar(
         title: Text(
-          'Aurora Soft Preview',
+          context.tr('p7_aurora_preview_title'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w900,
             fontSize: 18,
@@ -54,6 +56,7 @@ class _AuroraThemePreviewScreenState extends State<AuroraThemePreviewScreen> {
         actions: [
           // Light/Dark toggle
           IconButton(
+            tooltip: context.tr('p7_toggle_color_mode'),
             icon: Icon(
               _isDark ? Icons.light_mode : Icons.dark_mode,
               color: _isDark ? Colors.white : const Color(0xFF4A3040),
@@ -62,6 +65,7 @@ class _AuroraThemePreviewScreenState extends State<AuroraThemePreviewScreen> {
           ),
           // Font toggle
           IconButton(
+            tooltip: context.tr('p7_toggle_preview_font'),
             icon: Text(
               'Aa',
               style: TextStyle(
@@ -71,81 +75,99 @@ class _AuroraThemePreviewScreenState extends State<AuroraThemePreviewScreen> {
               ),
             ),
             onPressed: () => setState(() {
-              _fontKey = _fontKey == 'plusJakarta' ? 'quicksand' : 'plusJakarta';
+              _fontKey = _fontKey == 'plusJakarta'
+                  ? 'quicksand'
+                  : 'plusJakarta';
             }),
           ),
           const SizedBox(width: 8),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Header ──────────────────────────────────────────────────────
-            _SectionTitle(
-              title: 'Aurora Palette',
-              isDark: _isDark,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontalPadding = constraints.maxWidth >= 720 ? 32.0 : 16.0;
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              20,
+              horizontalPadding,
+              40,
             ),
-            const SizedBox(height: 12),
-            _buildColorSwatches(),
-            const SizedBox(height: 32),
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 960),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── Header ──────────────────────────────────────────────────────
+                    _SectionTitle(
+                      title: context.tr('p7_preview_section_palette'),
+                      isDark: _isDark,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildColorSwatches(),
+                    const SizedBox(height: 32),
 
-            // ── Buttons ──────────────────────────────────────────────────────
-            _SectionTitle(
-              title: 'Buttons',
-              isDark: _isDark,
-            ),
-            const SizedBox(height: 12),
-            _buildButtonShowcase(),
-            const SizedBox(height: 32),
+                    // ── Buttons ──────────────────────────────────────────────────────
+                    _SectionTitle(
+                      title: context.tr('p7_preview_section_buttons'),
+                      isDark: _isDark,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildButtonShowcase(),
+                    const SizedBox(height: 32),
 
-            // ── Cards ───────────────────────────────────────────────────────
-            _SectionTitle(
-              title: 'Cards',
-              isDark: _isDark,
-            ),
-            const SizedBox(height: 12),
-            _buildCardShowcase(),
-            const SizedBox(height: 32),
+                    // ── Cards ───────────────────────────────────────────────────────
+                    _SectionTitle(
+                      title: context.tr('p7_preview_section_cards'),
+                      isDark: _isDark,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildCardShowcase(),
+                    const SizedBox(height: 32),
 
-            // ── Inputs ──────────────────────────────────────────────────────
-            _SectionTitle(
-              title: 'Inputs',
-              isDark: _isDark,
-            ),
-            const SizedBox(height: 12),
-            _buildInputShowcase(),
-            const SizedBox(height: 32),
+                    // ── Inputs ──────────────────────────────────────────────────────
+                    _SectionTitle(
+                      title: context.tr('p7_preview_section_inputs'),
+                      isDark: _isDark,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildInputShowcase(),
+                    const SizedBox(height: 32),
 
-            // ── Chat Bubbles ───────────────────────────────────────────────
-            _SectionTitle(
-              title: 'Chat Bubbles',
-              isDark: _isDark,
-            ),
-            const SizedBox(height: 12),
-            _buildChatBubbleShowcase(),
-            const SizedBox(height: 32),
+                    // ── Chat Bubbles ───────────────────────────────────────────────
+                    _SectionTitle(
+                      title: context.tr('p7_preview_section_chat'),
+                      isDark: _isDark,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildChatBubbleShowcase(),
+                    const SizedBox(height: 32),
 
-            // ── Aurora Gradients ───────────────────────────────────────────
-            _SectionTitle(
-              title: 'Aurora Gradients',
-              isDark: _isDark,
-            ),
-            const SizedBox(height: 12),
-            _buildGradientShowcase(),
-            const SizedBox(height: 32),
+                    // ── Aurora Gradients ───────────────────────────────────────────
+                    _SectionTitle(
+                      title: context.tr('p7_preview_section_gradients'),
+                      isDark: _isDark,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildGradientShowcase(),
+                    const SizedBox(height: 32),
 
-            // ── Toasts & Dialogs (NEW) ────────────────────────────────────
-            _SectionTitle(
-              title: 'Thông báo & Hộp thoại',
-              isDark: _isDark,
+                    // ── Toasts & Dialogs (NEW) ────────────────────────────────────
+                    _SectionTitle(
+                      title: context.tr('p7_preview_section_feedback'),
+                      isDark: _isDark,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildToastShowcase(),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 12),
-            _buildToastShowcase(),
-            const SizedBox(height: 40),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -155,7 +177,7 @@ class _AuroraThemePreviewScreenState extends State<AuroraThemePreviewScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Bấm để xem trước các loại thông báo & hộp thoại mới.',
+          context.tr('p7_preview_feedback_description'),
           style: SLTheme.quicksand(
             fontSize: 13,
             fontWeight: FontWeight.w600,
@@ -167,7 +189,7 @@ class _AuroraThemePreviewScreenState extends State<AuroraThemePreviewScreen> {
 
         // ── Snackbar variants ──
         Text(
-          'Snackbar',
+          context.tr('p7_preview_snackbar'),
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w900,
@@ -177,50 +199,46 @@ class _AuroraThemePreviewScreenState extends State<AuroraThemePreviewScreen> {
         ),
         const SizedBox(height: 10),
         _buildToastDemoButton(
-          'Thành công',
+          context.tr('p7_preview_success'),
           Icons.check_circle_rounded,
           const Color(0xFF00C853),
-          () => SLToast.success(context, 'Đăng xuất thành công!'),
+          () =>
+              SLToast.success(context, context.tr('p7_preview_logout_success')),
         ),
         const SizedBox(height: 8),
         _buildToastDemoButton(
-          'Lỗi',
+          context.tr('p7_preview_error'),
           Icons.error_rounded,
           const Color(0xFFFF5252),
-          () => SLToast.error(context, 'Mất kết nối mạng, vui lòng thử lại.'),
+          () => SLToast.error(context, context.tr('p7_preview_network_error')),
         ),
         const SizedBox(height: 8),
         _buildToastDemoButton(
-          'Cảnh báo',
+          context.tr('p7_preview_warning'),
           Icons.warning_amber_rounded,
           const Color(0xFFFFAB00),
-          () => SLToast.warning(
-            context,
-            'Bạn đã đạt giới hạn 5 ảnh/ngày.',
-          ),
+          () => SLToast.warning(context, context.tr('p7_preview_daily_limit')),
         ),
         const SizedBox(height: 8),
         _buildToastDemoButton(
-          'Thông tin',
+          context.tr('p7_preview_information'),
           Icons.info_rounded,
           const Color(0xFF2979FF),
-          () => SLToast.info(
-            context,
-            'Tin nhắn của bạn đã được mã hoá đầu cuối.',
-          ),
+          () =>
+              SLToast.info(context, context.tr('p7_preview_encrypted_message')),
         ),
         const SizedBox(height: 8),
         _buildToastDemoButton(
-          'Mặc định (với nút hành động)',
+          context.tr('p7_preview_default_with_action'),
           Icons.favorite_rounded,
           const Color(0xFFFF4B91),
           () => SLToast.show(
             context,
-            'Có 3 ảnh đang chờ upload lại.',
+            context.tr('p7_preview_pending_uploads'),
             variant: SLToastVariant.warning,
-            actionLabel: 'Thử lại',
+            actionLabel: context.tr('p7_retry'),
             onAction: () {
-              SLToast.info(context, 'Đang thử lại...');
+              SLToast.info(context, context.tr('p7_preview_retrying'));
             },
           ),
         ),
@@ -228,7 +246,7 @@ class _AuroraThemePreviewScreenState extends State<AuroraThemePreviewScreen> {
 
         // ── Dialog variants ──
         Text(
-          'Hộp thoại xác nhận',
+          context.tr('p7_preview_confirmation_dialogs'),
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w900,
@@ -238,69 +256,70 @@ class _AuroraThemePreviewScreenState extends State<AuroraThemePreviewScreen> {
         ),
         const SizedBox(height: 10),
         _buildToastDemoButton(
-          'Đăng xuất (warning)',
+          context.tr('p7_preview_logout_warning'),
           Icons.logout_rounded,
           const Color(0xFFFFAB00),
           () async {
             final ok = await SLToast.confirm(
               context,
-              title: 'Đăng xuất?',
-              message: 'Bạn sẽ cần đăng nhập lại để tiếp tục sử dụng.',
-              confirmLabel: 'Đăng xuất',
+              title: context.tr('p7_preview_logout_question'),
+              message: context.tr('p7_preview_logout_message'),
+              confirmLabel: context.tr('p7_preview_logout_action'),
               variant: SLToastVariant.warning,
             );
-            if (ok && context.mounted) {
-              SLToast.success(context, 'Đã đăng xuất thành công.');
+            if (ok && mounted) {
+              SLToast.success(context, context.tr('p7_preview_logout_success'));
             }
           },
         ),
         const SizedBox(height: 8),
         _buildToastDemoButton(
-          'Xoá vĩnh viễn (danger)',
+          context.tr('p7_preview_delete_danger'),
           Icons.delete_forever_rounded,
           const Color(0xFFFF5252),
           () async {
             final ok = await SLToast.confirm(
               context,
-              title: 'Xoá tất cả ảnh?',
-              message:
-                  'Hành động này không thể hoàn tác. Tất cả ảnh và video sẽ bị xoá vĩnh viễn.',
-              confirmLabel: 'Xoá vĩnh viễn',
+              title: context.tr('p7_preview_delete_all_question'),
+              message: context.tr('p7_preview_delete_all_message'),
+              confirmLabel: context.tr('p7_preview_delete_permanently'),
               variant: SLToastVariant.danger,
             );
-            if (ok && context.mounted) {
-              SLToast.error(context, 'Đã xoá toàn bộ ảnh.');
+            if (ok && mounted) {
+              SLToast.error(context, context.tr('p7_preview_deleted_all'));
             }
           },
         ),
         const SizedBox(height: 8),
         _buildToastDemoButton(
-          'Nâng cấp Premium (primary)',
+          context.tr('p7_preview_upgrade_primary'),
           Icons.star_rounded,
           const Color(0xFFFF4B91),
           () async {
             final ok = await SLToast.confirm(
               context,
-              title: 'Nâng cấp Premium?',
-              message:
-                  'Mở khóa tất cả tính năng: vault không giới hạn, theme độc quyền.',
-              confirmLabel: 'Nâng cấp',
+              title: context.tr('p7_preview_upgrade_question'),
+              message: context.tr('p7_preview_upgrade_message'),
+              confirmLabel: context.tr('p7_preview_upgrade_action'),
               variant: SLToastVariant.primary,
             );
-            if (ok && context.mounted) {
-              SLToast.success(context, 'Chào mừng bạn đến với Premium!');
+            if (ok && mounted) {
+              SLToast.success(
+                context,
+                context.tr('p7_preview_upgrade_success'),
+              );
             }
           },
         ),
         const SizedBox(height: 8),
         _buildToastDemoButton(
-          'Thông báo đơn (info)',
+          context.tr('p7_preview_alert_info'),
           Icons.notifications_active_rounded,
           const Color(0xFF2979FF),
           () => SLToast.alert(
             context,
-            title: 'Cập nhật thành công',
-            message: 'Phiên bản 2.6.1 đã được cài đặt.',
+            title: context.tr('p7_preview_update_success'),
+            message: context.tr('p7_preview_update_installed'),
           ),
         ),
       ],
@@ -323,10 +342,7 @@ class _AuroraThemePreviewScreenState extends State<AuroraThemePreviewScreen> {
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: color.withValues(alpha: 0.25),
-              width: 1,
-            ),
+            border: Border.all(color: color.withValues(alpha: 0.25), width: 1),
           ),
           child: Row(
             children: [
@@ -365,13 +381,13 @@ class _AuroraThemePreviewScreenState extends State<AuroraThemePreviewScreen> {
 
   Widget _buildColorSwatches() {
     final colors = [
-      ('Rose Deep', const Color(0xFFFF6B9D)),
-      ('Rose Mid', const Color(0xFFFF8FB1)),
-      ('Lavender', const Color(0xFFB19CD9)),
-      ('Lavender Deep', const Color(0xFF7B68B6)),
-      ('Peach', const Color(0xFFFFAB91)),
-      ('Mint', const Color(0xFF80CBC4)),
-      ('Gold', const Color(0xFFFFB74D)),
+      (context.tr('p7_preview_color_rose_deep'), const Color(0xFFFF6B9D)),
+      (context.tr('p7_preview_color_rose_mid'), const Color(0xFFFF8FB1)),
+      (context.tr('p7_preview_color_lavender'), const Color(0xFFB19CD9)),
+      (context.tr('p7_preview_color_lavender_deep'), const Color(0xFF7B68B6)),
+      (context.tr('p7_preview_color_peach'), const Color(0xFFFFAB91)),
+      (context.tr('p7_preview_color_mint'), const Color(0xFF80CBC4)),
+      (context.tr('p7_preview_color_gold'), const Color(0xFFFFB74D)),
     ];
 
     return Wrap(
@@ -411,55 +427,76 @@ class _AuroraThemePreviewScreenState extends State<AuroraThemePreviewScreen> {
   }
 
   Widget _buildButtonShowcase() {
-    return Column(
-      children: [
-        // Primary buttons row
-        Row(
-          children: [
-            Expanded(child: _AuroraPreviewButton(label: 'Primary', variant: 'primary', isDark: _isDark)),
-            const SizedBox(width: 12),
-            Expanded(child: _AuroraPreviewButton(label: 'Secondary', variant: 'secondary', isDark: _isDark)),
-            const SizedBox(width: 12),
-            Expanded(child: _AuroraPreviewButton(label: 'Ghost', variant: 'ghost', isDark: _isDark)),
-          ],
-        ),
-        const SizedBox(height: 12),
-        // Premium & destructive
-        Row(
-          children: [
-            Expanded(child: _AuroraPreviewButton(label: 'Premium', variant: 'premium', isDark: _isDark)),
-            const SizedBox(width: 12),
-            Expanded(child: _AuroraPreviewButton(label: 'Destructive', variant: 'destructive', isDark: _isDark)),
-          ],
-        ),
-      ],
+    final buttons = [
+      (context.tr('p7_preview_button_primary'), 'primary'),
+      (context.tr('p7_preview_button_secondary'), 'secondary'),
+      (context.tr('p7_preview_button_ghost'), 'ghost'),
+      (context.tr('p7_preview_button_premium'), 'premium'),
+      (context.tr('p7_preview_button_destructive'), 'destructive'),
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 720
+            ? 3
+            : constraints.maxWidth >= 420
+            ? 2
+            : 1;
+        final itemWidth =
+            (constraints.maxWidth - ((columns - 1) * 12)) / columns;
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: buttons
+              .map(
+                (button) => SizedBox(
+                  width: itemWidth,
+                  child: _AuroraPreviewButton(
+                    label: button.$1,
+                    variant: button.$2,
+                    isDark: _isDark,
+                  ),
+                ),
+              )
+              .toList(growable: false),
+        );
+      },
     );
   }
 
   Widget _buildCardShowcase() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: _AuroraPreviewCard(
-            title: 'Highlight Card',
-            subtitle: 'Your special moment',
-            icon: Icons.favorite_rounded,
-            variant: 'highlight',
-            isDark: _isDark,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _AuroraPreviewCard(
-            title: 'Insight Card',
-            subtitle: 'Love statistics',
-            icon: Icons.insights_rounded,
-            variant: 'insight',
-            isDark: _isDark,
-          ),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useColumns = constraints.maxWidth >= 520;
+        final itemWidth = useColumns
+            ? (constraints.maxWidth - 12) / 2
+            : constraints.maxWidth;
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            SizedBox(
+              width: itemWidth,
+              child: _AuroraPreviewCard(
+                title: context.tr('p7_preview_highlight_card'),
+                subtitle: context.tr('p7_preview_special_moment'),
+                icon: Icons.favorite_rounded,
+                variant: 'highlight',
+                isDark: _isDark,
+              ),
+            ),
+            SizedBox(
+              width: itemWidth,
+              child: _AuroraPreviewCard(
+                title: context.tr('p7_preview_insight_card'),
+                subtitle: context.tr('p7_preview_love_statistics'),
+                icon: Icons.insights_rounded,
+                variant: 'insight',
+                isDark: _isDark,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -467,13 +504,13 @@ class _AuroraThemePreviewScreenState extends State<AuroraThemePreviewScreen> {
     return Column(
       children: [
         _AuroraPreviewInput(
-          hint: 'Email address',
+          hint: context.tr('p7_preview_email_address'),
           icon: Icons.email_outlined,
           isDark: _isDark,
         ),
         const SizedBox(height: 12),
         _AuroraPreviewInput(
-          hint: 'Password',
+          hint: context.tr('p7_preview_password'),
           icon: Icons.lock_outlined,
           isDark: _isDark,
           obscure: true,
@@ -489,7 +526,7 @@ class _AuroraThemePreviewScreenState extends State<AuroraThemePreviewScreen> {
         Align(
           alignment: Alignment.centerRight,
           child: _AuroraChatBubble(
-            text: 'Anh yêu em nhiều lắm! 💕',
+            text: context.tr('p7_preview_chat_sent'),
             isFromMe: true,
             isDark: _isDark,
           ),
@@ -499,7 +536,7 @@ class _AuroraThemePreviewScreenState extends State<AuroraThemePreviewScreen> {
         Align(
           alignment: Alignment.centerLeft,
           child: _AuroraChatBubble(
-            text: 'Em cũng yêu anh nhiều lắm! 🥰',
+            text: context.tr('p7_preview_chat_received'),
             isFromMe: false,
             isDark: _isDark,
           ),
@@ -510,10 +547,38 @@ class _AuroraThemePreviewScreenState extends State<AuroraThemePreviewScreen> {
 
   Widget _buildGradientShowcase() {
     final gradients = [
-      ('Rose Dawn', [const Color(0xFFFF6B9D), const Color(0xFFFF8FB1), const Color(0xFFB19CD9)]),
-      ('Lavender Dusk', [const Color(0xFF7B68B6), const Color(0xFFB19CD9), const Color(0xFFFF8FB1)]),
-      ('Peach Sunset', [const Color(0xFFFFAB91), const Color(0xFFFF8FB1), const Color(0xFFFF6B9D)]),
-      ('Mint Bloom', [const Color(0xFF80CBC4), const Color(0xFFB19CD9), const Color(0xFF7B68B6)]),
+      (
+        context.tr('p7_preview_gradient_rose_dawn'),
+        [
+          const Color(0xFFFF6B9D),
+          const Color(0xFFFF8FB1),
+          const Color(0xFFB19CD9),
+        ],
+      ),
+      (
+        context.tr('p7_preview_gradient_lavender_dusk'),
+        [
+          const Color(0xFF7B68B6),
+          const Color(0xFFB19CD9),
+          const Color(0xFFFF8FB1),
+        ],
+      ),
+      (
+        context.tr('p7_preview_gradient_peach_sunset'),
+        [
+          const Color(0xFFFFAB91),
+          const Color(0xFFFF8FB1),
+          const Color(0xFFFF6B9D),
+        ],
+      ),
+      (
+        context.tr('p7_preview_gradient_mint_bloom'),
+        [
+          const Color(0xFF80CBC4),
+          const Color(0xFFB19CD9),
+          const Color(0xFF7B68B6),
+        ],
+      ),
     ];
 
     return Column(
@@ -691,7 +756,9 @@ class _AuroraPreviewCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: (isDark ? Colors.black : gradientColors.first).withValues(alpha: 0.1),
+            color: (isDark ? Colors.black : gradientColors.first).withValues(
+              alpha: 0.1,
+            ),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -810,7 +877,9 @@ class _AuroraPreviewInputState extends State<_AuroraPreviewInput> {
                   hintStyle: SLTheme.quicksand(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: widget.isDark ? Colors.white38 : const Color(0xFF9A8A9A),
+                    color: widget.isDark
+                        ? Colors.white38
+                        : const Color(0xFF9A8A9A),
                   ),
                   border: InputBorder.none,
                   isDense: true,

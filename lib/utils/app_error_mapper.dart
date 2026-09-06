@@ -11,10 +11,7 @@ class AppErrorInfo {
   final AppErrorKind kind;
   final String message;
 
-  const AppErrorInfo({
-    required this.kind,
-    required this.message,
-  });
+  const AppErrorInfo({required this.kind, required this.message});
 
   bool get isUserError => kind == AppErrorKind.user;
   bool get isNetworkError => kind == AppErrorKind.network;
@@ -31,10 +28,7 @@ class AppErrorMapper {
   static String get recentLoginMessage =>
       L10nService().translate('err_auth_recent_login_required');
 
-  static AppErrorInfo resolve(
-    dynamic error, {
-    String? fallbackMessage,
-  }) {
+  static AppErrorInfo resolve(dynamic error, {String? fallbackMessage}) {
     if (error is AppErrorInfo) {
       return error;
     }
@@ -107,7 +101,8 @@ class AppErrorMapper {
         message.contains('invalid-credential') ||
         message.contains('invalid login credentials') ||
         message.contains(
-            'tài khoản chưa được đăng ký hoặc mật khẩu không chính xác');
+          'tài khoản chưa được đăng ký hoặc mật khẩu không chính xác',
+        );
   }
 
   static AppErrorInfo _fromFirebaseAuth(
@@ -184,17 +179,11 @@ class AppErrorMapper {
     final message = cleanMessage(error.message);
 
     if (code == 'requires-recent-login') {
-      return AppErrorInfo(
-        kind: AppErrorKind.user,
-        message: recentLoginMessage,
-      );
+      return AppErrorInfo(kind: AppErrorKind.user, message: recentLoginMessage);
     }
 
     if (code == 'unauthenticated') {
-      return AppErrorInfo(
-        kind: AppErrorKind.user,
-        message: authSyncMessage,
-      );
+      return AppErrorInfo(kind: AppErrorKind.user, message: authSyncMessage);
     }
 
     if (code == 'network-request-failed' ||
@@ -222,10 +211,7 @@ class AppErrorMapper {
               : cleanMsg,
         );
       }
-      return AppErrorInfo(
-        kind: AppErrorKind.server,
-        message: cleanMsg,
-      );
+      return AppErrorInfo(kind: AppErrorKind.server, message: cleanMsg);
     }
 
     if (_looksLikeNetwork(message)) {
@@ -331,6 +317,10 @@ class AppErrorMapper {
     }
     if (normalized.contains('requires-recent-login')) {
       return recentLoginMessage;
+    }
+    if (normalized.contains('phiên đăng nhập không hợp lệ') ||
+        normalized.contains('phiên đăng nhập đã hết hạn')) {
+      return authSyncMessage;
     }
     if (normalized.contains('phiên đăng nhập') ||
         normalized.contains('đăng nhập để tạo liên kết')) {

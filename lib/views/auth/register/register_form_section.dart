@@ -1,20 +1,13 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import '../login/auth_visual_style.dart';
+import '../login/auth_form_details.dart';
+import '../login/aurora_form_widgets.dart';
 
-import '../../../core/sl_theme.dart';
 import '../../../utils/services/l10n_service.dart';
-import '../../../utils/flexible_date_input.dart';
 import '../login/glass_text_field.dart';
 import '../login/social_auth_buttons.dart';
 
 final RegExp _registerEmailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-
-const List<Color> _registerButtonDisabledColors = <Color>[
-  Color(0xFFFFD6E0),
-  Color(0xFFFFC2D1),
-  Color(0xFFFFB3C6),
-];
 
 bool _isRegisterInputValid(String email, String password, bool acceptTerms) {
   return _registerEmailRegex.hasMatch(email.trim()) &&
@@ -71,26 +64,16 @@ class RegisterForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = L10nService();
-    final isBirthQuestion =
-        DateInputUtils.looksLikeBirthQuestion(selectedSecurityQuestion);
     final passwordLabel = l10n.translate('Mật khẩu');
     final passwordHint = l10n.translate('Tối thiểu 6 ký tự');
-    final securityQuestionLabel =
-        l10n.translate('auth_security_question_not_required');
-    final securityQuestionTapLabel =
-        l10n.translate('auth_security_question_select_tap');
-    final securityNote = l10n.translate('auth_recovery_hint');
-    final securityAnswerHint = l10n.translate('auth_security_answer_hint');
-    final signupLabel = l10n.translate('Đăng ký').toUpperCase();
+    final signupLabel = l10n.translate('auth_refresh_create_account');
 
     return AutofillGroup(
       child: Column(
         key: const ValueKey('register'),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SLTheme.sectionHeader(
-            title: l10n.translate('auth_email_label'),
-          ),
+          AuthSectionLabel(label: l10n.translate('auth_refresh_email_label')),
           const SizedBox(height: 8),
           GlassTextField(
             controller: emailController,
@@ -103,14 +86,10 @@ class RegisterForm extends StatelessWidget {
             onSubmitted: (_) => FocusScope.of(context).nextFocus(),
             hintText: l10n.translate('auth_email_placeholder'),
             accentColor: accentRose,
-            prefixIcon: Icon(
-              Icons.mail_outline_rounded,
-              color: accentRose.withValues(alpha: 0.65),
-              size: 20,
-            ),
+            prefixIcon: const Icon(Icons.mail_outline_rounded, size: 20),
           ),
           const SizedBox(height: 10),
-          SLTheme.sectionHeader(title: passwordLabel),
+          AuthSectionLabel(label: passwordLabel),
           const SizedBox(height: 8),
           GlassTextField(
             controller: passwordController,
@@ -124,88 +103,27 @@ class RegisterForm extends StatelessWidget {
             },
             hintText: passwordHint,
             accentColor: accentRose,
-            prefixIcon: Icon(
-              Icons.lock_outline_rounded,
-              color: accentRose.withValues(alpha: 0.65),
-              size: 20,
-            ),
+            prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20),
             suffixIcon: IconButton(
+              tooltip: l10n.translate(
+                obscurePassword
+                    ? 'auth_refresh_show_password'
+                    : 'auth_refresh_hide_password',
+              ),
               icon: Icon(
                 obscurePassword ? Icons.visibility : Icons.visibility_off,
-                color: SLTheme.authMutedTextColor,
+                color: AuthVisualStyle.of(context).muted,
                 size: 20,
               ),
               onPressed: onToggleObscure,
             ),
           ),
           const SizedBox(height: 12),
-          SLTheme.authToggleCard(
-            selected: acceptTerms,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              child: Row(
-                children: [
-                  SizedBox(
-                    height: 24,
-                    width: 24,
-                    child: Checkbox(
-                      value: acceptTerms,
-                      activeColor: SLColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      onChanged: onAcceptTermsChanged,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: RichText(
-                      text: TextSpan(
-                        style: SLTheme.quicksand(
-                          fontSize: 12,
-                          color: const Color(0xFF58455B),
-                          fontWeight: FontWeight.w700,
-                          height: 1.4,
-                        ),
-                        children: [
-                          TextSpan(
-                            text:
-                                '${l10n.translate('auth_terms_confirm_prefix')} ',
-                            recognizer: TapGestureRecognizer()
-                              ..onTap =
-                                  () => onAcceptTermsChanged(!acceptTerms),
-                          ),
-                          TextSpan(
-                            text: l10n.translate('terms_of_use'),
-                            style: const TextStyle(
-                              color: SLColors.primary,
-                              fontWeight: FontWeight.w900,
-                            ),
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = onTermsTap,
-                          ),
-                          TextSpan(
-                            text: ' & ',
-                            recognizer: TapGestureRecognizer()
-                              ..onTap =
-                                  () => onAcceptTermsChanged(!acceptTerms),
-                          ),
-                          TextSpan(
-                            text: l10n.translate('privacy_policy'),
-                            style: const TextStyle(
-                              color: SLColors.primary,
-                              fontWeight: FontWeight.w900,
-                            ),
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = onPrivacyTap,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          AuthTermsConsent(
+            accepted: acceptTerms,
+            onChanged: onAcceptTermsChanged,
+            onTerms: onTermsTap,
+            onPrivacy: onPrivacyTap,
           ),
           const SizedBox(height: 24),
           ValueListenableBuilder<TextEditingValue>(
@@ -220,87 +138,24 @@ class RegisterForm extends StatelessWidget {
                     acceptTerms,
                   );
 
-                  return SLTheme.authPrimaryButton(
+                  return AuroraPrimaryButton(
                     label: signupLabel,
                     onPressed: isLoading || !isInputValid ? null : onRegister,
                     isLoading: isLoading,
-                    colors: isInputValid
-                        ? [accentRose, accentBlush, accentLavender]
-                        : _registerButtonDisabledColors,
+                    enabled: isInputValid,
                   );
                 },
               );
             },
           ),
           const SizedBox(height: 16),
-          _AuroraRegisterDivider(
-            label: l10n.translate('Hoặc đăng ký nhanh với'),
-          ),
+          AuthSocialDivider(label: l10n.translate('Hoặc đăng ký nhanh với')),
           const SizedBox(height: 14),
-          SocialAuthButtons(
-            onProviderTap: onSocialLogin,
-          ),
+          SocialAuthButtons(onProviderTap: onSocialLogin),
           const SizedBox(height: 12),
-          Center(
-            child: Text(
-              l10n.translate('auth_social_register_notice'),
-              textAlign: TextAlign.center,
-              style: SLTheme.quicksand(
-                color: const Color(0xFF999999),
-                fontSize: 10.5,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
+          AuthPrivacyNote(text: l10n.translate('auth_social_register_notice')),
         ],
       ),
-    );
-  }
-}
-
-class _AuroraRegisterDivider extends StatelessWidget {
-  final String label;
-
-  const _AuroraRegisterDivider({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            height: 1,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.transparent, Color(0xFFEBDDE1)],
-              ),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontFamily: 'Quicksand',
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFFA5929A),
-              letterSpacing: 0.2,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Container(
-            height: 1,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFEBDDE1), Colors.transparent],
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

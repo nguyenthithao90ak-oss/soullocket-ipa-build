@@ -6,43 +6,45 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
     final currentSpaceId = (_openedSpaceHouseId ?? _selfSpaceHouseId).trim();
     final sharedSpace = _sharedSpaceFor(currentSpaceId);
     final deleteRequest = _deleteRequestFor(currentSpaceId);
-    final result =
-        await Navigator.of(context).push<_CountdownModeSettingsResult>(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => _CountdownModeEditorScreen(
-          currentHouseId: widget.currentHouseId,
-          isVipActive: widget.isVipActive,
-          spaceTitle: _spaceTitle(currentSpaceId),
-          isAccepted: _acceptedSpaceHouseIds.contains(currentSpaceId),
-          showDeleteSection:
-              currentSpaceId != _selfSpaceHouseId && sharedSpace != null,
-          canRequestDelete: currentSpaceId != _selfSpaceHouseId &&
-              sharedSpace != null &&
-              deleteRequest == null,
-          canAcceptDelete: deleteRequest != null &&
-              !deleteRequest.isRequestedBy(_selfSpaceHouseId),
-          deleteStatusTitle: _deleteStatusTitle(currentSpaceId),
-          deleteStatusDescription: _deleteStatusDescription(currentSpaceId),
-          singleMode: _singleMode,
-          anchorDate: _anchorDate,
-          themeKey: _themeKey,
-          styleKey: _countdownStyleKey,
-          frameKey: _avatarFrameKey,
-          fontKey: _fontKey,
-          transparentMode: _transparentMode,
-          sizePx: _countdownSizePx,
-          topLabel: _topLabelText,
-          bottomLabel: _bottomLabelText,
-          nameU1: _nameU1,
-          nameU2: _nameU2,
-          avatarUrl1: _avatarUrl1,
-          avatarUrl2: _avatarUrl2,
-          customBackgroundUrl: _customBackgroundUrl,
-          centerIconType: _centerIconType,
-        ),
-      ),
-    );
+    final result = await Navigator.of(context)
+        .push<_CountdownModeSettingsResult>(
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (_) => _CountdownModeEditorScreen(
+              currentHouseId: widget.currentHouseId,
+              isVipActive: widget.isVipActive,
+              spaceTitle: _spaceTitle(currentSpaceId),
+              isAccepted: _acceptedSpaceHouseIds.contains(currentSpaceId),
+              showDeleteSection:
+                  currentSpaceId != _selfSpaceHouseId && sharedSpace != null,
+              canRequestDelete:
+                  currentSpaceId != _selfSpaceHouseId &&
+                  sharedSpace != null &&
+                  deleteRequest == null,
+              canAcceptDelete:
+                  deleteRequest != null &&
+                  !deleteRequest.isRequestedBy(_selfSpaceHouseId),
+              deleteStatusTitle: _deleteStatusTitle(currentSpaceId),
+              deleteStatusDescription: _deleteStatusDescription(currentSpaceId),
+              singleMode: _singleMode,
+              anchorDate: _anchorDate,
+              themeKey: _themeKey,
+              styleKey: _countdownStyleKey,
+              frameKey: _avatarFrameKey,
+              fontKey: _fontKey,
+              transparentMode: _transparentMode,
+              sizePx: _countdownSizePx,
+              topLabel: _topLabelText,
+              bottomLabel: _bottomLabelText,
+              nameU1: _nameU1,
+              nameU2: _nameU2,
+              avatarUrl1: _avatarUrl1,
+              avatarUrl2: _avatarUrl2,
+              customBackgroundUrl: _customBackgroundUrl,
+              centerIconType: _centerIconType,
+            ),
+          ),
+        );
 
     if (result == null || !mounted) {
       return;
@@ -82,7 +84,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
         _spaceChromeVisible = false;
       });
       await _saveLocalSettings();
-      if (mounted) _showMessage('Đã lưu không gian đếm.');
+      if (mounted) _showMessage(context.tr('p7_countdown_space_saved'));
       return;
     }
 
@@ -143,8 +145,9 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                   decoration: BoxDecoration(
                     color: const Color(0xFF0F1A2D),
                     borderRadius: BorderRadius.circular(12),
-                    border:
-                        Border.all(color: Colors.white.withValues(alpha: 0.10)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.10),
+                    ),
                   ),
                   child: SingleChildScrollView(
                     physics: const ClampingScrollPhysics(),
@@ -161,13 +164,13 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                           children: [
                             Expanded(
                               child: Text(
-                                'Cài đặt không gian đếm',
+                                context.tr('p7_countdown_settings_title'),
                                 style: SLTheme.quicksand(
                                   fontSize:
                                       MediaQuery.of(sheetContext).size.width <
-                                              360
-                                          ? 16
-                                          : 18,
+                                          360
+                                      ? 16
+                                      : 18,
                                   fontWeight: FontWeight.w900,
                                   color: Colors.white,
                                 ),
@@ -186,39 +189,39 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                         TextField(
                           controller: topCtrl,
                           decoration: _sheetDecoration(
-                            label: 'Tiêu đề trên',
-                            hint: 'Yêu nhau',
+                            label: context.tr('p7_countdown_top_label'),
+                            hint: context.tr('p7_countdown_top_hint'),
                           ),
                         ),
                         const SizedBox(height: 10),
                         TextField(
                           controller: bottomCtrl,
                           decoration: _sheetDecoration(
-                            label: 'Tiêu đề dưới',
-                            hint: 'ngày',
+                            label: context.tr('p7_countdown_bottom_label'),
+                            hint: context.tr('p7_countdown_bottom_hint'),
                           ),
                         ),
                         const SizedBox(height: 10),
                         TextField(
                           controller: leftCtrl,
                           decoration: _sheetDecoration(
-                            label: 'Tên bên trái',
-                            hint: 'Bạn',
+                            label: context.tr('p7_countdown_left_name'),
+                            hint: context.tr('p7_preview_you'),
                           ),
                         ),
                         const SizedBox(height: 10),
                         TextField(
                           controller: rightCtrl,
                           decoration: _sheetDecoration(
-                            label: 'Tên bên phải',
-                            hint: 'Người ấy',
+                            label: context.tr('p7_countdown_right_name'),
+                            hint: context.tr('p7_preview_partner'),
                           ),
                         ),
                         const SizedBox(height: 10),
                         TextField(
                           controller: leftAvatarCtrl,
                           decoration: _sheetDecoration(
-                            label: 'Avatar trái',
+                            label: context.tr('p7_countdown_left_avatar'),
                             hint: 'https://...',
                           ),
                         ),
@@ -226,7 +229,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                         TextField(
                           controller: rightAvatarCtrl,
                           decoration: _sheetDecoration(
-                            label: 'Avatar phải',
+                            label: context.tr('p7_countdown_right_avatar'),
                             hint: 'https://...',
                           ),
                         ),
@@ -236,8 +239,9 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                             Expanded(
                               child: ChoiceChip(
                                 selected: draftSingleMode,
-                                label:
-                                    Text(context.tr('countdown_single_mode')),
+                                label: Text(
+                                  context.tr('countdown_single_mode'),
+                                ),
                                 onSelected: (_) =>
                                     setSheetState(() => draftSingleMode = true),
                               ),
@@ -246,10 +250,12 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                             Expanded(
                               child: ChoiceChip(
                                 selected: !draftSingleMode,
-                                label:
-                                    Text(context.tr('countdown_couple_mode')),
+                                label: Text(
+                                  context.tr('countdown_couple_mode'),
+                                ),
                                 onSelected: (_) => setSheetState(
-                                    () => draftSingleMode = false),
+                                  () => draftSingleMode = false,
+                                ),
                               ),
                             ),
                           ],
@@ -289,7 +295,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                         ),
                         const SizedBox(height: 10),
                         _CountdownModeSheetDropdown(
-                          label: 'Chủ đề',
+                          label: context.tr('p7_countdown_theme'),
                           value: draftThemeKey,
                           options: _CountdownModeIndependentScreenState
                               ._themeOptions,
@@ -298,7 +304,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                         ),
                         const SizedBox(height: 10),
                         _CountdownModeSheetDropdown(
-                          label: 'Giao diện vòng đếm',
+                          label: context.tr('p7_countdown_ring_style'),
                           value: draftStyleKey,
                           options: _CountdownModeIndependentScreenState
                               ._countdownStyleOptions,
@@ -307,7 +313,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                         ),
                         const SizedBox(height: 10),
                         _CountdownModeSheetDropdown(
-                          label: 'Khung avatar',
+                          label: context.tr('p7_avatar_frame'),
                           value: draftFrameKey,
                           options: _CountdownModeIndependentScreenState
                               ._avatarFrameOptions,
@@ -327,7 +333,9 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                               min: 200,
                               max: UiPrefs.maxCountdownSizePx,
                               value: draftSize.clamp(
-                                  200.0, UiPrefs.maxCountdownSizePx),
+                                200.0,
+                                UiPrefs.maxCountdownSizePx,
+                              ),
                               onChanged: (value) {
                                 setSliderState(() {
                                   draftSize = value;
@@ -471,7 +479,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
         _avatarUrl2 = result.avatarUrl2;
       });
       await _saveLocalSettings();
-      if (mounted) _showMessage('Đã lưu không gian đếm.');
+      if (mounted) _showMessage(context.tr('p7_countdown_space_saved'));
       return;
     }
 
@@ -527,7 +535,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Không gian đếm',
+                  context.tr('p7_countdown_spaces_title'),
                   style: SLTheme.quicksand(
                     fontSize: 24,
                     fontWeight: FontWeight.w900,
@@ -536,12 +544,13 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Nhập mã nhà, @username hoặc link để gửi yêu cầu ghép nối. Mỗi không gian ở đây có cấu hình đếm riêng, không dùng chung dữ liệu với home.',
+                  context.tr('p7_countdown_spaces_description'),
                   style: SLTheme.quicksand(
                     fontSize: 12.2,
                     fontWeight: FontWeight.w700,
-                    color: themeData.foreground
-                        .withValues(alpha: themeData.isDark ? 0.82 : 0.68),
+                    color: themeData.foreground.withValues(
+                      alpha: themeData.isDark ? 0.82 : 0.68,
+                    ),
                     height: 1.4,
                   ),
                 ),
@@ -551,11 +560,11 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                     itemCount: _spaceHouseIds.length + 1,
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
-                      childAspectRatio: 1,
-                    ),
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 1,
+                        ),
                     itemBuilder: (context, index) {
                       if (index == _spaceHouseIds.length) {
                         return InkWell(
@@ -573,8 +582,9 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                                     : [
                                         themeData.orbA.withValues(alpha: 0.12),
                                         themeData.orbB.withValues(alpha: 0.08),
-                                        const Color(0xFFFFF5F8)
-                                            .withValues(alpha: 0.88),
+                                        const Color(
+                                          0xFFFFF5F8,
+                                        ).withValues(alpha: 0.88),
                                       ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
@@ -582,13 +592,15 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: themeData.orbA.withValues(
-                                    alpha: themeData.isDark ? 0.26 : 0.22),
+                                  alpha: themeData.isDark ? 0.26 : 0.22,
+                                ),
                               ),
                             ),
                             child: Center(
                               child: _isAddingSpace
                                   ? const CircularProgressIndicator(
-                                      strokeWidth: 2.2)
+                                      strokeWidth: 2.2,
+                                    )
                                   : Column(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
@@ -601,7 +613,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                                         ),
                                         const SizedBox(height: 6),
                                         Text(
-                                          'Thêm không gian',
+                                          context.tr('p7_countdown_add_space'),
                                           style: SLTheme.quicksand(
                                             fontWeight: FontWeight.w900,
                                             color: themeData.foreground,
@@ -616,8 +628,8 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
 
                       final houseId = _spaceHouseIds[index];
                       final incomingRequest = _incomingRequestFor(houseId);
-                      final isHandlingIncomingRequest = incomingRequest !=
-                              null &&
+                      final isHandlingIncomingRequest =
+                          incomingRequest != null &&
                           _isHandlingSpaceRequest(incomingRequest.requestId);
                       final snapshot = _spaceSnapshotFor(houseId);
                       final accent = _spaceAccentColorResolved(houseId);
@@ -627,15 +639,15 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                       final openIncomingRequest = incomingRequest == null
                           ? null
                           : () => unawaited(
-                                _showIncomingSpaceRequestDialog(houseId),
-                              );
+                              _showIncomingSpaceRequestDialog(houseId),
+                            );
 
                       return InkWell(
                         onTap: isHandlingIncomingRequest
                             ? null
                             : (incomingRequest == null
-                                ? () => unawaited(_openSpace(houseId))
-                                : openIncomingRequest),
+                                  ? () => unawaited(_openSpace(houseId))
+                                  : openIncomingRequest),
                         onLongPress: () =>
                             unawaited(_showRenameSpaceDialog(houseId)),
                         borderRadius: BorderRadius.circular(12),
@@ -649,8 +661,9 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                                       accent.withValues(alpha: 0.12),
                                     ]
                                   : [
-                                      const Color(0xFFFFF5F8)
-                                          .withValues(alpha: 0.88),
+                                      const Color(
+                                        0xFFFFF5F8,
+                                      ).withValues(alpha: 0.88),
                                       accent.withValues(alpha: 0.10),
                                     ],
                               begin: Alignment.topLeft,
@@ -658,8 +671,10 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                             ),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                                color: accent.withValues(
-                                    alpha: themeData.isDark ? 0.24 : 0.20)),
+                              color: accent.withValues(
+                                alpha: themeData.isDark ? 0.24 : 0.20,
+                              ),
+                            ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -686,16 +701,16 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                                         strokeWidth: 2,
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
-                                          accent,
-                                        ),
+                                              accent,
+                                            ),
                                       ),
                                     )
                                   else
                                     InkWell(
                                       onTap: incomingRequest == null
                                           ? () => unawaited(
-                                                _showRenameSpaceDialog(houseId),
-                                              )
+                                              _showRenameSpaceDialog(houseId),
+                                            )
                                           : openIncomingRequest,
                                       borderRadius: BorderRadius.circular(999),
                                       child: Icon(
@@ -704,8 +719,9 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                                             : Icons.mark_email_unread_rounded,
                                         size: 16,
                                         color: incomingRequest == null
-                                            ? themeData.foreground
-                                                .withValues(alpha: 0.72)
+                                            ? themeData.foreground.withValues(
+                                                alpha: 0.72,
+                                              )
                                             : accent,
                                       ),
                                     ),
@@ -729,15 +745,16 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                                   gradient: LinearGradient(
                                     colors: [
                                       accent.withValues(
-                                          alpha:
-                                              themeData.isDark ? 0.24 : 0.18),
+                                        alpha: themeData.isDark ? 0.24 : 0.18,
+                                      ),
                                       themeData.orbB.withValues(
-                                          alpha:
-                                              themeData.isDark ? 0.10 : 0.08),
+                                        alpha: themeData.isDark ? 0.10 : 0.08,
+                                      ),
                                     ],
                                   ),
                                   border: Border.all(
-                                      color: accent.withValues(alpha: 0.28)),
+                                    color: accent.withValues(alpha: 0.28),
+                                  ),
                                 ),
                                 child: Center(
                                   child: Column(

@@ -28,10 +28,7 @@ class AppEntryAccessResolution {
   final AppEntryAccessState? initialState;
   final Future<AppEntryAccessState> future;
 
-  const AppEntryAccessResolution({
-    this.initialState,
-    required this.future,
-  });
+  const AppEntryAccessResolution({this.initialState, required this.future});
 }
 
 class AppEntryAccessResolver {
@@ -43,8 +40,8 @@ class AppEntryAccessResolver {
     AuthService? authService,
     HouseService? houseService,
     required this._getPrefs,
-  })  : _authService = authService ?? AuthService(),
-        _houseService = houseService ?? HouseService();
+  }) : _authService = authService ?? AuthService(),
+       _houseService = houseService ?? HouseService();
 
   final AuthService _authService;
   final HouseService _houseService;
@@ -57,7 +54,8 @@ class AppEntryAccessResolver {
       AppEntryAccessState state, {
       required String? userId,
       required String? cachedHouseId,
-    }) onBackgroundState,
+    })
+    onBackgroundState,
   }) {
     if (cachedHouseId != null && cachedHouseId.isNotEmpty) {
       final initialState = AppEntryAccessState(
@@ -95,11 +93,7 @@ class AppEntryAccessResolver {
         user: user,
         userId: user.uid,
         onBackgroundState: (state) {
-          onBackgroundState(
-            state,
-            userId: user.uid,
-            cachedHouseId: null,
-          );
+          onBackgroundState(state, userId: user.uid, cachedHouseId: null);
         },
       ),
     );
@@ -110,13 +104,15 @@ class AppEntryAccessResolver {
     required String? userId,
     required void Function(AppEntryAccessState state) onBackgroundState,
   }) async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await (() async {
           try {
             return await _getPrefs().timeout(_prefsTimeout);
           } catch (e) {
             debugPrint(
-                '[AppEntry] Prefs read timed out: ${AppErrorMapper.resolve(e).message}');
+              '[AppEntry] Prefs read timed out: ${AppErrorMapper.resolve(e).message}',
+            );
             return null;
           }
         }());
@@ -174,20 +170,17 @@ class AppEntryAccessResolver {
       await prefs?.remove('il_role');
     }
 
-    final isAdminFuture = _authService.isUserAdmin(user).timeout(
-          _adminTimeout,
-          onTimeout: () => false,
-        );
+    final isAdminFuture = _authService
+        .isUserAdmin(user)
+        .timeout(_adminTimeout, onTimeout: () => false);
     final remoteStateFuture = fetchRemoteAccessState(false);
 
     try {
-      final results = await Future.wait([
-        isAdminFuture,
-        remoteStateFuture,
-      ]).timeout(
-        _remoteTimeout,
-        onTimeout: () => throw Exception('Remote auth checks timed out'),
-      );
+      final results = await Future.wait([isAdminFuture, remoteStateFuture])
+          .timeout(
+            _remoteTimeout,
+            onTimeout: () => throw Exception('Remote auth checks timed out'),
+          );
       final isAdmin = results[0] as bool;
       final remoteState = results[1] as AppEntryAccessState;
       if (remoteState.houseId != null &&
@@ -197,11 +190,19 @@ class AppEntryAccessResolver {
           final prefs = await _getPrefs();
           await prefs.setString('il_house_id', remoteState.houseId!);
           await prefs.setString('il_auth_uid', userId);
-          await SecureStorageService.instance
-              .write(SecureStorageService.keyHouseId, remoteState.houseId!);
-          await SecureStorageService.instance
-              .write(SecureStorageService.keyAuthUid, userId);
-        } catch (_) {}
+          await SecureStorageService.instance.write(
+            SecureStorageService.keyHouseId,
+            remoteState.houseId!,
+          );
+          await SecureStorageService.instance.write(
+            SecureStorageService.keyAuthUid,
+            userId,
+          );
+        } catch (error) {
+          debugPrint(
+            '[SuppressedError] lib/views/app_entry/app_entry_access_resolver.dart: $error',
+          );
+        }
       }
       return AppEntryAccessState(
         houseId: remoteState.houseId,
@@ -211,11 +212,13 @@ class AppEntryAccessResolver {
       );
     } catch (e) {
       debugPrint(
-          '[AppEntry] Offline fallback triggered: ${AppErrorMapper.resolve(e).message}');
+        '[AppEntry] Offline fallback triggered: ${AppErrorMapper.resolve(e).message}',
+      );
       final isAdmin = await isAdminFuture.catchError((_) => false);
-      final fallbackHouseId = (await SecureStorageService.instance
-                  .read(SecureStorageService.keyHouseId))
-              ?.trim() ??
+      final fallbackHouseId =
+          (await SecureStorageService.instance.read(
+            SecureStorageService.keyHouseId,
+          ))?.trim() ??
           '';
       return AppEntryAccessState(
         houseId: fallbackHouseId.isNotEmpty ? fallbackHouseId : null,
@@ -233,39 +236,46 @@ class AppEntryAccessResolver {
       AppEntryAccessState state, {
       required String? userId,
       required String? cachedHouseId,
-    }) onResolved,
+    })
+    onResolved,
   }) {
-    return fetchRemoteAccessState(isAdmin).timeout(_remoteTimeout).then<void>(
-        (state) {
-      final sameHouseId = (state.houseId ?? '') == (cachedHouseId ?? '');
-      if (sameHouseId && state.blockReason == null && !state.isMaintenance) {
-        return;
-      }
+    return fetchRemoteAccessState(isAdmin)
+        .timeout(_remoteTimeout)
+        .then<void>(
+          (state) {
+            final sameHouseId = (state.houseId ?? '') == (cachedHouseId ?? '');
+            if (sameHouseId &&
+                state.blockReason == null &&
+                !state.isMaintenance) {
+              return;
+            }
 
-      // Guard: Nếu cache đang có nhà hợp lệ nhưng state mới trả về null house
-      // (do mạng chậm / Firebase timeout) mà không có block/maintenance reason,
-      // thì KHÔNG override — tránh app tự nhảy về HouseChoiceScreen.
-      final cachedIsValid = (cachedHouseId ?? '').isNotEmpty;
-      final newHouseEmpty = (state.houseId ?? '').isEmpty;
-      final isNetworkFallback =
-          cachedIsValid && newHouseEmpty && state.blockReason == null && !state.isMaintenance;
-      if (isNetworkFallback) {
-        debugPrint(
-          '[AppEntry] Background refresh returned empty houseId for cached house '
-          '$cachedHouseId — likely network issue, skipping override.',
+            // Guard: Nếu cache đang có nhà hợp lệ nhưng state mới trả về null house
+            // (do mạng chậm / Firebase timeout) mà không có block/maintenance reason,
+            // thì KHÔNG override — tránh app tự nhảy về HouseChoiceScreen.
+            final cachedIsValid = (cachedHouseId ?? '').isNotEmpty;
+            final newHouseEmpty = (state.houseId ?? '').isEmpty;
+            final isNetworkFallback =
+                cachedIsValid &&
+                newHouseEmpty &&
+                state.blockReason == null &&
+                !state.isMaintenance;
+            if (isNetworkFallback) {
+              debugPrint(
+                '[AppEntry] Background refresh returned empty houseId for cached house '
+                '$cachedHouseId — likely network issue, skipping override.',
+              );
+              return;
+            }
+
+            onResolved(state, userId: userId, cachedHouseId: cachedHouseId);
+          },
+          onError: (Object e, StackTrace stackTrace) {
+            debugPrint(
+              '[AppEntry] Background fetch error: ${AppErrorMapper.resolve(e).message}',
+            );
+          },
         );
-        return;
-      }
-
-      onResolved(
-        state,
-        userId: userId,
-        cachedHouseId: cachedHouseId,
-      );
-    }, onError: (Object e, StackTrace stackTrace) {
-      debugPrint(
-          '[AppEntry] Background fetch error: ${AppErrorMapper.resolve(e).message}');
-    });
   }
 
   Future<AppEntryAccessState> fetchRemoteAccessState(bool isAdmin) async {

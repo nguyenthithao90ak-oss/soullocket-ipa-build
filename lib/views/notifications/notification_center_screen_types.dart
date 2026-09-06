@@ -28,31 +28,41 @@ class _NotifModel {
   });
 
   factory _NotifModel.fromMap(String id, Map<String, dynamic> m) {
+    final l10n = L10nService();
     final type = m['type']?.toString().toLowerCase() ?? 'system';
+    final fallbackTitle = switch (type) {
+      'friend_request' => l10n.translate('p5_notif_type_friend_request'),
+      'friend_accept' => l10n.translate('p5_notif_type_friend_accept'),
+      'friend_wave' => l10n.translate('p5_notif_type_friend_wave'),
+      'like' => l10n.translate('p5_notif_type_like'),
+      'fire' => l10n.translate('p5_notif_type_fire'),
+      'comment' => l10n.translate('p5_notif_type_comment'),
+      'new_device' => l10n.translate('p5_notif_type_new_device'),
+      'role_change' => l10n.translate('p5_notif_type_role_change'),
+      'warning' => l10n.translate('p5_notif_type_warning'),
+      'system' => l10n.translate('p5_notif_type_system'),
+      _ => l10n.translate('p5_notif_type_default'),
+    };
     final title = (m['title']?.toString().trim().isNotEmpty ?? false)
         ? m['title'].toString().trim()
-        : switch (type) {
-            'friend_request' => 'Lời mời kết bạn',
-            'friend_accept' => 'Kết bạn thành công',
-            'friend_wave' => 'Lời chào mới',
-            'like' => 'Lượt thích mới',
-            'fire' => 'Yêu thích mới',
-            'comment' => 'Bình luận mới',
-            'new_device' => 'Đăng nhập thiết bị mới',
-            'role_change' => 'Thay đổi vai trò',
-            'warning' => 'Cảnh báo hệ thống',
-            'system' => 'Thông báo hệ thống',
-            _ => 'Thông báo mới',
-          };
+        : fallbackTitle;
     final normalizedTitle = switch (type) {
       'countdown_space_request' =>
-        title == 'Thông báo mới' ? 'Yêu cầu ghép nối không gian đêm' : title,
+        title == fallbackTitle
+            ? l10n.translate('p5_notif_type_pair_request')
+            : title,
       'countdown_space_accept' =>
-        title == 'Thông báo mới' ? 'Ghép nối không gian đêm thành công' : title,
+        title == fallbackTitle
+            ? l10n.translate('p5_notif_type_pair_accept')
+            : title,
       'countdown_space_delete_request' =>
-        title == 'Thông báo mới' ? 'Yêu cầu xóa không gian đếm' : title,
+        title == fallbackTitle
+            ? l10n.translate('p5_notif_type_space_delete_request')
+            : title,
       'countdown_space_deleted' =>
-        title == 'Thông báo mới' ? 'Không gian đếm đã được xóa' : title,
+        title == fallbackTitle
+            ? l10n.translate('p5_notif_type_space_deleted')
+            : title,
       _ => title,
     };
 
@@ -60,24 +70,28 @@ class _NotifModel {
       id: id,
       type: type,
       title: normalizedTitle,
-      from: (m['sourceLabel'] ??
-              m['fromName'] ??
-              m['fromLabel'] ??
-              m['from'] ??
-              'Hệ thống')
-          .toString(),
+      from:
+          (m['sourceLabel'] ??
+                  m['fromName'] ??
+                  m['fromLabel'] ??
+                  m['from'] ??
+                  l10n.translate('p5_notif_system_source'))
+              .toString(),
       rawFrom: m['fromId']?.toString() ?? m['from']?.toString(),
-      msg: m['msg']?.toString() ??
+      msg:
+          m['msg']?.toString() ??
           m['message']?.toString() ??
           m['content']?.toString() ??
           '',
-      ts: (m['ts'] as num?)?.toInt() ??
+      ts:
+          (m['ts'] as num?)?.toInt() ??
           (m['timestamp'] as num?)?.toInt() ??
           (m['createdAt'] as num?)?.toInt() ??
           DateTime.now().millisecondsSinceEpoch,
       readAt: (m['readAt'] as num?)?.toInt(),
       postId: m['postId']?.toString(),
-      locked: m['immutable'] == true ||
+      locked:
+          m['immutable'] == true ||
           m['systemLocked'] == true ||
           m['locked'] == true,
       raw: Map<String, dynamic>.from(m),

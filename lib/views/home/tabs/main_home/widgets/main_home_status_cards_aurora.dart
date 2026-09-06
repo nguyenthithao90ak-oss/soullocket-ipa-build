@@ -36,6 +36,8 @@ import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/core/theme/design_tokens.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
+import 'package:soullocket_app/views/home/widgets/home_sticker_motion.dart';
+import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
 
 // ─── Animation Curves ─────────────────────────────────────────────────────────
 
@@ -292,7 +294,6 @@ class _AuroraHighlightCardState extends State<_AuroraHighlightCard>
     with SingleTickerProviderStateMixin {
   late final AnimationController _animCtrl;
   late final Animation<double> _fadeAnim;
-  bool _animationEnabled = true;
 
   @override
   void initState() {
@@ -314,7 +315,6 @@ class _AuroraHighlightCardState extends State<_AuroraHighlightCard>
       if (!mounted) return;
       final prefs = UiPrefs.notifier.value;
       if (prefs.liteMode) {
-        setState(() => _animationEnabled = false);
         _animCtrl.value = 1.0;
       }
     });
@@ -328,7 +328,6 @@ class _AuroraHighlightCardState extends State<_AuroraHighlightCard>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = L10nService();
     final today = DateTime.now();
     final todayMidnight = DateTime(today.year, today.month, today.day);
 
@@ -450,7 +449,6 @@ class _AuroraInsightCardState extends State<_AuroraInsightCard>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = L10nService();
     final hasData = widget.data.loveScore != null;
 
     return FadeTransition(
@@ -519,8 +517,6 @@ class _AuroraMapCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = L10nService();
-
     return GestureDetector(
       onTap: data.onTap,
       child: Container(
@@ -950,10 +946,6 @@ class _AuroraIconRing extends StatelessWidget {
     final primaryColor = gradientColors.isNotEmpty
         ? gradientColors.first
         : SLAuroraPalette.roseDeep;
-    final secondaryColor = gradientColors.length > 1
-        ? gradientColors[1]
-        : SLAuroraPalette.lavender;
-
     return Container(
       width: size,
       height: size,
@@ -1079,11 +1071,11 @@ class _HighlightHeader extends StatelessWidget {
               ),
             ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(3.0),
-            child: Image.asset(
+          child: const Padding(
+            padding: EdgeInsets.all(3.0),
+            child: HomeStickerAsset(
               'assets/icons/cute_3d/icon_bubble_lol_cloud.png',
-              fit: BoxFit.contain,
+              motion: SoulLocketStickerMotion.bounce,
             ),
           ),
         ),
@@ -1246,7 +1238,12 @@ class _JourneyStatTile extends StatelessWidget {
       child: Row(
         children: [
           if (imageAsset != null)
-            Image.asset(imageAsset!, width: 36, height: 36, fit: BoxFit.contain)
+            HomeStickerAsset(
+              imageAsset!,
+              width: 36,
+              height: 36,
+              motion: SoulLocketStickerMotion.sway,
+            )
           else
             const SizedBox(width: 36),
           const SizedBox(width: 8),

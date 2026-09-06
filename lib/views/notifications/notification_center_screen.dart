@@ -102,15 +102,15 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
         .limitToLast(_notificationsLimit)
         .onValue
         .listen(
-      _handleNotificationsEvent,
-      onError: (Object error) {
-        debugPrint(
-          '[NotificationCenter] listener error: ${AppErrorMapper.resolve(error).message}',
+          _handleNotificationsEvent,
+          onError: (Object error) {
+            debugPrint(
+              '[NotificationCenter] listener error: ${AppErrorMapper.resolve(error).message}',
+            );
+            if (!mounted) return;
+            setState(() => _isLoading = false);
+          },
         );
-        if (!mounted) return;
-        setState(() => _isLoading = false);
-      },
-    );
   }
 
   void _detachNotificationsListener() {
@@ -193,13 +193,12 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
             final item = Map<String, dynamic>.from(
               Map<dynamic, dynamic>.from(value),
             );
-            items.add(
-              _NotifModel.fromMap(
-                key.toString(),
-                item,
-              ),
+            items.add(_NotifModel.fromMap(key.toString(), item));
+          } catch (error) {
+            debugPrint(
+              '[NotificationCenter] Skipped malformed notification $key: $error',
             );
-          } catch (_) {}
+          }
         }
       });
       items.sort((a, b) {
@@ -273,7 +272,9 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
         _dobU1 = (data['dobU1'] ?? '').toString();
         _dobU2 = (data['dobU2'] ?? '').toString();
       });
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[NotificationCenter] Cannot load house metadata: $error');
+    }
   }
 
   bool _isRead(_NotifModel n) => _readLocal.contains(n.id) || n.readAt != null;
@@ -338,36 +339,39 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
     setState(() => _search = value);
   }
 
-  void _deleteOne(String id) {
+  Future<bool> _confirmDeleteOne(String id) async {
     final target = _findNotif(id);
-    if (target != null && _isLocked(target)) return;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Xoá thông báo'),
-        content: const Text('Bạn có chắc chắn muốn xoá thông báo này?'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _db.ref('notifications/$_houseId/$id').remove();
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Xoá'),
+    if (target != null && _isLocked(target)) return false;
+    return await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(context.tr('p5_notif_delete_one_title')),
+            content: Text(context.tr('p5_notif_delete_one_message')),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(context.tr('p5_cancel')),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: Text(context.tr('p5_delete')),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        ) ??
+        false;
+  }
+
+  Future<void> _deleteOne(String id) async {
+    if (!await _confirmDeleteOne(id)) return;
+    await _db.ref('notifications/$_houseId/$id').remove();
   }
 
   Future<void> _clearAll() async {
     final deletable = _filtered.where((n) => !_isLocked(n)).toList();
     if (deletable.isEmpty) {
-      _snack(
-        L10nService().translate('notif_no_regular_to_delete'),
-      );
+      _snack(L10nService().translate('notif_no_regular_to_delete'));
       return;
     }
 
@@ -386,10 +390,12 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
       context: context,
       builder: (_) => AlertDialog(
         title: Text(
-            L10nService().format('notif_delete_title', {'category': catName})),
+          L10nService().format('notif_delete_title', {'category': catName}),
+        ),
         content: Text(
-          L10nService()
-              .format('notif_delete_confirm_body', {'count': deletable.length}),
+          L10nService().format('notif_delete_confirm_body', {
+            'count': deletable.length,
+          }),
         ),
         actions: [
           TextButton(
@@ -459,9 +465,11 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
       fromHouseId: fromHouseId,
     );
     await _db.ref('notifications/$_houseId/$notifId').remove();
-    _snack(ok
-        ? L10nService().translate('notif_friend_accepted')
-        : L10nService().translate('notif_invite_process_error'));
+    _snack(
+      ok
+          ? L10nService().translate('notif_friend_accepted')
+          : L10nService().translate('notif_invite_process_error'),
+    );
   }
 
   Future<void> _declineFriendReq(String notifId, String fromHouseId) async {
@@ -521,7 +529,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
     final houseId = _houseId;
     final requestId = _countdownRequestId(notif);
     if (houseId == null || requestId.isEmpty) {
-      _snack('Không xác định được yêu cầu ghép nối.');
+      _snack(context.tr('p5_notif_pair_request_missing'));
       return;
     }
 
@@ -536,14 +544,14 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
     }
 
     await _db.ref('notifications/$houseId/${notif.id}').remove();
-    _snack('Đã chấp nhận ghép nối không gian đêm.');
+    _snack(L10nService().translate('p5_notif_pair_request_accepted'));
   }
 
   Future<void> _declineCountdownSpaceReq(_NotifModel notif) async {
     final houseId = _houseId;
     final requestId = _countdownRequestId(notif);
     if (houseId == null || requestId.isEmpty) {
-      _snack('Không xác định được yêu cầu ghép nối.');
+      _snack(context.tr('p5_notif_pair_request_missing'));
       return;
     }
 
@@ -557,14 +565,14 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
     }
 
     await _db.ref('notifications/$houseId/${notif.id}').remove();
-    _snack('Đã từ chối ghép nối không gian.');
+    _snack(L10nService().translate('p5_notif_pair_request_declined'));
   }
 
   Future<void> _acceptCountdownSpaceDeleteReq(_NotifModel notif) async {
     final houseId = _houseId;
     final spaceId = _countdownDeleteSpaceId(notif);
     if (houseId == null || spaceId.isEmpty) {
-      _snack('Không xác định được yêu cầu xóa không gian.');
+      _snack(context.tr('p5_notif_delete_request_missing'));
       return;
     }
 
@@ -586,9 +594,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
     if (houseId == null) return;
 
     await _db.ref('notifications/$houseId/${notif.id}').remove();
-    _snack(
-      'Đã ẩn thông báo. Không gian sẽ tự xóa sau 15 ngày nếu không có thay đổi.',
-    );
+    _snack(L10nService().translate('p5_notif_delete_request_dismissed'));
   }
 
   @override
@@ -609,48 +615,58 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
                     ),
                   )
                 : _filtered.isEmpty
-                    ? _buildEmpty()
-                    : ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-                        itemCount: _filtered.length,
-                        itemBuilder: (_, i) {
-                          final n = _filtered[i];
-                          final isLocked = _isLocked(n);
-                          return Dismissible(
-                            key: Key(n.id),
-                            direction: isLocked
-                                ? DismissDirection.none
-                                : DismissDirection.endToStart,
-                            background: Container(
-                              alignment: Alignment.centerRight,
-                              padding: const EdgeInsets.only(right: 20),
-                              decoration: BoxDecoration(
-                                color: SLColors.danger,
-                                borderRadius: SLRadius.lgAll,
+                ? _buildEmpty()
+                : ListView.builder(
+                    physics: SLResponsive.scrollPhysicsForPlatform(),
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+                    itemCount: _filtered.length,
+                    itemBuilder: (_, i) {
+                      final n = _filtered[i];
+                      final isLocked = _isLocked(n);
+                      return Dismissible(
+                        key: Key(n.id),
+                        direction: isLocked
+                            ? DismissDirection.none
+                            : DismissDirection.endToStart,
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          decoration: BoxDecoration(
+                            color: SLColors.danger,
+                            borderRadius: SLRadius.lgAll,
+                          ),
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.delete_outline,
+                                color: Colors.white,
                               ),
-                              margin: const EdgeInsets.only(bottom: 8),
-                              child: const Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.delete_outline,
-                                    color: Colors.white,
-                                  ),
-                                  Text(
-                                    'Xoá',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 11,
-                                    ),
-                                  ),
-                                ],
+                              Text(
+                                context.tr('p5_delete'),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                ),
                               ),
-                            ),
-                            onDismissed: (_) => _deleteOne(n.id),
-                            child: _buildCard(n),
+                            ],
+                          ),
+                        ),
+                        confirmDismiss: (_) => _confirmDeleteOne(n.id),
+                        onDismissed: (_) {
+                          setState(() {
+                            _all.removeWhere((item) => item.id == n.id);
+                          });
+                          _updateBadge();
+                          unawaited(
+                            _db.ref('notifications/$_houseId/${n.id}').remove(),
                           );
                         },
-                      ),
+                        child: _buildCard(n),
+                      );
+                    },
+                  ),
           ),
         ],
       ),

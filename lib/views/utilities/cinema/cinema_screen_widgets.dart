@@ -7,32 +7,37 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text(
-          'Rạp chiếu phim',
+          context.tr('p8_cinema_dialog_title'),
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
-        content: const SingleChildScrollView(
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
               Text(
-                  '- Cùng nhau xem YouTube đồng bộ từ xa (vừa xem vừa chat/call).\n- Bạn tua video hoặc tạm dừng, máy người ấy cũng đồng bộ theo lập tức.'),
-              SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
+                context.tr('p8_cinema_dialog_feature_title'),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Text(context.tr('p8_cinema_dialog_feature_body')),
+              const SizedBox(height: 12),
               Text(
-                  '- Dán link video YouTube vào ô tìm kiếm hoặc chọn từ lịch sử.\n- Khi video phát, cả hai sẽ xem cùng một khoảnh khắc. Bất kỳ ai bấm Pause hoặc tua đi, hệ thống sẽ đồng bộ cho người còn lại.'),
+                context.tr('p8_cinema_dialog_how_to_title'),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Text(context.tr('p8_cinema_dialog_how_to_body')),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu',
-                style: TextStyle(color: SLColors.primary)),
+            child: Text(
+              context.tr('p8_cinema_dialog_confirm'),
+              style: const TextStyle(color: SLColors.primary),
+            ),
           ),
         ],
       ),
@@ -49,11 +54,13 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
           children: <Widget>[
             _circleButton(
               icon: Icons.arrow_back_ios_new_rounded,
+              tooltip: context.tr('p8_cinema_back'),
               onTap: () => Navigator.of(context).maybePop(),
             ),
             const SizedBox(width: 8),
             _circleButton(
               icon: Icons.info_outline_rounded,
+              tooltip: context.tr('p8_cinema_info'),
               onTap: () => _showInfoDialog(context),
             ),
             SizedBox(width: compact ? 8 : 12),
@@ -82,16 +89,20 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
   Widget _buildHeroCard(_CinemaDailyReel? reel) {
     final nextMilestone = _nextAnniversaryMilestone(DateTime.now(), _startDate);
     final nextShow = nextMilestone?.date;
+    final l10n = L10nScope.of(context);
     final metricValues = reel == null
         ? <Map<String, String>>[
             <String, String>{
               'label': context.tr('util_btu_3cb0f0'),
-              'value':
-                  _startDate == null ? '--/--/----' : _formatDate(_startDate!),
+              'value': _startDate == null
+                  ? '--/--/----'
+                  : _formatDate(_startDate!),
             },
             <String, String>{
               'label': context.tr('util_khonh_8160c2'),
-              'value': '${_records.length} ảnh',
+              'value': l10n.format('p8_cinema_image_count', <String, Object?>{
+                'count': _records.length,
+              }),
             },
             <String, String>{
               'label': context.tr('util_mcktip_3705df'),
@@ -101,8 +112,9 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
         : <Map<String, String>>[
             <String, String>{
               'label': context.tr('util_btu_3cb0f0'),
-              'value':
-                  _startDate == null ? '--/--/----' : _formatDate(_startDate!),
+              'value': _startDate == null
+                  ? '--/--/----'
+                  : _formatDate(_startDate!),
             },
             <String, String>{
               'label': context.tr('util_khunghnh_cba5af'),
@@ -117,8 +129,9 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 380;
-        final accent =
-            reel == null ? const Color(0xFF8AD8FF) : Color(reel.accentValue);
+        final accent = reel == null
+            ? const Color(0xFF8AD8FF)
+            : Color(reel.accentValue);
         return Container(
           padding: EdgeInsets.all(compact ? 16 : 18),
           decoration: BoxDecoration(
@@ -161,7 +174,8 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                       ),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.10)),
+                        color: Colors.white.withValues(alpha: 0.10),
+                      ),
                     ),
                     child: Icon(
                       reel == null
@@ -262,10 +276,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const Icon(
-            Icons.info_outline_rounded,
-            color: Color(0xFFFFD87A),
-          ),
+          const Icon(Icons.info_outline_rounded, color: Color(0xFFFFD87A)),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -301,10 +312,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
               color: const Color(0x227FD3FF),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(
-              Icons.schedule_rounded,
-              color: Color(0xFF7FD3FF),
-            ),
+            child: const Icon(Icons.schedule_rounded, color: Color(0xFF7FD3FF)),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -314,7 +322,10 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                 Text(
                   nextShow == null
                       ? context.tr('util_chaxcnhcmc_84ba6e')
-                      : 'Suất gần nhất sẽ mở vào ${_formatDate(nextShow)}',
+                      : L10nScope.of(context).format(
+                          'p8_cinema_next_show',
+                          <String, Object?>{'date': _formatDate(nextShow)},
+                        ),
                   style: SLTheme.quicksand(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
@@ -334,7 +345,10 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                 ],
                 const SizedBox(height: 4),
                 Text(
-                  'Khi tới đúng mốc đó, reel sẽ tự chọn tối đa $_kCinemaReelFrameLimit ảnh và phát như một video ngắn.',
+                  L10nScope.of(context).format(
+                    'p8_cinema_locked_explanation',
+                    <String, Object?>{'count': _kCinemaReelFrameLimit},
+                  ),
                   style: SLTheme.quicksand(
                     fontSize: 13,
                     height: 1.42,
@@ -349,10 +363,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
     );
   }
 
-  Widget _buildPreviewCard(
-    _CinemaDailyReel reel,
-    _CinemaMemoryRecord item,
-  ) {
+  Widget _buildPreviewCard(_CinemaDailyReel reel, _CinemaMemoryRecord item) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -440,23 +451,30 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                                   borderRadius: BorderRadius.circular(42),
                                   child: FastBackdropFilter(
                                     filter: ImageFilter.blur(
-                                        sigmaX: 12, sigmaY: 12),
+                                      sigmaX: 12,
+                                      sigmaY: 12,
+                                    ),
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 24, vertical: 14),
+                                        horizontal: 24,
+                                        vertical: 14,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: Colors.white
-                                            .withValues(alpha: 0.15),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.15,
+                                        ),
                                         borderRadius: BorderRadius.circular(42),
                                         border: Border.all(
-                                          color: Colors.white
-                                              .withValues(alpha: 0.35),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.35,
+                                          ),
                                           width: 1.5,
                                         ),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black
-                                                .withValues(alpha: 0.2),
+                                            color: Colors.black.withValues(
+                                              alpha: 0.2,
+                                            ),
                                             blurRadius: 10,
                                             spreadRadius: 2,
                                           ),
@@ -472,7 +490,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                                           ),
                                           const SizedBox(width: 8),
                                           Text(
-                                            'PHÁT REEL',
+                                            context.tr('p8_cinema_play_reel'),
                                             style: SLTheme.quicksand(
                                               fontSize: 16,
                                               fontWeight: FontWeight.w800,
@@ -506,7 +524,12 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                                 Text(
                                   item.authorName.isEmpty
                                       ? context.tr('util_videoknimh_23d177')
-                                      : 'Khung hình có ảnh được lưu bởi ${item.authorName}.',
+                                      : L10nScope.of(context).format(
+                                          'p8_cinema_frame_by_author',
+                                          <String, Object?>{
+                                            'name': item.authorName,
+                                          },
+                                        ),
                                   style: SLTheme.quicksand(
                                     fontSize: 13.5,
                                     height: 1.4,
@@ -524,6 +547,9 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                               child: Center(
                                 child: _overlayArrow(
                                   icon: Icons.chevron_left_rounded,
+                                  tooltip: context.tr(
+                                    'p8_cinema_previous_frame',
+                                  ),
                                   onTap: _showPreviousPreview,
                                 ),
                               ),
@@ -535,6 +561,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                               child: Center(
                                 child: _overlayArrow(
                                   icon: Icons.chevron_right_rounded,
+                                  tooltip: context.tr('p8_cinema_next_frame'),
                                   onTap: _showNextPreview,
                                 ),
                               ),
@@ -561,7 +588,10 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
               Expanded(
                 child: _metricCard(
                   label: context.tr('util_ngunnh_7abd29'),
-                  value: '${_records.length} ảnh nhật ký',
+                  value: L10nScope.of(context).format(
+                    'p8_cinema_diary_image_count',
+                    <String, Object?>{'count': _records.length},
+                  ),
                 ),
               ),
             ],
@@ -588,92 +618,107 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
           children: List<Widget>.generate(reel.items.length, (index) {
             final item = reel.items[index];
             final isActive = index == _previewIndex;
-            return GestureDetector(
-              onTap: () => _setPreviewIndex(index),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                width: _kCinemaFilmstripCardWidth,
-                margin: EdgeInsets.only(
-                  right: index == reel.items.length - 1
-                      ? 0
-                      : _kCinemaFilmstripSpacing,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: isActive
-                        ? Color(reel.accentValue)
-                        : Colors.white.withValues(alpha: 0.06),
-                    width: isActive ? 2 : 1,
-                  ),
-                  boxShadow: isActive
-                      ? <BoxShadow>[
-                          BoxShadow(
-                            color:
-                                Color(reel.accentValue).withValues(alpha: 0.26),
-                            blurRadius: 16,
-                            offset: const Offset(0, 8),
-                          ),
-                        ]
-                      : const <BoxShadow>[],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(17),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: <Widget>[
-                      _networkImage(item.displayUrl),
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: <Color>[
-                              Colors.transparent,
-                              Colors.black.withValues(alpha: 0.54),
-                            ],
-                          ),
-                        ),
+            final frameLabel = L10nScope.of(context).format(
+              'p8_cinema_select_frame',
+              <String, Object?>{'index': index + 1},
+            );
+            return Tooltip(
+              message: frameLabel,
+              child: Semantics(
+                button: true,
+                label: frameLabel,
+                selected: isActive,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => _setPreviewIndex(index),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    width: _kCinemaFilmstripCardWidth,
+                    margin: EdgeInsets.only(
+                      right: index == reel.items.length - 1
+                          ? 0
+                          : _kCinemaFilmstripSpacing,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: isActive
+                            ? Color(reel.accentValue)
+                            : Colors.white.withValues(alpha: 0.06),
+                        width: isActive ? 2 : 1,
                       ),
-                      if (isActive)
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
+                      boxShadow: isActive
+                          ? <BoxShadow>[
+                              BoxShadow(
+                                color: Color(
+                                  reel.accentValue,
+                                ).withValues(alpha: 0.26),
+                                blurRadius: 16,
+                                offset: const Offset(0, 8),
+                              ),
+                            ]
+                          : const <BoxShadow>[],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(17),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: <Widget>[
+                          _networkImage(item.displayUrl),
+                          DecoratedBox(
                             decoration: BoxDecoration(
-                              color: Color(reel.accentValue)
-                                  .withValues(alpha: 0.92),
-                              borderRadius: BorderRadius.circular(999),
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: <Color>[
+                                  Colors.transparent,
+                                  Colors.black.withValues(alpha: 0.54),
+                                ],
+                              ),
                             ),
+                          ),
+                          if (isActive)
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Color(
+                                    reel.accentValue,
+                                  ).withValues(alpha: 0.92),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  context.tr('util_angchiu_6db1a2'),
+                                  style: SLTheme.quicksand(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          Positioned(
+                            left: 8,
+                            right: 8,
+                            bottom: 8,
                             child: Text(
-                              context.tr('util_angchiu_6db1a2'),
+                              '${index + 1}',
+                              textAlign: TextAlign.center,
                               style: SLTheme.quicksand(
-                                fontSize: 10,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w800,
                                 color: Colors.white,
                               ),
                             ),
                           ),
-                        ),
-                      Positioned(
-                        left: 8,
-                        right: 8,
-                        bottom: 8,
-                        child: Text(
-                          '${index + 1}',
-                          textAlign: TextAlign.center,
-                          style: SLTheme.quicksand(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -756,7 +801,10 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
               children: <Widget>[
                 _buildBulletLine(
                   Icons.shuffle_rounded,
-                  'Chọn ngẫu nhiên tối đa $_kCinemaReelFrameLimit ảnh từ toàn bộ kho kỷ niệm.',
+                  L10nScope.of(context).format(
+                    'p8_cinema_random_selection',
+                    <String, Object?>{'count': _kCinemaReelFrameLimit},
+                  ),
                 ),
                 const SizedBox(height: 10),
                 _buildBulletLine(
@@ -766,7 +814,10 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                 const SizedBox(height: 10),
                 _buildBulletLine(
                   Icons.delete_sweep_rounded,
-                  'Tự xóa lúc ${_formatClock(reel.expiresAt)} để ngày kỷ niệm sau dựng lại reel mới.',
+                  L10nScope.of(context).format(
+                    'p8_cinema_auto_delete',
+                    <String, Object?>{'time': _formatClock(reel.expiresAt)},
+                  ),
                 ),
               ],
             ),
@@ -776,8 +827,9 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
             width: double.infinity,
             child: FilledButton.icon(
               style: FilledButton.styleFrom(
-                backgroundColor:
-                    Color(reel.accentValue).withValues(alpha: 0.26),
+                backgroundColor: Color(
+                  reel.accentValue,
+                ).withValues(alpha: 0.26),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -803,8 +855,11 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
       children: <Widget>[
         Padding(
           padding: const EdgeInsets.only(top: 1),
-          child:
-              Icon(icon, size: 16, color: Colors.white.withValues(alpha: 0.78)),
+          child: Icon(
+            icon,
+            size: 16,
+            color: Colors.white.withValues(alpha: 0.78),
+          ),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -865,17 +920,14 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
               color: Colors.white.withValues(alpha: 0.76),
             ),
           ),
-          if (child != null) child,
+          ...?(child == null ? null : <Widget>[child]),
         ],
       ),
     );
   }
 
   // ignore: unused_element
-  Widget _buildSectionTitle({
-    required String title,
-    required String subtitle,
-  }) {
+  Widget _buildSectionTitle({required String title, required String subtitle}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -924,7 +976,8 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                     child: isActive
                         ? TweenAnimationBuilder<double>(
                             key: ValueKey<String>(
-                                '$keySalt-$index-$activeIndex'),
+                              '$keySalt-$index-$activeIndex',
+                            ),
                             tween: Tween<double>(begin: 0, end: 1),
                             duration: _kCinemaFrameDuration,
                             builder: (context, value, child) {
@@ -934,12 +987,14 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                               );
                             },
                             child: ColoredBox(
-                                color: Colors.white.withValues(alpha: 0.92)),
+                              color: Colors.white.withValues(alpha: 0.92),
+                            ),
                           )
                         : FractionallySizedBox(
                             widthFactor: isDone ? 1 : 0,
                             child: ColoredBox(
-                                color: Colors.white.withValues(alpha: 0.75)),
+                              color: Colors.white.withValues(alpha: 0.75),
+                            ),
                           ),
                   ),
                 ),
@@ -961,7 +1016,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
         fit: BoxFit.cover,
         memCacheWidth: 600,
         filterQuality: FilterQuality.medium,
-        placeholder: (_, __) => Container(
+        placeholder: (_, _) => Container(
           color: const Color(0xFF182334),
           alignment: Alignment.center,
           child: const CircularProgressIndicator(
@@ -969,7 +1024,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
             color: Color(0xFFFF6FA5),
           ),
         ),
-        errorWidget: (_, __, ___) => Container(
+        errorWidget: (_, _, _) => Container(
           color: const Color(0xFF182334),
           alignment: Alignment.center,
           child: const Icon(
@@ -985,7 +1040,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
         cacheWidth: 1440,
         fit: BoxFit.cover,
         filterQuality: FilterQuality.medium,
-        errorBuilder: (_, __, ___) => Container(
+        errorBuilder: (_, _, _) => Container(
           color: const Color(0xFF182334),
           alignment: Alignment.center,
           child: const Icon(
@@ -1016,7 +1071,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                 fit: BoxFit.scaleDown,
                 filterQuality: FilterQuality.medium,
                 alignment: Alignment.center,
-                placeholder: (_, __) => const SizedBox(
+                placeholder: (_, _) => const SizedBox(
                   width: 34,
                   height: 34,
                   child: CircularProgressIndicator(
@@ -1024,7 +1079,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                     color: Color(0xFFFF6FA5),
                   ),
                 ),
-                errorWidget: (_, __, ___) => Icon(
+                errorWidget: (_, _, _) => Icon(
                   Icons.broken_image_outlined,
                   color: Colors.white70,
                   size: errorIconSize,
@@ -1036,7 +1091,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                 fit: BoxFit.scaleDown,
                 filterQuality: FilterQuality.medium,
                 alignment: Alignment.center,
-                errorBuilder: (_, __, ___) => Icon(
+                errorBuilder: (_, _, _) => Icon(
                   Icons.broken_image_outlined,
                   color: Colors.white70,
                   size: errorIconSize,
@@ -1108,22 +1163,30 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
 
   Widget _circleButton({
     required IconData icon,
+    required String tooltip,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Ink(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            color: const Color(0x1AFFFFFF),
+    return Tooltip(
+      message: tooltip,
+      child: Semantics(
+        button: true,
+        label: tooltip,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            child: Ink(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: const Color(0x1AFFFFFF),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+              ),
+              child: Icon(icon, color: Colors.white),
+            ),
           ),
-          child: Icon(icon, color: Colors.white),
         ),
       ),
     );
@@ -1131,22 +1194,30 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
 
   Widget _overlayArrow({
     required IconData icon,
+    required String tooltip,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
-        child: Ink(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.28),
+    return Tooltip(
+      message: tooltip,
+      child: Semantics(
+        button: true,
+        label: tooltip,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+            child: Ink(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.28),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+              ),
+              child: Icon(icon, color: Colors.white),
+            ),
           ),
-          child: Icon(icon, color: Colors.white),
         ),
       ),
     );

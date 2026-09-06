@@ -48,13 +48,13 @@ class AuthSignInService {
     NowProvider? nowProvider,
     required this._adminService,
     required this._houseContextService,
-  })  : _sharedPreferencesProvider =
-            sharedPreferencesProvider ?? SharedPreferences.getInstance,
-        _googleSignInBuilder =
-            googleSignInBuilder ?? (() => GoogleSignIn.instance),
-        _httpPost = httpPost ?? http.post,
-        _nowProvider = nowProvider ?? DateTime.now,
-        _playIntegrityService = PlayIntegrityService();
+  }) : _sharedPreferencesProvider =
+           sharedPreferencesProvider ?? SharedPreferences.getInstance,
+       _googleSignInBuilder =
+           googleSignInBuilder ?? (() => GoogleSignIn.instance),
+       _httpPost = httpPost ?? http.post,
+       _nowProvider = nowProvider ?? DateTime.now,
+       _playIntegrityService = PlayIntegrityService();
 
   static const String dailyLoginLimitMessage =
       'Thiết bị này chỉ được đăng nhập tối đa 3 tài khoản mới trong 1 ngày.';
@@ -109,8 +109,6 @@ class AuthSignInService {
 
   GoogleSignIn? _googleSignIn;
 
-
-
   firebase_auth.FirebaseAuth get _auth =>
       _firebaseAuth ?? firebase_auth.FirebaseAuth.instance;
   DatabaseReference get _db => _databaseRef ?? FirebaseDatabase.instance.ref();
@@ -133,10 +131,9 @@ class AuthSignInService {
       }
       return accounts.length < AppConfig.maxNewLoginsPerDay;
     } catch (error) {
-      debugPrint('checkDailyLoginLimit failed: ${AppErrorMapper.resolve(
-        error,
-        fallbackMessage: 'Không thể kiểm tra giới hạn đăng nhập hôm nay.',
-      ).message}');
+      debugPrint(
+        'checkDailyLoginLimit failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể kiểm tra giới hạn đăng nhập hôm nay.').message}',
+      );
       return true;
     }
   }
@@ -147,8 +144,9 @@ class AuthSignInService {
       final dayKey = _currentLoginTrackerDay();
       final tracker = await _getDailyLoginTracker();
       final existingDay = tracker['d']?.toString() ?? '';
-      final accounts =
-          existingDay == dayKey ? _trackerAccounts(tracker) : <String>[];
+      final accounts = existingDay == dayKey
+          ? _trackerAccounts(tracker)
+          : <String>[];
 
       if (!accounts.contains(normalizedEmail)) {
         if (accounts.length >= AppConfig.maxNewLoginsPerDay) {
@@ -160,17 +158,13 @@ class AuthSignInService {
       final prefs = await _prefs;
       await prefs.setString(
         _dailyLoginTrackerPrefsKey,
-        jsonEncode({
-          'd': dayKey,
-          'acc': accounts,
-        }),
+        jsonEncode({'d': dayKey, 'acc': accounts}),
       );
       return true;
     } catch (error) {
-      debugPrint('recordDailyLoginLimit failed: ${AppErrorMapper.resolve(
-        error,
-        fallbackMessage: 'Không thể ghi giới hạn đăng nhập hôm nay.',
-      ).message}');
+      debugPrint(
+        'recordDailyLoginLimit failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể ghi giới hạn đăng nhập hôm nay.').message}',
+      );
       return true;
     }
   }
@@ -225,10 +219,7 @@ class AuthSignInService {
   }) async {
     final normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail.contains('@')) {
-      return _LoginEmailResolution(
-        email: normalizedEmail,
-        source: 'input',
-      );
+      return _LoginEmailResolution(email: normalizedEmail, source: 'input');
     }
 
     try {
@@ -237,10 +228,14 @@ class AuthSignInService {
         'email': normalizedEmail,
       });
       final payload = _asStringDynamicMap(result.data);
-      final resolvedEmail =
-          (payload['email'] ?? '').toString().trim().toLowerCase();
-      final source =
-          (payload['source'] ?? 'input').toString().trim().toLowerCase();
+      final resolvedEmail = (payload['email'] ?? '')
+          .toString()
+          .trim()
+          .toLowerCase();
+      final source = (payload['source'] ?? 'input')
+          .toString()
+          .trim()
+          .toLowerCase();
 
       return _LoginEmailResolution(
         email: resolvedEmail.contains('@') ? resolvedEmail : normalizedEmail,
@@ -258,8 +253,8 @@ class AuthSignInService {
         throw message.isNotEmpty
             ? message
             : (code == 'invalid-argument'
-                ? 'Email đăng nhập không hợp lệ.'
-                : 'Email phụ này chưa thể dùng để đăng nhập.');
+                  ? 'Email đăng nhập không hợp lệ.'
+                  : 'Email phụ này chưa thể dùng để đăng nhập.');
       }
       if (!allowFallbackOnFailure) {
         throw message.isNotEmpty
@@ -288,10 +283,7 @@ class AuthSignInService {
       }
     }
 
-    return _LoginEmailResolution(
-      email: normalizedEmail,
-      source: 'input',
-    );
+    return _LoginEmailResolution(email: normalizedEmail, source: 'input');
   }
 
   Future<firebase_auth.UserCredential?> signInWithEmailPassword(
@@ -461,10 +453,7 @@ class AuthSignInService {
   }
 
   Future<void> _recordServerLoginSuccess(String normalizedEmail) async {
-    await _callServerLoginGuard(
-      action: 'success',
-      email: normalizedEmail,
-    );
+    await _callServerLoginGuard(action: 'success', email: normalizedEmail);
   }
 
   Future<Map<String, dynamic>?> _callServerLoginGuard({
@@ -489,12 +478,9 @@ class AuthSignInService {
     try {
       final response = await _httpPost(
         Uri.parse(endpoint),
-        headers: await AppCheckHttpHeaders.withRequiredToken(
-          <String, String>{
-            'Content-Type': 'application/json',
-          },
-          forceRefresh: false,
-        ),
+        headers: await AppCheckHttpHeaders.withRequiredToken(<String, String>{
+          'Content-Type': 'application/json',
+        }, forceRefresh: false),
         body: jsonEncode(<String, dynamic>{
           'action': action,
           'email': email,
@@ -533,19 +519,16 @@ class AuthSignInService {
       return payload;
     } catch (error) {
       if (kDebugMode) {
-        debugPrint('authLoginGuardHttp failed: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: 'Không thể kiểm tra trạng thái đăng nhập lúc này.',
-        ).message}');
+        debugPrint(
+          'authLoginGuardHttp failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể kiểm tra trạng thái đăng nhập lúc này.').message}',
+        );
       }
       unawaited(
         RevenueSecurityTelemetryService.instance.logEvent(
           type: 'auth_login_guard_failed',
           reason: error is StateError ? 'missing_app_check' : 'request_failed',
           severity: 'medium',
-          extra: <String, Object?>{
-            'action': action,
-          },
+          extra: <String, Object?>{'action': action},
         ),
       );
       return null;
@@ -562,8 +545,9 @@ class AuthSignInService {
     }
 
     final payload = <String, dynamic>{
-      'emailHash':
-          sha256.convert(utf8.encode(email.trim().toLowerCase())).toString(),
+      'emailHash': sha256
+          .convert(utf8.encode(email.trim().toLowerCase()))
+          .toString(),
       'action': action.trim().toLowerCase(),
       if (reason.trim().isNotEmpty) 'reason': reason.trim().toLowerCase(),
     };
@@ -583,7 +567,8 @@ class AuthSignInService {
     await SecurityVerdictCacheService.instance.save(
       levelKey: (payload['riskLevel'] as String?) ?? 'block',
       code: (payload['error'] as String?) ?? 'play_integrity_blocked',
-      message: (payload['message'] as String?) ??
+      message:
+          (payload['message'] as String?) ??
           'Thiết bị hoặc bản cài đặt này không đủ tin cậy để đăng nhập.',
       payload: payload,
       ttl: const Duration(minutes: 5),
@@ -682,8 +667,10 @@ class AuthSignInService {
               : _buildAppleWebAuthenticationOptions(),
         );
 
-        final oauthCredential =
-            _buildAppleFirebaseCredential(appleCredential, rawNonce);
+        final oauthCredential = _buildAppleFirebaseCredential(
+          appleCredential,
+          rawNonce,
+        );
         userCredential = await _auth.signInWithCredential(oauthCredential);
       }
 
@@ -767,15 +754,18 @@ class AuthSignInService {
         final googleSignIn = _googleSignIn ??= _googleSignInBuilder();
         if (!_isGoogleSignInInitialized) {
           final initCompleter = Completer<void>();
-          googleSignIn.initialize().then((_) {
-            if (!initCompleter.isCompleted) initCompleter.complete();
-          }).catchError((error) {
-            if (!initCompleter.isCompleted) {
-              initCompleter.completeError(error);
-            } else {
-              debugPrint('Late Google init error swallowed: $error');
-            }
-          });
+          googleSignIn
+              .initialize()
+              .then((_) {
+                if (!initCompleter.isCompleted) initCompleter.complete();
+              })
+              .catchError((error) {
+                if (!initCompleter.isCompleted) {
+                  initCompleter.completeError(error);
+                } else {
+                  debugPrint('Late Google init error swallowed: $error');
+                }
+              });
           await initCompleter.future.timeout(
             const Duration(seconds: 15),
             onTimeout: () =>
@@ -787,20 +777,23 @@ class AuthSignInService {
         // Sign out trước để xoá cache phiên cũ, tránh lỗi treo và sign_in_failed
         try {
           await googleSignIn.signOut();
-        } catch (_) {}
+        } catch (error) {
+          debugPrint('[Auth] Không xóa được phiên Google cũ: $error');
+        }
 
         final authCompleter = Completer<dynamic>();
-        googleSignIn.authenticate(
-          scopeHint: const ['email'],
-        ).then((user) {
-          if (!authCompleter.isCompleted) authCompleter.complete(user);
-        }).catchError((error) {
-          if (!authCompleter.isCompleted) {
-            authCompleter.completeError(error);
-          } else {
-            debugPrint('Late Google auth error swallowed: $error');
-          }
-        });
+        googleSignIn
+            .authenticate(scopeHint: const ['email'])
+            .then((user) {
+              if (!authCompleter.isCompleted) authCompleter.complete(user);
+            })
+            .catchError((error) {
+              if (!authCompleter.isCompleted) {
+                authCompleter.completeError(error);
+              } else {
+                debugPrint('Late Google auth error swallowed: $error');
+              }
+            });
 
         final googleUser = await authCompleter.future.timeout(
           const Duration(seconds: 20),
@@ -851,7 +844,8 @@ class AuthSignInService {
           throw 'Mạng đang lỗi hoặc bị chặn, chưa thể đăng nhập Google lúc này.';
         default:
           debugPrint(
-              'Google FirebaseAuthException: ${error.code} ${error.message}');
+            'Google FirebaseAuthException: ${error.code} ${error.message}',
+          );
           throw handleFirebaseAuthError(error);
       }
     } catch (error) {
@@ -909,14 +903,17 @@ class AuthSignInService {
   }
 
   Future<void> _enforceNoNewAccountOnWeb(
-      firebase_auth.UserCredential credential) async {
+    firebase_auth.UserCredential credential,
+  ) async {
     if (kIsWeb) {
       if (credential.additionalUserInfo?.isNewUser == true) {
         final user = credential.user;
         if (user != null) {
           try {
             await user.delete();
-          } catch (_) {}
+          } catch (error) {
+            debugPrint('[Auth] Không xóa được tài khoản Web vừa tạo: $error');
+          }
         }
         await signOut();
         throw 'Tính năng tạo tài khoản hiện không khả dụng trên nền tảng này. Vui lòng đăng nhập bằng tài khoản đã có.';
@@ -973,7 +970,9 @@ class AuthSignInService {
       try {
         await currentUser.reload();
         currentUser = _auth.currentUser ?? currentUser;
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[Auth] Không tải lại được tài khoản đăng ký dở: $error');
+      }
 
       final currentEmail = (currentUser?.email ?? '').trim().toLowerCase();
       if (currentUser != null && currentEmail == normalizedEmail) {
@@ -985,18 +984,12 @@ class AuthSignInService {
           } on firebase_auth.FirebaseAuthException catch (error) {
             debugPrint(
               'rollbackIncompleteEmailSignup delete failed: '
-              '${AppErrorMapper.resolve(
-                error,
-                fallbackMessage: 'Không thể xóa tài khoản đăng ký dang dở.',
-              ).message}',
+              '${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể xóa tài khoản đăng ký dang dở.').message}',
             );
           } catch (error) {
             debugPrint(
               'rollbackIncompleteEmailSignup delete failed: '
-              '${AppErrorMapper.resolve(
-                error,
-                fallbackMessage: 'Không thể xóa tài khoản đăng ký dang dở.',
-              ).message}',
+              '${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể xóa tài khoản đăng ký dang dở.').message}',
             );
           }
         }
@@ -1052,10 +1045,7 @@ class AuthSignInService {
       return houseId.isNotEmpty;
     } catch (error) {
       debugPrint(
-        '_hasKnownHouseContext failed for $uid: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: 'Không thể kiểm tra ngữ cảnh nhà hiện tại.',
-        ).message}',
+        '_hasKnownHouseContext failed for $uid: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể kiểm tra ngữ cảnh nhà hiện tại.').message}',
       );
       return null;
     }
@@ -1091,66 +1081,103 @@ class AuthSignInService {
       final role = RoleUtils.currentRoleSync();
       if (houseId != null && houseId.isNotEmpty) {
         await PresenceService()
-            .goOffline(
-              houseId: houseId,
-              role: role,
-            )
+            .goOffline(houseId: houseId, role: role)
             .timeout(const Duration(milliseconds: 300))
-            .catchError((_) {});
+            .catchError(
+              (error) => debugPrint('[Auth] Không đặt được offline: $error'),
+            );
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[Auth] Không chuẩn bị được trạng thái offline: $error');
+    }
 
     // 2. Fire and forget other network/SDK cleanups so we don't block the UI
     final List<Future<void>> asyncCleanups = [];
-    asyncCleanups.add(NotificationService()
-        .clearTokenOnSignOut()
-        .timeout(const Duration(seconds: 2))
-        .catchError((_) {}));
+    asyncCleanups.add(
+      NotificationService()
+          .clearTokenOnSignOut()
+          .timeout(const Duration(seconds: 2))
+          .catchError(
+            (error) => debugPrint('[Auth] Không xóa được push token: $error'),
+          ),
+    );
 
     try {
       if (!kIsWeb && _googleSignIn != null) {
-        asyncCleanups.add(_googleSignIn!
-            .signOut()
-            .timeout(const Duration(seconds: 2))
-            .catchError((_) {}));
+        asyncCleanups.add(
+          _googleSignIn!
+              .signOut()
+              .timeout(const Duration(seconds: 2))
+              .catchError(
+                (error) => debugPrint('[Auth] Google sign-out lỗi: $error'),
+              ),
+        );
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[Auth] Không khởi tạo được Google sign-out: $error');
+    }
 
-
-
-    await Future.wait(asyncCleanups).catchError((_) => []);
+    await Future.wait(asyncCleanups).catchError((error) {
+      debugPrint('[Auth] Một tác vụ sign-out nền bị lỗi: $error');
+      return <void>[];
+    });
 
     // 3. Thực hiện đăng xuất FirebaseAuth (bắt buộc chờ nhưng timeout ngắn)
     try {
       await _auth.signOut().timeout(const Duration(seconds: 1));
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[Auth] Firebase sign-out lỗi hoặc quá hạn: $error');
+    }
 
     // 4. Thực hiện dọn dẹp dữ liệu cục bộ (chờ hoàn tất để đảm bảo an toàn)
     try {
       await Future.wait([
-        SettingsSyncService().clearLocalSyncedSettings().catchError((_) {}),
-        _clearSensitiveLocalData(prefs).catchError((_) {}),
-        SecureStorageService.instance.deleteAll().catchError((_) {}),
-        OfflineCacheService.clearAllCache().catchError((_) {}),
-      ]).timeout(const Duration(seconds: 2)).catchError((_) => []);
-    } catch (_) {}
+        SettingsSyncService().clearLocalSyncedSettings().catchError(
+          (error) => debugPrint('[Auth] Xóa settings cache lỗi: $error'),
+        ),
+        _clearSensitiveLocalData(prefs).catchError(
+          (error) => debugPrint('[Auth] Xóa local data nhạy cảm lỗi: $error'),
+        ),
+        SecureStorageService.instance.deleteAll().catchError(
+          (error) => debugPrint('[Auth] Xóa secure storage lỗi: $error'),
+        ),
+        OfflineCacheService.clearAllCache().catchError(
+          (error) => debugPrint('[Auth] Xóa offline cache lỗi: $error'),
+        ),
+      ]).timeout(const Duration(seconds: 2)).catchError((error) {
+        debugPrint('[Auth] Dọn dữ liệu cục bộ lỗi hoặc quá hạn: $error');
+        return <void>[];
+      });
+    } catch (error) {
+      debugPrint('[Auth] Không hoàn tất được dọn dữ liệu cục bộ: $error');
+    }
 
     // 4. Các tác vụ UI/Memory nhẹ chạy đồng bộ lập tức
     try {
       EncryptionService().clearCache();
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[Auth] Xóa encryption cache lỗi: $error');
+    }
     try {
       RoleUtils.roleNotifier.value = null;
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[Auth] Reset role notifier lỗi: $error');
+    }
     try {
       RoleUtils.duplicateRoleNotifier.value = false;
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[Auth] Reset duplicate-role notifier lỗi: $error');
+    }
     try {
       PaintingBinding.instance.imageCache.clear();
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[Auth] Xóa image cache lỗi: $error');
+    }
     try {
       PaintingBinding.instance.imageCache.clearLiveImages();
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[Auth] Xóa live image cache lỗi: $error');
+    }
   }
 
   Future<Map<String, dynamic>> deleteAccount() async {
@@ -1205,23 +1232,21 @@ class AuthSignInService {
           normalized.contains('phiên đăng nhập đã hết hạn') ||
           normalized.contains('phiên đăng nhập không còn hợp lệ')) {
         if (kDebugMode) {
-          debugPrint(
-            'deleteAccount(): retrying after session error: $error',
-          );
+          debugPrint('deleteAccount(): retrying after session error: $error');
         }
         await _reauthenticateCurrentUserWithLinkedProvider(user);
         final result = await _deleteAccountFromServer(user);
         if (kDebugMode) {
           debugPrint(
-              'deleteAccount(): success after session retry uid=${user.uid}');
+            'deleteAccount(): success after session retry uid=${user.uid}',
+          );
         }
         return result;
       }
       if (kDebugMode) {
-        debugPrint('deleteAccount(): failed with error=${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: 'Không thể xóa tài khoản lúc này.',
-        ).message}');
+        debugPrint(
+          'deleteAccount(): failed with error=${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể xóa tài khoản lúc này.').message}',
+        );
       }
       if (error is String) rethrow;
       final resolvedError = AppErrorMapper.resolve(
@@ -1237,9 +1262,10 @@ class AuthSignInService {
     final user = _auth.currentUser;
     if (user == null) throw 'Bạn chưa đăng nhập.';
     final idToken = await user.getIdToken(true) ?? '';
-    final undoEndpoint = AppConfig.deleteAccountUrl
-        .trim()
-        .replaceAll('deleteUserDataHttp', 'undoAccountDeletionHttp');
+    final undoEndpoint = AppConfig.deleteAccountUrl.trim().replaceAll(
+      'deleteUserDataHttp',
+      'undoAccountDeletionHttp',
+    );
     final response = await _httpPost(
       Uri.parse(undoEndpoint),
       headers: await AppCheckHttpHeaders.withOptionalToken({
@@ -1255,9 +1281,7 @@ class AuthSignInService {
           severity: response.statusCode == 401 || response.statusCode == 403
               ? 'high'
               : 'medium',
-          extra: <String, Object?>{
-            'statusCode': response.statusCode,
-          },
+          extra: <String, Object?>{'statusCode': response.statusCode},
         ),
       );
       throw 'Không hoàn tác được: trạng thái tài khoản chưa khôi phục được, hãy kiểm tra mạng rồi thử lại.';
@@ -1276,16 +1300,16 @@ class AuthSignInService {
     }
 
     final endpoint = AppConfig.deleteAccountUrl.trim().replaceAll(
-        'deleteUserDataHttp', 'revokeOtherSessionsAfterPasswordChangeHttp');
+      'deleteUserDataHttp',
+      'revokeOtherSessionsAfterPasswordChangeHttp',
+    );
     final response = await _httpPost(
       Uri.parse(endpoint),
       headers: await AppCheckHttpHeaders.withOptionalToken({
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $idToken',
       }),
-      body: jsonEncode({
-        'source': 'flutter_app',
-      }),
+      body: jsonEncode({'source': 'flutter_app'}),
     ).timeout(const Duration(seconds: 20));
 
     if (response.statusCode != 200) {
@@ -1295,9 +1319,7 @@ class AuthSignInService {
             type: 'revoke_other_sessions_failed',
             reason: 'unauthorized',
             severity: 'high',
-            extra: <String, Object?>{
-              'statusCode': response.statusCode,
-            },
+            extra: <String, Object?>{'statusCode': response.statusCode},
           ),
         );
         throw 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để áp dụng thay đổi bảo mật.';
@@ -1307,9 +1329,7 @@ class AuthSignInService {
           type: 'revoke_other_sessions_failed',
           reason: 'server_rejected',
           severity: 'medium',
-          extra: <String, Object?>{
-            'statusCode': response.statusCode,
-          },
+          extra: <String, Object?>{'statusCode': response.statusCode},
         ),
       );
       throw 'Không thể đăng xuất các thiết bị khác lúc này. Vui lòng thử lại sau ít phút.';
@@ -1349,14 +1369,14 @@ class AuthSignInService {
       if (resolvedEmail.isNotEmpty)
         _adminService
             .getSystemBlockReason(
-          resolvedEmail,
-          allowAdminBypass: true,
-          forceRefreshAdmin: true,
-        )
+              resolvedEmail,
+              allowAdminBypass: true,
+              forceRefreshAdmin: true,
+            )
             .catchError((error) {
-          debugPrint('Failed to check system block reason: $error');
-          return null;
-        })
+              debugPrint('Failed to check system block reason: $error');
+              return null;
+            })
       else
         Future<String?>.value(null),
       _ensureUserProfileExists(user),
@@ -1373,8 +1393,9 @@ class AuthSignInService {
 
     final houseIdSnap = phase1Results[2] as DataSnapshot;
     final rawHouseId = houseIdSnap.value?.toString().trim();
-    final houseId =
-        (rawHouseId == null || rawHouseId.isEmpty) ? null : rawHouseId;
+    final houseId = (rawHouseId == null || rawHouseId.isEmpty)
+        ? null
+        : rawHouseId;
 
     final prefs = phase1Results[3] as SharedPreferences;
 
@@ -1382,30 +1403,40 @@ class AuthSignInService {
     if (houseId != null && houseId.isNotEmpty) {
       await prefs.setString('il_house_id', houseId);
       await prefs.setString('il_auth_uid', user.uid);
-      await SecureStorageService.instance
-          .write(SecureStorageService.keyHouseId, houseId);
-      await SecureStorageService.instance
-          .write(SecureStorageService.keyAuthUid, user.uid);
+      await SecureStorageService.instance.write(
+        SecureStorageService.keyHouseId,
+        houseId,
+      );
+      await SecureStorageService.instance.write(
+        SecureStorageService.keyAuthUid,
+        user.uid,
+      );
       existingRole = prefs.getString('il_role');
       try {
         await FirebaseDatabase.instance
             .ref('users/${user.uid}/houseId')
             .set(houseId);
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[Auth] Không đồng bộ được houseId vào user: $error');
+      }
     } else {
       await prefs.remove('il_house_id');
       await prefs.remove('il_auth_uid');
       await prefs.remove('il_role');
-      await SecureStorageService.instance
-          .delete(SecureStorageService.keyHouseId);
-      await SecureStorageService.instance
-          .delete(SecureStorageService.keyAuthUid);
+      await SecureStorageService.instance.delete(
+        SecureStorageService.keyHouseId,
+      );
+      await SecureStorageService.instance.delete(
+        SecureStorageService.keyAuthUid,
+      );
       await SecureStorageService.instance.delete(SecureStorageService.keyRole);
       try {
         await FirebaseDatabase.instance
             .ref('users/${user.uid}/houseId')
             .remove();
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[Auth] Không xóa được houseId cũ khỏi user: $error');
+      }
     }
 
     await prefs.setString(
@@ -1413,7 +1444,8 @@ class AuthSignInService {
       _nowProvider().millisecondsSinceEpoch.toString(),
     );
 
-    final shouldDetectRole = houseId != null &&
+    final shouldDetectRole =
+        houseId != null &&
         houseId.isNotEmpty &&
         existingRole != 'user1' &&
         existingRole != 'user2';
@@ -1422,13 +1454,13 @@ class AuthSignInService {
       unawaited(
         _houseContextService
             .syncSecurityEmailForCurrentUser(
-          user: user,
-          email: resolvedEmail,
-          houseId: houseId,
-        )
+              user: user,
+              email: resolvedEmail,
+              houseId: houseId,
+            )
             .catchError((error) {
-          debugPrint('Failed to sync security email: $error');
-        }),
+              debugPrint('Failed to sync security email: $error');
+            }),
       );
     }
 
@@ -1437,40 +1469,31 @@ class AuthSignInService {
           .registerCurrentDevice()
           .timeout(const Duration(seconds: 4))
           .catchError((error) {
-        debugPrint(
-          'registerCurrentDevice skipped during auth finalize: '
-          '${AppErrorMapper.resolve(
-            error,
-            fallbackMessage: 'Không thể đăng ký thiết bị hiện tại lúc này.',
-          ).message}',
-        );
-      }),
+            debugPrint(
+              'registerCurrentDevice skipped during auth finalize: '
+              '${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể đăng ký thiết bị hiện tại lúc này.').message}',
+            );
+          }),
     );
 
     // Parallel Phase 2: Check ban status, sync relationship mode, fetch settings, detect auto role
     final phase2Results = await Future.wait([
-      _houseContextService.checkBanStatus(
-        houseId,
-        onForcedSignOut: signOut,
-      ),
+      _houseContextService.checkBanStatus(houseId, onForcedSignOut: signOut),
       _houseContextService
-          .syncRelationshipModeForCurrentUser(
-        user: user,
-        houseId: houseId,
-      )
+          .syncRelationshipModeForCurrentUser(user: user, houseId: houseId)
           .catchError((error) {
-        debugPrint('Failed to sync relationship mode: $error');
-        return null;
-      }),
+            debugPrint('Failed to sync relationship mode: $error');
+            return null;
+          }),
       if (houseId != null && houseId.isNotEmpty)
         _db
             .child('houses/$houseId/settings')
             .get()
             .then<DataSnapshot?>((snap) => snap)
             .catchError((error) {
-          debugPrint('Failed to fetch house settings: $error');
-          return null;
-        })
+              debugPrint('Failed to fetch house settings: $error');
+              return null;
+            })
       else
         Future<DataSnapshot?>.value(null),
       if (shouldDetectRole)
@@ -1489,10 +1512,11 @@ class AuthSignInService {
             ? _asStringDynamicMap(settingsSnap.value)
             : null;
         if (settings != null) {
-          final customBackgroundUrl = (settings['customBackgroundUrl'] ??
-                  settings['customHomeBackground'] ??
-                  '')
-              .toString();
+          final customBackgroundUrl =
+              (settings['customBackgroundUrl'] ??
+                      settings['customHomeBackground'] ??
+                      '')
+                  .toString();
           if (customBackgroundUrl.isNotEmpty) {
             await UiPrefs.ensureLoaded();
             await UiPrefs.saveState(
@@ -1503,10 +1527,9 @@ class AuthSignInService {
           }
         }
       } catch (error) {
-        debugPrint('Failed to sync UI preferences: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: 'Không thể đồng bộ cài đặt giao diện lúc này.',
-        ).message}');
+        debugPrint(
+          'Failed to sync UI preferences: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể đồng bộ cài đặt giao diện lúc này.').message}',
+        );
       }
     }
 
@@ -1519,19 +1542,13 @@ class AuthSignInService {
 
     unawaited(
       CriticalDataSyncService()
-          .syncCurrentUserData(
-        houseId: houseId,
-        force: true,
-      )
+          .syncCurrentUserData(houseId: houseId, force: true)
           .catchError((error) {
-        debugPrint(
-          'CriticalDataSync skipped during auth finalize: '
-          '${AppErrorMapper.resolve(
-            error,
-            fallbackMessage: 'Không thể đồng bộ dữ liệu quan trọng lúc này.',
-          ).message}',
-        );
-      }),
+            debugPrint(
+              'CriticalDataSync skipped during auth finalize: '
+              '${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể đồng bộ dữ liệu quan trọng lúc này.').message}',
+            );
+          }),
     );
   }
 
@@ -1545,14 +1562,15 @@ class AuthSignInService {
       final decoded = await compute(jsonDecode, raw);
       return _asStringDynamicMap(decoded);
     } catch (error) {
-      debugPrint('_getDailyLoginTracker failed: ${AppErrorMapper.resolve(
-        error,
-        fallbackMessage: 'Không thể đọc bộ đếm đăng nhập hôm nay.',
-      ).message}');
+      debugPrint(
+        '_getDailyLoginTracker failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể đọc bộ đếm đăng nhập hôm nay.').message}',
+      );
       try {
         final prefs = await _prefs;
         await prefs.remove(_dailyLoginTrackerPrefsKey);
-      } catch (_) {}
+      } catch (cleanupError) {
+        debugPrint('[Auth] Không xóa được bộ đếm đăng nhập lỗi: $cleanupError');
+      }
       return <String, dynamic>{};
     }
   }
@@ -1615,10 +1633,7 @@ class AuthSignInService {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $idToken',
         }),
-        body: jsonEncode({
-          'source': 'flutter_app',
-          'deviceId': deviceId,
-        }),
+        body: jsonEncode({'source': 'flutter_app', 'deviceId': deviceId}),
       ).timeout(const Duration(seconds: 20));
 
       if (kDebugMode) {
@@ -1636,10 +1651,9 @@ class AuthSignInService {
                 decoded['error'] == 'deletion_already_scheduled') {
               final scheduledAt = decoded['scheduledAt'];
               final delayDays = scheduledAt is num
-                  ? DateTime.fromMillisecondsSinceEpoch(scheduledAt.toInt())
-                      .difference(DateTime.now())
-                      .inDays
-                      .clamp(0, 30)
+                  ? DateTime.fromMillisecondsSinceEpoch(
+                      scheduledAt.toInt(),
+                    ).difference(DateTime.now()).inDays.clamp(0, 30)
                   : 3;
               return <String, dynamic>{
                 'ok': true,
@@ -1648,7 +1662,11 @@ class AuthSignInService {
                 'delayDays': delayDays,
               };
             }
-          } catch (_) {}
+          } catch (parseError) {
+            debugPrint(
+              '[Auth] Không đọc được phản hồi xóa tài khoản: $parseError',
+            );
+          }
         }
         if (response.statusCode == 401 || response.statusCode == 403) {
           unawaited(
@@ -1656,9 +1674,7 @@ class AuthSignInService {
               type: 'delete_account_failed',
               reason: 'unauthorized',
               severity: 'high',
-              extra: <String, Object?>{
-                'statusCode': response.statusCode,
-              },
+              extra: <String, Object?>{'statusCode': response.statusCode},
             ),
           );
           throw 'Phiên đăng nhập đã hết hạn hoặc không còn hợp lệ. Vui lòng đăng nhập lại trước khi xóa tài khoản.';
@@ -1673,9 +1689,7 @@ class AuthSignInService {
             type: 'delete_account_failed',
             reason: 'server_rejected',
             severity: 'medium',
-            extra: <String, Object?>{
-              'statusCode': response.statusCode,
-            },
+            extra: <String, Object?>{'statusCode': response.statusCode},
           ),
         );
         throw 'Máy chủ chưa thể xóa hết dữ liệu tài khoản lúc này. Vui lòng thử lại sau ít phút.';
@@ -1690,10 +1704,9 @@ class AuthSignInService {
       throw 'Máy chủ xóa tài khoản phản hồi quá chậm. Vui lòng thử lại khi mạng ổn định hơn.';
     } catch (error) {
       if (kDebugMode) {
-        debugPrint('Delete account endpoint error: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: 'Không thể gọi máy chủ xóa tài khoản lúc này.',
-        ).message}');
+        debugPrint(
+          'Delete account endpoint error: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể gọi máy chủ xóa tài khoản lúc này.').message}',
+        );
       }
       if (error is String) rethrow;
       throw 'Không hoàn tất xóa tài khoản: hãy kiểm tra mạng và đăng nhập lại nếu cần.';
@@ -1710,11 +1723,11 @@ class AuthSignInService {
     final keysToRemove = <String>{
       ..._signOutClearedPrefsKeys,
       ...prefs.getKeys().where(
-            (key) =>
-                key.startsWith('il_rel_mode_') ||
-                key.startsWith('il_diary_privacy_seen_') ||
-                key.startsWith('il_first_setup_guide_pending_'),
-          ),
+        (key) =>
+            key.startsWith('il_rel_mode_') ||
+            key.startsWith('il_diary_privacy_seen_') ||
+            key.startsWith('il_first_setup_guide_pending_'),
+      ),
     };
     keysToRemove.removeAll(_signOutPreservedPrefsKeys);
     for (final key in keysToRemove) {
@@ -1736,20 +1749,14 @@ class _ServerLoginGuardPrecheck {
 }
 
 class _ServerLoginGuardRecord {
-  const _ServerLoginGuardRecord({
-    this.allowed = true,
-    this.message = '',
-  });
+  const _ServerLoginGuardRecord({this.allowed = true, this.message = ''});
 
   final bool allowed;
   final String message;
 }
 
 class _LoginEmailResolution {
-  const _LoginEmailResolution({
-    required this.email,
-    required this.source,
-  });
+  const _LoginEmailResolution({required this.email, required this.source});
 
   final String email;
   final String source;

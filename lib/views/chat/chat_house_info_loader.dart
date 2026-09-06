@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'package:firebase_database/firebase_database.dart';
 
 // Fields cần cho chat display — không load toàn bộ house node
@@ -31,7 +33,11 @@ Future<Map<dynamic, dynamic>> loadChatHouseInfo(
           merged[_kChatHouseFields[i]] = snap.value;
         }
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/chat/chat_house_info_loader.dart: $error',
+      );
+    }
   }
 
   await Future.wait([

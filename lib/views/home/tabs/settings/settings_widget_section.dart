@@ -37,24 +37,24 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       (context.tr('home_hngngt_6a8c4a'), 'pink'),
       (context.tr('home_tihini_18f563'), 'dark'),
       (context.tr('home_trngtinh_2fff95'), 'white'),
-      ('Xanh lam', 'blue'),
+      (context.tr('p7_color_blue'), 'blue'),
       (context.tr('home_camnng_da76a5'), 'orange'),
       (context.tr('home_tmmng_9db47d'), 'purple'),
       (context.tr('home_xanhngc_49b55b'), 'green'),
       (context.tr('home_m_720483'), 'red'),
       if (AppConfig.isPurchaseEnabled) ...[
-        ('Aurora', 'premium'),
-        ('Vũ trụ', 'cosmic'),
+        (context.tr('p7_theme_aurora'), 'premium'),
+        (context.tr('p7_theme_cosmic'), 'cosmic'),
       ],
     ];
     final heartColorOptions = [
       (context.tr('home_hngrose_ee75eb'), 'rose'),
       (context.tr('home_ruby_cb8e85'), 'ruby'),
       (context.tr('home_tmviolet_19bc69'), 'violet'),
-      ('Xanh ocean', 'ocean'),
+      (context.tr('p7_heart_ocean'), 'ocean'),
       (context.tr('home_honghn_ab7dad'), 'sunset'),
-      ('Gold', 'gold'),
-      ('Tắt / Trong suốt', 'none'),
+      (context.tr('p7_color_gold'), 'gold'),
+      (context.tr('p7_transparent_off'), 'none'),
     ];
     final previewSizeOptions = _widgetPreviewSizeKeys
         .map((key) => (_widgetPreviewSizeLabel(key), key))
@@ -77,7 +77,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
     final smartThemeLabel = themeOptions
         .firstWhere(
           (item) => item.$2 == (_draftWidgetThemeKey ?? 'pink'),
-          orElse: () => ('Pink', 'pink'),
+          orElse: () => (context.tr('p7_color_pink'), 'pink'),
         )
         .$1;
     final smartSeasonLabel = smartSeasonKey == 'none'
@@ -100,173 +100,33 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
   }
 
   Widget _buildWidgetPanelTabBar() {
-    final items = <(String, String, IconData)>[
-      (
-        WidgetService.defaultWidgetStyleKey,
-        context.tr('home_mcnh_a57a8e'),
-        Icons.widgets_rounded,
-      ),
-      ('countdown', context.tr('home_mngy_5500cb'), Icons.timer_outlined),
-      (
-        'soulevent',
-        L10nService().translate('Kỷ niệm'),
-        Icons.celebration_rounded,
-      ),
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: SLColors.bgMuted,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: SLColors.border, width: 1),
-      ),
-      child: Row(
-        children: items
-            .map((item) {
-              final isSelected = _widgetPanelTabKey == item.$1;
-
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () => unawaited(_handleWidgetPanelTabChanged(item.$1)),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 240),
-                    curve: Curves.easeOut,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: isSelected
-                          ? const LinearGradient(
-                              colors: [SLColors.primary, SLColors.accentPink],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            )
-                          : null,
-                      color: isSelected ? null : Colors.transparent,
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: SLColors.primary.withValues(alpha: 0.26),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                              BoxShadow(
-                                color: SLColors.accentPink.withValues(
-                                  alpha: 0.12,
-                                ),
-                                blurRadius: 4,
-                                offset: const Offset(0, 1),
-                              ),
-                            ]
-                          : const [],
-                    ),
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        // Decorative sparkle for selected tab
-                        if (isSelected)
-                          Positioned(
-                            top: -2,
-                            right: 4,
-                            child: Container(
-                              width: 4,
-                              height: 4,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white.withValues(alpha: 0.6),
-                              ),
-                            ),
-                          ),
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              item.$3,
-                              size: 18,
-                              color: isSelected
-                                  ? Colors.white
-                                  : SLColors.textSecond,
-                            ),
-                            const SizedBox(height: 5),
-                            Text(
-                              item.$2,
-                              textAlign: TextAlign.center,
-                              style: SLTheme.quicksand(
-                                fontSize: 11.8,
-                                fontWeight: FontWeight.w900,
-                                color: isSelected
-                                    ? Colors.white
-                                    : SLColors.textSecond,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            })
-            .toList(growable: false),
-      ),
+    return WidgetStudioSegmentedControl(
+      selectedId: _widgetPanelTabKey,
+      onChanged: (styleKey) {
+        unawaited(_handleWidgetPanelTabChanged(styleKey));
+      },
+      items: [
+        WidgetStudioTab(
+          id: WidgetService.defaultWidgetStyleKey,
+          label: context.tr('home_mcnh_a57a8e'),
+          icon: Icons.widgets_rounded,
+        ),
+        WidgetStudioTab(
+          id: 'countdown',
+          label: context.tr('home_mngy_5500cb'),
+          icon: Icons.timer_outlined,
+        ),
+        WidgetStudioTab(
+          id: 'soulevent',
+          label: context.tr('p7_widget_tab_memories'),
+          icon: Icons.celebration_rounded,
+        ),
+      ],
     );
   }
 
   Widget _buildWidgetPanel({bool hideBackButton = false}) {
     final config = _buildWidgetPanelConfig();
-    final themeOptions = [
-      (context.tr('home_hngngt_6a8c4a'), 'pink'),
-      (context.tr('home_tihini_18f563'), 'dark'),
-      (context.tr('home_trngtinh_2fff95'), 'white'),
-      ('Xanh lam', 'blue'),
-      (context.tr('home_camnng_da76a5'), 'orange'),
-      (context.tr('home_tmmng_9db47d'), 'purple'),
-      (context.tr('home_xanhngc_49b55b'), 'green'),
-      (context.tr('home_m_720483'), 'red'),
-      if (AppConfig.isPurchaseEnabled) ...[
-        ('Aurora', 'premium'),
-        ('Vũ trụ', 'cosmic'),
-      ],
-    ];
-    final heartColorOptions = [
-      (context.tr('home_hngrose_ee75eb'), 'rose'),
-      (context.tr('home_ruby_cb8e85'), 'ruby'),
-      (context.tr('home_tmviolet_19bc69'), 'violet'),
-      ('Xanh ocean', 'ocean'),
-      (context.tr('home_honghn_ab7dad'), 'sunset'),
-      ('Gold', 'gold'),
-      ('Tắt / Trong suốt', 'none'),
-    ];
-    final previewSizeOptions = _widgetPreviewSizeKeys
-        .map((key) => (_widgetPreviewSizeLabel(key), key))
-        .toList(growable: false);
-    final diaryLayoutOptions = _widgetDiaryLayoutKeys
-        .map((key) => (_widgetDiaryLayoutLabel(key), key))
-        .toList(growable: false);
-    final seasonModeOptions = _widgetSeasonModeKeys
-        .map((key) => (_widgetSeasonModeLabel(key), key))
-        .toList(growable: false);
-    final smartSeasonKey = _resolvedWidgetSeasonKey();
-    final smartSeasonPalette = _widgetSeasonPalette(smartSeasonKey);
-    final smartHeartPalette = _widgetHeartPalette(_widgetHeartColorKey);
-    final smartAccentColor = smartSeasonKey == 'none'
-        ? smartHeartPalette.first
-        : smartSeasonPalette.first;
-    final smartSurfaceColor = smartSeasonKey == 'none'
-        ? smartHeartPalette.last
-        : smartSeasonPalette.last;
-    final smartThemeLabel = themeOptions
-        .firstWhere(
-          (item) => item.$2 == (_draftWidgetThemeKey ?? 'pink'),
-          orElse: () => ('Pink', 'pink'),
-        )
-        .$1;
-    final smartSeasonLabel = smartSeasonKey == 'none'
-        ? context.tr('home_tngphimu_c549ba')
-        : WidgetService.seasonLabel(smartSeasonKey);
 
     Future<void> handlePinWidget() async {
       if (kIsWeb) {
@@ -334,29 +194,28 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       }
     }
 
-    return _buildPanel(
-      hideBackButton: hideBackButton,
-      id: 'widget',
+    final isStandalone = Navigator.of(context).canPop();
+
+    return WidgetStudioPanel(
       title: context.tr('widget_utility'),
-      borderColor: const Color(0xFF80DEEA),
-      flatMode: true,
+      onBack: !hideBackButton && isStandalone
+          ? () => Navigator.of(context).pop()
+          : null,
+      onClose: !isStandalone ? () => _togglePanel('widget') : null,
+      leading: ValueListenableBuilder<UiPrefsState>(
+        valueListenable: UiPrefs.notifier,
+        builder: (context, ui, _) =>
+            SoulLocketBrandMark(styleKey: ui.brandMarkKey, size: 22),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Text(
-              context.tr('home_xemtrcwidg_189f43'),
-              style: SLTheme.quicksand(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFF1F2A37),
-              ),
-            ),
+          WidgetStudioPreviewStage(
+            title: context.tr('home_xemtrcwidg_189f43'),
+            themeName: config.smartThemeLabel,
+            child: _buildWidgetPreview(),
           ),
-          const SizedBox(height: 10),
-          _buildWidgetPreview(),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           if (Theme.of(context).platform != TargetPlatform.iOS) ...[
             _buildWidgetPanelTabBar(),
             const SizedBox(height: 14),
@@ -364,15 +223,13 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
           if (_widgetPanelTabKey == 'soulevent') ...[
             _buildWidgetSectionCard(
               icon: Icons.info_outline_rounded,
-              title: L10nService().translate('Cấu hình Sự kiện'),
+              title: context.tr('p7_event_widget_config'),
               subtitle: null,
               iconGradient: const [Color(0xFF3B82F6), Color(0xFF60A5FA)],
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Text(
-                  L10nService().translate(
-                    'Màu sắc và chủ đề của Tiện ích được lấy trực tiếp từ sự kiện bạn chọn ghim hoặc sự kiện gần nhất trong danh sách Sự Kiện & Kỷ Niệm.',
-                  ),
+                  context.tr('p7_event_widget_config_desc'),
                   style: SLTheme.quicksand(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -466,15 +323,11 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
             const SizedBox(height: 14),
             _buildWidgetSectionCard(
               icon: Icons.celebration_rounded,
-              title: L10nService().translate('Tiện ích Sự kiện & Kỷ niệm'),
-              subtitle: L10nService().translate(
-                'Đếm ngược các sự kiện quan trọng của 2 bạn',
-              ),
+              title: context.tr('p7_event_widget_title'),
+              subtitle: context.tr('p7_event_widget_subtitle'),
               iconGradient: const [Color(0xFFF472B6), Color(0xFFEC4899)],
               child: Text(
-                L10nService().translate(
-                  'Hiển thị sự kiện tiếp theo (ví dụ: ngày sinh nhật, chuyến đi, ngày kỷ niệm yêu...) trực tiếp trên màn hình chính.',
-                ),
+                context.tr('p7_event_widget_desc'),
                 style: SLTheme.quicksand(
                   fontSize: 12.8,
                   fontWeight: FontWeight.w800,
@@ -625,34 +478,6 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
     }
   }
 
-  /// Decorative emoji accent for each widget theme swatch.
-  String _widgetThemeSwatchEmoji(String key) {
-    switch (key) {
-      case 'pink':
-        return '🌸';
-      case 'white':
-        return '❄️';
-      case 'dark':
-        return '🌙';
-      case 'blue':
-        return '🌊';
-      case 'orange':
-        return '🌅';
-      case 'purple':
-        return '✨';
-      case 'green':
-        return '🍀';
-      case 'red':
-        return '🔥';
-      case 'premium':
-        return '💎';
-      case 'cosmic':
-        return '🌌';
-      default:
-        return '🎨';
-    }
-  }
-
   /// Color swatch grid for widget background theme selection.
   Widget _buildWidgetThemeSwatchGrid(_WidgetPanelConfig config) {
     // Map themeKey -> (gradient colors, label)
@@ -661,7 +486,10 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         'pink',
         [const Color(0xFFFFB6CA), const Color(0xFFFF7098)],
         config.themeOptions
-            .firstWhere((o) => o.$2 == 'pink', orElse: () => ('Hồng', 'pink'))
+            .firstWhere(
+              (o) => o.$2 == 'pink',
+              orElse: () => (context.tr('p7_color_pink'), 'pink'),
+            )
             .$1,
       ),
       (
@@ -670,7 +498,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         config.themeOptions
             .firstWhere(
               (o) => o.$2 == 'white',
-              orElse: () => ('Trắng', 'white'),
+              orElse: () => (context.tr('p7_color_white'), 'white'),
             )
             .$1,
       ),
@@ -678,7 +506,10 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         'dark',
         [const Color(0xFF3A3A4A), const Color(0xFF1C1C2E)],
         config.themeOptions
-            .firstWhere((o) => o.$2 == 'dark', orElse: () => ('Tối', 'dark'))
+            .firstWhere(
+              (o) => o.$2 == 'dark',
+              orElse: () => (context.tr('p7_color_dark'), 'dark'),
+            )
             .$1,
       ),
       (
@@ -687,7 +518,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         config.themeOptions
             .firstWhere(
               (o) => o.$2 == 'blue',
-              orElse: () => ('Xanh lam', 'blue'),
+              orElse: () => (context.tr('p7_color_blue'), 'blue'),
             )
             .$1,
       ),
@@ -697,7 +528,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         config.themeOptions
             .firstWhere(
               (o) => o.$2 == 'orange',
-              orElse: () => ('Cam', 'orange'),
+              orElse: () => (context.tr('p7_color_orange'), 'orange'),
             )
             .$1,
       ),
@@ -707,7 +538,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         config.themeOptions
             .firstWhere(
               (o) => o.$2 == 'purple',
-              orElse: () => ('Tím', 'purple'),
+              orElse: () => (context.tr('p7_color_purple'), 'purple'),
             )
             .$1,
       ),
@@ -717,7 +548,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         config.themeOptions
             .firstWhere(
               (o) => o.$2 == 'green',
-              orElse: () => ('Xanh lá', 'green'),
+              orElse: () => (context.tr('p7_color_green'), 'green'),
             )
             .$1,
       ),
@@ -725,7 +556,10 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         'red',
         [const Color(0xFFEF9A9A), const Color(0xFFB71C1C)],
         config.themeOptions
-            .firstWhere((o) => o.$2 == 'red', orElse: () => ('Đỏ', 'red'))
+            .firstWhere(
+              (o) => o.$2 == 'red',
+              orElse: () => (context.tr('p7_color_red'), 'red'),
+            )
             .$1,
       ),
       if (AppConfig.isPurchaseEnabled) ...[
@@ -735,7 +569,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
           config.themeOptions
               .firstWhere(
                 (o) => o.$2 == 'premium',
-                orElse: () => ('Aurora', 'premium'),
+                orElse: () => (context.tr('p7_theme_aurora'), 'premium'),
               )
               .$1,
         ),
@@ -745,7 +579,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
           config.themeOptions
               .firstWhere(
                 (o) => o.$2 == 'cosmic',
-                orElse: () => ('Vũ trụ', 'cosmic'),
+                orElse: () => (context.tr('p7_theme_cosmic'), 'cosmic'),
               )
               .$1,
         ),
@@ -754,229 +588,21 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
 
     final currentKey = _draftWidgetThemeKey ?? 'pink';
 
-    return Wrap(
-      spacing: 10,
-      runSpacing: 12,
-      children: swatches.map((swatch) {
-        final key = swatch.$1;
-        final colors = swatch.$2;
-        final label = swatch.$3;
-        final isSelected = currentKey == key;
-        final themeIcon = _widgetThemeSwatchIcon(key);
-        final themeEmoji = _widgetThemeSwatchEmoji(key);
-        final isDarkTheme = key == 'dark';
-        final iconColor = isDarkTheme
-            ? Colors.white.withValues(alpha: 0.7)
-            : Colors.white.withValues(alpha: 0.85);
-
-        return GestureDetector(
-          onTap: () async => _handleWidgetThemeChanged(key),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOut,
-            width: 76,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isSelected
-                    ? colors.last.withValues(alpha: 0.90)
-                    : const Color(0xFFE0E7EF),
-                width: isSelected ? 2.2 : 1.2,
-              ),
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: colors.first.withValues(alpha: 0.38),
-                        blurRadius: 14,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 5),
-                      ),
-                      BoxShadow(
-                        color: colors.last.withValues(alpha: 0.18),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ]
-                  : [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+    return WidgetStudioThemePicker(
+      selectedId: currentKey,
+      onChanged: (themeKey) {
+        unawaited(_handleWidgetThemeChanged(themeKey));
+      },
+      options: swatches
+          .map(
+            (swatch) => WidgetStudioThemeOption(
+              id: swatch.$1,
+              label: swatch.$3,
+              colors: swatch.$2,
+              icon: _widgetThemeSwatchIcon(swatch.$1),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Color preview area with decorative icon + emoji
-                  Container(
-                    height: 52,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          colors.first,
-                          Color.lerp(colors.first, colors.last, 0.5)!,
-                          colors.last,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        // Subtle decorative pattern overlay
-                        Positioned(
-                          top: -4,
-                          right: -4,
-                          child: Icon(
-                            themeIcon,
-                            size: 28,
-                            color: isDarkTheme
-                                ? Colors.white.withValues(alpha: 0.12)
-                                : Colors.white.withValues(alpha: 0.20),
-                          ),
-                        ),
-                        // Bottom-left small decorative dot
-                        Positioned(
-                          bottom: 4,
-                          left: 6,
-                          child: Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white.withValues(alpha: 0.28),
-                            ),
-                          ),
-                        ),
-                        // White curved wave overlay for normal swatches
-                        if (key != 'premium' && key != 'cosmic')
-                          Positioned(
-                            bottom: -22,
-                            left: -10,
-                            right: -10,
-                            child: Container(
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.16),
-                                borderRadius: const BorderRadius.vertical(
-                                  top: Radius.elliptical(50, 15),
-                                ),
-                              ),
-                            ),
-                          ),
-                        // Center content
-                        Center(
-                          child: isSelected
-                              ? Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      width: 22,
-                                      height: 22,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.92,
-                                        ),
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: colors.last.withValues(
-                                              alpha: 0.30,
-                                            ),
-                                            blurRadius: 6,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Icon(
-                                        Icons.check_rounded,
-                                        size: 14,
-                                        color: colors.last,
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : Icon(themeIcon, size: 20, color: iconColor),
-                        ),
-                        // Shimmer dot for selected state
-                        if (isSelected)
-                          Positioned(
-                            top: 5,
-                            left: 6,
-                            child: Container(
-                              width: 7,
-                              height: 7,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: RadialGradient(
-                                  colors: [
-                                    Colors.white.withValues(alpha: 0.90),
-                                    Colors.white.withValues(alpha: 0.0),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  // Label area with emoji + gradient tint
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: isSelected
-                            ? [
-                                colors.first.withValues(alpha: 0.08),
-                                Colors.white,
-                              ]
-                            : [Colors.white, Colors.white],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 5,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (isSelected) ...[
-                          Text(themeEmoji, style: const TextStyle(fontSize: 9)),
-                          const SizedBox(width: 2),
-                        ],
-                        Flexible(
-                          child: Text(
-                            label,
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: SLTheme.quicksand(
-                              fontSize: 10.4,
-                              fontWeight: isSelected
-                                  ? FontWeight.w900
-                                  : FontWeight.w700,
-                              color: isSelected
-                                  ? colors.last
-                                  : const Color(0xFF64748B),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      }).toList(),
+          )
+          .toList(growable: false),
     );
   }
 }

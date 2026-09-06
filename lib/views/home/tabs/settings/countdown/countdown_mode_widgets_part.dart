@@ -26,8 +26,7 @@ final List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
     label: L10nService().translate('home_nh_dbe2a3'),
     emoji: '\u{1F496}',
     icon: Icons.favorite_rounded,
-    assetPath:
-        'assets/images/anhtomau_stickers/sticker_1.gif',
+    assetPath: 'assets/images/anhtomau_stickers/sticker_1.gif',
     gradient: [const Color(0xFFFFD8E6), const Color(0xFFFFF3F7)],
     accent: const Color(0xFFD94C86),
   ),
@@ -36,8 +35,7 @@ final List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
     label: L10nService().translate('home_gin_6a4c8c'),
     emoji: '\u{1F63E}',
     icon: Icons.sentiment_very_dissatisfied_rounded,
-    assetPath:
-        'assets/images/anhtomau_stickers/sticker_12.gif',
+    assetPath: 'assets/images/anhtomau_stickers/sticker_12.gif',
     gradient: [const Color(0xFFFFE6DC), const Color(0xFFFFF6F2)],
     accent: const Color(0xFFE26A3A),
   ),
@@ -46,8 +44,7 @@ final List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
     label: L10nService().translate('home_hn_fac010'),
     emoji: '\u{1F48B}',
     icon: Icons.favorite_border_rounded,
-    assetPath:
-        'assets/images/anhtomau_stickers/sticker_14.gif',
+    assetPath: 'assets/images/anhtomau_stickers/sticker_14.gif',
     gradient: [const Color(0xFFFFE1EC), const Color(0xFFFFF7FA)],
     accent: const Color(0xFFE14A8B),
   ),
@@ -56,8 +53,7 @@ final List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
     label: L10nService().translate('home_m_07a3b7'),
     emoji: '\u{1F428}',
     icon: Icons.diversity_1_rounded,
-    assetPath:
-        'assets/images/anhtomau_stickers/sticker_6.gif',
+    assetPath: 'assets/images/anhtomau_stickers/sticker_6.gif',
     gradient: [const Color(0xFFDDF3FF), const Color(0xFFF5FBFF)],
     accent: const Color(0xFF2D8FE3),
   ),
@@ -66,8 +62,7 @@ final List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
     label: L10nService().translate('home_tru_d66cdf'),
     emoji: '\u{1F921}',
     icon: Icons.auto_awesome_rounded,
-    assetPath:
-        'assets/images/anhtomau_stickers/sticker_15.gif',
+    assetPath: 'assets/images/anhtomau_stickers/sticker_15.gif',
     gradient: [const Color(0xFFE8E1FF), const Color(0xFFF8F5FF)],
     accent: const Color(0xFF7B61D9),
   ),
@@ -76,20 +71,18 @@ final List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
     label: L10nService().translate('home_khc_92394f'),
     emoji: '\u{1F62D}',
     icon: Icons.face_retouching_natural_rounded,
-    assetPath:
-        'assets/images/anhtomau_stickers/sticker_7.gif',
+    assetPath: 'assets/images/anhtomau_stickers/sticker_7.gif',
     gradient: [const Color(0xFFDDEBFF), const Color(0xFFF4F8FF)],
     accent: const Color(0xFF5B8DEF),
   ),
-  const _CountdownModeCenterIconPreset(
+  _CountdownModeCenterIconPreset(
     type: 'poop',
-    label: 'Troll',
+    label: L10nService().translate('p7_interaction_troll'),
     emoji: '\u{1F4A9}',
     icon: Icons.bolt_rounded,
-    assetPath:
-        'assets/images/anhtomau_stickers/sticker_8.gif',
-    gradient: [Color(0xFFFFE1B9), Color(0xFFFFF4E6)],
-    accent: Color(0xFFB96B2C),
+    assetPath: 'assets/images/anhtomau_stickers/sticker_8.gif',
+    gradient: [const Color(0xFFFFE1B9), const Color(0xFFFFF4E6)],
+    accent: const Color(0xFFB96B2C),
   ),
 ];
 
@@ -138,8 +131,8 @@ Widget _buildCountdownModeCenterIconVisual({
 }) {
   final resolvedAssetPath =
       preset.assetPath != null && preset.assetPath!.trim().isNotEmpty
-          ? preset.assetPath!.trim()
-          : null;
+      ? preset.assetPath!.trim()
+      : null;
 
   if (preferAsset && resolvedAssetPath != null) {
     return Image.asset(
@@ -148,7 +141,7 @@ Widget _buildCountdownModeCenterIconVisual({
       height: size,
       fit: BoxFit.contain,
       filterQuality: FilterQuality.medium,
-      errorBuilder: (_, __, ___) => _buildCountdownModeCenterIconVisual(
+      errorBuilder: (_, _, _) => _buildCountdownModeCenterIconVisual(
         preset: preset,
         size: size,
         emojiSize: emojiSize,
@@ -239,72 +232,81 @@ Future<String?> _showCountdownModeCenterIconPicker(
                   itemBuilder: (context, index) {
                     final preset = _kCountdownModeCenterIconPresets[index];
                     final isSelected = preset.type == selected;
-                    return InkWell(
-                      borderRadius: BorderRadius.circular(22),
-                      onTap: () => Navigator.of(sheetContext).pop(preset.type),
-                      child: Ink(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.92),
-                          borderRadius: BorderRadius.circular(22),
-                          border: Border.all(
-                            color: isSelected
-                                ? preset.accent
-                                : Colors.white.withValues(alpha: 0.52),
-                            width: isSelected ? 2.2 : 1.2,
+                    return Semantics(
+                      button: true,
+                      selected: isSelected,
+                      label: L10nService()
+                          .translate('p7_choose_interaction')
+                          .replaceAll('{action}', preset.label),
+                      excludeSemantics: true,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(22),
+                        onTap: () =>
+                            Navigator.of(sheetContext).pop(preset.type),
+                        child: Ink(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 10,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: preset.accent.withValues(
-                                alpha: isSelected ? 0.22 : 0.10,
-                              ),
-                              blurRadius: isSelected ? 20 : 12,
-                              offset: const Offset(0, 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.92),
+                            borderRadius: BorderRadius.circular(22),
+                            border: Border.all(
+                              color: isSelected
+                                  ? preset.accent
+                                  : Colors.white.withValues(alpha: 0.52),
+                              width: isSelected ? 2.2 : 1.2,
                             ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 46,
-                              height: 46,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  colors: preset.gradient,
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
+                            boxShadow: [
+                              BoxShadow(
+                                color: preset.accent.withValues(
+                                  alpha: isSelected ? 0.22 : 0.10,
                                 ),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.80),
-                                  width: 2,
+                                blurRadius: isSelected ? 20 : 12,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 46,
+                                height: 46,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    colors: preset.gradient,
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.80),
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: _buildCountdownModeCenterIconVisual(
+                                    preset: preset,
+                                    size: 36,
+                                    emojiSize: 28,
+                                  ),
                                 ),
                               ),
-                              child: Center(
-                                child: _buildCountdownModeCenterIconVisual(
-                                  preset: preset,
-                                  size: 36,
-                                  emojiSize: 28,
+                              const SizedBox(height: 8),
+                              Text(
+                                preset.label,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: SLTheme.quicksand(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF243041),
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              preset.label,
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: SLTheme.quicksand(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xFF243041),
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     );
@@ -348,63 +350,69 @@ class _CountdownModeFriendTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Ink(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        ),
-        child: Row(
-          children: [
-            _CountdownModeAvatarFrame(
-              avatarUrl: friend.avatarUrl,
-              fallbackName: friend.displayName,
-              avatarFrameKey: avatarFrameKey,
-              accent: const Color(0xFFFF6FA3),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    friend.displayName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: SLTheme.textStyleForKey(
-                      fontKey,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    friend.subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: SLTheme.textStyleForKey(
-                      fontKey,
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ],
+    return Semantics(
+      button: true,
+      label: L10nService()
+          .translate('p7_open_friend_space')
+          .replaceAll('{name}', friend.displayName),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          ),
+          child: Row(
+            children: [
+              _CountdownModeAvatarFrame(
+                avatarUrl: friend.avatarUrl,
+                fallbackName: friend.displayName,
+                avatarFrameKey: avatarFrameKey,
+                accent: const Color(0xFFFF6FA3),
               ),
-            ),
-            const SizedBox(width: 8),
-            const Icon(
-              Icons.north_east_rounded,
-              color: Colors.white70,
-              size: 18,
-            ),
-          ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      friend.displayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: SLTheme.textStyleForKey(
+                        fontKey,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      friend.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: SLTheme.textStyleForKey(
+                        fontKey,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(
+                Icons.north_east_rounded,
+                color: Colors.white70,
+                size: 18,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -563,73 +571,87 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: onCenterIconTap,
-              onLongPress: onCenterIconChanged == null
+            child: Semantics(
+              button: onCenterIconTap != null || onCenterIconChanged != null,
+              label: L10nService()
+                  .translate('p7_center_interaction_label')
+                  .replaceAll('{action}', centerPreset.label),
+              hint: onCenterIconChanged == null
                   ? null
-                  : () async {
-                      final selected = await _showCountdownModeCenterIconPicker(
-                        context,
-                        selectedType: centerIconType,
-                      );
-                      if (selected != null) {
-                        onCenterIconChanged!(selected);
-                      }
-                    },
-              onHorizontalDragEnd: onCenterIconChanged == null
-                  ? null
-                  : (details) {
-                      final velocity = details.primaryVelocity ?? 0;
-                      if (velocity.abs() < 180) {
-                        return;
-                      }
-                      onCenterIconChanged!(
-                        _cycleCountdownModeCenterIconType(
-                          centerIconType,
-                          velocity < 0 ? 1 : -1,
-                        ),
-                      );
-                    },
-              child: Container(
-                width: 58,
-                height: 58,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: isDark ? 0.14 : 0.94),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: isDark ? 0.28 : 0.84),
-                    width: 1.5,
+                  : L10nService().translate('p7_center_interaction_hint'),
+              excludeSemantics: true,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onCenterIconTap,
+                onLongPress: onCenterIconChanged == null
+                    ? null
+                    : () async {
+                        final selected =
+                            await _showCountdownModeCenterIconPicker(
+                              context,
+                              selectedType: centerIconType,
+                            );
+                        if (selected != null) {
+                          onCenterIconChanged!(selected);
+                        }
+                      },
+                onHorizontalDragEnd: onCenterIconChanged == null
+                    ? null
+                    : (details) {
+                        final velocity = details.primaryVelocity ?? 0;
+                        if (velocity.abs() < 180) {
+                          return;
+                        }
+                        onCenterIconChanged!(
+                          _cycleCountdownModeCenterIconType(
+                            centerIconType,
+                            velocity < 0 ? 1 : -1,
+                          ),
+                        );
+                      },
+                child: Container(
+                  width: 58,
+                  height: 58,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: isDark ? 0.14 : 0.94),
+                    border: Border.all(
+                      color: Colors.white.withValues(
+                        alpha: isDark ? 0.28 : 0.84,
+                      ),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: centerPreset.accent.withValues(alpha: 0.22),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: centerPreset.accent.withValues(alpha: 0.22),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(5),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: centerPreset.gradient,
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+                  child: Padding(
+                    padding: const EdgeInsets.all(5),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: centerPreset.gradient,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        border: Border.all(
+                          color: Colors.white.withValues(
+                            alpha: isDark ? 0.22 : 0.88,
+                          ),
+                          width: 2,
+                        ),
                       ),
-                      border: Border.all(
-                        color: Colors.white
-                            .withValues(alpha: isDark ? 0.22 : 0.88),
-                        width: 2,
-                      ),
-                    ),
-                    child: Center(
-                      child: _buildCountdownModeCenterIconVisual(
-                        preset: centerPreset,
-                        size: 34,
-                        emojiSize: 24,
+                      child: Center(
+                        child: _buildCountdownModeCenterIconVisual(
+                          preset: centerPreset,
+                          size: 34,
+                          emojiSize: 24,
+                        ),
                       ),
                     ),
                   ),
@@ -706,26 +728,39 @@ class _CountdownModeAvatarIdentity extends StatelessWidget {
               Positioned(
                 right: -6,
                 bottom: -6,
-                child: GestureDetector(
-                  onTap: onChatTap,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD81B60),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 1.5),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
+                child: Semantics(
+                  button: true,
+                  label: L10nService()
+                      .translate('p7_open_chat_with')
+                      .replaceAll('{name}', name),
+                  excludeSemantics: true,
+                  child: Tooltip(
+                    message: L10nService()
+                        .translate('p7_open_chat_with')
+                        .replaceAll('{name}', name),
+                    excludeFromSemantics: true,
+                    child: GestureDetector(
+                      onTap: onChatTap,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD81B60),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1.5),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 4,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.chat_bubble_rounded,
-                      color: Colors.white,
-                      size: 13,
+                        child: const Icon(
+                          Icons.chat_bubble_rounded,
+                          color: Colors.white,
+                          size: 13,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -752,7 +787,8 @@ class _CountdownModeAvatarIdentity extends StatelessWidget {
             color: accent.withValues(alpha: isDark ? 0.18 : 0.12),
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
-                color: accent.withValues(alpha: isDark ? 0.30 : 0.18)),
+              color: accent.withValues(alpha: isDark ? 0.30 : 0.18),
+            ),
           ),
           child: Text(
             roleLabel,
@@ -773,10 +809,16 @@ class _CountdownModeAvatarIdentity extends StatelessWidget {
       return content;
     }
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: content,
+    return Semantics(
+      button: true,
+      label: L10nService()
+          .translate('p7_change_avatar_for')
+          .replaceAll('{name}', name),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: content,
+      ),
     );
   }
 }
@@ -815,11 +857,7 @@ class _CountdownModeAvatarFrame extends StatelessWidget {
       return Container(
         color: accent.withValues(alpha: 0.12),
         alignment: Alignment.center,
-        child: Icon(
-          Icons.favorite_border_rounded,
-          size: 28,
-          color: accent,
-        ),
+        child: Icon(Icons.favorite_border_rounded, size: 28, color: accent),
       );
     }
 
@@ -829,7 +867,7 @@ class _CountdownModeAvatarFrame extends StatelessWidget {
         fit: BoxFit.cover,
         filterQuality: FilterQuality.medium,
         memCacheWidth: 400,
-        errorWidget: (_, __, ___) => _buildFallback(),
+        errorWidget: (_, _, _) => _buildFallback(),
       );
     }
 
@@ -912,18 +950,12 @@ class _CountdownModeCircle extends StatelessWidget {
           shadows: styleData.shadows,
         ),
         child: Padding(
-          padding: (styleData.outerColor != null ||
-                  styleData.outerGradient != null ||
-                  styleData.outerBorder != null)
-              ? const EdgeInsets.all(14)
-              : EdgeInsets.zero,
+          padding: const EdgeInsets.all(14),
           child: Container(
             decoration: ShapeDecoration(
               shape: SlCountdownShapes.getShapeBorderForKey(
                 countdownShapeKey,
-                side: (styleData.innerBorder is Border)
-                    ? (styleData.innerBorder).top
-                    : BorderSide.none,
+                side: styleData.innerBorder.top,
               ),
               color: styleData.innerColor,
               gradient: styleData.innerGradient,
@@ -932,14 +964,16 @@ class _CountdownModeCircle extends StatelessWidget {
               alignment: Alignment.center,
               children: [
                 Padding(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: resolvedSize * 0.12),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: resolvedSize * 0.12,
+                  ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Padding(
                         padding: EdgeInsets.symmetric(
-                            horizontal: resolvedSize * 0.04),
+                          horizontal: resolvedSize * 0.04,
+                        ),
                         child: _CountdownModeCircleTapTarget(
                           circleSize: resolvedSize,
                           onTap: onTopTap,
@@ -955,8 +989,10 @@ class _CountdownModeCircle extends StatelessWidget {
                               textAlign: TextAlign.center,
                               style: SLTheme.textStyleForKey(
                                 fontKey,
-                                fontSize:
-                                    (resolvedSize * 0.082).clamp(17.0, 24.0),
+                                fontSize: (resolvedSize * 0.082).clamp(
+                                  17.0,
+                                  24.0,
+                                ),
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 0.8,
                                 color: styleData.bottomColor,
@@ -990,7 +1026,8 @@ class _CountdownModeCircle extends StatelessWidget {
                       SizedBox(height: resolvedSize * 0.02),
                       Padding(
                         padding: EdgeInsets.symmetric(
-                            horizontal: resolvedSize * 0.06),
+                          horizontal: resolvedSize * 0.06,
+                        ),
                         child: _CountdownModeCircleTapTarget(
                           circleSize: resolvedSize,
                           onTap: onBottomTap,
@@ -1006,8 +1043,10 @@ class _CountdownModeCircle extends StatelessWidget {
                               textAlign: TextAlign.center,
                               style: SLTheme.textStyleForKey(
                                 fontKey,
-                                fontSize:
-                                    (resolvedSize * 0.082).clamp(17.0, 24.0),
+                                fontSize: (resolvedSize * 0.082).clamp(
+                                  17.0,
+                                  24.0,
+                                ),
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 1.1,
                                 color: styleData.bottomColor,
@@ -1050,16 +1089,20 @@ class _CountdownModeCircleTapTarget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: ConstrainedBox(
-        constraints: constraints ??
-            BoxConstraints(
-              minWidth: _countdownTapWidth(circleSize),
-              minHeight: _countdownTapHeight(circleSize),
-            ),
-        child: Center(child: child),
+    return Semantics(
+      button: onTap != null,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints:
+              constraints ??
+              BoxConstraints(
+                minWidth: _countdownTapWidth(circleSize),
+                minHeight: _countdownTapHeight(circleSize),
+              ),
+          child: Center(child: child),
+        ),
       ),
     );
   }
@@ -1120,8 +1163,11 @@ class _CountdownModeGlowOrb extends StatelessWidget {
 
 /// Overlay trái tim bay bổng, xoay lật 3D đa chiều cực kỳ cute và nổi bật.
 class FloatingHeartsRingOverlay extends StatefulWidget {
-  const FloatingHeartsRingOverlay(
-      {super.key, required this.size, this.enableMotion = true});
+  const FloatingHeartsRingOverlay({
+    super.key,
+    required this.size,
+    this.enableMotion = true,
+  });
   final double size;
   final bool enableMotion;
 
@@ -1142,7 +1188,9 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _particleCount = UiPrefs.notifier.value.liteMode ? 15 : 75;
+    // Dùng lượng hạt vừa đủ để Tim bay nổi bật nhưng không tạo hàng chục
+    // widget phát sáng quá lớn trên mỗi khung hình (đặc biệt ở CanvasKit).
+    _particleCount = UiPrefs.notifier.value.liteMode ? 12 : 32;
     _initParticles();
     _animController = AnimationController(
       vsync: this,
@@ -1207,23 +1255,23 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
       final jitter3 = ((rng ^ (i * 9876543)) & 0xFFFF) / 0xFFFF;
       final zIndex = ((rng ^ (i * 13579)) & 0xFFFF) / 0xFFFF;
 
-      // Tính toán base size tuỳ theo độ sâu (zIndex) để tạo hiệu ứng 3D
-      // Tăng kích thước để các hạt rõ và nổi bật hơn
-      final baseSize = 12.0 + (jitter3 * 22.0) + (zIndex * 28.0);
+      // Chênh kích thước vừa phải tạo chiều sâu mà không che số ngày.
+      final baseSize = 10.0 + (jitter3 * 14.0) + (zIndex * 10.0);
 
       return _HeartParticle(
         startX: 0.05 + (jitter1 * 0.9),
         speed: 0.2 + (jitter2 * 0.6) + (zIndex * 0.7), // Bay nhẹ nhàng bay bổng
         size: baseSize,
-        wobbleAmplitude: 12.0 + (jitter1 * 30.0) + (zIndex * 20.0),
+        wobbleAmplitude: 8.0 + (jitter1 * 12.0) + (zIndex * 8.0),
         wobbleSpeed: 1.0 + (jitter2 * 3.0),
         phase: jitter1,
         rotationSpeed: (jitter2 - 0.5) * 5.0,
         colorIndex:
             (jitter3 * _kHeartColors.length).toInt() % _kHeartColors.length,
-        icon: iconChoices[
-            (jitter1 * iconChoices.length).toInt() % iconChoices.length],
-        isGlow: jitter2 > 0.35, // Phát sáng nhiều hơn (65%)
+        icon:
+            iconChoices[(jitter1 * iconChoices.length).toInt() %
+                iconChoices.length],
+        isGlow: jitter2 > 0.48,
         zIndex: zIndex,
         pulseSpeed: 2.0 + (jitter1 * 3.0), // Tốc độ nhịp đập tim
       );
@@ -1252,85 +1300,14 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
 
             return RepaintBoundary(
               child: ClipOval(
-                child: Stack(
-                  clipBehavior: Clip.hardEdge,
-                  children: List.generate(_particleCount, (i) {
-                    final p = _particles[i];
-
-                    final double localProgress =
-                        (progress * p.speed + p.phase) % 1.0;
-
-                    // Bay từ dưới lên trên: y = 1.1 -> -0.1
-                    final double cy = widget.size * (1.1 - localProgress * 1.2);
-
-                    // Lắc lư ngang theo hình sin
-                    final double t =
-                        math.sin(localProgress * p.wobbleSpeed * 2 * math.pi);
-                    final double cx = (widget.size * p.startX) +
-                        (t * p.wobbleAmplitude) +
-                        _autoTiltX;
-
-                    double opacity = 1.0;
-                    if (localProgress < 0.1) {
-                      opacity = localProgress / 0.1;
-                    } else if (localProgress > 0.85) {
-                      opacity = (1.0 - localProgress) / 0.15;
-                    }
-
-                    // Thêm nhịp đập nhè nhẹ cho tim (Pulsing)
-                    final double pulse = 1.0 +
-                        0.15 * math.sin(progress * math.pi * 2 * p.pulseSpeed);
-
-                    final double entryScale =
-                        localProgress < 0.1 ? (localProgress / 0.1) : 1.0;
-                    final double scale = entryScale * pulse;
-                    final double angle =
-                        localProgress * p.rotationSpeed * math.pi;
-                    final Color baseColor = _kHeartColors[p.colorIndex];
-
-                    Widget heartWidget = Icon(
-                      p.icon,
-                      size: p.size,
-                      color: baseColor.withValues(alpha: 1.0), // Đậm màu, không trong suốt
-                    );
-
-                    if (p.isGlow) {
-                      heartWidget = Container(
-                        decoration:
-                            BoxDecoration(shape: BoxShape.circle, boxShadow: [
-                          BoxShadow(
-                            color: baseColor.withValues(alpha: 0.85),
-                            blurRadius: 22, // Tỏa sáng rộng hơn
-                            spreadRadius: 4,
-                          ),
-                          BoxShadow(
-                            color: Colors.white.withValues(alpha: 0.4),
-                            blurRadius: 8,
-                            spreadRadius: 1, // Lõi sáng trắng nhẹ nhàng
-                          ),
-                        ]),
-                        child: heartWidget,
-                      );
-                    }
-
-                    return Positioned(
-                      left: cx - p.size / 2,
-                      top: cy - p.size / 2,
-                      child: Opacity(
-                        opacity: opacity.clamp(0.0, 1.0),
-                        child: Transform.translate(
-                          offset: Offset(0, _autoTiltY),
-                          child: Transform.rotate(
-                            angle: angle,
-                            child: Transform.scale(
-                              scale: scale,
-                              child: heartWidget,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
+                child: CustomPaint(
+                  painter: _FloatingHeartsCanvasPainter(
+                    progress: progress,
+                    particles: _particles,
+                    tiltX: _autoTiltX,
+                    tiltY: _autoTiltY,
+                  ),
+                  child: const SizedBox.expand(),
                 ),
               ),
             );
@@ -1383,3 +1360,169 @@ class _HeartParticle {
   final double pulseSpeed;
 }
 
+/// Một painter thay cho hàng chục Icon/Positioned được layout lại mỗi frame.
+/// Nhờ vậy Tim bay vẫn nhiều màu và có chiều sâu nhưng nhẹ hơn trên Android/Web.
+class _FloatingHeartsCanvasPainter extends CustomPainter {
+  final double progress;
+  final List<_HeartParticle> particles;
+  final double tiltX;
+  final double tiltY;
+
+  const _FloatingHeartsCanvasPainter({
+    required this.progress,
+    required this.particles,
+    required this.tiltX,
+    required this.tiltY,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final particle in particles) {
+      final localProgress = (progress * particle.speed + particle.phase) % 1.0;
+      final sway = math.sin(localProgress * particle.wobbleSpeed * 2 * math.pi);
+      final center = Offset(
+        (size.width * particle.startX) +
+            (sway * particle.wobbleAmplitude) +
+            tiltX,
+        size.height * (1.1 - localProgress * 1.2) + tiltY,
+      );
+
+      var opacity = 1.0;
+      if (localProgress < 0.1) {
+        opacity = localProgress / 0.1;
+      } else if (localProgress > 0.85) {
+        opacity = (1.0 - localProgress) / 0.15;
+      }
+      opacity = opacity.clamp(0.0, 1.0);
+
+      final pulse =
+          1.0 + 0.15 * math.sin(progress * math.pi * 2 * particle.pulseSpeed);
+      final entryScale = localProgress < 0.1 ? localProgress / 0.1 : 1.0;
+      final scale = entryScale * pulse;
+      final angle = localProgress * particle.rotationSpeed * math.pi;
+      final baseColor =
+          _FloatingHeartsRingOverlayState._kHeartColors[particle.colorIndex];
+
+      if (particle.isGlow) {
+        final glowRadius = particle.size * 0.82 * scale;
+        canvas.drawCircle(
+          center,
+          glowRadius,
+          Paint()
+            ..shader = RadialGradient(
+              colors: [
+                baseColor.withValues(alpha: 0.28 * opacity),
+                baseColor.withValues(alpha: 0.10 * opacity),
+                Colors.transparent,
+              ],
+            ).createShader(Rect.fromCircle(center: center, radius: glowRadius)),
+        );
+      }
+
+      canvas.save();
+      canvas.translate(center.dx, center.dy);
+      canvas.rotate(angle);
+      canvas.scale(scale, scale);
+      final color = baseColor.withValues(alpha: opacity * 0.94);
+      if (particle.icon == Icons.star_rounded) {
+        _drawStar(canvas, particle.size * 0.48, color);
+      } else if (particle.icon == Icons.auto_awesome) {
+        _drawSparkle(canvas, particle.size * 0.46, color);
+      } else if (particle.icon == Icons.volunteer_activism) {
+        _drawHeart(canvas, particle.size * 0.44, color);
+        canvas.translate(particle.size * 0.27, -particle.size * 0.24);
+        _drawHeart(
+          canvas,
+          particle.size * 0.20,
+          Colors.white.withValues(alpha: opacity * 0.84),
+        );
+      } else {
+        _drawHeart(
+          canvas,
+          particle.size * 0.46,
+          particle.icon == Icons.favorite_border_rounded
+              ? color.withValues(alpha: opacity * 0.72)
+              : color,
+          outlined: particle.icon == Icons.favorite_border_rounded,
+        );
+      }
+      canvas.restore();
+    }
+  }
+
+  void _drawHeart(
+    Canvas canvas,
+    double radius,
+    Color color, {
+    bool outlined = false,
+  }) {
+    final path = Path()
+      ..moveTo(0, radius * 0.72)
+      ..cubicTo(
+        -radius * 1.35,
+        radius * 0.02,
+        -radius * 0.72,
+        -radius,
+        0,
+        -radius * 0.36,
+      )
+      ..cubicTo(
+        radius * 0.72,
+        -radius,
+        radius * 1.35,
+        radius * 0.02,
+        0,
+        radius * 0.72,
+      );
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color
+        ..style = outlined ? PaintingStyle.stroke : PaintingStyle.fill
+        ..strokeWidth = outlined ? math.max(1.2, radius * 0.18) : 0
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
+    );
+  }
+
+  void _drawSparkle(Canvas canvas, double radius, Color color) {
+    final path = Path()
+      ..moveTo(0, -radius)
+      ..lineTo(radius * 0.28, -radius * 0.28)
+      ..lineTo(radius, 0)
+      ..lineTo(radius * 0.28, radius * 0.28)
+      ..lineTo(0, radius)
+      ..lineTo(-radius * 0.28, radius * 0.28)
+      ..lineTo(-radius, 0)
+      ..lineTo(-radius * 0.28, -radius * 0.28)
+      ..close();
+    canvas.drawPath(path, Paint()..color = color);
+  }
+
+  void _drawStar(Canvas canvas, double radius, Color color) {
+    final path = Path();
+    for (var index = 0; index < 10; index++) {
+      final angle = -math.pi / 2 + index * math.pi / 5;
+      final pointRadius = index.isEven ? radius : radius * 0.43;
+      final point = Offset(
+        math.cos(angle) * pointRadius,
+        math.sin(angle) * pointRadius,
+      );
+      if (index == 0) {
+        path.moveTo(point.dx, point.dy);
+      } else {
+        path.lineTo(point.dx, point.dy);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(covariant _FloatingHeartsCanvasPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.tiltX != tiltX ||
+        oldDelegate.tiltY != tiltY ||
+        !identical(oldDelegate.particles, particles);
+  }
+}

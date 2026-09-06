@@ -100,31 +100,31 @@ class ActivityHistoryEntry {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'seq': seq,
-        'ts': ts,
-        'role': role,
-        'text': text,
-        'title': title,
-        'subtitle': subtitle,
-        'action': action,
-        'module': module,
-        'entityType': entityType,
-        'entityId': entityId,
-        'sourceLabel': sourceLabel,
-        'previewUrl': previewUrl,
-        'previewType': previewType,
-        'restorePath': restorePath,
-        'restorePayload': restorePayload,
-        'restoreExpiresAt': restoreExpiresAt,
-        'private': isPrivate,
-        'placeholder': placeholder,
-        'revealed': revealed,
-        'key': key,
-        'houseId': houseId,
-        'syncStatus': syncStatus,
-        'authorUid': authorUid,
-      };
+    'id': id,
+    'seq': seq,
+    'ts': ts,
+    'role': role,
+    'text': text,
+    'title': title,
+    'subtitle': subtitle,
+    'action': action,
+    'module': module,
+    'entityType': entityType,
+    'entityId': entityId,
+    'sourceLabel': sourceLabel,
+    'previewUrl': previewUrl,
+    'previewType': previewType,
+    'restorePath': restorePath,
+    'restorePayload': restorePayload,
+    'restoreExpiresAt': restoreExpiresAt,
+    'private': isPrivate,
+    'placeholder': placeholder,
+    'revealed': revealed,
+    'key': key,
+    'houseId': houseId,
+    'syncStatus': syncStatus,
+    'authorUid': authorUid,
+  };
 
   ActivityHistoryEntry copyWith({
     String? id,
@@ -256,11 +256,9 @@ class ActivityHistoryService {
         }
       }
     } catch (e) {
-      debugPrint('ActivityHistory remote load failed: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage:
-            L10nService().translate('home_activity_history_load_error'),
-      ).message}');
+      debugPrint(
+        'ActivityHistory remote load failed: ${AppErrorMapper.resolve(e, fallbackMessage: L10nService().translate('home_activity_history_load_error')).message}',
+      );
     }
 
     final cache = await _loadCache(resolvedHouseId);
@@ -298,7 +296,8 @@ class ActivityHistoryService {
     final entryId = '${now}_${seq}_${role.trim()}';
     final moduleKey = module.trim().toLowerCase();
     final entityTypeKey = entityType.trim().toLowerCase();
-    final isSecretVaultEntry = moduleKey == 'secret_vault' ||
+    final isSecretVaultEntry =
+        moduleKey == 'secret_vault' ||
         entityTypeKey == 'secret_photo' ||
         restorePath.contains('/private_secure/');
     final safeSubtitle = isSecretVaultEntry ? '' : subtitle;
@@ -306,10 +305,10 @@ class ActivityHistoryService {
     final safePreviewType = isSecretVaultEntry ? 'private' : previewType;
     final safeRestorePayload = isSecretVaultEntry
         ? (Map<String, dynamic>.from(restorePayload)
-          ..remove('url')
-          ..remove('downloadUrl')
-          ..remove('previewUrl')
-          ..remove('caption_plain'))
+            ..remove('url')
+            ..remove('downloadUrl')
+            ..remove('previewUrl')
+            ..remove('caption_plain'))
         : restorePayload;
     final safeIsPrivate = isPrivate || isSecretVaultEntry;
     final safePlaceholder = isSecretVaultEntry && placeholder.trim().isEmpty
@@ -332,7 +331,8 @@ class ActivityHistoryService {
       previewType: safePreviewType,
       restorePath: restorePath,
       restorePayload: safeRestorePayload,
-      restoreExpiresAt: restoreExpiresAt ??
+      restoreExpiresAt:
+          restoreExpiresAt ??
           (restorePath.trim().isNotEmpty && safeRestorePayload.isNotEmpty
               ? now + restoreWindowMs
               : 0),
@@ -367,18 +367,18 @@ class ActivityHistoryService {
         await _saveCache(
           resolvedHouseId,
           next
-              .map((item) => item.id == entry.id
-                  ? item.copyWith(syncStatus: 'synced')
-                  : item)
+              .map(
+                (item) => item.id == entry.id
+                    ? item.copyWith(syncStatus: 'synced')
+                    : item,
+              )
               .toList(),
         );
         return;
       } catch (e) {
         debugPrint(
-            'ActivityHistory direct sync failed: ${AppErrorMapper.resolve(
-          e,
-          fallbackMessage: L10nService().translate('home_activity_sync_error'),
-        ).message}');
+          'ActivityHistory direct sync failed: ${AppErrorMapper.resolve(e, fallbackMessage: L10nService().translate('home_activity_sync_error')).message}',
+        );
       }
     }
 
@@ -406,28 +406,28 @@ class ActivityHistoryService {
         );
       } catch (e) {
         final errorText = AppErrorMapper.resolve(e).message;
-        final isNotFound = errorText.contains('firebase_functions/not-found') ||
+        final isNotFound =
+            errorText.contains('firebase_functions/not-found') ||
             errorText.contains('not-found') ||
             errorText.contains('NOT_FOUND') ||
             errorText.contains(
-                L10nService().translate('home_activity_memory_not_found'));
+              L10nService().translate('home_activity_memory_not_found'),
+            );
         final payload = Map<String, dynamic>.from(entry.restorePayload);
         final payloadPurgeAt = (payload['purgeAt'] as num?)?.toInt() ?? 0;
         final effectiveExpiry = entry.restoreExpiresAt > 0
             ? entry.restoreExpiresAt
             : payloadPurgeAt;
-        final isExpired = effectiveExpiry > 0 &&
+        final isExpired =
+            effectiveExpiry > 0 &&
             DateTime.now().millisecondsSinceEpoch > effectiveExpiry;
         if (!isNotFound ||
             payload.isEmpty ||
             entry.houseId.isEmpty ||
             isExpired) {
           debugPrint(
-              'ActivityHistory diary memory restore failed: ${AppErrorMapper.resolve(
-            e,
-            fallbackMessage:
-                L10nService().translate('home_activity_memory_restore_error'),
-          ).message}');
+            'ActivityHistory diary memory restore failed: ${AppErrorMapper.resolve(e, fallbackMessage: L10nService().translate('home_activity_memory_restore_error')).message}',
+          );
           return false;
         }
 
@@ -447,19 +447,16 @@ class ActivityHistoryService {
           });
         } catch (fallbackError) {
           debugPrint(
-            'ActivityHistory diary memory fallback restore failed: ${AppErrorMapper.resolve(
-              fallbackError,
-              fallbackMessage:
-                  L10nService().translate('home_activity_backup_restore_error'),
-            ).message}',
+            'ActivityHistory diary memory fallback restore failed: ${AppErrorMapper.resolve(fallbackError, fallbackMessage: L10nService().translate('home_activity_backup_restore_error')).message}',
           );
           return false;
         }
       }
 
       await add(
-        L10nService().format('home_activity_restored',
-            {'label': entry.effectiveSourceLabel.toLowerCase()}),
+        L10nService().format('home_activity_restored', {
+          'label': entry.effectiveSourceLabel.toLowerCase(),
+        }),
         houseId: entry.houseId,
         role: entry.role,
         title: L10nService().translate('home_activity_restored_title'),
@@ -483,8 +480,9 @@ class ActivityHistoryService {
     await _db.ref(entry.restorePath).set(payload);
 
     await add(
-      L10nService().format('home_activity_restored',
-          {'label': entry.effectiveSourceLabel.toLowerCase()}),
+      L10nService().format('home_activity_restored', {
+        'label': entry.effectiveSourceLabel.toLowerCase(),
+      }),
       houseId: entry.houseId,
       role: entry.role,
       title: L10nService().translate('home_activity_restored_title'),
@@ -503,7 +501,8 @@ class ActivityHistoryService {
   Future<void> clear({String? houseId}) async {
     final resolvedHouseId = await _resolveHouseId(houseId);
     if (resolvedHouseId == null || resolvedHouseId.isEmpty) {
-      final prefs = OfflineCacheService.getPrefsSync() ??
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
       await prefs.remove(_legacyKey);
       await prefs.remove(_legacySeqKey);
@@ -511,7 +510,8 @@ class ActivityHistoryService {
     }
 
     await _saveCache(resolvedHouseId, const <ActivityHistoryEntry>[]);
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     await prefs.remove(_seqKey(resolvedHouseId));
 
@@ -537,7 +537,8 @@ class ActivityHistoryService {
       return;
     }
 
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     if (prefs.getBool('$_migratedPrefix$resolvedHouseId') == true) {
       return;
@@ -589,21 +590,27 @@ class ActivityHistoryService {
   String exportAsTxt(List<ActivityHistoryEntry> list) {
     final lines = list.asMap().entries.map((e) {
       final idx = (e.key + 1).toString().padLeft(3, '0');
-      final time = DateFormat('dd/MM/yyyy HH:mm')
-          .format(DateTime.fromMillisecondsSinceEpoch(e.value.ts));
+      final time = DateFormat(
+        'dd/MM/yyyy HH:mm',
+      ).format(DateTime.fromMillisecondsSinceEpoch(e.value.ts));
       return '$idx. $time • ${e.value.displayLine}';
     }).toList();
     return lines.join('\n');
   }
 
   String exportAsHtml(List<ActivityHistoryEntry> list) {
-    final rows = list.asMap().entries.map((e) {
-      final idx = (e.key + 1).toString().padLeft(3, '0');
-      final time = DateFormat('dd/MM/yyyy HH:mm')
-          .format(DateTime.fromMillisecondsSinceEpoch(e.value.ts));
-      final line = '$idx. $time • ${e.value.displayLine}';
-      return '<div class="row">$line</div>';
-    }).join('');
+    final rows = list
+        .asMap()
+        .entries
+        .map((e) {
+          final idx = (e.key + 1).toString().padLeft(3, '0');
+          final time = DateFormat(
+            'dd/MM/yyyy HH:mm',
+          ).format(DateTime.fromMillisecondsSinceEpoch(e.value.ts));
+          final line = '$idx. $time • ${e.value.displayLine}';
+          return '<div class="row">$line</div>';
+        })
+        .join('');
 
     return '''<!doctype html><html lang="vi"><head><meta charset="utf-8">
 <title>Lịch sử hoạt động</title>
@@ -640,7 +647,8 @@ $rows
 
   Future<List<ActivityHistoryEntry>> _loadCache(String houseId) async {
     try {
-      final prefs = OfflineCacheService.getPrefsSync() ??
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
       final raw = prefs.getString(_cacheKey(houseId));
       if (raw == null || raw.isEmpty) {
@@ -650,9 +658,11 @@ $rows
       return _normalizeEntries(
         list
             .whereType<Map>()
-            .map((item) => ActivityHistoryEntry.fromJson(
-                  Map<String, dynamic>.from(item),
-                ))
+            .map(
+              (item) => ActivityHistoryEntry.fromJson(
+                Map<String, dynamic>.from(item),
+              ),
+            )
             .toList(),
       );
     } catch (_) {
@@ -662,7 +672,8 @@ $rows
 
   Future<List<ActivityHistoryEntry>> _loadLegacyLocalEntries() async {
     try {
-      final prefs = OfflineCacheService.getPrefsSync() ??
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
       final raw = prefs.getString(_legacyKey);
       if (raw == null || raw.isEmpty) {
@@ -687,7 +698,8 @@ $rows
     String houseId,
     List<ActivityHistoryEntry> list,
   ) async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     await prefs.setString(
       _cacheKey(houseId),
@@ -716,7 +728,8 @@ $rows
   Future<void> _appendLegacyLocal(ActivityHistoryEntry entry) async {
     final list = await _loadLegacyLocalEntries();
     final merged = _normalizeEntries([...list, entry]);
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     await prefs.setString(
       _legacyKey,
@@ -726,7 +739,8 @@ $rows
   }
 
   List<ActivityHistoryEntry> _normalizeEntries(
-      List<ActivityHistoryEntry> list) {
+    List<ActivityHistoryEntry> list,
+  ) {
     final byId = <String, ActivityHistoryEntry>{};
     for (final entry in list) {
       final resolvedId = entry.id.isNotEmpty
@@ -748,16 +762,16 @@ $rows
       if (!snapshot.exists || snapshot.value == null) return;
 
       final raw = Map<dynamic, dynamic>.from(snapshot.value as Map);
-      final list =
-          raw.entries.where((entry) => entry.value is Map).map((entry) {
+      final list = raw.entries.where((entry) => entry.value is Map).map((
+        entry,
+      ) {
         final map = Map<String, dynamic>.from(
           Map<dynamic, dynamic>.from(entry.value as Map),
         );
         map['id'] ??= entry.key.toString();
         map['houseId'] ??= houseId;
         return ActivityHistoryEntry.fromJson(map);
-      }).toList()
-            ..sort((a, b) => a.ts.compareTo(b.ts));
+      }).toList()..sort((a, b) => a.ts.compareTo(b.ts));
 
       if (list.length <= _max) return;
       final overflow = list.take(list.length - _max).toList();
@@ -769,10 +783,9 @@ $rows
         await _db.ref('houses/$houseId/activity_history').update(updates);
       }
     } catch (e) {
-      debugPrint('ActivityHistory trim failed: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Cannot compress activity history.',
-      ).message}');
+      debugPrint(
+        'ActivityHistory trim failed: ${AppErrorMapper.resolve(e, fallbackMessage: 'Cannot compress activity history.').message}',
+      );
     }
   }
 
@@ -787,7 +800,8 @@ $rows
       return resolved;
     }
 
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     final cached = prefs.getString('il_house_id')?.trim() ?? '';
     final cachedAuthUid = prefs.getString('il_auth_uid')?.trim() ?? '';
@@ -813,15 +827,19 @@ $rows
         await prefs.setString('il_auth_uid', user.uid);
         return remote;
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[ActivityHistory] Không khôi phục được houseId: $error');
+    }
     return null;
   }
 
   Future<int> _nextSeq(String? houseId) async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    final key =
-        houseId == null || houseId.isEmpty ? _legacySeqKey : _seqKey(houseId);
+    final key = houseId == null || houseId.isEmpty
+        ? _legacySeqKey
+        : _seqKey(houseId);
     int next = prefs.getInt(key) ?? 0;
     next = (next + 1) > 100000 ? 1 : next + 1;
     await prefs.setInt(key, next);

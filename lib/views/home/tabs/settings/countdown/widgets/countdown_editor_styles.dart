@@ -3,16 +3,15 @@ part of '../../../settings_tab.dart';
 
 extension StylesEditorExt on _CountdownModeEditorScreenState {
   List<Widget> _buildEditorStyles(
-      BuildContext context, _CountdownModeThemeData themeData) {
+    BuildContext context,
+    _CountdownModeThemeData themeData,
+  ) {
     return [
       _sectionCard(
         icon: Icons.event_available_rounded,
-        title: 'Mốc thời gian & kiểu hiển thị',
-        subtitle: 'Chọn ngày mốc, theme, vòng đếm, kính mờ',
-        iconGradient: const [
-          Color(0xFF14B8A6),
-          Color(0xFF06B6D4),
-        ],
+        title: context.tr('p7_countdown_time_style_title'),
+        subtitle: context.tr('p7_countdown_time_style_subtitle'),
+        iconGradient: const [Color(0xFF14B8A6), Color(0xFF06B6D4)],
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -28,18 +27,19 @@ extension StylesEditorExt on _CountdownModeEditorScreenState {
                     color: _singleMode ? Colors.white : const Color(0xFF7C6D76),
                   ),
                   selectedColor: const Color(0xFFD81B60),
-                  onSelected: (_) => setState(() => _singleMode = true),
+                  onSelected: (_) => _safeSetState(() => _singleMode = true),
                 ),
                 ChoiceChip(
                   selected: !_singleMode,
                   label: Text(context.tr('home_cpi_d525b0')),
                   labelStyle: SLTheme.quicksand(
                     fontWeight: FontWeight.w800,
-                    color:
-                        !_singleMode ? Colors.white : const Color(0xFF7C6D76),
+                    color: !_singleMode
+                        ? Colors.white
+                        : const Color(0xFF7C6D76),
                   ),
                   selectedColor: const Color(0xFFD81B60),
-                  onSelected: (_) => setState(() => _singleMode = false),
+                  onSelected: (_) => _safeSetState(() => _singleMode = false),
                 ),
               ],
             ),
@@ -52,12 +52,8 @@ extension StylesEditorExt on _CountdownModeEditorScreenState {
                   label: Text(context.tr('countdown_today')),
                   onPressed: () {
                     final now = DateTime.now();
-                    setState(() {
-                      _anchorDate = DateTime(
-                        now.year,
-                        now.month,
-                        now.day,
-                      );
+                    _safeSetState(() {
+                      _anchorDate = DateTime(now.year, now.month, now.day);
                     });
                   },
                 ),
@@ -67,12 +63,10 @@ extension StylesEditorExt on _CountdownModeEditorScreenState {
                     final parsed = DateInputUtils.parse(
                       widget.anchorDate == null
                           ? ''
-                          : DateInputUtils.formatIsoDate(
-                              widget.anchorDate!,
-                            ),
+                          : DateInputUtils.formatIsoDate(widget.anchorDate!),
                     );
                     if (parsed == null) return;
-                    setState(() {
+                    _safeSetState(() {
                       _anchorDate = DateTime(
                         parsed.year,
                         parsed.month,
@@ -90,9 +84,7 @@ extension StylesEditorExt on _CountdownModeEditorScreenState {
               decoration: BoxDecoration(
                 color: const Color(0xFFFFF6FA),
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: const Color(0xFFF4D2E1),
-                ),
+                border: Border.all(color: const Color(0xFFF4D2E1)),
               ),
               child: Row(
                 children: [
@@ -112,9 +104,7 @@ extension StylesEditorExt on _CountdownModeEditorScreenState {
                         Text(
                           _anchorDate == null
                               ? context.tr('home_chachn_cf29c8')
-                              : DateInputUtils.formatDisplayDate(
-                                  _anchorDate!,
-                                ),
+                              : DateInputUtils.formatDisplayDate(_anchorDate!),
                           style: SLTheme.quicksand(
                             fontSize: 14.5,
                             fontWeight: FontWeight.w900,
@@ -136,10 +126,7 @@ extension StylesEditorExt on _CountdownModeEditorScreenState {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    icon: const Icon(
-                      Icons.event_rounded,
-                      size: 18,
-                    ),
+                    icon: const Icon(Icons.event_rounded, size: 18),
                     label: Text(context.tr('home_chnngy_d2cce5')),
                   ),
                 ],

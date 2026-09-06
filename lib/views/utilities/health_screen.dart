@@ -51,15 +51,16 @@ class _HealthScreenState extends State<HealthScreen> {
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: SLColors.paper,
         title: Text(
-          'Quyền Dữ Liệu Sức Khỏe',
+          context.tr('p3_health_consent_title'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.bold,
             color: const Color(0xFFE91E63),
           ),
         ),
         content: Text(
-          'SoulLocket thu thập và lưu trữ thông tin chu kỳ kinh nguyệt của bạn để tính toán và hiển thị dự báo cho bạn và nửa kia. Dữ liệu sức khỏe này là nhạy cảm và chỉ được chia sẻ an toàn với người ấy. Bạn có đồng ý cung cấp thông tin này không?',
+          context.tr('p3_health_consent_body'),
           style: SLTheme.quicksand(fontWeight: FontWeight.w600, height: 1.5),
         ),
         actions: [
@@ -72,7 +73,7 @@ class _HealthScreenState extends State<HealthScreen> {
             ),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              'Tiếp tục',
+              context.tr('p3_continue'),
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -186,11 +187,9 @@ class _HealthScreenState extends State<HealthScreen> {
           _lastDate!,
         ).map(DateTime.parse).toList(growable: false);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(L10nService().translate('Đã lưu cài đặt sức khỏe! ✨')),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.tr('p3_health_saved'))));
     }
   }
 
@@ -213,24 +212,24 @@ class _HealthScreenState extends State<HealthScreen> {
     final nextPeriodDays = safeLength - dayInCycle;
 
     String phase = '';
-    String fertility = 'Thấp 🍃';
+    String fertility = context.tr('p3_health_fertility_low');
     Color phaseColor = const Color(0xFFFDE4ED);
 
     if (dayInCycle < _periodDays) {
-      phase = 'Đang trong kỳ';
-      fertility = 'Rất thấp';
+      phase = context.tr('p3_health_phase_period');
+      fertility = context.tr('p3_health_fertility_very_low');
       phaseColor = const Color(0xFFFFEBEE);
     } else if (dayInCycle < _length / 2 - 2) {
-      phase = 'Giai đoạn An toàn';
-      fertility = 'Thấp 🍃';
+      phase = context.tr('p3_health_phase_safe');
+      fertility = context.tr('p3_health_fertility_low');
       phaseColor = const Color(0xFFFDE4ED);
     } else if (dayInCycle < _length / 2 + 2) {
-      phase = 'Giai đoạn Rụng trứng';
-      fertility = 'Cao 🔥';
+      phase = context.tr('p3_health_phase_ovulation');
+      fertility = context.tr('p3_health_fertility_high');
       phaseColor = const Color(0xFFFFF3E0);
     } else {
-      phase = 'Giai đoạn An toàn (PMS)';
-      fertility = 'Thấp 🍃';
+      phase = context.tr('p3_health_phase_pms');
+      fertility = context.tr('p3_health_fertility_low');
       phaseColor = const Color(0xFFF3E5F5);
     }
 
@@ -301,6 +300,7 @@ class _HealthScreenState extends State<HealthScreen> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         leading: IconButton(
+          tooltip: context.tr('p3_back'),
           icon: const Icon(
             Icons.arrow_back_ios_new,
             color: Color(0xFFD81B60),
@@ -321,30 +321,39 @@ class _HealthScreenState extends State<HealthScreen> {
             ),
           ),
           child: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 40),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SLSpacing.h8,
-                  _buildHeader(),
-                  SLSpacing.h24,
-                  if (!_hasConsent)
-                    _buildConsentButton()
-                  else ...[
-                    _buildMainDashboard(cycleData),
-                    SLSpacing.h32,
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: _buildSettingsSection(),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 760),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: SingleChildScrollView(
+                    physics: SLResponsive.scrollPhysicsForPlatform(),
+                    padding: const EdgeInsets.only(bottom: 40),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SLSpacing.h8,
+                        _buildHeader(),
+                        SLSpacing.h24,
+                        if (!_hasConsent)
+                          _buildConsentButton()
+                        else ...[
+                          _buildMainDashboard(cycleData),
+                          SLSpacing.h32,
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: _buildSettingsSection(),
+                          ),
+                          SLSpacing.h24,
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: _buildPrivacyAndNotesSection(),
+                          ),
+                        ],
+                      ],
                     ),
-                    SLSpacing.h24,
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: _buildPrivacyAndNotesSection(),
-                    ),
-                  ],
-                ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -357,7 +366,7 @@ class _HealthScreenState extends State<HealthScreen> {
     return Column(
       children: [
         _buildOutlinedText(
-          'Theo dõi',
+          context.tr('p3_health_header_tracking'),
           32,
           const Color(0xFFFF69B4),
           Colors.white,
@@ -365,7 +374,7 @@ class _HealthScreenState extends State<HealthScreen> {
         ),
         const SizedBox(height: 0),
         _buildOutlinedText(
-          'Chu Kì',
+          context.tr('p3_health_header_cycle'),
           48,
           const Color(0xFFD81B60),
           Colors.white,
@@ -378,7 +387,7 @@ class _HealthScreenState extends State<HealthScreen> {
             const Icon(Icons.favorite, color: Color(0xFFFF80AB), size: 16),
             const SizedBox(width: 8),
             Text(
-              'Hiểu cơ thể – Yêu bản thân',
+              context.tr('p3_health_header_subtitle'),
               style: SLTheme.quicksand(
                 color: const Color(0xFF880E4F),
                 fontWeight: FontWeight.w700,
@@ -406,7 +415,7 @@ class _HealthScreenState extends State<HealthScreen> {
         ),
         onPressed: _requestConsent,
         child: Text(
-          'Bật tính năng theo dõi chu kỳ',
+          context.tr('p3_health_enable_tracking'),
           style: SLTheme.quicksand(fontWeight: FontWeight.bold, fontSize: 16),
         ),
       ),
@@ -430,7 +439,7 @@ class _HealthScreenState extends State<HealthScreen> {
             ],
           ),
           child: Text(
-            'Vui lòng cài đặt\nngày bắt đầu chu kỳ.',
+            context.tr('p3_health_set_start_prompt'),
             style: SLTheme.quicksand(
               color: const Color(0xFFD81B60),
               fontWeight: FontWeight.w800,
@@ -478,7 +487,7 @@ class _HealthScreenState extends State<HealthScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Ngày dự kiến',
+                    context.tr('p3_health_expected_date'),
                     style: SLTheme.quicksand(
                       color: const Color(0xFF880E4F),
                       fontWeight: FontWeight.w600,
@@ -496,7 +505,7 @@ class _HealthScreenState extends State<HealthScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      'bắt đầu kỳ tiếp theo',
+                      context.tr('p3_health_next_period'),
                       style: SLTheme.quicksand(
                         color: const Color(0xFFD81B60),
                         fontWeight: FontWeight.w700,
@@ -507,7 +516,7 @@ class _HealthScreenState extends State<HealthScreen> {
                   const SizedBox(height: 8),
                   Text(
                     cycleData['nextPeriodDays'] == 0
-                        ? 'Hôm nay'
+                        ? context.tr('p3_today')
                         : '${cycleData['nextPeriodDays']}',
                     style: SLTheme.quicksand(
                       color: const Color(0xFFD81B60),
@@ -518,7 +527,7 @@ class _HealthScreenState extends State<HealthScreen> {
                   ),
                   if (cycleData['nextPeriodDays'] != 0)
                     Text(
-                      'ngày nữa',
+                      context.tr('p3_health_days_remaining'),
                       style: SLTheme.quicksand(
                         color: const Color(0xFFD81B60),
                         fontWeight: FontWeight.w800,
@@ -536,7 +545,9 @@ class _HealthScreenState extends State<HealthScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      'Khả năng thụ thai: ${cycleData['fertility']}',
+                      L10nService().format('p3_health_fertility_label', {
+                        'value': cycleData['fertility'],
+                      }),
                       style: SLTheme.quicksand(
                         color: const Color(0xFF6A1B9A),
                         fontWeight: FontWeight.w700,
@@ -616,7 +627,9 @@ class _HealthScreenState extends State<HealthScreen> {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Cơ thể bạn đang ở giai đoạn\n${cycleData['phase']}',
+                  L10nService().format('p3_health_phase_label', {
+                    'value': cycleData['phase'],
+                  }),
                   style: SLTheme.quicksand(
                     color: const Color(0xFF880E4F),
                     fontWeight: FontWeight.w700,
@@ -660,7 +673,7 @@ class _HealthScreenState extends State<HealthScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Cài đặt chu kỳ',
+          context.tr('p3_health_settings_title'),
           style: SLTheme.quicksand(
             color: const Color(0xFF4A4A4A),
             fontWeight: FontWeight.w800,
@@ -669,9 +682,9 @@ class _HealthScreenState extends State<HealthScreen> {
         ),
         SLSpacing.h12,
         _buildListTile(
-          title: L10nService().translate('Ngày bắt đầu kỳ gần nhất'),
+          title: context.tr('p3_health_latest_start'),
           subtitle: _lastDate == null
-              ? 'Chưa chọn'
+              ? context.tr('p3_not_selected')
               : DateFormat('dd/MM/yyyy').format(_lastDate!),
           icon: Icons.calendar_today,
           iconColor: const Color(0xFFFF80AB),
@@ -680,8 +693,8 @@ class _HealthScreenState extends State<HealthScreen> {
         ),
         SLSpacing.h12,
         _buildListTile(
-          title: L10nService().translate('Đánh dấu hôm nay là ngày bắt đầu kỳ'),
-          subtitle: L10nService().translate('Chạm nhanh để lưu mốc hôm nay'),
+          title: context.tr('p3_health_mark_today_title'),
+          subtitle: context.tr('p3_health_mark_today_subtitle'),
           icon: Icons.bolt_rounded,
           iconColor: const Color(0xFF9C27B0),
           iconBgColor: const Color(0xFFF3E5F5),
@@ -692,16 +705,19 @@ class _HealthScreenState extends State<HealthScreen> {
           children: [
             Expanded(
               child: _buildNumberCard(
-                label: 'Độ dài chu kỳ (ngày)',
+                label: context.tr('p3_health_cycle_length_label'),
                 value: _length.toString(),
-                onTap: () =>
-                    _showEditDialog('Độ dài chu kỳ', _length.toString(), (val) {
-                      final v = int.tryParse(val);
-                      if (v != null && v >= 20 && v <= 45) {
-                        _length = v;
-                        _saveHealthData();
-                      }
-                    }),
+                onTap: () => _showEditDialog(
+                  context.tr('p3_health_cycle_length_title'),
+                  _length.toString(),
+                  (val) {
+                    final v = int.tryParse(val);
+                    if (v != null && v >= 20 && v <= 45) {
+                      _length = v;
+                      _saveHealthData();
+                    }
+                  },
+                ),
                 icon: Icons.calendar_month,
                 iconColor: const Color(0xFFFF80AB),
               ),
@@ -709,10 +725,10 @@ class _HealthScreenState extends State<HealthScreen> {
             SLSpacing.w12,
             Expanded(
               child: _buildNumberCard(
-                label: 'Số ngày kinh (ngày)',
+                label: context.tr('p3_health_period_days_label'),
                 value: _periodDays.toString(),
                 onTap: () => _showEditDialog(
-                  'Số ngày kinh',
+                  context.tr('p3_health_period_days_title'),
                   _periodDays.toString(),
                   (val) {
                     final v = int.tryParse(val);
@@ -758,7 +774,10 @@ class _HealthScreenState extends State<HealthScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Hủy', style: SLTheme.quicksand(color: Colors.grey)),
+            child: Text(
+              context.tr('p3_cancel'),
+              style: SLTheme.quicksand(color: Colors.grey),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -772,7 +791,7 @@ class _HealthScreenState extends State<HealthScreen> {
               Navigator.pop(ctx);
             },
             child: Text(
-              'Lưu',
+              context.tr('p3_save'),
               style: SLTheme.quicksand(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -911,7 +930,7 @@ class _HealthScreenState extends State<HealthScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Trung bình',
+                          context.tr('p3_health_average'),
                           style: SLTheme.quicksand(
                             color: const Color(0xFF9E9E9E),
                             fontWeight: FontWeight.w600,
@@ -940,7 +959,7 @@ class _HealthScreenState extends State<HealthScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Riêng tư & Lưu ý',
+          context.tr('p3_health_privacy_title'),
           style: SLTheme.quicksand(
             color: const Color(0xFF4A4A4A),
             fontWeight: FontWeight.w800,
@@ -983,7 +1002,7 @@ class _HealthScreenState extends State<HealthScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Chia sẻ với người ấy',
+                          context.tr('p3_health_share_title'),
                           style: SLTheme.quicksand(
                             color: const Color(0xFF243041),
                             fontWeight: FontWeight.w800,
@@ -992,7 +1011,7 @@ class _HealthScreenState extends State<HealthScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Người ấy sẽ thấy dự báo và gợi ý chăm sóc.',
+                          context.tr('p3_health_share_subtitle'),
                           style: SLTheme.quicksand(
                             color: const Color(0xFF757575),
                             fontWeight: FontWeight.w600,
@@ -1005,7 +1024,7 @@ class _HealthScreenState extends State<HealthScreen> {
                   ),
                   Switch(
                     value: _shareWithPartner,
-                    activeColor: Colors.white,
+                    activeThumbColor: Colors.white,
                     activeTrackColor: const Color(0xFFFF80AB),
                     onChanged: (value) {
                       setState(() => _shareWithPartner = value);
@@ -1031,7 +1050,7 @@ class _HealthScreenState extends State<HealthScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Dữ liệu chu kỳ chỉ mang tính tham khảo, không thay thế lời khuyên y tế.',
+                        context.tr('p3_health_medical_disclaimer'),
                         style: SLTheme.quicksand(
                           color: const Color(0xFF880E4F),
                           fontWeight: FontWeight.w600,

@@ -204,6 +204,8 @@ flutter:
     - assets/images/default_home_bg.jpg
     - assets/images/anhtomau_stickers/
     - assets/images/soullocket_stickers/
+    - assets/images/diary_mood_stickers/
+    - assets/images/milestone_embedded/
 
     # Home screen bundled interaction stickers
     - assets/images/utility_stickers/

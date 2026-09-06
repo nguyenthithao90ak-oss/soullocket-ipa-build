@@ -1,76 +1,78 @@
+import 'package:flutter/foundation.dart';
+
 class ZodiacUtils {
   static const List<Map<String, dynamic>> _zodiacs = [
     {
       'name': 'Ma Kết',
       'emoji': '♑',
       'start': [12, 22],
-      'end': [1, 19]
+      'end': [1, 19],
     },
     {
       'name': 'Bảo Bình',
       'emoji': '♒',
       'start': [1, 20],
-      'end': [2, 18]
+      'end': [2, 18],
     },
     {
       'name': 'Song Ngư',
       'emoji': '♓',
       'start': [2, 19],
-      'end': [3, 20]
+      'end': [3, 20],
     },
     {
       'name': 'Bạch Dương',
       'emoji': '♈',
       'start': [3, 21],
-      'end': [4, 19]
+      'end': [4, 19],
     },
     {
       'name': 'Kim Ngưu',
       'emoji': '♉',
       'start': [4, 20],
-      'end': [5, 20]
+      'end': [5, 20],
     },
     {
       'name': 'Song Tử',
       'emoji': '♊',
       'start': [5, 21],
-      'end': [6, 21]
+      'end': [6, 21],
     },
     {
       'name': 'Cự Giải',
       'emoji': '♋',
       'start': [6, 22],
-      'end': [7, 22]
+      'end': [7, 22],
     },
     {
       'name': 'Sư Tử',
       'emoji': '♌',
       'start': [7, 23],
-      'end': [8, 22]
+      'end': [8, 22],
     },
     {
       'name': 'Xử Nữ',
       'emoji': '♍',
       'start': [8, 23],
-      'end': [9, 22]
+      'end': [9, 22],
     },
     {
       'name': 'Thiên Bình',
       'emoji': '♎',
       'start': [9, 23],
-      'end': [10, 23]
+      'end': [10, 23],
     },
     {
       'name': 'Thiên Yết',
       'emoji': '♏',
       'start': [10, 24],
-      'end': [11, 22]
+      'end': [11, 22],
     },
     {
       'name': 'Nhân Mã',
       'emoji': '♐',
       'start': [11, 23],
-      'end': [12, 21]
+      'end': [12, 21],
     },
   ];
 
@@ -188,13 +190,12 @@ class ZodiacUtils {
 
         if ((month == startM && day >= startD) ||
             (month == endM && day <= endD)) {
-          return {
-            'name': z['name'] as String,
-            'emoji': z['emoji'] as String,
-          };
+          return {'name': z['name'] as String, 'emoji': z['emoji'] as String};
         }
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[SuppressedError] lib/utils/zodiac_utils.dart: $error');
+    }
     return null;
   }
 
@@ -206,7 +207,9 @@ class ZodiacUtils {
       final difference = now.difference(date).inDays;
       if (difference < 0) return null;
       return '$difference ngày tuổi';
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[SuppressedError] lib/utils/zodiac_utils.dart: $error');
+    }
     return null;
   }
 

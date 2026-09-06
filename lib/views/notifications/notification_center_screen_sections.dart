@@ -2,14 +2,14 @@ part of 'notification_center_screen.dart';
 
 extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
   ScheduleIdentityContext get _scheduleIdentity => ScheduleIdentityContext(
-        houseId: _houseId ?? '',
-        houseName: _houseName,
-        nameU1: _nameU1,
-        nameU2: _nameU2,
-        startDate: _startDate,
-        dobU1: _dobU1,
-        dobU2: _dobU2,
-      );
+    houseId: _houseId ?? '',
+    houseName: _houseName,
+    nameU1: _nameU1,
+    nameU2: _nameU2,
+    startDate: _startDate,
+    dobU1: _dobU1,
+    dobU2: _dobU2,
+  );
 
   ScheduleEventPresentation? _schedulePresentation(_NotifModel notif) {
     final raw = notif.raw;
@@ -40,16 +40,16 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
   }
 
   String _sourceText(_NotifModel notif) => _normalizeNotificationText(
-        _schedulePresentation(notif)?.sourceLabel ?? notif.from,
-      );
+    _schedulePresentation(notif)?.sourceLabel ?? notif.from,
+  );
 
   String _titleText(_NotifModel notif) => _normalizeNotificationText(
-        _schedulePresentation(notif)?.title ?? notif.title,
-      );
+    _schedulePresentation(notif)?.title ?? notif.title,
+  );
 
   String _messageText(_NotifModel notif) => _normalizeNotificationText(
-        _schedulePresentation(notif)?.message ?? notif.msg,
-      );
+    _schedulePresentation(notif)?.message ?? notif.msg,
+  );
 
   List<_NotifModel> get _filtered {
     var list = _all.where((n) {
@@ -132,7 +132,11 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
   Widget _buildHeader(int unread) {
     return Container(
       padding: EdgeInsets.fromLTRB(
-          16, MediaQuery.paddingOf(context).top + 12, 16, 14),
+        16,
+        MediaQuery.paddingOf(context).top + 12,
+        16,
+        14,
+      ),
       decoration: BoxDecoration(
         color: SLColors.bgCard,
         boxShadow: [
@@ -147,11 +151,12 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
         children: [
           IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+            tooltip: context.tr('p5_back'),
             onPressed: () => Navigator.pop(context),
           ),
           Expanded(
             child: Text(
-              'Thông báo',
+              context.tr('p5_notif_title'),
               style: SLTheme.quicksand(
                 fontSize: 18,
                 fontWeight: FontWeight.w900,
@@ -164,9 +169,12 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
           if (unread > 0)
             IconButton(
               onPressed: _markAllRead,
-              icon:
-                  const Icon(Icons.done_all, size: 20, color: SLColors.success),
-              tooltip: 'Đánh dấu đã đọc',
+              icon: const Icon(
+                Icons.done_all,
+                size: 20,
+                color: SLColors.success,
+              ),
+              tooltip: context.tr('p5_notif_mark_all_read'),
               style: IconButton.styleFrom(
                 backgroundColor: SLColors.successLight,
                 padding: SLSpacing.all8,
@@ -176,9 +184,12 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
           SLSpacing.w8,
           IconButton(
             onPressed: _clearAll,
-            icon: const Icon(Icons.delete_sweep,
-                size: 20, color: SLColors.danger),
-            tooltip: 'Xoá tất cả',
+            icon: const Icon(
+              Icons.delete_sweep,
+              size: 20,
+              color: SLColors.danger,
+            ),
+            tooltip: context.tr('p5_notif_delete_all'),
             style: IconButton.styleFrom(
               backgroundColor: SLColors.dangerLight,
               padding: SLSpacing.all8,
@@ -194,22 +205,22 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
     final cats = [
       (
         id: 'all',
-        label: 'TẤT CẢ',
+        label: context.tr('p5_notif_filter_all').toUpperCase(),
         cat: _NotifCategory.all,
       ),
       (
         id: 'warning',
-        label: 'CẢNH BÁO',
+        label: context.tr('p5_notif_filter_warning').toUpperCase(),
         cat: _NotifCategory.warning,
       ),
       (
         id: 'friend',
-        label: 'BẠN BÈ',
+        label: context.tr('p5_notif_filter_friend').toUpperCase(),
         cat: _NotifCategory.friend,
       ),
       (
         id: 'social',
-        label: 'CỘNG ĐỒNG',
+        label: context.tr('p5_notif_filter_social').toUpperCase(),
         cat: _NotifCategory.social,
       ),
     ];
@@ -231,61 +242,71 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
             final isActive = _cat == c.cat;
             final cnt = countCat(c.cat);
             final tone = _toneForCategory(c.cat);
-            return GestureDetector(
-              onTap: () => _setCategory(c.cat),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.only(right: 8),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: tone.surface,
-                  borderRadius: SLRadius.lgAll,
-                  border: Border.all(
-                    color: isActive ? tone.accent : Colors.transparent,
-                    width: 1.5,
+            return Semantics(
+              button: true,
+              selected: isActive,
+              label: c.label,
+              value: '$cnt',
+              child: GestureDetector(
+                onTap: () => _setCategory(c.cat),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
                   ),
-                  boxShadow: isActive
-                      ? [
-                          BoxShadow(
-                            color: tone.accent.withValues(alpha: 0.18),
-                            blurRadius: 4,
-                            offset: const Offset(0, 1),
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      c.label,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: tone.accent,
-                      ),
+                  decoration: BoxDecoration(
+                    color: tone.surface,
+                    borderRadius: SLRadius.lgAll,
+                    border: Border.all(
+                      color: isActive ? tone.accent : Colors.transparent,
+                      width: 1.5,
                     ),
-                    if (cnt > 0) ...[
-                      SLSpacing.w8,
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
+                    boxShadow: isActive
+                        ? [
+                            BoxShadow(
+                              color: tone.accent.withValues(alpha: 0.18),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        c.label,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
                           color: tone.accent,
-                          borderRadius: SLRadius.smAll,
-                        ),
-                        child: Text(
-                          cnt > 99 ? '99+' : '$cnt',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                          ),
                         ),
                       ),
+                      if (cnt > 0) ...[
+                        SLSpacing.w8,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: tone.accent,
+                            borderRadius: SLRadius.smAll,
+                          ),
+                          child: Text(
+                            cnt > 99 ? '99+' : '$cnt',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             );
@@ -306,14 +327,13 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
             child: TextField(
               onChanged: _setSearchQuery,
               decoration: InputDecoration(
-                hintText: 'Tìm kiếm thông báo...',
-                hintStyle: SLTheme.quicksand(
-                  fontSize: 13,
-                  color: Colors.grey,
-                ),
+                hintText: context.tr('p5_notif_search_hint'),
+                hintStyle: SLTheme.quicksand(fontSize: 13, color: Colors.grey),
                 prefixIcon: const Icon(Icons.search, size: 18),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: SLRadius.pillAll,
                   borderSide: const BorderSide(color: SLColors.border),
@@ -361,194 +381,249 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
     final displaySource = _sourceText(n);
     final displayMessage = _messageText(n);
 
-    return GestureDetector(
-      onTap: () {
-        if (!isRead) _markRead(n.id);
-        _showNotifDetail(n);
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: isRead ? SLColors.bgCard : SLColors.primaryLight,
-          borderRadius: SLRadius.lgAll,
-          border: Border.all(
-            color: isRead ? SLColors.border : tone.border,
-            width: isRead ? 1 : 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isRead ? 0.03 : 0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
+    return Semantics(
+      button: true,
+      label: '$displayTitle, $displaySource, ${_fmtTime(n.ts)}',
+      child: GestureDetector(
+        onTap: () {
+          if (!isRead) _markRead(n.id);
+          _showNotifDetail(n);
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isRead ? SLColors.bgCard : SLColors.primaryLight,
+            borderRadius: SLRadius.lgAll,
+            border: Border.all(
+              color: isRead ? SLColors.border : tone.border,
+              width: isRead ? 1 : 1.5,
             ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: tone.surface,
-                    borderRadius: SLRadius.lgAll,
-                    border: Border.all(color: tone.border),
-                  ),
-                  child: Center(
-                    child: Text(_catIcon(cat),
-                        style: const TextStyle(fontSize: 18)),
-                  ),
-                ),
-                SLSpacing.w10,
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              displayTitle,
-                              style: SLTheme.quicksand(
-                                fontSize: 14.5,
-                                fontWeight:
-                                    isRead ? FontWeight.w700 : FontWeight.w900,
-                                color: SLColors.textPrimary,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (!isRead)
-                            Container(
-                              margin: const EdgeInsets.only(left: 8, top: 2),
-                              width: 9,
-                              height: 9,
-                              decoration: const BoxDecoration(
-                                color: SLColors.primaryActive,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                        ],
-                      ),
-                      SLSpacing.h6,
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: [
-                          _buildMetaChip(
-                            icon: Icons.person_outline_rounded,
-                            label: displaySource,
-                            accent: tone.accent,
-                          ),
-                          _buildMetaChip(
-                            icon: Icons.schedule_rounded,
-                            label: _fmtTime(n.ts),
-                            accent: SLColors.info,
-                          ),
-                          _buildMetaChip(
-                            icon: Icons.sell_outlined,
-                            label: _typeLabel(n),
-                            accent: tone.accent,
-                          ),
-                          if (isLocked)
-                            _buildMetaChip(
-                              icon: Icons.lock_rounded,
-                              label: 'Hệ thống',
-                              accent: SLColors.warning,
-                              highlighted: true,
-                            )
-                          else if (isPinned)
-                            _buildMetaChip(
-                              icon: Icons.push_pin_rounded,
-                              label: 'Đã ghim',
-                              accent: SLColors.primaryActive,
-                              highlighted: true,
-                            )
-                          else if (!isRead)
-                            _buildMetaChip(
-                              icon: Icons.fiber_new_rounded,
-                              label: 'Mới',
-                              accent: tone.accent,
-                              highlighted: true,
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            if (displayMessage.isNotEmpty) ...[
-              SLSpacing.h10,
-              Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-                decoration: BoxDecoration(
-                  color: isRead
-                      ? SLColors.bgSubtle
-                      : tone.surface.withValues(alpha: 0.9),
-                  borderRadius: SLRadius.mdAll,
-                  border: Border.all(color: tone.border),
-                ),
-                child: Text(
-                  displayMessage,
-                  style: SLTheme.quicksand(
-                    fontSize: 12.5,
-                    color: SLColors.textSecondary,
-                    fontWeight: FontWeight.w600,
-                    height: 1.45,
-                  ),
-                  maxLines: 4,
-                  overflow: TextOverflow.ellipsis,
-                ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isRead ? 0.03 : 0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
               ),
             ],
-            if (isCountdownSpaceReq) ...[
-              SLSpacing.h12,
+          ),
+          child: Column(
+            children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => _acceptCountdownSpaceReq(n),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: SLColors.primaryActive,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: SLRadius.mdAll,
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                      ),
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: tone.surface,
+                      borderRadius: SLRadius.lgAll,
+                      border: Border.all(color: tone.border),
+                    ),
+                    child: Center(
                       child: Text(
-                        'Chấp nhận',
-                        style: SLTheme.quicksand(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 13,
-                          color: Colors.white,
-                        ),
+                        _catIcon(cat),
+                        style: const TextStyle(fontSize: 18),
                       ),
                     ),
                   ),
-                  SLSpacing.w8,
+                  SLSpacing.w10,
                   Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => _declineCountdownSpaceReq(n),
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: SLRadius.mdAll,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                displayTitle,
+                                style: SLTheme.quicksand(
+                                  fontSize: 14.5,
+                                  fontWeight: isRead
+                                      ? FontWeight.w700
+                                      : FontWeight.w900,
+                                  color: SLColors.textPrimary,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (!isRead)
+                              Container(
+                                margin: const EdgeInsets.only(left: 8, top: 2),
+                                width: 9,
+                                height: 9,
+                                decoration: const BoxDecoration(
+                                  color: SLColors.primaryActive,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                          ],
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                      ),
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
+                        SLSpacing.h6,
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            _buildMetaChip(
+                              icon: Icons.person_outline_rounded,
+                              label: displaySource,
+                              accent: tone.accent,
+                            ),
+                            _buildMetaChip(
+                              icon: Icons.schedule_rounded,
+                              label: _fmtTime(n.ts),
+                              accent: SLColors.info,
+                            ),
+                            _buildMetaChip(
+                              icon: Icons.sell_outlined,
+                              label: _typeLabel(n),
+                              accent: tone.accent,
+                            ),
+                            if (isLocked)
+                              _buildMetaChip(
+                                icon: Icons.lock_rounded,
+                                label: context.tr('p5_notif_system'),
+                                accent: SLColors.warning,
+                                highlighted: true,
+                              )
+                            else if (isPinned)
+                              _buildMetaChip(
+                                icon: Icons.push_pin_rounded,
+                                label: context.tr('p5_notif_pinned'),
+                                accent: SLColors.primaryActive,
+                                highlighted: true,
+                              )
+                            else if (!isRead)
+                              _buildMetaChip(
+                                icon: Icons.fiber_new_rounded,
+                                label: context.tr('p5_notif_new'),
+                                accent: tone.accent,
+                                highlighted: true,
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (displayMessage.isNotEmpty) ...[
+                SLSpacing.h10,
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 9,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isRead
+                        ? SLColors.bgSubtle
+                        : tone.surface.withValues(alpha: 0.9),
+                    borderRadius: SLRadius.mdAll,
+                    border: Border.all(color: tone.border),
+                  ),
+                  child: Text(
+                    displayMessage,
+                    style: SLTheme.quicksand(
+                      fontSize: 12.5,
+                      color: SLColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                      height: 1.45,
+                    ),
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+              if (isCountdownSpaceReq) ...[
+                SLSpacing.h12,
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => _acceptCountdownSpaceReq(n),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: SLColors.primaryActive,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: SLRadius.mdAll,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
                         child: Text(
-                          'Không đồng ý',
-                          maxLines: 1,
-                          softWrap: false,
+                          context.tr('p5_accept'),
+                          style: SLTheme.quicksand(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 13,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SLSpacing.w8,
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => _declineCountdownSpaceReq(n),
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: SLRadius.mdAll,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            context.tr('p5_decline'),
+                            maxLines: 1,
+                            softWrap: false,
+                            style: SLTheme.quicksand(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              if (isCountdownSpaceDeleteReq) ...[
+                SLSpacing.h12,
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => _acceptCountdownSpaceDeleteReq(n),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: SLColors.danger,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: SLRadius.mdAll,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                        child: Text(
+                          context.tr('p5_delete_now'),
+                          style: SLTheme.quicksand(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 13,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SLSpacing.w8,
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => _dismissCountdownSpaceDeleteReq(n),
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: SLRadius.mdAll,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                        child: Text(
+                          context.tr('p5_later'),
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w900,
                             fontSize: 13,
@@ -556,145 +631,119 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
-            if (isCountdownSpaceDeleteReq) ...[
-              SLSpacing.h12,
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => _acceptCountdownSpaceDeleteReq(n),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: SLColors.danger,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: SLRadius.mdAll,
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                      ),
-                      child: Text(
-                        'Xóa ngay',
-                        style: SLTheme.quicksand(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 13,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SLSpacing.w8,
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => _dismissCountdownSpaceDeleteReq(n),
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: SLRadius.mdAll,
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                      ),
-                      child: Text(
-                        'Để sau',
-                        style: SLTheme.quicksand(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-            if (isFriendReq) ...[
-              SLSpacing.h12,
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () =>
-                          _acceptFriendReq(n.id, n.rawFrom ?? n.from),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: SLColors.primaryActive,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: SLRadius.mdAll,
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                      ),
-                      child: Text(
-                        'Chấp nhận',
-                        style: SLTheme.quicksand(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 13,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SLSpacing.w8,
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () =>
-                          _declineFriendReq(n.id, n.rawFrom ?? n.from),
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: SLRadius.mdAll,
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                      ),
-                      child: Text(
-                        'Từ chối',
-                        style: SLTheme.quicksand(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-            SLSpacing.h10,
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _statusText(n),
-                    style: SLTheme.quicksand(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
-                      color: SLColors.textSecondary,
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: isLocked ? null : () => _togglePin(n.id),
-                  child: Icon(
-                    isLocked
-                        ? Icons.lock_outline_rounded
-                        : (isPinned ? Icons.push_pin : Icons.push_pin_outlined),
-                    size: 18,
-                    color: isLocked
-                        ? Colors.grey[400]
-                        : isPinned
-                            ? SLColors.primaryActive
-                            : Colors.grey[400],
-                  ),
-                ),
-                SLSpacing.w12,
-                GestureDetector(
-                  onTap: () => _markRead(n.id),
-                  child: Icon(
-                    isRead
-                        ? Icons.mark_email_read_outlined
-                        : Icons.mark_email_unread_outlined,
-                    size: 18,
-                    color: isRead ? SLColors.info : SLColors.success,
-                  ),
+                  ],
                 ),
               ],
-            ),
-          ],
+              if (isFriendReq) ...[
+                SLSpacing.h12,
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () =>
+                            _acceptFriendReq(n.id, n.rawFrom ?? n.from),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: SLColors.primaryActive,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: SLRadius.mdAll,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                        child: Text(
+                          context.tr('p5_accept'),
+                          style: SLTheme.quicksand(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 13,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SLSpacing.w8,
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () =>
+                            _declineFriendReq(n.id, n.rawFrom ?? n.from),
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: SLRadius.mdAll,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                        child: Text(
+                          context.tr('p5_decline'),
+                          style: SLTheme.quicksand(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              SLSpacing.h10,
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _statusText(n),
+                      style: SLTheme.quicksand(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: SLColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: isLocked ? null : () => _togglePin(n.id),
+                    tooltip: isLocked
+                        ? context.tr('p5_notif_system_locked')
+                        : (isPinned
+                              ? context.tr('p5_notif_unpin')
+                              : context.tr('p5_notif_pin')),
+                    constraints: const BoxConstraints(
+                      minWidth: 36,
+                      minHeight: 36,
+                    ),
+                    padding: SLSpacing.all8,
+                    icon: Icon(
+                      isLocked
+                          ? Icons.lock_outline_rounded
+                          : (isPinned
+                                ? Icons.push_pin
+                                : Icons.push_pin_outlined),
+                      size: 18,
+                      color: isLocked
+                          ? Colors.grey[400]
+                          : isPinned
+                          ? SLColors.primaryActive
+                          : Colors.grey[400],
+                    ),
+                  ),
+                  SLSpacing.w12,
+                  IconButton(
+                    onPressed: isRead ? null : () => _markRead(n.id),
+                    tooltip: isRead
+                        ? context.tr('notifications_status_read')
+                        : context.tr('p5_notif_mark_read'),
+                    constraints: const BoxConstraints(
+                      minWidth: 36,
+                      minHeight: 36,
+                    ),
+                    padding: SLSpacing.all8,
+                    icon: Icon(
+                      isRead
+                          ? Icons.mark_email_read_outlined
+                          : Icons.mark_email_unread_outlined,
+                      size: 18,
+                      color: isRead ? SLColors.info : SLColors.success,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -702,57 +751,56 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
 
   String _typeLabel(_NotifModel n) {
     return switch (n.type.toLowerCase()) {
-      'friend_request' => 'Lời mời kết bạn',
-      'friend_accept' => 'Kết bạn thành công',
-      'friend_wave' => 'Lời chào mới',
-      'like' => 'Lượt thích mới',
-      'fire' => 'Thả tim mới',
-      'comment' => 'Bình luận mới',
-      'message' => 'Tin nhắn',
-      'countdown_space_request' => 'Yêu cầu ghép nối',
-      'countdown_space_accept' => 'Ghép nối thành công',
-      'new_device' => 'Thiết bị mới',
-      'role_change' => 'Đổi vai trò',
-      'warning' => 'Cảnh báo hệ thống',
-      'system' => 'Thông báo hệ thống',
-      'countdown_space_delete_request' => 'Yêu cầu xóa không gian',
-      'countdown_space_deleted' => 'Không gian đã bị xóa',
+      'friend_request' => context.tr('p5_notif_type_friend_request'),
+      'friend_accept' => context.tr('p5_notif_type_friend_accept'),
+      'friend_wave' => context.tr('p5_notif_type_friend_wave'),
+      'like' => context.tr('p5_notif_type_like'),
+      'fire' => context.tr('p5_notif_type_fire'),
+      'comment' => context.tr('p5_notif_type_comment'),
+      'message' => context.tr('p5_notif_type_message'),
+      'countdown_space_request' => context.tr(
+        'p5_notif_type_pair_request_short',
+      ),
+      'countdown_space_accept' => context.tr('p5_notif_type_pair_accept_short'),
+      'new_device' => context.tr('p5_notif_type_new_device_short'),
+      'role_change' => context.tr('p5_notif_type_role_change_short'),
+      'warning' => context.tr('p5_notif_type_warning'),
+      'system' => context.tr('p5_notif_type_system'),
+      'countdown_space_delete_request' => context.tr(
+        'p5_notif_type_space_delete_request_short',
+      ),
+      'countdown_space_deleted' => context.tr(
+        'p5_notif_type_space_deleted_short',
+      ),
       _ => switch (_category(n)) {
-          _NotifCategory.warning => 'Cảnh báo',
-          _NotifCategory.friend => 'Bạn bè',
-          _NotifCategory.social => 'Cộng đồng',
-          _NotifCategory.all => 'Thông báo',
-        },
+        _NotifCategory.warning => context.tr('p5_notif_filter_warning'),
+        _NotifCategory.friend => context.tr('p5_notif_filter_friend'),
+        _NotifCategory.social => context.tr('p5_notif_filter_social'),
+        _NotifCategory.all => context.tr('p5_notif_title'),
+      },
     };
   }
 
   String _statusText(_NotifModel n) {
     if (_isLocked(n)) {
-      return 'Hệ thống giữ lại';
+      return context.tr('p5_notif_status_retained');
     }
     if (_isRead(n)) {
-      return _pinLocal.contains(n.id) ? 'Đã đọc • Đã ghim' : 'Đã đọc';
+      return _pinLocal.contains(n.id)
+          ? context.tr('p5_notif_status_read_pinned')
+          : context.tr('p5_notif_status_read');
     }
-    return _pinLocal.contains(n.id) ? 'Chưa đọc • Đã ghim' : 'Chưa đọc';
+    return _pinLocal.contains(n.id)
+        ? context.tr('p5_notif_status_unread_pinned')
+        : context.tr('p5_notif_status_unread');
   }
 
   Widget _buildEmpty() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text('🔔', style: TextStyle(fontSize: 52)),
-          SLSpacing.h12,
-          Text(
-            'Không có thông báo phù hợp.',
-            style: SLTheme.quicksand(
-              fontSize: 15,
-              color: SLColors.textSecondary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
+    return SLTheme.emptyStatePanel(
+      icon: Icons.notifications_none_rounded,
+      title: context.tr('p5_notif_empty_title'),
+      subtitle: context.tr('p5_notif_empty_subtitle'),
+      accentColor: _toneForCategory(_cat).accent,
     );
   }
 
@@ -760,10 +808,10 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
     final tone = _toneForCategory(_cat);
     return (
       label: switch (_cat) {
-        _NotifCategory.warning => 'Cảnh báo',
-        _NotifCategory.friend => 'Bạn bè',
-        _NotifCategory.social => 'Cộng đồng',
-        _NotifCategory.all => 'Tất cả',
+        _NotifCategory.warning => context.tr('p5_notif_filter_warning'),
+        _NotifCategory.friend => context.tr('p5_notif_filter_friend'),
+        _NotifCategory.social => context.tr('p5_notif_filter_social'),
+        _NotifCategory.all => context.tr('p5_notif_filter_all'),
       },
       accent: tone.accent,
       surface: tone.surface,
@@ -775,50 +823,63 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
   ) {
     return switch (c) {
       _NotifCategory.warning => (
-          accent: SLColors.warning,
-          surface: SLColors.warningLight,
-          border: SLColors.warning.withValues(alpha: 0.22),
-        ),
+        accent: SLColors.warning,
+        surface: SLColors.warningLight,
+        border: SLColors.warning.withValues(alpha: 0.22),
+      ),
       _NotifCategory.friend => (
-          accent: SLColors.primaryActive,
-          surface: SLColors.primaryLight,
-          border: SLColors.primary.withValues(alpha: 0.18),
-        ),
+        accent: SLColors.primaryActive,
+        surface: SLColors.primaryLight,
+        border: SLColors.primary.withValues(alpha: 0.18),
+      ),
       _NotifCategory.social => (
-          accent: SLColors.accentPurpleDark,
-          surface: SLColors.accentPurple.withValues(alpha: 0.16),
-          border: SLColors.accentPurpleDark.withValues(alpha: 0.18),
-        ),
+        accent: SLColors.accentPurpleDark,
+        surface: SLColors.accentPurple.withValues(alpha: 0.16),
+        border: SLColors.accentPurpleDark.withValues(alpha: 0.18),
+      ),
       _NotifCategory.all => (
-          accent: SLColors.info,
-          surface: SLColors.infoLight,
-          border: SLColors.info.withValues(alpha: 0.16),
-        ),
+        accent: SLColors.info,
+        surface: SLColors.infoLight,
+        border: SLColors.info.withValues(alpha: 0.16),
+      ),
     };
   }
 
   String _catIcon(_NotifCategory c) => switch (c) {
-        _NotifCategory.warning => '⚠️',
-        _NotifCategory.friend => '👥',
-        _NotifCategory.social => '🌐',
-        _ => '🔔',
-      };
+    _NotifCategory.warning => '⚠️',
+    _NotifCategory.friend => '👥',
+    _NotifCategory.social => '🌐',
+    _ => '🔔',
+  };
 
   String _fmtTime(int ts) {
     try {
       final tsFixed = ts == 0 ? DateTime.now().millisecondsSinceEpoch : ts;
       final now = DateTime.now().millisecondsSinceEpoch;
       final diff = ((now - tsFixed) / 1000).floor();
-      if (diff < 10) return 'Vừa xong';
-      if (diff < 60) return '$diff giây trước';
-      if (diff < 3600) return '${(diff / 60).floor()} phút trước';
-      if (diff < 86400) return '${(diff / 3600).floor()} giờ trước';
+      if (diff < 10) return context.tr('p5_notif_just_now');
+      if (diff < 60) {
+        return L10nService().format('p5_notif_seconds_ago', {'count': diff});
+      }
+      if (diff < 3600) {
+        return L10nService().format('p5_notif_minutes_ago', {
+          'count': (diff / 60).floor(),
+        });
+      }
+      if (diff < 86400) {
+        return L10nService().format('p5_notif_hours_ago', {
+          'count': (diff / 3600).floor(),
+        });
+      }
       final days = (diff / 86400).floor();
-      if (days < 7) return '$days ngày trước';
-      if (days < 14) return '1 tuần trước';
-      if (days < 21) return '2 tuần trước';
-      if (days < 28) return '3 tuần trước';
-      if (days < 31) return '4 tuần trước';
+      if (days < 7) {
+        return L10nService().format('p5_notif_days_ago', {'count': days});
+      }
+      if (days < 31) {
+        return L10nService().format('p5_notif_weeks_ago', {
+          'count': (days / 7).floor(),
+        });
+      }
       final d = DateTime.fromMillisecondsSinceEpoch(tsFixed);
       return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
     } catch (_) {
@@ -828,8 +889,9 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
 
   String _fmtDateTime(int ts) {
     try {
-      return DateFormat('HH:mm - dd/MM/yyyy')
-          .format(DateTime.fromMillisecondsSinceEpoch(ts));
+      return DateFormat(
+        'HH:mm - dd/MM/yyyy',
+      ).format(DateTime.fromMillisecondsSinceEpoch(ts));
     } catch (_) {
       return '';
     }

@@ -59,10 +59,7 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(text),
-        backgroundColor: backgroundColor,
-      ),
+      SnackBar(content: Text(text), backgroundColor: backgroundColor),
     );
   }
 
@@ -84,19 +81,24 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
   Future<void> _restartScanner() async {
     try {
       await _controller.stop();
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/auth/qr_authorize_scanner_screen.dart: $error',
+      );
+    }
 
     await Future<void>.delayed(const Duration(milliseconds: 120));
 
     try {
       await _controller.start();
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/auth/qr_authorize_scanner_screen.dart: $error',
+      );
+    }
   }
 
-  Future<void> _showScannerInfo(
-    String text, {
-    bool showSnack = true,
-  }) async {
+  Future<void> _showScannerInfo(String text, {bool showSnack = true}) async {
     if (mounted) {
       setState(() => _scannerInfoText = text);
     } else {
@@ -104,10 +106,7 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
     }
 
     if (showSnack) {
-      await _showSnack(
-        text,
-        backgroundColor: const Color(0xFFD81B60),
-      );
+      await _showSnack(text, backgroundColor: const Color(0xFFD81B60));
     }
   }
 
@@ -150,9 +149,7 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
     );
   }
 
-  Future<bool?> _showConfirmDialog({
-    required String houseId,
-  }) {
+  Future<bool?> _showConfirmDialog({required String houseId}) {
     return showDialog<bool>(
       context: context,
       builder: (ctx) {
@@ -294,8 +291,8 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
     final token = QRPayloadCodec.extractLoginToken(code);
     if (token == null) {
       final kind = QRPayloadCodec.detectKind(code);
-      final text = kind == QRPayloadKind.house ||
-              kind == QRPayloadKind.community
+      final text =
+          kind == QRPayloadKind.house || kind == QRPayloadKind.community
           ? 'Đây là QR nhà hoặc QR cộng đồng, không phải QR đăng nhập. Hãy mở đúng QR đăng nhập trên thiết bị mới rồi quét lại.'
           : 'Mã vừa quét không phải QR đăng nhập hợp lệ.';
       await _showScannerInfo(text);
@@ -310,7 +307,7 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
     try {
       final houseId =
           (await HouseService().getCurrentHouseId(preferFresh: true))?.trim() ??
-              '';
+          '';
 
       if (houseId.isEmpty) {
         await _handleMissingSession();
@@ -462,10 +459,12 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
                   final maxByHeight = (constraints.maxHeight * 0.34)
                       .clamp(minFrameSize, 270.0)
                       .toDouble();
-                  final scanFrameSize =
-                      maxByWidth < maxByHeight ? maxByWidth : maxByHeight;
-                  final frameInset =
-                      (scanFrameSize * 0.052).clamp(12.0, 16.0).toDouble();
+                  final scanFrameSize = maxByWidth < maxByHeight
+                      ? maxByWidth
+                      : maxByHeight;
+                  final frameInset = (scanFrameSize * 0.052)
+                      .clamp(12.0, 16.0)
+                      .toDouble();
                   final contentGap = isCompactHeight ? 12.0 : 18.0;
                   final infoPadding = isCompactHeight ? 14.0 : 16.0;
 
@@ -529,7 +528,8 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
                             color: Colors.white.withValues(alpha: 0.12),
                             borderRadius: SLRadius.xlAll,
                             border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.18)),
+                              color: Colors.white.withValues(alpha: 0.18),
+                            ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -573,8 +573,9 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
                             width: double.infinity,
                             padding: EdgeInsets.all(infoPadding),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF401722)
-                                  .withValues(alpha: 0.86),
+                              color: const Color(
+                                0xFF401722,
+                              ).withValues(alpha: 0.86),
                               borderRadius: SLRadius.xlAll,
                               border: Border.all(
                                 color: const Color(0x66FF8DB4),
@@ -605,8 +606,9 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: SLColors.primaryActive
-                                      .withValues(alpha: 0.22),
+                                  color: SLColors.primaryActive.withValues(
+                                    alpha: 0.22,
+                                  ),
                                   blurRadius: 28,
                                   spreadRadius: 4,
                                 ),
@@ -657,7 +659,8 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
                             color: Colors.black.withValues(alpha: 0.5),
                             borderRadius: SLRadius.xlAll,
                             border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.14)),
+                              color: Colors.white.withValues(alpha: 0.14),
+                            ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -711,13 +714,15 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
                       color: const Color(0xFF1F1A1D),
                       borderRadius: SLRadius.xlAll,
                       border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.08)),
+                        color: Colors.white.withValues(alpha: 0.08),
+                      ),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const CircularProgressIndicator(
-                            color: Color(0xFFD81B60)),
+                          color: Color(0xFFD81B60),
+                        ),
                         SLSpacing.h12,
                         Text(
                           'Đang kiểm tra QR đăng nhập...',
@@ -786,9 +791,7 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
     return SizedBox(
       width: 34,
       height: 34,
-      child: CustomPaint(
-        painter: _CornerPainter(),
-      ),
+      child: CustomPaint(painter: _CornerPainter()),
     );
   }
 }

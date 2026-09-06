@@ -195,6 +195,134 @@ enum _HomeCardAdornment {
   waxSeal,
 }
 
+/// Mỗi nhóm nội dung trên Home có một chất liệu riêng để các khối không bị
+/// lặp lại cùng một kiểu "tờ giấy có dải màu".
+enum _HomeCardVisualStyle { paper, couple, milestone, map, insight }
+
+class _HomeCardVisualSpec {
+  final List<Color> surfaceColors;
+  final Color borderColor;
+  final Color shadowColor;
+  final Color frameColor;
+  final Color accentColor;
+  final double frameAngle;
+  final double frameLeft;
+  final double frameTop;
+  final double frameRight;
+  final double frameBottom;
+
+  const _HomeCardVisualSpec({
+    required this.surfaceColors,
+    required this.borderColor,
+    required this.shadowColor,
+    required this.frameColor,
+    required this.accentColor,
+    required this.frameAngle,
+    required this.frameLeft,
+    required this.frameTop,
+    required this.frameRight,
+    required this.frameBottom,
+  });
+
+  static _HomeCardVisualSpec resolve({
+    required _HomeCardVisualStyle style,
+    required Color surface,
+    required Color accent,
+  }) {
+    Color tint(Color color, double opacity) {
+      // Chỉ pha màu, không làm mất độ trong suốt mà người dùng đã chọn.
+      return Color.alphaBlend(
+        color.withValues(alpha: opacity),
+        surface.withValues(alpha: 1),
+      ).withValues(alpha: surface.a);
+    }
+
+    switch (style) {
+      case _HomeCardVisualStyle.couple:
+        return _HomeCardVisualSpec(
+          surfaceColors: [
+            tint(const Color(0xFFFFE9F0), 0.40),
+            tint(const Color(0xFFFFFBF4), 0.62),
+            tint(const Color(0xFFF8EFFA), 0.34),
+          ],
+          borderColor: const Color(0xFFE889A5).withValues(alpha: 0.48),
+          shadowColor: const Color(0xFFE95B87).withValues(alpha: 0.16),
+          frameColor: const Color(0xFFFF91AC).withValues(alpha: 0.20),
+          accentColor: const Color(0xFFE95B87),
+          frameAngle: -0.008,
+          frameLeft: 4,
+          frameTop: 7,
+          frameRight: -4,
+          frameBottom: -5,
+        );
+      case _HomeCardVisualStyle.milestone:
+        return _HomeCardVisualSpec(
+          surfaceColors: [
+            tint(const Color(0xFFFFF0EF), 0.46),
+            tint(const Color(0xFFFFFCF6), 0.78),
+            tint(const Color(0xFFFFF2F7), 0.42),
+          ],
+          borderColor: const Color(0xFFF1A2B1).withValues(alpha: 0.52),
+          shadowColor: const Color(0xFFFF7A96).withValues(alpha: 0.15),
+          frameColor: const Color(0xFFFFB1C3).withValues(alpha: 0.22),
+          accentColor: const Color(0xFFFF6D8E),
+          frameAngle: 0.010,
+          frameLeft: 8,
+          frameTop: 9,
+          frameRight: -6,
+          frameBottom: -6,
+        );
+      case _HomeCardVisualStyle.map:
+        return _HomeCardVisualSpec(
+          surfaceColors: [
+            tint(const Color(0xFFE5F7FF), 0.50),
+            tint(const Color(0xFFF9FDFF), 0.84),
+            tint(const Color(0xFFF1EEFF), 0.38),
+          ],
+          borderColor: const Color(0xFF72C9ED).withValues(alpha: 0.54),
+          shadowColor: const Color(0xFF4DBBEA).withValues(alpha: 0.16),
+          frameColor: const Color(0xFF9EDCFF).withValues(alpha: 0.28),
+          accentColor: const Color(0xFF3399D4),
+          frameAngle: -0.012,
+          frameLeft: 4,
+          frameTop: 10,
+          frameRight: -5,
+          frameBottom: -6,
+        );
+      case _HomeCardVisualStyle.insight:
+        return _HomeCardVisualSpec(
+          surfaceColors: [
+            tint(const Color(0xFFF1E9FF), 0.52),
+            tint(const Color(0xFFFFFBFF), 0.88),
+            tint(const Color(0xFFFFEEF8), 0.46),
+          ],
+          borderColor: const Color(0xFFB9A5EF).withValues(alpha: 0.54),
+          shadowColor: const Color(0xFF9A7BE5).withValues(alpha: 0.16),
+          frameColor: const Color(0xFFCDBCF8).withValues(alpha: 0.26),
+          accentColor: const Color(0xFF8D72D8),
+          frameAngle: 0.006,
+          frameLeft: 7,
+          frameTop: 8,
+          frameRight: -5,
+          frameBottom: -7,
+        );
+      case _HomeCardVisualStyle.paper:
+        return _HomeCardVisualSpec(
+          surfaceColors: [surface, surface],
+          borderColor: SLColors.border,
+          shadowColor: accent.withValues(alpha: 0.12),
+          frameColor: accent.withValues(alpha: 0.15),
+          accentColor: accent,
+          frameAngle: 0.008,
+          frameLeft: 7,
+          frameTop: 9,
+          frameRight: -5,
+          frameBottom: -6,
+        );
+    }
+  }
+}
+
 class _HomeScrapbookCard extends StatelessWidget {
   final Widget child;
   final EdgeInsets padding;
@@ -202,6 +330,7 @@ class _HomeScrapbookCard extends StatelessWidget {
   final Color? color;
   final double radius;
   final _HomeCardAdornment adornment;
+  final _HomeCardVisualStyle visualStyle;
 
   const _HomeScrapbookCard({
     required this.child,
@@ -210,6 +339,7 @@ class _HomeScrapbookCard extends StatelessWidget {
     this.color,
     this.radius = 28,
     this.adornment = _HomeCardAdornment.none,
+    this.visualStyle = _HomeCardVisualStyle.paper,
   });
 
   @override
@@ -219,20 +349,25 @@ class _HomeScrapbookCard extends StatelessWidget {
     final effectiveSurface = ui.transparentMode
         ? surface.withValues(alpha: 0.82)
         : surface;
+    final visual = _HomeCardVisualSpec.resolve(
+      style: visualStyle,
+      surface: effectiveSurface,
+      accent: accentColor,
+    );
 
     return Stack(
       clipBehavior: Clip.none,
       children: [
         Positioned.fill(
-          left: 7,
-          top: 9,
-          right: -5,
-          bottom: -6,
+          left: visual.frameLeft,
+          top: visual.frameTop,
+          right: visual.frameRight,
+          bottom: visual.frameBottom,
           child: Transform.rotate(
-            angle: 0.008,
+            angle: visual.frameAngle,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: accentColor.withValues(alpha: 0.15),
+                color: visual.frameColor,
                 borderRadius: BorderRadius.circular(radius),
               ),
             ),
@@ -241,49 +376,146 @@ class _HomeScrapbookCard extends StatelessWidget {
         Container(
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: effectiveSurface,
+            color: visualStyle == _HomeCardVisualStyle.paper
+                ? effectiveSurface
+                : null,
+            gradient: visualStyle == _HomeCardVisualStyle.paper
+                ? null
+                : LinearGradient(
+                    colors: visual.surfaceColors,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
             borderRadius: BorderRadius.circular(radius),
-            border: Border.all(color: SLColors.border, width: 1.15),
-            boxShadow: SLShadow.paper,
+            border: Border.all(color: visual.borderColor, width: 1.15),
+            boxShadow: [
+              if (visualStyle != _HomeCardVisualStyle.paper)
+                BoxShadow(
+                  color: visual.shadowColor,
+                  blurRadius: 21,
+                  spreadRadius: -5,
+                  offset: const Offset(0, 10),
+                ),
+              ...SLShadow.paper,
+            ],
           ),
           child: Stack(
             children: [
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: 5,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        accentColor.withValues(alpha: 0.92),
-                        accentColor.withValues(alpha: 0.34),
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 16,
-                top: 13,
-                child: Row(
-                  children: List.generate(
-                    3,
-                    (index) => Container(
-                      width: 4,
-                      height: 4,
-                      margin: const EdgeInsets.only(left: 5),
-                      decoration: BoxDecoration(
-                        color: accentColor.withValues(alpha: 0.20),
-                        shape: BoxShape.circle,
+              if (visualStyle != _HomeCardVisualStyle.paper)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(
+                      painter: _HomeCardMotifPainter(
+                        style: visualStyle,
+                        accent: visual.accentColor,
                       ),
                     ),
                   ),
                 ),
-              ),
+              if (visualStyle == _HomeCardVisualStyle.paper ||
+                  visualStyle == _HomeCardVisualStyle.map)
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: visualStyle == _HomeCardVisualStyle.map ? 4 : 5,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          visual.accentColor.withValues(alpha: 0.92),
+                          visual.accentColor.withValues(
+                            alpha: visualStyle == _HomeCardVisualStyle.paper
+                                ? 0.34
+                                : 0.28,
+                          ),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                  ),
+                ),
+              if (visualStyle == _HomeCardVisualStyle.paper)
+                Positioned(
+                  right: 16,
+                  top: 13,
+                  child: IgnorePointer(
+                    child: Row(
+                      children: List.generate(
+                        3,
+                        (index) => Container(
+                          width: 4,
+                          height: 4,
+                          margin: const EdgeInsets.only(left: 5),
+                          decoration: BoxDecoration(
+                            color: accentColor.withValues(alpha: 0.20),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              if (visualStyle == _HomeCardVisualStyle.couple)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Padding(
+                      padding: const EdgeInsets.all(7),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(radius - 7),
+                          border: Border.all(
+                            color: visual.accentColor.withValues(alpha: 0.16),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              if (visualStyle == _HomeCardVisualStyle.milestone)
+                Positioned(
+                  left: 26,
+                  right: 26,
+                  top: 0,
+                  height: 4,
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.transparent,
+                            visual.accentColor.withValues(alpha: 0.72),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              if (visualStyle == _HomeCardVisualStyle.insight)
+                Positioned(
+                  right: 19,
+                  top: 17,
+                  child: IgnorePointer(
+                    child: Container(
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            Colors.white.withValues(alpha: 0.92),
+                            visual.accentColor.withValues(alpha: 0.12),
+                          ],
+                        ),
+                        border: Border.all(
+                          color: visual.accentColor.withValues(alpha: 0.16),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               Padding(padding: padding, child: child),
             ],
           ),
@@ -478,6 +710,237 @@ class _HomeScrapbookCard extends StatelessWidget {
           ),
       ],
     );
+  }
+}
+
+/// Họa tiết rất nhẹ phía sau nội dung. Không dùng animation liên tục để Home
+/// vẫn mượt trên máy cấu hình yếu; hiệu ứng đến từ chiều sâu, nét vẽ và màu.
+class _HomeCardMotifPainter extends CustomPainter {
+  final _HomeCardVisualStyle style;
+  final Color accent;
+
+  const _HomeCardMotifPainter({required this.style, required this.accent});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.width < 64 || size.height < 42) return;
+
+    switch (style) {
+      case _HomeCardVisualStyle.couple:
+        _paintCoupleFrame(canvas, size);
+        break;
+      case _HomeCardVisualStyle.milestone:
+        _paintPostcardEdge(canvas, size);
+        break;
+      case _HomeCardVisualStyle.map:
+        _paintMapRoute(canvas, size);
+        break;
+      case _HomeCardVisualStyle.insight:
+        _paintInsightConstellation(canvas, size);
+        break;
+      case _HomeCardVisualStyle.paper:
+        break;
+    }
+  }
+
+  void _paintCoupleFrame(Canvas canvas, Size size) {
+    final frameRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(11, 11, size.width - 22, size.height - 22),
+      const Radius.circular(22),
+    );
+    canvas.drawRRect(
+      frameRect,
+      Paint()
+        ..color = accent.withValues(alpha: 0.10)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2,
+    );
+
+    final thread = Path()
+      ..moveTo(size.width * 0.12, size.height * 0.78)
+      ..cubicTo(
+        size.width * 0.30,
+        size.height * 0.62,
+        size.width * 0.40,
+        size.height * 0.94,
+        size.width * 0.50,
+        size.height * 0.79,
+      )
+      ..cubicTo(
+        size.width * 0.61,
+        size.height * 0.62,
+        size.width * 0.74,
+        size.height * 0.93,
+        size.width * 0.88,
+        size.height * 0.73,
+      );
+    canvas.drawPath(
+      thread,
+      Paint()
+        ..color = accent.withValues(alpha: 0.11)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.3
+        ..strokeCap = StrokeCap.round,
+    );
+    _drawHeart(
+      canvas,
+      Offset(size.width * 0.50, size.height * 0.79),
+      5.2,
+      accent.withValues(alpha: 0.15),
+    );
+  }
+
+  void _paintPostcardEdge(Canvas canvas, Size size) {
+    final perforation = Paint()..color = accent.withValues(alpha: 0.18);
+    for (double x = 22; x < size.width - 20; x += 12) {
+      canvas.drawCircle(Offset(x, 13), 1.15, perforation);
+      canvas.drawCircle(Offset(x, size.height - 13), 1.15, perforation);
+    }
+
+    final seal = Offset(size.width - 37, size.height - 33);
+    canvas.drawCircle(
+      seal,
+      17,
+      Paint()
+        ..color = accent.withValues(alpha: 0.055)
+        ..style = PaintingStyle.fill,
+    );
+    canvas.drawCircle(
+      seal,
+      12,
+      Paint()
+        ..color = accent.withValues(alpha: 0.15)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.1,
+    );
+    _drawHeart(canvas, seal, 5.0, accent.withValues(alpha: 0.20));
+  }
+
+  void _paintMapRoute(Canvas canvas, Size size) {
+    final points = [
+      Offset(size.width * 0.12, size.height * 0.76),
+      Offset(size.width * 0.31, size.height * 0.56),
+      Offset(size.width * 0.53, size.height * 0.70),
+      Offset(size.width * 0.73, size.height * 0.36),
+      Offset(size.width * 0.88, size.height * 0.46),
+    ];
+    final route = Path()..moveTo(points.first.dx, points.first.dy);
+    for (var index = 1; index < points.length; index++) {
+      final previous = points[index - 1];
+      final current = points[index];
+      route.quadraticBezierTo(
+        (previous.dx + current.dx) / 2,
+        index.isEven ? size.height * 0.84 : size.height * 0.29,
+        current.dx,
+        current.dy,
+      );
+    }
+    canvas.drawPath(
+      route,
+      Paint()
+        ..color = accent.withValues(alpha: 0.14)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.45
+        ..strokeCap = StrokeCap.round,
+    );
+    for (var index = 0; index < points.length; index++) {
+      final point = points[index];
+      canvas.drawCircle(
+        point,
+        index == 0 || index == points.length - 1 ? 4.4 : 2.8,
+        Paint()..color = Colors.white.withValues(alpha: 0.82),
+      );
+      canvas.drawCircle(
+        point,
+        index == 0 || index == points.length - 1 ? 3.3 : 1.9,
+        Paint()..color = accent.withValues(alpha: 0.28),
+      );
+    }
+  }
+
+  void _paintInsightConstellation(Canvas canvas, Size size) {
+    final center = Offset(size.width * 0.76, size.height * 0.30);
+    final orbitPaint = Paint()
+      ..color = accent.withValues(alpha: 0.10)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+    canvas.drawArc(
+      Rect.fromCenter(center: center, width: 82, height: 30),
+      -0.35,
+      pi * 1.40,
+      false,
+      orbitPaint,
+    );
+    canvas.drawArc(
+      Rect.fromCenter(center: center, width: 34, height: 76),
+      1.25,
+      pi * 1.32,
+      false,
+      orbitPaint,
+    );
+
+    final stars = [
+      Offset(size.width * 0.16, size.height * 0.23),
+      Offset(size.width * 0.85, size.height * 0.20),
+      Offset(size.width * 0.68, size.height * 0.78),
+      Offset(size.width * 0.28, size.height * 0.73),
+    ];
+    for (var index = 0; index < stars.length; index++) {
+      _drawSparkle(
+        canvas,
+        stars[index],
+        index.isEven ? 4.8 : 3.6,
+        accent.withValues(alpha: index.isEven ? 0.20 : 0.14),
+      );
+    }
+  }
+
+  void _drawHeart(Canvas canvas, Offset center, double size, Color color) {
+    final heart = Path()
+      ..moveTo(center.dx, center.dy + size * 0.60)
+      ..cubicTo(
+        center.dx - size,
+        center.dy,
+        center.dx - size * 0.54,
+        center.dy - size * 0.82,
+        center.dx,
+        center.dy - size * 0.28,
+      )
+      ..cubicTo(
+        center.dx + size * 0.54,
+        center.dy - size * 0.82,
+        center.dx + size,
+        center.dy,
+        center.dx,
+        center.dy + size * 0.60,
+      );
+    canvas.drawPath(
+      heart,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.15
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  void _drawSparkle(Canvas canvas, Offset center, double size, Color color) {
+    final sparkle = Path()
+      ..moveTo(center.dx, center.dy - size)
+      ..lineTo(center.dx + size * 0.34, center.dy - size * 0.34)
+      ..lineTo(center.dx + size, center.dy)
+      ..lineTo(center.dx + size * 0.34, center.dy + size * 0.34)
+      ..lineTo(center.dx, center.dy + size)
+      ..lineTo(center.dx - size * 0.34, center.dy + size * 0.34)
+      ..lineTo(center.dx - size, center.dy)
+      ..lineTo(center.dx - size * 0.34, center.dy - size * 0.34)
+      ..close();
+    canvas.drawPath(sparkle, Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(covariant _HomeCardMotifPainter oldDelegate) {
+    return oldDelegate.style != style || oldDelegate.accent != accent;
   }
 }
 
@@ -870,9 +1333,13 @@ class _HomeHeroStage extends StatelessWidget {
           top: 24,
           child: Transform.rotate(
             angle: -0.16,
-            child: _HomeDoodleStamp(
-              icon: Icons.auto_awesome_rounded,
-              color: SLColors.warningGold,
+            child: const HomeStickerMotion(
+              motion: SoulLocketStickerMotion.sway,
+              motionSeed: 'hero-sparkle',
+              child: _HomeDoodleStamp(
+                icon: Icons.auto_awesome_rounded,
+                color: SLColors.warningGold,
+              ),
             ),
           ),
         ),
@@ -881,11 +1348,15 @@ class _HomeHeroStage extends StatelessWidget {
           bottom: 28,
           child: Transform.rotate(
             angle: 0.13,
-            child: _HomeDoodleStamp(
-              icon: isSingle
-                  ? Icons.self_improvement_rounded
-                  : Icons.favorite_rounded,
-              color: accent,
+            child: HomeStickerMotion(
+              motion: SoulLocketStickerMotion.heartbeat,
+              motionSeed: 'hero-heart',
+              child: _HomeDoodleStamp(
+                icon: isSingle
+                    ? Icons.self_improvement_rounded
+                    : Icons.favorite_rounded,
+                color: accent,
+              ),
             ),
           ),
         ),

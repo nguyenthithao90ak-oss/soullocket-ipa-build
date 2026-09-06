@@ -24,7 +24,9 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
 
       final compactAge = ageDays >= 365 ? (ageDays / 365).floor() : ageDays;
       return '$emoji $compactAge';
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[MainHome] Cannot build birthday widget label: $error');
+    }
     return '✨ 0';
   }
 
@@ -81,7 +83,8 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
           .map((item) => item.url)
           .where((url) => seen.add(url))
           .toList(growable: false);
-    } catch (_) {
+    } catch (error) {
+      debugPrint('[MainHome] Cannot collect widget memory images: $error');
       return const <String>[];
     }
   }
@@ -380,6 +383,8 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       await WidgetService.syncCalendarWidgetData(houseId: houseId);
       await SoulMergeService().syncSoulMergeWidgetNow();
       _lastLoveWidgetSignature = widgetSignature;
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[MainHome] Widget synchronization failed: $error');
+    }
   }
 }

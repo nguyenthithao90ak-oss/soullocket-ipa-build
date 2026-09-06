@@ -46,58 +46,62 @@ class _CommentSheetState extends State<_CommentSheet> {
         .collection('comments')
         .snapshots()
         .listen((snapshot) {
-      if (!mounted) return;
-      final loaded = <Map<String, dynamic>>[];
-      for (final doc in snapshot.docs) {
-        final item = doc.data();
-        if (item['isHidden'] == true) continue;
+          if (!mounted) return;
+          final loaded = <Map<String, dynamic>>[];
+          for (final doc in snapshot.docs) {
+            final item = doc.data();
+            if (item['isHidden'] == true) continue;
 
-        final authorId = (item['houseId'] ?? item['uid'] ?? '').toString();
-        if (authorId.isNotEmpty && widget.blockedUsers[authorId] == true) {
-          continue;
-        }
+            final authorId = (item['houseId'] ?? item['uid'] ?? '').toString();
+            if (authorId.isNotEmpty && widget.blockedUsers[authorId] == true) {
+              continue;
+            }
 
-        loaded.add(<String, dynamic>{
-          'id': doc.id,
-          'content':
-              (item['content'] ?? item['c'] ?? item['text'] ?? '').toString(),
-          'author_name': (item['authorName'] ??
-                  item['author_name'] ??
-                  item['author'] ??
-                  item['name'] ??
-                  item['u'] ??
-                  context.tr('home_ngidng_3bf886'))
-              .toString(),
-          'author_id': authorId,
-          'author_avt': (item['authorAvt'] ??
-                  item['avt'] ??
-                  item['avatar'] ??
-                  item['houseAvt'] ??
-                  '')
-              .toString(),
-          'created_at': item['ts'] ?? 0,
+            loaded.add(<String, dynamic>{
+              'id': doc.id,
+              'content': (item['content'] ?? item['c'] ?? item['text'] ?? '')
+                  .toString(),
+              'author_name':
+                  (item['authorName'] ??
+                          item['author_name'] ??
+                          item['author'] ??
+                          item['name'] ??
+                          item['u'] ??
+                          context.tr('home_ngidng_3bf886'))
+                      .toString(),
+              'author_id': authorId,
+              'author_avt':
+                  (item['authorAvt'] ??
+                          item['avt'] ??
+                          item['avatar'] ??
+                          item['houseAvt'] ??
+                          '')
+                      .toString(),
+              'created_at': item['ts'] ?? 0,
+            });
+          }
+
+          loaded.sort((a, b) {
+            final left = (a['created_at'] as num?)?.toInt() ?? 0;
+            final right = (b['created_at'] as num?)?.toInt() ?? 0;
+            return right.compareTo(left);
+          });
+
+          setState(() {
+            _comments = loaded;
+            _loading = false;
+          });
         });
-      }
-
-      loaded.sort((a, b) {
-        final left = (a['created_at'] as num?)?.toInt() ?? 0;
-        final right = (b['created_at'] as num?)?.toInt() ?? 0;
-        return right.compareTo(left);
-      });
-
-      setState(() {
-        _comments = loaded;
-        _loading = false;
-      });
-    });
   }
 
   Future<void> _postComment() async {
     final text = _ctrl.text.trim();
     if (text.isEmpty) return;
 
-    final validationError =
-        _socialService.validateCommunityText(text, isComment: true);
+    final validationError = _socialService.validateCommunityText(
+      text,
+      isComment: true,
+    );
     if (validationError != null) {
       _showSnack(validationError);
       return;
@@ -124,12 +128,16 @@ class _CommentSheetState extends State<_CommentSheet> {
 
   void _showSnack(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final l10n = L10nScope.of(context);
+
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
       minChildSize: 0.5,
@@ -137,9 +145,9 @@ class _CommentSheetState extends State<_CommentSheet> {
       expand: false,
       builder: (context, scrollController) {
         return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
           ),
           child: Column(
             children: [
@@ -149,54 +157,60 @@ class _CommentSheetState extends State<_CommentSheet> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: colors.outlineVariant,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Bình luận (${_comments.length})',
+                      l10n.format('p9_comments_title', {
+                        'count': _comments.length,
+                      }),
                       style: SLTheme.quicksand(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
+                        color: colors.onSurface,
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.grey),
+                      icon: Icon(Icons.close, color: colors.onSurfaceVariant),
                       onPressed: () => Navigator.pop(context),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
+                      tooltip: context.tr('p9_comments_close'),
                     ),
                   ],
                 ),
               ),
-              const Divider(height: 1),
+              Divider(height: 1, color: colors.outlineVariant),
               Expanded(
                 child: _loading
                     ? const Center(child: CircularProgressIndicator())
                     : _comments.isEmpty
-                        ? Center(
-                            child: Text(
-                              context.tr('home_chacbnhlun_8fff46'),
-                              style: SLTheme.quicksand(color: Colors.grey),
-                            ),
-                          )
-                        : ListView.builder(
-                            controller: scrollController,
-                            itemCount: _comments.length,
-                            padding: const EdgeInsets.only(top: 8, bottom: 16),
-                            itemBuilder: (context, index) {
-                              return _buildCommentItem(_comments[index]);
-                            },
+                    ? Center(
+                        child: Text(
+                          context.tr('home_chacbnhlun_8fff46'),
+                          style: SLTheme.quicksand(
+                            color: colors.onSurfaceVariant,
                           ),
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: scrollController,
+                        itemCount: _comments.length,
+                        padding: const EdgeInsets.only(top: 8, bottom: 16),
+                        itemBuilder: (context, index) {
+                          return _buildCommentItem(_comments[index]);
+                        },
+                      ),
               ),
-              const Divider(height: 1),
+              Divider(height: 1, color: colors.outlineVariant),
               Padding(
                 padding: EdgeInsets.only(
                   bottom: MediaQuery.viewInsetsOf(context).bottom + 8,
@@ -206,10 +220,14 @@ class _CommentSheetState extends State<_CommentSheet> {
                 ),
                 child: Row(
                   children: [
-                    const CircleAvatar(
+                    CircleAvatar(
                       radius: 18,
-                      backgroundColor: Colors.grey,
-                      child: Icon(Icons.person, color: Colors.white, size: 20),
+                      backgroundColor: colors.surfaceContainerHighest,
+                      child: Icon(
+                        Icons.person,
+                        color: colors.onSurfaceVariant,
+                        size: 20,
+                      ),
                     ),
                     SLSpacing.w12,
                     Expanded(
@@ -222,7 +240,7 @@ class _CommentSheetState extends State<_CommentSheet> {
                         decoration: InputDecoration(
                           hintText: context.tr('home_thmbnhlun_7cc7c1'),
                           hintStyle: SLTheme.quicksand(
-                            color: Colors.grey,
+                            color: colors.onSurfaceVariant,
                             fontSize: 14,
                           ),
                           border: OutlineInputBorder(
@@ -230,7 +248,7 @@ class _CommentSheetState extends State<_CommentSheet> {
                             borderSide: BorderSide.none,
                           ),
                           filled: true,
-                          fillColor: Colors.grey[100],
+                          fillColor: colors.surfaceContainerHighest,
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
                             vertical: 10,
@@ -246,8 +264,7 @@ class _CommentSheetState extends State<_CommentSheet> {
                         color: Color(0xFFD81B60),
                       ),
                       onPressed: _postComment,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
+                      tooltip: context.tr('p9_comments_send'),
                     ),
                   ],
                 ),
@@ -260,6 +277,7 @@ class _CommentSheetState extends State<_CommentSheet> {
   }
 
   Widget _buildCommentItem(Map<String, dynamic> c) {
+    final colors = Theme.of(context).colorScheme;
     final authorId = c['author_id']?.toString() ?? '';
     final authorAvt = c['author_avt']?.toString() ?? '';
     final authorName =
@@ -272,20 +290,12 @@ class _CommentSheetState extends State<_CommentSheet> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            GestureDetector(
-              onTap: () {
-                if (authorId.isEmpty) return;
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        VisitorProfileScreen(targetHouseId: authorId),
-                  ),
-                );
-              },
+            _buildAuthorButton(
+              authorId: authorId,
+              authorName: authorName,
               child: CircleAvatar(
                 radius: 18,
-                backgroundColor: Colors.grey.shade200,
+                backgroundColor: colors.surfaceContainerHighest,
                 backgroundImage: authorAvt.isNotEmpty
                     ? CachedNetworkImageProvider(authorAvt)
                     : null,
@@ -308,31 +318,25 @@ class _CommentSheetState extends State<_CommentSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  GestureDetector(
-                    onTap: () {
-                      if (authorId.isEmpty) return;
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              VisitorProfileScreen(targetHouseId: authorId),
-                        ),
-                      );
-                    },
+                  _buildAuthorButton(
+                    authorId: authorId,
+                    authorName: authorName,
                     child: Text(
                       authorName,
                       style: SLTheme.quicksand(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
-                        color: Colors.grey[700],
+                        color: colors.onSurface,
                       ),
                     ),
                   ),
                   SLSpacing.h4,
                   Text(
                     c['content']?.toString() ?? '',
-                    style:
-                        SLTheme.quicksand(fontSize: 14, color: Colors.black87),
+                    style: SLTheme.quicksand(
+                      fontSize: 14,
+                      color: colors.onSurface,
+                    ),
                   ),
                   SLSpacing.h8,
                   Row(
@@ -341,23 +345,29 @@ class _CommentSheetState extends State<_CommentSheet> {
                         _formatTime(c['created_at']),
                         style: SLTheme.quicksand(
                           fontSize: 12,
-                          color: Colors.grey,
+                          color: colors.onSurfaceVariant,
                         ),
                       ),
                       SLSpacing.w16,
-                      GestureDetector(
-                        onTap: () {
+                      TextButton(
+                        onPressed: () {
                           _focusNode.requestFocus();
                           _ctrl.text = '@$authorName ';
                           _ctrl.selection = TextSelection.fromPosition(
                             TextPosition(offset: _ctrl.text.length),
                           );
                         },
+                        style: TextButton.styleFrom(
+                          foregroundColor: colors.onSurfaceVariant,
+                          minimumSize: const Size(48, 36),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                         child: Text(
                           context.tr('home_trli_4c5df0'),
                           style: SLTheme.quicksand(
                             fontSize: 12,
-                            color: Colors.grey,
+                            color: colors.onSurfaceVariant,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -369,16 +379,59 @@ class _CommentSheetState extends State<_CommentSheet> {
             ),
             Column(
               children: [
-                Icon(Icons.favorite_border, size: 16, color: Colors.grey[500]),
+                Icon(
+                  Icons.favorite_border,
+                  size: 16,
+                  color: colors.onSurfaceVariant,
+                ),
                 SLSpacing.gapH(2),
                 Text(
                   '0',
-                  style:
-                      SLTheme.quicksand(fontSize: 12, color: Colors.grey[500]),
+                  style: SLTheme.quicksand(
+                    fontSize: 12,
+                    color: colors.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAuthorButton({
+    required String authorId,
+    required String authorName,
+    required Widget child,
+  }) {
+    final canOpen = authorId.isNotEmpty;
+    final label = L10nScope.of(
+      context,
+    ).format('p9_comments_open_profile', {'name': authorName});
+
+    return Semantics(
+      button: canOpen,
+      label: label,
+      child: Tooltip(
+        message: label,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: canOpen
+                ? () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            VisitorProfileScreen(targetHouseId: authorId),
+                      ),
+                    );
+                  }
+                : null,
+            borderRadius: BorderRadius.circular(20),
+            child: child,
+          ),
         ),
       ),
     );
@@ -391,9 +444,18 @@ class _CommentSheetState extends State<_CommentSheet> {
           ? DateTime.fromMillisecondsSinceEpoch(ts)
           : DateTime.parse(ts.toString());
       final diff = DateTime.now().difference(dateTime);
-      if (diff.inDays > 0) return '${diff.inDays} ngày trước';
-      if (diff.inHours > 0) return '${diff.inHours} giờ trước';
-      if (diff.inMinutes > 0) return '${diff.inMinutes} phút trước';
+      final l10n = L10nScope.of(context);
+      if (diff.inDays > 0) {
+        return l10n.format('p9_comments_days_ago', {'count': diff.inDays});
+      }
+      if (diff.inHours > 0) {
+        return l10n.format('p9_comments_hours_ago', {'count': diff.inHours});
+      }
+      if (diff.inMinutes > 0) {
+        return l10n.format('p9_comments_minutes_ago', {
+          'count': diff.inMinutes,
+        });
+      }
       return context.tr('home_vaxong_e92d16');
     } catch (_) {
       return context.tr('home_vaxong_e92d16');
@@ -408,7 +470,7 @@ class _CommentSheetState extends State<_CommentSheet> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -422,14 +484,16 @@ class _CommentSheetState extends State<_CommentSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: Theme.of(context).colorScheme.outlineVariant,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               ListTile(
                 leading: const Icon(Icons.reply_rounded),
-                title: Text(context.tr('home_trli_4c5df0'),
-                    style: SLTheme.quicksand()),
+                title: Text(
+                  context.tr('home_trli_4c5df0'),
+                  style: SLTheme.quicksand(),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _focusNode.requestFocus();
@@ -441,8 +505,10 @@ class _CommentSheetState extends State<_CommentSheet> {
               ),
               ListTile(
                 leading: const Icon(Icons.copy_rounded),
-                title: Text(context.tr('home_saochp_cbfba9'),
-                    style: SLTheme.quicksand()),
+                title: Text(
+                  context.tr('home_saochp_cbfba9'),
+                  style: SLTheme.quicksand(),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   Clipboard.setData(
@@ -453,8 +519,10 @@ class _CommentSheetState extends State<_CommentSheet> {
               ),
               ListTile(
                 leading: const Icon(Icons.flag_rounded, color: Colors.orange),
-                title: Text(context.tr('home_bocobnhlun_7e340e'),
-                    style: SLTheme.quicksand()),
+                title: Text(
+                  context.tr('home_bocobnhlun_7e340e'),
+                  style: SLTheme.quicksand(),
+                ),
                 onTap: () async {
                   Navigator.pop(context);
                   final msgReportOk = context.tr('home_gibocobnhl_48e423');
@@ -525,7 +593,7 @@ class _CommentSheetState extends State<_CommentSheet> {
                           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                         ),
                         content: Text(
-                          'Bạn có chắc muốn chặn người này không?\nHọ sẽ không thể xem nhà bạn nữa.',
+                          context.tr('p9_comments_block_description'),
                           style: SLTheme.quicksand(),
                         ),
                         actions: [

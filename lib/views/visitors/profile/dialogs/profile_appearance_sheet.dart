@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/sl_theme.dart';
+import '../../../../utils/services/l10n_service.dart';
 import '../sections/profile_section_models.dart';
 
 Future<void> showVisitorProfileAppearanceSheet({
@@ -30,7 +31,8 @@ Future<void> showVisitorProfileAppearanceSheet({
       return StatefulBuilder(
         builder: (context, modalSetState) {
           return SafeArea(
-            child: Padding(
+            child: SingleChildScrollView(
+              physics: SLResponsive.scrollPhysicsForPlatform(),
               padding: EdgeInsets.fromLTRB(
                 20,
                 16,
@@ -53,7 +55,7 @@ Future<void> showVisitorProfileAppearanceSheet({
                   ),
                   SLSpacing.h16,
                   Text(
-                    'Tùy chỉnh hồ sơ',
+                    context.tr('p5_profile_appearance_title'),
                     style: SLTheme.quicksand(
                       fontSize: 18,
                       fontWeight: FontWeight.w900,
@@ -62,7 +64,7 @@ Future<void> showVisitorProfileAppearanceSheet({
                   ),
                   SLSpacing.h4,
                   Text(
-                    'Áp dụng chung cho cả 2 người trong nhà. Người ngoài chỉ xem được, không có nút chỉnh sửa.',
+                    context.tr('p5_profile_appearance_description'),
                     style: SLTheme.quicksand(
                       fontSize: 12.6,
                       fontWeight: FontWeight.w600,
@@ -76,7 +78,7 @@ Future<void> showVisitorProfileAppearanceSheet({
                       Expanded(
                         child: _VisitorProfileAppearanceAction(
                           icon: Icons.wallpaper_rounded,
-                          label: 'Đổi ảnh nền',
+                          label: context.tr('p5_profile_change_header'),
                           onTap: isUpdatingProfileAppearance
                               ? null
                               : () async {
@@ -89,7 +91,7 @@ Future<void> showVisitorProfileAppearanceSheet({
                       Expanded(
                         child: _VisitorProfileAppearanceAction(
                           icon: Icons.account_circle_rounded,
-                          label: 'Đổi avatar',
+                          label: context.tr('p5_profile_change_avatar'),
                           onTap: isUpdatingProfileAppearance
                               ? null
                               : () async {
@@ -104,7 +106,7 @@ Future<void> showVisitorProfileAppearanceSheet({
                     const SizedBox(height: 10),
                     _VisitorProfileAppearanceAction(
                       icon: Icons.layers_clear_rounded,
-                      label: 'Bỏ ảnh nền riêng',
+                      label: context.tr('p5_profile_remove_header'),
                       onTap: isUpdatingProfileAppearance
                           ? null
                           : () async {
@@ -118,7 +120,7 @@ Future<void> showVisitorProfileAppearanceSheet({
                   if (showThemeSelection) ...[
                     const SizedBox(height: 18),
                     Text(
-                      'Nền mặc định',
+                      context.tr('p5_profile_default_background'),
                       style: SLTheme.quicksand(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w900,
@@ -131,66 +133,74 @@ Future<void> showVisitorProfileAppearanceSheet({
                       runSpacing: 10,
                       children: themes.map((theme) {
                         final selected = selectedThemeKey == theme.key;
-                        return GestureDetector(
-                          onTap: isUpdatingProfileAppearance
-                              ? null
-                              : () async {
-                                  modalSetState(() {
-                                    selectedThemeKey = theme.key;
-                                    draftHasCustomHeaderImage = false;
-                                  });
-                                  await onThemeSelected(theme.key);
-                                },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 180),
-                            width: 92,
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(
-                                color: selected
-                                    ? SLColors.primary
-                                    : SLColors.border,
-                                width: selected ? 1.6 : 1,
+                        final themeLabel = context.tr(theme.labelKey);
+                        return Semantics(
+                          button: true,
+                          selected: selected,
+                          label: themeLabel,
+                          child: GestureDetector(
+                            onTap: isUpdatingProfileAppearance
+                                ? null
+                                : () async {
+                                    modalSetState(() {
+                                      selectedThemeKey = theme.key;
+                                      draftHasCustomHeaderImage = false;
+                                    });
+                                    await onThemeSelected(theme.key);
+                                  },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              width: 92,
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(
+                                  color: selected
+                                      ? SLColors.primary
+                                      : SLColors.border,
+                                  width: selected ? 1.6 : 1,
+                                ),
+                                color: Colors.white,
+                                boxShadow: selected ? SLShadow.sm : null,
                               ),
-                              color: Colors.white,
-                              boxShadow: selected ? SLShadow.sm : null,
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  height: 52,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(14),
-                                    gradient: LinearGradient(
-                                      colors: theme.colors,
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    height: 52,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(14),
+                                      gradient: LinearGradient(
+                                        colors: theme.colors,
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Icon(
+                                      theme.icon,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.92,
+                                      ),
+                                      size: 20,
                                     ),
                                   ),
-                                  alignment: Alignment.center,
-                                  child: Icon(
-                                    theme.icon,
-                                    color: Colors.white.withValues(alpha: 0.92),
-                                    size: 20,
+                                  SLSpacing.h8,
+                                  Text(
+                                    themeLabel,
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: SLTheme.quicksand(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: selected
+                                          ? SLColors.primary
+                                          : SLColors.textPrimary,
+                                    ),
                                   ),
-                                ),
-                                SLSpacing.h8,
-                                Text(
-                                  theme.label,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: SLTheme.quicksand(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w800,
-                                    color: selected
-                                        ? SLColors.primary
-                                        : SLColors.textPrimary,
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         );
@@ -200,7 +210,7 @@ Future<void> showVisitorProfileAppearanceSheet({
                   const SizedBox(height: 18),
                   _VisitorProfileAppearanceAction(
                     icon: Icons.settings_rounded,
-                    label: 'Mở cài đặt cộng đồng',
+                    label: context.tr('p5_profile_open_community_settings'),
                     onTap: () async {
                       Navigator.pop(sheetContext);
                       await onOpenCommunitySettings();

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/services/admob_service.dart';
+import '../../utils/services/l10n_service.dart';
 
 import '../../core/sl_theme.dart';
 import '../../models/chat_message.dart';
@@ -57,6 +58,35 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
   String get _groupId => widget.initialRoom.id;
   String get _mutePrefsKey => 'group_chat_muted_$_groupId';
+
+  String _tr(String key) => context.tr(key);
+
+  String _trFormat(String key, Map<String, Object?> params) =>
+      L10nScope.of(context).format(key, params);
+
+  bool _isDarkMode(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark;
+
+  Color _pageBackground(BuildContext context) =>
+      _isDarkMode(context) ? SLColors.darkBgMain : const Color(0xFFF8FAFC);
+
+  Color _surfaceColor(BuildContext context) =>
+      _isDarkMode(context) ? SLColors.darkBgCard : Colors.white;
+
+  Color _elevatedSurfaceColor(BuildContext context) =>
+      _isDarkMode(context) ? SLColors.darkBgElevated : const Color(0xFFF8FAFC);
+
+  Color _borderColor(BuildContext context) =>
+      _isDarkMode(context) ? SLColors.darkBorder : const Color(0xFFE2E8F0);
+
+  Color _primaryTextColor(BuildContext context) =>
+      _isDarkMode(context) ? SLColors.darkTextPrimary : SLColors.darkNavy;
+
+  Color _secondaryTextColor(BuildContext context) =>
+      _isDarkMode(context) ? SLColors.darkTextSecond : const Color(0xFF64748B);
+
+  double _messageMaxWidth(BuildContext context) =>
+      (MediaQuery.sizeOf(context).width * 0.78).clamp(0.0, 420.0).toDouble();
 
   @override
   void initState() {
@@ -150,7 +180,11 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     if (nameU1.isNotEmpty || nameU2.isNotEmpty) {
       return [nameU1, nameU2].where((item) => item.isNotEmpty).join(' • ');
     }
-    return houseId == widget.myHouseId ? 'Nhà của bạn' : 'Nhà $houseId';
+    return houseId == widget.myHouseId
+        ? _tr('p9_group_chat_your_house')
+        : _trFormat('p9_group_chat_house_fallback', <String, Object?>{
+            'houseId': houseId,
+          });
   }
 
   String _houseAvatar(String houseId) {
@@ -205,7 +239,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       return;
     }
     if (!_groupChatService.isHouseMemberOfGroup(room, widget.myHouseId)) {
-      _showNotice('Bạn không còn là thành viên của nhóm này.', error: true);
+      _showNotice(_tr('p9_group_chat_not_member'), error: true);
       return;
     }
     if (!await SecurityService().guardAction(
@@ -230,8 +264,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       _showNotice(
         AppErrorMapper.resolve(
           error,
-          fallbackMessage:
-              'Chưa thể gửi tin nhắn nhóm. Hãy kiểm tra kết nối rồi thử lại.',
+          fallbackMessage: _tr('p9_group_chat_send_failed'),
         ).message,
         error: true,
       );
@@ -420,34 +453,36 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     _liveMessageSub?.cancel();
     _liveMessageSub = _groupChatService
         .streamNewGroupMessages(
-      _groupId,
-      viewerHouseId: widget.myHouseId,
-      afterTs: _newestMessageTs,
-    )
-        .listen((message) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _upsertLiveMessage(message);
-      });
-    }, onError: (error) {
-      if (!mounted) {
-        return;
-      }
-      _showNotice(
-        AppErrorMapper.resolve(
-          error,
-          fallbackMessage:
-              'Chưa thể đồng bộ tin nhắn nhóm. Hãy kiểm tra kết nối rồi thử lại.',
-        ).message,
-        error: true,
-      );
-      setState(() {
-        _room = null;
-        _hasMoreMessages = false;
-      });
-    });
+          _groupId,
+          viewerHouseId: widget.myHouseId,
+          afterTs: _newestMessageTs,
+        )
+        .listen(
+          (message) {
+            if (!mounted) {
+              return;
+            }
+            setState(() {
+              _upsertLiveMessage(message);
+            });
+          },
+          onError: (error) {
+            if (!mounted) {
+              return;
+            }
+            _showNotice(
+              AppErrorMapper.resolve(
+                error,
+                fallbackMessage: _tr('p9_group_chat_sync_failed'),
+              ).message,
+              error: true,
+            );
+            setState(() {
+              _room = null;
+              _hasMoreMessages = false;
+            });
+          },
+        );
   }
 
   String _buildHeaderPreview() {
@@ -456,7 +491,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         .where((houseId) => houseId != widget.myHouseId)
         .toList(growable: false);
     if (otherMembers.isEmpty) {
-      return 'Không gian trò chuyện riêng của bạn';
+      return _tr('p9_group_chat_private_space');
     }
     final previewNames = otherMembers
         .take(2)
@@ -464,10 +499,14 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         .where((name) => name.trim().isNotEmpty)
         .toList(growable: false);
     if (previewNames.isEmpty) {
-      return '${room.memberHouseIds.length} thành viên đang trò chuyện';
+      return _trFormat('p9_group_chat_members_chatting', <String, Object?>{
+        'count': room.memberHouseIds.length,
+      });
     }
     final suffix = otherMembers.length > 2
-        ? ' cùng ${otherMembers.length - 2} người khác'
+        ? _trFormat('p9_group_chat_header_more_members', <String, Object?>{
+            'count': otherMembers.length - 2,
+          })
         : '';
     return '${previewNames.join(' • ')}$suffix';
   }
@@ -483,8 +522,8 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       await _saveMutedPref(nextValue);
       _showNotice(
         nextValue
-            ? 'Đã tắt thông báo cho nhóm này trên thiết bị của bạn.'
-            : 'Đã bật lại thông báo cho nhóm này trên thiết bị của bạn.',
+            ? _tr('p9_group_chat_notifications_muted')
+            : _tr('p9_group_chat_notifications_enabled'),
       );
     } catch (error) {
       if (!mounted) {
@@ -493,8 +532,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       setState(() {
         _isGroupMuted = !nextValue;
       });
-      _showNotice('Chưa thể cập nhật thông báo lúc này. Vui lòng thử lại.',
-          error: true);
+      _showNotice(_tr('p9_group_chat_notification_update_failed'), error: true);
     }
   }
 
@@ -508,24 +546,24 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Đổi tên nhóm'),
+          title: Text(_tr('p9_group_chat_rename_title')),
           content: TextField(
             controller: controller,
             maxLength: 50,
             autofocus: true,
-            decoration: const InputDecoration(
-              hintText: 'Nhập tên nhóm mới',
+            decoration: InputDecoration(
+              hintText: _tr('p9_group_chat_rename_hint'),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Hủy'),
+              child: Text(_tr('p9_group_chat_cancel')),
             ),
             ElevatedButton(
               onPressed: () =>
                   Navigator.of(dialogContext).pop(controller.text.trim()),
-              child: const Text('Lưu'),
+              child: Text(_tr('p9_group_chat_save')),
             ),
           ],
         );
@@ -541,10 +579,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         name: nextName,
         actorHouseId: widget.myHouseId,
       );
-      _showNotice('Đã cập nhật tên nhóm.');
+      _showNotice(_tr('p9_group_chat_rename_success'));
     } catch (error) {
-      _showNotice('Chưa thể đổi tên nhóm lúc này. Vui lòng thử lại.',
-          error: true);
+      _showNotice(_tr('p9_group_chat_rename_failed'), error: true);
     }
   }
 
@@ -557,25 +594,30 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         return StatefulBuilder(
           builder: (dialogContext, setDialogState) {
             return AlertDialog(
-              title: const Text('Báo cáo nhóm'),
+              title: Text(_tr('p9_group_chat_report_title')),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
                     initialValue: selected,
-                    items: const [
-                      DropdownMenuItem(value: 'spam', child: Text('Spam')),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'spam',
+                        child: Text(_tr('p9_group_chat_report_spam')),
+                      ),
                       DropdownMenuItem(
                         value: 'harassment',
-                        child: Text('Quấy rối'),
+                        child: Text(_tr('p9_group_chat_report_harassment')),
                       ),
                       DropdownMenuItem(
                         value: 'inappropriate_content',
-                        child: Text('Nội dung không phù hợp'),
+                        child: Text(
+                          _tr('p9_group_chat_report_inappropriate_content'),
+                        ),
                       ),
                       DropdownMenuItem(
                         value: 'other',
-                        child: Text('Khác'),
+                        child: Text(_tr('p9_group_chat_report_other')),
                       ),
                     ],
                     onChanged: (value) {
@@ -591,8 +633,8 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                   TextField(
                     controller: reasonCtrl,
                     maxLength: 140,
-                    decoration: const InputDecoration(
-                      hintText: 'Ghi chú thêm (không bắt buộc)',
+                    decoration: InputDecoration(
+                      hintText: _tr('p9_group_chat_report_note_hint'),
                     ),
                   ),
                 ],
@@ -600,15 +642,16 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Hủy'),
+                  child: Text(_tr('p9_group_chat_cancel')),
                 ),
                 ElevatedButton(
                   onPressed: () {
                     final extra = reasonCtrl.text.trim();
-                    Navigator.of(dialogContext)
-                        .pop(extra.isEmpty ? selected : '$selected: $extra');
+                    Navigator.of(
+                      dialogContext,
+                    ).pop(extra.isEmpty ? selected : '$selected: $extra');
                   },
-                  child: const Text('Gửi báo cáo'),
+                  child: Text(_tr('p9_group_chat_send_report')),
                 ),
               ],
             );
@@ -632,10 +675,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         reporterHouseId: widget.myHouseId,
         reason: reason,
       );
-      _showNotice('Đã gửi báo cáo. Cảm ơn bạn đã phản hồi.');
+      _showNotice(_tr('p9_group_chat_report_success'));
     } catch (error) {
-      _showNotice('Chưa thể gửi báo cáo lúc này. Vui lòng thử lại.',
-          error: true);
+      _showNotice(_tr('p9_group_chat_report_failed'), error: true);
     }
   }
 
@@ -650,6 +692,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         final media = MediaQuery.of(sheetContext);
+        final isCompactActionLayout =
+            media.size.width < 360 ||
+            MediaQuery.textScalerOf(sheetContext).scale(1) > 1.15;
         return SafeArea(
           child: Padding(
             padding: EdgeInsets.fromLTRB(
@@ -661,7 +706,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             child: Container(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: _surfaceColor(sheetContext),
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Column(
@@ -673,7 +718,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                       width: 42,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE2E8F0),
+                        color: _borderColor(sheetContext),
                         borderRadius: BorderRadius.circular(999),
                       ),
                     ),
@@ -681,15 +726,22 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                   const SizedBox(height: 16),
                   Text(
                     room.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w900,
                       fontSize: 18,
-                      color: SLColors.darkNavy,
+                      color: _primaryTextColor(sheetContext),
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '${room.memberHouseIds.length} thành viên • Tạo lúc ${_formatDateTime(room.createdAtMs)}',
+                    _trFormat('p9_group_chat_members_meta', <String, Object?>{
+                      'count': room.memberHouseIds.length,
+                      'date': _formatDateTime(room.createdAtMs),
+                    }),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w700,
                       fontSize: 12,
@@ -697,31 +749,59 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
+                  if (isCompactActionLayout)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        OutlinedButton(
                           onPressed: () async {
                             Navigator.of(sheetContext).pop();
                             await _renameGroup();
                           },
-                          child: const Text('Đổi tên'),
+                          child: Text(_tr('p9_group_chat_rename_action')),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: OutlinedButton(
+                        const SizedBox(height: 8),
+                        OutlinedButton(
                           onPressed: () async {
                             Navigator.of(sheetContext).pop();
                             await _toggleGroupMute();
                           },
-                          child: Text(_isGroupMuted
-                              ? 'Bật thông báo'
-                              : 'Tắt thông báo'),
+                          child: Text(
+                            _isGroupMuted
+                                ? _tr('p9_group_chat_enable_notifications')
+                                : _tr('p9_group_chat_disable_notifications'),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    )
+                  else
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () async {
+                              Navigator.of(sheetContext).pop();
+                              await _renameGroup();
+                            },
+                            child: Text(_tr('p9_group_chat_rename_action')),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () async {
+                              Navigator.of(sheetContext).pop();
+                              await _toggleGroupMute();
+                            },
+                            child: Text(
+                              _isGroupMuted
+                                  ? _tr('p9_group_chat_enable_notifications')
+                                  : _tr('p9_group_chat_disable_notifications'),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   const SizedBox(height: 8),
                   SizedBox(
                     width: double.infinity,
@@ -733,16 +813,16 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFFDC2626),
                       ),
-                      child: const Text('Báo cáo nhóm'),
+                      child: Text(_tr('p9_group_chat_report_title')),
                     ),
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    'Thành viên',
+                    _tr('p9_group_chat_members_title'),
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w900,
                       fontSize: 14,
-                      color: SLColors.darkNavy,
+                      color: _primaryTextColor(sheetContext),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -753,17 +833,17 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                     child: ListView.separated(
                       shrinkWrap: true,
                       itemCount: room.memberHouseIds.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      separatorBuilder: (_, _) => const SizedBox(height: 8),
                       itemBuilder: (context, index) {
                         final houseId = room.memberHouseIds[index];
                         final isMine = houseId == widget.myHouseId;
                         return Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
+                            color: _elevatedSurfaceColor(sheetContext),
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                              color: const Color(0xFFE2E8F0),
+                              color: _borderColor(sheetContext),
                             ),
                           ),
                           child: Row(
@@ -782,7 +862,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                                   overflow: TextOverflow.ellipsis,
                                   style: SLTheme.quicksand(
                                     fontWeight: FontWeight.w800,
-                                    color: SLColors.darkNavy,
+                                    color: _primaryTextColor(sheetContext),
                                   ),
                                 ),
                               ),
@@ -854,8 +934,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             ? Image(
                 image: CachedNetworkImageProvider(trimmedAvatar),
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
-                    _buildAvatarFallback(displayLabel),
+                errorBuilder: (_, _, _) => _buildAvatarFallback(displayLabel),
               )
             : _buildAvatarFallback(displayLabel),
       ),
@@ -864,7 +943,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
   Widget _buildAvatarFallback(String label) {
     return Container(
-      color: const Color(0xFFFFF1F6),
+      color: _isDarkMode(context)
+          ? SLColors.darkBgElevated
+          : const Color(0xFFFFF1F6),
       alignment: Alignment.center,
       child: Text(
         label.substring(0, 1).toUpperCase(),
@@ -948,49 +1029,58 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
   Widget _buildMessagesList() {
     if (_isInitialMessagesLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: Color(0xFFD81B60)),
+      return Center(
+        child: Semantics(
+          label: _tr('p9_group_chat_loading_messages'),
+          liveRegion: true,
+          child: const CircularProgressIndicator(color: Color(0xFFD81B60)),
+        ),
       );
     }
 
     if (_messages.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 74,
-              height: 74,
-              decoration: const BoxDecoration(
-                color: Color(0xFFFFF1F6),
-                shape: BoxShape.circle,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 74,
+                height: 74,
+                decoration: BoxDecoration(
+                  color: _isDarkMode(context)
+                      ? SLColors.darkBgElevated
+                      : const Color(0xFFFFF1F6),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.forum_rounded,
+                  size: 36,
+                  color: Color(0xFFD81B60),
+                ),
               ),
-              child: const Icon(
-                Icons.forum_rounded,
-                size: 36,
-                color: Color(0xFFD81B60),
+              const SizedBox(height: 16),
+              Text(
+                _tr('p9_group_chat_empty_title'),
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16,
+                  color: _primaryTextColor(context),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Bắt đầu chat nhóm',
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w900,
-                fontSize: 16,
-                color: SLColors.darkNavy,
+              const SizedBox(height: 8),
+              Text(
+                _tr('p9_group_chat_empty_description'),
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w700,
+                  color: _secondaryTextColor(context),
+                  height: 1.4,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Đây là đoạn chat chung của tất cả thành viên trong nhóm.',
-              textAlign: TextAlign.center,
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF94A3B8),
-                height: 1.4,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     }
@@ -1003,15 +1093,19 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       itemCount: itemCount,
       itemBuilder: (context, index) {
         if (_isLoadingOlderMessages && index == _messages.length) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(
-              child: SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.2,
-                  color: Color(0xFFD81B60),
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Semantics(
+              label: _tr('p9_group_chat_loading_older_messages'),
+              liveRegion: true,
+              child: const Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.2,
+                    color: Color(0xFFD81B60),
+                  ),
                 ),
               ),
             ),
@@ -1026,11 +1120,12 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   Widget _buildMessageBubble(ChatMessage message) {
     final isSystem = message.senderId == 'system';
     final isMe = !isSystem && message.senderId == widget.myHouseId;
-    final senderName = isSystem ? 'Hệ thống' : _houseName(message.senderId);
+    final senderName = isSystem
+        ? _tr('p9_group_chat_system_sender')
+        : _houseName(message.senderId);
     final timeLabel = DateFormat('HH:mm').format(message.timestamp);
-    final bubbleColor =
-        isMe ? const Color(0xFFD81B60) : const Color(0xFFFFFFFF);
-    final textColor = isMe ? Colors.white : SLColors.darkNavy;
+    final bubbleColor = isMe ? const Color(0xFFD81B60) : _surfaceColor(context);
+    final textColor = isMe ? Colors.white : _primaryTextColor(context);
 
     if (isSystem) {
       return Padding(
@@ -1039,12 +1134,20 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF1F6),
+              color: _isDarkMode(context)
+                  ? SLColors.darkBgElevated
+                  : const Color(0xFFFFF1F6),
               borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: const Color(0xFFFFD9E6)),
+              border: Border.all(
+                color: _isDarkMode(context)
+                    ? SLColors.darkBorder
+                    : const Color(0xFFFFD9E6),
+              ),
             ),
             child: Text(
-              message.text.trim().isEmpty ? 'Nhóm đã được tạo' : message.text,
+              message.text.trim().isEmpty
+                  ? _tr('p9_group_chat_created')
+                  : message.text,
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.w800,
                 color: const Color(0xFFD81B60),
@@ -1069,10 +1172,11 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 5),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 290),
+          constraints: BoxConstraints(maxWidth: _messageMaxWidth(context)),
           child: Column(
-            crossAxisAlignment:
-                isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            crossAxisAlignment: isMe
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
             children: [
               if (!isMe)
                 Padding(
@@ -1087,8 +1191,10 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                   ),
                 ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 11,
+                ),
                 decoration: BoxDecoration(
                   color: bubbleColor,
                   borderRadius: BorderRadius.only(
@@ -1100,7 +1206,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                   border: Border.all(
                     color: isMe
                         ? const Color(0xFFD81B60)
-                        : const Color(0xFFE2E8F0),
+                        : _borderColor(context),
                   ),
                   boxShadow: const [
                     BoxShadow(
@@ -1154,7 +1260,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         .map((item) => item.trim())
         .where((item) => item.isNotEmpty)
         .toList(growable: false);
-    final title = lines.isNotEmpty ? lines.first : 'Đã chia sẻ một nội dung';
+    final title = lines.isNotEmpty
+        ? lines.first
+        : _tr('p9_group_chat_share_fallback');
     final body = lines.length > 1 ? lines.sublist(1).join('\n') : '';
 
     return Align(
@@ -1162,10 +1270,11 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 5),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 300),
+          constraints: BoxConstraints(maxWidth: _messageMaxWidth(context)),
           child: Column(
-            crossAxisAlignment:
-                isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            crossAxisAlignment: isMe
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
             children: [
               if (!isMe)
                 Padding(
@@ -1175,16 +1284,20 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w800,
                       fontSize: 11,
-                      color: const Color(0xFF94A3B8),
+                      color: _secondaryTextColor(context),
                     ),
                   ),
                 ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: isMe
+                    colors: _isDarkMode(context)
+                        ? const [SLColors.darkBgElevated, SLColors.darkBgCard]
+                        : isMe
                         ? const [Color(0xFFFFF1F6), Color(0xFFFFFFFF)]
                         : const [Color(0xFFFFFFFF), Color(0xFFF8FAFC)],
                     begin: Alignment.topLeft,
@@ -1196,7 +1309,11 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                     bottomLeft: Radius.circular(isMe ? 22 : 8),
                     bottomRight: Radius.circular(isMe ? 8 : 22),
                   ),
-                  border: Border.all(color: const Color(0xFFFFD9E6)),
+                  border: Border.all(
+                    color: _isDarkMode(context)
+                        ? SLColors.darkBorder
+                        : const Color(0xFFFFD9E6),
+                  ),
                   boxShadow: const [
                     BoxShadow(
                       color: Color(0x120F172A),
@@ -1227,7 +1344,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            'Chia sẻ từ Cộng đồng',
+                            _tr('p9_group_chat_shared_from_community'),
                             style: SLTheme.quicksand(
                               fontWeight: FontWeight.w900,
                               fontSize: 11.5,
@@ -1245,7 +1362,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                       style: SLTheme.quicksand(
                         fontWeight: FontWeight.w900,
                         fontSize: 14.2,
-                        color: SLColors.darkNavy,
+                        color: _primaryTextColor(context),
                         height: 1.3,
                       ),
                     ),
@@ -1255,9 +1372,11 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.72),
+                          color: _isDarkMode(context)
+                              ? SLColors.darkBgCard
+                              : Colors.white.withValues(alpha: 0.72),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFF1F5F9)),
+                          border: Border.all(color: _borderColor(context)),
                         ),
                         child: Text(
                           body,
@@ -1266,7 +1385,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w700,
                             fontSize: 12.5,
-                            color: const Color(0xFF475569),
+                            color: _secondaryTextColor(context),
                             height: 1.4,
                           ),
                         ),
@@ -1280,7 +1399,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                         style: SLTheme.quicksand(
                           fontWeight: FontWeight.w800,
                           fontSize: 10.5,
-                          color: const Color(0xFF94A3B8),
+                          color: _secondaryTextColor(context),
                         ),
                       ),
                     ),
@@ -1295,13 +1414,16 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   }
 
   Widget _buildInputArea() {
+    final canSend =
+        _room != null &&
+        _groupChatService.isHouseMemberOfGroup(_room!, widget.myHouseId);
     return SafeArea(
       top: false,
       child: Container(
         padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
+        decoration: BoxDecoration(
+          color: _surfaceColor(context),
+          boxShadow: const [
             BoxShadow(
               color: Color(0x120F172A),
               blurRadius: 16,
@@ -1314,58 +1436,68 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                  color: _elevatedSurfaceColor(context),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: _borderColor(context)),
                 ),
                 child: TextField(
                   controller: _msgController,
-                  enabled: _room != null &&
-                      _groupChatService.isHouseMemberOfGroup(
-                        _room!,
-                        widget.myHouseId,
-                      ),
+                  enabled: canSend,
                   minLines: 1,
                   maxLines: 4,
                   textCapitalization: TextCapitalization.sentences,
+                  style: SLTheme.quicksand(
+                    color: _primaryTextColor(context),
+                    fontWeight: FontWeight.w700,
+                  ),
                   decoration: InputDecoration(
-                    hintText: _room != null &&
-                            _groupChatService.isHouseMemberOfGroup(
-                              _room!,
-                              widget.myHouseId,
-                            )
-                        ? 'Nhắn cả nhóm...'
-                        : 'Bạn không còn là thành viên của nhóm này',
+                    hintText: canSend
+                        ? _tr('p9_group_chat_composer_hint')
+                        : _tr('p9_group_chat_not_member_hint'),
+                    hintStyle: SLTheme.quicksand(
+                      color: _secondaryTextColor(context),
+                      fontWeight: FontWeight.w700,
+                    ),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 12),
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
                   ),
                   onSubmitted: (_) => _sendMsg(),
                 ),
               ),
             ),
             const SizedBox(width: 10),
-            GestureDetector(
-              onTap: _room != null &&
-                      _groupChatService.isHouseMemberOfGroup(
-                        _room!,
-                        widget.myHouseId,
-                      )
-                  ? _sendMsg
-                  : null,
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: _hasComposerText
-                      ? const Color(0xFFD81B60)
-                      : const Color(0xFFF8BBD0),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.send_rounded,
-                  color: Colors.white,
-                  size: 20,
+            Semantics(
+              label: _tr('p9_group_chat_send_message'),
+              button: true,
+              enabled: canSend,
+              excludeSemantics: true,
+              child: Material(
+                color: Colors.transparent,
+                shape: const CircleBorder(),
+                child: InkResponse(
+                  onTap: canSend ? _sendMsg : null,
+                  radius: 26,
+                  customBorder: const CircleBorder(),
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: _hasComposerText
+                          ? const Color(0xFFD81B60)
+                          : _isDarkMode(context)
+                          ? SLColors.darkBgElevated
+                          : const Color(0xFFF8BBD0),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -1379,13 +1511,13 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   Widget build(BuildContext context) {
     final room = _room ?? widget.initialRoom;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: _pageBackground(context),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(88),
         child: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
+          decoration: BoxDecoration(
+            color: _surfaceColor(context),
+            boxShadow: const [
               BoxShadow(
                 color: Color(0x0F000000),
                 blurRadius: 10,
@@ -1400,16 +1532,16 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               child: Row(
                 children: [
                   IconButton(
+                    tooltip: _tr('p9_group_chat_back'),
                     padding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
                     constraints: const BoxConstraints.tightFor(
-                      width: 36,
-                      height: 36,
+                      width: 48,
+                      height: 48,
                     ),
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.arrow_back_ios_new,
                       size: 18,
-                      color: SLColors.darkNavy,
+                      color: _primaryTextColor(context),
                     ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
@@ -1425,7 +1557,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: SLTheme.quicksand(
-                            color: SLColors.darkNavy,
+                            color: _primaryTextColor(context),
                             fontSize: 16.4,
                             fontWeight: FontWeight.w900,
                             height: 1.05,
@@ -1440,7 +1572,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: SLTheme.quicksand(
-                                  color: const Color(0xFF64748B),
+                                  color: _secondaryTextColor(context),
                                   fontSize: 11.6,
                                   fontWeight: FontWeight.w800,
                                 ),
@@ -1453,13 +1585,13 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF3F4F6),
+                                color: _elevatedSurfaceColor(context),
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: Text(
                                 '${room.memberHouseIds.length}',
                                 style: SLTheme.quicksand(
-                                  color: const Color(0xFF475569),
+                                  color: _secondaryTextColor(context),
                                   fontSize: 10.5,
                                   fontWeight: FontWeight.w900,
                                 ),
@@ -1470,19 +1602,36 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                       ],
                     ),
                   ),
-                  GestureDetector(
-                    onTap: _openSettingsSheet,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF3F4F6),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: const Icon(
-                        Icons.more_horiz_rounded,
-                        size: 20,
-                        color: Color(0xFF334155),
+                  Semantics(
+                    label: _tr('p9_group_chat_group_settings'),
+                    button: true,
+                    excludeSemantics: true,
+                    child: SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: Material(
+                        color: Colors.transparent,
+                        shape: const CircleBorder(),
+                        child: InkResponse(
+                          onTap: _openSettingsSheet,
+                          radius: 24,
+                          customBorder: const CircleBorder(),
+                          child: Center(
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: _elevatedSurfaceColor(context),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Icon(
+                                Icons.more_horiz_rounded,
+                                size: 20,
+                                color: _secondaryTextColor(context),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),

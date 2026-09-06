@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'dart:convert';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 
 import 'local_database_service.dart';
@@ -510,7 +511,9 @@ class CountdownSpaceService {
           list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
           yield list;
         }
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[CountdownSpace] Cache không hợp lệ: $error');
+      }
     }
 
     yield* _watchPairedRecords(

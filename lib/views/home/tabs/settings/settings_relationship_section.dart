@@ -303,7 +303,7 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: isSingle
-                    ? [SLColors.tertiarySoft, Color(0xFFE7DEF8)]
+                    ? const [SLColors.tertiarySoft, Color(0xFFE7DEF8)]
                     : [SLColors.paperBlush, SLColors.primarySoft],
               ),
               borderRadius: BorderRadius.circular(22),
@@ -340,8 +340,8 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
                     children: [
                       Text(
                         isSingle
-                            ? L10nService().translate('Chế độ Độc thân ✨')
-                            : L10nService().translate('Chế độ Có người yêu 💖'),
+                            ? context.tr('p6_relationship_single_mode')
+                            : context.tr('p6_relationship_couple_mode'),
                         style: SLTheme.quicksand(
                           fontSize: 15,
                           fontWeight: FontWeight.w900,

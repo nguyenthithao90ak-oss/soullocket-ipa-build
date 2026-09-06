@@ -19,9 +19,9 @@ class L10nService extends ChangeNotifier {
   static final L10nService _instance = L10nService._internal();
   static final Map<String, String> _viValueToKey =
       _L10nValueToKeyHelper.buildFromSources([
-    _L10nStaticData._vi,
-    _L10nStaticData._viWebParity,
-  ]);
+        _L10nStaticData._vi,
+        _L10nStaticData._viWebParity,
+      ]);
 
   factory L10nService() => _instance;
   L10nService._internal();
@@ -71,7 +71,9 @@ class L10nService extends ChangeNotifier {
           return locale;
         }
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[L10nService] Cannot read the system locale: $error');
+    }
 
     return 'vi';
   }
@@ -80,21 +82,25 @@ class L10nService extends ChangeNotifier {
     if (bundle != null) {
       _state.assetBundle = bundle;
     }
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     final langCode = _normalizeLangCode(prefs.getString('il_lang'));
     await _ensureAssetTranslationsLoaded();
+    _lookup.clearCache();
     _state.currentLocale = _localeForLangCode(langCode);
     notifyListeners();
   }
 
   Future<void> setLocale(String langCode) async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     await prefs.setString('il_lang', langCode);
     final normalizedLangCode = _normalizeLangCode(langCode);
     _state.currentLocale = _localeForLangCode(normalizedLangCode);
     await _ensureAssetTranslationsLoaded();
+    _lookup.clearCache();
     notifyListeners();
   }
 

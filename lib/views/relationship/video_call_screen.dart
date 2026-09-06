@@ -80,7 +80,11 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
           }
         });
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/relationship/video_call_screen.dart: $error',
+      );
+    }
   }
 
   void _startElapsedTimer() {
@@ -111,7 +115,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Đã hết $limitMin phút. Cuộc gọi đã kết thúc.',
+          L10nService().format('p4_call_time_up', {'minutes': limitMin}),
         ),
         backgroundColor: const Color(0xFFD81B60),
         duration: const Duration(seconds: 4),
@@ -165,8 +169,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         return;
       }
 
-      final stream =
-          await _webrtcService.openUserMedia(includeVideo: widget.isVideo);
+      final stream = await _webrtcService.openUserMedia(
+        includeVideo: widget.isVideo,
+      );
       _localRenderer.srcObject = stream;
 
       if (widget.roomId == null) {
@@ -203,44 +208,41 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             .ref('calls/$_roomId/status')
             .onValue
             .listen(
-          (event) {
-            final status = event.snapshot.value as String?;
-            if (status == 'connected') {
-              _timeoutTimer?.cancel();
-            } else if (status == 'ended') {
-              if (mounted) {
-                _endCall();
-              }
-            }
-          },
-          onError: (Object error) {
-            String msg = 'relationship_khngththeo_dec6d3';
-            if (mounted) msg = context.tr(msg);
-            debugPrint(
-              'Video call room listener failed: ${AppErrorMapper.resolve(
-                error,
-                fallbackMessage: msg,
-              ).message}',
+              (event) {
+                final status = event.snapshot.value as String?;
+                if (status == 'connected') {
+                  _timeoutTimer?.cancel();
+                } else if (status == 'ended') {
+                  if (mounted) {
+                    _endCall();
+                  }
+                }
+              },
+              onError: (Object error) {
+                String msg = 'relationship_khngththeo_dec6d3';
+                if (mounted) msg = context.tr(msg);
+                debugPrint(
+                  'Video call room listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: msg).message}',
+                );
+              },
             );
-          },
-        );
       }
     } catch (e) {
       if (!mounted) return;
       setState(() => _isPreparing = false);
       final msgErrorOccurred = context.tr('relationship_chathbtucu_cd4ee1');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(msgErrorOccurred),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(msgErrorOccurred)));
       Navigator.pop(context);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final callLabel = widget.isVideo ? 'Video call' : 'Audio call';
+    final callLabel = context.tr(
+      widget.isVideo ? 'p4_call_video_label' : 'p4_call_audio_label',
+    );
     final mediaPadding = MediaQuery.paddingOf(context);
 
     return Scaffold(
@@ -248,10 +250,12 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final sidePadding = constraints.maxWidth < 360 ? 14.0 : 20.0;
-          final previewWidth =
-              (constraints.maxWidth * 0.30).clamp(96.0, 128.0).toDouble();
-          final previewHeight =
-              (previewWidth * 4 / 3).clamp(128.0, 172.0).toDouble();
+          final previewWidth = (constraints.maxWidth * 0.30)
+              .clamp(96.0, 128.0)
+              .toDouble();
+          final previewHeight = (previewWidth * 4 / 3)
+              .clamp(128.0, 172.0)
+              .toDouble();
           final previewTop = mediaPadding.top + 76;
 
           return Stack(
@@ -259,12 +263,12 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
               Positioned.fill(
                 child: widget.isVideo
                     ? (_inCall
-                        ? RTCVideoView(
-                            _remoteRenderer,
-                            objectFit: RTCVideoViewObjectFit
-                                .RTCVideoViewObjectFitCover,
-                          )
-                        : _buildWaitingState(callLabel))
+                          ? RTCVideoView(
+                              _remoteRenderer,
+                              objectFit: RTCVideoViewObjectFit
+                                  .RTCVideoViewObjectFitCover,
+                            )
+                          : _buildWaitingState(callLabel))
                     : _buildAudioBackdrop(callLabel),
               ),
               Positioned(
@@ -283,9 +287,12 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                     child: Row(
                       children: [
                         IconButton(
+                          tooltip: context.tr('p4_call_end_and_back'),
                           onPressed: _endCall,
-                          icon:
-                              const Icon(Icons.arrow_back, color: Colors.white),
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                          ),
                         ),
                         Expanded(
                           child: Padding(
@@ -339,7 +346,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                                       Text(
                                         _isPreparing
                                             ? context.tr(
-                                                'relationship_angktni_e4af2e')
+                                                'relationship_angktni_e4af2e',
+                                              )
                                             : callLabel,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -401,8 +409,14 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                     children: [
                       _buildCallBtn(
                         icon: _isSpeakerOn ? Icons.volume_up : Icons.volume_off,
-                        color:
-                            _isSpeakerOn ? Colors.white24 : Colors.grey[800]!,
+                        label: context.tr(
+                          _isSpeakerOn
+                              ? 'p4_call_speaker_off'
+                              : 'p4_call_speaker_on',
+                        ),
+                        color: _isSpeakerOn
+                            ? Colors.white24
+                            : Colors.grey[800]!,
                         iconColor: Colors.white,
                         onTap: _toggleSpeaker,
                         size: 56,
@@ -410,6 +424,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                       if (widget.isVideo)
                         _buildCallBtn(
                           icon: Icons.cameraswitch,
+                          label: context.tr('p4_call_switch_camera'),
                           color: Colors.white24,
                           iconColor: Colors.white,
                           onTap: _switchCamera,
@@ -420,6 +435,11 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                           icon: _isCameraOff
                               ? Icons.videocam_off
                               : Icons.videocam,
+                          label: context.tr(
+                            _isCameraOff
+                                ? 'p4_call_camera_on'
+                                : 'p4_call_camera_off',
+                          ),
                           color: _isCameraOff ? Colors.white : Colors.white24,
                           iconColor: _isCameraOff ? Colors.black : Colors.white,
                           onTap: _toggleCamera,
@@ -427,6 +447,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                         ),
                       _buildCallBtn(
                         icon: _isMicMuted ? Icons.mic_off : Icons.mic,
+                        label: context.tr(
+                          _isMicMuted ? 'p4_call_mic_on' : 'p4_call_mic_off',
+                        ),
                         color: _isMicMuted ? Colors.white : Colors.white24,
                         iconColor: _isMicMuted ? Colors.black : Colors.white,
                         onTap: _toggleMic,
@@ -434,6 +457,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                       ),
                       _buildCallBtn(
                         icon: Icons.call_end,
+                        label: context.tr('p4_call_end'),
                         color: Colors.red,
                         iconColor: Colors.white,
                         onTap: _endCall,
@@ -569,8 +593,10 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                 const SizedBox(width: 10),
                 Text(
                   _isPreparing
-                      ? 'Đang khởi tạo $callLabel...'
-                      : 'Đang chờ kết nối...',
+                      ? L10nService().format('p4_call_initializing', {
+                          'type': callLabel,
+                        })
+                      : context.tr('p4_call_waiting'),
                   style: SLTheme.quicksand(
                     color: Colors.white60,
                     fontSize: 14,
@@ -629,7 +655,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             SLSpacing.h8,
             Text(
               _isPreparing
-                  ? 'Đang kết nối $callLabel...'
+                  ? L10nService().format('p4_call_connecting', {
+                      'type': callLabel,
+                    })
                   : context.tr('relationship_micangbt_8c0d7f'),
               style: SLTheme.quicksand(
                 color: Colors.white70,
@@ -652,27 +680,36 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 
   Widget _buildCallBtn({
     required IconData icon,
+    required String label,
     required Color color,
     required Color iconColor,
     required VoidCallback onTap,
     double size = 56,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: size,
-        width: size,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-                color: color.withValues(alpha: 0.4),
-                blurRadius: 20,
-                offset: const Offset(0, 8))
-          ],
+    return Tooltip(
+      message: label,
+      child: Semantics(
+        button: true,
+        label: label,
+        child: GestureDetector(
+          onTap: onTap,
+          child: Container(
+            height: size,
+            width: size,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Icon(icon, color: iconColor, size: size * 0.5),
+          ),
         ),
-        child: Icon(icon, color: iconColor, size: size * 0.5),
       ),
     );
   }

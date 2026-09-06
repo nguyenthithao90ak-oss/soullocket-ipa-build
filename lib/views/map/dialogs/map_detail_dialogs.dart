@@ -4,14 +4,19 @@ extension _MapDetailDialogsExt on _MapScreenState {
   Future<void> _maybeShowFirstMapNotice() async {
     try {
       final prefs = await OfflineCacheService.getPrefs();
-      final houseScope =
-          widget.houseId.trim().isEmpty ? 'global' : widget.houseId.trim();
+      final houseScope = widget.houseId.trim().isEmpty
+          ? 'global'
+          : widget.houseId.trim();
       final seenKey = 'il_map_first_notice_seen_$houseScope';
       if (prefs.getBool(seenKey) == true || !mounted) return;
 
       await _showMapFirstNoticeDialog();
       await prefs.setBool(seenKey, true);
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/map/dialogs/map_detail_dialogs.dart: $error',
+      );
+    }
   }
 
   Future<void> _showMapFirstNoticeDialog() async {
@@ -278,8 +283,10 @@ extension _MapDetailDialogsExt on _MapScreenState {
                       ),
                       borderRadius: SLRadius.mdAll,
                     ),
-                    child:
-                        const Icon(Icons.favorite_rounded, color: Colors.white),
+                    child: const Icon(
+                      Icons.favorite_rounded,
+                      color: Colors.white,
+                    ),
                   ),
                   SLSpacing.w12,
                   Expanded(
@@ -366,8 +373,10 @@ extension _MapDetailDialogsExt on _MapScreenState {
                       ),
                       borderRadius: SLRadius.mdAll,
                     ),
-                    child:
-                        const Icon(Icons.push_pin_rounded, color: Colors.white),
+                    child: const Icon(
+                      Icons.push_pin_rounded,
+                      color: Colors.white,
+                    ),
                   ),
                   SLSpacing.w12,
                   Expanded(

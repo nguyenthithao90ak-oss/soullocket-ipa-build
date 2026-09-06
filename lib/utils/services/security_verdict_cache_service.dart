@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 typedef SecurityVerdictPrefsProvider = Future<SharedPreferences> Function();
@@ -21,9 +22,8 @@ class CachedSecurityVerdict {
 }
 
 class SecurityVerdictCacheService {
-  SecurityVerdictCacheService({
-    SecurityVerdictPrefsProvider? prefsProvider,
-  }) : _prefsProvider = prefsProvider ?? SharedPreferences.getInstance;
+  SecurityVerdictCacheService({SecurityVerdictPrefsProvider? prefsProvider})
+    : _prefsProvider = prefsProvider ?? SharedPreferences.getInstance;
 
   static final SecurityVerdictCacheService instance =
       SecurityVerdictCacheService();
@@ -100,8 +100,9 @@ class SecurityVerdictCacheService {
       return null;
     }
 
-    final rawLevel =
-        (prefs.getString(_riskLevelKey) ?? '').trim().toLowerCase();
+    final rawLevel = (prefs.getString(_riskLevelKey) ?? '')
+        .trim()
+        .toLowerCase();
     final rawCode = (prefs.getString(_riskCodeKey) ?? '').trim().toLowerCase();
     final rawMessage = (prefs.getString(_riskMessageKey) ?? '').trim();
     final rawPayload = (prefs.getString(_riskPayloadKey) ?? '').trim();
@@ -113,7 +114,11 @@ class SecurityVerdictCacheService {
         if (decoded is Map) {
           payload = Map<String, dynamic>.from(decoded);
         }
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[SecurityVerdictCacheService] Invalid cached verdict payload: $error',
+        );
+      }
     }
 
     final payloadExpiresAtMs = _readInt(payload['expiresAtMs']);

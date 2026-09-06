@@ -244,7 +244,11 @@ class _StableAvatarNetworkImage extends StatelessWidget {
       if (file != null && await file.exists()) {
         await file.delete();
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/home/tabs/main_home/widgets/main_home_avatar_section.dart: $error',
+      );
+    }
   }
 }
 
@@ -264,12 +268,17 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
     // Nếu không có, mới lấy từ UiPrefs.
     final effectiveSize = size ?? UiPrefs.notifier.value.avatarSizePx;
     final avatarUrl = url.trim();
-    final frameKey =
-        isSinglePlaceholder ? 'circle' : UiPrefs.notifier.value.avatarFrameKey;
-    final framePadding =
-        LegacyWebUi.avatarFramePaddingForKey(frameKey, effectiveSize);
-    final frameRadius =
-        LegacyWebUi.avatarBorderRadiusForKey(frameKey, effectiveSize);
+    final frameKey = isSinglePlaceholder
+        ? 'circle'
+        : UiPrefs.notifier.value.avatarFrameKey;
+    final framePadding = LegacyWebUi.avatarFramePaddingForKey(
+      frameKey,
+      effectiveSize,
+    );
+    final frameRadius = LegacyWebUi.avatarBorderRadiusForKey(
+      frameKey,
+      effectiveSize,
+    );
     final frameIsCircle = LegacyWebUi.avatarFrameIsCircle(frameKey);
     final fallbackAsset = isUser1
         ? 'assets/images/male_avatar_sticker.json'
@@ -277,9 +286,7 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
     final avatarContent = isSinglePlaceholder
         ? const _AnimatedSinglePlaceholder()
         : _StableAvatarNetworkImage(
-            key: ValueKey<String>(
-              'home-avatar-${isUser1 ? 'user1' : 'user2'}',
-            ),
+            key: ValueKey<String>('home-avatar-${isUser1 ? 'user1' : 'user2'}'),
             imageUrl: avatarUrl,
             fallbackAsset: fallbackAsset,
             fit: BoxFit.cover,
@@ -289,10 +296,7 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
         avatarUrl.isEmpty && !isUploading && !isSinglePlaceholder;
     final clippedAvatar = frameIsCircle
         ? ClipOval(child: avatarContent)
-        : ClipRRect(
-            borderRadius: frameRadius,
-            child: avatarContent,
-          );
+        : ClipRRect(borderRadius: frameRadius, child: avatarContent);
 
     return RepaintBoundary(
       child: GestureDetector(
@@ -340,9 +344,7 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
               ),
               if (showChooseImageHint)
                 const Positioned.fill(
-                  child: IgnorePointer(
-                    child: _BlinkingAvatarHint(),
-                  ),
+                  child: IgnorePointer(child: _BlinkingAvatarHint()),
                 ),
               if (isUploading)
                 Align(
@@ -351,8 +353,9 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
                     width: effectiveSize,
                     height: effectiveSize,
                     decoration: BoxDecoration(
-                      shape:
-                          frameIsCircle ? BoxShape.circle : BoxShape.rectangle,
+                      shape: frameIsCircle
+                          ? BoxShape.circle
+                          : BoxShape.rectangle,
                       borderRadius: frameIsCircle ? null : frameRadius,
                       color: Colors.black.withValues(alpha: 0.3),
                     ),
@@ -371,11 +374,13 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
                                         strokeWidth: 3,
                                         value: uploadProgress,
                                         valueColor:
-                                            AlwaysStoppedAnimation<Color>(Colors
-                                                .white
-                                                .withValues(alpha: 0.9)),
-                                        backgroundColor:
-                                            Colors.white.withValues(alpha: 0.2),
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white.withValues(
+                                                alpha: 0.9,
+                                              ),
+                                            ),
+                                        backgroundColor: Colors.white
+                                            .withValues(alpha: 0.2),
                                       ),
                                     ),
                                     if (uploadProgress != null)
@@ -402,20 +407,20 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
     );
   }
 
-//   Widget _buildQuestionAvatarPlaceholder() {
-//     return Container(
-//       color: const Color(0xFFD1D5DB),
-//       alignment: Alignment.center,
-//       child: Text(
-//         '?',
-//         style: SLTheme.quicksand(
-//           fontSize: 28,
-//           fontWeight: FontWeight.w900,
-//           color: const Color(0xFF6B7280),
-//         ),
-//       ),
-//     );
-//   }
+  //   Widget _buildQuestionAvatarPlaceholder() {
+  //     return Container(
+  //       color: const Color(0xFFD1D5DB),
+  //       alignment: Alignment.center,
+  //       child: Text(
+  //         '?',
+  //         style: SLTheme.quicksand(
+  //           fontSize: 28,
+  //           fontWeight: FontWeight.w900,
+  //           color: const Color(0xFF6B7280),
+  //         ),
+  //       ),
+  //     );
+  //   }
 }
 
 class _PlaceholderParticle {
@@ -466,7 +471,7 @@ class __AnimatedSinglePlaceholderState extends State<_AnimatedSinglePlaceholder>
     '🔮',
     '🧸',
     '🎈',
-    '💎'
+    '💎',
   ];
 
   final Random _random = Random();
@@ -507,13 +512,15 @@ class __AnimatedSinglePlaceholderState extends State<_AnimatedSinglePlaceholder>
       final text = particleEmojis[_random.nextInt(particleEmojis.length)];
       final scale = 0.6 + _random.nextDouble() * 0.6;
       final rotation = _random.nextDouble() * pi;
-      _particles.add(_PlaceholderParticle(
-        angle: angle,
-        maxDistance: maxDistance,
-        text: text,
-        scale: scale,
-        rotation: rotation,
-      ));
+      _particles.add(
+        _PlaceholderParticle(
+          angle: angle,
+          maxDistance: maxDistance,
+          text: text,
+          scale: scale,
+          rotation: rotation,
+        ),
+      );
     }
   }
 
@@ -618,8 +625,9 @@ class __AnimatedSinglePlaceholderState extends State<_AnimatedSinglePlaceholder>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFF4081)
-                              .withValues(alpha: 0.2 * pulse),
+                          color: const Color(
+                            0xFFFF4081,
+                          ).withValues(alpha: 0.2 * pulse),
                           blurRadius: 10 + 10 * pulse,
                           spreadRadius: 2 + 5 * pulse,
                         ),
@@ -673,7 +681,8 @@ class __AnimatedSinglePlaceholderState extends State<_AnimatedSinglePlaceholder>
                     animation: _spinController,
                     builder: (context, child) {
                       final rotationValue = _spinController.value * 2 * pi;
-                      final scaleValue = 1.0 -
+                      final scaleValue =
+                          1.0 -
                           (sin(_spinController.value * pi * 2).abs() * 0.12);
                       return Transform.scale(
                         scale: scaleValue,
@@ -688,7 +697,7 @@ class __AnimatedSinglePlaceholderState extends State<_AnimatedSinglePlaceholder>
                                   color: Colors.black12,
                                   blurRadius: 4,
                                   offset: Offset(0, 2),
-                                )
+                                ),
                               ],
                             ),
                           ),
@@ -710,7 +719,7 @@ class __AnimatedSinglePlaceholderState extends State<_AnimatedSinglePlaceholder>
                             color: Colors.black12,
                             blurRadius: 6,
                             offset: Offset(0, 3),
-                          )
+                          ),
                         ],
                       ),
                     ),

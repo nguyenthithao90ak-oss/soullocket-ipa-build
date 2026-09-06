@@ -86,7 +86,6 @@ class DeviceManagerService {
 
   final _db = FirebaseDatabase.instance;
   final _auth = FirebaseAuth.instance;
-  final _functions = FirebaseFunctions.instance;
   final ConsentService _consentService = ConsentService();
   Map<String, String>? _cachedDeviceInfo;
   String? _cachedHouseId;
@@ -815,195 +814,53 @@ class DeviceManagerService {
 
   /// Load danh sách tất cả thiết bị của user
   Future<List<Map<String, dynamic>>> loadDevices() async {
-    final functionDevices = await _loadDevicesFromFunction();
-
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) {
-      return functionDevices ?? [];
-    }
-
-    final houseSnap = await _db
-        .ref('users/$uid/houseId')
-        .get()
-        .timeout(const Duration(seconds: 10));
-    final houseId = houseSnap.value?.toString().trim();
-    if (houseId == null || houseId.isEmpty) {
-      return functionDevices ?? [];
-    }
-
-    final snap = await _db
-        .ref('houses/$houseId/security/devices')
-        .limitToFirst(20)
-        .get()
-        .timeout(const Duration(seconds: 10));
-    if (!snap.exists) {
-      return functionDevices ?? [];
-    }
-
-    final data = Map<dynamic, dynamic>.from(snap.value as Map);
-    final legacyDevices = data.entries
-        .map((e) {
-          final device = Map<String, dynamic>.from(e.value as Map);
-          device['deviceId'] = e.key;
-
-          if (device['status'] == 'pending') {
-            final firstSeen = (device['first_seen'] as num?)?.toInt() ?? 0;
-            if (firstSeen > 0) {
-              final ageMs = DateTime.now().millisecondsSinceEpoch - firstSeen;
-              if (ageMs >= pendingAutoTrustDelay.inMilliseconds) {
-                device['status'] = 'approved';
-                unawaited(
-                  _db
-                      .ref('houses/$houseId/security/devices/${e.key}')
-                      .update({
-                        'status': 'approved',
-                        'approved_at': ServerValue.timestamp,
-                        'approved_reason': 'auto_after_12_hours',
-                      })
-                      .catchError((_) {}),
-                );
-              }
-            }
-          }
-
-          return device;
-        })
-        .where((d) => d['status'] != 'deleted')
-        .toList();
-
-    final merged = <String, Map<String, dynamic>>{};
-    for (final device in legacyDevices) {
-      final key =
-          "${device['model']}_${device['platform']}_${device['os']}_${device['ip']}";
-      final currentTs = (device['last_seen'] as num?)?.toInt() ?? 0;
-      final existing = merged[key];
-      if (existing == null ||
-          ((existing['last_seen'] as num?)?.toInt() ?? 0) < currentTs) {
-        merged[key] = device;
-      }
-    }
-    for (final device in functionDevices ?? const <Map<String, dynamic>>[]) {
-      final key =
-          "${device['model']}_${device['platform']}_${device['os']}_${device['ip']}";
-      final currentTs = (device['last_seen'] as num?)?.toInt() ?? 0;
-      final existing = merged[key];
-      if (existing == null ||
-          ((existing['last_seen'] as num?)?.toInt() ?? 0) < currentTs) {
-        merged[key] = device;
-      }
-    }
-
-    final devices = merged.values.toList(growable: false)
-      ..sort((a, b) {
-        final aTs = (a['last_seen'] as num?)?.toInt() ?? 0;
-        final bTs = (b['last_seen'] as num?)?.toInt() ?? 0;
-        return bTs.compareTo(aTs);
-      });
-
-    return devices;
+    return _loadDevicesFromFunction();
   }
 
-  Future<List<Map<String, dynamic>>?> _loadDevicesFromFunction() async {
-    try {
-      final currentDeviceId = await getCurrentDeviceIdentifier();
-      final result = await CloudFunctionsHelper.callSecure<dynamic>(
-        'getDeviceListSecure',
-        payload: {'currentDeviceId': currentDeviceId},
-        timeout: const Duration(seconds: 6),
-        throwOriginalException: true,
-      );
-      final rawDevices = result.data is Map ? result.data['devices'] : null;
-      if (rawDevices is! List) {
-        return const [];
-      }
-      return rawDevices
-          .whereType<Map>()
-          .map((device) => Map<String, dynamic>.from(device))
-          .toList(growable: false);
-    } on FirebaseFunctionsException catch (e) {
-      debugPrint('getDeviceListSecure fallback to legacy DB read: ${e.code}');
-      return null;
-    } catch (e) {
-      debugPrint(
-        'getDeviceListSecure fallback to legacy DB read: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể tải danh sách thiết bị bảo mật.').message}',
-      );
-      return null;
+  Future<List<Map<String, dynamic>>> _loadDevicesFromFunction() async {
+    final currentDeviceId = await getCurrentDeviceIdentifier();
+    final result = await CloudFunctionsHelper.callSecure<dynamic>(
+      'getDeviceListSecure',
+      payload: {'currentDeviceId': currentDeviceId},
+      timeout: const Duration(seconds: 10),
+      throwOriginalException: true,
+    );
+    final rawDevices = result.data is Map ? result.data['devices'] : null;
+    if (rawDevices is! List) {
+      return const [];
     }
+    return rawDevices
+        .whereType<Map>()
+        .map((device) => Map<String, dynamic>.from(device))
+        .toList(growable: false);
   }
 
   /// Duyệt thiết bị đang ở trạng thái pending
   Future<void> approveDevice(String deviceId) async {
-    if (await _callDeviceActionFunction('approveDeviceSecure', deviceId)) {
-      return;
-    }
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) return;
-    final houseSnap = await _db.ref('users/$uid/houseId').get();
-    final houseId = houseSnap.value?.toString().trim();
-    if (houseId == null || houseId.isEmpty) return;
-    await _db.ref('houses/$houseId/security/devices/$deviceId').update({
-      'status': 'approved',
-      'approved_at': ServerValue.timestamp,
-      'approved_reason': 'manual_device_approval',
-    });
+    await _callDeviceActionFunction('approveDeviceSecure', deviceId);
   }
 
   /// Chặn thiết bị lạ (Vĩnh viễn)
   Future<void> blockDevice(String deviceId) async {
-    if (await _callDeviceActionFunction('blockDeviceSecure', deviceId)) {
-      return;
-    }
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) return;
-    final houseSnap = await _db.ref('users/$uid/houseId').get();
-    final houseId = houseSnap.value?.toString().trim();
-    if (houseId == null || houseId.isEmpty) return;
-
-    final ref = _db.ref('houses/$houseId/security/devices/$deviceId');
-    await ref.update({
-      'status': 'blocked',
-      'blocked_at': ServerValue.timestamp,
-    });
+    await _callDeviceActionFunction('blockDeviceSecure', deviceId);
   }
 
   /// Xóa thiết bị khỏi danh sách (Không thể đăng nhập trong 1 giờ)
   Future<void> deleteDevice(String deviceId) async {
-    if (await _callDeviceActionFunction('deleteDeviceSecure', deviceId)) {
-      return;
-    }
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) return;
-    final houseSnap = await _db.ref('users/$uid/houseId').get();
-    final houseId = houseSnap.value?.toString().trim();
-    if (houseId == null || houseId.isEmpty) return;
-
-    await _db.ref('houses/$houseId/security/devices/$deviceId').update({
-      'status': 'deleted',
-      'deleted_at': ServerValue.timestamp,
-    });
+    await _callDeviceActionFunction('deleteDeviceSecure', deviceId);
   }
 
-  Future<bool> _callDeviceActionFunction(
+  Future<void> _callDeviceActionFunction(
     String functionName,
     String deviceId,
   ) async {
-    try {
-      final currentDeviceId = await getCurrentDeviceIdentifier();
-      final callable = _functions.httpsCallable(functionName);
-      await callable.call({
-        'deviceId': deviceId,
-        'currentDeviceId': currentDeviceId,
-      });
-      return true;
-    } on FirebaseFunctionsException catch (e) {
-      debugPrint('$functionName fallback to legacy DB write: ${e.code}');
-      return false;
-    } catch (e) {
-      debugPrint(
-        'Device action fallback to legacy DB write: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể xử lý thao tác thiết bị qua máy chủ bảo mật.').message}',
-      );
-      return false;
-    }
+    final currentDeviceId = await getCurrentDeviceIdentifier();
+    await CloudFunctionsHelper.callSecure<dynamic>(
+      functionName,
+      payload: {'deviceId': deviceId, 'currentDeviceId': currentDeviceId},
+      timeout: const Duration(seconds: 10),
+      throwOriginalException: true,
+    );
   }
 
   /// Lấy thông tin thiết bị hiện tại
@@ -1230,7 +1087,9 @@ class DeviceManagerService {
         os = 'iOS ${info.systemVersion}';
         platform = 'ios';
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[DeviceManager] Không đọc được thông tin thiết bị: $error');
+    }
 
     // Ensure no invalid characters remain
     deviceId = deviceId.replaceAll(RegExp(r'[.#$\[\]/]'), '_');

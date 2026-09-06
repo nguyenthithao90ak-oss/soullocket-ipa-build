@@ -3,8 +3,10 @@ part of '../../main_home_tab.dart';
 
 extension _MainHomeToolSlotSection on _MainHomeTabState {
   String _homeToolRelationshipMode() {
-    final liveMode =
-        _houseSettings?['relationshipMode']?.toString().trim().toLowerCase();
+    final liveMode = _houseSettings?['relationshipMode']
+        ?.toString()
+        .trim()
+        .toLowerCase();
     if (liveMode != null && (liveMode == 'couple' || liveMode == 'single')) {
       return liveMode;
     }
@@ -24,9 +26,10 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
 
     final customOrder =
         OfflineCacheService.getPrefsSync()?.getStringList('il_utility_order') ??
-            const <String>[];
-    final orderIds =
-        customOrder.isNotEmpty ? customOrder : utilitiesHubDefaultOrder;
+        const <String>[];
+    final orderIds = customOrder.isNotEmpty
+        ? customOrder
+        : utilitiesHubDefaultOrder;
     final orderMap = <String, int>{
       for (var index = 0; index < orderIds.length; index++)
         orderIds[index]: index,
@@ -77,7 +80,8 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
       return;
     }
 
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     final stored = _normalizeHomeToolId(
       prefs.getString(_homeToolSelectionPrefKey(normalizedHouseId)),
@@ -137,9 +141,7 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
     if (apps.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.tr('home_hinchactin_ec5a16')),
-        ),
+        SnackBar(content: Text(context.tr('home_hinchactin_ec5a16'))),
       );
       return;
     }
@@ -208,11 +210,7 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
       case 'drawing':
         return DrawingStudioScreen(houseId: houseId, myName: myName);
       case 'voice':
-        return VoiceScreen(
-          houseId: houseId,
-          myName: myName,
-          embedded: true,
-        );
+        return VoiceScreen(houseId: houseId, myName: myName, embedded: true);
       case 'calendar':
         return CalendarScreen(houseId: houseId, myName: myName);
       case 'capsule':
@@ -234,10 +232,7 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
       case 'giftcode':
         return GiftcodeScreen(houseId: houseId, myName: myName);
       case 'history':
-        return HistoryScreen(
-          houseId: houseId,
-          embedded: true,
-        );
+        return HistoryScreen(houseId: houseId, embedded: true);
       case 'diary_export':
         return DiaryExportScreen(houseId: houseId);
       case 'tarot':
@@ -286,16 +281,13 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
         final fallbackWidth = MediaQuery.sizeOf(context).width;
         final surfaceWidth =
             constraints.hasBoundedWidth && constraints.maxWidth.isFinite
-                ? constraints.maxWidth
-                : fallbackWidth;
+            ? constraints.maxWidth
+            : fallbackWidth;
         return RepaintBoundary(
           child: SizedBox(
             width: surfaceWidth,
             height: _homeToolPanelHeight(app.id),
-            child: _EmbeddedHomeToolSurface(
-              toolId: app.id,
-              child: tool,
-            ),
+            child: _EmbeddedHomeToolSurface(toolId: app.id, child: tool),
           ),
         );
       },
@@ -347,10 +339,7 @@ class _HomeToolPickerSheet extends StatelessWidget {
   final List<UtilityApp> apps;
   final String? selectedId;
 
-  const _HomeToolPickerSheet({
-    required this.apps,
-    required this.selectedId,
-  });
+  const _HomeToolPickerSheet({required this.apps, required this.selectedId});
 
   @override
   Widget build(BuildContext context) {
@@ -433,10 +422,7 @@ class _HomeToolSectionHeader extends StatelessWidget {
   final String title;
   final IconData icon;
 
-  const _HomeToolSectionHeader({
-    required this.title,
-    required this.icon,
-  });
+  const _HomeToolSectionHeader({required this.title, required this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -497,12 +483,15 @@ class _HomeToolPickerTile extends StatelessWidget {
                   gradient: LinearGradient(colors: app.colors),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: buildUtilityStickerIcon(
-                  utilityId: app.id,
-                  fallbackIcon: app.icon,
-                  fallbackColor: Colors.white,
-                  fallbackSize: 22,
-                  padding: const EdgeInsets.all(3),
+                child: HomeStickerMotion(
+                  motionSeed: app.id,
+                  child: buildUtilityStickerIcon(
+                    utilityId: app.id,
+                    fallbackIcon: app.icon,
+                    fallbackColor: Colors.white,
+                    fallbackSize: 22,
+                    padding: const EdgeInsets.all(3),
+                  ),
                 ),
               ),
               SLSpacing.w12,
@@ -534,10 +523,7 @@ class _EmbeddedHomeToolSurface extends StatelessWidget {
   final String toolId;
   final Widget child;
 
-  const _EmbeddedHomeToolSurface({
-    required this.toolId,
-    required this.child,
-  });
+  const _EmbeddedHomeToolSurface({required this.toolId, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -548,10 +534,7 @@ class _EmbeddedHomeToolSurface extends StatelessWidget {
           builder: (_) => MediaQuery.removePadding(
             context: context,
             removeTop: true,
-            child: PopScope(
-              canPop: false,
-              child: child,
-            ),
+            child: PopScope(canPop: false, child: child),
           ),
         );
       },
@@ -601,9 +584,7 @@ class _HomeVaultChip extends StatelessWidget {
 class _HomeEmbeddedVaultGate extends StatefulWidget {
   final String houseId;
 
-  const _HomeEmbeddedVaultGate({
-    required this.houseId,
-  });
+  const _HomeEmbeddedVaultGate({required this.houseId});
 
   @override
   State<_HomeEmbeddedVaultGate> createState() => _HomeEmbeddedVaultGateState();
@@ -685,7 +666,8 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
           accent = SLColors.primary;
         }
 
-        final showPreview = uiPrefs.vaultHomePreviewEnabled &&
+        final showPreview =
+            uiPrefs.vaultHomePreviewEnabled &&
             !(uiPrefs.vaultHomeHidePreviewWhenLocked && !_isUnlocked);
 
         return Container(
@@ -722,8 +704,9 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color:
-                          accent.withValues(alpha: cosmicStyle ? 0.35 : 0.18),
+                      color: accent.withValues(
+                        alpha: cosmicStyle ? 0.35 : 0.18,
+                      ),
                       blurRadius: cosmicStyle ? 36 : 28,
                       offset: const Offset(0, 16),
                     ),
@@ -745,17 +728,17 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
                                   colors: secureStyle
                                       ? [
                                           const Color(0xFF4F46E5),
-                                          const Color(0xFF111827)
+                                          const Color(0xFF111827),
                                         ]
                                       : cosmicStyle
-                                          ? [
-                                              const Color(0xFFD97706),
-                                              const Color(0xFF7C2D12)
-                                            ]
-                                          : [
-                                              const Color(0xFFFF7A86),
-                                              const Color(0xFFF6A0C6)
-                                            ],
+                                      ? [
+                                          const Color(0xFFD97706),
+                                          const Color(0xFF7C2D12),
+                                        ]
+                                      : [
+                                          const Color(0xFFFF7A86),
+                                          const Color(0xFFF6A0C6),
+                                        ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
@@ -765,8 +748,8 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
                                 secureStyle
                                     ? Icons.enhanced_encryption_rounded
                                     : cosmicStyle
-                                        ? Icons.vpn_key_rounded
-                                        : Icons.lock_person_rounded,
+                                    ? Icons.vpn_key_rounded
+                                    : Icons.lock_person_rounded,
                                 color: Colors.white,
                                 size: compactStyle ? 28 : 34,
                               ),
@@ -784,7 +767,9 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
                                         : const Color(0xFF43A047),
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                        color: Colors.white, width: 3),
+                                      color: Colors.white,
+                                      width: 3,
+                                    ),
                                   ),
                                   child: Icon(
                                     _isRequestingUnlock
@@ -879,8 +864,9 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
                         label: Text(context.tr('home_mkhnggianr_b53f72')),
                         style: FilledButton.styleFrom(
                           backgroundColor: accent,
-                          foregroundColor:
-                              cosmicStyle ? Colors.black87 : Colors.white,
+                          foregroundColor: cosmicStyle
+                              ? Colors.black87
+                              : Colors.white,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 18,
                             vertical: 12,

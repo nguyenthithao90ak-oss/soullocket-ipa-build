@@ -17,8 +17,9 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
       return;
     }
 
-    final cachedSettings =
-        OfflineCacheService.loadCacheSync(_homeSettingsCacheKey(cachedHouseId));
+    final cachedSettings = OfflineCacheService.loadCacheSync(
+      _homeSettingsCacheKey(cachedHouseId),
+    );
     if (cachedSettings is! Map) {
       return;
     }
@@ -43,9 +44,11 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
         : null;
     final devicePixelRatio =
         mediaQuery?.devicePixelRatio ?? view?.devicePixelRatio ?? 1.0;
-    final logicalWidth = mediaQuery?.size.width ??
+    final logicalWidth =
+        mediaQuery?.size.width ??
         ((view?.physicalSize.width ?? 0) / devicePixelRatio);
-    final logicalHeight = mediaQuery?.size.height ??
+    final logicalHeight =
+        mediaQuery?.size.height ??
         ((view?.physicalSize.height ?? 0) / devicePixelRatio);
     final qualityScale = devicePixelRatio >= 2.5 ? 0.75 : 0.85;
     final cacheWidth = (logicalWidth * devicePixelRatio * qualityScale)
@@ -143,13 +146,13 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
     if (providers.isEmpty) return;
 
     await Future.wait<void>(
-      providers.map(
-        (provider) async {
-          try {
-            await precacheImage(provider, context);
-          } catch (_) {}
-        },
-      ),
+      providers.map((provider) async {
+        try {
+          await precacheImage(provider, context);
+        } catch (error) {
+          debugPrint('[MainHome] Image warm-up failed: $error');
+        }
+      }),
       eagerError: false,
     );
   }
@@ -162,10 +165,7 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
     setState(() => _deferHeavyHomeMotion = false);
   }
 
-  void _warmHomeMedia({
-    bool delayMotion = false,
-    bool force = false,
-  }) {
+  void _warmHomeMedia({bool delayMotion = false, bool force = false}) {
     final avatarUrl1 = _houseSettings?['avtUser1']?.toString().trim() ?? '';
     final avatarUrl2 = _houseSettings?['avtUser2']?.toString().trim() ?? '';
     final backgroundUrl = UiPrefs.notifier.value.customBackgroundUrl.trim();

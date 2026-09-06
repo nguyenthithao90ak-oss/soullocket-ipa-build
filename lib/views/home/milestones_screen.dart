@@ -57,6 +57,17 @@ class _MilestonesScreenState extends State<MilestonesScreen>
     super.dispose();
   }
 
+  DateTime _clampedDate(int year, int month, int preferredDay) {
+    final normalizedMonth = DateTime(year, month, 1);
+    final lastDay = DateTime(
+      normalizedMonth.year,
+      normalizedMonth.month + 1,
+      0,
+    ).day;
+    final safeDay = preferredDay > lastDay ? lastDay : preferredDay;
+    return DateTime(normalizedMonth.year, normalizedMonth.month, safeDay);
+  }
+
   void _calculateEvents() {
     final today = DateTime.now();
     final todayMidnight = DateTime(today.year, today.month, today.day);
@@ -66,7 +77,11 @@ class _MilestonesScreenState extends State<MilestonesScreen>
     if (widget.startDate != null && widget.startDate!.isNotEmpty) {
       try {
         startDt = DateTime.parse(widget.startDate!);
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[SuppressedError] lib/views/home/milestones_screen.dart: $error',
+        );
+      }
     }
 
     // 1. Cột mốc kỷ niệm ngày yêu
@@ -115,15 +130,15 @@ class _MilestonesScreenState extends State<MilestonesScreen>
       // Cột mốc tháng (kỷ niệm tháng yêu nhau: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 tháng)
       final milestoneMonths = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
       for (final m in milestoneMonths) {
-        final milestoneDate = DateTime(
+        final milestoneDate = _clampedDate(
           startDtMidnight.year,
           startDtMidnight.month + m,
           startDtMidnight.day,
         );
         final diff = milestoneDate.difference(todayMidnight).inDays;
-        final title = L10nService().localeCode == 'vi'
-            ? 'Kỷ niệm $m tháng bên nhau 💖'
-            : 'Celebrating $m months of love 💖';
+        final title = L10nService().format('p4_milestone_anniversary_months', {
+          'months': m.toString(),
+        });
         allEvents.add(
           MilestoneEvent(
             title: title,
@@ -136,7 +151,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
 
       // Cột mốc năm (kỷ niệm năm yêu nhau)
       for (int y = 1; y <= 25; y++) {
-        final annivDate = DateTime(
+        final annivDate = _clampedDate(
           startDtMidnight.year + y,
           startDtMidnight.month,
           startDtMidnight.day,
@@ -158,8 +173,12 @@ class _MilestonesScreenState extends State<MilestonesScreen>
     // 2. Sinh nhật đôi bạn (dobU1, dobU2)
     final dobU1 = widget.houseSettings['dobU1']?.toString() ?? '';
     final dobU2 = widget.houseSettings['dobU2']?.toString() ?? '';
-    final nameU1 = widget.houseSettings['nameU1']?.toString() ?? 'Bạn';
-    final nameU2 = widget.houseSettings['nameU2']?.toString() ?? 'Người ấy';
+    final nameU1 =
+        widget.houseSettings['nameU1']?.toString() ??
+        L10nService().translate('p4_default_you');
+    final nameU2 =
+        widget.houseSettings['nameU2']?.toString() ??
+        L10nService().translate('p4_default_partner');
 
     void computeBirthdays(String dob, String name) {
       if (dob.isEmpty) return;
@@ -186,7 +205,11 @@ class _MilestonesScreenState extends State<MilestonesScreen>
             ),
           );
         }
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[SuppressedError] lib/views/home/milestones_screen.dart: $error',
+        );
+      }
     }
 
     computeBirthdays(dobU1, nameU1);
@@ -355,7 +378,9 @@ class _MilestonesScreenState extends State<MilestonesScreen>
       MaterialPageRoute(
         builder: (_) => CalendarScreen(
           houseId: widget.houseId,
-          myName: widget.houseSettings['nameU1']?.toString() ?? 'Bạn',
+          myName:
+              widget.houseSettings['nameU1']?.toString() ??
+              L10nService().translate('p4_default_you'),
         ),
       ),
     ).then((_) {
@@ -378,7 +403,11 @@ class _MilestonesScreenState extends State<MilestonesScreen>
           startDt.day,
         );
         daysLove = todayMidnight.difference(startDtMidnight).inDays;
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[SuppressedError] lib/views/home/milestones_screen.dart: $error',
+        );
+      }
     }
 
     return Scaffold(
@@ -431,232 +460,253 @@ class _MilestonesScreenState extends State<MilestonesScreen>
           ),
           // Nội dung chính
           SafeArea(
-            child: Column(
-              children: [
-                // Custom App Bar siêu đáng yêu
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  child: Row(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 760),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Column(
                     children: [
-                      IconButton(
-                        icon: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.85),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.9),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.04),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            color: Color(0xFFFF4D7D),
-                            size: 18,
-                          ),
+                      // Custom App Bar siêu đáng yêu
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
                         ),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        L10nService().translate('milestone_title'),
-                        style: SLTheme.quicksand(
-                          fontSize: 21,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFF2D3748),
-                        ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.85),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.9),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.04),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.calendar_month_rounded,
-                            color: Color(0xFFFF4D7D),
-                            size: 20,
-                          ),
-                        ),
-                        onPressed: _openCalendar,
-                        tooltip: L10nService().translate(
-                          'milestone_manage_calendar',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Banner số ngày yêu nhau xinh xắn
-                if (daysLove > 0)
-                  Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    width: double.infinity,
-                    height: 100,
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFFFF85A2),
-                                  Color(0xFFFF4D7D),
-                                  Color(0xFFFF6584),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(26),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.6),
-                                width: 1.2,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(
-                                    0xFFFF4D7D,
-                                  ).withValues(alpha: 0.35),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        // Soft highlight line top
-                        Positioned(
-                          top: 0,
-                          left: 20,
-                          right: 20,
-                          height: 1.5,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.white.withValues(alpha: 0.0),
-                                  Colors.white.withValues(alpha: 0.6),
-                                  Colors.white.withValues(alpha: 0.0),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Watermark cute hearts
-                        Positioned(
-                          right: -10,
-                          bottom: -10,
-                          child: Icon(
-                            Icons.favorite,
-                            size: 110,
-                            color: Colors.white.withValues(alpha: 0.14),
-                          ),
-                        ),
-                        Positioned(
-                          left: 20,
-                          top: -20,
-                          child: Icon(
-                            Icons.favorite_border,
-                            size: 55,
-                            color: Colors.white.withValues(alpha: 0.10),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 16,
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 62,
-                                height: 62,
+                        child: Row(
+                          children: [
+                            IconButton(
+                              tooltip: context.tr('p4_back'),
+                              icon: Container(
+                                padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.25),
+                                  color: Colors.white.withValues(alpha: 0.85),
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.6),
-                                    width: 2,
+                                    color: Colors.white.withValues(alpha: 0.9),
                                   ),
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.black.withValues(
-                                        alpha: 0.08,
+                                        alpha: 0.04,
                                       ),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
                                     ),
                                   ],
                                 ),
-                                child: const Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.all(3.0),
-                                    child: MilestoneEmbeddedSticker(
-                                      'fireworks_couple',
-                                      width: 54,
-                                      height: 54,
-                                      fallbackAssetPath:
-                                          'assets/images/anhtomau_stickers/sticker_2.gif',
+                                child: const Icon(
+                                  Icons.arrow_back_ios_new_rounded,
+                                  color: Color(0xFFFF4D7D),
+                                  size: 18,
+                                ),
+                              ),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              L10nService().translate('milestone_title'),
+                              style: SLTheme.quicksand(
+                                fontSize: 21,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF2D3748),
+                              ),
+                            ),
+                            const Spacer(),
+                            IconButton(
+                              icon: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.04,
+                                      ),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.calendar_month_rounded,
+                                  color: Color(0xFFFF4D7D),
+                                  size: 20,
+                                ),
+                              ),
+                              onPressed: _openCalendar,
+                              tooltip: L10nService().translate(
+                                'milestone_manage_calendar',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Banner số ngày yêu nhau xinh xắn
+                      if (daysLove > 0)
+                        Container(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          width: double.infinity,
+                          height: 100,
+                          child: Stack(
+                            children: [
+                              Positioned.fill(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFFFF85A2),
+                                        Color(0xFFFF4D7D),
+                                        Color(0xFFFF6584),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(26),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.6,
+                                      ),
+                                      width: 1.2,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(
+                                          0xFFFF4D7D,
+                                        ).withValues(alpha: 0.35),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 10),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              // Soft highlight line top
+                              Positioned(
+                                top: 0,
+                                left: 20,
+                                right: 20,
+                                height: 1.5,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.white.withValues(alpha: 0.0),
+                                        Colors.white.withValues(alpha: 0.6),
+                                        Colors.white.withValues(alpha: 0.0),
+                                      ],
                                     ),
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                              // Watermark cute hearts
+                              Positioned(
+                                right: -10,
+                                bottom: -10,
+                                child: Icon(
+                                  Icons.favorite,
+                                  size: 110,
+                                  color: Colors.white.withValues(alpha: 0.14),
+                                ),
+                              ),
+                              Positioned(
+                                left: 20,
+                                top: -20,
+                                child: Icon(
+                                  Icons.favorite_border,
+                                  size: 55,
+                                  color: Colors.white.withValues(alpha: 0.10),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 16,
+                                ),
+                                child: Row(
                                   children: [
-                                    Text(
-                                      L10nService().translate(
-                                        'milestone_together_for',
-                                      ),
-                                      style: SLTheme.quicksand(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
+                                    Container(
+                                      width: 62,
+                                      height: 62,
+                                      decoration: BoxDecoration(
                                         color: Colors.white.withValues(
-                                          alpha: 0.95,
+                                          alpha: 0.25,
+                                        ),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.6,
+                                          ),
+                                          width: 2,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.08,
+                                            ),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Center(
+                                        child: Padding(
+                                          padding: EdgeInsets.all(3.0),
+                                          child: MilestoneEmbeddedSticker(
+                                            'fireworks_couple',
+                                            width: 54,
+                                            height: 54,
+                                            fallbackAssetPath:
+                                                'assets/images/anhtomau_stickers/sticker_2.gif',
+                                          ),
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(height: 3),
-                                    Text(
-                                      L10nService().format(
-                                        'milestone_love_days',
-                                        {'days': daysLove.toString()},
-                                      ),
-                                      style: SLTheme.quicksand(
-                                        fontSize: 19,
-                                        fontWeight: FontWeight.w900,
-                                        color: Colors.white,
-                                        shadows: [
-                                          const Shadow(
-                                            color: Colors.black26,
-                                            blurRadius: 6,
-                                            offset: Offset(0, 2),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            L10nService().translate(
+                                              'milestone_together_for',
+                                            ),
+                                            style: SLTheme.quicksand(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w700,
+                                              color: Colors.white.withValues(
+                                                alpha: 0.95,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            L10nService().format(
+                                              'milestone_love_days',
+                                              {'days': daysLove.toString()},
+                                            ),
+                                            style: SLTheme.quicksand(
+                                              fontSize: 19,
+                                              fontWeight: FontWeight.w900,
+                                              color: Colors.white,
+                                              shadows: [
+                                                const Shadow(
+                                                  color: Colors.black26,
+                                                  blurRadius: 6,
+                                                  offset: Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -667,97 +717,110 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                // Custom TabBar kiểu bong bóng kẹo ngọt
-                Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.75),
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: Colors.white, width: 1.5),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFCEBCD0).withValues(alpha: 0.12),
-                        blurRadius: 14,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: TabBar(
-                    controller: _tabController,
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    indicatorColor: Colors.transparent,
-                    labelColor: Colors.white,
-                    unselectedLabelColor: const Color(0xFF7E6475),
-                    labelStyle: SLTheme.quicksand(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 13.5,
-                    ),
-                    unselectedLabelStyle: SLTheme.quicksand(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13.5,
-                    ),
-                    indicator: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFFF7E9B), Color(0xFFFF4D7D)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(18),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFFF4D7D).withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
+                      // Custom TabBar kiểu bong bóng kẹo ngọt
+                      Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
                         ),
-                      ],
-                    ),
-                    tabs: [
-                      Tab(
-                        height: 38,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.hourglass_empty_rounded, size: 16),
-                            const SizedBox(width: 6),
-                            Text(
-                              L10nService().translate('milestone_tab_upcoming'),
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.75),
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(color: Colors.white, width: 1.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(
+                                0xFFCEBCD0,
+                              ).withValues(alpha: 0.12),
+                              blurRadius: 14,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: TabBar(
+                          controller: _tabController,
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          indicatorColor: Colors.transparent,
+                          labelColor: Colors.white,
+                          unselectedLabelColor: const Color(0xFF7E6475),
+                          labelStyle: SLTheme.quicksand(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 13.5,
+                          ),
+                          unselectedLabelStyle: SLTheme.quicksand(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13.5,
+                          ),
+                          indicator: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFFF7E9B), Color(0xFFFF4D7D)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(18),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFFFF4D7D,
+                                ).withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          tabs: [
+                            Tab(
+                              height: 38,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.hourglass_empty_rounded,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    L10nService().translate(
+                                      'milestone_tab_upcoming',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Tab(
+                              height: 38,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.favorite_rounded, size: 16),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    L10nService().translate(
+                                      'milestone_tab_past',
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      Tab(
-                        height: 38,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                      // Tab Views
+                      Expanded(
+                        child: TabBarView(
+                          physics: const SLPagePhysics(),
+                          controller: _tabController,
                           children: [
-                            const Icon(Icons.favorite_rounded, size: 16),
-                            const SizedBox(width: 6),
-                            Text(L10nService().translate('milestone_tab_past')),
+                            _buildEventsList(_upcomingList, isUpcoming: true),
+                            _buildEventsList(_pastList, isUpcoming: false),
                           ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                // Tab Views
-                Expanded(
-                  child: TabBarView(
-                    physics: const SLPagePhysics(),
-                    controller: _tabController,
-                    children: [
-                      _buildEventsList(_upcomingList, isUpcoming: true),
-                      _buildEventsList(_pastList, isUpcoming: false),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ],
@@ -945,7 +1008,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
     }
 
     return ListView.builder(
-      physics: const BouncingScrollPhysics(),
+      physics: SLResponsive.scrollPhysicsForPlatform(),
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       itemCount: list.length,
       itemBuilder: (context, index) {

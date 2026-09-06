@@ -237,29 +237,34 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     required String tooltip,
     required VoidCallback onTap,
   }) {
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Ink(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: _kSettingsHeaderSurface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: _kSettingsHeaderBorder),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+    return Semantics(
+      button: true,
+      label: tooltip,
+      child: Tooltip(
+        message: tooltip,
+        excludeFromSemantics: true,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(12),
+            child: Ink(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: _kSettingsHeaderSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _kSettingsHeaderBorder),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Icon(icon, color: const Color(0xFFFF78A8), size: 18),
             ),
-            child: Icon(icon, color: const Color(0xFFFF78A8), size: 18),
           ),
         ),
       ),
@@ -587,23 +592,31 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
             child: Row(
               children: [
                 if (showBack) ...[
-                  InkWell(
-                    onTap: () => Navigator.pop(context),
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.10),
+                  Semantics(
+                    button: true,
+                    label: context.tr('p6_back'),
+                    child: Tooltip(
+                      message: context.tr('p6_back'),
+                      excludeFromSemantics: true,
+                      child: InkWell(
+                        onTap: () => Navigator.pop(context),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: accent.withValues(alpha: 0.20),
+                        child: Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: accent.withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: accent.withValues(alpha: 0.20),
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            size: 15,
+                            color: accent,
+                          ),
                         ),
-                      ),
-                      child: Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        size: 15,
-                        color: accent,
                       ),
                     ),
                   ),
@@ -641,17 +654,29 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                   ),
                 ),
                 if (showExpand)
-                  InkWell(
-                    onTap: () => _togglePanel(id),
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.08),
+                  Semantics(
+                    button: true,
+                    label: context.tr('p6_close_panel'),
+                    child: Tooltip(
+                      message: context.tr('p6_close_panel'),
+                      excludeFromSemantics: true,
+                      child: InkWell(
+                        onTap: () => _togglePanel(id),
                         borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: accent.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: 18,
+                            color: accent,
+                          ),
+                        ),
                       ),
-                      child: Icon(Icons.close_rounded, size: 18, color: accent),
                     ),
                   ),
               ],
@@ -1094,47 +1119,56 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     );
     final tileBorder = color.withValues(alpha: 0.22);
 
-    return GestureDetector(
-      onTap: onTap ?? () => _showToast(context.tr('home_angm_1441cf')),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-        decoration: BoxDecoration(
-          color: tileBg,
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap ?? () => _showToast(context.tr('home_angm_1441cf')),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: tileBorder),
-          boxShadow: SLShadow.subtle,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(icon, color: color, size: 20),
+          child: Ink(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            decoration: BoxDecoration(
+              color: tileBg,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: tileBorder),
+              boxShadow: SLShadow.subtle,
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: SLTheme.quicksand(
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w900,
-                  color: _kSettingsActionTileText,
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(icon, color: color, size: 20),
                 ),
-              ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: SLTheme.quicksand(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w900,
+                      color: _kSettingsActionTileText,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.open_in_new_rounded,
+                  color: color.withValues(alpha: 0.9),
+                  size: 18,
+                ),
+              ],
             ),
-            Icon(
-              Icons.open_in_new_rounded,
-              color: color.withValues(alpha: 0.9),
-              size: 18,
-            ),
-          ],
+          ),
         ),
       ),
     );

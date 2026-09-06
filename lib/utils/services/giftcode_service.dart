@@ -1,5 +1,6 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
 import 'security_service.dart';
 
@@ -108,7 +109,9 @@ class GiftcodeService {
                 ? payload['message'].toString()
                 : 'Mã quà tặng hợp lệ!',
           );
-        } catch (_) {}
+        } catch (parseError) {
+          debugPrint('[Giftcode] Không đọc được payload lỗi: $parseError');
+        }
       }
 
       final normalizedMessage = error.message?.trim() ?? '';

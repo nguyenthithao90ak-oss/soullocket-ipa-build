@@ -2,6 +2,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Query, Transaction;
 import 'package:cloud_firestore/cloud_firestore.dart' as cf;
+import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/models/social_post.dart';
 import 'local_database_service.dart';
 
@@ -141,7 +142,9 @@ class SocialService {
         data['id'] = postId;
         return data;
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[SocialService] Không tải được bài viết: $error');
+    }
     return null;
   }
 
@@ -162,7 +165,9 @@ class SocialService {
         data['id'] = commentId;
         return data;
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[SocialService] Không tải được bình luận: $error');
+    }
     return null;
   }
 
@@ -395,21 +400,12 @@ class SocialService {
         if (value.isNotEmpty) {
           return value;
         }
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[SocialService] Không đọc được tên nhà từ $path: $error');
+      }
     }
 
     return normalized;
-  }
-
-  String _compactNotificationMessage(String value, {int maxLength = 160}) {
-    final normalized = value.replaceAll(RegExp(r'\s+'), ' ').trim();
-    if (normalized.isEmpty) {
-      return '';
-    }
-    if (normalized.length <= maxLength) {
-      return normalized;
-    }
-    return '${normalized.substring(0, maxLength - 1)}…';
   }
 
   // [ĐÃ XÓA] Các hàm push notification cộng đồng cũ đã gỡ bỏ.
@@ -567,9 +563,7 @@ class SocialService {
     });
 
     if (addedLike) {
-      try {
-        await notifyPostLiked(postId: postId, actorHouseId: myHouseId);
-      } catch (_) {}
+      await notifyPostLiked(postId: postId, actorHouseId: myHouseId);
     }
   }
 
@@ -663,7 +657,9 @@ class SocialService {
             .child('houses/$houseId/settings/houseAvt')
             .get();
         resolvedAvt = avtSnap.value?.toString() ?? '';
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[SocialService] Không đọc được ảnh đại diện nhà: $error');
+      }
     }
 
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -699,13 +695,11 @@ class SocialService {
     await docRef.set(payload);
 
     if (!hasViolations) {
-      try {
-        await notifyPostCommented(
-          postId: postId,
-          actorHouseId: houseId,
-          commentText: trimmedContent,
-        );
-      } catch (_) {}
+      await notifyPostCommented(
+        postId: postId,
+        actorHouseId: houseId,
+        commentText: trimmedContent,
+      );
     }
   }
 
@@ -722,37 +716,33 @@ class SocialService {
         .doc(commentId);
 
     bool liked = false;
-    try {
-      await _firestore.runTransaction((transaction) async {
-        final snapshot = await transaction.get(docRef);
-        if (snapshot.exists) {
-          final data = snapshot.data() ?? {};
-          final likesMap = Map<String, dynamic>.from(data['likes_map'] ?? {});
-          liked = likesMap.containsKey(myHouseId);
-          if (liked) {
-            likesMap.remove(myHouseId);
-          } else {
-            likesMap[myHouseId] = {
-              'ts': DateTime.now().millisecondsSinceEpoch,
-              'by': myHouseId,
-            };
-          }
-          transaction.update(docRef, {
-            'likes_map': likesMap,
-            'reacts': likesMap.length,
-          });
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(docRef);
+      if (snapshot.exists) {
+        final data = snapshot.data() ?? {};
+        final likesMap = Map<String, dynamic>.from(data['likes_map'] ?? {});
+        liked = likesMap.containsKey(myHouseId);
+        if (liked) {
+          likesMap.remove(myHouseId);
+        } else {
+          likesMap[myHouseId] = {
+            'ts': DateTime.now().millisecondsSinceEpoch,
+            'by': myHouseId,
+          };
         }
-      });
-    } catch (_) {}
+        transaction.update(docRef, {
+          'likes_map': likesMap,
+          'reacts': likesMap.length,
+        });
+      }
+    });
 
     if (!liked) {
-      try {
-        await notifyCommentLiked(
-          postId: postId,
-          commentId: commentId,
-          actorHouseId: myHouseId,
-        );
-      } catch (_) {}
+      await notifyCommentLiked(
+        postId: postId,
+        commentId: commentId,
+        actorHouseId: myHouseId,
+      );
     }
   }
 
@@ -879,7 +869,9 @@ class SocialService {
       if (doc.exists && doc.data() != null) {
         try {
           posts.add(SocialPost.fromJson(doc.id, doc.data()!));
-        } catch (_) {}
+        } catch (error) {
+          debugPrint('[SocialService] Bỏ qua bài đã thích bị lỗi: $error');
+        }
       } else {
         staleLikeRefs.add(likedDocs.docs[index].reference);
       }

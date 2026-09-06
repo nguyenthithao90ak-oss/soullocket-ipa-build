@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/sl_theme.dart';
+import '../../../../utils/services/l10n_service.dart';
 
 class VisitorProfileStatsSection extends StatelessWidget {
   final int postCount;
@@ -35,21 +36,21 @@ class VisitorProfileStatsSection extends StatelessWidget {
           Expanded(
             child: _VisitorProfileStatItem(
               value: '$postCount',
-              label: 'Bài đăng',
+              label: context.tr('p5_profile_stat_posts'),
             ),
           ),
           const _VisitorProfileStatDivider(),
           Expanded(
             child: _VisitorProfileStatItem(
               value: (hideLikeCount && !isMe) ? '***' : '$heartCount',
-              label: 'Lửa ❤️',
+              label: context.tr('p5_profile_stat_hearts'),
             ),
           ),
           const _VisitorProfileStatDivider(),
           Expanded(
             child: _VisitorProfileStatItem(
               value: isFriend ? '✓' : '—',
-              label: 'Bạn bè',
+              label: context.tr('p5_profile_stat_friends'),
             ),
           ),
         ],
@@ -62,10 +63,7 @@ class _VisitorProfileStatItem extends StatelessWidget {
   final String value;
   final String label;
 
-  const _VisitorProfileStatItem({
-    required this.value,
-    required this.label,
-  });
+  const _VisitorProfileStatItem({required this.value, required this.label});
 
   @override
   Widget build(BuildContext context) {

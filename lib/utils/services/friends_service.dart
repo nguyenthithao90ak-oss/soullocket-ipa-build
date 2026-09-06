@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 import 'chat_service.dart';
@@ -125,7 +126,9 @@ class FriendsService {
           normalizedCurrentHouseId,
           normalizedFromHouseId,
         );
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[FriendsService] Không seed được lời chào chat: $error');
+      }
       return true;
     } catch (_) {
       return false;
@@ -177,7 +180,8 @@ class FriendsService {
     final normalizedFriendId = friendId.trim();
     if (normalizedHouseId.isEmpty || normalizedFriendId.isEmpty) return;
     final ref = _db.ref(
-        'houses/$normalizedHouseId/settings/favoriteFriends/$normalizedFriendId');
+      'houses/$normalizedHouseId/settings/favoriteFriends/$normalizedFriendId',
+    );
     final snap = await ref.get();
 
     if (snap.exists) {
@@ -241,60 +245,68 @@ class FriendsService {
 
     void emitLatest() {
       if (!controller.isClosed) {
-        controller.add(FriendRequestsData(
-          sent: Map<String, String>.from(currentSent),
-          received: Map<String, String>.from(currentReceived),
-        ));
+        controller.add(
+          FriendRequestsData(
+            sent: Map<String, String>.from(currentSent),
+            received: Map<String, String>.from(currentReceived),
+          ),
+        );
       }
     }
 
     controller = StreamController<FriendRequestsData>.broadcast(
       onListen: () {
-        sentSub = sentStream.listen((event) {
-          final newSent = <String, String>{};
-          final raw = event.snapshot.value;
-          if (event.snapshot.exists && raw is Map) {
-            final map = Map<dynamic, dynamic>.from(raw);
-            map.forEach((key, value) {
-              if (value is Map) {
-                final req = Map<String, dynamic>.from(value);
-                if (req['status'] == 'pending') {
-                  final to = req['to']?.toString().trim() ?? '';
-                  if (to.isNotEmpty) {
-                    newSent[to] = key.toString();
+        sentSub = sentStream.listen(
+          (event) {
+            final newSent = <String, String>{};
+            final raw = event.snapshot.value;
+            if (event.snapshot.exists && raw is Map) {
+              final map = Map<dynamic, dynamic>.from(raw);
+              map.forEach((key, value) {
+                if (value is Map) {
+                  final req = Map<String, dynamic>.from(value);
+                  if (req['status'] == 'pending') {
+                    final to = req['to']?.toString().trim() ?? '';
+                    if (to.isNotEmpty) {
+                      newSent[to] = key.toString();
+                    }
                   }
                 }
-              }
-            });
-          }
-          currentSent = newSent;
-          emitLatest();
-        }, onError: (Object error) {
-          if (!controller.isClosed) controller.addError(error);
-        });
+              });
+            }
+            currentSent = newSent;
+            emitLatest();
+          },
+          onError: (Object error) {
+            if (!controller.isClosed) controller.addError(error);
+          },
+        );
 
-        receivedSub = receivedStream.listen((event) {
-          final newReceived = <String, String>{};
-          final raw = event.snapshot.value;
-          if (event.snapshot.exists && raw is Map) {
-            final map = Map<dynamic, dynamic>.from(raw);
-            map.forEach((key, value) {
-              if (value is Map) {
-                final req = Map<String, dynamic>.from(value);
-                if (req['status'] == 'pending') {
-                  final from = req['from']?.toString().trim() ?? '';
-                  if (from.isNotEmpty) {
-                    newReceived[from] = key.toString();
+        receivedSub = receivedStream.listen(
+          (event) {
+            final newReceived = <String, String>{};
+            final raw = event.snapshot.value;
+            if (event.snapshot.exists && raw is Map) {
+              final map = Map<dynamic, dynamic>.from(raw);
+              map.forEach((key, value) {
+                if (value is Map) {
+                  final req = Map<String, dynamic>.from(value);
+                  if (req['status'] == 'pending') {
+                    final from = req['from']?.toString().trim() ?? '';
+                    if (from.isNotEmpty) {
+                      newReceived[from] = key.toString();
+                    }
                   }
                 }
-              }
-            });
-          }
-          currentReceived = newReceived;
-          emitLatest();
-        }, onError: (Object error) {
-          if (!controller.isClosed) controller.addError(error);
-        });
+              });
+            }
+            currentReceived = newReceived;
+            emitLatest();
+          },
+          onError: (Object error) {
+            if (!controller.isClosed) controller.addError(error);
+          },
+        );
       },
       onCancel: () {
         sentSub?.cancel();
@@ -310,7 +322,10 @@ class FriendsService {
   // ─────────────────────────────────────────────────────────────
 
   String _callableErrorMessage(Object error, String fallback) {
-    final message = error.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
+    final message = error.toString().replaceFirst(
+      RegExp(r'^Exception:\s*'),
+      '',
+    );
     return message.trim().isEmpty ? fallback : message.trim();
   }
 
@@ -340,8 +355,10 @@ class FriendsService {
   // 6. TÌM KIẾM
   // ─────────────────────────────────────────────────────────────
 
-  Future<List<Map<String, dynamic>>> searchHouses(String query,
-      {int limit = 50}) async {
+  Future<List<Map<String, dynamic>>> searchHouses(
+    String query, {
+    int limit = 50,
+  }) async {
     final effectiveLimit = limit < 1 ? 1 : limit;
     // ⚡ Tối ưu hóa băng thông: Chỉ tải node houses_public (chứa thông tin công khai siêu nhẹ)
     // thay vì tải toàn bộ cây houses (chứa nhật ký, ảnh album của tất cả mọi nhà).
@@ -377,8 +394,9 @@ class FriendsService {
       final settings = data['settings'];
 
       // Kiểm tra cài đặt bảo mật: Có cho phép tìm kiếm không?
-      final bool searchPrivacy =
-          settings is Map ? (settings['searchPrivacy'] != false) : true;
+      final bool searchPrivacy = settings is Map
+          ? (settings['searchPrivacy'] != false)
+          : true;
       if (!searchPrivacy) return;
 
       final name =
@@ -423,19 +441,22 @@ class FriendsService {
           'houseName': name,
           'username': username,
           'houseAvatar': settings is Map ? settings['houseAvatar'] : null,
-          'matchScore':
-              nameLower.startsWith(q) || usernameLower.startsWith(q) ? 50 : 10,
+          'matchScore': nameLower.startsWith(q) || usernameLower.startsWith(q)
+              ? 50
+              : 10,
         });
       }
     });
 
     partialMatches.sort(
-        (a, b) => (b['matchScore'] as int).compareTo(a['matchScore'] as int));
+      (a, b) => (b['matchScore'] as int).compareTo(a['matchScore'] as int),
+    );
 
     if (q.isEmpty) {
       suggestions.sort((a, b) {
-        final scoreDiff =
-            (b['matchScore'] as int).compareTo(a['matchScore'] as int);
+        final scoreDiff = (b['matchScore'] as int).compareTo(
+          a['matchScore'] as int,
+        );
         if (scoreDiff != 0) return scoreDiff;
         final nameA = (a['houseName'] ?? '').toString();
         final nameB = (b['houseName'] ?? '').toString();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/sl_theme.dart';
+import '../../../../utils/services/l10n_service.dart';
 
 Future<bool> showVisitorProfileConfirmDialog({
   required BuildContext context,
@@ -27,7 +28,7 @@ Future<bool> showVisitorProfileConfirmDialog({
             TextButton(
               onPressed: () => Navigator.pop(context, false),
               child: Text(
-                'Hủy',
+                context.tr('p5_cancel'),
                 style: SLTheme.quicksand(color: SLColors.textSecond),
               ),
             ),
@@ -38,7 +39,7 @@ Future<bool> showVisitorProfileConfirmDialog({
               ),
               onPressed: () => Navigator.pop(context, true),
               child: Text(
-                'Xác nhận',
+                context.tr('p5_confirm'),
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w800,
                   color: Colors.white,

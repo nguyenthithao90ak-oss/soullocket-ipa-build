@@ -27,10 +27,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       return true;
     } catch (e) {
       debugPrint(
-        '_ensureCanModifySharedInfo failed: ${AppErrorMapper.resolve(
-          e,
-          fallbackMessage: context.tr('home_clixyra_775791'),
-        ).message}',
+        '_ensureCanModifySharedInfo failed: ${AppErrorMapper.resolve(e, fallbackMessage: context.tr('home_clixyra_775791')).message}',
       );
       return true;
     }
@@ -50,20 +47,14 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
 
       if (result.isPendingDevice) {
         if (showToast) {
-          _showToast(
-            context.tr('home_thitbangch_25cf69'),
-            success: false,
-          );
+          _showToast(context.tr('home_thitbangch_25cf69'), success: false);
         }
         return false;
       }
       return true;
     } catch (e) {
       debugPrint(
-        '_ensureCanModifySecurityInfo failed: ${AppErrorMapper.resolve(
-          e,
-          fallbackMessage: context.tr('home_clixyra_775791'),
-        ).message}',
+        '_ensureCanModifySecurityInfo failed: ${AppErrorMapper.resolve(e, fallbackMessage: context.tr('home_clixyra_775791')).message}',
       );
       return true;
     }
@@ -71,12 +62,12 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
 
   Future<void> _checkSecurityScopeLockReal() async {
     try {
-      final nextState =
-          await _settingsSecurityController.resolveSecurityShellState(
-        context: context,
-        houseId: _houseId,
-        currentState: _currentSecurityShellState(),
-      );
+      final nextState = await _settingsSecurityController
+          .resolveSecurityShellState(
+            context: context,
+            houseId: _houseId,
+            currentState: _currentSecurityShellState(),
+          );
       if (!mounted) return;
       setState(() {
         _isSecurityLocked = nextState.isSecurityLocked;
@@ -88,10 +79,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       return;
     } catch (e) {
       debugPrint(
-        'security scope unlock failed: ${AppErrorMapper.resolve(
-          e,
-          fallbackMessage: context.tr('home_clixyra_775791'),
-        ).message}',
+        'security scope unlock failed: ${AppErrorMapper.resolve(e, fallbackMessage: context.tr('home_clixyra_775791')).message}',
       );
       if (!mounted) return;
       setState(() {
@@ -156,7 +144,11 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
 
     try {
       await _auth.currentUser?.reload();
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/home/tabs/settings/security/security_action_flows_part.dart: $error',
+      );
+    }
 
     final user = _auth.currentUser;
     if (user == null || user.email == null) {
@@ -209,7 +201,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         if (diff < _SettingsTabState._emailVerifyResendCooldownSeconds * 1000) {
           final waitMins =
               _SettingsTabState._emailVerifyResendCooldownSeconds ~/ 60 -
-                  (diff / 60000).floor();
+              (diff / 60000).floor();
           // ignore: unused_local_variable
           final waitText = waitMins > 0 ? '$waitMins phút' : waitMinText;
           _showToast(context.tr('resend_cooldown_text'), success: false);
@@ -258,10 +250,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
     } catch (e) {
       if (mounted) {
         _showToast(
-          AppErrorMapper.resolve(
-            e,
-            fallbackMessage: fallbackErrMsg,
-          ).message,
+          AppErrorMapper.resolve(e, fallbackMessage: fallbackErrMsg).message,
           success: false,
         );
       }
@@ -319,7 +308,8 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
     final pendingSentTime =
         prefs.getInt(_SettingsTabState._emailVerifyPendingSentTimeKey) ?? 0;
     final nowMs = DateTime.now().millisecondsSinceEpoch;
-    final hasPending = currentEmail.isNotEmpty &&
+    final hasPending =
+        currentEmail.isNotEmpty &&
         pendingEmail == currentEmail &&
         pendingSentTime > 0 &&
         (nowMs - pendingSentTime) <
@@ -386,8 +376,9 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       final isVerified = refreshedUser?.emailVerified ?? false;
       setState(() {
         _isMainEmailVerified = isVerified;
-        _securityEmail =
-            (refreshedUser?.email ?? _securityEmail).toString().trim();
+        _securityEmail = (refreshedUser?.email ?? _securityEmail)
+            .toString()
+            .trim();
       });
 
       if (isVerified) {
@@ -406,28 +397,19 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         return;
       }
       if (showPendingToast) {
-        _showToast(
-          pendingMsg,
-          success: false,
-        );
+        _showToast(pendingMsg, success: false);
       }
     } on FirebaseAuthException catch (e) {
       if (!mounted) {
         return;
       }
-      _showToast(
-        e.message ?? defaultErrorMsg,
-        success: false,
-      );
+      _showToast(e.message ?? defaultErrorMsg, success: false);
     } catch (e) {
       if (!mounted) {
         return;
       }
       _showToast(
-        AppErrorMapper.resolve(
-          e,
-          fallbackMessage: fallbackErrMsg,
-        ).message,
+        AppErrorMapper.resolve(e, fallbackMessage: fallbackErrMsg).message,
         success: false,
       );
     } finally {
@@ -544,14 +526,17 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       final statuses = <String, bool>{};
       final settingsLockedPermissions = <String>[];
 
-      statuses['GPS'] =
-          await LocationService().requestPermission(context: context);
+      statuses['GPS'] = await LocationService().requestPermission(
+        context: context,
+      );
 
       if (!kIsWeb) {
-        final camera =
-            await _requestAppPermission(app_permission.Permission.camera);
-        final mic =
-            await _requestAppPermission(app_permission.Permission.microphone);
+        final camera = await _requestAppPermission(
+          app_permission.Permission.camera,
+        );
+        final mic = await _requestAppPermission(
+          app_permission.Permission.microphone,
+        );
         statuses['Camera'] = _isPermissionGranted(camera);
         statuses['Mic'] = _isPermissionGranted(mic);
 
@@ -565,7 +550,8 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         if (Platform.isAndroid) {
           try {
             final uri = Uri.parse(
-                'android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS');
+              'android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
+            );
             final canOpen = await canLaunchUrl(uri);
             if (canOpen) {
               await AppLifecyclePresenceGuard.guard(() => launchUrl(uri));
@@ -587,8 +573,8 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         statuses['Mic'] = true;
       }
 
-      statuses[notifLabel] =
-          await NotificationService().requestPermissionAndInit();
+      statuses[notifLabel] = await NotificationService()
+          .requestPermissionAndInit();
 
       final grantedCount = statuses.values.where((it) => it).length;
       final deniedPermissions = statuses.entries
@@ -620,10 +606,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       await _promptOpenAppSettings(settingsLockedPermissions);
     } catch (e) {
       _showToast(
-        AppErrorMapper.resolve(
-          e,
-          fallbackMessage: fallbackErrMsg,
-        ).message,
+        AppErrorMapper.resolve(e, fallbackMessage: fallbackErrMsg).message,
         success: false,
       );
     } finally {
@@ -674,9 +657,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       lastDate: DateTime.now(),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: Color(0xFFD81B60),
-          ),
+          colorScheme: const ColorScheme.light(primary: Color(0xFFD81B60)),
         ),
         child: child!,
       ),
@@ -695,8 +676,9 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       allowMissingYear: true,
     );
     _recoveryAnswerCtrl.text = normalized;
-    _recoveryAnswerCtrl.selection =
-        TextSelection.collapsed(offset: normalized.length);
+    _recoveryAnswerCtrl.selection = TextSelection.collapsed(
+      offset: normalized.length,
+    );
   }
 
   Future<void> _linkGoogleAccount() async {
@@ -782,7 +764,8 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       return;
     }
 
-    final logoutOtherDevices = await showDialog<bool>(
+    final logoutOtherDevices =
+        await showDialog<bool>(
           context: context,
           barrierDismissible: false,
           builder: (ctx) => AlertDialog(
@@ -827,10 +810,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
 
     if (!_passwordLinked) {
       if ((user.email ?? '').trim().isEmpty) {
-        _showToast(
-          unsupportedAccountMsg,
-          success: false,
-        );
+        _showToast(unsupportedAccountMsg, success: false);
         return;
       }
 
@@ -841,15 +821,9 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         await _loadSecurityDetails();
         if (!mounted) return;
         setState(() => _showPasswordEditor = false);
-        _showToast(
-          createPasswordSuccessMsg,
-          success: true,
-        );
+        _showToast(createPasswordSuccessMsg, success: true);
       } on FirebaseAuthException catch (e) {
-        _showToast(
-          e.message ?? defaultCreatePasswordErr,
-          success: false,
-        );
+        _showToast(e.message ?? defaultCreatePasswordErr, success: false);
       } catch (e) {
         _showToast(
           AppErrorMapper.resolve(
@@ -923,7 +897,9 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       verifyCode: (otp, newPassword) async {
         final token = await _authService.verifyOtpAndGetToken(email, otp);
         await _authService.signInWithCustomTokenAndSetPassword(
-            token, newPassword);
+          token,
+          newPassword,
+        );
       },
     );
     if (!success) return;
@@ -949,7 +925,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
     }
   }
 
-//   Future<bool> _authenticate() async {
-//     return _authenticateLockSettingsChange();
-//   }
+  //   Future<bool> _authenticate() async {
+  //     return _authenticateLockSettingsChange();
+  //   }
 }

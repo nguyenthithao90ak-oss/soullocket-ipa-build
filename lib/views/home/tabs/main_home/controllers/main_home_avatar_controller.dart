@@ -1,10 +1,7 @@
 part of '../../main_home_tab.dart';
 
 extension MainHomeAvatarController on _MainHomeTabState {
-  Future<XFile?> _cropAvatarImage(
-    XFile file, {
-    required bool isUser1,
-  }) async {
+  Future<XFile?> _cropAvatarImage(XFile file, {required bool isUser1}) async {
     if (kIsWeb || file.path.isEmpty) {
       return file;
     }
@@ -19,8 +16,9 @@ extension MainHomeAvatarController on _MainHomeTabState {
         maxHeight: 1080,
         uiSettings: [
           AndroidUiSettings(
-            toolbarTitle:
-                isUser1 ? 'Cắt avatar bạn nam' : 'Cắt avatar người ấy',
+            toolbarTitle: isUser1
+                ? 'Cắt avatar bạn nam'
+                : 'Cắt avatar người ấy',
             toolbarColor: const Color(0xFFD81B60),
             toolbarWidgetColor: Colors.white,
             initAspectRatio: CropAspectRatioPreset.square,
@@ -53,8 +51,8 @@ extension MainHomeAvatarController on _MainHomeTabState {
     if (_didPromptPendingAvatarRetry || !mounted) {
       return;
     }
-    final houseId =
-        (_houseId ?? await _houseService.getCurrentHouseId())?.trim();
+    final houseId = (_houseId ?? await _houseService.getCurrentHouseId())
+        ?.trim();
     if (houseId == null || houseId.isEmpty) {
       return;
     }
@@ -87,8 +85,8 @@ extension MainHomeAvatarController on _MainHomeTabState {
   }
 
   Future<void> _retryPendingAvatarUpload() async {
-    final houseId =
-        (_houseId ?? await _houseService.getCurrentHouseId())?.trim();
+    final houseId = (_houseId ?? await _houseService.getCurrentHouseId())
+        ?.trim();
     if (houseId == null || houseId.isEmpty) {
       return;
     }
@@ -121,16 +119,10 @@ extension MainHomeAvatarController on _MainHomeTabState {
       }
       return;
     }
-    await _changeAvatar(
-      isUser1: role != 'user2',
-      presetFile: file,
-    );
+    await _changeAvatar(isUser1: role != 'user2', presetFile: file);
   }
 
-  Future<void> _changeAvatar({
-    required bool isUser1,
-    XFile? presetFile,
-  }) async {
+  Future<void> _changeAvatar({required bool isUser1, XFile? presetFile}) async {
     final houseId = _houseId ?? await _houseService.getCurrentHouseId();
     if (!mounted || houseId == null) return;
     if (_uploadingAvatarRole != null) return;
@@ -188,16 +180,23 @@ extension MainHomeAvatarController on _MainHomeTabState {
       try {
         final hid = (_houseId ?? '').trim();
         if (hid.isNotEmpty) {
-          await _dbRef.child('houses/$hid/settings').update({
-            field: url,
-          }).catchError((_) {});
+          await _dbRef
+              .child('houses/$hid/settings')
+              .update({field: url})
+              .catchError((error) {
+                debugPrint('[MainHome] Avatar settings sync failed: $error');
+              });
         }
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[MainHome] Avatar profile sync failed: $error');
+      }
 
       if (oldAvatarUrl.isNotEmpty && oldAvatarUrl.startsWith('http')) {
         try {
           _storageService.deleteImageByUrl(oldAvatarUrl);
-        } catch (_) {}
+        } catch (error) {
+          debugPrint('[MainHome] Old avatar cleanup failed: $error');
+        }
       }
 
       if (mounted) {
@@ -222,8 +221,9 @@ extension MainHomeAvatarController on _MainHomeTabState {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content:
-                Text('Chưa thể đổi ảnh đại diện lúc này. Vui lòng thử lại.'),
+            content: Text(
+              'Chưa thể đổi ảnh đại diện lúc này. Vui lòng thử lại.',
+            ),
             behavior: SnackBarBehavior.floating,
           ),
         );

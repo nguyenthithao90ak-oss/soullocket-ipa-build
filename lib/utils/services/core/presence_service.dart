@@ -155,10 +155,7 @@ class PresenceService {
     return latest == 0 ? null : latest;
   }
 
-  static int activeSessionCount(
-    Map<dynamic, dynamic>? data, {
-    int? nowMs,
-  }) {
+  static int activeSessionCount(Map<dynamic, dynamic>? data, {int? nowMs}) {
     if (data == null || data.isEmpty) {
       return 0;
     }
@@ -240,7 +237,8 @@ class PresenceService {
     await FirebaseDatabase.instance.goOnline();
     final previousHouseId = _activeHouseId;
     final previousRole = _activeRole;
-    final targetChanged = previousHouseId != null &&
+    final targetChanged =
+        previousHouseId != null &&
         previousRole != null &&
         (previousHouseId != houseId || previousRole != role);
     debugPrint(
@@ -265,7 +263,8 @@ class PresenceService {
     _heartbeatCount = 0;
 
     final nextFingerprint = '$houseId|$role|${deviceType ?? 'flutter'}';
-    final canReuseCurrentSession = !targetChanged &&
+    final canReuseCurrentSession =
+        !targetChanged &&
         _myPresenceRef != null &&
         _mySessionId != null &&
         _lastOnlineFingerprint == nextFingerprint;
@@ -287,21 +286,23 @@ class PresenceService {
 
   void _setupConnectedListener() {
     if (_connectedSub != null) return;
-    _connectedSub = _dbRef.child('.info/connected').onValue.listen(
-      (event) {
-        final connected = event.snapshot.value == true;
-        _isConnected = connected;
-        if (connected && _shouldBeOnline) {
-          unawaited(_doGoOnline());
-        }
-      },
-      onError: (Object error) {
-        debugPrint('Presence backend listener failed: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: 'Không thể lắng nghe trạng thái hiện diện.',
-        ).message}');
-      },
-    );
+    _connectedSub = _dbRef
+        .child('.info/connected')
+        .onValue
+        .listen(
+          (event) {
+            final connected = event.snapshot.value == true;
+            _isConnected = connected;
+            if (connected && _shouldBeOnline) {
+              unawaited(_doGoOnline());
+            }
+          },
+          onError: (Object error) {
+            debugPrint(
+              'Presence backend listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể lắng nghe trạng thái hiện diện.').message}',
+            );
+          },
+        );
   }
 
   void _startHeartbeat() {
@@ -324,13 +325,15 @@ class PresenceService {
 
     if (!_isConnected) {
       debugPrint(
-          '[Presence] Skip lightweight heartbeat because connection is offline');
+        '[Presence] Skip lightweight heartbeat because connection is offline',
+      );
       return;
     }
     try {
-      await _myPresenceRef!.child('sessions/$_mySessionId').update({
-        'ts': ServerValue.timestamp,
-      }).timeout(const Duration(seconds: 3));
+      await _myPresenceRef!
+          .child('sessions/$_mySessionId')
+          .update({'ts': ServerValue.timestamp})
+          .timeout(const Duration(seconds: 3));
     } catch (e) {
       debugPrint('[Presence] Lightweight heartbeat failed: $e');
     }
@@ -356,14 +359,17 @@ class PresenceService {
 
     final now = DateTime.now().millisecondsSinceEpoch;
     try {
-      final deviceId =
-          await DeviceManagerService().getCurrentDeviceIdentifier();
-      await _myPresenceRef!.child('sessions/$_mySessionId').set({
-        'ts': now,
-        if (_currentUid != null) 'uid': _currentUid,
-        if (_activeDeviceType != null) 'device': _activeDeviceType,
-        'deviceId': deviceId,
-      }).timeout(const Duration(seconds: 3));
+      final deviceId = await DeviceManagerService()
+          .getCurrentDeviceIdentifier();
+      await _myPresenceRef!
+          .child('sessions/$_mySessionId')
+          .set({
+            'ts': now,
+            if (_currentUid != null) 'uid': _currentUid,
+            if (_activeDeviceType != null) 'device': _activeDeviceType,
+            'deviceId': deviceId,
+          })
+          .timeout(const Duration(seconds: 3));
 
       // Prune stale sessions cho chính role của mình để đảm bảo status chính xác
       if (_myPresenceRef != null) {
@@ -385,10 +391,9 @@ class PresenceService {
     } on TimeoutException {
       return;
     } catch (e) {
-      debugPrint('Presence heartbeat failed: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể cập nhật trạng thái hiện diện.',
-      ).message}');
+      debugPrint(
+        'Presence heartbeat failed: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể cập nhật trạng thái hiện diện.').message}',
+      );
     }
   }
 
@@ -408,15 +413,16 @@ class PresenceService {
     }
 
     try {
-      final safeGet =
-          _dbRef.child('houses/$houseId/presence/$role/sessions').get();
+      final safeGet = _dbRef
+          .child('houses/$houseId/presence/$role/sessions')
+          .get();
       safeGet.ignore();
       final snap = await safeGet.timeout(const Duration(seconds: 3));
       final raw = snap.value;
       if (raw is! Map) return;
 
-      final currentDeviceId =
-          await DeviceManagerService().getCurrentDeviceIdentifier();
+      final currentDeviceId = await DeviceManagerService()
+          .getCurrentDeviceIdentifier();
       var otherFreshCount = 0;
       raw.forEach((key, value) {
         if (key.toString() == sessionId) return; // bỏ qua session của mình
@@ -439,9 +445,12 @@ class PresenceService {
         _lastDuplicateRoleWarnedAt = DateTime.now();
         RoleUtils.duplicateRoleNotifier.value = true;
         debugPrint(
-            '[Presence] Duplicate role detected: $otherFreshCount other session(s) on $role');
+          '[Presence] Duplicate role detected: $otherFreshCount other session(s) on $role',
+        );
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[Presence] Duplicate-role check failed: $error');
+    }
   }
 
   Future<void> markActiveNow() async {
@@ -490,19 +499,17 @@ class PresenceService {
       if (updates.isNotEmpty) {
         await ref.child('sessions').update(updates);
         debugPrint(
-            'Presence pruned stale sessions: ${updates.keys.join(', ')}');
+          'Presence pruned stale sessions: ${updates.keys.join(', ')}',
+        );
       }
     } catch (e) {
-      debugPrint('Presence stale session prune failed: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể dọn phiên hiện diện cũ.',
-      ).message}');
+      debugPrint(
+        'Presence stale session prune failed: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể dọn phiên hiện diện cũ.').message}',
+      );
     }
   }
 
-  Future<void> _removeCurrentUidGhostSessions({
-    required int nowMs,
-  }) async {
+  Future<void> _removeCurrentUidGhostSessions({required int nowMs}) async {
     // [Vô hiệu hóa] Theo rule dự án Shared Account, 2 user dùng chung 1 UID.
     // Nếu xóa ghost sessions của vai đối diện theo UID,
     // người này online sẽ đá trạng thái online của người kia.
@@ -542,7 +549,8 @@ class PresenceService {
 
       // Grace period: chỉ ghi 'offline' nếu lastSeen đã cũ hơn 3 phút
       // Tránh race condition khi 2 thiết bị heartbeat gần nhau (lệch đồng hồ, mạng chậm)
-      final shouldMarkOffline = freshSessionCount == 0 &&
+      final shouldMarkOffline =
+          freshSessionCount == 0 &&
           (resolvedLastSeen == 0 ||
               nowMs - resolvedLastSeen >
                   const Duration(minutes: 3).inMilliseconds);
@@ -563,10 +571,9 @@ class PresenceService {
         '[Presence] aggregate role=${ref.key} status=${freshSessionCount > 0 ? 'online' : 'offline'} sessions=$freshSessionCount lastSeen=$resolvedLastSeen device=${resolvedDevice ?? '-'}',
       );
     } catch (e) {
-      debugPrint('Presence aggregate refresh failed: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể tổng hợp trạng thái hiện diện.',
-      ).message}');
+      debugPrint(
+        'Presence aggregate refresh failed: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể tổng hợp trạng thái hiện diện.').message}',
+      );
     }
   }
 
@@ -607,14 +614,17 @@ class PresenceService {
       // Chỉ dọn dẹp stale sessions cho bản thân, không dọn cho người kia để tránh lệch giờ làm xoá nhầm
       await _pruneStaleSessions(_myPresenceRef!, nowMs: now);
 
-      final deviceId =
-          await DeviceManagerService().getCurrentDeviceIdentifier();
-      await _myPresenceRef!.child('sessions/$_mySessionId').set({
-        'ts': now,
-        if (_currentUid != null) 'uid': _currentUid,
-        if (_activeDeviceType != null) 'device': _activeDeviceType,
-        'deviceId': deviceId,
-      }).timeout(const Duration(seconds: 3));
+      final deviceId = await DeviceManagerService()
+          .getCurrentDeviceIdentifier();
+      await _myPresenceRef!
+          .child('sessions/$_mySessionId')
+          .set({
+            'ts': now,
+            if (_currentUid != null) 'uid': _currentUid,
+            if (_activeDeviceType != null) 'device': _activeDeviceType,
+            'deviceId': deviceId,
+          })
+          .timeout(const Duration(seconds: 3));
       // ⚡ onDisconnect chỉ xóa đúng session của mình — không ghi 'status: offline'
       // vào node cha để tránh đè trạng thái của thiết bị/session khác đang online cùng vai.
       // Status sẽ được tính lại từ sessions map khi heartbeat tiếp theo chạy.
@@ -636,10 +646,9 @@ class PresenceService {
     } on TimeoutException {
       return;
     } catch (e) {
-      debugPrint('Presence write failed: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể ghi trạng thái hiện diện.',
-      ).message}');
+      debugPrint(
+        'Presence write failed: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể ghi trạng thái hiện diện.').message}',
+      );
     }
   }
 
@@ -699,10 +708,14 @@ class PresenceService {
     if (sessionId != null) {
       try {
         await ref.onDisconnect().cancel().timeout(const Duration(seconds: 3));
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[Presence] onDisconnect cancel failed: $error');
+      }
       try {
         await ref.child('sessions/$sessionId').remove();
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[Presence] Session cleanup failed: $error');
+      }
     }
 
     if (!markOfflineIfEmpty) {
@@ -740,10 +753,8 @@ class PresenceService {
         return true;
       }
       debugPrint(
-          'Presence backend reachability failed: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể kiểm tra kết nối hiện diện.',
-      ).message}');
+        'Presence backend reachability failed: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể kiểm tra kết nối hiện diện.').message}',
+      );
       return false;
     }
   }
@@ -798,8 +809,9 @@ class PresenceService {
   Future<bool> isPartnerOnline(String houseId, String myRole) async {
     final partnerRole = myRole == 'user1' ? 'user2' : 'user1';
     try {
-      final snap =
-          await _dbRef.child('houses/$houseId/presence/$partnerRole').get();
+      final snap = await _dbRef
+          .child('houses/$houseId/presence/$partnerRole')
+          .get();
       if (!snap.exists || snap.value == null) {
         return false;
       }
@@ -808,7 +820,8 @@ class PresenceService {
         return false;
       }
       return isPresenceOnline(raw);
-    } catch (_) {
+    } catch (error) {
+      debugPrint('[Presence] Partner presence lookup failed: $error');
       return false;
     }
   }
@@ -825,9 +838,7 @@ class PresenceService {
     final role = _activeRole;
     if (houseId == null || role == null) return;
 
-    final updates = <String, dynamic>{
-      'sleep_mode': isSleeping,
-    };
+    final updates = <String, dynamic>{'sleep_mode': isSleeping};
     if (isSleeping) {
       updates['sleep_start_time'] = ServerValue.timestamp;
     }

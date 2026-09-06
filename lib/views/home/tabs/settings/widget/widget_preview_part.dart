@@ -2,14 +2,14 @@ part of '../../settings_tab.dart';
 
 extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
   ({List<Color> colors, Color textColor, Color borderColor, bool premium})
-      _widgetPreviewThemeSpec(String themeKey) {
+  _widgetPreviewThemeSpec(String themeKey) {
     switch (themeKey) {
       case 'dark':
         return (
           colors: const [
             Color(0xFF0F172A),
             Color(0xFF1E1E38),
-            Color(0xFF0F172A)
+            Color(0xFF0F172A),
           ],
           textColor: Colors.white,
           borderColor: const Color(0xFF475569),
@@ -20,7 +20,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
           colors: const [
             Color(0xFFFFFFFF),
             Color(0xFFF8FAFC),
-            Color(0xFFF1F5F9)
+            Color(0xFFF1F5F9),
           ],
           textColor: const Color(0xFF1F2937),
           borderColor: const Color(0xFFE2E8F0),
@@ -50,10 +50,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
         );
       case 'purple':
         return (
-          colors: const [
-            Color(0xFFCE93D8),
-            Color(0xFF6A1B9A),
-          ],
+          colors: const [Color(0xFFCE93D8), Color(0xFF6A1B9A)],
           textColor: Colors.white,
           borderColor: const Color(0xFFCE93D8),
           premium: false,
@@ -106,10 +103,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
       case 'pink':
       default:
         return (
-          colors: const [
-            Color(0xFFFFB6CA),
-            Color(0xFFFF7098),
-          ],
+          colors: const [Color(0xFFFFB6CA), Color(0xFFFF7098)],
           textColor: Colors.white,
           borderColor: const Color(0xFFFFB6CA),
           premium: false,
@@ -120,42 +114,18 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
   List<Color> _widgetHeartPalette(String colorKey) {
     switch (colorKey) {
       case 'ruby':
-        return const [
-          Color(0xFFFF5E7E),
-          Color(0xFFFF85A1),
-          Color(0xFFFFE3EA),
-        ];
+        return const [Color(0xFFFF5E7E), Color(0xFFFF85A1), Color(0xFFFFE3EA)];
       case 'violet':
-        return const [
-          Color(0xFF8B5CF6),
-          Color(0xFFC084FC),
-          Color(0xFFF3E8FF),
-        ];
+        return const [Color(0xFF8B5CF6), Color(0xFFC084FC), Color(0xFFF3E8FF)];
       case 'ocean':
-        return const [
-          Color(0xFF0EA5E9),
-          Color(0xFF67E8F9),
-          Color(0xFFE0F2FE),
-        ];
+        return const [Color(0xFF0EA5E9), Color(0xFF67E8F9), Color(0xFFE0F2FE)];
       case 'sunset':
-        return const [
-          Color(0xFFF97316),
-          Color(0xFFFBBF24),
-          Color(0xFFFFEDD5),
-        ];
+        return const [Color(0xFFF97316), Color(0xFFFBBF24), Color(0xFFFFEDD5)];
       case 'gold':
-        return const [
-          Color(0xFFEAB308),
-          Color(0xFFFDE68A),
-          Color(0xFFFFFBEB),
-        ];
+        return const [Color(0xFFEAB308), Color(0xFFFDE68A), Color(0xFFFFFBEB)];
       case 'rose':
       default:
-        return const [
-          Color(0xFFFF4D73),
-          Color(0xFFFF8FB1),
-          Color(0xFFFFE4EC),
-        ];
+        return const [Color(0xFFFF4D73), Color(0xFFFF8FB1), Color(0xFFFFE4EC)];
     }
   }
 
@@ -179,7 +149,9 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
           color: textColor.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(outerRadius),
           border: Border.all(
-              color: Colors.white.withValues(alpha: 0.62), width: 0.95),
+            color: Colors.white.withValues(alpha: 0.62),
+            width: 0.95,
+          ),
         ),
         child: Center(
           child: Icon(
@@ -203,86 +175,112 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
 
   Widget _buildWidgetHeartStylePicker() {
     final selectedKey = _normalizeWidgetHeartStyleKey(_widgetHeartStyleKey);
-    final visibleHeartStyles =
-        _widgetHeartStyleKeys.take(12).toList(growable: false);
+    final visibleHeartStyles = _widgetHeartStyleKeys
+        .take(12)
+        .toList(growable: false);
     final hiddenCount =
         _widgetHeartStyleKeys.length - visibleHeartStyles.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: visibleHeartStyles.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            childAspectRatio: 1,
-          ),
-          itemBuilder: (context, index) {
-            final heart = visibleHeartStyles[index];
-            final isSelected = selectedKey == heart;
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final crossAxisCount = constraints.maxWidth >= 560
+                ? 8
+                : constraints.maxWidth >= 400
+                ? 6
+                : 4;
 
-            return Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(18),
-                onTap: () async => _handleWidgetHeartStyleChanged(heart),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOut,
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? const Color(0xFFFFEEF5)
-                        : const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: isSelected
-                          ? const Color(0xFFFF6B97)
-                          : const Color(0xFFE4EAF3),
-                      width: isSelected ? 1.6 : 1.1,
-                    ),
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color: const Color(0xFFFF6B97)
-                                  .withValues(alpha: 0.16),
-                              blurRadius: 12,
-                              offset: const Offset(0, 5),
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: visibleHeartStyles.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 1,
+              ),
+              itemBuilder: (context, index) {
+                final heart = visibleHeartStyles[index];
+                final isSelected = selectedKey == heart;
+                final optionLabel = context
+                    .tr('p7_heart_style_option')
+                    .replaceAll('{index}', '${index + 1}');
+
+                void selectHeart() {
+                  unawaited(_handleWidgetHeartStyleChanged(heart));
+                }
+
+                return Semantics(
+                  button: true,
+                  selected: isSelected,
+                  label: optionLabel,
+                  onTap: selectHeart,
+                  excludeSemantics: true,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(18),
+                      onTap: selectHeart,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOut,
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? const Color(0xFFFFEEF5)
+                              : const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: isSelected
+                                ? const Color(0xFFFF6B97)
+                                : const Color(0xFFE4EAF3),
+                            width: isSelected ? 1.6 : 1.1,
+                          ),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: const Color(
+                                      0xFFFF6B97,
+                                    ).withValues(alpha: 0.16),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ]
+                              : const [],
+                        ),
+                        child: Center(
+                          child: AnimatedScale(
+                            duration: const Duration(milliseconds: 220),
+                            scale: isSelected ? 1.08 : 1,
+                            child: ShaderMask(
+                              shaderCallback: (bounds) => const LinearGradient(
+                                colors: [
+                                  Color(0xFFFF4D8D),
+                                  Color(0xFFFFB86B),
+                                  Color(0xFF8B5CF6),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ).createShader(bounds),
+                              child: Text(
+                                heart,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 23,
+                                  height: 1,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
-                          ]
-                        : const [],
-                  ),
-                  child: Center(
-                    child: AnimatedScale(
-                      duration: const Duration(milliseconds: 220),
-                      scale: isSelected ? 1.08 : 1,
-                      child: ShaderMask(
-                        shaderCallback: (bounds) => const LinearGradient(
-                          colors: [
-                            Color(0xFFFF4D8D),
-                            Color(0xFFFFB86B),
-                            Color(0xFF8B5CF6),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ).createShader(bounds),
-                        child: Text(
-                          heart,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 23,
-                            height: 1,
-                            color: Colors.white,
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             );
           },
         ),
@@ -320,8 +318,9 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    L10nService()
-                                        .translate('home_tat_ca_kieu_trai_tim'),
+                                    L10nService().translate(
+                                      'home_tat_ca_kieu_trai_tim',
+                                    ),
                                     style: SLTheme.quicksand(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w900,
@@ -331,79 +330,114 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                                 ),
                                 IconButton(
                                   onPressed: () => Navigator.pop(sheetContext),
+                                  tooltip: context.tr('p7_close'),
                                   icon: const Icon(Icons.close_rounded),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 12),
                             Flexible(
-                              child: GridView.builder(
-                                shrinkWrap: true,
-                                physics: const ClampingScrollPhysics(),
-                                itemCount: _widgetHeartStyleKeys.length,
-                                gridDelegate:
-                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 4,
-                                  crossAxisSpacing: 10,
-                                  mainAxisSpacing: 10,
-                                  childAspectRatio: 1,
-                                ),
-                                itemBuilder: (context, index) {
-                                  final heart = _widgetHeartStyleKeys[index];
-                                  final isSelected = selectedKey == heart;
-                                  return Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(18),
-                                      onTap: () async {
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final crossAxisCount =
+                                      constraints.maxWidth >= 640
+                                      ? 8
+                                      : constraints.maxWidth >= 440
+                                      ? 6
+                                      : 4;
+
+                                  return GridView.builder(
+                                    shrinkWrap: true,
+                                    physics: const ClampingScrollPhysics(),
+                                    itemCount: _widgetHeartStyleKeys.length,
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: crossAxisCount,
+                                          crossAxisSpacing: 10,
+                                          mainAxisSpacing: 10,
+                                          childAspectRatio: 1,
+                                        ),
+                                    itemBuilder: (context, index) {
+                                      final heart =
+                                          _widgetHeartStyleKeys[index];
+                                      final isSelected = selectedKey == heart;
+                                      final optionLabel = context
+                                          .tr('p7_heart_style_option')
+                                          .replaceAll(
+                                            '{index}',
+                                            '${index + 1}',
+                                          );
+
+                                      Future<void> selectHeart() async {
                                         await _handleWidgetHeartStyleChanged(
-                                            heart);
+                                          heart,
+                                        );
                                         if (sheetContext.mounted) {
                                           Navigator.pop(sheetContext);
                                         }
-                                      },
-                                      child: AnimatedContainer(
-                                        duration:
-                                            const Duration(milliseconds: 220),
-                                        curve: Curves.easeOut,
-                                        decoration: BoxDecoration(
-                                          color: isSelected
-                                              ? const Color(0xFFFFEEF5)
-                                              : const Color(0xFFF8FAFC),
-                                          borderRadius:
-                                              BorderRadius.circular(18),
-                                          border: Border.all(
-                                            color: isSelected
-                                                ? const Color(0xFFFF6B97)
-                                                : const Color(0xFFE4EAF3),
-                                            width: isSelected ? 1.6 : 1.1,
-                                          ),
-                                        ),
-                                        child: Center(
-                                          child: ShaderMask(
-                                            shaderCallback: (bounds) =>
-                                                const LinearGradient(
-                                              colors: [
-                                                Color(0xFFFF4D8D),
-                                                Color(0xFFFFB86B),
-                                                Color(0xFF8B5CF6),
-                                              ],
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                            ).createShader(bounds),
-                                            child: Text(
-                                              heart,
-                                              textAlign: TextAlign.center,
-                                              style: const TextStyle(
-                                                fontSize: 23,
-                                                height: 1,
-                                                color: Colors.white,
+                                      }
+
+                                      return Semantics(
+                                        button: true,
+                                        selected: isSelected,
+                                        label: optionLabel,
+                                        onTap: selectHeart,
+                                        excludeSemantics: true,
+                                        child: Material(
+                                          color: Colors.transparent,
+                                          child: InkWell(
+                                            borderRadius: BorderRadius.circular(
+                                              18,
+                                            ),
+                                            onTap: selectHeart,
+                                            child: AnimatedContainer(
+                                              duration: const Duration(
+                                                milliseconds: 220,
+                                              ),
+                                              curve: Curves.easeOut,
+                                              decoration: BoxDecoration(
+                                                color: isSelected
+                                                    ? const Color(0xFFFFEEF5)
+                                                    : const Color(0xFFF8FAFC),
+                                                borderRadius:
+                                                    BorderRadius.circular(18),
+                                                border: Border.all(
+                                                  color: isSelected
+                                                      ? const Color(0xFFFF6B97)
+                                                      : const Color(0xFFE4EAF3),
+                                                  width: isSelected ? 1.6 : 1.1,
+                                                ),
+                                              ),
+                                              child: Center(
+                                                child: ShaderMask(
+                                                  shaderCallback: (bounds) =>
+                                                      const LinearGradient(
+                                                        colors: [
+                                                          Color(0xFFFF4D8D),
+                                                          Color(0xFFFFB86B),
+                                                          Color(0xFF8B5CF6),
+                                                        ],
+                                                        begin:
+                                                            Alignment.topLeft,
+                                                        end: Alignment
+                                                            .bottomRight,
+                                                      ).createShader(bounds),
+                                                  child: Text(
+                                                    heart,
+                                                    textAlign: TextAlign.center,
+                                                    style: const TextStyle(
+                                                      fontSize: 23,
+                                                      height: 1,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
                                               ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                    ),
+                                      );
+                                    },
                                   );
                                 },
                               ),
@@ -470,8 +504,10 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
     final styleKey = _normalizeWidgetHeartStyleKey(_widgetHeartStyleKey);
 
     final styleSeed = styleKey.runes.fold<int>(0, (sum, rune) => sum + rune);
-    final colorSeed =
-        _widgetHeartColorKey.runes.fold<int>(0, (sum, rune) => sum + rune);
+    final colorSeed = _widgetHeartColorKey.runes.fold<int>(
+      0,
+      (sum, rune) => sum + rune,
+    );
     final animatedStyleIndex =
         (tick * 7 + styleSeed + colorSeed) % _widgetHeartStyleKeys.length;
     final activeStyleKey = _widgetHeartAnimated
@@ -501,10 +537,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
               child: Text(
                 activeStyleKey,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: emojiSize,
-                  height: 1,
-                ),
+                style: TextStyle(fontSize: emojiSize, height: 1),
               ),
             ),
           ),
@@ -586,7 +619,8 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                       shadows: [
                         Shadow(
                           color: primary.withValues(
-                              alpha: _widgetHeartAnimated ? 0.28 : 0.16),
+                            alpha: _widgetHeartAnimated ? 0.28 : 0.16,
+                          ),
                           blurRadius: size * 0.18,
                           offset: const Offset(0, 3),
                         ),
@@ -636,12 +670,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
         colors[2].withValues(alpha: 0.94),
         colors[3].withValues(alpha: 0.98),
       ],
-      stops: [
-        0.0,
-        (0.34 + stopOffsets[phase]).clamp(0.18, 0.46),
-        0.72,
-        1.0,
-      ],
+      stops: [0.0, (0.34 + stopOffsets[phase]).clamp(0.18, 0.46), 0.72, 1.0],
       begin: begins[phase],
       end: ends[phase],
     );
@@ -934,7 +963,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
             ),
           ),
           TextSpan(
-            text: 'ng\u00E0y',
+            text: context.tr('p7_day_lowercase'),
             style: SLTheme.quicksand(
               color: textColor,
               fontWeight: FontWeight.w800,
@@ -952,59 +981,70 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
   Widget _buildWidgetPreview() {
     return ValueListenableBuilder<int>(
       valueListenable: _widgetPreviewTickNotifier,
-      builder: (context, _, __) {
+      builder: (context, _, _) {
         final themeKey = _draftWidgetThemeKey ?? 'pink';
         final theme = _widgetPreviewThemeSpec(themeKey);
         final textColor = theme.textColor;
         final heartPalette = _widgetHeartPalette(_widgetHeartColorKey);
         final seasonKey = _resolvedWidgetSeasonKey();
         final seasonPalette = _widgetSeasonPalette(seasonKey);
-        final accentColor =
-            seasonKey == 'none' ? heartPalette.first : seasonPalette.first;
+        final accentColor = seasonKey == 'none'
+            ? heartPalette.first
+            : seasonPalette.first;
         final daysColor = theme.premium || themeKey == 'dark'
             ? Colors.white
             : Color.alphaBlend(accentColor.withValues(alpha: 0.18), textColor);
         final days = _loveDayCounter();
-        final label1 =
-            _nameU1.trim().isEmpty ? context.tr('role_male') : _nameU1.trim();
-        final label2 =
-            _nameU2.trim().isEmpty ? context.tr('role_female') : _nameU2.trim();
+        final label1 = _nameU1.trim().isEmpty
+            ? context.tr('role_male')
+            : _nameU1.trim();
+        final label2 = _nameU2.trim().isEmpty
+            ? context.tr('role_female')
+            : _nameU2.trim();
         final showDiaryPreview = _showDiaryOnWidget;
         final isCountdownStyle = _widgetStyleKey == 'countdown';
         final loveDateLabel = _loveDate.trim().isEmpty
-            ? 'Bat dau hom nay'
-            : 'Tu ${DateInputUtils.normalizeForDisplay(_loveDate)}';
+            ? context.tr('p7_love_date_starts_today')
+            : context
+                  .tr('p7_love_date_since')
+                  .replaceAll(
+                    '{date}',
+                    DateInputUtils.normalizeForDisplay(_loveDate),
+                  );
 
         return LayoutBuilder(
           builder: (context, constraints) {
             final maxWidth =
                 constraints.maxWidth.isFinite && constraints.maxWidth > 0
-                    ? constraints.maxWidth
-                    : 340.0;
+                ? constraints.maxWidth
+                : 340.0;
             final cardWidth = _widgetPreviewCardWidth(maxWidth);
             final isCompact = cardWidth < 320;
             final isLarge = cardWidth >= 370;
             final cardHeight = showDiaryPreview
                 ? (cardWidth * (isCompact ? 0.68 : 0.60))
-                    .clamp(196.0, 286.0)
-                    .toDouble()
+                      .clamp(196.0, 286.0)
+                      .toDouble()
                 : (cardWidth * (isCompact ? 0.54 : 0.50))
-                    .clamp(168.0, 236.0)
-                    .toDouble();
+                      .clamp(168.0, 236.0)
+                      .toDouble();
             final avatarRadius = isCompact ? 25.0 : (isLarge ? 31.0 : 28.0);
             final avatarWidth = isCompact ? 82.0 : (isLarge ? 112.0 : 96.0);
             final heartSize = showDiaryPreview
                 ? (isCompact ? 58.0 : (isLarge ? 70.0 : 64.0))
                 : (isCompact ? 66.0 : (isLarge ? 76.0 : 70.0));
-            final diaryPreviewWidth =
-                isCompact ? 58.0 : (isLarge ? 74.0 : 66.0);
-            final diaryPreviewHeight =
-                isCompact ? 84.0 : (isLarge ? 108.0 : 96.0);
+            final diaryPreviewWidth = isCompact
+                ? 58.0
+                : (isLarge ? 74.0 : 66.0);
+            final diaryPreviewHeight = isCompact
+                ? 84.0
+                : (isLarge ? 108.0 : 96.0);
             final diaryBlockOffsetY = showDiaryPreview
                 ? (isCompact ? 4.0 : (isLarge ? 8.0 : 6.0))
                 : 0.0;
-            final diaryBlockGap =
-                showDiaryPreview ? (isCompact ? 4.0 : 6.0) : 6.0;
+            final diaryBlockGap = showDiaryPreview
+                ? (isCompact ? 4.0 : 6.0)
+                : 6.0;
 
             final isSoulEventStyle = _widgetPanelTabKey == 'soulevent';
             if (isSoulEventStyle) {
@@ -1015,14 +1055,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
               return FutureBuilder<Map<String, String>>(
                 future: _loadSoulEventPreviewData(),
                 builder: (context, snapshot) {
-                  final data = snapshot.data ??
-                      {
-                        'title': 'Chưa có sự kiện',
-                        'date': '--/--/----',
-                        'days': '0',
-                        'label': 'ngày nữa',
-                        'color': '#EC4899',
-                      };
+                  final data = snapshot.data ?? _emptySoulEventPreviewData();
 
                   final colorHex = data['color']!;
                   Color eventColor;
@@ -1098,8 +1131,9 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                                         borderRadius: BorderRadius.circular(12),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black
-                                                .withValues(alpha: 0.03),
+                                            color: Colors.black.withValues(
+                                              alpha: 0.03,
+                                            ),
                                             blurRadius: 4,
                                             offset: const Offset(0, 2),
                                           ),
@@ -1182,8 +1216,10 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                   height: countdownHeight,
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
-                    gradient:
-                        _widgetPreviewCardGradient(themeKey, theme.colors),
+                    gradient: _widgetPreviewCardGradient(
+                      themeKey,
+                      theme.colors,
+                    ),
                     borderRadius: BorderRadius.circular(26),
                     border: Border.all(
                       color: themeKey == 'white'
@@ -1237,7 +1273,8 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 10),
+                                    horizontal: 10,
+                                  ),
                                   child: Icon(
                                     Icons.favorite_rounded,
                                     color: accentColor,
@@ -1430,15 +1467,12 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
   }
 
   Future<Map<String, String>> _loadSoulEventPreviewDataInternal() async {
+    final emptyData = _emptySoulEventPreviewData();
+    final todayLabel = context.tr('p7_today_upper');
+    final daysRemainingLabel = context.tr('p7_days_remaining');
     final houseId = _houseId ?? '';
     if (houseId.isEmpty) {
-      return {
-        'title': 'Chưa có sự kiện',
-        'date': '--/--/----',
-        'days': '0',
-        'label': 'ngày nữa',
-        'color': '#EC4899',
-      };
+      return emptyData;
     }
 
     try {
@@ -1479,24 +1513,33 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
         final isToday = nextDate.isAtSameMomentAs(today);
         final dateStr =
             '${nextDate.day.toString().padLeft(2, '0')}/${nextDate.month.toString().padLeft(2, '0')}/${nextDate.year}';
-        final colorHex =
-            topEvent.colorHex.isNotEmpty ? topEvent.colorHex : '#EC4899';
+        final colorHex = topEvent.colorHex.isNotEmpty
+            ? topEvent.colorHex
+            : '#EC4899';
 
         return {
           'title': topEvent.title,
           'date': dateStr,
-          'days': isToday ? 'HÔM NAY' : minDays.toString(),
-          'label': isToday ? '🎉' : 'ngày nữa',
+          'days': isToday ? todayLabel : minDays.toString(),
+          'label': isToday ? '🎉' : daysRemainingLabel,
           'color': colorHex,
         };
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/home/tabs/settings/widget/widget_preview_part.dart: $error',
+      );
+    }
 
+    return emptyData;
+  }
+
+  Map<String, String> _emptySoulEventPreviewData() {
     return {
-      'title': 'Chưa có sự kiện',
+      'title': context.tr('p7_no_upcoming_event'),
       'date': '--/--/----',
       'days': '0',
-      'label': 'ngày nữa',
+      'label': context.tr('p7_days_remaining'),
       'color': '#EC4899',
     };
   }
@@ -1672,7 +1715,7 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
                 maxWidthDiskCache: tileWidth.ceil(),
                 maxHeightDiskCache: tileHeight.ceil(),
                 memCacheWidth: 400,
-                errorWidget: (_, __, ___) {
+                errorWidget: (_, _, _) {
                   return Icon(
                     Icons.broken_image_rounded,
                     size: iconSize,
@@ -1697,13 +1740,13 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
         final timeOffset = (DateTime.now().millisecondsSinceEpoch ~/ 60000);
         final filledUrls = switch (widget.layoutKey) {
           'grid' => List<String?>.generate(
-              4,
-              (index) => imageUrls[(index + timeOffset) % imageUrls.length],
-            ),
+            4,
+            (index) => imageUrls[(index + timeOffset) % imageUrls.length],
+          ),
           'duo' => List<String?>.generate(
-              2,
-              (index) => imageUrls[(index + timeOffset) % imageUrls.length],
-            ),
+            2,
+            (index) => imageUrls[(index + timeOffset) % imageUrls.length],
+          ),
           _ => <String?>[imageUrls[timeOffset % imageUrls.length]],
         };
         final previewKey = '${widget.layoutKey}_${filledUrls.join('|')}';
@@ -1713,10 +1756,7 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
           switchInCurve: Curves.easeOut,
           switchOutCurve: Curves.easeIn,
           transitionBuilder: (child, animation) {
-            return FadeTransition(
-              opacity: animation,
-              child: child,
-            );
+            return FadeTransition(opacity: animation, child: child);
           },
           child: Container(
             key: ValueKey(previewKey),
@@ -1735,83 +1775,83 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
                 padding: const EdgeInsets.all(3),
                 child: switch (widget.layoutKey) {
                   'grid' => Column(
-                      children: [
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: _buildTile(
-                                  imageUrl: filledUrls[0],
-                                  tileWidth: widget.width / 2,
-                                  tileHeight: widget.height / 2,
-                                  borderRadius: BorderRadius.circular(11),
-                                ),
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _buildTile(
+                                imageUrl: filledUrls[0],
+                                tileWidth: widget.width / 2,
+                                tileHeight: widget.height / 2,
+                                borderRadius: BorderRadius.circular(11),
                               ),
-                              const SizedBox(width: 3),
-                              Expanded(
-                                child: _buildTile(
-                                  imageUrl: filledUrls[1],
-                                  tileWidth: widget.width / 2,
-                                  tileHeight: widget.height / 2,
-                                  borderRadius: BorderRadius.circular(11),
-                                ),
+                            ),
+                            const SizedBox(width: 3),
+                            Expanded(
+                              child: _buildTile(
+                                imageUrl: filledUrls[1],
+                                tileWidth: widget.width / 2,
+                                tileHeight: widget.height / 2,
+                                borderRadius: BorderRadius.circular(11),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 3),
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: _buildTile(
-                                  imageUrl: filledUrls[2],
-                                  tileWidth: widget.width / 2,
-                                  tileHeight: widget.height / 2,
-                                  borderRadius: BorderRadius.circular(11),
-                                ),
+                      ),
+                      const SizedBox(height: 3),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _buildTile(
+                                imageUrl: filledUrls[2],
+                                tileWidth: widget.width / 2,
+                                tileHeight: widget.height / 2,
+                                borderRadius: BorderRadius.circular(11),
                               ),
-                              const SizedBox(width: 3),
-                              Expanded(
-                                child: _buildTile(
-                                  imageUrl: filledUrls[3],
-                                  tileWidth: widget.width / 2,
-                                  tileHeight: widget.height / 2,
-                                  borderRadius: BorderRadius.circular(11),
-                                ),
+                            ),
+                            const SizedBox(width: 3),
+                            Expanded(
+                              child: _buildTile(
+                                imageUrl: filledUrls[3],
+                                tileWidth: widget.width / 2,
+                                tileHeight: widget.height / 2,
+                                borderRadius: BorderRadius.circular(11),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  ),
                   'duo' => Column(
-                      children: [
-                        Expanded(
-                          child: _buildTile(
-                            imageUrl: filledUrls[0],
-                            tileWidth: widget.width,
-                            tileHeight: widget.height / 2,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                    children: [
+                      Expanded(
+                        child: _buildTile(
+                          imageUrl: filledUrls[0],
+                          tileWidth: widget.width,
+                          tileHeight: widget.height / 2,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        const SizedBox(height: 3),
-                        Expanded(
-                          child: _buildTile(
-                            imageUrl: filledUrls[1],
-                            tileWidth: widget.width,
-                            tileHeight: widget.height / 2,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                      ),
+                      const SizedBox(height: 3),
+                      Expanded(
+                        child: _buildTile(
+                          imageUrl: filledUrls[1],
+                          tileWidth: widget.width,
+                          tileHeight: widget.height / 2,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  ),
                   _ => _buildTile(
-                      imageUrl: filledUrls.first,
-                      tileWidth: widget.width,
-                      tileHeight: widget.height,
-                      borderRadius: BorderRadius.circular(13),
-                    ),
+                    imageUrl: filledUrls.first,
+                    tileWidth: widget.width,
+                    tileHeight: widget.height,
+                    borderRadius: BorderRadius.circular(13),
+                  ),
                 },
               ),
             ),

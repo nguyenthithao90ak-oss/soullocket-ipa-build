@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/utils/services/ai_counselor_service.dart';
 import 'package:soullocket_app/utils/services/offline_cache_service.dart';
@@ -295,8 +296,9 @@ class LoveInsightService {
     final monthStart = DateTime(now.year, now.month, 1);
 
     final firestore = FirebaseFirestore.instance;
-    final cutoff45Days =
-        now.subtract(const Duration(days: 45)).millisecondsSinceEpoch;
+    final cutoff45Days = now
+        .subtract(const Duration(days: 45))
+        .millisecondsSinceEpoch;
 
     try {
       final results = await Future.wait([
@@ -406,7 +408,9 @@ class LoveInsightService {
         _insightCacheKey(houseId, relationshipMode),
         data.toMap(),
       );
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[LoveInsight] Không lưu được insight cache: $error');
+    }
   }
 
   Future<LoveInsightData?> _loadInsightCache(
@@ -422,7 +426,9 @@ class LoveInsightService {
           Map<String, dynamic>.from(Map<dynamic, dynamic>.from(cached)),
         );
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[LoveInsight] Insight cache không hợp lệ: $error');
+    }
     return null;
   }
 
@@ -439,10 +445,12 @@ class LoveInsightService {
     int totalAlbumCount,
   ) async {
     final now = DateTime.now();
-    final diaryList =
-        diaryDocs.map((e) => e.data() as Map<String, dynamic>).toList();
-    final albumList =
-        albumDocs.map((e) => e.data() as Map<String, dynamic>).toList();
+    final diaryList = diaryDocs
+        .map((e) => e.data() as Map<String, dynamic>)
+        .toList();
+    final albumList = albumDocs
+        .map((e) => e.data() as Map<String, dynamic>)
+        .toList();
     final settings = _asMap(settingsValue);
     final presence = _asMap(presenceValue);
     final diaryViews = _intMap(diaryViewsValue);
@@ -455,20 +463,24 @@ class LoveInsightService {
     ).millisecondsSinceEpoch;
 
     final isSingle = relationshipMode == 'single';
-    final rawNameU1 = _string(settings['nameU1'],
-        fallback: L10nService().translate('home_bn_1fd75b'));
-    final rawNameU2 = _string(settings['nameU2'],
-        fallback: L10nService().translate('home_ngiy_5bab37'));
+    final rawNameU1 = _string(
+      settings['nameU1'],
+      fallback: L10nService().translate('home_bn_1fd75b'),
+    );
+    final rawNameU2 = _string(
+      settings['nameU2'],
+      fallback: L10nService().translate('home_ngiy_5bab37'),
+    );
     final nameU1 = rawNameU1.toLowerCase() == 'bạn nam'
         ? L10nService().translate('male_role_default')
         : (rawNameU1.toLowerCase() == 'bạn nữ'
-            ? L10nService().translate('female_role_default')
-            : rawNameU1);
+              ? L10nService().translate('female_role_default')
+              : rawNameU1);
     final nameU2 = rawNameU2.toLowerCase() == 'bạn nữ'
         ? L10nService().translate('female_role_default')
         : (rawNameU2.toLowerCase() == 'bạn nam'
-            ? L10nService().translate('male_role_default')
-            : rawNameU2);
+              ? L10nService().translate('male_role_default')
+              : rawNameU2);
 
     var diaryTotal = totalDiaryCount;
     var diaryMonth = 0;
@@ -527,10 +539,9 @@ class LoveInsightService {
           latestU2TouchTs = max(latestU2TouchTs, ts);
         }
 
-        final dayKey = DateTime.fromMillisecondsSinceEpoch(ts)
-            .toIso8601String()
-            .split('T')
-            .first;
+        final dayKey = DateTime.fromMillisecondsSinceEpoch(
+          ts,
+        ).toIso8601String().split('T').first;
         activeDays.add(dayKey);
         if (ts >= monthStart.millisecondsSinceEpoch) {
           diaryMonth++;
@@ -616,10 +627,9 @@ class LoveInsightService {
           latestU2TouchTs = max(latestU2TouchTs, ts);
         }
 
-        final dayKey = DateTime.fromMillisecondsSinceEpoch(ts)
-            .toIso8601String()
-            .split('T')
-            .first;
+        final dayKey = DateTime.fromMillisecondsSinceEpoch(
+          ts,
+        ).toIso8601String().split('T').first;
         activeDays.add(dayKey);
         if (ts >= monthStart.millisecondsSinceEpoch) {
           albumMonth++;
@@ -669,14 +679,17 @@ class LoveInsightService {
     final openU2 = appOpens['user2'] ?? 0;
 
     final recentPositivity = recentMoodTotal > 0
-        ? ((recentPositiveMoodTotal / recentMoodTotal) * 100)
-            .round()
-            .clamp(0, 100)
+        ? ((recentPositiveMoodTotal / recentMoodTotal) * 100).round().clamp(
+            0,
+            100,
+          )
         : positivity;
-    final blendedPositivity =
-        ((positivity * 0.58) + (recentPositivity * 0.42)).round().clamp(0, 100);
+    final blendedPositivity = ((positivity * 0.58) + (recentPositivity * 0.42))
+        .round()
+        .clamp(0, 100);
     final recentMemory30 = recentDiary30 + recentAlbum30;
-    final recentMemoryUnits = (recentDiary30 * 1.1) +
+    final recentMemoryUnits =
+        (recentDiary30 * 1.1) +
         (recentAlbum30 * 1.25) +
         (recentDiary14 * 0.6) +
         (recentAlbum14 * 0.75);
@@ -691,12 +704,14 @@ class LoveInsightService {
     final attentionU2 = (viewU2 * 0.22) + (openU2 * 0.55);
     final attentionTotal = attentionU1 + attentionU2;
 
-    final recentEffortU1 = (recentDiary30U1 * 1.9) +
+    final recentEffortU1 =
+        (recentDiary30U1 * 1.9) +
         (recentAlbum30U1 * 1.6) +
         (recentMoodPosU1 * 1.0) +
         (recentDiary14U1 * 0.8) +
         (recentAlbum14U1 * 0.7);
-    final recentEffortU2 = (recentDiary30U2 * 1.9) +
+    final recentEffortU2 =
+        (recentDiary30U2 * 1.9) +
         (recentAlbum30U2 * 1.6) +
         (recentMoodPosU2 * 1.0) +
         (recentDiary14U2 * 0.8) +
@@ -711,18 +726,20 @@ class LoveInsightService {
     final shareU1 = isSingle
         ? 1.0
         : contribTotal > 0
-            ? contribU1 / contribTotal
-            : 0.5;
+        ? contribU1 / contribTotal
+        : 0.5;
     final shareU2 = isSingle
         ? 0.0
         : contribTotal > 0
-            ? contribU2 / contribTotal
-            : 0.5;
-    final balanceRatio =
-        isSingle ? 1.0 : (1 - ((shareU1 - 0.5).abs() * 2)).clamp(0.0, 1.0);
+        ? contribU2 / contribTotal
+        : 0.5;
+    final balanceRatio = isSingle
+        ? 1.0
+        : (1 - ((shareU1 - 0.5).abs() * 2)).clamp(0.0, 1.0);
 
-    final overallNegativeRatio =
-        moodTotal > 0 ? negativeMoodTotal / moodTotal : 0.0;
+    final overallNegativeRatio = moodTotal > 0
+        ? negativeMoodTotal / moodTotal
+        : 0.0;
     final recentNegativeRatio = recentMoodTotal > 0
         ? recentNegativeMoodTotal / recentMoodTotal
         : overallNegativeRatio;
@@ -747,8 +764,10 @@ class LoveInsightService {
       maxPenalty: isSingle ? 18.0 : 16.0,
     );
 
-    final foundationScoreCouple =
-        min(14.0, (log(max(1, loveDays + 1)) / log(3651)) * 14);
+    final foundationScoreCouple = min(
+      14.0,
+      (log(max(1, loveDays + 1)) / log(3651)) * 14,
+    );
     final recentMemoryScoreCouple = min(20.0, (recentMemoryUnits / 18) * 20);
     final rhythmScoreCouple = min(14.0, (recentActiveDays.length / 18) * 14);
     final togetherScore = min(10.0, (sharedDays30 / 8) * 10);
@@ -756,8 +775,10 @@ class LoveInsightService {
     final balanceScore = min(8.0, balanceRatio * 8);
     final attentionScoreCouple = min(6.0, (attentionTotal / 20) * 6);
 
-    final foundationScoreSingle =
-        min(10.0, (log(max(1, loveDays + 1)) / log(1461)) * 10);
+    final foundationScoreSingle = min(
+      10.0,
+      (log(max(1, loveDays + 1)) / log(1461)) * 10,
+    );
     final recentMemoryScoreSingle = min(24.0, (recentMemoryUnits / 16) * 24);
     final rhythmScoreSingle = min(18.0, (recentActiveDaysU1.length / 18) * 18);
     final positivityScoreSingle = min(18.0, (blendedPositivity / 100) * 18);
@@ -769,17 +790,18 @@ class LoveInsightService {
         0.0,
         (offPenaltyU1 * 0.65) - (recentActiveDaysU1.length >= 6 ? 1.0 : 0.0),
       );
-      loveScore = (24 +
-              foundationScoreSingle +
-              recentMemoryScoreSingle +
-              rhythmScoreSingle +
-              positivityScoreSingle +
-              attentionScoreSingle +
-              freshnessScore -
-              moodPenalty -
-              stalePenalty -
-              offlinePenalty)
-          .round();
+      loveScore =
+          (24 +
+                  foundationScoreSingle +
+                  recentMemoryScoreSingle +
+                  rhythmScoreSingle +
+                  positivityScoreSingle +
+                  attentionScoreSingle +
+                  freshnessScore -
+                  moodPenalty -
+                  stalePenalty -
+                  offlinePenalty)
+              .round();
       if (recentMemory30 >= 8 || recentActiveDaysU1.length >= 12) {
         loveScore = max(loveScore, 72);
       }
@@ -792,19 +814,20 @@ class LoveInsightService {
         ((offPenaltyU1 + offPenaltyU2) * 0.62) -
             (recentActiveDays.length >= 8 ? 1.5 : 0.0),
       );
-      loveScore = (26 +
-              foundationScoreCouple +
-              recentMemoryScoreCouple +
-              rhythmScoreCouple +
-              togetherScore +
-              positivityScoreCouple +
-              balanceScore +
-              attentionScoreCouple +
-              freshnessScore -
-              moodPenalty -
-              stalePenalty -
-              offlinePenalty)
-          .round();
+      loveScore =
+          (26 +
+                  foundationScoreCouple +
+                  recentMemoryScoreCouple +
+                  rhythmScoreCouple +
+                  togetherScore +
+                  positivityScoreCouple +
+                  balanceScore +
+                  attentionScoreCouple +
+                  freshnessScore -
+                  moodPenalty -
+                  stalePenalty -
+                  offlinePenalty)
+              .round();
       if (loveDays >= 90 && recentMemory30 >= 4) {
         loveScore = max(loveScore, 64);
       }
@@ -820,12 +843,12 @@ class LoveInsightService {
     final level = loveScore >= 90
         ? _tr('love_level_soulmate')
         : loveScore >= 75
-            ? _tr('love_level_deep_love')
-            : loveScore >= 60
-                ? _tr('love_level_stable')
-                : loveScore >= 45
-                    ? _tr('love_level_warming_up')
-                    : _tr('love_level_care_more');
+        ? _tr('love_level_deep_love')
+        : loveScore >= 60
+        ? _tr('love_level_stable')
+        : loveScore >= 45
+        ? _tr('love_level_warming_up')
+        : _tr('love_level_care_more');
 
     final user1Positivity = moodTotalU1 > 0
         ? ((moodPosU1 / moodTotalU1) * 100).round().clamp(0, 100)
@@ -876,8 +899,8 @@ class LoveInsightService {
     final favoriteActivity = diaryTotal > albumTotal
         ? _tr('love_activity_diary')
         : diaryTotal < albumTotal
-            ? _tr('love_activity_photo')
-            : _tr('love_activity_balanced');
+        ? _tr('love_activity_photo')
+        : _tr('love_activity_balanced');
 
     final timeline = _buildTimeline(
       startDate: startDate,
@@ -1011,7 +1034,9 @@ class LoveInsightService {
         return _tr('love_insight_suggest_single_slow_rhythm');
       }
       if (currentStreak >= 5) {
-        return _tr('love_insight_suggest_single_streak', {'currentStreak': currentStreak});
+        return _tr('love_insight_suggest_single_streak', {
+          'currentStreak': currentStreak,
+        });
       }
       if (loveScore >= 85) {
         return _tr('love_insight_suggest_single_stable_rhythm');
@@ -1035,13 +1060,21 @@ class LoveInsightService {
     }
 
     if (currentStreak >= 7) {
-      return _tr('love_insight_suggest_couple_streak', {'currentStreak': currentStreak});
+      return _tr('love_insight_suggest_couple_streak', {
+        'currentStreak': currentStreak,
+      });
     }
 
     if (shareU1 > 0.8) {
-      return _tr('love_insight_suggest_couple_u1_dominant', {'nameU1': nameU1, 'nameU2': nameU2});
+      return _tr('love_insight_suggest_couple_u1_dominant', {
+        'nameU1': nameU1,
+        'nameU2': nameU2,
+      });
     } else if (shareU2 > 0.8) {
-      return _tr('love_insight_suggest_couple_u2_dominant', {'nameU1': nameU1, 'nameU2': nameU2});
+      return _tr('love_insight_suggest_couple_u2_dominant', {
+        'nameU1': nameU1,
+        'nameU2': nameU2,
+      });
     }
 
     if (daysSinceLastMemory >= 6) {
@@ -1100,18 +1133,29 @@ class LoveInsightService {
               : _tr('love_insight_suggest_milestone_today_couple');
         }
         return isSingle
-            ? _tr('love_insight_suggest_milestone_upcoming_single', {'daysUntil': daysUntil, 'title': nearestUpcoming.title})
-            : _tr('love_insight_suggest_milestone_upcoming_couple', {'daysUntil': daysUntil, 'title': nearestUpcoming.title});
+            ? _tr('love_insight_suggest_milestone_upcoming_single', {
+                'daysUntil': daysUntil,
+                'title': nearestUpcoming.title,
+              })
+            : _tr('love_insight_suggest_milestone_upcoming_couple', {
+                'daysUntil': daysUntil,
+                'title': nearestUpcoming.title,
+              });
       }
     }
 
     if (nearestRecentPast != null) {
-      final daysSince =
-          today.difference(_startOfDay(nearestRecentPast.date)).inDays;
+      final daysSince = today
+          .difference(_startOfDay(nearestRecentPast.date))
+          .inDays;
       if (daysSince <= 7) {
         return isSingle
-            ? _tr('love_insight_suggest_milestone_past_single', {'title': nearestRecentPast.title})
-            : _tr('love_insight_suggest_milestone_past_couple', {'title': nearestRecentPast.title});
+            ? _tr('love_insight_suggest_milestone_past_single', {
+                'title': nearestRecentPast.title,
+              })
+            : _tr('love_insight_suggest_milestone_past_couple', {
+                'title': nearestRecentPast.title,
+              });
       }
     }
 
@@ -1125,14 +1169,11 @@ class LoveInsightService {
     required DateTime now,
   }) {
     final timeline = <LoveInsightTimelineEntry>[];
-//     final today = _startOfDay(now);
+    //     final today = _startOfDay(now);
 
     if (startDate != null) {
       timeline.addAll(
-        buildMilestoneTimeline(
-          startDate: startDate,
-          isSingle: isSingle,
-        ),
+        buildMilestoneTimeline(startDate: startDate, isSingle: isSingle),
       );
     }
 
@@ -1144,13 +1185,17 @@ class LoveInsightService {
         if (dStr.isNotEmpty && tStr.isNotEmpty) {
           try {
             final dt = DateTime.parse(dStr);
-            timeline.add(LoveInsightTimelineEntry(
-              date: dt,
-              title: tStr,
-              type: 'custom',
-              subtitle: 'Sự kiện riêng',
-            ));
-          } catch (_) {}
+            timeline.add(
+              LoveInsightTimelineEntry(
+                date: dt,
+                title: tStr,
+                type: 'custom',
+                subtitle: 'Sự kiện riêng',
+              ),
+            );
+          } catch (error) {
+            debugPrint('[LoveInsight] Bỏ qua custom event sai ngày: $error');
+          }
         }
       }
     });
@@ -1234,7 +1279,9 @@ class LoveInsightService {
               'Lâu rồi chưa thấy $name ghé app, thử gửi một lời hỏi han dịu dàng nhé.',
         );
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[LoveInsight] Không gửi được smart reminder: $error');
+    }
   }
 
   /// Kiểm tra và tự động gửi thông báo AI nếu điểm tương tác thấp (tối đa 1 lần/ngày)
@@ -1295,8 +1342,10 @@ class LoveInsightService {
     DateTime? from,
   }) {
     final today = _startOfDay(from ?? DateTime.now());
-    for (final entry
-        in buildMilestoneTimeline(startDate: startDate, isSingle: isSingle)) {
+    for (final entry in buildMilestoneTimeline(
+      startDate: startDate,
+      isSingle: isSingle,
+    )) {
       if (!entry.date.isBefore(today)) {
         return entry;
       }
@@ -1408,9 +1457,7 @@ class LoveInsightService {
     if (value is! Map) {
       return <String, dynamic>{};
     }
-    return value.map(
-      (key, data) => MapEntry(key.toString(), data),
-    );
+    return value.map((key, data) => MapEntry(key.toString(), data));
   }
 
   Map<String, int> _intMap(Object? value) {
@@ -1504,19 +1551,21 @@ class LoveInsightService {
       step: isSingle ? 0.9 : 1.1,
       maxPenalty: 14.0,
     );
-    final offlinePenalty =
-        offlineDays > 1 ? min(10.0, (offlineDays - 1) * 1.4) : 0.0;
+    final offlinePenalty = offlineDays > 1
+        ? min(10.0, (offlineDays - 1) * 1.4)
+        : 0.0;
 
-    final score = (8 +
-            (baseLoveScore * 0.54) +
-            effortScore +
-            rhythmScore +
-            moodScore +
-            attentionScore +
-            freshnessScore -
-            quietPenalty -
-            offlinePenalty)
-        .round();
+    final score =
+        (8 +
+                (baseLoveScore * 0.54) +
+                effortScore +
+                rhythmScore +
+                moodScore +
+                attentionScore +
+                freshnessScore -
+                quietPenalty -
+                offlinePenalty)
+            .round();
 
     return max(isSingle ? 42 : 28, min(99, score));
   }
@@ -1540,29 +1589,35 @@ class LoveInsightService {
 
   String _monthMilestoneTitle(int months, {required bool isSingle}) {
     if (isSingle) {
-      return L10nService()
-          .format('milestone_months_single', {'months': months.toString()});
+      return L10nService().format('milestone_months_single', {
+        'months': months.toString(),
+      });
     }
-    return L10nService()
-        .format('milestone_months_together', {'months': months.toString()});
+    return L10nService().format('milestone_months_together', {
+      'months': months.toString(),
+    });
   }
 
   String _dayMilestoneTitle(int days, {required bool isSingle}) {
     if (isSingle) {
-      return L10nService()
-          .format('milestone_days_single', {'days': days.toString()});
+      return L10nService().format('milestone_days_single', {
+        'days': days.toString(),
+      });
     }
-    return L10nService()
-        .format('milestone_anniversary_days', {'days': days.toString()});
+    return L10nService().format('milestone_anniversary_days', {
+      'days': days.toString(),
+    });
   }
 
   String _yearMilestoneTitle(int years, {required bool isSingle}) {
     if (isSingle) {
-      return L10nService()
-          .format('milestone_years_single', {'years': years.toString()});
+      return L10nService().format('milestone_years_single', {
+        'years': years.toString(),
+      });
     }
-    return L10nService()
-        .format('milestone_anniversary_years', {'years': years.toString()});
+    return L10nService().format('milestone_anniversary_years', {
+      'years': years.toString(),
+    });
   }
 
   DateTime? _parseFlexibleDate(String raw) {

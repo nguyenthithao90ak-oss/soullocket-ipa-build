@@ -101,7 +101,11 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     try {
       final file = File('${_albumDir ?? ''}/$fileName');
       if (await file.exists()) await file.delete();
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/utilities/local_album_screen.dart: $error',
+      );
+    }
   }
 
   @override

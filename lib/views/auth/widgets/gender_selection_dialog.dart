@@ -1,12 +1,10 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../../../core/sl_theme.dart';
-import '../../../core/fast_backdrop_filter.dart';
+
 import '../../../utils/services/l10n_service.dart';
-import 'package:lottie/lottie.dart';
+import '../login/auth_visual_style.dart';
 
 class GenderSelectionDialog extends StatefulWidget {
-  final Function(String) onSelected;
+  final ValueChanged<String> onSelected;
 
   const GenderSelectionDialog({super.key, required this.onSelected});
 
@@ -14,311 +12,308 @@ class GenderSelectionDialog extends StatefulWidget {
   State<GenderSelectionDialog> createState() => _GenderSelectionDialogState();
 }
 
-class _GenderSelectionDialogState extends State<GenderSelectionDialog>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  bool _isSelecting = false;
+class _GenderSelectionDialogState extends State<GenderSelectionDialog> {
+  String? _selectedRole;
+  bool _submitted = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 220),
-    );
-    _scaleAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutCubic,
-    );
-    _controller.forward();
-  }
+  String _t(String key) => L10nService().translate(key);
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _handleSelect(String gender) {
-    if (_isSelecting) return;
-    _isSelecting = true;
-    if (mounted) {
-      widget.onSelected(gender);
-    }
+  void _confirm() {
+    final role = _selectedRole;
+    if (role == null || _submitted) return;
+    setState(() => _submitted = true);
+    // Giữ nguyên ánh xạ vai trò, chỉ lưu sau khi người dùng xác nhận.
+    widget.onSelected(role);
   }
 
   @override
   Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    final screenSize = mediaQuery.size;
-    final textScale = mediaQuery.textScaler.scale(1);
-    final isCompactLayout = screenSize.width < 380 || screenSize.height < 760 || textScale > 1.05;
-    final maxDialogHeight = (screenSize.height - mediaQuery.viewInsets.vertical - 48).clamp(260.0, screenSize.height);
-
-    return RepaintBoundary(
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: Dialog(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: 520,
-              maxHeight: maxDialogHeight,
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(32),
-              child: FastBackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(20, 36, 20, 40),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFCF5F7), // Nền hồng nhạt
-                    borderRadius: BorderRadius.circular(32),
-                    border: Border.all(color: Colors.white, width: 2), // Viền trắng
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 30,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
+    final style = AuthVisualStyle.of(context);
+    return Dialog(
+      backgroundColor: style.background,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(28),
+        side: BorderSide(color: style.border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 440),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(22, 26, 22, 22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                      color: style.accentFill,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.favorite_border_rounded,
+                      color: style.accent,
+                      size: 18,
+                    ),
                   ),
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _t('auth_gender_eyebrow'),
+                      style: style
+                          .text(
+                            size: 11,
+                            weight: FontWeight.w700,
+                            color: style.accent,
+                          )
+                          .copyWith(letterSpacing: 1.2),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Text(
+                _t('auth_gender_title'),
+                style: style.text(
+                  size: 27,
+                  weight: FontWeight.w700,
+                  height: 1.2,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                _t('auth_gender_description'),
+                style: style.text(size: 13, color: style.muted, height: 1.55),
+              ),
+              const SizedBox(height: 24),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final imageSize = ((constraints.maxWidth - 14) / 2 - 24)
+                      .clamp(72.0, 148.0);
+                  return IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // --- Title Pill ---
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFF0F5),
-                            borderRadius: BorderRadius.circular(30),
-                            border: Border.all(color: Colors.white, width: 1.5),
-                          ),
-                          child: Text(
-                            '✨ ${L10nService().translate('GIỚI TÍNH CỦA BẠN')} ✨',
-                            textAlign: TextAlign.center,
-                            style: SLTheme.quicksand(
-                              color: const Color(0xFFFF4081), // Chữ hồng đậm
-                              fontSize: 14,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-
-                        // --- Subtitle ---
-                        Text(
-                          L10nService().translate('Để ứng dụng hiển thị đúng giao diện\nmà không cần lột lớp sau nhé!'),
-                          textAlign: TextAlign.center,
-                          style: SLTheme.quicksand(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF6B6B6B),
-                            height: 1.5,
+                        Expanded(
+                          child: _GenderCard(
+                            key: const ValueKey('gender_male_card'),
+                            label: _t('auth_gender_male'),
+                            asset:
+                                'assets/images/soullocket_stickers/auth_gender_male_v1.png',
+                            selected: _selectedRole == 'user1',
+                            imageSize: imageSize,
+                            tint: style.dark
+                                ? const Color(0xFF303B34)
+                                : const Color(0xFFEDF1E9),
+                            selectedHint: _t('auth_gender_selected'),
+                            unselectedHint: _t('auth_gender_choose'),
+                            onTap: _submitted
+                                ? null
+                                : () => setState(() => _selectedRole = 'user1'),
                           ),
                         ),
-                        const SizedBox(height: 36),
-
-                        // --- Avatars Area with Floating Hearts & Curves ---
-                        SizedBox(
-                          height: compactSize(isCompactLayout) + 115, // Tăng chiều cao đủ chứa Avatar + Chữ không bị tràn
-                          child: Stack(
-                            alignment: Alignment.center,
-                            clipBehavior: Clip.none,
-                            children: [
-                              // Floating Decor
-                              Positioned(
-                                left: -10, top: -10,
-                                child: Icon(Icons.favorite, size: 20, color: const Color(0xFFFF80AB).withValues(alpha: 0.7)),
-                              ),
-                              Positioned(
-                                right: -10, top: 30,
-                                child: Icon(Icons.favorite, size: 24, color: const Color(0xFFFF80AB).withValues(alpha: 0.8)),
-                              ),
-                              const Positioned(
-                                right: 10, top: -30,
-                                child: Icon(Icons.auto_awesome, size: 16, color: Colors.white),
-                              ),
-                              const Positioned(
-                                left: 30, top: 40,
-                                child: Icon(Icons.auto_awesome, size: 12, color: Colors.white),
-                              ),
-
-                              // Dotted Curve & Center Heart
-                              Positioned.fill(
-                                child: CustomPaint(
-                                  painter: _GenderDottedCurvePainter(),
-                                ),
-                              ),
-                              const Center(
-                                child: Icon(Icons.favorite, size: 24, color: Color(0xFFFF80AB)),
-                              ),
-
-                              // Avatars
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Expanded(
-                                    child: _buildOption(
-                                      assetPath: 'assets/images/avatar_male.jpg',
-                                      lottieUrl: 'assets/images/male_avatar_sticker.json',
-                                      title: L10nService().translate('Nam'),
-                                      desc: L10nService().translate('Bạn Nam'),
-                                      baseColor: const Color(0xFF82B1FF),
-                                      shadowColor: const Color(0xFF82B1FF),
-                                      compact: isCompactLayout,
-                                      onTap: () => _handleSelect('user1'),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 40), // Khoảng cách giữa 2 avatar
-                                  Expanded(
-                                    child: _buildOption(
-                                      assetPath: 'assets/images/avatar_female.jpg',
-                                      lottieUrl: 'assets/images/female_avatar_sticker.json',
-                                      title: L10nService().translate('Nữ'),
-                                      desc: L10nService().translate('Bạn Nữ'),
-                                      baseColor: const Color(0xFFFF80AB),
-                                      shadowColor: const Color(0xFFFF80AB),
-                                      compact: isCompactLayout,
-                                      onTap: () => _handleSelect('user2'),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: _GenderCard(
+                            key: const ValueKey('gender_female_card'),
+                            label: _t('auth_gender_female'),
+                            asset:
+                                'assets/images/soullocket_stickers/auth_gender_female_v1.png',
+                            selected: _selectedRole == 'user2',
+                            imageSize: imageSize,
+                            tint: style.dark
+                                ? const Color(0xFF49333B)
+                                : const Color(0xFFF8E9ED),
+                            selectedHint: _t('auth_gender_selected'),
+                            unselectedHint: _t('auth_gender_choose'),
+                            onTap: _submitted
+                                ? null
+                                : () => setState(() => _selectedRole = 'user2'),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  double compactSize(bool compact) => compact ? 90 : 120;
-
-  Widget _buildOption({
-    required String assetPath,
-    String? lottieUrl,
-    required String title,
-    required String desc,
-    required Color baseColor,
-    required Color shadowColor,
-    required bool compact,
-    required VoidCallback onTap,
-  }) {
-    final size = compactSize(compact);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        color: Colors.transparent, // Giữ vùng bấm
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Stack(
-              alignment: Alignment.center,
-              clipBehavior: Clip.none,
-              children: [
-                // Avatar background with colored glowing border
-                Container(
-                  width: size,
-                  height: size,
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                    border: Border.all(color: baseColor.withValues(alpha: 0.3), width: 3),
-                    boxShadow: [
-                      BoxShadow(
-                        color: shadowColor.withValues(alpha: 0.25),
-                        blurRadius: 24,
-                        spreadRadius: 4,
-                      ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  key: const ValueKey('gender_continue'),
+                  onPressed: _selectedRole == null || _submitted
+                      ? null
+                      : _confirm,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: style.button,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: style.border,
+                    disabledForegroundColor: style.muted,
+                    minimumSize: const Size.fromHeight(52),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    textStyle: style.text(size: 14, weight: FontWeight.w700),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(child: Text(_t('auth_gender_continue'))),
+                      const SizedBox(width: 10),
+                      const Icon(Icons.arrow_forward_rounded, size: 18),
                     ],
                   ),
-                  child: ClipOval(
-                    child: lottieUrl != null
-                        ? (lottieUrl.startsWith('http')
-                            ? Lottie.network(lottieUrl, width: size, height: size, fit: BoxFit.cover, options: LottieOptions(enableMergePaths: true))
-                            : Lottie.asset(lottieUrl, width: size, height: size, fit: BoxFit.cover, options: LottieOptions(enableMergePaths: true)))
-                        : Image.asset(assetPath, width: size, height: size, fit: BoxFit.cover),
-                  ),
                 ),
-
-              ],
-            ),
-            const SizedBox(height: 14),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: SLTheme.quicksand(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFF1D2335), // Dark text
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              desc,
-              textAlign: TextAlign.center,
-              style: SLTheme.quicksand(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF8A8A8A), // Gray text
+              const SizedBox(height: 12),
+              Center(
+                child: Text(
+                  _t('auth_gender_footer'),
+                  textAlign: TextAlign.center,
+                  style: style.text(size: 11, color: style.muted),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _GenderDottedCurvePainter extends CustomPainter {
+class _GenderCard extends StatelessWidget {
+  final String label;
+  final String asset;
+  final bool selected;
+  final double imageSize;
+  final Color tint;
+  final String selectedHint;
+  final String unselectedHint;
+  final VoidCallback? onTap;
+
+  const _GenderCard({
+    super.key,
+    required this.label,
+    required this.asset,
+    required this.selected,
+    required this.imageSize,
+    required this.tint,
+    required this.selectedHint,
+    required this.unselectedHint,
+    required this.onTap,
+  });
+
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFFFF80AB).withValues(alpha: 0.4)
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final path = Path();
-    // Vẽ đường cong sine mềm mại đi qua giữa hai avatar
-    final startY = size.height / 2 + 10;
-    path.moveTo(0, startY + 20);
-    path.quadraticBezierTo(size.width * 0.25, startY - 20, size.width / 2, startY);
-    path.quadraticBezierTo(size.width * 0.75, startY + 20, size.width, startY - 20);
-
-    // Vẽ nét đứt (dashed line)
-    const dashWidth = 4.0;
-    const dashSpace = 4.0;
-    double distance = 0.0;
-    
-    // Thuật toán chia nét đứt đơn giản dọc theo path
-    // Flutter không có sẵn drawDashedPath, ta dùng vòng lặp tạo PathMetric
-    for (final metric in path.computeMetrics()) {
-      while (distance < metric.length) {
-        final extractPath = metric.extractPath(distance, distance + dashWidth);
-        canvas.drawPath(extractPath, paint);
-        distance += dashWidth + dashSpace;
-      }
-      distance = 0.0;
-    }
+  Widget build(BuildContext context) {
+    final style = AuthVisualStyle.of(context);
+    final image = Image.asset(
+      asset,
+      width: imageSize,
+      height: imageSize,
+      fit: BoxFit.contain,
+      excludeFromSemantics: true,
+      errorBuilder: (context, error, stackTrace) => SizedBox.square(
+        dimension: imageSize,
+        child: Icon(Icons.person_outline_rounded, color: style.muted, size: 56),
+      ),
+    );
+    return Semantics(
+      label: label,
+      button: true,
+      selected: selected,
+      enabled: onTap != null,
+      inMutuallyExclusiveGroup: true,
+      onTap: onTap,
+      excludeSemantics: true,
+      child: Material(
+        color: selected ? style.accentFill : style.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(21),
+          side: BorderSide(
+            color: selected ? style.accent : style.border,
+            width: selected ? 1.8 : 1,
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 12, 10, 15),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox.square(
+                      dimension: imageSize,
+                      child: Center(
+                        child: Container(
+                          width: imageSize * .86,
+                          height: imageSize * .86,
+                          decoration: BoxDecoration(
+                            color: tint,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ),
+                    image,
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        width: 23,
+                        height: 23,
+                        decoration: BoxDecoration(
+                          color: selected ? style.accent : style.surface,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: selected ? style.accent : style.border,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: selected
+                            ? Icon(
+                                Icons.check_rounded,
+                                size: 16,
+                                color: style.surface,
+                              )
+                            : null,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: style.text(size: 17, weight: FontWeight.w700),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  selected ? selectedHint : unselectedHint,
+                  textAlign: TextAlign.center,
+                  style: style.text(
+                    size: 11,
+                    color: selected ? style.accent : style.muted,
+                    weight: selected ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

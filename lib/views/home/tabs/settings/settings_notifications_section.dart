@@ -773,7 +773,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
               ),
               const SizedBox(width: 8),
               Text(
-                '🧪 Kiểm tra thông báo',
+                context.tr('p6_test_notifications_title'),
                 style: SLTextStyles.quicksand(
                   fontWeight: FontWeight.w900,
                   fontSize: 14.5,
@@ -784,9 +784,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
           ),
           const SizedBox(height: 4),
           Text(
-            L10nService().translate(
-              'Gửi thông báo thử đến điện thoại người ấy để kiểm tra xem thông báo có hiện ra ngoài màn hình không.',
-            ),
+            context.tr('p6_test_notifications_description'),
             style: SLTextStyles.quicksand(
               fontWeight: FontWeight.w600,
               fontSize: 12.5,
@@ -799,27 +797,23 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
             children: [
               Expanded(
                 child: _buildTestNotifBtn(
-                  label: L10nService().translate('💬 Test chat'),
+                  label: context.tr('p6_test_chat_label'),
                   color: const Color(0xFF6366F1),
                   type: 'chat',
                   screen: 'chat',
-                  title: L10nService().translate('💬 Nhắn tin mới!'),
-                  body: L10nService().translate(
-                    'Đây là thông báo thử nghiệm loại Chat. Nếu bạn thấy tin này nghĩa là thông báo đang hoạt động! 🎉',
-                  ),
+                  title: context.tr('p6_test_chat_title'),
+                  body: context.tr('p6_test_chat_body'),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _buildTestNotifBtn(
-                  label: L10nService().translate('💖 Test Soul Merge'),
+                  label: context.tr('p6_test_soul_merge_label'),
                   color: const Color(0xFFD81B60),
                   type: 'soul_merge',
                   screen: 'soul_merge',
-                  title: L10nService().translate('💖 Soul Merge đang gọi bạn!'),
-                  body: L10nService().translate(
-                    'Người ấy đang chờ bạn trong Soul Merge. Đây là thông báo thử nghiệm! 💕',
-                  ),
+                  title: context.tr('p6_test_soul_merge_title'),
+                  body: context.tr('p6_test_soul_merge_body'),
                 ),
               ),
             ],
@@ -828,14 +822,12 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
           SizedBox(
             width: double.infinity,
             child: _buildTestNotifBtn(
-              label: L10nService().translate('🔔 Test thông báo thường'),
+              label: context.tr('p6_test_regular_notification_label'),
               color: const Color(0xFF059669),
               type: 'home',
               screen: 'home',
-              title: L10nService().translate('🔔 Thông báo thử nghiệm'),
-              body: L10nService().translate(
-                'Nếu bạn thấy tin này ngoài màn hình chính nghĩa là thông báo đang hoạt động bình thường! ✅',
-              ),
+              title: context.tr('p6_test_regular_notification_title'),
+              body: context.tr('p6_test_regular_notification_body'),
             ),
           ),
         ],
@@ -851,48 +843,53 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
     required String title,
     required String body,
   }) {
-    return GestureDetector(
-      onTap: () async {
-        final houseId = _houseId;
-        if (houseId == null || houseId.isEmpty) {
-          _showToast(
-            L10nService().translate('Chưa có thông tin nhà, thử lại sau.'),
-            success: false,
-          );
-          return;
-        }
-        try {
-          await NotificationService().sendPartnerNotification(
-            houseId: houseId,
-            title: title,
-            body: body,
-            data: {'screen': screen, 'type': type},
-          );
-          if (!mounted) return;
-          _showToast('✅ Đã gửi thông báo test đến người ấy!', success: true);
-        } catch (e) {
-          if (!mounted) return;
-          _showToast(
-            '❌ Gửi thất bại: ${AppErrorMapper.resolve(e).message}',
-            success: false,
-          );
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: SLTextStyles.quicksand(
-              fontWeight: FontWeight.w900,
-              fontSize: 12.5,
-              color: Colors.white,
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () async {
+          final houseId = _houseId;
+          if (houseId == null || houseId.isEmpty) {
+            _showToast(context.tr('p6_house_info_unavailable'), success: false);
+            return;
+          }
+          try {
+            await NotificationService().sendPartnerNotification(
+              houseId: houseId,
+              title: title,
+              body: body,
+              data: {'screen': screen, 'type': type},
+            );
+            if (!mounted) return;
+            _showToast(context.tr('p6_test_notification_sent'), success: true);
+          } catch (e) {
+            if (!mounted) return;
+            _showToast(
+              context
+                  .tr('p6_test_notification_failed')
+                  .replaceAll('{error}', AppErrorMapper.resolve(e).message),
+              success: false,
+            );
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: SLTextStyles.quicksand(
+                fontWeight: FontWeight.w900,
+                fontSize: 12.5,
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
           ),
         ),
       ),

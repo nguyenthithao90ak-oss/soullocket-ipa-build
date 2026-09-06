@@ -307,10 +307,10 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
               imageUrl: imageUrl,
               fit: BoxFit.contain,
               memCacheWidth: 600,
-              placeholder: (_, __) => const Center(
+              placeholder: (_, _) => const Center(
                 child: CircularProgressIndicator(color: Colors.white),
               ),
-              errorWidget: (_, __, ___) => const Icon(
+              errorWidget: (_, _, _) => const Icon(
                 Icons.image_not_supported_outlined,
                 color: Colors.white70,
                 size: 50,
@@ -486,23 +486,22 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                           fit: BoxFit.cover,
                                           memCacheWidth: 600,
                                           filterQuality: FilterQuality.medium,
-                                          placeholder: (_, __) =>
+                                          placeholder: (_, _) =>
                                               const SkeletonContainer.rounded(
                                                 width: double.infinity,
                                                 height: 220,
                                                 borderRadius: BorderRadius.zero,
                                               ),
-                                          errorWidget: (_, __, ___) =>
-                                              const SizedBox(
-                                                height: 220,
-                                                child: Center(
-                                                  child: Icon(
-                                                    Icons
-                                                        .image_not_supported_outlined,
-                                                    color: Colors.white70,
-                                                  ),
-                                                ),
+                                          errorWidget: (_, _, _) => const SizedBox(
+                                            height: 220,
+                                            child: Center(
+                                              child: Icon(
+                                                Icons
+                                                    .image_not_supported_outlined,
+                                                color: Colors.white70,
                                               ),
+                                            ),
+                                          ),
                                         ),
                                         Positioned(
                                           bottom: 8,
@@ -588,43 +587,43 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: const Color(0xFF1B2A36),
+        backgroundColor: SLColors.paper,
         title: Text(
-          'Hộp thời gian',
+          context.tr('p3_capsule_help_title'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w900,
-            color: Colors.white,
+            color: SLColors.textPrimary,
           ),
         ),
-        content: const SingleChildScrollView(
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Tính năng:',
-                style: TextStyle(
+                context.tr('p3_help_features_label'),
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: SLColors.textPrimary,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '- Gửi gắm một thông điệp, hình ảnh, hoặc video vào tương lai.\n- Hộp sẽ bị khóa cứng và không ai (kể cả bạn) có thể mở ra xem trước thời hạn.',
-                style: TextStyle(color: Colors.white70),
+                context.tr('p3_capsule_help_features'),
+                style: const TextStyle(color: SLColors.textSecond),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                'Cách sử dụng:',
-                style: TextStyle(
+                context.tr('p3_help_how_to_label'),
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: SLColors.textPrimary,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '- Bấm Tạo hộp mới, chọn thời gian mở khóa (ví dụ: kỷ niệm 10 năm).\n- Thêm lời nhắn, ảnh, video, sau đó bấm Niêm phong.\n- Cả hai sẽ nhận được thông báo khi hộp thời gian đến ngày mở khóa.',
-                style: TextStyle(color: Colors.white70),
+                context.tr('p3_capsule_help_how_to'),
+                style: const TextStyle(color: SLColors.textSecond),
               ),
             ],
           ),
@@ -632,9 +631,9 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Đã hiểu',
-              style: TextStyle(color: Color(0xFF64B5F6)),
+            child: Text(
+              context.tr('p3_understood'),
+              style: const TextStyle(color: SLColors.primary),
             ),
           ),
         ],
@@ -667,6 +666,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
           ),
         ),
         leading: IconButton(
+          tooltip: context.tr('p3_back'),
           icon: const Icon(
             Icons.arrow_back_ios_new,
             color: Colors.white,
@@ -676,6 +676,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
         ),
         actions: [
           IconButton(
+            tooltip: context.tr('p3_capsule_help_tooltip'),
             icon: const Icon(
               Icons.info_outline_rounded,
               color: Colors.white,
@@ -695,9 +696,21 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
             ),
           ),
           child: SafeArea(
-            child: SingleChildScrollView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              child: Column(children: [_buildInputArea(), _buildCapsuleList()]),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 760),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: SingleChildScrollView(
+                    physics: SLResponsive.scrollPhysicsForPlatform(),
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    child: Column(
+                      children: [_buildInputArea(), _buildCapsuleList()],
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
@@ -1187,14 +1200,18 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                   ),
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: const Column(
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.delete_rounded, color: Colors.white, size: 28),
-                      SizedBox(height: 4),
+                      const Icon(
+                        Icons.delete_rounded,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                      const SizedBox(height: 4),
                       Text(
-                        'Xóa',
-                        style: TextStyle(
+                        context.tr('p3_delete'),
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w800,
                           fontSize: 12,
@@ -1257,7 +1274,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                           imageUrl: capsule['image_url'],
                                           fit: BoxFit.cover,
                                           memCacheWidth: 600,
-                                          placeholder: (_, __) =>
+                                          placeholder: (_, _) =>
                                               const SkeletonContainer.rounded(
                                                 width: double.infinity,
                                                 height: 140,
@@ -1500,7 +1517,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
         backgroundColor: const Color(0xFF1E1035),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Xóa hòm thời gian?',
+          context.tr('p3_capsule_delete_title'),
           style: SLTheme.quicksand(
             color: Colors.white,
             fontWeight: FontWeight.w800,
@@ -1508,7 +1525,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
           ),
         ),
         content: Text(
-          'Hành động này không thể hoàn tác. Nội dung trong hòm sẽ bị xóa vĩnh viễn.',
+          context.tr('p3_capsule_delete_message'),
           style: SLTheme.quicksand(
             color: Colors.white70,
             fontWeight: FontWeight.w600,
@@ -1519,7 +1536,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
-              'Hủy',
+              context.tr('p3_cancel'),
               style: SLTheme.quicksand(
                 color: Colors.white54,
                 fontWeight: FontWeight.w700,
@@ -1529,7 +1546,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              'Xóa',
+              context.tr('p3_delete'),
               style: SLTheme.quicksand(
                 color: const Color(0xFFEF4444),
                 fontWeight: FontWeight.w900,
@@ -1547,7 +1564,11 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Xóa thất bại: ${AppErrorMapper.resolve(e).message}'),
+            content: Text(
+              L10nService().format('p3_capsule_delete_failed', {
+                'error': AppErrorMapper.resolve(e).message,
+              }),
+            ),
           ),
         );
       }

@@ -17,8 +17,8 @@ class DiaryGuardController extends ChangeNotifier {
   DiaryGuardController({
     FirebaseAuth? auth,
     MilitaryLockService? militaryLockService,
-  })  : _auth = auth ?? FirebaseAuth.instance,
-        _militaryLockService = militaryLockService ?? MilitaryLockService() {
+  }) : _auth = auth ?? FirebaseAuth.instance,
+       _militaryLockService = militaryLockService ?? MilitaryLockService() {
     refreshConnectivity();
   }
 
@@ -66,7 +66,11 @@ class DiaryGuardController extends ChangeNotifier {
       }
       _showDiaryPrivacyNotice = nextValue;
       if (!_disposed) notifyListeners();
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/home/tabs/diary/controllers/diary_guard_controller.dart: $error',
+      );
+    }
   }
 
   Future<void> dismissPrivacyNotice() async {
@@ -80,12 +84,14 @@ class DiaryGuardController extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       final uid = _auth.currentUser?.uid ?? 'guest';
       await prefs.setBool('il_diary_privacy_seen_$uid', true);
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/home/tabs/diary/controllers/diary_guard_controller.dart: $error',
+      );
+    }
   }
 
-  Future<bool> prepareAccessState({
-    required String? houseId,
-  }) async {
+  Future<bool> prepareAccessState({required String? houseId}) async {
     bool nextAuthenticated;
     try {
       final needsUnlock = await _militaryLockService.needsUnlock(
@@ -146,7 +152,11 @@ class DiaryGuardController extends ChangeNotifier {
       // cached tokens without breaking the caller. Errors surface later if unresolvable.
       try {
         await currentUser.getIdToken(false).timeout(const Duration(seconds: 3));
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[SuppressedError] lib/views/home/tabs/diary/controllers/diary_guard_controller.dart: $error',
+        );
+      }
       return currentUser;
     }
 
@@ -179,8 +189,9 @@ class DiaryGuardController extends ChangeNotifier {
           context,
           app_permission.Permission.photosAddOnly,
           title: L10nService().translate('diary_upload_permission_title'),
-          disclosure:
-              L10nService().translate('diary_upload_permission_ios_desc'),
+          disclosure: L10nService().translate(
+            'diary_upload_permission_ios_desc',
+          ),
         );
 
         if (requested) {
@@ -219,8 +230,9 @@ class DiaryGuardController extends ChangeNotifier {
         context,
         app_permission.Permission.storage,
         title: L10nService().translate('diary_upload_permission_title'),
-        disclosure:
-            L10nService().translate('diary_upload_permission_android_desc'),
+        disclosure: L10nService().translate(
+          'diary_upload_permission_android_desc',
+        ),
       );
 
       if (requested) {

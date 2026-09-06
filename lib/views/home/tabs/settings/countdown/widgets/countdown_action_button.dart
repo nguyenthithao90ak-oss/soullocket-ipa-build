@@ -35,6 +35,15 @@ extension CountdownActionButtonExt on _CountdownModeIndependentScreenState {
         ),
       ),
     );
-    return Semantics(button: true, label: tooltip, child: child);
+    return Semantics(
+      button: true,
+      label: tooltip,
+      excludeSemantics: true,
+      child: Tooltip(
+        message: tooltip,
+        excludeFromSemantics: true,
+        child: child,
+      ),
+    );
   }
 }

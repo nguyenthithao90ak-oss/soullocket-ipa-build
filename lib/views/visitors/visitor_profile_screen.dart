@@ -16,6 +16,7 @@ import '../../utils/services/house_service.dart';
 import '../../utils/services/social_service.dart';
 import '../../utils/services/pending_upload_service.dart';
 import '../../utils/services/house_settings_service.dart';
+import '../../utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/helpers/cloudflare_image_helper.dart';
 import '../../utils/services/storage/storage_service.dart';
 import '../../utils/app_error_mapper.dart';
@@ -112,13 +113,19 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
     );
     _heartScale = TweenSequence([
       TweenSequenceItem(
-          tween: Tween<double>(begin: 1.0, end: 1.4)
-              .chain(CurveTween(curve: Curves.easeOutCubic)),
-          weight: 40),
+        tween: Tween<double>(
+          begin: 1.0,
+          end: 1.4,
+        ).chain(CurveTween(curve: Curves.easeOutCubic)),
+        weight: 40,
+      ),
       TweenSequenceItem(
-          tween: Tween<double>(begin: 1.4, end: 1.0)
-              .chain(CurveTween(curve: Curves.elasticOut)),
-          weight: 60),
+        tween: Tween<double>(
+          begin: 1.4,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.elasticOut)),
+        weight: 60,
+      ),
     ]).animate(_heartController);
     _load();
   }
@@ -150,18 +157,20 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       '$_pendingHouseAvatarUploadKeyPrefix${widget.targetHouseId}';
 
   String _profileHeaderImageUrl() {
-    final fromSettings =
-        (_targetSettings['profileHeaderImageUrl'] ?? '').toString().trim();
+    final fromSettings = (_targetSettings['profileHeaderImageUrl'] ?? '')
+        .toString()
+        .trim();
     if (fromSettings.isNotEmpty) return fromSettings;
     return (_targetData['profileHeaderImageUrl'] ?? '').toString().trim();
   }
 
   String _profileHeaderThemeKey() {
-    final raw = ((_targetSettings['profileHeaderThemeKey'] ??
-                _targetData['profileHeaderThemeKey']) ??
-            '')
-        .toString()
-        .trim();
+    final raw =
+        ((_targetSettings['profileHeaderThemeKey'] ??
+                    _targetData['profileHeaderThemeKey']) ??
+                '')
+            .toString()
+            .trim();
     if (visitorProfileHeaderThemes.any((theme) => theme.key == raw)) {
       return raw;
     }
@@ -218,9 +227,10 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       return;
     }
 
-    final safeAvatarSize = (avatarSizePx?.clamp(
-            _kMinProfileAvatarSize, _kMaxProfileAvatarSize) as num?)
-        ?.toDouble();
+    final safeAvatarSize =
+        (avatarSizePx?.clamp(_kMinProfileAvatarSize, _kMaxProfileAvatarSize)
+                as num?)
+            ?.toDouble();
 
     setState(() => _isUpdatingProfileAppearance = true);
     try {
@@ -240,8 +250,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       });
     } catch (e) {
       if (!mounted) return;
-      _showSnack(
-          'Chưa thể cập nhật giao diện hồ sơ lúc này. Vui lòng thử lại.');
+      _showSnack(context.tr('p5_profile_update_failed'));
     } finally {
       if (mounted) {
         setState(() => _isUpdatingProfileAppearance = false);
@@ -267,7 +276,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       maxHeight: 1080,
       uiSettings: [
         IOSUiSettings(
-          title: 'Cắt ảnh nền hồ sơ',
+          title: context.tr('p5_profile_crop_header'),
           aspectRatioLockEnabled: true,
           aspectRatioPickerButtonHidden: true,
           resetAspectRatioEnabled: false,
@@ -294,7 +303,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         maxHeight: 800,
         uiSettings: [
           IOSUiSettings(
-            title: 'Cắt avatar hồ sơ',
+            title: context.tr('p5_profile_crop_avatar'),
             aspectRatioLockEnabled: true,
             aspectRatioPickerButtonHidden: true,
             resetAspectRatioEnabled: false,
@@ -326,11 +335,9 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
           }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text(
-                'Lần đổi ảnh nền hồ sơ trước đã bị gián đoạn.',
-              ),
+              content: Text(context.tr('p5_profile_header_retry_message')),
               action: SnackBarAction(
-                label: 'Thử lại',
+                label: context.tr('p5_retry'),
                 onPressed: () {
                   unawaited(_retryPendingProfileHeaderUpload());
                 },
@@ -352,11 +359,9 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
           }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text(
-                'Lần đổi ảnh đại diện trước đã bị gián đoạn.',
-              ),
+              content: Text(context.tr('p5_profile_avatar_retry_message')),
               action: SnackBarAction(
-                label: 'Thử lại',
+                label: context.tr('p5_retry'),
                 onPressed: () {
                   unawaited(_retryPendingHouseAvatarUpload());
                 },
@@ -410,9 +415,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
     final file = XFile(filePath);
     try {
       if (await file.length() <= 0) {
-        await PendingUploadService.instance.clear(
-          _pendingHouseAvatarUploadKey,
-        );
+        await PendingUploadService.instance.clear(_pendingHouseAvatarUploadKey);
         return;
       }
     } catch (_) {
@@ -456,10 +459,10 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       await PendingUploadService.instance.clear(_pendingProfileHeaderUploadKey);
       final refreshedUrl = _withRefreshToken(url);
       await _saveProfilePresentation(headerImageUrl: refreshedUrl);
-      _showSnack('Đã cập nhật ảnh nền hồ sơ.');
+      _showSnack(L10nService().translate('p5_profile_header_updated'));
     } catch (e) {
       if (!mounted) return;
-      _showSnack('Chưa thể đổi ảnh nền lúc này. Vui lòng thử lại.');
+      _showSnack(context.tr('p5_profile_header_change_failed'));
     }
   }
 
@@ -508,7 +511,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         setState(() {
           _applyProfilePresentationLocally(houseAvatar: refreshedUrl);
         });
-        _showSnack('Đã cập nhật avatar hồ sơ.');
+        _showSnack(context.tr('p5_profile_avatar_updated'));
       } finally {
         if (mounted) {
           setState(() => _isUpdatingProfileAppearance = false);
@@ -516,19 +519,19 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       }
     } catch (e) {
       if (!mounted) return;
-      _showSnack('Chưa thể đổi ảnh đại diện lúc này. Vui lòng thử lại.');
+      _showSnack(context.tr('p5_profile_avatar_change_failed'));
     }
   }
 
   Future<void> _removeProfileHeaderImage() async {
     await _saveProfilePresentation(headerImageUrl: '');
     if (!mounted) return;
-    _showSnack('Đã quay về nền mặc định của hồ sơ.');
+    _showSnack(context.tr('p5_profile_header_reset'));
   }
 
   Future<void> _openCommunitySettingsScreen() async {
     // DELETED_COMMUNITY_FEATURE 2026-06-28
-    _showSnack('Tính năng Cộng đồng hiện đang tạm đóng để nâng cấp hệ thống.');
+    _showSnack(context.tr('p5_profile_community_unavailable'));
   }
 
   Future<void> _openProfileAppearanceSheet() async {
@@ -562,14 +565,20 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       }
 
       try {
-        final mySnap =
-            await _db.ref('houses/$_myHouseId/settings/houseName').get();
+        final mySnap = await _db
+            .ref('houses/$_myHouseId/settings/houseName')
+            .get();
         _myHouseName = mySnap.value?.toString() ?? _myHouseId;
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[SuppressedError] lib/views/visitors/visitor_profile_screen.dart: $error',
+        );
+      }
 
       try {
-        final targetSnap =
-            await _db.ref('house_profiles/${widget.targetHouseId}').get();
+        final targetSnap = await _db
+            .ref('house_profiles/${widget.targetHouseId}')
+            .get();
         if (targetSnap.exists && targetSnap.value is Map) {
           _targetData = Map<String, dynamic>.from(
             Map<dynamic, dynamic>.from(targetSnap.value as Map),
@@ -582,7 +591,8 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         }
       } catch (e) {
         debugPrint(
-            'Lỗi tải house_profiles: ${AppErrorMapper.resolve(e).message}');
+          'Lỗi tải house_profiles: ${AppErrorMapper.resolve(e).message}',
+        );
       }
 
       if (_targetData.isEmpty) {
@@ -632,24 +642,36 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
             };
             _targetSettings = settingsMap;
           }
-        } catch (_) {}
+        } catch (error) {
+          debugPrint(
+            '[SuppressedError] lib/views/visitors/visitor_profile_screen.dart: $error',
+          );
+        }
       }
 
       try {
-        final fireSnap =
-            await _db.ref('uploads/fire_totals/${widget.targetHouseId}').get();
+        final fireSnap = await _db
+            .ref('uploads/fire_totals/${widget.targetHouseId}')
+            .get();
         _heartCount = (fireSnap.value as num?)?.toInt() ?? 0;
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[SuppressedError] lib/views/visitors/visitor_profile_screen.dart: $error',
+        );
+      }
 
       try {
         final today = DateTime.now().toLocal();
         final todayKey = '${today.year}-${today.month}-${today.day}';
         final storeKey = 'fire_log_${_myHouseId}_${widget.targetHouseId}';
-        final cachedHeartState =
-            _HeartDropCache.hasDroppedToday(storeKey, todayKey);
+        final cachedHeartState = _HeartDropCache.hasDroppedToday(
+          storeKey,
+          todayKey,
+        );
         final heartStateSnap = await _db
             .ref(
-                'houses/$_myHouseId/settings/visitorHeartStates/${widget.targetHouseId}')
+              'houses/$_myHouseId/settings/visitorHeartStates/${widget.targetHouseId}',
+            )
             .get();
         if (heartStateSnap.exists && heartStateSnap.value is Map) {
           final heartState = Map<String, dynamic>.from(
@@ -662,9 +684,11 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
           _heartHasContributed = cachedHeartState;
         }
 
-        final friendSnap =
-            await _db.ref('friends/$_myHouseId/${widget.targetHouseId}').get();
-        _isFriend = friendSnap.exists &&
+        final friendSnap = await _db
+            .ref('friends/$_myHouseId/${widget.targetHouseId}')
+            .get();
+        _isFriend =
+            friendSnap.exists &&
             (friendSnap.value == true || friendSnap.value != null);
 
         if (!_isFriend) {
@@ -675,8 +699,9 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
               .equalTo(_myHouseId)
               .once();
           if (reqSnap.snapshot.exists && reqSnap.snapshot.value is Map) {
-            final reqMap =
-                Map<dynamic, dynamic>.from(reqSnap.snapshot.value as Map);
+            final reqMap = Map<dynamic, dynamic>.from(
+              reqSnap.snapshot.value as Map,
+            );
             for (final entry in reqMap.entries) {
               if (entry.value is! Map) continue;
               final req = Map<String, dynamic>.from(entry.value);
@@ -702,7 +727,8 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
             if (incomingSnap.snapshot.exists &&
                 incomingSnap.snapshot.value is Map) {
               final incomingMap = Map<dynamic, dynamic>.from(
-                  incomingSnap.snapshot.value as Map);
+                incomingSnap.snapshot.value as Map,
+              );
               for (final v in incomingMap.values) {
                 if (v is! Map) continue;
                 final req = Map<String, dynamic>.from(v);
@@ -721,7 +747,11 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
 
       try {
         await _loadPosts();
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[SuppressedError] lib/views/visitors/visitor_profile_screen.dart: $error',
+        );
+      }
     } catch (e) {
       debugPrint('Lỗi profile: ${AppErrorMapper.resolve(e).message}');
     } finally {
@@ -734,8 +764,9 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
 
   Future<void> _loadPosts() async {
     try {
-      final posts =
-          await _socialService.fetchHouseFeedPage(widget.targetHouseId);
+      final posts = await _socialService.fetchHouseFeedPage(
+        widget.targetHouseId,
+      );
       _posts = posts
           .where((p) => p.imageUrl.isNotEmpty || p.videoUrl.isNotEmpty)
           .toList();
@@ -747,8 +778,9 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
   Future<void> _loadReposts() async {
     setState(() => _isLoadingRepost = true);
     try {
-      final posts =
-          await _socialService.fetchRepostFeedPage(widget.targetHouseId);
+      final posts = await _socialService.fetchRepostFeedPage(
+        widget.targetHouseId,
+      );
       _repostPosts = posts
           .where((p) => p.imageUrl.isNotEmpty || p.videoUrl.isNotEmpty)
           .toList();
@@ -762,14 +794,16 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
   Future<void> _loadPrivatePosts() async {
     setState(() => _isLoadingPrivate = true);
     try {
-      final posts =
-          await _socialService.fetchPrivateFeedPage(widget.targetHouseId);
+      final posts = await _socialService.fetchPrivateFeedPage(
+        widget.targetHouseId,
+      );
       _privatePosts = posts
           .where((p) => p.imageUrl.isNotEmpty || p.videoUrl.isNotEmpty)
           .toList();
     } catch (e) {
       debugPrint(
-          'Error loading private posts: ${AppErrorMapper.resolve(e).message}');
+        'Error loading private posts: ${AppErrorMapper.resolve(e).message}',
+      );
     } finally {
       if (mounted) setState(() => _isLoadingPrivate = false);
     }
@@ -778,8 +812,9 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
   Future<void> _loadLocketPosts() async {
     setState(() => _isLoadingLocket = true);
     try {
-      final posts =
-          await _socialService.fetchLocketFeedPage(widget.targetHouseId);
+      final posts = await _socialService.fetchLocketFeedPage(
+        widget.targetHouseId,
+      );
       final isMe = _canEditProfile;
       _locketPosts = posts.where((p) {
         if (!p.isLocket) return false;
@@ -796,7 +831,8 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       }).toList();
     } catch (e) {
       debugPrint(
-          'Error loading locket posts: ${AppErrorMapper.resolve(e).message}');
+        'Error loading locket posts: ${AppErrorMapper.resolve(e).message}',
+      );
     } finally {
       if (mounted) setState(() => _isLoadingLocket = false);
     }
@@ -805,11 +841,13 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
   Future<void> _loadLikedPosts() async {
     setState(() => _isLoadingLiked = true);
     try {
-      _likedPosts =
-          await _socialService.fetchLikedFeedPage(widget.targetHouseId);
+      _likedPosts = await _socialService.fetchLikedFeedPage(
+        widget.targetHouseId,
+      );
     } catch (e) {
       debugPrint(
-          'Error loading liked posts: ${AppErrorMapper.resolve(e).message}');
+        'Error loading liked posts: ${AppErrorMapper.resolve(e).message}',
+      );
     } finally {
       if (mounted) setState(() => _isLoadingLiked = false);
     }
@@ -820,7 +858,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
   Future<void> _toggleHeart() async {
     if (_myHouseId == null || _isDroppingHeart) return;
     if (_myHouseId == widget.targetHouseId) {
-      _showSnack('Bạn chưa thể thả tim cho chính nhà của mình.');
+      _showSnack(context.tr('p5_profile_cannot_heart_self'));
       return;
     }
 
@@ -850,15 +888,16 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       final response = await FirebaseFunctions.instance
           .httpsCallable('dropVisitorHeart')
           .call(<String, dynamic>{
-        'targetHouseId': widget.targetHouseId,
-        'active': !wasDropped,
-      });
+            'targetHouseId': widget.targetHouseId,
+            'active': !wasDropped,
+          });
       final payload = response.data;
       if (payload is! Map || payload['success'] != true) {
         throw StateError('Visitor heart update was not accepted.');
       }
       final resolvedActive = payload['active'] == true;
-      final resolvedCount = (payload['count'] as num?)?.toInt() ?? previousCount;
+      final resolvedCount =
+          (payload['count'] as num?)?.toInt() ?? previousCount;
       if (resolvedActive) {
         _HeartDropCache.setDropped(storeKey, todayKey);
       } else {
@@ -882,7 +921,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         _heartCount = previousCount;
         _isDroppingHeart = false;
       });
-      _showSnack('Kết nối chưa ổn định. Vui lòng thử lại.');
+      _showSnack(context.tr('p5_profile_connection_unstable'));
     }
   }
 
@@ -890,11 +929,12 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
     if (_myHouseId == null) return;
     setState(() => _isPendingSent = true);
     final result = await _friendsService.sendFriendRequest(
-        fromHouseId: _myHouseId!,
-        fromHouseName: _myHouseName ?? _myHouseId!,
-        toHouseId: widget.targetHouseId);
+      fromHouseId: _myHouseId!,
+      fromHouseName: _myHouseName ?? _myHouseId!,
+      toHouseId: widget.targetHouseId,
+    );
     if (result.success) {
-      _showSnack('Đã gửi lời mời kết bạn 📨');
+      _showSnack(L10nService().translate('p5_profile_friend_request_sent'));
     } else {
       if (!mounted) return;
       setState(() => _isPendingSent = false);
@@ -903,7 +943,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
   }
 
   Future<void> _reportUser() async {
-    final reason = await _promptReason('Lý do báo cáo (tùy chọn):');
+    final reason = await _promptReason(context.tr('p5_profile_report_hint'));
     final reporterHouseId = _myHouseId;
     if (reason == null || reporterHouseId == null || reporterHouseId.isEmpty) {
       return;
@@ -914,39 +954,42 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         reporterHouseId: reporterHouseId,
         reason: reason,
       );
-      _showSnack('Đã gửi báo cáo. Cảm ơn bạn.');
+      _showSnack(L10nService().translate('p5_profile_report_sent'));
     } catch (e) {
-      _showSnack('Chưa thể gửi báo cáo lúc này. Vui lòng thử lại.');
+      _showSnack(L10nService().translate('p5_profile_report_failed'));
     }
   }
 
   Future<void> _blockUser() async {
     final myHouseId = _myHouseId;
     if (myHouseId == null || myHouseId.isEmpty) {
-      _showSnack('Không tìm thấy nhà hiện tại để chặn người dùng.');
+      _showSnack(context.tr('p5_profile_block_no_house'));
       return;
     }
-    final ok = await _confirm('Xác nhận chặn',
-        'Bạn có chắc muốn chặn người này không?\nHọ sẽ không thể xem nhà bạn nữa.');
+    final ok = await _confirm(
+      context.tr('p5_profile_block_title'),
+      context.tr('p5_profile_block_message'),
+    );
     if (!ok) return;
     try {
       await _socialService.blockHouse(
         sourceHouseId: myHouseId,
         targetHouseId: widget.targetHouseId,
       );
-      _showSnack('Đã chặn người dùng.');
+      _showSnack(L10nService().translate('p5_profile_blocked'));
       if (mounted) Navigator.pop(context);
     } catch (e) {
-      _showSnack('Chưa thể chặn người dùng lúc này. Vui lòng thử lại.');
+      _showSnack(L10nService().translate('p5_profile_block_failed'));
     }
   }
 
   void _copyProfileLink() {
-    final link =
-        AppConfig.webUri('/profile/${widget.targetHouseId}').toString();
+    final link = AppConfig.webUri(
+      '/profile/${widget.targetHouseId}',
+    ).toString();
     Clipboard.setData(ClipboardData(text: link));
     if (!mounted) return;
-    _showSnack('Đã sao chép liên kết hồ sơ vào khay nhớ tạm.');
+    _showSnack(context.tr('p5_profile_link_copied'));
   }
 
   @override
@@ -954,26 +997,26 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: SLColors.bgMain,
-        body: Center(
-          child: CircularProgressIndicator(color: SLColors.primary),
-        ),
+        body: Center(child: CircularProgressIndicator(color: SLColors.primary)),
       );
     }
 
     final name = (_targetData['houseName'] ?? '').toString();
-    final avatar = _targetSettings['houseAvatar']?.toString() ??
+    final avatar =
+        _targetSettings['houseAvatar']?.toString() ??
         _targetData['houseAvatar']?.toString() ??
         _targetData['avatar']?.toString();
     final bio = _targetSettings['bio']?.toString() ?? '';
     final privacy = _targetSettings['privacy']?.toString() ?? 'public';
     final isMe = _canEditProfile;
-    final isPro = ((_targetSettings['proUntil'] as num?)?.toInt() ?? 0) >
+    final isPro =
+        ((_targetSettings['proUntil'] as num?)?.toInt() ?? 0) >
         DateTime.now().millisecondsSinceEpoch;
 
     return Scaffold(
       backgroundColor: SLColors.bgMain,
       body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
+        physics: SLResponsive.scrollPhysicsForPlatform(),
         slivers: [
           SliverAppBar(
             expandedHeight: _kProfileHeaderExpandedHeight,
@@ -995,6 +1038,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
                         size: 16,
                       ),
                     ),
+                    tooltip: context.tr('p5_back'),
                     onPressed: () => Navigator.pop(context),
                   )
                 : null,
@@ -1020,17 +1064,17 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
             ),
           ),
           if (privacy == 'private' && !isMe && !_isFriend)
-            const SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: VisitorProfilePrivacyBlock(
-                title: '🔒 Nhà riêng tư',
-                subtitle: 'Chỉ chủ nhà mới xem được nội dung bên trong.',
+                title: context.tr('p5_profile_private_title'),
+                subtitle: context.tr('p5_profile_private_subtitle'),
               ),
             )
           else if (privacy == 'friends' && !isMe && !_isFriend)
-            const SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: VisitorProfilePrivacyBlock(
-                title: '👥 Chỉ bạn bè mới xem được',
-                subtitle: 'Kết bạn với nhà này để xem nội dung.',
+                title: context.tr('p5_profile_friends_only_title'),
+                subtitle: context.tr('p5_profile_friends_only_subtitle'),
               ),
             )
           else ...[
@@ -1097,10 +1141,10 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
 
     if (!_isFriend && !_isPendingSent && !_isIncomingPending) {
       actions.add(
-        const VisitorProfileMenuAction(
+        VisitorProfileMenuAction(
           value: 'add_friend',
           icon: Icons.person_add_rounded,
-          label: 'Kết bạn',
+          label: context.tr('p5_profile_add_friend'),
           iconColor: SLColors.primary,
           textColor: SLColors.primary,
         ),
@@ -1109,10 +1153,10 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
 
     if (_isPendingSent) {
       actions.add(
-        const VisitorProfileMenuAction(
+        VisitorProfileMenuAction(
           value: 'pending_sent',
           icon: Icons.schedule_rounded,
-          label: 'Đã gửi lời mời',
+          label: context.tr('p5_profile_pending_sent'),
           iconColor: Colors.grey,
           textColor: Colors.grey,
           enabled: false,
@@ -1122,10 +1166,10 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
 
     if (_isIncomingPending) {
       actions.add(
-        const VisitorProfileMenuAction(
+        VisitorProfileMenuAction(
           value: 'incoming_pending',
           icon: Icons.mark_email_unread_rounded,
-          label: 'Chờ bạn xác nhận',
+          label: context.tr('p5_profile_incoming_pending'),
           iconColor: Colors.grey,
           textColor: Colors.grey,
           enabled: false,
@@ -1134,22 +1178,22 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
     }
 
     actions.addAll([
-      const VisitorProfileMenuAction(
+      VisitorProfileMenuAction(
         value: 'copy_link',
         icon: Icons.link_rounded,
-        label: 'Sao chép liên kết',
+        label: context.tr('p5_profile_copy_link'),
         iconColor: SLColors.textSecond,
       ),
-      const VisitorProfileMenuAction(
+      VisitorProfileMenuAction(
         value: 'report',
         icon: Icons.flag_outlined,
-        label: 'Báo cáo',
+        label: context.tr('p5_profile_report'),
         iconColor: SLColors.textSecond,
       ),
-      const VisitorProfileMenuAction(
+      VisitorProfileMenuAction(
         value: 'block',
         icon: Icons.block,
-        label: 'Chặn',
+        label: context.tr('p5_profile_block'),
         iconColor: Colors.red,
         textColor: Colors.red,
       ),
@@ -1167,10 +1211,10 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
 
   List<VisitorProfileTabItem> _visibleTabItems(bool isMe) {
     final items = <VisitorProfileTabItem>[
-      const VisitorProfileTabItem(
+      VisitorProfileTabItem(
         id: 'posts',
         icon: Icons.grid_on_rounded,
-        label: 'Bài đăng',
+        label: context.tr('p5_profile_tab_posts'),
       ),
     ];
 
@@ -1183,38 +1227,38 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
 
     if (canSeeLocket) {
       items.add(
-        const VisitorProfileTabItem(
+        VisitorProfileTabItem(
           id: 'locket',
           icon: Icons.camera_alt_rounded,
-          label: 'Khoảnh khắc',
+          label: context.tr('p5_profile_tab_locket'),
         ),
       );
     }
 
     if (canSeeLiked) {
       items.add(
-        const VisitorProfileTabItem(
+        VisitorProfileTabItem(
           id: 'liked',
           icon: Icons.favorite_rounded,
-          label: 'Yêu thích',
+          label: context.tr('p5_profile_tab_liked'),
         ),
       );
     }
 
     items.add(
-      const VisitorProfileTabItem(
+      VisitorProfileTabItem(
         id: 'repost',
         icon: Icons.repeat_rounded,
-        label: 'Đăng lại',
+        label: context.tr('p5_profile_tab_repost'),
       ),
     );
 
     if (isMe) {
       items.add(
-        const VisitorProfileTabItem(
+        VisitorProfileTabItem(
           id: 'private',
           icon: Icons.lock_outline_rounded,
-          label: 'Riêng tư',
+          label: context.tr('p5_profile_tab_private'),
         ),
       );
     }
@@ -1237,35 +1281,35 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       'posts': VisitorProfileTabContentData(
         isLoading: false,
         posts: _posts,
-        emptyText: 'Chưa có bài đăng nào',
+        emptyText: context.tr('p5_profile_empty_posts'),
         valueKeyPrefix: 'post',
         filterType: 'house',
       ),
       'locket': VisitorProfileTabContentData(
         isLoading: _isLoadingLocket,
         posts: _locketPosts,
-        emptyText: 'Chưa có khoảnh khắc nào',
+        emptyText: context.tr('p5_profile_empty_locket'),
         valueKeyPrefix: 'locket',
         filterType: 'locket_profile',
       ),
       'repost': VisitorProfileTabContentData(
         isLoading: _isLoadingRepost,
         posts: _repostPosts,
-        emptyText: 'Chưa có bài đăng lại nào',
+        emptyText: context.tr('p5_profile_empty_reposts'),
         valueKeyPrefix: 'repost',
         filterType: 'repost',
       ),
       'private': VisitorProfileTabContentData(
         isLoading: _isLoadingPrivate,
         posts: _privatePosts,
-        emptyText: 'Chưa có bài riêng tư nào',
+        emptyText: context.tr('p5_profile_empty_private'),
         valueKeyPrefix: 'private',
         filterType: 'private',
       ),
       'liked': VisitorProfileTabContentData(
         isLoading: _isLoadingLiked,
         posts: _likedPosts,
-        emptyText: 'Chưa thích bài nào',
+        emptyText: context.tr('p5_profile_empty_liked'),
         valueKeyPrefix: 'liked',
         filterType: 'liked',
       ),
@@ -1301,63 +1345,84 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
     final likes = post.likes;
     return ClipRRect(
       borderRadius: BorderRadius.circular(4),
-      child: Stack(fit: StackFit.expand, children: [
-        if (img.isNotEmpty)
-          CachedNetworkImage(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (img.isNotEmpty)
+            CachedNetworkImage(
               maxWidthDiskCache: 300,
               memCacheWidth: 300,
               imageUrl: CloudflareImageHelper.optimizeUrl(img, width: 300),
               fit: BoxFit.cover,
               filterQuality: FilterQuality.low,
               fadeInDuration: const Duration(milliseconds: 150),
-              placeholder: (_, __) => Container(color: SLColors.borderLight),
-              errorWidget: (_, __, ___) => Container(color: SLColors.border))
-        else
-          Container(
+              placeholder: (_, _) => Container(color: SLColors.borderLight),
+              errorWidget: (_, _, _) => Container(color: SLColors.border),
+            )
+          else
+            Container(
               color: SLColors.borderLight,
-              child: const Icon(Icons.image_outlined,
-                  color: Colors.grey, size: 28)),
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(6, 12, 6, 6),
-            decoration: const BoxDecoration(
+              child: const Icon(
+                Icons.image_outlined,
+                color: Colors.grey,
+                size: 28,
+              ),
+            ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(6, 12, 6, 6),
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                    colors: [Colors.transparent, Colors.black54],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter)),
-            child: Row(children: [
-              const Icon(Icons.favorite_rounded, color: Colors.white, size: 12),
-              SLSpacing.w4,
-              Text('$likes',
-                  style: const TextStyle(
+                  colors: [Colors.transparent, Colors.black54],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.favorite_rounded,
+                    color: Colors.white,
+                    size: 12,
+                  ),
+                  SLSpacing.w4,
+                  Text(
+                    '$likes',
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 11,
-                      fontWeight: FontWeight.bold)),
-            ]),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 
   void _showSnack(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg, style: SLTheme.quicksand(fontWeight: FontWeight.w700)),
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
-      backgroundColor: SLColors.textPrimary,
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          msg,
+          style: SLTheme.quicksand(fontWeight: FontWeight.w700),
+        ),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
+        backgroundColor: SLColors.textPrimary,
+      ),
+    );
   }
 
   Future<String?> _promptReason(String hint) {
-    return showVisitorProfileReasonDialog(
-      context: context,
-      hint: hint,
-    );
+    return showVisitorProfileReasonDialog(context: context, hint: hint);
   }
 
   Future<bool> _confirm(String title, String msg) {

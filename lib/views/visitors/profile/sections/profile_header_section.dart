@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/sl_theme.dart';
+import '../../../../utils/services/l10n_service.dart';
 import 'profile_action_widgets.dart';
 import 'profile_section_models.dart';
 
@@ -81,15 +82,16 @@ class VisitorProfileHeaderSection extends StatelessWidget {
             fit: BoxFit.cover,
             filterQuality: FilterQuality.medium,
             fadeInDuration: const Duration(milliseconds: 180),
-            errorWidget: (_, __, ___) => const SizedBox.shrink(),
+            errorWidget: (_, _, _) => const SizedBox.shrink(),
           ),
         Positioned.fill(
           child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.black
-                      .withValues(alpha: headerImageUrl.isNotEmpty ? 0.12 : 0),
+                  Colors.black.withValues(
+                    alpha: headerImageUrl.isNotEmpty ? 0.12 : 0,
+                  ),
                   Colors.black.withValues(
                     alpha: headerImageUrl.isNotEmpty ? 0.26 : 0.05,
                   ),
@@ -105,12 +107,16 @@ class VisitorProfileHeaderSection extends StatelessWidget {
         ),
         if (isMe)
           Positioned.fill(
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onOpenAppearance,
-                splashColor: Colors.white.withValues(alpha: 0.06),
-                highlightColor: Colors.white.withValues(alpha: 0.03),
+            child: Semantics(
+              button: true,
+              label: context.tr('p5_profile_change_header'),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onOpenAppearance,
+                  splashColor: Colors.white.withValues(alpha: 0.06),
+                  highlightColor: Colors.white.withValues(alpha: 0.03),
+                ),
               ),
             ),
           ),
@@ -120,13 +126,16 @@ class VisitorProfileHeaderSection extends StatelessWidget {
             bottom: 18,
             child: IgnorePointer(
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(SLRadius.pill),
-                  border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.16)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.16),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -138,7 +147,7 @@ class VisitorProfileHeaderSection extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Chạm nền để đổi',
+                      context.tr('p5_profile_change_background_hint'),
                       style: SLTheme.quicksand(
                         color: Colors.white,
                         fontSize: 11.5,
@@ -159,47 +168,52 @@ class VisitorProfileHeaderSection extends StatelessWidget {
                 clipBehavior: Clip.none,
                 alignment: Alignment.bottomCenter,
                 children: [
-                  GestureDetector(
-                    onTap: onPickAvatar,
-                    child: Container(
-                      padding: SLSpacing.all4,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: const LinearGradient(
-                          colors: [Colors.white, Color(0xFFFFB3C6)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                  Semantics(
+                    button: onPickAvatar != null,
+                    label: context.tr('p5_profile_change_avatar'),
+                    enabled: onPickAvatar != null,
+                    child: GestureDetector(
+                      onTap: onPickAvatar,
+                      child: Container(
+                        padding: SLSpacing.all4,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            colors: [Colors.white, Color(0xFFFFB3C6)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          boxShadow: avatarShadow,
                         ),
-                        boxShadow: avatarShadow,
-                      ),
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          ClipOval(
-                            child: SizedBox(
-                              width: avatarSize,
-                              height: avatarSize,
-                              child: trimmedAvatar.isNotEmpty
-                                  ? CachedNetworkImage(
-                                      maxWidthDiskCache: 720,
-                                      imageUrl: trimmedAvatar,
-                                      fit: BoxFit.cover,
-                                      memCacheWidth: 400,
-                                      memCacheHeight: 400,
-                                      filterQuality: FilterQuality.medium,
-                                      errorWidget: (_, __, ___) =>
-                                          SLTheme.avatarPlaceholder(
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            ClipOval(
+                              child: SizedBox(
+                                width: avatarSize,
+                                height: avatarSize,
+                                child: trimmedAvatar.isNotEmpty
+                                    ? CachedNetworkImage(
+                                        maxWidthDiskCache: 720,
+                                        imageUrl: trimmedAvatar,
+                                        fit: BoxFit.cover,
+                                        memCacheWidth: 400,
+                                        memCacheHeight: 400,
+                                        filterQuality: FilterQuality.medium,
+                                        errorWidget: (_, _, _) =>
+                                            SLTheme.avatarPlaceholder(
+                                              name,
+                                              size: avatarSize,
+                                            ),
+                                      )
+                                    : SLTheme.avatarPlaceholder(
                                         name,
                                         size: avatarSize,
                                       ),
-                                    )
-                                  : SLTheme.avatarPlaceholder(
-                                      name,
-                                      size: avatarSize,
-                                    ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -213,11 +227,7 @@ class VisitorProfileHeaderSection extends StatelessWidget {
                             avatarUrl: partnerAvatar1,
                             fallbackLabel: 'U1',
                           ),
-                          Container(
-                            width: 12,
-                            height: 2,
-                            color: Colors.white,
-                          ),
+                          Container(width: 12, height: 2, color: Colors.white),
                           _VisitorProfileSmallHouseAvatarBadge(
                             avatarUrl: partnerAvatar2,
                             fallbackLabel: 'U2',
@@ -341,7 +351,7 @@ class _VisitorProfileSmallHouseAvatarBadge extends StatelessWidget {
                 memCacheWidth: 200,
                 memCacheHeight: 200,
                 filterQuality: FilterQuality.medium,
-                errorWidget: (_, __, ___) =>
+                errorWidget: (_, _, _) =>
                     SLTheme.avatarPlaceholder(fallbackLabel, size: 32),
               )
             : SLTheme.avatarPlaceholder(fallbackLabel, size: 32),

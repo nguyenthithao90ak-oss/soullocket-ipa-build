@@ -54,42 +54,47 @@ class _VisitorProfileTabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        margin: const EdgeInsets.symmetric(horizontal: 2),
-        decoration: BoxDecoration(
-          color: isActive ? SLColors.bgCard : Colors.transparent,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: isActive ? SLShadow.sm : null,
-        ),
-        alignment: Alignment.center,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              item.icon,
-              size: 16,
-              color: isActive ? SLColors.primary : SLColors.textTertiary,
-            ),
-            if (isActive) ...[
-              SLSpacing.w4,
-              Flexible(
-                child: Text(
-                  item.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: SLTheme.quicksand(
-                    color: SLColors.primary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
+    return Semantics(
+      button: true,
+      selected: isActive,
+      label: item.label,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          decoration: BoxDecoration(
+            color: isActive ? SLColors.bgCard : Colors.transparent,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: isActive ? SLShadow.sm : null,
+          ),
+          alignment: Alignment.center,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                item.icon,
+                size: 16,
+                color: isActive ? SLColors.primary : SLColors.textTertiary,
+              ),
+              if (isActive) ...[
+                SLSpacing.w4,
+                Flexible(
+                  child: Text(
+                    item.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: SLTheme.quicksand(
+                      color: SLColors.primary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

@@ -88,7 +88,8 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
               final url = request.url.toLowerCase();
               if (!url.startsWith('https://')) {
                 debugPrint(
-                    '🚨 [WatchTogether] Chặn URL không an toàn (chỉ cho phép HTTPS).');
+                  '🚨 [WatchTogether] Chặn URL không an toàn (chỉ cho phép HTTPS).',
+                );
                 return NavigationDecision.prevent;
               }
               return NavigationDecision.navigate;
@@ -248,8 +249,9 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
       if (parsed.isEmpty) return;
       final decoded = jsonDecode(parsed);
       if (decoded is! Map) return;
-      final Map<String, dynamic> data =
-          decoded.map((key, value) => MapEntry(key.toString(), value));
+      final Map<String, dynamic> data = decoded.map(
+        (key, value) => MapEntry(key.toString(), value),
+      );
       if (data.isEmpty) return;
       final eventName = data['event']?.toString() ?? '';
 
@@ -263,7 +265,11 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
         isPlaying: isPlaying,
         positionSec: positionSec,
       );
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/chat/watch_together_screen.dart: $error',
+      );
+    }
   }
 
   void _injectWebPlaybackBridge() {
@@ -357,7 +363,10 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
           })();
         ''');
       }
-    } catch (_) {
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/chat/watch_together_screen.dart: $error',
+      );
     } finally {
       Future<void>.delayed(const Duration(milliseconds: 400), () {
         _isApplyingRemoteSync = false;
@@ -392,10 +401,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
       },
       onError: (Object error) {
         debugPrint(
-          'Watch together listener failed: ${AppErrorMapper.resolve(
-            error,
-            fallbackMessage: 'Không thể đồng bộ phòng xem chung.',
-          ).message}',
+          'Watch together listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể đồng bộ phòng xem chung.').message}',
         );
       },
     );
@@ -450,8 +456,10 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
       _isCallingVN.value = true;
       _showSnack('Đã kết nối cuộc gọi thoại.');
     } catch (e) {
-      _showSnack('Chưa thể kết nối cuộc gọi thoại lúc này. Vui lòng thử lại.',
-          isError: true);
+      _showSnack(
+        'Chưa thể kết nối cuộc gọi thoại lúc này. Vui lòng thử lại.',
+        isError: true,
+      );
     }
   }
 
@@ -488,31 +496,25 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
     _lastKnownPosition = Duration.zero;
     _lastTickTime = DateTime.now();
 
-    final isVideoFile = url.toLowerCase().endsWith('.mp4') ||
+    final isVideoFile =
+        url.toLowerCase().endsWith('.mp4') ||
         url.contains('firebasestorage.googleapis.com');
 
     if (isVideoFile) {
       _isVideoPlayer = true;
       if (!kIsWeb) {
         _webViewController?.loadHtmlString(
-            '<html><body style="background: black;"></body></html>');
+          '<html><body style="background: black;"></body></html>',
+        );
       }
       final oldController = _videoPlayerController;
-      
+
       VideoPlayerController newController;
       try {
-        File? cachedFile;
         final fileInfo = await AppCacheManager.instance.getFileFromCache(url);
-        if (fileInfo != null) {
-          cachedFile = fileInfo.file;
-        } else {
-          cachedFile = await AppCacheManager.instance.getSingleFile(url);
-        }
-        if (cachedFile != null) {
-          newController = VideoPlayerController.file(cachedFile);
-        } else {
-          newController = VideoPlayerController.networkUrl(Uri.parse(url));
-        }
+        final cachedFile =
+            fileInfo?.file ?? await AppCacheManager.instance.getSingleFile(url);
+        newController = VideoPlayerController.file(cachedFile);
       } catch (_) {
         newController = VideoPlayerController.networkUrl(Uri.parse(url));
       }
@@ -538,8 +540,9 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(text),
-        backgroundColor:
-            isError ? const Color(0xFFD81B60) : const Color(0xFF2E7D32),
+        backgroundColor: isError
+            ? const Color(0xFFD81B60)
+            : const Color(0xFF2E7D32),
       ),
     );
   }
@@ -717,17 +720,22 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                           SLSpacing.h12,
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.green.withValues(alpha: 0.1),
                               borderRadius: SLRadius.lgAll,
                               border: Border.all(
-                                  color: Colors.green.withValues(alpha: 0.3)),
+                                color: Colors.green.withValues(alpha: 0.3),
+                              ),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.record_voice_over_rounded,
-                                    color: Colors.green),
+                                const Icon(
+                                  Icons.record_voice_over_rounded,
+                                  color: Colors.green,
+                                ),
                                 SLSpacing.w8,
                                 Expanded(
                                   child: Text(
@@ -767,11 +775,14 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                     decoration: InputDecoration(
                       labelText: 'Dán link video hoặc website',
                       hintText: 'youtube.com, tiktok.com, vnexpress.net...',
-                      labelStyle:
-                          SLTheme.quicksand(fontWeight: FontWeight.w800),
+                      labelStyle: SLTheme.quicksand(
+                        fontWeight: FontWeight.w800,
+                      ),
                       hintStyle: SLTheme.quicksand(fontWeight: FontWeight.w700),
-                      prefixIcon: const Icon(Icons.link_rounded,
-                          color: Color(0xFFD81B60)),
+                      prefixIcon: const Icon(
+                        Icons.link_rounded,
+                        color: Color(0xFFD81B60),
+                      ),
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
@@ -785,7 +796,9 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: SLRadius.lgAll,
                         borderSide: const BorderSide(
-                            color: Color(0xFFD81B60), width: 2),
+                          color: Color(0xFFD81B60),
+                          width: 2,
+                        ),
                       ),
                     ),
                   ),
@@ -824,7 +837,9 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.85),
                       borderRadius: SLRadius.lgAll,
@@ -908,8 +923,11 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                                   shape: BoxShape.circle,
                                 ),
                                 padding: const EdgeInsets.all(12),
-                                child: const Icon(Icons.play_arrow_rounded,
-                                    color: Colors.white, size: 48),
+                                child: const Icon(
+                                  Icons.play_arrow_rounded,
+                                  color: Colors.white,
+                                  size: 48,
+                                ),
                               ),
                           ],
                         ),
@@ -919,15 +937,20 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                         controller: _webViewController!,
                         gestureRecognizers: {
                           Factory<VerticalDragGestureRecognizer>(
-                              () => VerticalDragGestureRecognizer()),
+                            () => VerticalDragGestureRecognizer(),
+                          ),
                           Factory<HorizontalDragGestureRecognizer>(
-                              () => HorizontalDragGestureRecognizer()),
+                            () => HorizontalDragGestureRecognizer(),
+                          ),
                           Factory<ScaleGestureRecognizer>(
-                              () => ScaleGestureRecognizer()),
+                            () => ScaleGestureRecognizer(),
+                          ),
                           Factory<TapGestureRecognizer>(
-                              () => TapGestureRecognizer()),
+                            () => TapGestureRecognizer(),
+                          ),
                           Factory<PanGestureRecognizer>(
-                              () => PanGestureRecognizer()),
+                            () => PanGestureRecognizer(),
+                          ),
                         },
                       )
                     else
@@ -997,15 +1020,16 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                               vertical: 14,
                             ),
                             decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: SLRadius.lgAll,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.05),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  )
-                                ]),
+                              color: Colors.white,
+                              borderRadius: SLRadius.lgAll,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -1019,16 +1043,17 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                                 ),
                                 SLSpacing.w8,
                                 ValueListenableBuilder<double>(
-                                    valueListenable: _progressVN,
-                                    builder: (context, value, _) {
-                                      return Text(
-                                        'Đang tải... ${(value * 100).toInt()}%',
-                                        style: SLTheme.quicksand(
-                                          fontWeight: FontWeight.w800,
-                                          color: const Color(0xFF6D5C63),
-                                        ),
-                                      );
-                                    }),
+                                  valueListenable: _progressVN,
+                                  builder: (context, value, _) {
+                                    return Text(
+                                      'Đang tải... ${(value * 100).toInt()}%',
+                                      style: SLTheme.quicksand(
+                                        fontWeight: FontWeight.w800,
+                                        color: const Color(0xFF6D5C63),
+                                      ),
+                                    );
+                                  },
+                                ),
                               ],
                             ),
                           ),
@@ -1045,15 +1070,16 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                           left: 0,
                           right: 0,
                           child: ValueListenableBuilder<double>(
-                              valueListenable: _progressVN,
-                              builder: (context, value, _) {
-                                return LinearProgressIndicator(
-                                  value: value,
-                                  backgroundColor: Colors.transparent,
-                                  color: const Color(0xFFD81B60),
-                                  minHeight: 3,
-                                );
-                              }),
+                            valueListenable: _progressVN,
+                            builder: (context, value, _) {
+                              return LinearProgressIndicator(
+                                value: value,
+                                backgroundColor: Colors.transparent,
+                                color: const Color(0xFFD81B60),
+                                minHeight: 3,
+                              );
+                            },
+                          ),
                         );
                       },
                     ),

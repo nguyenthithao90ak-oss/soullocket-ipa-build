@@ -30,8 +30,9 @@ class PremiumStoreScreen extends StatefulWidget {
 }
 
 class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
-  bool get _isEnglish => L10nService().locale.languageCode == 'en';
-  String _tr(String vi, String en) => _isEnglish ? en : vi;
+  String _t(String key) => L10nService().translate(key);
+  String _tf(String key, Map<String, Object?> params) =>
+      L10nService().format(key, params);
 
   final PurchaseService _purchaseService = PurchaseService();
 
@@ -41,9 +42,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   bool _isPurchasing = false;
   bool _isVip = false;
   List<ProductDetails> _products = [];
-  late String _storeHint = _tr(
-      'Tính năng chưa khả dụng trong bản phát hành hiện tại.',
-      'Feature not available in current release.');
+  String _storeHintKey = 'p5_premium_unavailable';
   // ignore: unused_field
   bool _storeConfigured = false;
 
@@ -55,22 +54,22 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
 
   String get _storeDisplayName {
     if (_isAppleStorePlatform) {
-      return _tr('cửa hàng trong ứng dụng', 'in-app store');
+      return _t('p5_premium_store_in_app');
     }
     if (_isAndroidStorePlatform) {
-      return _tr('cửa hàng trong ứng dụng', 'in-app store');
+      return _t('p5_premium_store_in_app');
     }
-    return _tr('cửa hàng trên thiết bị', 'on-device store');
+    return _t('p5_premium_store_on_device');
   }
 
   String get _checkoutLabel {
     if (_isAppleStorePlatform) {
-      return _tr('Thanh toán trong ứng dụng', 'In-app purchases');
+      return _t('p5_premium_checkout_label');
     }
     if (_isAndroidStorePlatform) {
-      return _tr('Thanh toán trong ứng dụng', 'In-app purchases');
+      return _t('p5_premium_checkout_label');
     }
-    return _tr('Thanh toán trong ứng dụng', 'In-app purchases');
+    return _t('p5_premium_checkout_label');
   }
 
   bool _isConfiguredStoreAvailable(bool available) {
@@ -81,22 +80,19 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     return true;
   }
 
-  String _buildStoreHint({
+  String _buildStoreHintKey({
     required bool available,
     required List<ProductDetails> products,
   }) {
     if (!available) {
-      return 'Tính năng này chưa khả dụng trong bản phát hành hiện tại.';
+      return 'p5_premium_unavailable';
     }
 
     if (products.isEmpty) {
-      return _tr(
-          'Chưa tải được dữ liệu. Vui lòng thử lại sau ít phút hoặc kiểm tra kết nối mạng.',
-          'Failed to load data. Please check connection and try again.');
+      return 'p5_premium_load_failed';
     }
 
-    return _tr(
-        'Cửa hàng đã kết nối thành công.', 'Store connected successfully.');
+    return 'p5_premium_store_connected';
   }
 
   List<ProductDetails> get _sortedProducts {
@@ -120,8 +116,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
 
     final items = itemsByPlan.values.toList();
     items.sort(
-      (a, b) => (planOrder[_planIdForProduct(a)] ?? 999)
-          .compareTo(planOrder[_planIdForProduct(b)] ?? 999),
+      (a, b) => (planOrder[_planIdForProduct(a)] ?? 999).compareTo(
+        planOrder[_planIdForProduct(b)] ?? 999,
+      ),
     );
     return items;
   }
@@ -325,9 +322,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       setState(() {
         _products = const <ProductDetails>[];
         _isVip = false;
-        _storeHint = _tr(
-            'Tính năng chưa khả dụng trong bản phát hành hiện tại.',
-            'Feature not available in current release.');
+        _storeHintKey = 'p5_premium_unavailable';
         _storeConfigured = false;
         _isLoading = false;
       });
@@ -339,7 +334,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       await _purchaseService.initialize();
       final products = await _purchaseService.getProducts();
       final isVip = await _purchaseService.isVip();
-      final storeHint = _buildStoreHint(
+      final storeHintKey = _buildStoreHintKey(
         available: available,
         products: products,
       );
@@ -348,7 +343,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       setState(() {
         _products = products;
         _isVip = isVip;
-        _storeHint = storeHint;
+        _storeHintKey = storeHintKey;
         _storeConfigured = _isConfiguredStoreAvailable(available);
         _isLoading = false;
       });
@@ -356,17 +351,11 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       if (!mounted) return;
       setState(() {
         _products = const <ProductDetails>[];
-        _storeHint = _tr(
-            'Chưa tải được dữ liệu. Vui lòng thử lại sau ít phút hoặc kiểm tra kết nối mạng.',
-            'Failed to load data. Please check connection and try again.');
+        _storeHintKey = 'p5_premium_load_failed';
         _storeConfigured = false;
         _isLoading = false;
       });
-      _showMessage(
-        _tr('Chưa tải được dữ liệu PRO. Vui lòng thử lại sau.',
-            'Failed to load PRO data. Please try again.'),
-        isError: true,
-      );
+      _showMessage(_t('p5_premium_pro_load_failed'), isError: true);
     }
   }
 
@@ -378,19 +367,12 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
         break;
       case VipPurchaseState.success:
         setState(() => _isPurchasing = false);
-        _showMessage(
-          _tr('Thanh toán thành công. Quyền lợi PRO sẽ được cập nhật trong giây lát.',
-              'Purchase successful. PRO benefits will be updated shortly.'),
-        );
+        _showMessage(_t('p5_premium_purchase_success'));
         unawaited(_loadData());
         break;
       case VipPurchaseState.error:
         setState(() => _isPurchasing = false);
-        _showMessage(
-          _tr('Chưa hoàn tất thao tác. Vui lòng thử lại sau ít phút.',
-              'Transaction incomplete. Please try again later.'),
-          isError: true,
-        );
+        _showMessage(_t('p5_premium_purchase_incomplete'), isError: true);
         break;
       case VipPurchaseState.idle:
         if (_isPurchasing) {
@@ -404,8 +386,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor:
-            isError ? const Color(0xFFC62828) : const Color(0xFF1D7D55),
+        backgroundColor: isError
+            ? const Color(0xFFC62828)
+            : const Color(0xFF1D7D55),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -420,31 +403,21 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      _showMessage(
-        _tr('Chưa thể khôi phục giao dịch. Vui lòng thử lại sau.',
-            'Could not restore purchases. Please try again later.'),
-        isError: true,
-      );
+      _showMessage(_t('p5_premium_restore_failed'), isError: true);
     }
   }
 
   Future<void> _openExternalUrl(String rawUrl) async {
     if (!AppConfig.isPurchaseEnabled) {
       if (!mounted) return;
-      _showMessage(
-        'Tính năng này chưa khả dụng trong bản phát hành hiện tại.',
-        isError: true,
-      );
+      _showMessage(_t('p5_premium_unavailable'), isError: true);
       return;
     }
 
     final url = Uri.parse(rawUrl);
     if (!await canLaunchUrl(url)) {
       if (!mounted) return;
-      _showMessage(
-          _tr('Không thể mở liên kết này ngay bây giờ.',
-              'Cannot open this link right now.'),
-          isError: true);
+      _showMessage(_t('p5_premium_link_open_failed'), isError: true);
       return;
     }
     await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -457,8 +430,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   bool _isFeaturedPlan(ProductDetails product) {
     final planId = _planIdForProduct(product);
     if (_sortedProducts.length == 1) return true;
-    if (_sortedProducts
-        .any((item) => _planIdForProduct(item) == VipProduct.yearly)) {
+    if (_sortedProducts.any(
+      (item) => _planIdForProduct(item) == VipProduct.yearly,
+    )) {
       return planId == VipProduct.yearly;
     }
     if (_sortedProducts.any(
@@ -466,8 +440,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     )) {
       return planId == VipProduct.sixMonths;
     }
-    if (_sortedProducts
-        .any((item) => _planIdForProduct(item) == VipProduct.monthly)) {
+    if (_sortedProducts.any(
+      (item) => _planIdForProduct(item) == VipProduct.monthly,
+    )) {
       return planId == VipProduct.monthly;
     }
     return planId == VipProduct.lifetime;
@@ -477,16 +452,16 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     if (info == null) return 'PRO';
     switch (info.durationDays) {
       case 7:
-        return _tr('1 tuần', '1 week');
+        return _t('p5_premium_plan_week');
       case 30:
-        return _tr('1 tháng', '1 month');
+        return _t('p5_premium_plan_month');
       case 180:
-        return _tr('6 tháng', '6 months');
+        return _t('p5_premium_plan_six_months');
       case 365:
-        return _tr('1 năm', '1 year');
+        return _t('p5_premium_plan_year');
       default:
         return info.durationDays == null
-            ? _tr('Vĩnh viễn', 'Lifetime')
+            ? _t('p5_premium_plan_lifetime')
             : info.label;
     }
   }
@@ -505,41 +480,30 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   String _planSubtitle(ProductDetails product) {
     switch (_planIdForProduct(product)) {
       case VipProduct.weekly:
-        return _tr('Gói ngắn hạn để mở nhanh toàn bộ quyền lợi PRO.',
-            'Short-term plan for quick access to all PRO benefits.');
+        return _t('p5_premium_weekly_subtitle');
       case VipProduct.monthly:
-        return _tr('Dễ bắt đầu, đủ dùng hằng ngày và giữ mức chi phí nhẹ.',
-            'Easy to start, sufficient for daily use with light cost.');
+        return _t('p5_premium_monthly_subtitle');
       case VipProduct.sixMonths:
-        return _tr(
-            'Phù hợp khi hai bạn dùng ổn định và muốn tiết kiệm hơn gói tháng.',
-            'Suitable for stable use and better savings than monthly plan.');
+        return _t('p5_premium_six_months_subtitle');
       case VipProduct.yearly:
-        return _tr('Tối ưu chi phí cho nhu cầu dùng lâu dài suốt cả năm.',
-            'Optimized cost for long-term use throughout the year.');
+        return _t('p5_premium_yearly_subtitle');
       case VipProduct.lifetime:
-        return _tr('Thanh toán một lần để giữ quyền lợi PRO lâu dài.',
-            'Pay once to keep PRO benefits permanently.');
+        return _t('p5_premium_lifetime_subtitle');
       default:
         break;
     }
 
     switch (product.id) {
       case VipProduct.weekly:
-        return _tr('Gói ngắn hạn để trải nghiệm trọn bộ tính năng PRO.',
-            'Short-term plan to experience all PRO features.');
+        return _t('p5_premium_weekly_subtitle_alt');
       case VipProduct.monthly:
-        return _tr('Dễ bắt đầu, cân bằng giữa chi phí và quyền lợi hằng ngày.',
-            'Easy to start, balanced cost and daily benefits.');
+        return _t('p5_premium_monthly_subtitle_alt');
       case VipProduct.yearly:
-        return _tr('Phù hợp khi hai bạn dùng lâu dài và muốn tối ưu chi phí.',
-            'Suitable for long-term use with optimized cost.');
+        return _t('p5_premium_yearly_subtitle_alt');
       case VipProduct.lifetime:
-        return _tr('Thanh toán một lần để mở khóa quyền lợi PRO lâu dài.',
-            'Pay once to unlock PRO benefits permanently.');
+        return _t('p5_premium_lifetime_subtitle_alt');
       default:
-        return _tr('Mở khóa toàn bộ trải nghiệm PRO cho hai bạn.',
-            'Unlock full PRO experience for both of you.');
+        return _t('p5_premium_default_subtitle');
     }
   }
 
@@ -547,7 +511,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     if (info != null) {
       return _resolvedPlanLabel(info);
     }
-    return _tr('Tính năng', 'Features');
+    return _t('p5_premium_features');
   }
 
   @override
@@ -559,8 +523,8 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       appBar: AppBar(
         title: Text(
           showPurchaseUi
-              ? _tr('SoulLocket PRO', 'SoulLocket PRO')
-              : _tr('Tính năng tài khoản', 'Account Features'),
+              ? context.tr('p5_premium_title')
+              : context.tr('p5_premium_account_features'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w900,
             color: Colors.white,
@@ -572,6 +536,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.close_rounded, color: Colors.white),
+          tooltip: _t('p5_close'),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -579,11 +544,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
         width: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFF111426),
-              Color(0xFF171D38),
-              Color(0xFF10294A),
-            ],
+            colors: [Color(0xFF111426), Color(0xFF171D38), Color(0xFF10294A)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -617,35 +578,35 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
             SafeArea(
               child: showPurchaseUi
                   ? (_isLoading
-                      ? const Center(
-                          child: SkeletonContainer.circle(size: 48),
-                        )
-                      : SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          padding: EdgeInsets.fromLTRB(
-                            compact ? 14 : 20,
-                            12,
-                            compact ? 14 : 20,
-                            compact ? 20 : 28,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              _buildHeroSection(),
-                              const SizedBox(height: 22),
-                              _buildBenefitsSection(),
-                              const SizedBox(height: 20),
-                              _buildComparisonSection(),
-                              const SizedBox(height: 24),
-                              if (_isVip)
-                                _buildVipActiveStatus()
-                              else
-                                _buildProductSection(),
-                              const SizedBox(height: 20),
-                              _buildFooter(),
-                            ],
-                          ),
-                        ))
+                        ? const Center(
+                            child: SkeletonContainer.circle(size: 48),
+                          )
+                        : SingleChildScrollView(
+                            physics: SLResponsive.scrollPhysicsForPlatform(),
+                            padding: EdgeInsets.fromLTRB(
+                              compact ? 14 : 20,
+                              12,
+                              compact ? 14 : 20,
+                              compact ? 20 : 28,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _buildHeroSection(),
+                                const SizedBox(height: 22),
+                                _buildBenefitsSection(),
+                                const SizedBox(height: 20),
+                                _buildComparisonSection(),
+                                const SizedBox(height: 24),
+                                if (_isVip)
+                                  _buildVipActiveStatus()
+                                else
+                                  _buildProductSection(),
+                                const SizedBox(height: 20),
+                                _buildFooter(),
+                              ],
+                            ),
+                          ))
                   : Center(
                       child: Padding(
                         padding: const EdgeInsets.all(20),
@@ -668,8 +629,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                _tr('Tính năng tài khoản chưa khả dụng',
-                                    'Account Features Unavailable'),
+                                _t('p5_premium_account_features_unavailable'),
                                 style: SLTheme.quicksand(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w900,
@@ -678,8 +638,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                _tr('Mục này đang tạm ẩn trong bản phát hành hiện tại.',
-                                    'This section is hidden in the current release.'),
+                                _t('p5_premium_section_hidden'),
                                 textAlign: TextAlign.center,
                                 style: SLTheme.quicksand(
                                   color: const Color(0xFFD8DDF0),
@@ -721,8 +680,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            _tr('Đang xử lý thanh toán...',
-                                'Processing payment...'),
+                            _t('p5_premium_processing_payment'),
                             style: SLTheme.quicksand(
                               color: Colors.white,
                               fontWeight: FontWeight.w800,
@@ -759,8 +717,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
           ),
           const SizedBox(height: 14),
           Text(
-            _tr('Tính năng chưa khả dụng trên bản phát hành này',
-                'Feature not available in this release'),
+            _t('p5_premium_feature_unavailable_title'),
             style: SLTheme.quicksand(
               color: Colors.white,
               fontWeight: FontWeight.w900,
@@ -769,8 +726,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            _tr('Mục này đang được tạm ẩn và sẽ được cập nhật trong bản phát hành sau.',
-                'This section is temporarily hidden and will be updated later.'),
+            _t('p5_premium_feature_unavailable_subtitle'),
             style: SLTheme.quicksand(
               color: const Color(0xFFD8DDF0),
               fontWeight: FontWeight.w600,
@@ -785,18 +741,18 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   String _badgeLabel(ProductDetails product, VipPlanInfo? info) {
     final planId = _planIdForProduct(product);
     if (planId == VipProduct.yearly && info != null && info.savePercent > 0) {
-      return _tr('Tiết kiệm ${info.savePercent}%', 'Save ${info.savePercent}%');
+      return _tf('p5_premium_save_percent', {'percent': info.savePercent});
     }
     if (planId == VipProduct.sixMonths &&
         info != null &&
         info.savePercent > 0) {
-      return _tr('Tiết kiệm ${info.savePercent}%', 'Save ${info.savePercent}%');
+      return _tf('p5_premium_save_percent', {'percent': info.savePercent});
     }
     if (planId == VipProduct.monthly) {
-      return _tr('Phổ biến', 'Popular');
+      return _t('p5_premium_popular');
     }
     if (planId == VipProduct.lifetime) {
-      return _tr('Trọn đời', 'Lifetime');
+      return _t('p5_premium_lifetime_badge');
     }
     return info?.badge ?? '';
   }
@@ -804,22 +760,26 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   String _purchaseModeText(ProductDetails product, VipPlanInfo? info) {
     if (_planIdForProduct(product) == VipProduct.lifetime ||
         info?.durationDays == null) {
-      return _tr('Thanh toán 1 lần', 'One-time payment');
+      return _t('p5_premium_one_time_payment');
     }
-    return _tr('Gia hạn theo chu kỳ', 'Auto-renewable subscription');
+    return _t('p5_premium_auto_renewable');
   }
 
   String _securityNote(ProductDetails product) {
     final planId = _planIdForProduct(product);
     if (VipProduct.isLifetimeProduct(planId)) {
-      return 'Gói Vĩnh Viễn: Tải lên tới 40MB ảnh & 100MB video/ngày, kho 1024MB (1GB). $_storeDisplayName xử lý thanh toán một lần và bạn có thể khôi phục trên cùng tài khoản.';
+      return _tf('p5_premium_lifetime_security_note', {
+        'store': _storeDisplayName,
+      });
     }
-    return 'Gói VIP: Tải lên 20MB ảnh & 50MB video/ngày, kho 512MB. $_storeDisplayName xử lý thanh toán an toàn và tự quản lý chu kỳ gia hạn cho gói này.';
+    return _tf('p5_premium_subscription_security_note', {
+      'store': _storeDisplayName,
+    });
   }
 
   String _formatVnd(int amount) {
     final formatter = NumberFormat.decimalPattern('vi_VN');
-    return '${formatter.format(amount)}đ';
+    return '${formatter.format(amount)} ₫';
   }
 
   String _displayPrice(ProductDetails product, VipPlanInfo? info) {
@@ -829,7 +789,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   String _calculatePricePerDay(ProductDetails product, VipPlanInfo? info) {
     final durationDays = info?.durationDays;
     if (durationDays == null || durationDays <= 0) {
-      return 'Thanh toán một lần';
+      return _t('p5_premium_one_time_payment');
     }
 
     try {
@@ -839,25 +799,34 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
         if (product.currencyCode == 'VND') {
           final formatter = NumberFormat.currency(
             locale: 'vi_VN',
-            symbol: 'đ',
+            symbol: '₫',
             decimalDigits: 0,
           );
-          return '~${formatter.format(perDay).replaceAll(' ', '')}/ngày';
+          return _tf('p5_premium_per_day', {
+            'price': '~${formatter.format(perDay).replaceAll(' ', '')}',
+          });
         }
 
-        final formatter =
-            NumberFormat.simpleCurrency(name: product.currencyCode);
-        return '~${formatter.format(perDay).replaceAll(' ', '')}/ngày';
+        final formatter = NumberFormat.simpleCurrency(
+          name: product.currencyCode,
+        );
+        return _tf('p5_premium_per_day', {
+          'price': '~${formatter.format(perDay).replaceAll(' ', '')}',
+        });
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/premium/premium_store_screen.dart: $error',
+      );
+    }
 
     if (info != null &&
         (product.currencyCode.isEmpty || product.currencyCode == 'VND')) {
       final perDay = (info.priceVnd / durationDays).round();
-      return '~${_formatVnd(perDay)}/ngày';
+      return _tf('p5_premium_per_day', {'price': '~${_formatVnd(perDay)}'});
     }
 
-    return 'Tính theo ngày';
+    return _t('p5_premium_calculated_daily');
   }
 
   Widget _buildHeroSection() {
@@ -895,7 +864,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
               ),
               _buildTopChip(
                 icon: Icons.verified_user_rounded,
-                label: _isVip ? 'Đang hoạt động' : _checkoutLabel,
+                label: _isVip ? _t('p5_premium_active') : _checkoutLabel,
               ),
             ],
           ),
@@ -933,7 +902,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Mở khóa trải nghiệm trọn vẹn',
+                      _t('p5_premium_hero_title'),
                       style: SLTheme.quicksand(
                         fontSize: 26,
                         fontWeight: FontWeight.w900,
@@ -943,7 +912,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'SoulLocket PRO giúp hai bạn dùng app mượt hơn, lưu được nhiều hơn và có giao diện riêng tinh gọn.',
+                      _t('p5_premium_hero_subtitle'),
                       style: SLTheme.quicksand(
                         fontSize: 13,
                         color: const Color(0xFFD8DDF0),
@@ -957,21 +926,21 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
             ],
           ),
           const SizedBox(height: 18),
-          const Wrap(
+          Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
               _PremiumInfoPill(
                 icon: Icons.block_rounded,
-                label: 'Không quảng cáo',
+                label: _t('p5_premium_no_ads'),
               ),
               _PremiumInfoPill(
                 icon: Icons.cloud_done_rounded,
-                label: 'Kho lưu trữ 512MB - 1GB',
+                label: _t('p5_premium_storage_range'),
               ),
               _PremiumInfoPill(
                 icon: Icons.refresh_rounded,
-                label: 'Khôi phục dễ dàng',
+                label: _t('p5_premium_easy_restore'),
               ),
             ],
           ),
@@ -984,27 +953,23 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     final benefits = <Map<String, Object>>[
       {
         'icon': Icons.cloud_upload_rounded,
-        'title': 'Kho lưu trữ mở rộng',
-        'desc':
-            'VIP: 20MB ảnh & 50MB video/ngày, kho 512MB. Gói Vĩnh Viễn: Tải lên x2 (40MB ảnh, 100MB video/ngày), kho x2 (1024MB/1GB).',
+        'title': _t('p5_premium_benefit_storage_title'),
+        'desc': _t('p5_premium_benefit_storage_desc'),
       },
       {
         'icon': Icons.palette_rounded,
-        'title': 'Theme & hiệu ứng',
-        'desc':
-            'Mở khóa toàn bộ giao diện cao cấp, hiệu ứng tình yêu và tùy chỉnh không gian riêng của hai bạn.',
+        'title': _t('p5_premium_benefit_theme_title'),
+        'desc': _t('p5_premium_benefit_theme_desc'),
       },
       {
         'icon': Icons.style_rounded,
-        'title': 'Love card & kỷ niệm',
-        'desc':
-            'Dùng không giới hạn mẫu thiệp, collage/video export và công cụ lưu giữ khoảnh khắc nâng cao.',
+        'title': _t('p5_premium_benefit_memories_title'),
+        'desc': _t('p5_premium_benefit_memories_desc'),
       },
       {
         'icon': Icons.block_rounded,
-        'title': 'Không quảng cáo',
-        'desc':
-            'Trải nghiệm mượt mà, riêng tư, tập trung 100% cho hai bạn không bị làm phiền.',
+        'title': _t('p5_premium_no_ads'),
+        'desc': _t('p5_premium_benefit_no_ads_desc'),
       },
     ];
 
@@ -1012,9 +977,8 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeading(
-          title: 'Quyền lợi SoulLocket PRO',
-          subtitle:
-              'Mở khóa giao diện, hiệu ứng và kho lưu trữ kỷ niệm chất lượng cao cho hai bạn.',
+          title: _t('p5_premium_benefits_title'),
+          subtitle: _t('p5_premium_benefits_subtitle'),
         ),
         const SizedBox(height: 14),
         LayoutBuilder(
@@ -1056,7 +1020,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'So sánh quyền lợi',
+            _t('p5_premium_comparison_title'),
             style: SLTheme.quicksand(
               color: Colors.white,
               fontWeight: FontWeight.w900,
@@ -1065,34 +1029,34 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
           ),
           const SizedBox(height: 12),
           _buildComparisonRow(
-            title: 'Tài khoản thường (Miễn phí)',
-            items: const [
-              'Tải lên mỗi ngày: 5MB ảnh & 15MB video',
-              'Dung lượng kho: 182MB ảnh & 182MB video',
-              'Theme mặc định, tiện ích cơ bản',
-              'Có quảng cáo trải nghiệm',
+            title: _t('p5_premium_free_title'),
+            items: [
+              _t('p5_premium_free_upload'),
+              _t('p5_premium_free_storage'),
+              _t('p5_premium_free_theme'),
+              _t('p5_premium_free_ads'),
             ],
           ),
           const SizedBox(height: 12),
           _buildComparisonRow(
-            title: 'Gói VIP (Tuần / Tháng / 6 Tháng / Năm)',
+            title: _t('p5_premium_subscription_title'),
             highlight: true,
-            items: const [
-              'Tải lên mỗi ngày: 20MB ảnh & 50MB video (gấp 4 lần)',
-              'Dung lượng kho mở rộng: 512MB ảnh & 512MB video',
-              'Mở khóa tất cả Theme, Hiệu ứng & Love Card PRO',
-              'Không có quảng cáo làm phiền',
+            items: [
+              _t('p5_premium_subscription_upload'),
+              _t('p5_premium_subscription_storage'),
+              _t('p5_premium_subscription_theme'),
+              _t('p5_premium_subscription_ads'),
             ],
           ),
           const SizedBox(height: 12),
           _buildComparisonRow(
-            title: 'Gói VIP VĨNH VIỄN (Gấp đôi quyền lợi VIP)',
+            title: _t('p5_premium_lifetime_title'),
             highlight: true,
-            items: const [
-              'Tải lên mỗi ngày: 40MB ảnh & 100MB video (gấp đôi VIP)',
-              'Dung lượng kho tối đa: 1024MB (1GB) ảnh & 1GB video',
-              'Mở khóa vĩnh viễn trọn đời toàn bộ tính năng PRO',
-              'Thanh toán duy nhất 1 lần, không gia hạn định kỳ',
+            items: [
+              _t('p5_premium_lifetime_upload'),
+              _t('p5_premium_lifetime_storage'),
+              _t('p5_premium_lifetime_features'),
+              _t('p5_premium_lifetime_payment'),
             ],
           ),
         ],
@@ -1240,7 +1204,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                'Đang kết nối tới App Store...',
+                _t('p5_premium_connecting_store'),
                 style: SLTheme.quicksand(
                   color: Colors.white70,
                   fontSize: 14,
@@ -1267,7 +1231,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                _storeHint,
+                _t(_storeHintKey),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   color: Colors.white70,
@@ -1292,7 +1256,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                   ),
                 ),
                 child: Text(
-                  'Thử lại',
+                  _t('p5_retry'),
                   style: SLTheme.quicksand(fontWeight: FontWeight.bold),
                 ),
               ),
@@ -1306,9 +1270,10 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeading(
-          title: 'Chọn gói phù hợp',
-          subtitle:
-              'Giá trên thẻ được chuẩn hóa theo bảng gói hiện tại. $_storeDisplayName sẽ xác nhận lại trước khi thanh toán.',
+          title: _t('p5_premium_choose_plan'),
+          subtitle: _tf('p5_premium_choose_plan_subtitle', {
+            'store': _storeDisplayName,
+          }),
         ),
         const SizedBox(height: 14),
         ..._sortedProducts.map(_buildProductCard),
@@ -1327,10 +1292,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: featured
-              ? [
-                  const Color(0x26F8C14E),
-                  const Color(0x22F37B9B),
-                ]
+              ? [const Color(0x26F8C14E), const Color(0x22F37B9B)]
               : [
                   Colors.white.withValues(alpha: 0.08),
                   Colors.white.withValues(alpha: 0.05),
@@ -1362,16 +1324,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
             runSpacing: 8,
             children: [
               if (badge.isNotEmpty)
-                _buildPlanBadge(
-                  label: badge,
-                  bright: featured,
-                ),
-              _buildPlanBadge(
-                label: _planDurationLabel(info),
-              ),
-              _buildPlanBadge(
-                label: _purchaseModeText(product, info),
-              ),
+                _buildPlanBadge(label: badge, bright: featured),
+              _buildPlanBadge(label: _planDurationLabel(info)),
+              _buildPlanBadge(label: _purchaseModeText(product, info)),
             ],
           ),
           const SizedBox(height: 14),
@@ -1403,8 +1358,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                 ],
               );
               final priceColumn = Column(
-                crossAxisAlignment:
-                    stacked ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+                crossAxisAlignment: stacked
+                    ? CrossAxisAlignment.start
+                    : CrossAxisAlignment.end,
                 children: [
                   Text(
                     _displayPrice(product, info),
@@ -1431,7 +1387,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                   children: [
                     infoColumn,
                     const SizedBox(height: 10),
-                    priceColumn
+                    priceColumn,
                   ],
                 );
               }
@@ -1487,8 +1443,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                 backgroundColor: featured
                     ? const Color(0xFFF9C15A)
                     : const Color(0xFF242A46),
-                foregroundColor:
-                    featured ? const Color(0xFF1E2138) : Colors.white,
+                foregroundColor: featured
+                    ? const Color(0xFF1E2138)
+                    : Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -1537,7 +1494,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
           ),
           const SizedBox(height: 14),
           Text(
-            'Dữ liệu đang được cập nhật',
+            _t('p5_premium_data_updating'),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               color: Colors.white,
@@ -1547,7 +1504,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            _storeHint,
+            _t(_storeHintKey),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               color: const Color(0xFFC4CBDE),
@@ -1565,16 +1522,14 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [
-            Color(0x2BF9C15A),
-            Color(0x1847C9A2),
-          ],
+          colors: [Color(0x2BF9C15A), Color(0x1847C9A2)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(30),
-        border:
-            Border.all(color: const Color(0xFFF9C15A).withValues(alpha: 0.35)),
+        border: Border.all(
+          color: const Color(0xFFF9C15A).withValues(alpha: 0.35),
+        ),
       ),
       child: Column(
         children: [
@@ -1593,7 +1548,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
           ),
           const SizedBox(height: 14),
           Text(
-            'Bạn đang dùng PRO',
+            _t('p5_premium_active_title'),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               fontSize: 22,
@@ -1603,7 +1558,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Toàn bộ quyền lợi đã được kích hoạt. Cảm ơn hai bạn đã đồng hành cùng SoulLocket.',
+            _t('p5_premium_active_subtitle'),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               color: const Color(0xFFD8DDF0),
@@ -1627,8 +1582,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       child: Column(
         children: [
           Text(
-            _tr('Mọi giao dịch được xử lý bởi $_storeDisplayName. Bạn có thể khôi phục lại gói đã mua trên cùng tài khoản bất cứ lúc nào.',
-                'All transactions are processed by $_storeDisplayName. You can restore your purchases anytime.'),
+            _tf('p5_premium_footer_note', {'store': _storeDisplayName}),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               color: const Color(0xFFC4CBDE),
@@ -1644,8 +1598,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
-                    onPressed:
-                        _isLoading || _isPurchasing ? null : _restorePurchases,
+                    onPressed: _isLoading || _isPurchasing
+                        ? null
+                        : _restorePurchases,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
                       side: BorderSide(
@@ -1659,11 +1614,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                     icon: const Icon(Icons.refresh_rounded, size: 18),
                     label: Text(
                       _isAppleStorePlatform
-                          ? _tr('Khôi phục giao dịch', 'Restore purchases')
-                          : _tr('Làm mới trạng thái', 'Refresh status'),
-                      style: SLTheme.quicksand(
-                        fontWeight: FontWeight.w800,
-                      ),
+                          ? _t('p5_premium_restore_purchases')
+                          : _t('p5_premium_refresh_status'),
+                      style: SLTheme.quicksand(fontWeight: FontWeight.w800),
                     ),
                   ),
                 ),
@@ -1677,7 +1630,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
             runSpacing: 8,
             children: [
               _buildFooterLink(
-                label: _tr('Điều khoản sử dụng', 'Terms of Use (EULA)'),
+                label: _t('p5_premium_terms'),
                 onTap: () => _openExternalUrl(AppConfig.termsOfUseUrl),
               ),
               Text(
@@ -1688,7 +1641,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                 ),
               ),
               _buildFooterLink(
-                label: _tr('Chính sách bảo mật', 'Privacy Policy'),
+                label: _t('p5_premium_privacy'),
                 onTap: () => _openExternalUrl(AppConfig.privacyPolicyUrl),
               ),
             ],
@@ -1726,10 +1679,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     );
   }
 
-  Widget _buildTopChip({
-    required IconData icon,
-    required String label,
-  }) {
+  Widget _buildTopChip({required IconData icon, required String label}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -1755,10 +1705,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     );
   }
 
-  Widget _buildPlanBadge({
-    required String label,
-    bool bright = false,
-  }) {
+  Widget _buildPlanBadge({required String label, bool bright = false}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -1806,10 +1753,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     );
   }
 
-  Widget _buildBackdropOrb({
-    required double size,
-    required Color color,
-  }) {
+  Widget _buildBackdropOrb({required double size, required Color color}) {
     return IgnorePointer(
       child: Container(
         width: size,
@@ -1832,10 +1776,7 @@ class _PremiumInfoPill extends StatelessWidget {
   final IconData icon;
   final String label;
 
-  const _PremiumInfoPill({
-    required this.icon,
-    required this.label,
-  });
+  const _PremiumInfoPill({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {

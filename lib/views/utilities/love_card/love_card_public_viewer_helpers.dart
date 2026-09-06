@@ -4,8 +4,6 @@ class _LoveCardViewerTheme {
   final String badge;
   final String headline;
   final String headerTitle;
-  final String openHint;
-  final String tearHint;
   final String signatureFallback;
   final String effectLabel;
   final List<Color> background;
@@ -23,8 +21,6 @@ class _LoveCardViewerTheme {
     required this.badge,
     required this.headline,
     required this.headerTitle,
-    required this.openHint,
-    required this.tearHint,
     required this.signatureFallback,
     required this.effectLabel,
     required this.background,
@@ -39,224 +35,424 @@ class _LoveCardViewerTheme {
     required this.stampIcon,
   });
 
-  static _LoveCardViewerTheme of(String key) {
-    switch (key.trim().toLowerCase()) {
+  factory _LoveCardViewerTheme.of(String rawKey) {
+    final key = rawKey.trim().toLowerCase();
+    switch (key) {
       case 'birthday':
         return _LoveCardViewerTheme(
           badge: L10nService().translate('util_sinhnht_71c600'),
-          headline: L10nService().translate('util_lichccbung_0dbab0'),
-          headerTitle: 'Birthday Card',
-          openHint: L10nService().translate('util_chmmquchcm_63c8ab'),
-          tearHint: L10nService().translate('util_koxdiquvxe_a06353'),
+          headline: L10nService().translate('util_rcrvvuiti_6474ca'),
+          headerTitle: L10nService().translate(
+            'love_card_receiver_birthday_header',
+          ),
           signatureFallback: L10nService().translate('util_chcmngsinh_1db118'),
           effectLabel: L10nService().translate('util_phogiybngn_b5a4e9'),
-          background: const [
-            Color(0xFFFAD0C4),
-            Color(0xFFFFD1FF),
-            Color(0xFFFFF0F5)
-          ],
-          accent: const Color(0xFFFF7DB0),
-          envelope: const Color(0xFFFFD8E5),
-          envelopeLight: const Color(0xFFFFF2F6),
-          paper: const Color(0xFFFFFCFE),
-          ink: const Color(0xFF6B3A5A),
-          muted: const Color(0xFF9E688A),
-          leadingIcon: Icons.celebration_rounded,
-          trailingIcon: Icons.cake_rounded,
-          stampIcon: Icons.celebration_rounded,
+          background: const [Color(0xFF50302F), Color(0xFF201C2E)],
+          accent: const Color(0xFFFF8B5E),
+          envelope: const Color(0xFFFFB47E),
+          envelopeLight: const Color(0xFFFFE09F),
+          paper: const Color(0xFFFFFBF1),
+          ink: const Color(0xFF382B35),
+          muted: const Color(0xFF7B6E74),
+          leadingIcon: Icons.cake_rounded,
+          trailingIcon: Icons.celebration_rounded,
+          stampIcon: Icons.local_activity_rounded,
         );
       case 'anniversary':
         return _LoveCardViewerTheme(
           badge: L10nService().translate('util_knim_4f6aeb'),
-          headline: L10nService().translate('util_mtctmcpcmr_62adaa'),
-          headerTitle: 'Anniversary Card',
-          openHint: L10nService().translate('util_chmmthipkn_52c875'),
-          tearHint: L10nService().translate('util_koxvlractm_cfd029'),
+          headline: L10nService().translate('util_trangtrngv_a5c5a8'),
+          headerTitle: L10nService().translate(
+            'love_card_receiver_anniversary_header',
+          ),
           signatureFallback: L10nService().translate('util_mtngyngnhc_02e59f'),
           effectLabel: L10nService().translate('util_hoquangkc_1a4d18'),
-          background: const [
-            Color(0xFFA1C4FD),
-            Color(0xFFC2E9FB),
-            Color(0xFFE6F3FF)
-          ],
-          accent: const Color(0xFF6A9DFE),
-          envelope: const Color(0xFFCCE4FF),
-          envelopeLight: const Color(0xFFEDF6FF),
-          paper: const Color(0xFFFAFDFE),
-          ink: const Color(0xFF284C7E),
-          muted: const Color(0xFF5B7BA3),
-          leadingIcon: Icons.workspace_premium_rounded,
-          trailingIcon: Icons.diamond_rounded,
-          stampIcon: Icons.workspace_premium_rounded,
+          background: const [Color(0xFF2D3F72), Color(0xFF171C3B)],
+          accent: const Color(0xFF6478E8),
+          envelope: const Color(0xFF8298F2),
+          envelopeLight: const Color(0xFFBFD3FF),
+          paper: const Color(0xFFF9FAFF),
+          ink: const Color(0xFF29304B),
+          muted: const Color(0xFF707791),
+          leadingIcon: Icons.diamond_rounded,
+          trailingIcon: Icons.workspace_premium_rounded,
+          stampIcon: Icons.auto_awesome_rounded,
         );
       case 'miss':
         return _LoveCardViewerTheme(
           badge: L10nService().translate('util_nhnhau_5dc5c1'),
-          headline: L10nService().translate('util_linhthngxu_de9d2c'),
-          headerTitle: 'Miss You Card',
-          openHint: L10nService().translate('util_chmmlinhth_3f9037'),
-          tearHint: L10nService().translate('util_koxdigiyvc_ae668f'),
+          headline: L10nService().translate('util_nhnhngvsul_592c70'),
+          headerTitle: L10nService().translate(
+            'love_card_receiver_miss_header',
+          ),
           signatureFallback: L10nService().translate('util_nhbnnhiulm_fcda3f'),
           effectLabel: L10nService().translate('util_msaodum_19d800'),
-          background: const [
-            Color(0xFFBDB2FF),
-            Color(0xFFFFC6FF),
-            Color(0xFFFFF0FF)
-          ],
-          accent: const Color(0xFF8B5CF6),
-          envelope: const Color(0xFFE8D8FF),
-          envelopeLight: const Color(0xFFF7F3FF),
-          paper: const Color(0xFFFDFCFF),
-          ink: const Color(0xFF4C3E8A),
-          muted: const Color(0xFF7E72B7),
+          background: const [Color(0xFF413766), Color(0xFF1D1A34)],
+          accent: const Color(0xFF8972D8),
+          envelope: const Color(0xFFA995E4),
+          envelopeLight: const Color(0xFFD5C7FA),
+          paper: const Color(0xFFFCF9FF),
+          ink: const Color(0xFF352E4D),
+          muted: const Color(0xFF786F8A),
           leadingIcon: Icons.nights_stay_rounded,
           trailingIcon: Icons.star_rounded,
-          stampIcon: Icons.star_rounded,
+          stampIcon: Icons.bedtime_rounded,
+        );
+      case 'encouragement':
+        return _LoveCardViewerTheme(
+          badge: L10nService().translate('love_card_theme_encouragement_chip'),
+          headline: L10nService().translate(
+            'love_card_theme_encouragement_title',
+          ),
+          headerTitle: L10nService().translate(
+            'love_card_receiver_encouragement_header',
+          ),
+          signatureFallback: L10nService().translate(
+            'love_card_theme_encouragement_signature',
+          ),
+          effectLabel: L10nService().translate(
+            'love_card_theme_encouragement_effect',
+          ),
+          background: const [Color(0xFF573829), Color(0xFF242126)],
+          accent: const Color(0xFFF57C45),
+          envelope: const Color(0xFFFFA65F),
+          envelopeLight: const Color(0xFFFFD36C),
+          paper: const Color(0xFFFFFBF0),
+          ink: const Color(0xFF3B302D),
+          muted: const Color(0xFF7D706A),
+          leadingIcon: Icons.emoji_objects_rounded,
+          trailingIcon: Icons.whatshot_rounded,
+          stampIcon: Icons.bolt_rounded,
+        );
+      case 'gratitude':
+        return _LoveCardViewerTheme(
+          badge: L10nService().translate('love_card_theme_gratitude_chip'),
+          headline: L10nService().translate('love_card_theme_gratitude_title'),
+          headerTitle: L10nService().translate(
+            'love_card_receiver_gratitude_header',
+          ),
+          signatureFallback: L10nService().translate(
+            'love_card_theme_gratitude_signature',
+          ),
+          effectLabel: L10nService().translate(
+            'love_card_theme_gratitude_effect',
+          ),
+          background: const [Color(0xFF214D52), Color(0xFF142A35)],
+          accent: const Color(0xFF269B96),
+          envelope: const Color(0xFF56BDB3),
+          envelopeLight: const Color(0xFF9BE1D2),
+          paper: const Color(0xFFF6FCF9),
+          ink: const Color(0xFF243E3F),
+          muted: const Color(0xFF687D7C),
+          leadingIcon: Icons.volunteer_activism_rounded,
+          trailingIcon: Icons.favorite_rounded,
+          stampIcon: Icons.water_drop_rounded,
+        );
+      case 'adventure':
+        return _LoveCardViewerTheme(
+          badge: L10nService().translate('love_card_theme_adventure_chip'),
+          headline: L10nService().translate('love_card_theme_adventure_title'),
+          headerTitle: L10nService().translate(
+            'love_card_receiver_adventure_header',
+          ),
+          signatureFallback: L10nService().translate(
+            'love_card_theme_adventure_signature',
+          ),
+          effectLabel: L10nService().translate(
+            'love_card_theme_adventure_effect',
+          ),
+          background: const [Color(0xFF214836), Color(0xFF172C27)],
+          accent: const Color(0xFF2C8C68),
+          envelope: const Color(0xFF65AD7B),
+          envelopeLight: const Color(0xFFAED5B8),
+          paper: const Color(0xFFF8FCF4),
+          ink: const Color(0xFF293B31),
+          muted: const Color(0xFF6B7C70),
+          leadingIcon: Icons.explore_rounded,
+          trailingIcon: Icons.flight_rounded,
+          stampIcon: Icons.landscape_rounded,
+        );
+      case 'serenity':
+        return _LoveCardViewerTheme(
+          badge: L10nService().translate('love_card_theme_serenity_chip'),
+          headline: L10nService().translate('love_card_theme_serenity_title'),
+          headerTitle: L10nService().translate(
+            'love_card_receiver_serenity_header',
+          ),
+          signatureFallback: L10nService().translate(
+            'love_card_theme_serenity_signature',
+          ),
+          effectLabel: L10nService().translate(
+            'love_card_theme_serenity_effect',
+          ),
+          background: const [Color(0xFF3E385A), Color(0xFF242137)],
+          accent: const Color(0xFF7769BC),
+          envelope: const Color(0xFF998CD1),
+          envelopeLight: const Color(0xFFD5C9EE),
+          paper: const Color(0xFFFBFAFD),
+          ink: const Color(0xFF373246),
+          muted: const Color(0xFF787285),
+          leadingIcon: Icons.self_improvement_rounded,
+          trailingIcon: Icons.nights_stay_rounded,
+          stampIcon: Icons.spa_rounded,
         );
       default:
         return _LoveCardViewerTheme(
           badge: L10nService().translate('util_tnhyu_2814db'),
-          headline: L10nService().translate('util_mtlthringc_c46917'),
-          headerTitle: 'Love Card',
-          openHint: L10nService().translate('util_chmmlthrin_c5daf2'),
-          tearHint: L10nService().translate('util_koxdigiyvl_f36b97'),
+          headline: L10nService().translate('util_dudngvmp_f089f1'),
+          headerTitle: L10nService().translate('utility_title_love_card'),
           signatureFallback: L10nService().translate('util_tngilunnhb_c60ef5'),
           effectLabel: L10nService().translate('util_tritimlpln_02cb79'),
-          background: const [
-            Color(0xFFFF8A9A),
-            Color(0xFFFFB7B2),
-            Color(0xFFFFF1F2)
-          ],
-          accent: const Color(0xFFFF5E8B),
-          envelope: const Color(0xFFFFD5DD),
-          envelopeLight: const Color(0xFFFFF0F3),
-          paper: const Color(0xFFFFFBFC),
-          ink: const Color(0xFF7B3645),
-          muted: const Color(0xFFAD6C7C),
-          leadingIcon: Icons.auto_awesome_rounded,
-          trailingIcon: Icons.favorite_rounded,
+          background: const [Color(0xFF5A3447), Color(0xFF251D32)],
+          accent: const Color(0xFFE75B80),
+          envelope: const Color(0xFFF47A99),
+          envelopeLight: const Color(0xFFFFB8C9),
+          paper: const Color(0xFFFFFAF6),
+          ink: const Color(0xFF3D2E38),
+          muted: const Color(0xFF806F79),
+          leadingIcon: Icons.favorite_rounded,
+          trailingIcon: Icons.auto_awesome_rounded,
           stampIcon: Icons.favorite_rounded,
         );
     }
   }
 }
 
-class _EnvelopeStage extends StatelessWidget {
+class _LoveCardBackdropMotif extends StatelessWidget {
   final _LoveCardViewerTheme palette;
-  final double openValue;
-  final VoidCallback onOpen;
-  final String hintText;
 
-  const _EnvelopeStage({
+  const _LoveCardBackdropMotif({required this.palette});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Stack(
+          children: [
+            Positioned(
+              top: -70,
+              right: -55,
+              child: _BackdropOrb(
+                size: 210,
+                color: palette.envelopeLight.withValues(alpha: 0.10),
+              ),
+            ),
+            Positioned(
+              left: -80,
+              bottom: 30,
+              child: _BackdropOrb(
+                size: 240,
+                color: palette.accent.withValues(alpha: 0.10),
+              ),
+            ),
+            Positioned(
+              top: constraints.maxHeight * 0.18,
+              left: 24,
+              child: Icon(
+                palette.trailingIcon,
+                size: 23,
+                color: Colors.white.withValues(alpha: 0.08),
+              ),
+            ),
+            Positioned(
+              top: constraints.maxHeight * 0.32,
+              right: 28,
+              child: Transform.rotate(
+                angle: 0.22,
+                child: Icon(
+                  palette.stampIcon,
+                  size: 31,
+                  color: palette.envelopeLight.withValues(alpha: 0.11),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: constraints.maxHeight * 0.15,
+              left: constraints.maxWidth * 0.18,
+              child: Icon(
+                Icons.auto_awesome_rounded,
+                size: 18,
+                color: Colors.white.withValues(alpha: 0.09),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _BackdropOrb extends StatelessWidget {
+  final double size;
+  final Color color;
+
+  const _BackdropOrb({required this.size, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+    );
+  }
+}
+
+class _SealedLoveEnvelope extends StatelessWidget {
+  final _LoveCardViewerTheme palette;
+  final String senderName;
+  final VoidCallback onOpen;
+
+  const _SealedLoveEnvelope({
     required this.palette,
-    required this.openValue,
+    required this.senderName,
     required this.onOpen,
-    required this.hintText,
   });
 
   @override
   Widget build(BuildContext context) {
-    final flapAngle = -pi * 0.94 * openValue;
-
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 760),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            height: 336,
+    return Semantics(
+      button: true,
+      label: context.tr('love_card_receiver_open_action'),
+      child: GestureDetector(
+        onTap: onOpen,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: AspectRatio(
+            aspectRatio: 1.38,
             child: Stack(
               clipBehavior: Clip.none,
-              alignment: Alignment.bottomCenter,
               children: [
                 Positioned(
-                  top: 20,
-                  child: _GlowOrb(
-                    size: 180,
-                    color: Colors.white.withValues(alpha: 0.20),
-                  ),
-                ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: _EnvelopePocket(
-                    color: palette.envelope,
-                    shadow: palette.accent.withValues(alpha: 0.24),
-                  ),
-                ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 150,
-                  child: Transform(
-                    alignment: Alignment.topCenter,
-                    transform: Matrix4.identity()
-                      ..setEntry(3, 2, 0.001)
-                      ..rotateX(flapAngle),
-                    child: _EnvelopeFlap(color: palette.envelopeLight),
-                  ),
-                ),
-                Positioned(
-                  left: 26,
-                  top: 32,
-                  child: Icon(
-                    palette.leadingIcon,
-                    color: Colors.white.withValues(alpha: 0.86),
-                    size: 26,
-                  ),
-                ),
-                Positioned(
-                  right: 28,
+                  left: 8,
+                  right: 8,
                   top: 34,
-                  child: Icon(
-                    palette.trailingIcon,
-                    color: Colors.white.withValues(alpha: 0.86),
-                    size: 24,
+                  bottom: 6,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: palette.envelopeLight,
+                      borderRadius: BorderRadius.circular(26),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.40),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.24),
+                          blurRadius: 30,
+                          offset: const Offset(0, 17),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 Positioned(
-                  bottom: 78,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: onOpen,
-                      borderRadius: BorderRadius.circular(999),
-                      child: Ink(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 22,
-                          vertical: 18,
+                  left: 29,
+                  right: 29,
+                  top: 10,
+                  height: 190,
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+                    decoration: BoxDecoration(
+                      color: palette.paper,
+                      borderRadius: BorderRadius.circular(22),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.10),
+                          blurRadius: 14,
+                          offset: const Offset(0, 7),
                         ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.16),
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.22),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _PostageStamp(palette: palette, compact: true),
+                        const Spacer(),
+                        Text(
+                          context.tr('love_card_receiver_letter_title'),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: SLTheme.quicksand(
+                            color: palette.ink,
+                            fontSize: 15,
+                            height: 1.25,
+                            fontWeight: FontWeight.w900,
                           ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          senderName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.dancingScript(
+                            color: palette.accent,
+                            fontSize: 19,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 8,
+                  right: 8,
+                  bottom: 6,
+                  height: 150,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(26),
+                    child: ColoredBox(
+                      color: palette.envelope,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Positioned(
+                            left: -83,
+                            top: 18,
+                            child: Transform.rotate(
+                              angle: 0.72,
+                              child: Container(
+                                width: 180,
+                                height: 180,
+                                color: Colors.white.withValues(alpha: 0.12),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            right: -83,
+                            top: 18,
+                            child: Transform.rotate(
+                              angle: -0.72,
+                              child: Container(
+                                width: 180,
+                                height: 180,
+                                color: Colors.black.withValues(alpha: 0.05),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 86,
+                  child: Center(
+                    child: Transform.rotate(
+                      angle: 0.785,
+                      child: Container(
+                        width: 190,
+                        height: 190,
+                        decoration: BoxDecoration(
+                          color: palette.envelopeLight,
+                          borderRadius: BorderRadius.circular(18),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.12),
-                              blurRadius: 24,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.unfold_more_rounded,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              L10nService().translate('util_mthip_c0ffaf'),
-                              style: SLTheme.quicksand(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w900,
-                              ),
+                              color: Colors.black.withValues(alpha: 0.08),
+                              blurRadius: 12,
+                              offset: const Offset(4, 5),
                             ),
                           ],
                         ),
@@ -264,823 +460,191 @@ class _EnvelopeStage extends StatelessWidget {
                     ),
                   ),
                 ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 66,
+                  child: Center(
+                    child: Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        color: palette.accent,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.62),
+                          width: 3,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: palette.accent.withValues(alpha: 0.40),
+                            blurRadius: 18,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        palette.leadingIcon,
+                        color: Colors.white,
+                        size: 30,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          AnimatedOpacity(
-            opacity: openValue > 0.18 ? 0.54 : 1,
-            duration: const Duration(milliseconds: 180),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
-              ),
-              child: Text(
-                hintText,
-                textAlign: TextAlign.center,
-                style: SLTheme.quicksand(
-                  color: Colors.white.withValues(alpha: 0.94),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _PaperBadge extends StatelessWidget {
-  final String label;
-  final Color background;
-  final Color foreground;
+class _PostageStamp extends StatelessWidget {
+  final _LoveCardViewerTheme palette;
+  final bool compact;
 
-  const _PaperBadge({
+  const _PostageStamp({required this.palette, this.compact = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final size = compact ? 46.0 : 58.0;
+    return Align(
+      alignment: Alignment.topRight,
+      child: Transform.rotate(
+        angle: 0.08,
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: palette.envelopeLight.withValues(alpha: 0.70),
+            borderRadius: BorderRadius.circular(compact ? 12 : 15),
+            border: Border.all(
+              color: palette.accent.withValues(alpha: 0.42),
+              width: 1.5,
+            ),
+          ),
+          child: Icon(
+            palette.stampIcon,
+            color: palette.accent,
+            size: compact ? 22 : 27,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LetterBadge extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final bool onPaper;
+
+  const _LetterBadge({
+    required this.icon,
     required this.label,
-    required this.background,
-    required this.foreground,
+    required this.color,
+    this.onPaper = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
       decoration: BoxDecoration(
-        color: background,
+        color: onPaper
+            ? color.withValues(alpha: 0.10)
+            : Colors.white.withValues(alpha: 0.11),
         borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: SLTheme.quicksand(
-          color: foreground,
-          fontSize: 12,
-          fontWeight: FontWeight.w900,
+        border: Border.all(
+          color: onPaper
+              ? color.withValues(alpha: 0.18)
+              : Colors.white.withValues(alpha: 0.14),
         ),
       ),
-    );
-  }
-}
-
-class _PaperTearStrip extends StatelessWidget {
-  final Color accent;
-  final String label;
-
-  const _PaperTearStrip({
-    required this.accent,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _TearStripPainter(
-        accent: accent,
-        paper: const Color(0xFFFFFCFE),
-      ),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(18, 14, 18, 24),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.swipe_rounded,
-                color: accent,
-                size: 22,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: onPaper ? color : Colors.white, size: 15),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: SLTheme.quicksand(
+                color: onPaper ? color : Colors.white,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w900,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                label,
-                style: SLTheme.quicksand(
-                  color: const Color(0xFF6C465A),
-                  fontSize: 13,
-                  height: 1.35,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _EnvelopePocket extends StatelessWidget {
-  final Color color;
-  final Color shadow;
-
-  const _EnvelopePocket({
-    required this.color,
-    required this.shadow,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 260,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(36),
-        boxShadow: [
-          BoxShadow(
-            color: shadow,
-            blurRadius: 28,
-            offset: const Offset(0, 18),
           ),
         ],
       ),
-      child: CustomPaint(
-        painter: _EnvelopePocketPainter(color: color.withValues(alpha: 0.94)),
-        child: const SizedBox.expand(),
-      ),
     );
   }
 }
 
-class _EnvelopeFlap extends StatelessWidget {
-  final Color color;
+class _LetterDivider extends StatelessWidget {
+  final _LoveCardViewerTheme palette;
 
-  const _EnvelopeFlap({required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 176,
-      child: CustomPaint(
-        painter: _EnvelopeFlapPainter(color: color),
-        child: const SizedBox.expand(),
-      ),
-    );
-  }
-}
-
-class _EnvelopePocketPainter extends CustomPainter {
-  final Color color;
-
-  const _EnvelopePocketPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final basePaint = Paint()..color = color;
-    final shinePaint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          Colors.white.withValues(alpha: 0.28),
-          Colors.transparent,
-        ],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-      ).createShader(Offset.zero & size);
-
-    final path = Path()
-      ..moveTo(0, 0)
-      ..lineTo(size.width / 2, size.height * 0.58)
-      ..lineTo(size.width, 0)
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
-      ..close();
-
-    canvas.drawPath(path, basePaint);
-    canvas.drawPath(path, shinePaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _EnvelopePocketPainter oldDelegate) {
-    return oldDelegate.color != color;
-  }
-}
-
-class _EnvelopeFlapPainter extends CustomPainter {
-  final Color color;
-
-  const _EnvelopeFlapPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          Colors.white.withValues(alpha: 0.38),
-          color,
-        ],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-      ).createShader(Offset.zero & size);
-
-    final path = Path()
-      ..moveTo(0, 0)
-      ..lineTo(size.width / 2, size.height)
-      ..lineTo(size.width, 0)
-      ..close();
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _EnvelopeFlapPainter oldDelegate) {
-    return oldDelegate.color != color;
-  }
-}
-
-class _TearStripPainter extends CustomPainter {
-  final Color accent;
-  final Color paper;
-
-  const _TearStripPainter({
-    required this.accent,
-    required this.paper,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final path = Path()..moveTo(18, 0);
-    path.lineTo(size.width - 18, 0);
-    path.quadraticBezierTo(size.width, 0, size.width, 18);
-    path.lineTo(size.width, size.height - 18);
-
-    const segments = 12;
-    final segmentWidth = size.width / segments;
-    for (var i = segments; i >= 0; i--) {
-      final x = i * segmentWidth;
-      final y = size.height - (i.isEven ? 6.0 : 16.0);
-      path.lineTo(x, y);
-    }
-
-    path.lineTo(0, 18);
-    path.quadraticBezierTo(0, 0, 18, 0);
-    path.close();
-
-    final fill = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          Colors.white,
-          paper,
-        ],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-      ).createShader(Offset.zero & size);
-    final border = Paint()
-      ..color = accent.withValues(alpha: 0.12)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-
-    canvas.drawShadow(path, Colors.black.withValues(alpha: 0.10), 10, false);
-    canvas.drawPath(path, fill);
-    canvas.drawPath(path, border);
-  }
-
-  @override
-  bool shouldRepaint(covariant _TearStripPainter oldDelegate) {
-    return oldDelegate.accent != accent || oldDelegate.paper != paper;
-  }
-}
-
-enum _ViewerThemeEffectKind {
-  love,
-  birthday,
-  anniversary,
-  miss,
-}
-
-_ViewerThemeEffectKind _viewerThemeEffectOf(String key) {
-  switch (key.trim().toLowerCase()) {
-    case 'birthday':
-      return _ViewerThemeEffectKind.birthday;
-    case 'anniversary':
-      return _ViewerThemeEffectKind.anniversary;
-    case 'miss':
-      return _ViewerThemeEffectKind.miss;
-    default:
-      return _ViewerThemeEffectKind.love;
-  }
-}
-
-class _ThemeAmbientPainter extends CustomPainter {
-  final String themeKey;
-  final double openProgress;
-  final double tearProgress;
-  final Color accent;
-  final Color softAccent;
-  final Color backdrop;
-
-  const _ThemeAmbientPainter({
-    required this.themeKey,
-    required this.openProgress,
-    required this.tearProgress,
-    required this.accent,
-    required this.softAccent,
-    required this.backdrop,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final reveal =
-        max(openProgress, tearProgress * 0.9).clamp(0.0, 1.0).toDouble();
-    if (reveal <= 0) {
-      return;
-    }
-
-    switch (_viewerThemeEffectOf(themeKey)) {
-      case _ViewerThemeEffectKind.love:
-        _drawHeart(
-          canvas,
-          Offset(size.width * 0.14, size.height * 0.16),
-          16,
-          accent.withValues(alpha: 0.16 * reveal),
-        );
-        _drawHeart(
-          canvas,
-          Offset(size.width * 0.84, size.height * 0.28),
-          22,
-          softAccent.withValues(alpha: 0.18 * reveal),
-        );
-        _drawSparkle(
-          canvas,
-          Offset(size.width * 0.78, size.height * 0.12),
-          12,
-          Colors.white.withValues(alpha: 0.34 * reveal),
-        );
-        _drawSparkle(
-          canvas,
-          Offset(size.width * 0.24, size.height * 0.26),
-          10,
-          Colors.white.withValues(alpha: 0.26 * reveal),
-        );
-        break;
-      case _ViewerThemeEffectKind.birthday:
-        _drawBalloon(
-          canvas,
-          Offset(size.width * 0.18, size.height * 0.18),
-          22,
-          softAccent.withValues(alpha: 0.22 * reveal),
-        );
-        _drawBalloon(
-          canvas,
-          Offset(size.width * 0.84, size.height * 0.16),
-          26,
-          Colors.white.withValues(alpha: 0.18 * reveal),
-        );
-        for (var i = 0; i < 9; i++) {
-          final x = size.width * (0.12 + i * 0.085);
-          final y = size.height * (0.11 + (i.isEven ? 0.00 : 0.03));
-          _drawConfettiPiece(
-            canvas,
-            Offset(x, y),
-            Size(i.isEven ? 12 : 8, i.isEven ? 4 : 8),
-            (i.isEven ? 0.42 : -0.52) + (i * 0.03),
-            Color.lerp(accent, softAccent, i / 8)!
-                .withValues(alpha: 0.28 * reveal),
-          );
-        }
-        break;
-      case _ViewerThemeEffectKind.anniversary:
-        _drawRing(
-          canvas,
-          Offset(size.width * 0.84, size.height * 0.18),
-          32,
-          Colors.white.withValues(alpha: 0.22 * reveal),
-          2,
-        );
-        _drawRing(
-          canvas,
-          Offset(size.width * 0.84, size.height * 0.18),
-          20,
-          const Color(0xFFFFD98B).withValues(alpha: 0.38 * reveal),
-          1.5,
-        );
-        _drawSparkle(
-          canvas,
-          Offset(size.width * 0.16, size.height * 0.18),
-          12,
-          const Color(0xFFFFE3A2).withValues(alpha: 0.34 * reveal),
-        );
-        _drawSparkle(
-          canvas,
-          Offset(size.width * 0.26, size.height * 0.12),
-          9,
-          Colors.white.withValues(alpha: 0.24 * reveal),
-        );
-        break;
-      case _ViewerThemeEffectKind.miss:
-        _drawMoon(
-          canvas,
-          Offset(size.width * 0.84, size.height * 0.17),
-          28,
-          Colors.white.withValues(alpha: 0.20 * reveal),
-          backdrop,
-        );
-        _drawSparkle(
-          canvas,
-          Offset(size.width * 0.18, size.height * 0.14),
-          9,
-          Colors.white.withValues(alpha: 0.26 * reveal),
-        );
-        _drawSparkle(
-          canvas,
-          Offset(size.width * 0.26, size.height * 0.22),
-          7,
-          softAccent.withValues(alpha: 0.22 * reveal),
-        );
-        break;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ThemeAmbientPainter oldDelegate) {
-    return oldDelegate.themeKey != themeKey ||
-        oldDelegate.openProgress != openProgress ||
-        oldDelegate.tearProgress != tearProgress ||
-        oldDelegate.accent != accent ||
-        oldDelegate.softAccent != softAccent ||
-        oldDelegate.backdrop != backdrop;
-  }
-}
-
-class _BurstParticlesPainter extends CustomPainter {
-  final String themeKey;
-  final double progress;
-  final double openProgress;
-  final Color accent;
-  final Color softAccent;
-
-  const _BurstParticlesPainter({
-    required this.themeKey,
-    required this.progress,
-    required this.openProgress,
-    required this.accent,
-    required this.softAccent,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (progress <= 0 || progress >= 1) {
-      return;
-    }
-
-    final effect = _viewerThemeEffectOf(themeKey);
-    final eased = Curves.easeOut.transform(progress);
-    final fade = (1 - Curves.easeIn.transform(progress)) *
-        (0.84 + (openProgress * 0.16));
-    final origin = Offset(size.width / 2, size.height * 0.72);
-
-    switch (effect) {
-      case _ViewerThemeEffectKind.love:
-        for (var i = 0; i < 14; i++) {
-          final angle = (-pi / 1.25) + (pi * 1.5) * (i / 13);
-          final distance = lerpDouble(16, 210 + (i % 3) * 18, eased) ?? 0;
-          final center = origin.translate(
-            cos(angle) * distance,
-            sin(angle) * distance,
-          );
-          final sizeFactor = lerpDouble(8, 18 - (i % 4), fade) ?? 10;
-          final color = Color.lerp(
-            accent.withValues(alpha: 0.90 * fade),
-            softAccent.withValues(alpha: 0.78 * fade),
-            i.isEven ? 0.24 : 0.68,
-          )!;
-          if (i % 3 == 0) {
-            _drawSparkle(canvas, center, max(sizeFactor * 0.68, 5), color);
-          } else {
-            _drawHeart(canvas, center, max(sizeFactor, 6), color);
-          }
-        }
-        break;
-      case _ViewerThemeEffectKind.birthday:
-        for (var i = 0; i < 18; i++) {
-          final angle = (-pi / 1.2) + (pi * 1.45) * (i / 17);
-          final distance = lerpDouble(18, 240 + (i % 4) * 10, eased) ?? 0;
-          final center = origin.translate(
-            cos(angle) * distance,
-            sin(angle) * distance,
-          );
-          final color = Color.lerp(
-            accent.withValues(alpha: 0.92 * fade),
-            softAccent.withValues(alpha: 0.70 * fade),
-            (i % 5) / 4,
-          )!;
-          if (i.isEven) {
-            _drawConfettiPiece(
-              canvas,
-              center,
-              Size(16 - (i % 3).toDouble(), 5 + (i % 2).toDouble()),
-              angle + (i * 0.1),
-              color,
-            );
-          } else {
-            canvas.drawCircle(
-              center,
-              lerpDouble(3, 7, fade) ?? 4,
-              Paint()..color = color,
-            );
-          }
-        }
-        break;
-      case _ViewerThemeEffectKind.anniversary:
-        for (var i = 0; i < 3; i++) {
-          _drawRing(
-            canvas,
-            origin,
-            lerpDouble(24 + (i * 8), 90 + (i * 28), eased) ?? 36,
-            Color.lerp(
-              accent.withValues(alpha: 0.20 * fade),
-              const Color(0xFFFFD98B).withValues(alpha: 0.28 * fade),
-              i / 2,
-            )!,
-            1.4 + (2 - i) * 0.4,
-          );
-        }
-        for (var i = 0; i < 12; i++) {
-          final angle = (-pi / 1.1) + (pi * 1.35) * (i / 11);
-          final distance = lerpDouble(12, 170 + (i % 3) * 14, eased) ?? 0;
-          final center = origin.translate(
-            cos(angle) * distance,
-            sin(angle) * distance,
-          );
-          final color = i.isEven
-              ? const Color(0xFFFFE3A2).withValues(alpha: 0.54 * fade)
-              : softAccent.withValues(alpha: 0.46 * fade);
-          if (i % 3 == 0) {
-            _drawSparkle(canvas, center, 10, color);
-          } else {
-            _drawDiamond(canvas, center, 8, color);
-          }
-        }
-        break;
-      case _ViewerThemeEffectKind.miss:
-        for (var i = 0; i < 14; i++) {
-          final angle = (-pi / 1.35) + (pi * 1.1) * (i / 13);
-          final distance = lerpDouble(10, 160 + (i % 4) * 12, eased) ?? 0;
-          final driftY = lerpDouble(0, -36, eased) ?? 0;
-          final center = origin.translate(
-            cos(angle) * distance,
-            (sin(angle) * distance) + driftY,
-          );
-          final color = Color.lerp(
-            softAccent.withValues(alpha: 0.62 * fade),
-            Colors.white.withValues(alpha: 0.52 * fade),
-            i / 13,
-          )!;
-          if (i.isEven) {
-            _drawSparkle(canvas, center, 8, color);
-          } else {
-            canvas.drawCircle(
-              center,
-              lerpDouble(2, 5, fade) ?? 3,
-              Paint()..color = color,
-            );
-          }
-        }
-        break;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _BurstParticlesPainter oldDelegate) {
-    return oldDelegate.themeKey != themeKey ||
-        oldDelegate.progress != progress ||
-        oldDelegate.openProgress != openProgress ||
-        oldDelegate.accent != accent ||
-        oldDelegate.softAccent != softAccent;
-  }
-}
-
-void _drawHeart(Canvas canvas, Offset center, double size, Color color) {
-  final width = size;
-  final height = size * 0.92;
-  final path = Path()
-    ..moveTo(center.dx, center.dy + height * 0.35)
-    ..cubicTo(
-      center.dx - width * 0.60,
-      center.dy - height * 0.10,
-      center.dx - width * 0.56,
-      center.dy - height * 0.58,
-      center.dx,
-      center.dy - height * 0.24,
-    )
-    ..cubicTo(
-      center.dx + width * 0.56,
-      center.dy - height * 0.58,
-      center.dx + width * 0.60,
-      center.dy - height * 0.10,
-      center.dx,
-      center.dy + height * 0.35,
-    )
-    ..close();
-
-  canvas.drawPath(path, Paint()..color = color);
-}
-
-void _drawSparkle(Canvas canvas, Offset center, double size, Color color) {
-  final paint = Paint()
-    ..color = color
-    ..style = PaintingStyle.stroke
-    ..strokeCap = StrokeCap.round
-    ..strokeWidth = max(size * 0.12, 1.2);
-
-  canvas.drawLine(
-    center.translate(0, -size),
-    center.translate(0, size),
-    paint,
-  );
-  canvas.drawLine(
-    center.translate(-size, 0),
-    center.translate(size, 0),
-    paint,
-  );
-  canvas.drawLine(
-    center.translate(-size * 0.62, -size * 0.62),
-    center.translate(size * 0.62, size * 0.62),
-    paint,
-  );
-  canvas.drawLine(
-    center.translate(size * 0.62, -size * 0.62),
-    center.translate(-size * 0.62, size * 0.62),
-    paint,
-  );
-}
-
-void _drawDiamond(Canvas canvas, Offset center, double size, Color color) {
-  final path = Path()
-    ..moveTo(center.dx, center.dy - size)
-    ..lineTo(center.dx + size * 0.78, center.dy)
-    ..lineTo(center.dx, center.dy + size)
-    ..lineTo(center.dx - size * 0.78, center.dy)
-    ..close();
-  canvas.drawPath(path, Paint()..color = color);
-}
-
-void _drawConfettiPiece(
-  Canvas canvas,
-  Offset center,
-  Size pieceSize,
-  double rotation,
-  Color color,
-) {
-  canvas.save();
-  canvas.translate(center.dx, center.dy);
-  canvas.rotate(rotation);
-  final rect = RRect.fromRectAndRadius(
-    Rect.fromCenter(
-      center: Offset.zero,
-      width: pieceSize.width,
-      height: pieceSize.height,
-    ),
-    Radius.circular(pieceSize.height),
-  );
-  canvas.drawRRect(rect, Paint()..color = color);
-  canvas.restore();
-}
-
-void _drawRing(
-  Canvas canvas,
-  Offset center,
-  double radius,
-  Color color,
-  double strokeWidth,
-) {
-  canvas.drawCircle(
-    center,
-    radius,
-    Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth,
-  );
-}
-
-void _drawBalloon(Canvas canvas, Offset center, double size, Color color) {
-  final paint = Paint()..color = color;
-  canvas.drawOval(
-    Rect.fromCenter(
-      center: center,
-      width: size * 0.92,
-      height: size * 1.14,
-    ),
-    paint,
-  );
-  canvas.drawLine(
-    center.translate(0, size * 0.56),
-    center.translate(size * 0.18, size * 1.42),
-    Paint()
-      ..color = color.withValues(alpha: 0.82)
-      ..strokeWidth = 1.4,
-  );
-}
-
-void _drawMoon(
-  Canvas canvas,
-  Offset center,
-  double size,
-  Color color,
-  Color cutout,
-) {
-  canvas.drawCircle(center, size, Paint()..color = color);
-  canvas.drawCircle(
-    center.translate(size * 0.34, -size * 0.12),
-    size * 0.82,
-    Paint()..color = cutout,
-  );
-}
-
-class _GlowOrb extends StatelessWidget {
-  final double size;
-  final Color color;
-
-  const _GlowOrb({
-    required this.size,
-    required this.color,
-  });
+  const _LetterDivider({required this.palette});
 
   @override
   Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: color,
-          boxShadow: [
-            BoxShadow(
-              color: color,
-              blurRadius: size * 0.36,
-              spreadRadius: size * 0.02,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PaperGlow extends StatelessWidget {
-  final double size;
-  final Color color;
-
-  const _PaperGlow({
-    required this.size,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [
-              color,
-              color.withValues(alpha: 0),
-            ],
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 1,
+            color: palette.accent.withValues(alpha: 0.16),
           ),
         ),
-      ),
+        const SizedBox(width: 10),
+        Icon(palette.trailingIcon, color: palette.accent, size: 18),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Container(
+            height: 1,
+            color: palette.accent.withValues(alpha: 0.16),
+          ),
+        ),
+      ],
     );
   }
 }
 
 class _ViewerCircleButton extends StatelessWidget {
   final IconData icon;
+  final String tooltip;
   final VoidCallback onTap;
 
   const _ViewerCircleButton({
     required this.icon,
+    required this.tooltip,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
-        child: Ink(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white.withValues(alpha: 0.14),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Ink(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withValues(alpha: 0.11),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.13)),
+            ),
+            child: Icon(icon, color: Colors.white, size: 19),
           ),
-          child: Icon(icon, color: Colors.white, size: 19),
         ),
       ),
     );
@@ -1108,24 +672,25 @@ class _ActionPillButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(18),
         child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
           decoration: BoxDecoration(
             color: background,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(18),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 18, color: foreground),
-              const SizedBox(width: 8),
+              Icon(icon, size: 17, color: foreground),
+              const SizedBox(width: 7),
               Flexible(
                 child: Text(
                   label,
                   overflow: TextOverflow.ellipsis,
                   style: SLTheme.quicksand(
                     color: foreground,
+                    fontSize: 12,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -1139,7 +704,7 @@ class _ActionPillButton extends StatelessWidget {
 }
 
 String _formatTime(int timestampMs) {
-  return DateFormat('HH:mm - dd/MM/yyyy').format(
-    DateTime.fromMillisecondsSinceEpoch(timestampMs),
-  );
+  return DateFormat(
+    'HH:mm - dd/MM/yyyy',
+  ).format(DateTime.fromMillisecondsSinceEpoch(timestampMs));
 }

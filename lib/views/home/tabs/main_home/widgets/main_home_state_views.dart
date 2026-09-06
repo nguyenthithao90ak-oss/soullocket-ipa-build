@@ -24,17 +24,25 @@ class _MainHomeStateView extends StatelessWidget {
   final bool isLoading;
   final bool hasVisibleContent;
   final Widget? child;
+  final VoidCallback onRetry;
 
   const _MainHomeStateView({
     required this.isLoading,
     required this.hasVisibleContent,
+    required this.onRetry,
     this.child,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Luôn show loading khi chưa có dữ liệu
+    // Khi tải thất bại, hiển thị cách thử lại thay vì giữ vòng quay vô hạn.
     if (!hasVisibleContent) {
+      if (!isLoading) {
+        return _MainHomeErrorView(
+          message: context.tr('home_khngthtidl_7be608'),
+          onRetry: onRetry,
+        );
+      }
       return const _MainHomeLoadingView();
     }
     // Đã có dữ liệu, đang load thêm → show content + overlay
@@ -242,8 +250,9 @@ class _MainHomeEmptyView extends StatelessWidget {
 
 class _MainHomeErrorView extends StatelessWidget {
   final String message;
+  final VoidCallback onRetry;
 
-  const _MainHomeErrorView({required this.message});
+  const _MainHomeErrorView({required this.message, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -286,6 +295,12 @@ class _MainHomeErrorView extends StatelessWidget {
                       color: _mainHomeErrorTextColor,
                       height: 1.45,
                     ),
+                  ),
+                  SLSpacing.h12,
+                  TextButton.icon(
+                    onPressed: onRetry,
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: Text(context.tr('core_retry')),
                   ),
                 ],
               ),

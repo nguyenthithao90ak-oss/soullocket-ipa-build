@@ -118,16 +118,8 @@ extension _HomeScreenShellBackground on _HomeScreenState {
   List<Color> _resolveShellGradient(String themeKey, bool isDark) {
     if (themeKey == 'off') {
       return isDark
-          ? const [
-              Color(0xFF121212),
-              Color(0xFF1E1E1E),
-              Color(0xFF2D2D2D),
-            ]
-          : const [
-              Color(0xFFFDFDFD),
-              Color(0xFFF4F7F6),
-              Color(0xFFE8ECEF),
-            ];
+          ? const [Color(0xFF121212), Color(0xFF1E1E1E), Color(0xFF2D2D2D)]
+          : const [Color(0xFFFDFDFD), Color(0xFFF4F7F6), Color(0xFFE8ECEF)];
     }
 
     switch (themeKey) {
@@ -203,11 +195,7 @@ extension _HomeScreenShellBackground on _HomeScreenState {
         ];
       default:
         return isDark
-            ? const [
-                Color(0xFF1A1430),
-                Color(0xFF241C3E),
-                Color(0xFF302552),
-              ]
+            ? const [Color(0xFF1A1430), Color(0xFF241C3E), Color(0xFF302552)]
             : SLTheme.defaultGradient;
     }
   }
@@ -274,13 +262,19 @@ class _StableShellBackgroundImageState
       return;
     }
 
-    precacheImage(provider, context).then((_) {
-      if (!mounted || _currentUrl != url) return;
-      setState(() {
-        _ready = true;
-        _retainedProvider = provider;
-      });
-    }).catchError((_) {});
+    precacheImage(provider, context)
+        .then((_) {
+          if (!mounted || _currentUrl != url) return;
+          setState(() {
+            _ready = true;
+            _retainedProvider = provider;
+          });
+        })
+        .catchError((error) {
+          debugPrint(
+            '[SuppressedError] lib/views/home/widgets/home_shell/home_screen_background.dart: $error',
+          );
+        });
 
     try {
       final cachedFile = await AppCacheManager.instance.getFileFromCache(url);
@@ -291,7 +285,11 @@ class _StableShellBackgroundImageState
           _diskCachedProvider = FileImage(file);
         });
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/home/widgets/home_shell/home_screen_background.dart: $error',
+      );
+    }
   }
 
   ImageProvider<Object> _buildNetworkProvider(String url) {
@@ -301,9 +299,11 @@ class _StableShellBackgroundImageState
         : null;
     final devicePixelRatio =
         mediaQuery?.devicePixelRatio ?? view?.devicePixelRatio ?? 1.0;
-    final logicalWidth = mediaQuery?.size.width ??
+    final logicalWidth =
+        mediaQuery?.size.width ??
         ((view?.physicalSize.width ?? 0) / devicePixelRatio);
-    final logicalHeight = mediaQuery?.size.height ??
+    final logicalHeight =
+        mediaQuery?.size.height ??
         ((view?.physicalSize.height ?? 0) / devicePixelRatio);
     final qualityScale = devicePixelRatio >= 2.5 ? 0.75 : 0.85;
     final cacheWidth = (logicalWidth * devicePixelRatio * qualityScale)
@@ -373,7 +373,9 @@ class _BackgroundPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final linePaint = Paint()
-      ..color = (isDark ? Colors.white : Colors.black).withValues(alpha: isDark ? 0.03 : 0.025)
+      ..color = (isDark ? Colors.white : Colors.black).withValues(
+        alpha: isDark ? 0.03 : 0.025,
+      )
       ..strokeWidth = 1.0
       ..style = PaintingStyle.stroke;
 
@@ -395,8 +397,9 @@ class _BackgroundPatternPainter extends CustomPainter {
     }
 
     final dotPaint = Paint()
-      ..color = (isDark ? Colors.white : const Color(0xFFD81B60))
-          .withValues(alpha: isDark ? 0.04 : 0.035)
+      ..color = (isDark ? Colors.white : const Color(0xFFD81B60)).withValues(
+        alpha: isDark ? 0.04 : 0.035,
+      )
       ..style = PaintingStyle.fill;
 
     for (double y = step / 2; y < size.height; y += step) {
@@ -410,4 +413,3 @@ class _BackgroundPatternPainter extends CustomPainter {
   bool shouldRepaint(covariant _BackgroundPatternPainter oldDelegate) =>
       oldDelegate.isDark != isDark;
 }
-

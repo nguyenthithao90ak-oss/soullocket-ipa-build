@@ -6,24 +6,28 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 
 import '../../../../../core/sl_theme.dart';
 import '../../../../../utils/app_error_mapper.dart';
+import '../../../../../utils/services/cloudflare_r2_service.dart';
 import '../../../../../utils/services/l10n_service.dart';
 import '../../../../../widgets/skeleton_container.dart';
 
 import '../controllers/diary_memory_controller.dart';
+import '../utils/diary_memory_media.dart';
 import 'diary_tab_shell_sections.dart';
 
 const Color _diaryMemoryAccentColor = Color(0xFFFF4D79);
 
-typedef DiaryPrepareMemoryFeedCallback = PreparedDiaryMemoryFeed Function({
-  required Object? liveSource,
-  required Object? cacheSource,
-  required bool useLiveSource,
-  required bool isOffline,
-  required bool waitingForLive,
-});
+typedef DiaryPrepareMemoryFeedCallback =
+    PreparedDiaryMemoryFeed Function({
+      required Object? liveSource,
+      required Object? cacheSource,
+      required bool useLiveSource,
+      required bool isOffline,
+      required bool waitingForLive,
+    });
 
 class DiaryMemorySection extends StatefulWidget {
   final Widget? header;
@@ -47,14 +51,16 @@ class DiaryMemorySection extends StatefulWidget {
   final void Function(
     Map<String, dynamic> photo,
     List<Map<String, dynamic>> allPhotos,
-  ) onOpenMemory;
+  )
+  onOpenMemory;
   final bool isLoadingMoreMemories;
   final VoidCallback onLoadMore;
   final Future<void> Function(Map<String, dynamic> photo) onEnsurePhotoUrl;
   final Future<void> Function(
     DateTime selectedDate,
     List<Map<String, dynamic>> photos,
-  ) onEditGroupDate;
+  )
+  onEditGroupDate;
 
   const DiaryMemorySection({
     super.key,
@@ -100,8 +106,11 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
 
   // Scroll indicator state
   final ValueNotifier<({bool isVisible, String label, double fraction})>
-      _scrollIndicatorNotifier =
-      ValueNotifier((isVisible: false, label: '', fraction: 0.0));
+  _scrollIndicatorNotifier = ValueNotifier((
+    isVisible: false,
+    label: '',
+    fraction: 0.0,
+  ));
   Timer? _hideIndicatorTimer;
 
   @override
@@ -165,7 +174,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: months.length + 1,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final isAll = index == 0;
                 final isSelected = isAll
@@ -180,8 +189,9 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color:
-                          isSelected ? Colors.white : const Color(0xFF8A5B76),
+                      color: isSelected
+                          ? Colors.white
+                          : const Color(0xFF8A5B76),
                     ),
                   ),
                   selected: isSelected,
@@ -193,9 +203,12 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                       ? BorderSide.none
                       : BorderSide(
                           color: Colors.white.withValues(alpha: 0.9),
-                          width: 1.2),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                          width: 1.2,
+                        ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 0,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(24),
                   ),
@@ -287,7 +300,11 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
     }
     final urls = <String>[
       for (final photo in photos.take(_thumbnailWarmupCount))
-        (photo['url']?.toString() ?? '').trim(),
+        (isDiaryMemoryVideo(photo)
+                    ? resolveDiaryMemoryVideoThumbnailUrl(photo)
+                    : resolveDiaryMemoryMediaUrl(photo))
+                ?.trim() ??
+            '',
     ]..removeWhere((url) => url.isEmpty);
     if (urls.isEmpty) {
       return;
@@ -305,7 +322,9 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
         unawaited(
           precacheImage(
             _DiaryMemoryImageProviders.thumbnail(
-                url, widget.thumbnailCacheWidth),
+              url,
+              widget.thumbnailCacheWidth,
+            ),
             context,
             onError: (error, stackTrace) {
               debugPrint(
@@ -335,7 +354,8 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
           child: FutureBuilder<ConnectivityResult>(
             future: widget.connectivityFuture,
             builder: (context, connSnapshot) {
-              final isOffline = connSnapshot.hasData &&
+              final isOffline =
+                  connSnapshot.hasData &&
                   connSnapshot.data == ConnectivityResult.none;
 
               if (isOffline && widget.initialMemoriesCache == null) {
@@ -363,7 +383,8 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                       var filteredCount = 0;
                       var filteredItems = <DiaryMemoryFlattenedItem>[];
 
-                      final waitingForLive = !isOffline &&
+                      final waitingForLive =
+                          !isOffline &&
                           snapshot.connectionState == ConnectionState.waiting;
                       widget.onFinishLoadingMore(waitingForLive);
                       final hasUsableCache =
@@ -379,7 +400,8 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                         );
                       } else {
                         try {
-                          final useLiveSource = !isOffline &&
+                          final useLiveSource =
+                              !isOffline &&
                               snapshot.hasData &&
                               snapshot.data?.snapshot.value != null &&
                               snapshot.data!.snapshot.value is Map;
@@ -429,9 +451,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                             // Month filter bar
                             if (_availableMonths.length > 1) {
                               bodySlivers.add(
-                                SliverToBoxAdapter(
-                                  child: _buildMonthFilter(),
-                                ),
+                                SliverToBoxAdapter(child: _buildMonthFilter()),
                               );
                             }
 
@@ -466,21 +486,28 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                     } else {
                                       cellWidget = Padding(
                                         padding: const EdgeInsets.only(
-                                            bottom: 8, left: 10, right: 10),
+                                          bottom: 8,
+                                          left: 10,
+                                          right: 10,
+                                        ),
                                         child: Row(
                                           children: [
-                                            for (int i = 0;
-                                                i < rowPhotos.length;
-                                                i++) ...[
-                                              if (i > 0) const SizedBox(width: 8),
+                                            for (
+                                              int i = 0;
+                                              i < rowPhotos.length;
+                                              i++
+                                            ) ...[
+                                              if (i > 0)
+                                                const SizedBox(width: 8),
                                               Expanded(
                                                 child: AspectRatio(
                                                   aspectRatio:
                                                       1.0, // Cố định tỷ lệ vuông cho mỗi ảnh trong hàng
                                                   child: _DiaryMemoryPhotoCell(
-                                                    key: ValueKey(rowPhotos[i]
-                                                            ['id'] ??
-                                                        'photo_${index * 10 + i}'),
+                                                    key: ValueKey(
+                                                      rowPhotos[i]['id'] ??
+                                                          'photo_${index * 10 + i}',
+                                                    ),
                                                     photo: rowPhotos[i],
                                                     index: index * 10 + i,
                                                     thumbnailCacheWidth: widget
@@ -491,8 +518,8 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                                         widget.selectedMemories,
                                                     isSelectionMode:
                                                         widget.isSelectionMode,
-                                                    onToggleSelection:
-                                                        widget.onToggleSelection,
+                                                    onToggleSelection: widget
+                                                        .onToggleSelection,
                                                     onOpenMemory:
                                                         widget.onOpenMemory,
                                                     allPhotos: filteredPhotos,
@@ -501,7 +528,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                                   ),
                                                 ),
                                               ),
-                                            ]
+                                            ],
                                           ],
                                         ),
                                       );
@@ -515,15 +542,19 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                             bodySlivers.add(
                               SliverToBoxAdapter(
                                 child: Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 40),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 40,
+                                  ),
                                   child: Center(
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 24, vertical: 14),
+                                        horizontal: 24,
+                                        vertical: 14,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFFCE4EC)
-                                            .withValues(alpha: 0.8),
+                                        color: const Color(
+                                          0xFFFCE4EC,
+                                        ).withValues(alpha: 0.8),
                                         borderRadius: BorderRadius.circular(30),
                                         border: Border.all(
                                           color: const Color(0xFFF48FB1),
@@ -531,15 +562,18 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                         ),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: const Color(0xFFD81B60)
-                                                .withValues(alpha: 0.1),
+                                            color: const Color(
+                                              0xFFD81B60,
+                                            ).withValues(alpha: 0.1),
                                             blurRadius: 10,
                                             offset: const Offset(0, 4),
                                           ),
                                         ],
                                       ),
                                       child: Text(
-                                        context.tr('Hết ảnh rồi nha bạn yêu !!!!'),
+                                        context.tr(
+                                          'Hết ảnh rồi nha bạn yêu !!!!',
+                                        ),
                                         style: SLTheme.quicksand(
                                           fontSize: 20,
                                           fontWeight: FontWeight.w800,
@@ -562,8 +596,9 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                     'diary_load_data_error',
                                     {'error': error},
                                   ),
-                                  style:
-                                      const TextStyle(color: Colors.redAccent),
+                                  style: const TextStyle(
+                                    color: Colors.redAccent,
+                                  ),
                                 ),
                               ),
                             ),
@@ -598,26 +633,31 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                 _scrollIndicatorNotifier.value = (
                                   isVisible: true,
                                   label: label,
-                                  fraction: fraction
+                                  fraction: fraction,
                                 );
 
                                 _hideIndicatorTimer?.cancel();
                                 _hideIndicatorTimer = Timer(
-                                    const Duration(milliseconds: 1200), () {
-                                  _scrollIndicatorNotifier.value = (
-                                    isVisible: false,
-                                    label: _scrollIndicatorNotifier.value.label,
-                                    fraction:
-                                        _scrollIndicatorNotifier.value.fraction
-                                  );
-                                });
+                                  const Duration(milliseconds: 1200),
+                                  () {
+                                    _scrollIndicatorNotifier.value = (
+                                      isVisible: false,
+                                      label:
+                                          _scrollIndicatorNotifier.value.label,
+                                      fraction: _scrollIndicatorNotifier
+                                          .value
+                                          .fraction,
+                                    );
+                                  },
+                                );
                               }
                               return false;
                             },
                             child: RawScrollbar(
                               controller: _scrollController,
-                              thumbColor: const Color(0xFFD81B60)
-                                  .withValues(alpha: 0.6),
+                              thumbColor: const Color(
+                                0xFFD81B60,
+                              ).withValues(alpha: 0.6),
                               radius: const Radius.circular(8),
                               thickness: 6,
                               interactive: true,
@@ -632,7 +672,8 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                     SliverSafeArea(
                                       bottom: false,
                                       sliver: SliverToBoxAdapter(
-                                          child: widget.header!),
+                                        child: widget.header!,
+                                      ),
                                     ),
                                   SliverToBoxAdapter(
                                     child: _DiaryMemoryHeroCard(
@@ -658,11 +699,8 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                             ),
                           ),
                           ValueListenableBuilder<
-                              ({
-                                bool isVisible,
-                                String label,
-                                double fraction
-                              })>(
+                            ({bool isVisible, String label, double fraction})
+                          >(
                             valueListenable: _scrollIndicatorNotifier,
                             builder: (context, state, _) {
                               if (state.label.isEmpty) {
@@ -672,8 +710,8 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                               const bottomMargin = 120.0;
                               final availableHeight =
                                   MediaQuery.of(context).size.height -
-                                      topMargin -
-                                      bottomMargin;
+                                  topMargin -
+                                  bottomMargin;
                               final topPos =
                                   topMargin + state.fraction * availableHeight;
 
@@ -686,14 +724,17 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                     opacity: state.isVisible ? 1.0 : 0.0,
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 6),
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFD81B60),
                                         borderRadius: BorderRadius.circular(20),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: const Color(0xFFD81B60)
-                                                .withValues(alpha: 0.4),
+                                            color: const Color(
+                                              0xFFD81B60,
+                                            ).withValues(alpha: 0.4),
                                             blurRadius: 8,
                                             offset: const Offset(0, 2),
                                           ),
@@ -712,9 +753,10 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                           ),
                                           const SizedBox(width: 4),
                                           const Icon(
-                                              Icons.calendar_month_rounded,
-                                              color: Colors.white,
-                                              size: 14),
+                                            Icons.calendar_month_rounded,
+                                            color: Colors.white,
+                                            size: 14,
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -745,11 +787,7 @@ class DiaryMemoryFixedBackground extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Color(0xFFFFF8FC),
-            Color(0xFFEAFBFF),
-            Color(0xFFFFF6E7),
-          ],
+          colors: [Color(0xFFFFF8FC), Color(0xFFEAFBFF), Color(0xFFFFF6E7)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -781,8 +819,10 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(24),
-        border:
-            Border.all(color: Colors.white.withValues(alpha: 0.95), width: 1.5),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.95),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF7C8BFF).withValues(alpha: 0.08),
@@ -849,10 +889,9 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
               border: Border.all(color: const Color(0xFFE9D7FF)),
             ),
             child: Text(
-              L10nService().format(
-                'diary_photos_count',
-                {'count': totalPhotos},
-              ),
+              L10nService().format('diary_photos_count', {
+                'count': totalPhotos,
+              }),
               style: SLTheme.quicksand(
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
@@ -965,10 +1004,9 @@ class _DiaryMemorySpecialHeader extends StatelessWidget {
               border: Border.all(color: const Color(0xFFE9D7FF)),
             ),
             child: Text(
-              L10nService().format(
-                'diary_photos_count',
-                {'count': totalPhotos},
-              ),
+              L10nService().format('diary_photos_count', {
+                'count': totalPhotos,
+              }),
               style: SLTheme.quicksand(
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
@@ -993,7 +1031,8 @@ class _DiaryMemoryPhotoCell extends StatefulWidget {
   final void Function(
     Map<String, dynamic> photo,
     List<Map<String, dynamic>> allPhotos,
-  ) onOpenMemory;
+  )
+  onOpenMemory;
   final List<Map<String, dynamic>> allPhotos;
   final Future<void> Function(Map<String, dynamic> photo) onEnsurePhotoUrl;
 
@@ -1088,8 +1127,32 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
     return photo['thumbUrl']?.toString().trim() ?? '';
   }
 
+  String _stableFallbackVideoUrl(Map<String, dynamic> photo) {
+    for (final key in const <String>[
+      'resolvedUrl',
+      'downloadUrl',
+      'videoUrl',
+      'video_url',
+      'mediaUrl',
+      'media_url',
+      'contentUrl',
+      'content_url',
+      'fileUrl',
+      'file_url',
+    ]) {
+      final value = photo[key]?.toString().trim() ?? '';
+      if (value.isNotEmpty) {
+        return value;
+      }
+    }
+    return '';
+  }
+
   String _resolvePhotoUrl(Map<String, dynamic> photo) {
-    final fallbackUrl = _stableFallbackPhotoUrl(photo);
+    final isVideo = isDiaryMemoryVideo(photo);
+    final fallbackUrl = isVideo
+        ? _stableFallbackVideoUrl(photo)
+        : _stableFallbackPhotoUrl(photo);
     final url = photo['url']?.toString().trim() ?? '';
     if (fallbackUrl.isNotEmpty &&
         (_needsSignedRefresh(photo) || _isLikelyTemporarySignedUrl(url))) {
@@ -1099,56 +1162,11 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
     return fallbackUrl;
   }
 
-  Widget _buildVideoThumbnail(
-      Map<String, dynamic> photo, String videoUrl) {
-    final thumbUrl = photo['thumbnailUrl']?.toString().trim() ?? '';
-    if (thumbUrl.isEmpty) {
-      // Fallback: không có thumbnail → icon play trên nền trắng
-      return Container(
-        color: const Color(0xFFF8FAFC),
-        child: const Center(
-          child: Icon(
-            Icons.play_circle_fill,
-            color: Color(0xFF94A3B8),
-            size: 48,
-          ),
-        ),
-      );
-    }
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        CachedNetworkImage(
-          imageUrl: thumbUrl,
-          memCacheWidth: widget.thumbnailCacheWidth,
-          fit: BoxFit.cover,
-          filterQuality: FilterQuality.low,
-          placeholder: (context, url) =>
-              Container(color: const Color(0xFFF1F5F9)),
-          errorWidget: (context, url, error) => Container(
-            color: const Color(0xFFF8FAFC),
-            child: const Center(
-              child: Icon(Icons.play_circle_fill,
-                  color: Color(0xFF94A3B8), size: 48),
-            ),
-          ),
-        ),
-        // Overlay icon play
-        Center(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.4),
-              shape: BoxShape.circle,
-            ),
-            padding: const EdgeInsets.all(8),
-            child: const Icon(
-              Icons.play_arrow_rounded,
-              color: Colors.white,
-              size: 28,
-            ),
-          ),
-        ),
-      ],
+  Widget _buildVideoThumbnail(Map<String, dynamic> photo, String videoUrl) {
+    return _DiaryMemoryVideoPreview(
+      videoUrl: videoUrl,
+      thumbnailUrl: resolveDiaryMemoryVideoThumbnailUrl(photo) ?? '',
+      thumbnailCacheWidth: widget.thumbnailCacheWidth,
     );
   }
 
@@ -1158,13 +1176,12 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
     final photoUrl = _resolvePhotoUrl(photo);
     final photoId = photo['id']?.toString() ?? 'unknown_${widget.index}';
 
-    final isStickerOrPng = photoUrl.toLowerCase().contains('.png') ||
+    final isStickerOrPng =
+        photoUrl.toLowerCase().contains('.png') ||
         photo['isSticker'] == true ||
         photo['isCutout'] == true;
 
-    final isVideo = photo['type']?.toString().toLowerCase() == 'video' ||
-        photoUrl.toLowerCase().endsWith('.mp4') ||
-        photoUrl.toLowerCase().endsWith('.mov');
+    final isVideo = isDiaryMemoryVideo(photo);
 
     if (photoUrl.isEmpty) {
       if (_retryCount < 1) {
@@ -1173,7 +1190,11 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
           if (!mounted) return;
           try {
             await _refreshStalePhotoUrl(photo);
-          } catch (_) {}
+          } catch (error) {
+            debugPrint(
+              '[SuppressedError] lib/views/home/tabs/diary/widgets/diary_memory_section.dart: $error',
+            );
+          }
         });
       }
       return Container(
@@ -1210,7 +1231,9 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-                color: Colors.white.withValues(alpha: 0.4), width: 1.5),
+              color: Colors.white.withValues(alpha: 0.4),
+              width: 1.5,
+            ),
             boxShadow: isStickerOrPng
                 ? [
                     BoxShadow(
@@ -1231,7 +1254,7 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
             borderRadius: BorderRadius.circular(24),
             child: Hero(
               tag: 'memory_image_${photo['id']}',
-              child: isVideo 
+              child: isVideo
                   ? _buildVideoThumbnail(photo, photoUrl)
                   : CachedNetworkImage(
                       imageUrl: photoUrl,
@@ -1246,7 +1269,9 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
                       errorWidget: (context, url, error) {
                         if (_retryCount < 2) {
                           _retryCount++;
-                          WidgetsBinding.instance.addPostFrameCallback((_) async {
+                          WidgetsBinding.instance.addPostFrameCallback((
+                            _,
+                          ) async {
                             if (!mounted) return;
                             try {
                               if (_retryCount > 1) {
@@ -1350,6 +1375,229 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
           ),
         );
       },
+    );
+  }
+}
+
+/// Dùng ảnh thumbnail khi có. Với video cũ chưa có thumbnail, lấy frame đầu
+/// bằng [VideoPlayer] để mọi máy vẫn có ảnh xem trước thay vì khung trắng.
+class _DiaryMemoryVideoPreview extends StatefulWidget {
+  final String videoUrl;
+  final String thumbnailUrl;
+  final int thumbnailCacheWidth;
+
+  const _DiaryMemoryVideoPreview({
+    required this.videoUrl,
+    required this.thumbnailUrl,
+    required this.thumbnailCacheWidth,
+  });
+
+  @override
+  State<_DiaryMemoryVideoPreview> createState() =>
+      _DiaryMemoryVideoPreviewState();
+}
+
+class _DiaryMemoryVideoPreviewState extends State<_DiaryMemoryVideoPreview> {
+  VideoPlayerController? _controller;
+  bool _thumbnailFailed = false;
+  bool _isLoadingPreview = false;
+  bool _previewFailed = false;
+  int _previewGeneration = 0;
+
+  bool get _usesVideoPreview =>
+      widget.thumbnailUrl.trim().isEmpty || _thumbnailFailed;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_usesVideoPreview) {
+      _initializeVideoPreview();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _DiaryMemoryVideoPreview oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.videoUrl == widget.videoUrl &&
+        oldWidget.thumbnailUrl == widget.thumbnailUrl) {
+      return;
+    }
+
+    _resetPreview();
+    if (_usesVideoPreview) {
+      _initializeVideoPreview();
+    }
+  }
+
+  void _resetPreview() {
+    _previewGeneration++;
+    final controller = _controller;
+    _controller = null;
+    _thumbnailFailed = false;
+    _isLoadingPreview = false;
+    _previewFailed = false;
+    if (controller != null) {
+      unawaited(controller.dispose());
+    }
+  }
+
+  void _handleThumbnailFailure() {
+    if (_thumbnailFailed) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _thumbnailFailed) {
+        return;
+      }
+      setState(() => _thumbnailFailed = true);
+      _initializeVideoPreview();
+    });
+  }
+
+  Future<void> _initializeVideoPreview() async {
+    if (!_usesVideoPreview || _isLoadingPreview || _previewFailed) {
+      return;
+    }
+
+    final rawUrl = widget.videoUrl.trim();
+    if (rawUrl.isEmpty) {
+      if (mounted) {
+        setState(() => _previewFailed = true);
+      }
+      return;
+    }
+
+    final generation = ++_previewGeneration;
+    if (mounted) {
+      setState(() => _isLoadingPreview = true);
+    }
+
+    VideoPlayerController? controller;
+    try {
+      final playableUrl = CloudflareR2Service.resolveVideoUrl(rawUrl);
+      final uri = Uri.tryParse(playableUrl);
+      if (uri == null || !uri.hasScheme) {
+        throw const FormatException('Invalid diary video URL');
+      }
+
+      controller = VideoPlayerController.networkUrl(uri);
+      await controller.initialize();
+      await controller.setVolume(0);
+      await controller.pause();
+
+      if (!mounted || generation != _previewGeneration) {
+        await controller.dispose();
+        return;
+      }
+
+      final previousController = _controller;
+      setState(() {
+        _controller = controller;
+        _isLoadingPreview = false;
+      });
+      if (previousController != null) {
+        unawaited(previousController.dispose());
+      }
+    } catch (error) {
+      if (controller != null) {
+        await controller.dispose();
+      }
+      debugPrint('[DiaryMemory] video preview failed: $error');
+      if (mounted && generation == _previewGeneration) {
+        setState(() {
+          _isLoadingPreview = false;
+          _previewFailed = true;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _previewGeneration++;
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final thumbnailUrl = widget.thumbnailUrl.trim();
+    Widget media;
+    if (!_usesVideoPreview && thumbnailUrl.isNotEmpty) {
+      media = CachedNetworkImage(
+        imageUrl: thumbnailUrl,
+        memCacheWidth: widget.thumbnailCacheWidth,
+        fit: BoxFit.cover,
+        filterQuality: FilterQuality.low,
+        placeholder: (context, url) => _buildFallbackSurface(isLoading: true),
+        errorWidget: (context, url, error) {
+          _handleThumbnailFailure();
+          return _buildFallbackSurface(isLoading: true);
+        },
+      );
+    } else {
+      final controller = _controller;
+      if (controller != null && controller.value.isInitialized) {
+        final size = controller.value.size;
+        media = SizedBox.expand(
+          child: FittedBox(
+            fit: BoxFit.cover,
+            child: SizedBox(
+              width: size.width,
+              height: size.height,
+              child: VideoPlayer(controller),
+            ),
+          ),
+        );
+      } else {
+        media = _buildFallbackSurface(isLoading: _isLoadingPreview);
+      }
+    }
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        media,
+        Center(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.42),
+              shape: BoxShape.circle,
+            ),
+            padding: const EdgeInsets.all(8),
+            child: const Icon(
+              Icons.play_arrow_rounded,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFallbackSurface({required bool isLoading}) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFFECF4FF), Color(0xFFDCE8FB)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: isLoading
+            ? const SizedBox(
+                width: 26,
+                height: 26,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              )
+            : const Icon(
+                Icons.movie_creation_outlined,
+                color: Color(0xFF6E88B0),
+                size: 38,
+              ),
+      ),
     );
   }
 }
@@ -1485,10 +1733,9 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
     final statusChips = <Widget>[
       _DiaryMemoryHeroChip(
         icon: Icons.photo_rounded,
-        label: L10nService().format(
-          'diary_photos_count',
-          {'count': totalPhotos},
-        ),
+        label: L10nService().format('diary_photos_count', {
+          'count': totalPhotos,
+        }),
         color: const Color(0xFFD81B60),
         background: const Color(0xFFFFEEF5),
       ),
@@ -1507,10 +1754,7 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: Colors.white,
-          width: 1.5,
-        ),
+        border: Border.all(color: Colors.white, width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -1571,78 +1815,51 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: statusChips,
-          ),
+          Wrap(spacing: 6, runSpacing: 6, children: statusChips),
           const SizedBox(height: 14),
-          _DiaryMemoryAddButton(
-            onTap: onAdd,
-            isLoading: isUploading,
-          ),
-              if (hasPendingUploadRetry) ...[
-                const SizedBox(height: 16),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final compact = constraints.maxWidth < 300;
-                    final message = Text(
-                      pendingUploadMessage,
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF7A5200),
-                        height: 1.35,
-                      ),
-                    );
-                    final retryButton = TextButton(
-                      onPressed:
-                          isUploading ? null : () => onRetryPendingUpload(),
-                      child: Text(
-                        context.tr('home_thli_4dffdf'),
-                        style: SLTheme.quicksand(
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFF8E5B00),
-                        ),
-                      ),
-                    );
+          _DiaryMemoryAddButton(onTap: onAdd, isLoading: isUploading),
+          if (hasPendingUploadRetry) ...[
+            const SizedBox(height: 16),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxWidth < 300;
+                final message = Text(
+                  pendingUploadMessage,
+                  style: SLTheme.quicksand(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF7A5200),
+                    height: 1.35,
+                  ),
+                );
+                final retryButton = TextButton(
+                  onPressed: isUploading ? null : () => onRetryPendingUpload(),
+                  child: Text(
+                    context.tr('home_thli_4dffdf'),
+                    style: SLTheme.quicksand(
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF8E5B00),
+                    ),
+                  ),
+                );
 
-                    return Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF4D6),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: const Color(0xFFF0C36A),
-                        ),
-                      ),
-                      child: compact
-                          ? Column(
+                return Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF4D6),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFF0C36A)),
+                  ),
+                  child: compact
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Icon(
-                                      Icons.error_outline_rounded,
-                                      color: Color(0xFF8E5B00),
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(child: message),
-                                  ],
-                                ),
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: retryButton,
-                                ),
-                              ],
-                            )
-                          : Row(
                               children: [
                                 const Icon(
                                   Icons.error_outline_rounded,
@@ -1651,16 +1868,33 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(child: message),
-                                const SizedBox(width: 8),
-                                retryButton,
                               ],
                             ),
-                    );
-                  },
-                ),
-              ],
-            ],
-          ),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: retryButton,
+                            ),
+                          ],
+                        )
+                      : Row(
+                          children: [
+                            const Icon(
+                              Icons.error_outline_rounded,
+                              color: Color(0xFF8E5B00),
+                              size: 18,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(child: message),
+                            const SizedBox(width: 8),
+                            retryButton,
+                          ],
+                        ),
+                );
+              },
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -1759,10 +1993,7 @@ class _DiaryMemoryAddButton extends StatelessWidget {
   final Future<void> Function() onTap;
   final bool isLoading;
 
-  const _DiaryMemoryAddButton({
-    required this.onTap,
-    this.isLoading = false,
-  });
+  const _DiaryMemoryAddButton({required this.onTap, this.isLoading = false});
 
   @override
   Widget build(BuildContext context) {
@@ -1911,10 +2142,7 @@ class _DiaryMemoryScaleOnPressState extends State<_DiaryMemoryScaleOnPress>
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
-          return Transform.scale(
-            scale: 1 - _controller.value,
-            child: child,
-          );
+          return Transform.scale(scale: 1 - _controller.value, child: child);
         },
         child: widget.child,
       ),

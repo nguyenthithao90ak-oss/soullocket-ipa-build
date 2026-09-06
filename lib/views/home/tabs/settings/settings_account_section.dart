@@ -746,8 +746,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                         child: Center(
                           child: Text(
                             isPremium
-                                ? context.tr('Xem quyền lợi')
-                                : context.tr('Nâng cấp VIP'),
+                                ? context.tr('p6_view_benefits')
+                                : context.tr('p6_upgrade_vip'),
                             style: SLTextStyles.quicksand(
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
@@ -873,7 +873,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 maxLength: 30,
                 accentColor: panelAccent,
               ),
-              _buildLabel(L10nService().translate('Mã nhà (House ID)')),
+              _buildLabel(context.tr('p6_house_id_label')),
               Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.symmetric(
@@ -907,9 +907,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                           ),
                           if (_houseIdChanged)
                             Text(
-                              L10nService().translate(
-                                'Chỉ được thay đổi 1 lần duy nhất (Đã đổi)',
-                              ),
+                              context.tr('p6_house_id_changed_status'),
                               style: SLTextStyles.quicksand(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
@@ -918,9 +916,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                             )
                           else
                             Text(
-                              L10nService().translate(
-                                'Được thay đổi 1 lần duy nhất (Chưa đổi)',
-                              ),
+                              context.tr('p6_house_id_available_status'),
                               style: SLTextStyles.quicksand(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
@@ -940,7 +936,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                           foregroundColor: const Color(0xFFD81B60),
                         ),
                         child: Text(
-                          L10nService().translate('Thay đổi'),
+                          context.tr('p6_change_action'),
                           style: SLTextStyles.quicksand(
                             fontWeight: FontWeight.w900,
                           ),
@@ -1158,7 +1154,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
     final lang = L10nService().localeCode;
     final hint = lang == 'vi'
         ? context.tr('home_pdngngaych_18f97b')
-        : L10nService().translate('Áp dụng ngay lập tức cho toàn bộ ứng dụng.');
+        : context.tr('p6_language_applies_immediately');
 
     return _buildPanel(
       hideBackButton: hideBackButton,
@@ -1388,9 +1384,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
 
               if (!RegExp(r'^[a-z0-9_]{3,20}$').hasMatch(clean)) {
                 setState(() {
-                  errorReason = L10nService().translate(
-                    'Mã chỉ gồm chữ thường, số, dấu gạch dưới (3-20 ký tự).',
-                  );
+                  errorReason = context.tr('p6_house_id_invalid_format');
                 });
                 return;
               }
@@ -1414,9 +1408,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                       if (!isAvailable) {
                         errorReason =
                             res['reason'] ??
-                            L10nService().translate(
-                              'Mã nhà đã tồn tại, vui lòng chọn mã khác.',
-                            );
+                            context.tr('p6_house_id_already_exists');
                         final suggs = res['suggestions'];
                         if (suggs is List) {
                           suggestions = suggs.map((e) => e.toString()).toList();
@@ -1427,9 +1419,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                     if (customId != clean) return;
                     setState(() {
                       isChecking = false;
-                      errorReason = L10nService().translate(
-                        'Lỗi kết nối máy chủ.',
-                      );
+                      errorReason = context.tr('p6_server_connection_error');
                     });
                   }
                 },
@@ -1455,9 +1445,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                     });
                     Navigator.of(dialogContext).pop();
                     _showToast(
-                      L10nService().translate(
-                        'Đổi mã nhà thành công! Hệ thống đang tải lại...',
-                      ),
+                      context.tr('p6_house_id_change_success'),
                       success: true,
                     );
                     Future.delayed(const Duration(seconds: 1), () {
@@ -1474,9 +1462,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 } else {
                   setState(() {
                     isSaving = false;
-                    errorReason = L10nService().translate(
-                      'Đổi mã nhà không thành công.',
-                    );
+                    errorReason = context.tr('p6_house_id_change_failed');
                   });
                 }
               } catch (e) {
@@ -1506,7 +1492,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          L10nService().translate('Xác nhận đổi'),
+                          context.tr('p6_house_id_confirm_title'),
                           style: SLTextStyles.quicksand(
                             fontSize: 18,
                             fontWeight: FontWeight.w900,
@@ -1516,9 +1502,9 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                       ],
                     ),
                     content: Text(
-                      L10nService().translate(
-                        'Bạn có chắc chắn muốn đổi sang "$customId"?\n\nHành động này chỉ được thực hiện MỘT LẦN DUY NHẤT và không thể hoàn tác.',
-                      ),
+                      context
+                          .tr('p6_house_id_confirm_body')
+                          .replaceAll('{houseId}', customId),
                       style: SLTextStyles.quicksand(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -1530,7 +1516,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(),
                         child: Text(
-                          L10nService().translate('Huỷ'),
+                          context.tr('cancel'),
                           style: SLTextStyles.quicksand(
                             fontWeight: FontWeight.w900,
                             color: const Color(0xFF8C7381),
@@ -1550,7 +1536,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                           ),
                         ),
                         child: Text(
-                          L10nService().translate('Đổi mã ngay'),
+                          context.tr('p6_house_id_change_now'),
                           style: SLTextStyles.quicksand(
                             fontWeight: FontWeight.w900,
                           ),
@@ -1569,300 +1555,306 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(28),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFF0F5),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Icon(
-                            Icons.maps_home_work_rounded,
-                            color: Color(0xFFD81B60),
-                            size: 32,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                L10nService().translate('Đổi mã nhà'),
-                                style: SLTextStyles.quicksand(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF2C1B22),
-                                ),
-                              ),
-                              Text(
-                                L10nService().translate(
-                                  'Chỉ thực hiện 1 lần duy nhất',
-                                ),
-                                style: SLTextStyles.quicksand(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFFD81B60),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      L10nService().translate(
-                        'Thiết bị của cả 2 bạn sẽ được tự động đồng bộ sang mã mới.',
-                      ),
-                      style: SLTextStyles.quicksand(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF7A6871),
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFAFAFA),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          width: 2,
-                          color: errorReason != null
-                              ? Colors.red.shade300
-                              : (isAvailable
-                                    ? Colors.green.shade400
-                                    : const Color(0xFFEEEEEE)),
-                        ),
-                        boxShadow: [
-                          if (isAvailable)
-                            BoxShadow(
-                              color: Colors.green.withValues(alpha: 0.1),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          if (errorReason != null)
-                            BoxShadow(
-                              color: Colors.red.withValues(alpha: 0.1),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                        ],
-                      ),
-                      child: TextField(
-                        controller: customIdCtrl,
-                        maxLength: 20,
-                        style: SLTextStyles.quicksand(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFF2C1B22),
-                        ),
-                        decoration: InputDecoration(
-                          labelText: L10nService().translate('Nhập mã nhà mới'),
-                          labelStyle: SLTextStyles.quicksand(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF8C7381),
-                          ),
-                          counterText: '',
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          errorBorder: InputBorder.none,
-                          focusedErrorBorder: InputBorder.none,
-                          suffixIcon: isChecking
-                              ? const Padding(
-                                  padding: EdgeInsets.all(12),
-                                  child: SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      color: Color(0xFFD81B60),
-                                    ),
-                                  ),
-                                )
-                              : (isAvailable
-                                    ? const Icon(
-                                        Icons.check_circle_rounded,
-                                        color: Colors.green,
-                                        size: 26,
-                                      )
-                                    : (errorReason != null
-                                          ? const Icon(
-                                              Icons.cancel_rounded,
-                                              color: Colors.red,
-                                              size: 26,
-                                            )
-                                          : null)),
-                        ),
-                        onChanged: onIdChanged,
-                      ),
-                    ),
-                    if (isAvailable) ...[
-                      const SizedBox(height: 8),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 520),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                       Row(
                         children: [
-                          const Icon(
-                            Icons.verified_rounded,
-                            color: Colors.green,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            L10nService().translate(
-                              'Mã nhà khả dụng và hợp lệ!',
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF0F5),
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            style: SLTextStyles.quicksand(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.green.shade700,
+                            child: const Icon(
+                              Icons.maps_home_work_rounded,
+                              color: Color(0xFFD81B60),
+                              size: 32,
                             ),
                           ),
-                        ],
-                      ),
-                    ],
-                    if (errorReason != null) ...[
-                      const SizedBox(height: 8),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.error_outline_rounded,
-                            color: Colors.red.shade600,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 16),
                           Expanded(
-                            child: Text(
-                              errorReason!,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  context.tr('p6_house_id_change_title'),
+                                  style: SLTextStyles.quicksand(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w900,
+                                    color: const Color(0xFF2C1B22),
+                                  ),
+                                ),
+                                Text(
+                                  context.tr('p6_house_id_one_time_only'),
+                                  style: SLTextStyles.quicksand(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFFD81B60),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        context.tr('p6_house_id_sync_note'),
+                        style: SLTextStyles.quicksand(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF7A6871),
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFAFAFA),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            width: 2,
+                            color: errorReason != null
+                                ? Colors.red.shade300
+                                : (isAvailable
+                                      ? Colors.green.shade400
+                                      : const Color(0xFFEEEEEE)),
+                          ),
+                          boxShadow: [
+                            if (isAvailable)
+                              BoxShadow(
+                                color: Colors.green.withValues(alpha: 0.1),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            if (errorReason != null)
+                              BoxShadow(
+                                color: Colors.red.withValues(alpha: 0.1),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                          ],
+                        ),
+                        child: TextField(
+                          controller: customIdCtrl,
+                          maxLength: 20,
+                          style: SLTextStyles.quicksand(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF2C1B22),
+                          ),
+                          decoration: InputDecoration(
+                            labelText: context.tr('p6_house_id_input_label'),
+                            labelStyle: SLTextStyles.quicksand(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF8C7381),
+                            ),
+                            counterText: '',
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            errorBorder: InputBorder.none,
+                            focusedErrorBorder: InputBorder.none,
+                            suffixIcon: isChecking
+                                ? const Padding(
+                                    padding: EdgeInsets.all(12),
+                                    child: SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        color: Color(0xFFD81B60),
+                                      ),
+                                    ),
+                                  )
+                                : (isAvailable
+                                      ? const Icon(
+                                          Icons.check_circle_rounded,
+                                          color: Colors.green,
+                                          size: 26,
+                                        )
+                                      : (errorReason != null
+                                            ? const Icon(
+                                                Icons.cancel_rounded,
+                                                color: Colors.red,
+                                                size: 26,
+                                              )
+                                            : null)),
+                          ),
+                          onChanged: onIdChanged,
+                        ),
+                      ),
+                      if (isAvailable) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.verified_rounded,
+                              color: Colors.green,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              context.tr('p6_house_id_valid_available'),
                               style: SLTextStyles.quicksand(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w800,
-                                color: Colors.red.shade700,
-                                height: 1.3,
+                                color: Colors.green.shade700,
                               ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (errorReason != null) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.error_outline_rounded,
+                              color: Colors.red.shade600,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                errorReason!,
+                                style: SLTextStyles.quicksand(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.red.shade700,
+                                  height: 1.3,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (suggestions.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          context.tr('p6_suggestions_for_you'),
+                          style: SLTextStyles.quicksand(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF7A6871),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: suggestions.map((sugg) {
+                            return ActionChip(
+                              label: Text(
+                                sugg,
+                                style: SLTextStyles.quicksand(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFFD81B60),
+                                ),
+                              ),
+                              backgroundColor: const Color(0xFFFFF0F5),
+                              side: const BorderSide(
+                                color: Color(0xFFFFD3E4),
+                                width: 1.5,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 8,
+                              ),
+                              onPressed: () => selectSuggestion(sugg),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                      const SizedBox(height: 28),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextButton(
+                              onPressed: isSaving
+                                  ? null
+                                  : () => Navigator.of(dialogContext).pop(),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              child: Text(
+                                context.tr('cancel'),
+                                style: SLTextStyles.quicksand(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF8C7381),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 2,
+                            child: ElevatedButton(
+                              onPressed:
+                                  (isAvailable && !isSaving && !isChecking)
+                                  ? confirmSubmitChange
+                                  : null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFD81B60),
+                                foregroundColor: Colors.white,
+                                disabledBackgroundColor: const Color(
+                                  0xFFF0F0F0,
+                                ),
+                                disabledForegroundColor: const Color(
+                                  0xFFAAAAAA,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              child: isSaving
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Text(
+                                      context.tr('p6_continue_action'),
+                                      style: SLTextStyles.quicksand(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
                             ),
                           ),
                         ],
                       ),
                     ],
-                    if (suggestions.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      Text(
-                        L10nService().translate('Gợi ý cho bạn:'),
-                        style: SLTextStyles.quicksand(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFF7A6871),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: suggestions.map((sugg) {
-                          return ActionChip(
-                            label: Text(
-                              sugg,
-                              style: SLTextStyles.quicksand(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xFFD81B60),
-                              ),
-                            ),
-                            backgroundColor: const Color(0xFFFFF0F5),
-                            side: const BorderSide(
-                              color: Color(0xFFFFD3E4),
-                              width: 1.5,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 8,
-                            ),
-                            onPressed: () => selectSuggestion(sugg),
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                    const SizedBox(height: 28),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextButton(
-                            onPressed: isSaving
-                                ? null
-                                : () => Navigator.of(dialogContext).pop(),
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                            child: Text(
-                              L10nService().translate('Huỷ'),
-                              style: SLTextStyles.quicksand(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xFF8C7381),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          flex: 2,
-                          child: ElevatedButton(
-                            onPressed: (isAvailable && !isSaving && !isChecking)
-                                ? confirmSubmitChange
-                                : null,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFD81B60),
-                              foregroundColor: Colors.white,
-                              disabledBackgroundColor: const Color(0xFFF0F0F0),
-                              disabledForegroundColor: const Color(0xFFAAAAAA),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                            child: isSaving
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : Text(
-                                    L10nService().translate('Tiếp tục'),
-                                    style: SLTextStyles.quicksand(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
               ),
             );

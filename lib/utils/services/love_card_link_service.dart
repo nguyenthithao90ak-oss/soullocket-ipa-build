@@ -1,8 +1,11 @@
 import 'dart:convert';
 
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 
 import 'package:soullocket_app/core/constants/app_config.dart';
+import 'app_check_http_headers.dart';
 
 class LoveCardLinkPayload {
   final String id;
@@ -52,7 +55,7 @@ class LoveCardLinkPayload {
       timestampMs: map['ts'] is int
           ? map['ts'] as int
           : int.tryParse('${map['ts']}') ??
-              DateTime.now().millisecondsSinceEpoch,
+                DateTime.now().millisecondsSinceEpoch,
       imageUrl: _normalizeOptionalString(map['imageUrl']),
     );
   }
@@ -115,8 +118,30 @@ class LoveCardLinkService {
 
   Future<LoveCardLinkPayload?> fetchPayloadByShareId(String shareId) async {
     final normalizedShareId = shareId.trim();
-    if (normalizedShareId.isEmpty) {
+    if (normalizedShareId.isEmpty ||
+        RegExp(r'[.#$\[\]/\x00-\x1f\x7f]').hasMatch(normalizedShareId)) {
       return null;
+    }
+
+    if (kIsWeb) {
+      // Thiệp đã được chia sẻ công khai: không phụ thuộc phiên Auth/RTDB
+      // cũ của người nhận. Máy chủ vẫn kiểm tra rules và App Check bình thường.
+      final base = Uri.parse(AppConfig.firebaseDatabaseUrl);
+      final uri = base.replace(
+        pathSegments: [publicShareCollectionPath, '$normalizedShareId.json'],
+      );
+      final headers = await AppCheckHttpHeaders.withOptionalToken({}).timeout(
+        const Duration(seconds: 2),
+        onTimeout: () => <String, String>{},
+      );
+      final response = await http
+          .get(uri, headers: headers)
+          .timeout(const Duration(seconds: 8));
+      if (response.statusCode != 200) {
+        throw StateError('Public card request failed: ${response.statusCode}');
+      }
+      final raw = jsonDecode(utf8.decode(response.bodyBytes));
+      return raw is Map ? LoveCardLinkPayload.fromMap(raw) : null;
     }
 
     try {

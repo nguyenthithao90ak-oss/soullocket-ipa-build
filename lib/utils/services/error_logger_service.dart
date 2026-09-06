@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 
@@ -11,6 +10,9 @@ class ErrorLoggerService {
   ErrorLoggerService._internal();
 
   Future<void> initialize() async {
+    if (kIsWeb) {
+      return;
+    }
     if (kDebugMode) {
       // In debug mode: disable Crashlytics entirely — do NOT attach error
       // handlers so the SDK never processes errors and shows no debug overlays.
@@ -30,8 +32,18 @@ class ErrorLoggerService {
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
   }
 
-  Future<void> logError(dynamic error, StackTrace? stack,
-      {String? reason, bool fatal = false}) async {
+  Future<void> logError(
+    dynamic error,
+    StackTrace? stack, {
+    String? reason,
+    bool fatal = false,
+  }) async {
+    if (kIsWeb) {
+      debugPrint(
+        'Crashlytics logging skipped on Web: ${AppErrorMapper.resolve(error).message}',
+      );
+      return;
+    }
     final errStr = error.toString().toLowerCase();
     if (errStr.contains('unable to load asset') ||
         errStr.contains('không thể tải')) {
@@ -39,14 +51,6 @@ class ErrorLoggerService {
       return;
     }
     debugPrint('Logging error: ${AppErrorMapper.resolve(error).message}');
-
-    // TEMPORARY: Dump error to file so Antigravity can read it
-    try {
-      final file =
-          File('C:\\Users\\PC\\.gemini\\antigravity\\scratch\\crash.txt');
-      file.writeAsStringSync('${DateTime.now()}\\n$error\\n$stack\\n\\n',
-          mode: FileMode.append);
-    } catch (_) {}
 
     await FirebaseCrashlytics.instance.recordError(
       error,
@@ -57,14 +61,17 @@ class ErrorLoggerService {
   }
 
   Future<void> setUserId(String userId) async {
+    if (kIsWeb) return;
     await FirebaseCrashlytics.instance.setUserIdentifier(userId);
   }
 
   Future<void> log(String message) async {
+    if (kIsWeb) return;
     await FirebaseCrashlytics.instance.log(message);
   }
 
   Future<void> setCustomKey(String key, dynamic value) async {
+    if (kIsWeb) return;
     await FirebaseCrashlytics.instance.setCustomKey(key, value);
   }
 }

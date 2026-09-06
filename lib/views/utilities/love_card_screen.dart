@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:math';
-import 'dart:ui' as ui;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -19,7 +17,6 @@ import '../../utils/app_error_mapper.dart';
 import '../../utils/services/pending_upload_service.dart';
 import '../../utils/services/storage/storage_service.dart';
 import 'love_card_public_viewer_screen.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 
 part 'love_card/dialogs/love_card_overlay_dialog.dart';
 part 'love_card/widgets/love_card_editor_sections.dart';
@@ -54,7 +51,8 @@ class LoveCardService {
         final cardsMap = cardsSnap.value as Map;
         if (cardsMap.length >= 100) {
           throw Exception(
-              'Hộp thư tình yêu đã đạt giới hạn (tối đa 100 thiệp). Vui lòng xoá bớt trước khi gửi thêm.');
+            'Hộp thư tình yêu đã đạt giới hạn (tối đa 100 thiệp). Vui lòng xoá bớt trước khi gửi thêm.',
+          );
         }
       }
       final ref = _db.ref('houses/$houseId/love_cards').push();
@@ -181,7 +179,8 @@ class LoveCardService {
       if (normalizedShareId.isNotEmpty)
         _db
             .ref(
-                '${LoveCardLinkService.publicShareCollectionPath}/$normalizedShareId')
+              '${LoveCardLinkService.publicShareCollectionPath}/$normalizedShareId',
+            )
             .remove(),
     ]);
   }
@@ -242,56 +241,62 @@ class LoveCardService {
         .orderByChild('ts')
         .onValue
         .map((event) {
-      final rawValue = event.snapshot.value;
-      if (!event.snapshot.exists || rawValue is! Map) {
-        return <Map<dynamic, dynamic>>[];
-      }
+          final rawValue = event.snapshot.value;
+          if (!event.snapshot.exists || rawValue is! Map) {
+            return <Map<dynamic, dynamic>>[];
+          }
 
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final data = Map<dynamic, dynamic>.from(rawValue);
-      final expiredShareIds = <String>[];
-      final expiredCardIds = <String>[];
-      final list =
-          data.entries.where((entry) => entry.value is Map).map((entry) {
-        final card = Map<dynamic, dynamic>.from(entry.value as Map);
-        card['id'] = entry.key;
-        return card;
-      }).where((card) {
-        final expiresAt = _readTimestampValue(card['expiresAt']);
-        if (expiresAt > 0 && expiresAt <= now) {
-          expiredCardIds.add((card['id'] ?? '').toString());
-          final shareId = (card['publicShareId'] ?? '').toString().trim();
-          if (shareId.isNotEmpty) {
-            expiredShareIds.add(shareId);
-          }
-          return false;
-        }
-        return card['fromUid']?.toString() ==
-                FirebaseAuth.instance.currentUser?.uid &&
-            (card['publicShareId'] ?? '').toString().trim().isNotEmpty;
-      }).toList();
+          final now = DateTime.now().millisecondsSinceEpoch;
+          final data = Map<dynamic, dynamic>.from(rawValue);
+          final expiredShareIds = <String>[];
+          final expiredCardIds = <String>[];
+          final list = data.entries
+              .where((entry) => entry.value is Map)
+              .map((entry) {
+                final card = Map<dynamic, dynamic>.from(entry.value as Map);
+                card['id'] = entry.key;
+                return card;
+              })
+              .where((card) {
+                final expiresAt = _readTimestampValue(card['expiresAt']);
+                if (expiresAt > 0 && expiresAt <= now) {
+                  expiredCardIds.add((card['id'] ?? '').toString());
+                  final shareId = (card['publicShareId'] ?? '')
+                      .toString()
+                      .trim();
+                  if (shareId.isNotEmpty) {
+                    expiredShareIds.add(shareId);
+                  }
+                  return false;
+                }
+                return card['fromUid']?.toString() ==
+                        FirebaseAuth.instance.currentUser?.uid &&
+                    (card['publicShareId'] ?? '').toString().trim().isNotEmpty;
+              })
+              .toList();
 
-      if (expiredCardIds.isNotEmpty || expiredShareIds.isNotEmpty) {
-        Future.microtask(() async {
-          final updates = <String, dynamic>{};
-          for (final cardId in expiredCardIds) {
-            if (cardId.trim().isNotEmpty) {
-              updates['houses/$normalizedHouseId/love_cards/$cardId'] = null;
-            }
+          if (expiredCardIds.isNotEmpty || expiredShareIds.isNotEmpty) {
+            Future.microtask(() async {
+              final updates = <String, dynamic>{};
+              for (final cardId in expiredCardIds) {
+                if (cardId.trim().isNotEmpty) {
+                  updates['houses/$normalizedHouseId/love_cards/$cardId'] =
+                      null;
+                }
+              }
+              for (final shareId in expiredShareIds) {
+                updates['${LoveCardLinkService.publicShareCollectionPath}/$shareId'] =
+                    null;
+              }
+              if (updates.isNotEmpty) {
+                await _db.ref().update(updates);
+              }
+            });
           }
-          for (final shareId in expiredShareIds) {
-            updates['${LoveCardLinkService.publicShareCollectionPath}/$shareId'] =
-                null;
-          }
-          if (updates.isNotEmpty) {
-            await _db.ref().update(updates);
-          }
+
+          list.sort((a, b) => _timestampOf(b).compareTo(_timestampOf(a)));
+          return list;
         });
-      }
-
-      list.sort((a, b) => _timestampOf(b).compareTo(_timestampOf(a)));
-      return list;
-    });
   }
 }
 
@@ -311,8 +316,7 @@ class LoveCardScreen extends StatefulWidget {
   State<LoveCardScreen> createState() => _LoveCardScreenState();
 }
 
-class _LoveCardScreenState extends State<LoveCardScreen>
-    with TickerProviderStateMixin {
+class _LoveCardScreenState extends State<LoveCardScreen> {
   static const String _pendingUploadKeyPrefix = 'love_card_';
   final _svc = LoveCardService();
   final _auth = FirebaseAuth.instance;
@@ -321,9 +325,6 @@ class _LoveCardScreenState extends State<LoveCardScreen>
   final _signatureCtrl = TextEditingController();
   final _contentCtrl = TextEditingController();
   final Map<String, _LoveThemeData> _themes = _loveCardThemes;
-
-  late final AnimationController _flipController;
-  late final Animation<double> _flipAnim;
 
   String _selectedTheme = 'love';
   int _selectedBg = 0xFFE94057;
@@ -342,21 +343,12 @@ class _LoveCardScreenState extends State<LoveCardScreen>
     super.initState();
     _senderNameCtrl.text = _defaultSenderName();
     _signatureCtrl.text = _defaultSignatureForTheme();
-    _flipController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 760),
-    );
-    _flipAnim = CurvedAnimation(
-      parent: _flipController,
-      curve: Curves.easeInOutCubic,
-    );
     _checkUnreadCards();
     unawaited(_promptPendingUploadRetryIfNeeded());
   }
 
   @override
   void dispose() {
-    _flipController.dispose();
     _senderNameCtrl.dispose();
     _signatureCtrl.dispose();
     _contentCtrl.dispose();
@@ -482,12 +474,15 @@ class _LoveCardScreenState extends State<LoveCardScreen>
   }
 
   void _showFullScreenPreview(
-      BuildContext context, _LoveThemeData theme, List<Color> colors) {
+    BuildContext context,
+    _LoveThemeData theme,
+    List<Color> colors,
+  ) {
     Navigator.of(context).push(
       PageRouteBuilder(
         barrierDismissible: true,
         opaque: false,
-        pageBuilder: (context, _, __) => Scaffold(
+        pageBuilder: (context, animation, secondaryAnimation) => Scaffold(
           backgroundColor: Colors.black.withValues(alpha: 0.88),
           body: Stack(
             children: [
@@ -519,8 +514,11 @@ class _LoveCardScreenState extends State<LoveCardScreen>
                         color: Colors.white.withValues(alpha: 0.12),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.close_rounded,
-                          color: Colors.white, size: 22),
+                      child: const Icon(
+                        Icons.close_rounded,
+                        color: Colors.white,
+                        size: 22,
+                      ),
                     ),
                   ),
                 ),
@@ -529,7 +527,9 @@ class _LoveCardScreenState extends State<LoveCardScreen>
           ),
         ),
         transitionsBuilder: (context, a, _, child) => FadeTransition(
-            opacity: a, child: ScaleTransition(scale: a, child: child)),
+          opacity: a,
+          child: ScaleTransition(scale: a, child: child),
+        ),
         transitionDuration: const Duration(milliseconds: 280),
       ),
     );
@@ -556,7 +556,8 @@ class _LoveCardScreenState extends State<LoveCardScreen>
     }
     final previousTheme = _selectedTheme;
     final currentSignature = _signatureCtrl.text.trim();
-    final shouldSyncSignature = currentSignature.isEmpty ||
+    final shouldSyncSignature =
+        currentSignature.isEmpty ||
         currentSignature == _defaultSignatureForTheme(previousTheme);
     setState(() {
       _selectedTheme = key;
@@ -657,7 +658,11 @@ class _LoveCardScreenState extends State<LoveCardScreen>
         entityId: entityId,
         sourceLabel: sourceLabel,
       );
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/utilities/love_card_screen.dart: $error',
+      );
+    }
   }
 
   Future<void> _sendCard() async {
@@ -678,14 +683,13 @@ class _LoveCardScreenState extends State<LoveCardScreen>
     try {
       await PendingUploadService.instance
           .save(_pendingUploadKey, <String, dynamic>{
-        'senderName': senderName,
-        'signature': signature,
-        'content': content,
-        'theme': _selectedTheme,
-        'bgColor': _selectedBg,
-        'imagePath': _selectedImageFile?.path ?? '',
-      });
-      await _flipController.forward();
+            'senderName': senderName,
+            'signature': signature,
+            'content': content,
+            'theme': _selectedTheme,
+            'bgColor': _selectedBg,
+            'imagePath': _selectedImageFile?.path ?? '',
+          });
       imageUrl = await _uploadSelectedCardImage();
 
       final cardId = await _svc.sendCard(
@@ -718,8 +722,9 @@ class _LoveCardScreenState extends State<LoveCardScreen>
           expiryMonths: LoveCardService.defaultExpiryMonths,
         );
         shareLink = shareId != null
-            ? const LoveCardLinkService()
-                .generatePublicCardLinkFromShareId(shareId)
+            ? const LoveCardLinkService().generatePublicCardLinkFromShareId(
+                shareId,
+              )
             : _svc.generatePublicCardLink(
                 cardId: cardId,
                 content: content,
@@ -732,16 +737,15 @@ class _LoveCardScreenState extends State<LoveCardScreen>
               );
       }
 
-      await Future.delayed(const Duration(milliseconds: 260));
       await PendingUploadService.instance.clear(_pendingUploadKey);
       isSuccess = true;
     } catch (e) {
-      final errorInfo = AppErrorMapper.resolve(
-        e,
-        fallbackMessage: fallbackMsg,
+      final errorInfo = AppErrorMapper.resolve(e, fallbackMessage: fallbackMsg);
+      debugPrint(
+        L10nService().format('util_love_card_send_debug_error', {
+          'error': errorInfo.message,
+        }),
       );
-      debugPrint(L10nService().format(
-          'util_love_card_send_debug_error', {'error': errorInfo.message}));
       if (!mounted) {
         return;
       }
@@ -756,12 +760,12 @@ class _LoveCardScreenState extends State<LoveCardScreen>
           ),
           backgroundColor: Colors.red.shade800,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
       );
     } finally {
-      _flipController.reset();
       if (mounted) {
         setState(() => _isSending = false);
       }
@@ -783,9 +787,9 @@ class _LoveCardScreenState extends State<LoveCardScreen>
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.tr('util_thipcgii_431480'))),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(context.tr('util_thipcgii_431480'))));
   }
 
   String _defaultSenderName() {
@@ -831,8 +835,9 @@ class _LoveCardScreenState extends State<LoveCardScreen>
         : _defaultSenderName();
     final signature = (card['signature'] ?? '').toString().trim();
     final imageUrl = (card['imageUrl'] ?? '').toString().trim();
-    final bgColor =
-        card['bgColor'] is int ? card['bgColor'] as int : _selectedBg;
+    final bgColor = card['bgColor'] is int
+        ? card['bgColor'] as int
+        : _selectedBg;
     final timestampMs = _timestampOf(card);
     final cardId = (card['id'] ?? '').toString().trim();
 
@@ -842,8 +847,9 @@ class _LoveCardScreenState extends State<LoveCardScreen>
       theme: theme.isEmpty ? 'love' : theme,
       bgColor: bgColor,
       senderName: senderName,
-      signature:
-          signature.isEmpty ? _defaultSignatureForTheme(theme) : signature,
+      signature: signature.isEmpty
+          ? _defaultSignatureForTheme(theme)
+          : signature,
       timestampMs: timestampMs,
       imageUrl: imageUrl.isEmpty ? null : imageUrl,
     );
@@ -865,10 +871,15 @@ class _LoveCardScreenState extends State<LoveCardScreen>
           expiryMonths: LoveCardService.defaultExpiryMonths,
         );
         if (ensuredShareId != null) {
-          return const LoveCardLinkService()
-              .generatePublicCardLinkFromShareId(ensuredShareId);
+          return const LoveCardLinkService().generatePublicCardLinkFromShareId(
+            ensuredShareId,
+          );
         }
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[SuppressedError] lib/views/utilities/love_card_screen.dart: $error',
+        );
+      }
     }
 
     return _svc.generatePublicCardLink(
@@ -894,35 +905,35 @@ class _LoveCardScreenState extends State<LoveCardScreen>
     final copiedSnackbarText = context.tr('util_tolinkthip_c78849');
 
     await Clipboard.setData(ClipboardData(text: link));
-    final preview =
-        content.length > 100 ? '${content.substring(0, 100)}…' : content;
+    final preview = content.length > 100
+        ? '${content.substring(0, 100)}…'
+        : content;
     final shareText = [
       titleText,
       if (preview.isNotEmpty)
-        L10nService()
-            .format('util_love_card_message_preview', {'message': preview}),
+        L10nService().format('util_love_card_message_preview', {
+          'message': preview,
+        }),
       suffixText,
       link,
     ].join('\n\n');
 
     await SharePlus.instance.share(ShareParams(text: shareText));
-    unawaited(_logLoveCardActivity(
-      text: logText,
-      title: logTitle,
-      subtitle: content,
-      action: 'create_link',
-    ));
+    unawaited(
+      _logLoveCardActivity(
+        text: logText,
+        title: logTitle,
+        subtitle: content,
+        action: 'create_link',
+      ),
+    );
 
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          copiedSnackbarText,
-        ),
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(copiedSnackbarText)));
   }
 
   Future<void> _deleteLoveCardLink(Map<dynamic, dynamic> card) async {
@@ -940,20 +951,22 @@ class _LoveCardScreenState extends State<LoveCardScreen>
       cardId: cardId,
       shareId: (card['publicShareId'] ?? '').toString(),
     );
-    unawaited(_logLoveCardActivity(
-      text: logText,
-      title: logTitle,
-      subtitle: (card['content'] ?? '').toString(),
-      action: 'delete_link',
-      entityId: cardId,
-    ));
+    unawaited(
+      _logLoveCardActivity(
+        text: logText,
+        title: logTitle,
+        subtitle: (card['content'] ?? '').toString(),
+        action: 'delete_link',
+        entityId: cardId,
+      ),
+    );
 
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(deletedSnackbarText)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(deletedSnackbarText)));
   }
 
   final Map<String, List<Color>> _themeColorsCache = {};
@@ -963,8 +976,9 @@ class _LoveCardScreenState extends State<LoveCardScreen>
   List<Color> _themeColors(String key) {
     if (!_themeColorsCache.containsKey(key)) {
       final theme = _themeOf(key);
-      _themeColorsCache[key] =
-          theme.colors.map(Color.new).toList(growable: false);
+      _themeColorsCache[key] = theme.colors
+          .map(Color.new)
+          .toList(growable: false);
     }
     return _themeColorsCache[key]!;
   }
@@ -988,23 +1002,7 @@ class _LoveCardScreenState extends State<LoveCardScreen>
 
   @override
   Widget build(BuildContext context) {
-    if (widget.isEmbedded) {
-      return _buildInnerContent();
-    }
-
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(context.tr('utility_title_love_card')),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: _buildInnerContent(),
-    );
+    return _buildInnerContent();
   }
 
   Widget _buildInnerContent() {
@@ -1034,7 +1032,7 @@ int _timestampFromValue(dynamic value) {
 }
 
 String _formatTime(int timestampMs) {
-  return DateFormat('HH:mm - dd/MM/yyyy').format(
-    DateTime.fromMillisecondsSinceEpoch(timestampMs),
-  );
+  return DateFormat(
+    'HH:mm - dd/MM/yyyy',
+  ).format(DateTime.fromMillisecondsSinceEpoch(timestampMs));
 }

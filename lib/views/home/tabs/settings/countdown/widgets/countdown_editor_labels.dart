@@ -3,16 +3,15 @@ part of '../../../settings_tab.dart';
 
 extension LabelsEditorExt on _CountdownModeEditorScreenState {
   List<Widget> _buildEditorLabels(
-      BuildContext context, _CountdownModeThemeData themeData) {
+    BuildContext context,
+    _CountdownModeThemeData themeData,
+  ) {
     return [
       _sectionCard(
         icon: Icons.timelapse_rounded,
-        title: 'Xem nhanh không gian',
-        subtitle: 'Xem vòng đếm gọn trước khi lưu',
-        iconGradient: const [
-          Color(0xFF3B82F6),
-          Color(0xFF60A5FA),
-        ],
+        title: context.tr('p7_countdown_preview_title'),
+        subtitle: context.tr('p7_countdown_preview_subtitle'),
+        iconGradient: const [Color(0xFF3B82F6), Color(0xFF60A5FA)],
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.all(14),

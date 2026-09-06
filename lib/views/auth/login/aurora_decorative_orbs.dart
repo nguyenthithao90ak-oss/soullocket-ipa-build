@@ -32,11 +32,10 @@ class _AuroraDecorativeOrbsState extends State<AuroraDecorativeOrbs>
 
   @override
   Widget build(BuildContext context) {
-    final reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     if (reduceMotion) {
-      return const IgnorePointer(
-        child: _DoodleLayer(progress: 0.35),
-      );
+      return const IgnorePointer(child: _DoodleLayer(progress: 0.35));
     }
 
     return IgnorePointer(
@@ -135,11 +134,7 @@ class _PaperSticker extends StatelessWidget {
   Widget build(BuildContext context) {
     return RepaintBoundary(
       child: CustomPaint(
-        painter: _PaperStickerPainter(
-          type: type,
-          fill: fill,
-          stroke: stroke,
-        ),
+        painter: _PaperStickerPainter(type: type, fill: fill, stroke: stroke),
         size: Size.square(size),
       ),
     );
@@ -227,15 +222,39 @@ class _PaperStickerPainter extends CustomPainter {
           canvas.drawCircle(petal, radius * 0.42, fillPaint);
           canvas.drawCircle(petal, radius * 0.42, outline);
         }
-        canvas.drawCircle(center, radius * 0.34, Paint()..color = const Color(0xFFFFD77A));
+        canvas.drawCircle(
+          center,
+          radius * 0.34,
+          Paint()..color = const Color(0xFFFFD77A),
+        );
         break;
       case _StickerType.spark:
         final path = Path()
           ..moveTo(center.dx, center.dy - radius)
-          ..quadraticBezierTo(center.dx + radius * 0.16, center.dy - radius * 0.16, center.dx + radius, center.dy)
-          ..quadraticBezierTo(center.dx + radius * 0.16, center.dy + radius * 0.16, center.dx, center.dy + radius)
-          ..quadraticBezierTo(center.dx - radius * 0.16, center.dy + radius * 0.16, center.dx - radius, center.dy)
-          ..quadraticBezierTo(center.dx - radius * 0.16, center.dy - radius * 0.16, center.dx, center.dy - radius)
+          ..quadraticBezierTo(
+            center.dx + radius * 0.16,
+            center.dy - radius * 0.16,
+            center.dx + radius,
+            center.dy,
+          )
+          ..quadraticBezierTo(
+            center.dx + radius * 0.16,
+            center.dy + radius * 0.16,
+            center.dx,
+            center.dy + radius,
+          )
+          ..quadraticBezierTo(
+            center.dx - radius * 0.16,
+            center.dy + radius * 0.16,
+            center.dx - radius,
+            center.dy,
+          )
+          ..quadraticBezierTo(
+            center.dx - radius * 0.16,
+            center.dy - radius * 0.16,
+            center.dx,
+            center.dy - radius,
+          )
           ..close();
         canvas.drawPath(path, fillPaint);
         canvas.drawPath(path, outline);

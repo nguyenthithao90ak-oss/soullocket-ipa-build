@@ -54,7 +54,8 @@ String? _getSleepWindow(DateTime now) {
   }
 
   // Khung nghỉ trưa: 11:30 → 13:30
-  final afterNoonStart = (h > kNoonNapStartHour) ||
+  final afterNoonStart =
+      (h > kNoonNapStartHour) ||
       (h == kNoonNapStartHour && m >= kNoonNapStartMinute);
   final beforeNoonEnd =
       (h < kNoonNapEndHour) || (h == kNoonNapEndHour && m <= kNoonNapEndMinute);
@@ -112,7 +113,10 @@ void callbackDispatcher() {
         final now = DateTime.now();
         final yesterday = now.subtract(const Duration(days: 1));
         final data = await health.getHealthDataFromTypes(
-            startTime: yesterday, endTime: now, types: types);
+          startTime: yesterday,
+          endTime: now,
+          types: types,
+        );
 
         bool isCurrentlySleeping = false;
         for (final d in data) {
@@ -122,8 +126,9 @@ void callbackDispatcher() {
           }
         }
 
-        final ref =
-            FirebaseDatabase.instance.ref('houses/$houseId/presence/$role');
+        final ref = FirebaseDatabase.instance.ref(
+          'houses/$houseId/presence/$role',
+        );
         if (isCurrentlySleeping) {
           final window = _getSleepWindow(now);
           final statusStr = window == 'noon' ? kStatusNoonNap : kStatusSleeping;
@@ -140,10 +145,7 @@ void callbackDispatcher() {
               await _saveAndClearSleepSession(ref, map, houseId, role);
             }
           }
-          await ref.update({
-            'sleep_mode': false,
-            'sleep_status': kStatusAwake,
-          });
+          await ref.update({'sleep_mode': false, 'sleep_status': kStatusAwake});
         }
       }
     } catch (e) {
@@ -199,8 +201,10 @@ void onStart(ServiceInstance service) async {
   // Timer định kỳ kiểm tra trạng thái offline timeout (mỗi 5 phút)
   periodicCheckTimer = Timer.periodic(const Duration(minutes: 5), (_) async {
     try {
-      final trackingEnabled = (await SharedPreferences.getInstance())
-              .getBool('is_sleep_tracking_enabled') ??
+      final trackingEnabled =
+          (await SharedPreferences.getInstance()).getBool(
+            'is_sleep_tracking_enabled',
+          ) ??
           false;
       if (!trackingEnabled) return;
 
@@ -226,7 +230,8 @@ void onStart(ServiceInstance service) async {
           // Nếu ngủ quá 14 tiếng mà không thức → có thể bị kẹt, reset
           if (sleepDurationHours > 14) {
             debugPrint(
-                '[SleepTracker] Sleep session >14h detected, auto-resetting.');
+              '[SleepTracker] Sleep session >14h detected, auto-resetting.',
+            );
             await _saveAndClearSleepSession(ref, map, houseId, role);
             await ref.update({
               'sleep_mode': false,
@@ -249,8 +254,9 @@ void onStart(ServiceInstance service) async {
 
       if (sleepWindow == null) {
         // Ngoài khung ngủ hoàn toàn
-        final minutesInactive =
-            lastActive > 0 ? (nowMs - lastActive) / 60000 : minutesOff;
+        final minutesInactive = lastActive > 0
+            ? (nowMs - lastActive) / 60000
+            : minutesOff;
         if (minutesInactive >= kInactiveThresholdMinutes &&
             map['sleep_status'] != kStatusInactive) {
           // Đã offline lâu ngoài giờ ngủ → "Không hoạt động"
@@ -264,10 +270,12 @@ void onStart(ServiceInstance service) async {
       if (minutesOff < minMinutes) return; // Chưa đủ thời gian, chờ thêm
 
       // Đủ điều kiện: chuyển sang ngủ
-      final statusStr =
-          sleepWindow == 'noon' ? kStatusNoonNap : kStatusSleeping;
+      final statusStr = sleepWindow == 'noon'
+          ? kStatusNoonNap
+          : kStatusSleeping;
       debugPrint(
-          '[SleepTracker] Entering sleep mode: $statusStr (${minutesOff.toStringAsFixed(1)} min off)');
+        '[SleepTracker] Entering sleep mode: $statusStr (${minutesOff.toStringAsFixed(1)} min off)',
+      );
       await ref.update({
         'sleep_mode': true,
         'sleep_status': statusStr,
@@ -280,8 +288,9 @@ void onStart(ServiceInstance service) async {
 
   // Lắng nghe sự kiện màn hình
   final screen = Screen();
-  screenStateSubscription =
-      screen.screenStateStream.listen((ScreenStateEvent event) async {
+  screenStateSubscription = screen.screenStateStream.listen((
+    ScreenStateEvent event,
+  ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final isTrackingEnabled =
@@ -319,7 +328,8 @@ void onStart(ServiceInstance service) async {
               // Giữ nguyên sleep_mode = true để periodic timer tự xử lý
             });
             debugPrint(
-                '[SleepTracker] Screen on during sleep window – monitoring brief wake.');
+              '[SleepTracker] Screen on during sleep window – monitoring brief wake.',
+            );
             return;
           }
 
@@ -344,7 +354,7 @@ void onStart(ServiceInstance service) async {
     } catch (e) {
       debugPrint('[BackgroundTracking] Screen event error: $e');
     }
-      });
+  });
 }
 
 // ─────────────────────────────────────────────
@@ -376,7 +386,8 @@ Future<void> _saveAndClearSleepSession(
   });
 
   debugPrint(
-      '[SleepTracker] Session saved: ${(durationMs / 3600000).toStringAsFixed(2)}h');
+    '[SleepTracker] Session saved: ${(durationMs / 3600000).toStringAsFixed(2)}h',
+  );
 }
 
 // ─────────────────────────────────────────────
@@ -390,8 +401,7 @@ class BackgroundTrackingService {
 
     if (Platform.isIOS) {
       if (isTrackingEnabled) {
-        await Workmanager()
-            .initialize(callbackDispatcher, isInDebugMode: false);
+        await Workmanager().initialize(callbackDispatcher);
         await Workmanager().registerPeriodicTask(
           'sleep_tracker',
           'sleep_tracker_task',
@@ -420,7 +430,8 @@ class BackgroundTrackingService {
 
       await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
+            AndroidFlutterLocalNotificationsPlugin
+          >()
           ?.createNotificationChannel(channel);
 
       await service.configure(
@@ -449,7 +460,9 @@ class BackgroundTrackingService {
           if (isRunning) {
             service.invoke('stopService');
           }
-        } catch (_) {}
+        } catch (error) {
+          debugPrint('[BackgroundTracking] Không dừng được service: $error');
+        }
       }
     }
   }
@@ -466,7 +479,7 @@ class BackgroundTrackingService {
         await service.startService();
       }
     } else if (Platform.isIOS) {
-      await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+      await Workmanager().initialize(callbackDispatcher);
       await Workmanager().registerPeriodicTask(
         'sleep_tracker',
         'sleep_tracker_task',
@@ -479,7 +492,9 @@ class BackgroundTrackingService {
           HealthDataType.SLEEP_ASLEEP,
         ];
         await health.requestAuthorization(types);
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[BackgroundTracking] Health authorization failed: $error');
+      }
     }
   }
 
@@ -492,11 +507,15 @@ class BackgroundTrackingService {
       final service = FlutterBackgroundService();
       try {
         service.invoke('stopService');
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[BackgroundTracking] Android stop failed: $error');
+      }
     } else if (Platform.isIOS) {
       try {
         await Workmanager().cancelByUniqueName('sleep_tracker');
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[BackgroundTracking] iOS cancel failed: $error');
+      }
     }
   }
 }

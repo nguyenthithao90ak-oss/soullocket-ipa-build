@@ -1,13 +1,12 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'login/auth_page_scaffold.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
-import '../../core/sl_theme.dart';
 import '../../utils/services/anti_spam_service.dart';
 import '../../utils/services/auth_service.dart';
 import '../../utils/services/l10n_service.dart';
@@ -25,14 +24,11 @@ import 'dialogs/auth_feedback_dialogs.dart';
 import 'dialogs/forgot_gmail_recovery_helper.dart';
 import 'dialogs/math_captcha_dialog.dart';
 import 'dialogs/support_dialog.dart';
-import 'login/auth_language_toggle.dart';
 import 'login/auth_panel_shell.dart';
 import 'login/forgot_password_launcher.dart';
 import 'login/login_shell.dart';
 import 'login/social_auth_action_helper.dart';
 import 'login/aurora_login_screen.dart';
-import 'login/aurora_hero_background.dart';
-import 'login/aurora_decorative_orbs.dart';
 import '../../views/ui_prefs.dart';
 import 'register/register_shell.dart';
 import 'widgets/gender_selection_dialog.dart';
@@ -105,7 +101,6 @@ class _LoginScreenState extends State<LoginScreen> {
     _prefs = await SharedPreferences.getInstance();
   }
 
-
   Future<void> _checkKickReason() async {
     _prefs ??= await SharedPreferences.getInstance();
     final prefs = _prefs!;
@@ -175,7 +170,9 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         return defaultMode;
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[LoginScreen] Cannot load relationship mode: $error');
+    }
 
     if (!mounted) return null;
 
@@ -269,7 +266,9 @@ class _LoginScreenState extends State<LoginScreen> {
           }
           return 'user1';
         }
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[LoginScreen] Cannot infer the current user role: $error');
+      }
     }
     return null;
   }
@@ -401,9 +400,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (!isDomainAllowed) {
-      _showErrorDialog(
-        L10nService().translate('auth_supported_domains_only'),
-      );
+      _showErrorDialog(L10nService().translate('auth_supported_domains_only'));
       return;
     }
 
@@ -967,312 +964,67 @@ class _LoginScreenState extends State<LoginScreen> {
     return ValueListenableBuilder<UiPrefsState>(
       valueListenable: UiPrefs.notifier,
       builder: (context, prefs, _) {
-        if (prefs.uiVersion == 'v2') {
-          return const AuroraLoginScreen();
-        }
+        if (prefs.uiVersion == 'v2') return const AuroraLoginScreen();
         return ListenableBuilder(
           listenable: L10nService(),
-          builder: (context, _) {
-            final l10n = L10nService();
-            return SensitiveContentGuard(
-              child: Scaffold(
-                resizeToAvoidBottomInset: false,
-                backgroundColor: SLColors.surfaceWarm,
-                body: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-                  child: Stack(
-                    children: [
-                      const Positioned.fill(child: AuroraHeroBackground()),
-                      const Positioned.fill(
-                        child: IgnorePointer(child: AuroraDecorativeOrbs()),
-                      ),
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final isDesktop = constraints.maxWidth >= 920;
-                          final isTablet =
-                              constraints.maxWidth >= 680 &&
-                              constraints.maxWidth < 920;
-                          final isCompact = constraints.maxWidth < 450;
-                          final horizontalPadding =
-                              SLResponsive.horizontalPaddingForWidth(
-                                constraints.maxWidth,
-                                compactPadding: 10,
-                                handsetPadding: 18,
-                                tabletPadding: 24,
-                              );
-                          final contentMaxWidth = isDesktop
-                              ? 1080.0
-                              : isTablet
-                              ? 560.0
-                              : 460.0;
-                          final authPanelWidth = isDesktop
-                              ? 408.0
-                              : min(
-                                  520.0,
-                                  constraints.maxWidth - (isCompact ? 20 : 32),
-                                );
-
-                          return Center(
-                            child: SingleChildScrollView(
-                              keyboardDismissBehavior:
-                                  ScrollViewKeyboardDismissBehavior.onDrag,
-                              physics: const BouncingScrollPhysics(),
-                              padding: EdgeInsets.only(
-                                left: horizontalPadding,
-                                right: horizontalPadding,
-                                top: 10,
-                                bottom:
-                                    10 +
-                                    MediaQuery.of(context).viewInsets.bottom,
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  SafeArea(
-                                    bottom: false,
-                                    child: Padding(
-                                      padding: EdgeInsets.only(
-                                        bottom: isCompact ? 12 : 16,
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          GestureDetector(
-                                            onTap: () =>
-                                                _showSyncGuideDialog(context),
-                                            child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 14,
-                                                    vertical: 8,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white.withValues(
-                                                  alpha: 0.65,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                border: Border.all(
-                                                  color: const Color(
-                                                    0xFFFFD6E0,
-                                                  ),
-                                                  width: 1.2,
-                                                ),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: SLColors.brandPink
-                                                        .withValues(
-                                                          alpha: 0.08,
-                                                        ),
-                                                    blurRadius: 10,
-                                                    offset: const Offset(0, 3),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  ShaderMask(
-                                                    shaderCallback: (bounds) =>
-                                                        const LinearGradient(
-                                                          colors: [
-                                                            Color(0xFFFF9E00),
-                                                            Color(0xFFFF6B00),
-                                                          ],
-                                                        ).createShader(bounds),
-                                                    child: const Icon(
-                                                      Icons.lightbulb_rounded,
-                                                      size: 16,
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 6),
-                                                  Text(
-                                                    l10n.translate(
-                                                      'auth_sync_guide',
-                                                    ),
-                                                    style: SLTheme.quicksand(
-                                                      fontSize: 12.5,
-                                                      fontWeight:
-                                                          FontWeight.w900,
-                                                      color: SLColors.brandPink,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          AuthLanguageToggle(
-                                            currentLocale: l10n.localeCode,
-                                            onSelect: (code) {
-                                              l10n.setLocale(code);
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  AnimatedPadding(
-                                    duration: const Duration(milliseconds: 280),
-                                    curve: Curves.easeOutCubic,
-                                    padding: EdgeInsets.only(
-                                      top: _isLoginTab ? 0 : 4,
-                                    ),
-                                    child: AnimatedOpacity(
-                                      duration: const Duration(
-                                        milliseconds: 500,
-                                      ),
-                                      curve: Curves.easeOutCubic,
-                                      opacity: _isSuccessTransition ? 0.0 : 1.0,
-                                      child: AnimatedScale(
-                                        duration: const Duration(
-                                          milliseconds: 500,
-                                        ),
-                                        curve: Curves.easeOutCubic,
-                                        scale: _isSuccessTransition ? 1.1 : 1.0,
-                                        child: ConstrainedBox(
-                                          constraints: BoxConstraints(
-                                            maxWidth: contentMaxWidth,
-                                          ),
-                                          child: Center(
-                                            child: SizedBox(
-                                              width: authPanelWidth,
-                                              child: AuthPanelShell(
-                                                compact:
-                                                    !isDesktop &&
-                                                    (isCompact || isTablet),
-                                                isLoginTab: _isLoginTab,
-                                                onSelectLogin: () =>
-                                                    _setAuthTab(true),
-                                                onSelectRegister: () =>
-                                                    _setAuthTab(false),
-                                                authSection: _isLoginTab
-                                                    ? LoginShell(
-                                                        emailController:
-                                                            _emailController,
-                                                        passwordController:
-                                                            _passwordController,
-                                                        obscurePassword:
-                                                            _obscurePassword,
-                                                        isLoading: _isLoading,
-                                                        rememberMe: _rememberMe,
-                                                        onToggleObscure: () => setState(
-                                                          () => _obscurePassword =
-                                                              !_obscurePassword,
-                                                        ),
-                                                        onRememberMeChanged:
-                                                            (value) => setState(
-                                                              () =>
-                                                                  _rememberMe =
-                                                                      value ??
-                                                                      true,
-                                                            ),
-                                                        onLogin:
-                                                            _handleAuthAction,
-                                                        onForgotPassword:
-                                                            _handleForgotPasswordAction,
-                                                        onSocialLogin:
-                                                            _handleSocialLogin,
-                                                      )
-                                                    : RegisterShell(
-                                                        emailController:
-                                                            _emailController,
-                                                        passwordController:
-                                                            _passwordController,
-                                                        obscurePassword:
-                                                            _obscurePassword,
-                                                        isLoading: _isLoading,
-                                                        acceptTerms:
-                                                            _acceptTerms,
-                                                        showSecurityQuestion:
-                                                            _showSecurityQuestion,
-                                                        selectedSecurityQuestion:
-                                                            _selectedSecurityQuestion,
-                                                        securityQuestions:
-                                                            _cleanSecurityQuestions,
-                                                        securityAnswerController:
-                                                            _securityAnswerController,
-                                                        onToggleObscure: () => setState(
-                                                          () => _obscurePassword =
-                                                              !_obscurePassword,
-                                                        ),
-                                                        onAcceptTermsChanged:
-                                                            (value) => setState(
-                                                              () =>
-                                                                  _acceptTerms =
-                                                                      value ??
-                                                                      false,
-                                                            ),
-                                                        onToggleSecurityQuestion:
-                                                            () => setState(
-                                                              () => _showSecurityQuestion =
-                                                                  !_showSecurityQuestion,
-                                                            ),
-                                                        onSecurityQuestionChanged:
-                                                            (value) {
-                                                              if (value == null)
-                                                                return;
-                                                              setState(
-                                                                () =>
-                                                                    _selectedSecurityQuestion =
-                                                                        value,
-                                                              );
-                                                            },
-                                                        onRegister:
-                                                            _handleAuthAction,
-                                                        onSocialLogin:
-                                                            _handleSocialLogin,
-                                                        onTermsTap:
-                                                            _openTermsDocument,
-                                                        onPrivacyTap:
-                                                            _openPrivacyDocument,
-                                                      ),
-                                                onOpenGuide: _openGuideDocument,
-                                                onOpenContact:
-                                                    _showContactDialog,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      // Copyright watermark
-                      SafeArea(
-                        child: Align(
-                          alignment: Alignment.bottomCenter,
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                              bottom: MediaQuery.of(context).padding.bottom > 0
-                                  ? 8
-                                  : 16,
-                            ),
-                            child: Text(
-                              'SoulLocket © $_copyrightYear — Tame Trương Việt Hoàng',
-                              style: SLTheme.quicksand(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white.withValues(alpha: 0.50),
-                              ),
-                            ),
-                          ),
+          builder: (context, _) => SensitiveContentGuard(
+            child: AuthPageScaffold(
+              copyrightYear: _copyrightYear.toString(),
+              transitioning: _isSuccessTransition,
+              onSyncGuide: () => _showSyncGuideDialog(context),
+              contentBuilder: (compact) => AuthPanelShell(
+                compact: compact,
+                isLoginTab: _isLoginTab,
+                onSelectLogin: () => _setAuthTab(true),
+                onSelectRegister: () => _setAuthTab(false),
+                authSection: _isLoginTab
+                    ? LoginShell(
+                        emailController: _emailController,
+                        passwordController: _passwordController,
+                        obscurePassword: _obscurePassword,
+                        isLoading: _isLoading,
+                        rememberMe: _rememberMe,
+                        onToggleObscure: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
                         ),
+                        onRememberMeChanged: (value) =>
+                            setState(() => _rememberMe = value ?? true),
+                        onLogin: _handleAuthAction,
+                        onForgotPassword: _handleForgotPasswordAction,
+                        onSocialLogin: _handleSocialLogin,
+                      )
+                    : RegisterShell(
+                        emailController: _emailController,
+                        passwordController: _passwordController,
+                        obscurePassword: _obscurePassword,
+                        isLoading: _isLoading,
+                        acceptTerms: _acceptTerms,
+                        showSecurityQuestion: _showSecurityQuestion,
+                        selectedSecurityQuestion: _selectedSecurityQuestion,
+                        securityQuestions: _cleanSecurityQuestions,
+                        securityAnswerController: _securityAnswerController,
+                        onToggleObscure: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
+                        onAcceptTermsChanged: (value) =>
+                            setState(() => _acceptTerms = value ?? false),
+                        onToggleSecurityQuestion: () => setState(
+                          () => _showSecurityQuestion = !_showSecurityQuestion,
+                        ),
+                        onSecurityQuestionChanged: (value) {
+                          if (value == null) return;
+                          setState(() => _selectedSecurityQuestion = value);
+                        },
+                        onRegister: _handleAuthAction,
+                        onSocialLogin: _handleSocialLogin,
+                        onTermsTap: _openTermsDocument,
+                        onPrivacyTap: _openPrivacyDocument,
                       ),
-                    ],
-                  ),
-                ),
+                onOpenGuide: _openGuideDocument,
+                onOpenContact: _showContactDialog,
               ),
-            );
-          },
+            ),
+          ),
         );
       },
     );
@@ -1743,7 +1495,12 @@ class _LegacySyncLoveThreadPainter extends CustomPainter {
     canvas.drawPath(path, thread);
 
     _drawPerson(canvas, left, const Color(0xFFFFD9E2), const Color(0xFFE76B8C));
-    _drawPerson(canvas, right, const Color(0xFFE6DFFF), const Color(0xFF7E6CC1));
+    _drawPerson(
+      canvas,
+      right,
+      const Color(0xFFE6DFFF),
+      const Color(0xFF7E6CC1),
+    );
 
     final heartCenter = Offset(size.width * 0.50, centerY - 1);
     _drawHeart(canvas, heartCenter, 19, const Color(0xFFF06D8D));
@@ -1763,7 +1520,8 @@ class _LegacySyncLoveThreadPainter extends CustomPainter {
   }
 
   void _drawPerson(Canvas canvas, Offset center, Color fill, Color accent) {
-    final shadow = Paint()..color = const Color(0xFF7B5F68).withValues(alpha: 0.10);
+    final shadow = Paint()
+      ..color = const Color(0xFF7B5F68).withValues(alpha: 0.10);
     canvas.drawOval(
       Rect.fromCenter(center: center.translate(0, 28), width: 55, height: 12),
       shadow,
@@ -1782,12 +1540,25 @@ class _LegacySyncLoveThreadPainter extends CustomPainter {
         ..strokeWidth = 2,
     );
 
-    canvas.drawCircle(center.translate(0, -9), 10, Paint()..color = Colors.white);
-    canvas.drawCircle(center.translate(-3.5, -10), 1.3, Paint()..color = accent);
+    canvas.drawCircle(
+      center.translate(0, -9),
+      10,
+      Paint()..color = Colors.white,
+    );
+    canvas.drawCircle(
+      center.translate(-3.5, -10),
+      1.3,
+      Paint()..color = accent,
+    );
     canvas.drawCircle(center.translate(3.5, -10), 1.3, Paint()..color = accent);
     final smile = Path()
       ..moveTo(center.dx - 3.5, center.dy - 5)
-      ..quadraticBezierTo(center.dx, center.dy - 1, center.dx + 3.5, center.dy - 5);
+      ..quadraticBezierTo(
+        center.dx,
+        center.dy - 1,
+        center.dx + 3.5,
+        center.dy - 5,
+      );
     canvas.drawPath(
       smile,
       Paint()
@@ -1823,5 +1594,6 @@ class _LegacySyncLoveThreadPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _LegacySyncLoveThreadPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _LegacySyncLoveThreadPainter oldDelegate) =>
+      false;
 }

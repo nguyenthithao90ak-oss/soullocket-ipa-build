@@ -12,7 +12,9 @@ extension CountdownLoveTimePanelExt on _CountdownModeIndependentScreenState {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _buildLoveTimeCell(
-                value: detail['h']!, label: context.tr('home_gi_770f40')),
+              value: detail['h']!,
+              label: context.tr('home_gi_770f40'),
+            ),
             const SizedBox(width: 8),
             _buildLoveTimeCell(
               value: detail['m']!,
@@ -21,7 +23,9 @@ extension CountdownLoveTimePanelExt on _CountdownModeIndependentScreenState {
             ),
             const SizedBox(width: 8),
             _buildLoveTimeCell(
-                value: detail['s']!, label: context.tr('home_giy_392758')),
+              value: detail['s']!,
+              label: context.tr('home_giy_392758'),
+            ),
           ],
         );
       },
@@ -73,16 +77,19 @@ extension CountdownLoveTimePanelExt on _CountdownModeIndependentScreenState {
                 end: Alignment.bottomRight,
               ),
         borderRadius: BorderRadius.circular(18),
-        border:
-            Border.all(color: Colors.white.withValues(alpha: 0.40), width: 1),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.40),
+          width: 1,
+        ),
         boxShadow: _transparentMode
             ? const []
             : [
                 BoxShadow(
-                  color: (alternate
-                          ? const Color(0xFFD81B60)
-                          : const Color(0xFF2563EB))
-                      .withValues(alpha: 0.10),
+                  color:
+                      (alternate
+                              ? const Color(0xFFD81B60)
+                              : const Color(0xFF2563EB))
+                          .withValues(alpha: 0.10),
                   blurRadius: 15,
                   offset: const Offset(0, 6),
                 ),
@@ -127,43 +134,45 @@ extension CountdownLoveTimePanelExt on _CountdownModeIndependentScreenState {
     final currentSpaceId = (_openedSpaceHouseId ?? _selfSpaceHouseId).trim();
     final sharedSpace = _sharedSpaceFor(currentSpaceId);
     final deleteRequest = _deleteRequestFor(currentSpaceId);
-    final result =
-        await Navigator.of(context).push<_CountdownModeSettingsResult>(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => _CountdownModeEditorScreen(
-          currentHouseId: widget.currentHouseId,
-          isVipActive: widget.isVipActive,
-          spaceTitle: _spaceTitle(currentSpaceId),
-          isAccepted: _acceptedSpaceHouseIds.contains(currentSpaceId),
-          showDeleteSection:
-              currentSpaceId != _selfSpaceHouseId && sharedSpace != null,
-          canRequestDelete: currentSpaceId != _selfSpaceHouseId &&
-              sharedSpace != null &&
-              deleteRequest == null,
-          canAcceptDelete: deleteRequest != null &&
-              !deleteRequest.isRequestedBy(_selfSpaceHouseId),
-          deleteStatusTitle: _deleteStatusTitle(currentSpaceId),
-          deleteStatusDescription: _deleteStatusDescription(currentSpaceId),
-          singleMode: _singleMode,
-          anchorDate: _anchorDate,
-          themeKey: _themeKey,
-          styleKey: _countdownStyleKey,
-          frameKey: _avatarFrameKey,
-          fontKey: _fontKey,
-          transparentMode: _transparentMode,
-          sizePx: _countdownSizePx,
-          topLabel: _topLabelText,
-          bottomLabel: _bottomLabelText,
-          nameU1: _nameU1,
-          nameU2: _nameU2,
-          avatarUrl1: _avatarUrl1,
-          avatarUrl2: _avatarUrl2,
-          customBackgroundUrl: _customBackgroundUrl,
-          centerIconType: _centerIconType,
-        ),
-      ),
-    );
+    final result = await Navigator.of(context)
+        .push<_CountdownModeSettingsResult>(
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (_) => _CountdownModeEditorScreen(
+              currentHouseId: widget.currentHouseId,
+              isVipActive: widget.isVipActive,
+              spaceTitle: _spaceTitle(currentSpaceId),
+              isAccepted: _acceptedSpaceHouseIds.contains(currentSpaceId),
+              showDeleteSection:
+                  currentSpaceId != _selfSpaceHouseId && sharedSpace != null,
+              canRequestDelete:
+                  currentSpaceId != _selfSpaceHouseId &&
+                  sharedSpace != null &&
+                  deleteRequest == null,
+              canAcceptDelete:
+                  deleteRequest != null &&
+                  !deleteRequest.isRequestedBy(_selfSpaceHouseId),
+              deleteStatusTitle: _deleteStatusTitle(currentSpaceId),
+              deleteStatusDescription: _deleteStatusDescription(currentSpaceId),
+              singleMode: _singleMode,
+              anchorDate: _anchorDate,
+              themeKey: _themeKey,
+              styleKey: _countdownStyleKey,
+              frameKey: _avatarFrameKey,
+              fontKey: _fontKey,
+              transparentMode: _transparentMode,
+              sizePx: _countdownSizePx,
+              topLabel: _topLabelText,
+              bottomLabel: _bottomLabelText,
+              nameU1: _nameU1,
+              nameU2: _nameU2,
+              avatarUrl1: _avatarUrl1,
+              avatarUrl2: _avatarUrl2,
+              customBackgroundUrl: _customBackgroundUrl,
+              centerIconType: _centerIconType,
+            ),
+          ),
+        );
 
     if (result == null || !mounted) {
       return;
@@ -264,8 +273,9 @@ extension CountdownLoveTimePanelExt on _CountdownModeIndependentScreenState {
                   decoration: BoxDecoration(
                     color: const Color(0xFF0F1A2D),
                     borderRadius: BorderRadius.circular(24),
-                    border:
-                        Border.all(color: Colors.white.withValues(alpha: 0.10)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.10),
+                    ),
                   ),
                   child: SingleChildScrollView(
                     physics: const ClampingScrollPhysics(),
@@ -286,9 +296,9 @@ extension CountdownLoveTimePanelExt on _CountdownModeIndependentScreenState {
                                 style: SLTheme.quicksand(
                                   fontSize:
                                       MediaQuery.of(sheetContext).size.width <
-                                              360
-                                          ? 16
-                                          : 18,
+                                          360
+                                      ? 16
+                                      : 18,
                                   fontWeight: FontWeight.w900,
                                   color: Colors.white,
                                 ),
@@ -368,7 +378,8 @@ extension CountdownLoveTimePanelExt on _CountdownModeIndependentScreenState {
                                 selected: !draftSingleMode,
                                 label: Text(context.tr('home_cpi_d525b0')),
                                 onSelected: (_) => setSheetState(
-                                    () => draftSingleMode = false),
+                                  () => draftSingleMode = false,
+                                ),
                               ),
                             ),
                           ],
@@ -380,7 +391,14 @@ extension CountdownLoveTimePanelExt on _CountdownModeIndependentScreenState {
                               child: Text(
                                 draftDate == null
                                     ? context.tr('home_chachnngym_6f48a0')
-                                    : 'Ngày mốc: ${DateInputUtils.formatDisplayDate(draftDate!)}',
+                                    : context
+                                          .tr('p7_anchor_date_label')
+                                          .replaceAll(
+                                            '{date}',
+                                            DateInputUtils.formatDisplayDate(
+                                              draftDate!,
+                                            ),
+                                          ),
                                 style: SLTheme.quicksand(
                                   fontSize: 12.8,
                                   fontWeight: FontWeight.w800,
@@ -426,7 +444,7 @@ extension CountdownLoveTimePanelExt on _CountdownModeIndependentScreenState {
                         ),
                         const SizedBox(height: 10),
                         _CountdownModeSheetDropdown(
-                          label: 'Khung avatar',
+                          label: context.tr('p7_avatar_frame'),
                           value: draftFrameKey,
                           options: _CountdownModeIndependentScreenState
                               ._avatarFrameOptions,
@@ -446,7 +464,9 @@ extension CountdownLoveTimePanelExt on _CountdownModeIndependentScreenState {
                               min: 200,
                               max: UiPrefs.maxCountdownSizePx,
                               value: draftSize.clamp(
-                                  200.0, UiPrefs.maxCountdownSizePx),
+                                200.0,
+                                UiPrefs.maxCountdownSizePx,
+                              ),
                               onChanged: (value) {
                                 setSliderState(() {
                                   draftSize = value;

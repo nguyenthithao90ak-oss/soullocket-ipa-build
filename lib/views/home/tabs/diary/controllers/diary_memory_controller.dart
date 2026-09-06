@@ -59,8 +59,8 @@ class DiaryMemoryController extends ChangeNotifier {
   DiaryMemoryController({
     DatabaseReference? dbRef,
     StorageService? storageService,
-  })  : _dbRef = dbRef ?? FirebaseDatabase.instance.ref(),
-        _storageService = storageService ?? StorageService() {
+  }) : _dbRef = dbRef ?? FirebaseDatabase.instance.ref(),
+       _storageService = storageService ?? StorageService() {
     _resetMemoriesPagination();
   }
 
@@ -290,8 +290,9 @@ class DiaryMemoryController extends ChangeNotifier {
     await _savePendingUploadState(
       houseId: houseId,
       paths: remaining,
-      message: L10nService()
-          .format('home_memory_remaining_upload', {'count': remaining.length}),
+      message: L10nService().format('home_memory_remaining_upload', {
+        'count': remaining.length,
+      }),
     );
   }
 
@@ -307,7 +308,11 @@ class DiaryMemoryController extends ChangeNotifier {
         if (await file.length() > 0) {
           files.add(file);
         }
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[SuppressedError] lib/views/home/tabs/diary/controllers/diary_memory_controller.dart: $error',
+        );
+      }
     }
     return files;
   }
@@ -492,7 +497,8 @@ class DiaryMemoryController extends ChangeNotifier {
         _memoriesStream == null) {
       _cachedHouseIdForMemories = normalizedHouseId;
       unawaited(
-          _storageService.cleanupExpiredMemoryTrashIfNeeded(normalizedHouseId));
+        _storageService.cleanupExpiredMemoryTrashIfNeeded(normalizedHouseId),
+      );
       _memoriesQuery = _dbRef
           .child('houses/$normalizedHouseId/memories')
           .orderByChild('ts')
@@ -510,9 +516,9 @@ class DiaryMemoryController extends ChangeNotifier {
     if (_memoriesCacheHouseId != normalizedHouseId ||
         _memoriesCacheFuture == null) {
       _memoriesCacheHouseId = normalizedHouseId;
-      _memoriesCacheFuture =
-          OfflineCacheService.loadCache('memories_$normalizedHouseId')
-              .then(_extractMemoriesCacheList);
+      _memoriesCacheFuture = OfflineCacheService.loadCache(
+        'memories_$normalizedHouseId',
+      ).then(_extractMemoriesCacheList);
     }
     return _memoriesCacheFuture!;
   }
@@ -522,8 +528,9 @@ class DiaryMemoryController extends ChangeNotifier {
     if (normalizedHouseId == null) {
       return null;
     }
-    final raw =
-        OfflineCacheService.loadCacheSync('memories_$normalizedHouseId');
+    final raw = OfflineCacheService.loadCacheSync(
+      'memories_$normalizedHouseId',
+    );
     return _extractMemoriesCacheList(raw);
   }
 
@@ -653,8 +660,9 @@ class DiaryMemoryController extends ChangeNotifier {
 
         // Tối ưu hóa Cache: Ghi đè lại URL mới vào Offline Cache để lần sau mở app không cần resolve lại
         try {
-          final cached =
-              await OfflineCacheService.loadCache('memories_$houseId');
+          final cached = await OfflineCacheService.loadCache(
+            'memories_$houseId',
+          );
           List? itemsList;
           int? cachedAt;
           // Hỗ trợ cả format mới {_cachedAt, items} và format cũ List
@@ -682,12 +690,14 @@ class DiaryMemoryController extends ChangeNotifier {
                 'items': itemsList,
               });
               debugPrint(
-                  '[DiaryMemory] Offline Cache updated with new signed URL for memoryId=$memoryId');
+                '[DiaryMemory] Offline Cache updated with new signed URL for memoryId=$memoryId',
+              );
             }
           }
         } catch (cacheErr) {
           debugPrint(
-              '[DiaryMemory] Failed to update offline cache with new signed URL: $cacheErr');
+            '[DiaryMemory] Failed to update offline cache with new signed URL: $cacheErr',
+          );
         }
       } catch (e) {
         _lastUrlRefreshTimes.remove(memoryId);
@@ -712,10 +722,10 @@ class DiaryMemoryController extends ChangeNotifier {
   void _normalizeMemoryPhotoUrl(Map<String, dynamic> item) {
     final fallbackUrl =
         item['downloadUrl']?.toString().trim().isNotEmpty == true
-            ? item['downloadUrl'].toString().trim()
-            : item['previewUrl']?.toString().trim().isNotEmpty == true
-                ? item['previewUrl'].toString().trim()
-                : item['thumbUrl']?.toString().trim() ?? '';
+        ? item['downloadUrl'].toString().trim()
+        : item['previewUrl']?.toString().trim().isNotEmpty == true
+        ? item['previewUrl'].toString().trim()
+        : item['thumbUrl']?.toString().trim() ?? '';
     if (fallbackUrl.isEmpty) {
       return;
     }
@@ -742,8 +752,9 @@ class DiaryMemoryController extends ChangeNotifier {
         if (value is! Map) {
           return;
         }
-        final item =
-            Map<String, dynamic>.from(Map<dynamic, dynamic>.from(value));
+        final item = Map<String, dynamic>.from(
+          Map<dynamic, dynamic>.from(value),
+        );
         item['id'] = key.toString();
         _normalizeMemoryPhotoUrl(item);
         photos.add(item);
@@ -783,10 +794,8 @@ class DiaryMemoryController extends ChangeNotifier {
 
     return sortedDates
         .map(
-          (dateKey) => (
-            date: DateTime.parse(dateKey),
-            items: grouped[dateKey]!,
-          ),
+          (dateKey) =>
+              (date: DateTime.parse(dateKey), items: grouped[dateKey]!),
         )
         .toList(growable: false);
   }
@@ -889,7 +898,8 @@ class DiaryMemoryController extends ChangeNotifier {
         startDate: startDate,
         relationshipMode: relationshipMode,
       ),
-      showingCache: !useLiveSource &&
+      showingCache:
+          !useLiveSource &&
           cacheSource is List &&
           (isOffline || waitingForLive),
       canLoadMore:
@@ -970,8 +980,9 @@ class DiaryMemoryController extends ChangeNotifier {
     }
 
     final prefs = await SharedPreferences.getInstance();
-    final role =
-        prefs.getString('il_role')?.trim() == 'user2' ? 'user2' : 'user1';
+    final role = prefs.getString('il_role')?.trim() == 'user2'
+        ? 'user2'
+        : 'user1';
 
     for (final raw in deletedItems) {
       if (raw is! Map) {
@@ -982,7 +993,8 @@ class DiaryMemoryController extends ChangeNotifier {
       if (memoryId.isEmpty) {
         continue;
       }
-      final previewUrl = item['previewUrl']?.toString().trim() ??
+      final previewUrl =
+          item['previewUrl']?.toString().trim() ??
           item['url']?.toString().trim() ??
           '';
       final title = item['title']?.toString().trim() ?? '';
@@ -1015,7 +1027,7 @@ class DiaryMemoryController extends ChangeNotifier {
     required BuildContext context,
     required String? houseId,
     required void Function(String message, {Color? backgroundColor})
-        showSnackBar,
+    showSnackBar,
   }) async {
     if (_selectedMemories.isEmpty || houseId == null) {
       return;
@@ -1032,15 +1044,19 @@ class DiaryMemoryController extends ChangeNotifier {
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
         content: Text(
-          L10nService()
-              .translate(L10nService().translate('home_bncchcmunx_09bf02')),
+          L10nService().translate(
+            L10nService().translate('home_bncchcmunx_09bf02'),
+          ),
           style: SLTheme.quicksand(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(L10nService()
-                .translate(L10nService().translate('home_hy_1e4050'))),
+            child: Text(
+              L10nService().translate(
+                L10nService().translate('home_hy_1e4050'),
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -1048,8 +1064,11 @@ class DiaryMemoryController extends ChangeNotifier {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: Text(L10nService()
-                .translate(L10nService().translate('home_xa_4ed187'))),
+            child: Text(
+              L10nService().translate(
+                L10nService().translate('home_xa_4ed187'),
+              ),
+            ),
           ),
         ],
       ),
@@ -1085,7 +1104,8 @@ class DiaryMemoryController extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       final errorText = AppErrorMapper.resolve(e).message;
-      final isNotFound = errorText.contains('firebase_functions/not-found') ||
+      final isNotFound =
+          errorText.contains('firebase_functions/not-found') ||
           errorText.contains('not-found') ||
           errorText.contains('NOT_FOUND') ||
           errorText.contains(L10nService().translate('home_khngtmthyn_b3a1a6'));
@@ -1097,8 +1117,9 @@ class DiaryMemoryController extends ChangeNotifier {
         for (final memoryId in _selectedMemories.keys) {
           final normalizedId = memoryId.trim();
           if (normalizedId.isEmpty) continue;
-          final memoryRef =
-              _dbRef.child('houses/$houseId/memories/$normalizedId');
+          final memoryRef = _dbRef.child(
+            'houses/$houseId/memories/$normalizedId',
+          );
           final snap = await memoryRef.get();
           if (!snap.exists || snap.value is! Map) continue;
           final payload = Map<String, dynamic>.from(snap.value as Map);
@@ -1117,8 +1138,9 @@ class DiaryMemoryController extends ChangeNotifier {
           });
         }
         if (updates.isNotEmpty) {
-          updates['houses/$houseId/memoriesCount'] =
-              ServerValue.increment(-deletedItems.length);
+          updates['houses/$houseId/memoriesCount'] = ServerValue.increment(
+            -deletedItems.length,
+          );
           // Trừ dung lượng khỏi tổng kho
           var deletedImageBytes = 0;
           var deletedVideoBytes = 0;
@@ -1175,7 +1197,7 @@ class DiaryMemoryController extends ChangeNotifier {
     required BuildContext context,
     required DiaryGuardController guardController,
     required void Function(String message, {Color? backgroundColor})
-        showSnackBar,
+    showSnackBar,
   }) async {
     if (_selectedMemories.isEmpty) {
       return;
@@ -1211,11 +1233,7 @@ class DiaryMemoryController extends ChangeNotifier {
           ttl: _memoryDownloadCacheTtl,
         );
         if (bytes != null && bytes.isNotEmpty) {
-          await _saveMemoryBytesToGallery(
-            bytes,
-            url: url,
-            index: i,
-          );
+          await _saveMemoryBytesToGallery(bytes, url: url, index: i);
           savedCount++;
         }
         i++;
@@ -1225,13 +1243,13 @@ class DiaryMemoryController extends ChangeNotifier {
         return;
       }
 
-
       if (savedCount > 0) {
         _exitSelectionMode(notify: false);
-        showSnackBar(L10nService().format(
-          'diary_saved_memories_to_album',
-          {'count': savedCount},
-        ));
+        showSnackBar(
+          L10nService().format('diary_saved_memories_to_album', {
+            'count': savedCount,
+          }),
+        );
         notifyListeners();
       } else {
         showSnackBar(
@@ -1257,7 +1275,7 @@ class DiaryMemoryController extends ChangeNotifier {
     required String url,
     required DiaryGuardController guardController,
     required void Function(String message, {Color? backgroundColor})
-        showSnackBar,
+    showSnackBar,
   }) async {
     showSnackBar('Đang xử lý...');
     try {
@@ -1280,11 +1298,7 @@ class DiaryMemoryController extends ChangeNotifier {
         ttl: _memoryDownloadCacheTtl,
       );
       if (bytes != null && bytes.isNotEmpty) {
-        await _saveMemoryBytesToGallery(
-          bytes,
-          url: url,
-          index: 0,
-        );
+        await _saveMemoryBytesToGallery(bytes, url: url, index: 0);
         if (!context.mounted) {
           return;
         }
@@ -1316,20 +1330,22 @@ class DiaryMemoryController extends ChangeNotifier {
     required String? houseId,
     required Map<String, dynamic> item,
     required void Function(String message, {Color? backgroundColor})
-        showSnackBar,
+    showSnackBar,
   }) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
         title: Text(
-          L10nService()
-              .translate(L10nService().translate('home_xaknim_bdb86a')),
+          L10nService().translate(
+            L10nService().translate('home_xaknim_bdb86a'),
+          ),
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
         content: Text(
-          L10nService()
-              .translate(L10nService().translate('home_bncchcmunc_c47262')),
+          L10nService().translate(
+            L10nService().translate('home_bncchcmunc_c47262'),
+          ),
           style: SLTheme.quicksand(),
         ),
         actions: [
@@ -1343,8 +1359,11 @@ class DiaryMemoryController extends ChangeNotifier {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: Text(L10nService()
-                .translate(L10nService().translate('home_xa_4ed187'))),
+            child: Text(
+              L10nService().translate(
+                L10nService().translate('home_xa_4ed187'),
+              ),
+            ),
           ),
         ],
       ),
@@ -1379,7 +1398,8 @@ class DiaryMemoryController extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       final errorText = AppErrorMapper.resolve(e).message;
-      final isNotFound = errorText.contains('firebase_functions/not-found') ||
+      final isNotFound =
+          errorText.contains('firebase_functions/not-found') ||
           errorText.contains('not-found') ||
           errorText.contains('NOT_FOUND') ||
           errorText.contains(L10nService().translate('home_khngtmthyn_b3a1a6'));
@@ -1401,12 +1421,10 @@ class DiaryMemoryController extends ChangeNotifier {
           // Trừ dung lượng khỏi tổng kho
           final delFileSize = (payload['fileSize'] as num?)?.toInt() ?? 0;
           if (delFileSize > 0) {
-            final typeKey =
-                payload['type']?.toString().toLowerCase() == 'video'
-                    ? 'video'
-                    : 'image';
-            singleDeleteUpdates[
-                    'houses/$houseId/memoryStorageBytes/$typeKey'] =
+            final typeKey = payload['type']?.toString().toLowerCase() == 'video'
+                ? 'video'
+                : 'image';
+            singleDeleteUpdates['houses/$houseId/memoryStorageBytes/$typeKey'] =
                 ServerValue.increment(-delFileSize);
           }
           await _dbRef.update(singleDeleteUpdates);
@@ -1443,7 +1461,7 @@ class DiaryMemoryController extends ChangeNotifier {
 
   /// Upload R2 only — trả về payload để batch-write Firebase sau
   Future<({String? error, Map<String, dynamic>? payload, int uploadedBytes})>
-      _uploadSingleMemoryPhoto({
+  _uploadSingleMemoryPhoto({
     required String houseId,
     required XFile image,
     required String authorName,
@@ -1453,9 +1471,18 @@ class DiaryMemoryController extends ChangeNotifier {
     Position? position,
   }) async {
     try {
-      final originalName = (image.name.isNotEmpty ? image.name : image.path).toLowerCase();
+      final originalName = (image.name.isNotEmpty ? image.name : image.path)
+          .toLowerCase();
       final ext = p.extension(originalName).toLowerCase();
-      final isVideoFile = const {'.mp4', '.mov', '.webm', '.3gp', '.m4v', '.avi', '.mkv'}.contains(ext);
+      final isVideoFile = const {
+        '.mp4',
+        '.mov',
+        '.webm',
+        '.3gp',
+        '.m4v',
+        '.avi',
+        '.mkv',
+      }.contains(ext);
       if (isVideoFile && !AppConfig.isVideoUploadEnabled) {
         return (
           error: 'Tính năng tải video đang tạm thời bảo trì để nâng cấp.',
@@ -1482,19 +1509,24 @@ class DiaryMemoryController extends ChangeNotifier {
       String? thumbnailUrl;
       if (isVideoFile && !kIsWeb) {
         try {
-          final thumbFile =
-              await VideoCompress.getFileThumbnail(image.path,
-                  quality: 50, position: -1);
-          if (thumbFile.existsSync() && thumbFile.lengthSync() > 0) {
-            final thumbXFile = XFile(thumbFile.path);
+          final thumbnailBytes = await VideoCompress.getByteThumbnail(
+            image.path,
+            quality: 50,
+            position: -1,
+          );
+          if (thumbnailBytes != null && thumbnailBytes.isNotEmpty) {
+            final thumbXFile = XFile.fromData(
+              thumbnailBytes,
+              name:
+                  'memory_video_thumbnail_${DateTime.now().microsecondsSinceEpoch}.jpg',
+              mimeType: 'image/jpeg',
+            );
             final thumbUpload = await _storageService.uploadMemoryImage(
               houseId,
               thumbXFile,
               quality: 60,
             );
             thumbnailUrl = thumbUpload?.downloadUrl.trim();
-            // Dọn file tạm
-            try { thumbFile.deleteSync(); } catch (_) {}
           }
         } catch (e) {
           debugPrint(
@@ -1521,20 +1553,27 @@ class DiaryMemoryController extends ChangeNotifier {
         if (position != null) 'lat': position.latitude,
         if (position != null) 'lng': position.longitude,
       };
-      return (error: null, payload: payload, uploadedBytes: upload.uploadedBytes ?? 0);
-    } catch (e) {
-      debugPrint(
-        'Lỗi tải ảnh kỷ niệm: ${AppErrorMapper.resolve(e).message}',
+      return (
+        error: null,
+        payload: payload,
+        uploadedBytes: upload.uploadedBytes ?? 0,
       );
-      return (error: AppErrorMapper.resolve(e).message, payload: null, uploadedBytes: 0);
+    } catch (e) {
+      debugPrint('Lỗi tải ảnh kỷ niệm: ${AppErrorMapper.resolve(e).message}');
+      return (
+        error: AppErrorMapper.resolve(e).message,
+        payload: null,
+        uploadedBytes: 0,
+      );
     }
   }
 
   /// Đọc tổng dung lượng ảnh + video đã lưu trong kho (bytes).
   Future<Map<String, int>> _getTotalStorageBytes(String houseId) async {
     try {
-      final snap =
-          await _dbRef.child('houses/$houseId/memoryStorageBytes').get();
+      final snap = await _dbRef
+          .child('houses/$houseId/memoryStorageBytes')
+          .get();
       if (snap.exists && snap.value is Map) {
         final map = Map<String, dynamic>.from(snap.value as Map);
         return {
@@ -1555,7 +1594,7 @@ class DiaryMemoryController extends ChangeNotifier {
     required DiaryGuardController guardController,
     required DiaryFeedController feedController,
     required void Function(String message, {Color? backgroundColor})
-        showSnackBar,
+    showSnackBar,
   }) async {
     final images = await _buildPendingUploadFiles();
     if (images.isEmpty) {
@@ -1583,7 +1622,7 @@ class DiaryMemoryController extends ChangeNotifier {
     required DiaryGuardController guardController,
     required DiaryFeedController feedController,
     required void Function(String message, {Color? backgroundColor})
-        showSnackBar,
+    showSnackBar,
     List<XFile>? presetImages,
   }) async {
     if (!await SecurityService().guardAction(context, 'diary_upload_photos')) {
@@ -1614,7 +1653,8 @@ class DiaryMemoryController extends ChangeNotifier {
     final imageStorageCap = vipAccess.totalMemoryStorageCapMb * 1024 * 1024;
     final videoStorageCap = vipAccess.totalMemoryVideoCapMb * 1024 * 1024;
 
-    if (totalImageBytes >= imageStorageCap && totalVideoBytes >= videoStorageCap) {
+    if (totalImageBytes >= imageStorageCap &&
+        totalVideoBytes >= videoStorageCap) {
       final imgCapMb = vipAccess.totalMemoryStorageCapMb;
       final vidCapMb = vipAccess.totalMemoryVideoCapMb;
       showSnackBar(
@@ -1629,8 +1669,9 @@ class DiaryMemoryController extends ChangeNotifier {
     final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
     // ── Đọc dung lượng ảnh + video đã upload hôm nay (bytes sau nén) ──
-    final uploadBytesRef =
-        _dbRef.child('houses/$houseId/memoryUploadBytes/$todayStr/$uid');
+    final uploadBytesRef = _dbRef.child(
+      'houses/$houseId/memoryUploadBytes/$todayStr/$uid',
+    );
     final bytesSnap = await uploadBytesRef.get();
     final bytesMap = bytesSnap.value is Map
         ? Map<String, dynamic>.from(bytesSnap.value as Map)
@@ -1650,8 +1691,8 @@ class DiaryMemoryController extends ChangeNotifier {
         vipAccess.isVip
             ? 'Bạn đã dùng hết dung lượng tải lên hôm nay (ảnh ${imageLimitMb}MB, video ${videoLimitMb}MB). Vui lòng thử lại ngày mai.'
             : AppConfig.isPurchaseEnabled
-                ? 'Tài khoản thường chỉ được tải lên ${imageLimitMb}MB ảnh và ${videoLimitMb}MB video mỗi ngày. Nâng cấp VIP để tải lên nhiều hơn!'
-                : 'Bạn đã dùng hết dung lượng tải lên hôm nay. Vui lòng thử lại ngày mai.',
+            ? 'Tài khoản thường chỉ được tải lên ${imageLimitMb}MB ảnh và ${videoLimitMb}MB video mỗi ngày. Nâng cấp VIP để tải lên nhiều hơn!'
+            : 'Bạn đã dùng hết dung lượng tải lên hôm nay. Vui lòng thử lại ngày mai.',
         backgroundColor: const Color(0xFFE53935),
       );
       return;
@@ -1686,20 +1727,21 @@ class DiaryMemoryController extends ChangeNotifier {
       // Sau khi user chọn ảnh: resolve user + location song song
       Future<Position?> locationFuture = Future.value(null);
       if (!kIsWeb) {
-        locationFuture =
-            Geolocator.isLocationServiceEnabled().then((enabled) async {
-          if (!enabled) return null;
-          final permission = await Geolocator.checkPermission();
-          if (permission != LocationPermission.always &&
-              permission != LocationPermission.whileInUse) {
-            return null;
-          }
-          return Geolocator.getCurrentPosition(
-            locationSettings: const LocationSettings(
-              accuracy: LocationAccuracy.low,
-            ),
-          ).timeout(const Duration(seconds: 1));
-        }).catchError((_) => null as Position?);
+        locationFuture = Geolocator.isLocationServiceEnabled()
+            .then((enabled) async {
+              if (!enabled) return null;
+              final permission = await Geolocator.checkPermission();
+              if (permission != LocationPermission.always &&
+                  permission != LocationPermission.whileInUse) {
+                return null;
+              }
+              return Geolocator.getCurrentPosition(
+                locationSettings: const LocationSettings(
+                  accuracy: LocationAccuracy.low,
+                ),
+              ).timeout(const Duration(seconds: 1));
+            })
+            .catchError((_) => null as Position?);
       }
 
       final postPickResults = await Future.wait([
@@ -1710,8 +1752,9 @@ class DiaryMemoryController extends ChangeNotifier {
       final user = postPickResults[0] as User?;
       if (user == null) {
         showSnackBar(
-          L10nService()
-              .translate(L10nService().translate('home_phinngnhpc_f6ac90')),
+          L10nService().translate(
+            L10nService().translate('home_phinngnhpc_f6ac90'),
+          ),
           backgroundColor: const Color(0xFFE53935),
         );
         return;
@@ -1727,8 +1770,10 @@ class DiaryMemoryController extends ChangeNotifier {
 
       if (position != null) {
         final pinSnapshot = await _mapPinLimitService.getSnapshot(houseId);
-        final alreadyPinned =
-            pinSnapshot.containsLocation(position.latitude, position.longitude);
+        final alreadyPinned = pinSnapshot.containsLocation(
+          position.latitude,
+          position.longitude,
+        );
         if (pinSnapshot.isFull && !alreadyPinned) {
           // Giữ nguyên upload ảnh nhưng bỏ ghim vị trí mới để không vượt mốc 30 điểm.
           position = null;
@@ -1743,9 +1788,7 @@ class DiaryMemoryController extends ChangeNotifier {
           await user.getIdToken(true);
         }
       } catch (e) {
-        debugPrint(
-          'Auth warm-up failed: ${AppErrorMapper.resolve(e).message}',
-        );
+        debugPrint('Auth warm-up failed: ${AppErrorMapper.resolve(e).message}');
       }
 
       final memoryUploadQuality = vipAccess.isVip ? 82 : 78;
@@ -1755,9 +1798,11 @@ class DiaryMemoryController extends ChangeNotifier {
       var sessionImageBytes = 0;
       var sessionVideoBytes = 0;
 
-      for (var start = 0;
-          start < images.length;
-          start += _memoryUploadConcurrency) {
+      for (
+        var start = 0;
+        start < images.length;
+        start += _memoryUploadConcurrency
+      ) {
         final end = (start + _memoryUploadConcurrency).clamp(0, images.length);
         final batch = images.sublist(start, end);
 
@@ -1790,20 +1835,22 @@ class DiaryMemoryController extends ChangeNotifier {
             if (isVideo) {
               if (videoUploadedToday + sessionVideoBytes + bytes >
                   videoLimitBytes) {
-                final limitMb =
-                    (videoLimitBytes / (1024 * 1024)).toStringAsFixed(0);
+                final limitMb = (videoLimitBytes / (1024 * 1024))
+                    .toStringAsFixed(0);
                 errorMessages.add(
-                    'Vượt giới hạn video ${limitMb}MB/ngày. Bỏ qua file này.');
+                  'Vượt giới hạn video ${limitMb}MB/ngày. Bỏ qua file này.',
+                );
                 continue;
               }
               sessionVideoBytes += bytes;
             } else {
               if (imageUploadedToday + sessionImageBytes + bytes >
                   imageLimitBytes) {
-                final limitMb =
-                    (imageLimitBytes / (1024 * 1024)).toStringAsFixed(0);
+                final limitMb = (imageLimitBytes / (1024 * 1024))
+                    .toStringAsFixed(0);
                 errorMessages.add(
-                    'Vượt giới hạn ảnh ${limitMb}MB/ngày. Bỏ qua file này.');
+                  'Vượt giới hạn ảnh ${limitMb}MB/ngày. Bỏ qua file này.',
+                );
                 continue;
               }
               sessionImageBytes += bytes;
@@ -1827,8 +1874,9 @@ class DiaryMemoryController extends ChangeNotifier {
             await _dbRef.update(batchUpdates);
           } catch (dbError) {
             debugPrint('Lỗi batch-write Firebase: $dbError');
-            errorMessages
-                .add(L10nService().translate('home_cannot_save_memory'));
+            errorMessages.add(
+              L10nService().translate('home_cannot_save_memory'),
+            );
           }
         }
         if (completedImages.isNotEmpty) {
@@ -1865,8 +1913,9 @@ class DiaryMemoryController extends ChangeNotifier {
       if (uploadedCount > 0) {
         await NotificationService().sendPartnerNotification(
           houseId: houseId,
-          title: L10nService()
-              .translate(L10nService().translate('home_knimmi_e43fdc')),
+          title: L10nService().translate(
+            L10nService().translate('home_knimmi_e43fdc'),
+          ),
           body: L10nService().format('diary_partner_new_memory', {
             'author': authorName,
             'count': uploadedCount,
@@ -1900,13 +1949,13 @@ class DiaryMemoryController extends ChangeNotifier {
           content: Text(
             failedCount == 0
                 ? skippedMapPinBecauseLimit
-                    ? 'Đã thêm $uploadedCount kỷ niệm. Ảnh vẫn được lưu nhưng không ghim vị trí mới vì bản đồ đã đủ ${MapPinLimitService.maxPins} điểm.'
-                    : L10nService().format('diary_added_new_memories', {
-                        'count': uploadedCount,
-                      })
+                      ? 'Đã thêm $uploadedCount kỷ niệm. Ảnh vẫn được lưu nhưng không ghim vị trí mới vì bản đồ đã đủ ${MapPinLimitService.maxPins} điểm.'
+                      : L10nService().format('diary_added_new_memories', {
+                          'count': uploadedCount,
+                        })
                 : skippedMapPinBecauseLimit
-                    ? L10nService().translate('home_memory_added_skip_location')
-                    : L10nService().translate('home_memory_added_with_errors'),
+                ? L10nService().translate('home_memory_added_skip_location')
+                : L10nService().translate('home_memory_added_with_errors'),
           ),
         ),
       );
@@ -1948,7 +1997,8 @@ class DiaryMemoryController extends ChangeNotifier {
         name: 'soullocket_$safeBaseName',
       );
 
-      final isSuccess = result['isSuccess'] == true ||
+      final isSuccess =
+          result['isSuccess'] == true ||
           (result['filePath']?.toString().isNotEmpty ?? false);
       if (!isSuccess) {
         final message = result['errorMessage']?.toString();

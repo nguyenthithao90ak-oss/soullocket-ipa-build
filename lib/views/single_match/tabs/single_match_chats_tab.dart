@@ -29,22 +29,25 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
   @override
   void initState() {
     super.initState();
-    _chatSub = _service.streamChatMappings(widget.houseId).listen(
-      (list) {
-        if (mounted) setState(() => _mappings = list);
-      },
-      onError: (err) {
-        if (mounted) {
-          setState(() {
-            _error = AppErrorMapper.resolve(
-              err,
-              fallbackMessage:
-                  L10nService().translate('match_khngthtidl_11f27c'),
-            ).message;
-          });
-        }
-      },
-    );
+    _chatSub = _service
+        .streamChatMappings(widget.houseId)
+        .listen(
+          (list) {
+            if (mounted) setState(() => _mappings = list);
+          },
+          onError: (err) {
+            if (mounted) {
+              setState(() {
+                _error = AppErrorMapper.resolve(
+                  err,
+                  fallbackMessage: L10nService().translate(
+                    'match_khngthtidl_11f27c',
+                  ),
+                ).message;
+              });
+            }
+          },
+        );
   }
 
   @override
@@ -57,8 +60,9 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
     if (_isCreating) return;
 
     try {
-      final alreadyChatted =
-          _mappings.map((m) => m['peerHouseId'].toString()).toSet();
+      final alreadyChatted = _mappings
+          .map((m) => m['peerHouseId'].toString())
+          .toSet();
 
       final result = await Navigator.push<dynamic>(
         context,
@@ -75,8 +79,7 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
 
       if (result == null || result is! SingleMatchCandidate) {
         if (!mounted) return;
-        _showSnack(
-            'Hiện không có ai để trò chuyện lúc này. Hãy ghép đôi thêm.');
+        _showSnack(context.tr('p9_match_chat_no_candidates'));
         return;
       }
 
@@ -104,10 +107,12 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
       );
     } catch (err) {
       if (!mounted) return;
-      _showSnack(AppErrorMapper.resolve(
-        err,
-        fallbackMessage: L10nService().translate('match_khngthtidl_11f27c'),
-      ).message);
+      _showSnack(
+        AppErrorMapper.resolve(
+          err,
+          fallbackMessage: L10nService().translate('match_khngthtidl_11f27c'),
+        ).message,
+      );
     } finally {
       if (mounted) setState(() => _isCreating = false);
     }
@@ -133,15 +138,20 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.cloud_off_rounded,
-                  size: 48, color: SLColors.textTertiary),
+              const Icon(
+                Icons.cloud_off_rounded,
+                size: 48,
+                color: SLColors.textTertiary,
+              ),
               const SizedBox(height: 12),
-              Text(_error!,
-                  textAlign: TextAlign.center,
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w700,
-                    color: SLColors.textSecondary,
-                  )),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w700,
+                  color: SLColors.textSecondary,
+                ),
+              ),
             ],
           ),
         ),
@@ -155,202 +165,283 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
     if (hasMappings) itemCount += 3 + _mappings.length;
     if (isEmptyState) itemCount += 2;
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 30),
-      itemCount: itemCount,
-      itemBuilder: (context, index) {
-        if (index == 0) {
-          return Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: const Color(0xFFF0E5DF), width: 1.2),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFFF5E7E).withValues(alpha: 0.04),
-                  blurRadius: 12,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                const Icon(Icons.casino_rounded,
-                    size: 40, color: Color(0xFFFF5E7E)),
-                const SizedBox(height: 8),
-                Text(
-                  'Trò chuyện ngẫu nhiên',
-                  style: SLTheme.quicksand(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF2E2427),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Hệ thống chọn người phù hợp nhất với bạn',
-                  textAlign: TextAlign.center,
-                  style: SLTheme.quicksand(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF7A6B72),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: _isCreating ? null : _startRandomChat,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF5E7E),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                    ),
-                    icon: _isCreating
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
-                        : const Icon(Icons.chat_rounded),
-                    label: Text(
-                      _isCreating ? 'Đang ghép...' : 'Trò chuyện ngay',
-                      style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = isDark ? colorScheme.surface : SLColors.paper;
+    final borderColor = isDark
+        ? colorScheme.outlineVariant
+        : const Color(0xFFF0E5DF);
+    final primaryText = isDark
+        ? colorScheme.onSurface
+        : const Color(0xFF2E2427);
+    final secondaryText = isDark
+        ? colorScheme.onSurfaceVariant
+        : const Color(0xFF7A6B72);
 
-        int offset = 1;
-        if (hasMappings) {
-          if (index == offset) return const SizedBox(height: 18);
-          if (index == offset + 1) {
-            return Row(
-              children: [
-                Text(
-                  'Lịch sử trò chuyện',
-                  style: SLTheme.quicksand(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF32203B),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 760),
+        child: ListView.builder(
+          physics: SLResponsive.scrollPhysicsForPlatform(),
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 30),
+          itemCount: itemCount,
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return Semantics(
+                container: true,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: surfaceColor,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: borderColor, width: 1.2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFF5E7E).withValues(alpha: 0.04),
+                        blurRadius: 12,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.casino_rounded,
+                        size: 40,
+                        color: Color(0xFFFF5E7E),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        context.tr('p9_match_chat_random_title'),
+                        style: SLTheme.quicksand(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                          color: primaryText,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        context.tr('p9_match_chat_random_subtitle'),
+                        textAlign: TextAlign.center,
+                        style: SLTheme.quicksand(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: secondaryText,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: _isCreating ? null : _startRandomChat,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFFFF5E7E),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          icon: _isCreating
+                              ? Semantics(
+                                  label: context.tr('p9_match_chat_creating'),
+                                  liveRegion: true,
+                                  child: const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                )
+                              : const Icon(Icons.chat_rounded),
+                          label: Text(
+                            context.tr(
+                              _isCreating
+                                  ? 'p9_match_chat_creating'
+                                  : 'p9_match_chat_start',
+                            ),
+                            style: SLTheme.quicksand(
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const Spacer(),
-                Text('${_mappings.length} người',
-                    style: SLTheme.quicksand(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: SLColors.textTertiary,
-                    )),
-              ],
-            );
-          }
-          if (index == offset + 2) return const SizedBox(height: 12);
+              );
+            }
 
-          final mappingIndex = index - (offset + 3);
-          if (mappingIndex < _mappings.length) {
-            return _buildChatItem(_mappings[mappingIndex]);
-          }
-          offset += 3 + _mappings.length;
-        }
-
-        if (isEmptyState) {
-          if (index == offset) return const SizedBox(height: 24);
-          if (index == offset + 1) {
-            return Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Column(
-                children: [
-                  const Icon(Icons.chat_bubble_outline_rounded,
-                      size: 52, color: SLColors.textTertiary),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Chưa có phòng trò chuyện nào',
-                    style: SLTheme.quicksand(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      color: SLColors.textSecondary,
+            int offset = 1;
+            if (hasMappings) {
+              if (index == offset) return const SizedBox(height: 18);
+              if (index == offset + 1) {
+                return Row(
+                  children: [
+                    Text(
+                      context.tr('p9_match_chat_history'),
+                      style: SLTheme.quicksand(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: primaryText,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Nhấn "Trò chuyện ngay" để kết nối hoặc quay lại tab Ghép đôi để gọi.',
-                    textAlign: TextAlign.center,
-                    style: SLTheme.quicksand(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: SLColors.textTertiary,
+                    const Spacer(),
+                    Text(
+                      L10nService().format('p9_match_chat_people_count', {
+                        'count': _mappings.length,
+                      }),
+                      style: SLTheme.quicksand(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: isDark
+                            ? colorScheme.onSurfaceVariant
+                            : SLColors.textTertiary,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          }
-        }
+                  ],
+                );
+              }
+              if (index == offset + 2) return const SizedBox(height: 12);
 
-        return const SizedBox.shrink();
-      },
+              final mappingIndex = index - (offset + 3);
+              if (mappingIndex < _mappings.length) {
+                return _buildChatItem(_mappings[mappingIndex]);
+              }
+              offset += 3 + _mappings.length;
+            }
+
+            if (isEmptyState) {
+              if (index == offset) return const SizedBox(height: 24);
+              if (index == offset + 1) {
+                return Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: surfaceColor,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: borderColor),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.chat_bubble_outline_rounded,
+                        size: 52,
+                        color: isDark
+                            ? colorScheme.onSurfaceVariant
+                            : SLColors.textTertiary,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        context.tr('p9_match_chat_empty_title'),
+                        style: SLTheme.quicksand(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          color: isDark
+                              ? colorScheme.onSurface
+                              : SLColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        context.tr('p9_match_chat_empty_subtitle'),
+                        textAlign: TextAlign.center,
+                        style: SLTheme.quicksand(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: isDark
+                              ? colorScheme.onSurfaceVariant
+                              : SLColors.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            }
+
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
     );
   }
 
   Widget _buildChatItem(Map<String, dynamic> mapping) {
     final peerHouseId = mapping['peerHouseId']?.toString() ?? '';
-    final peerName = mapping['peerName']?.toString() ??
+    final peerName =
+        mapping['peerName']?.toString() ??
         L10nService().translate('match_hsc_81b822');
     final peerAvatar = mapping['peerAvatarUrl']?.toString() ?? '';
     final createdAt = mapping['createdAt'] is num
         ? _formatTime(mapping['createdAt'] as num)
         : '';
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = isDark ? colorScheme.surface : SLColors.paper;
+    final borderColor = isDark
+        ? colorScheme.outlineVariant
+        : const Color(0xFFF0E5DF);
+    final primaryText = isDark
+        ? colorScheme.onSurface
+        : const Color(0xFF32203B);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: surfaceColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white),
+          border: Border.all(color: borderColor),
         ),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 24,
-              backgroundColor: const Color(0xFFFFDCE7),
-              backgroundImage: peerAvatar.isNotEmpty
-                  ? CachedNetworkImageProvider(peerAvatar)
-                  : null,
-              child: peerAvatar.isEmpty
-                  ? Text(peerName.isNotEmpty ? peerName[0].toUpperCase() : '?')
-                  : null,
+            Semantics(
+              image: true,
+              label: L10nService().format('p9_match_chat_avatar_label', {
+                'name': peerName,
+              }),
+              child: ExcludeSemantics(
+                child: CircleAvatar(
+                  radius: 24,
+                  backgroundColor: const Color(0xFFFFDCE7),
+                  backgroundImage: peerAvatar.isNotEmpty
+                      ? CachedNetworkImageProvider(peerAvatar)
+                      : null,
+                  child: peerAvatar.isEmpty
+                      ? Text(
+                          peerName.isNotEmpty ? peerName[0].toUpperCase() : '?',
+                        )
+                      : null,
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(peerName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF32203B),
-                      )),
+                  Text(
+                    peerName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: SLTheme.quicksand(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      color: primaryText,
+                    ),
+                  ),
                   if (createdAt.isNotEmpty)
-                    Text(createdAt,
-                        style: SLTheme.quicksand(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: SLColors.textTertiary,
-                        )),
+                    Text(
+                      createdAt,
+                      style: SLTheme.quicksand(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: isDark
+                            ? colorScheme.onSurfaceVariant
+                            : SLColors.textTertiary,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -370,13 +461,18 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF7C61FF),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
               ),
               icon: const Icon(Icons.chat_rounded, size: 16),
-              label: Text('Nhắn tin',
-                  style: SLTheme.quicksand(fontWeight: FontWeight.w800)),
+              label: Text(
+                context.tr('p9_match_chat_message'),
+                style: SLTheme.quicksand(fontWeight: FontWeight.w800),
+              ),
             ),
           ],
         ),
@@ -388,9 +484,28 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
     final dt = DateTime.fromMillisecondsSinceEpoch(ms.toInt());
     final now = DateTime.now();
     final diff = now.difference(dt);
-    if (diff.inMinutes < 60) return '${diff.inMinutes} phút trước';
-    if (diff.inHours < 24) return '${diff.inHours} giờ trước';
-    if (diff.inDays < 7) return '${diff.inDays} ngày trước';
-    return '${dt.day}/${dt.month}/${dt.year}';
+    if (diff.inMinutes < 1) {
+      return L10nService().translate('p9_match_time_just_now');
+    }
+    if (diff.inMinutes < 60) {
+      return L10nService().format('p9_match_time_minutes_ago', {
+        'count': diff.inMinutes,
+      });
+    }
+    if (diff.inHours < 24) {
+      return L10nService().format('p9_match_time_hours_ago', {
+        'count': diff.inHours,
+      });
+    }
+    if (diff.inDays < 7) {
+      return L10nService().format('p9_match_time_days_ago', {
+        'count': diff.inDays,
+      });
+    }
+    return L10nService().format('p9_match_time_date', {
+      'day': dt.day,
+      'month': dt.month,
+      'year': dt.year,
+    });
   }
 }

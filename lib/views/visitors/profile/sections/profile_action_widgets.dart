@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/sl_theme.dart';
+import '../../../../utils/services/l10n_service.dart';
 import 'profile_section_models.dart';
 
 class VisitorProfileAppBarActions extends StatelessWidget {
@@ -25,13 +26,14 @@ class VisitorProfileAppBarActions extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.only(right: 8),
         child: IconButton(
-          tooltip: 'Tùy chỉnh hồ sơ',
+          tooltip: context.tr('p5_profile_customize_tooltip'),
           onPressed: isUpdatingProfileAppearance ? null : onOpenAppearance,
           icon: _ActionCircle(
             child: Icon(
               Icons.settings_rounded,
-              color:
-                  isUpdatingProfileAppearance ? Colors.white54 : Colors.white,
+              color: isUpdatingProfileAppearance
+                  ? Colors.white54
+                  : Colors.white,
               size: 18,
             ),
           ),
@@ -42,6 +44,7 @@ class VisitorProfileAppBarActions extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: PopupMenuButton<String>(
+        tooltip: context.tr('p5_profile_more_actions'),
         icon: const _ActionCircle(
           child: Icon(Icons.more_vert, color: Colors.white, size: 18),
         ),
@@ -91,45 +94,51 @@ class VisitorProfileHeartButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: isDropping ? null : onTap,
-      child: ScaleTransition(
-        scale: heartScale,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: isHeartDroppedToday
-                ? Colors.white.withValues(alpha: 0.15)
-                : Colors.white.withValues(alpha: 0.22),
-            borderRadius: BorderRadius.circular(SLRadius.pill),
-            border: Border.all(
+    return Semantics(
+      button: true,
+      label: context.tr('p5_profile_heart_action'),
+      value: '$heartCount',
+      enabled: !isDropping,
+      child: GestureDetector(
+        onTap: isDropping ? null : onTap,
+        child: ScaleTransition(
+          scale: heartScale,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
               color: isHeartDroppedToday
-                  ? Colors.white24
-                  : Colors.white.withValues(alpha: 0.5),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isHeartDroppedToday
-                    ? Icons.favorite_rounded
-                    : Icons.favorite_border_rounded,
+                  ? Colors.white.withValues(alpha: 0.15)
+                  : Colors.white.withValues(alpha: 0.22),
+              borderRadius: BorderRadius.circular(SLRadius.pill),
+              border: Border.all(
                 color: isHeartDroppedToday
-                    ? const Color(0xFFFF8FAF)
-                    : Colors.white,
-                size: 18,
+                    ? Colors.white24
+                    : Colors.white.withValues(alpha: 0.5),
               ),
-              SLSpacing.w8,
-              Text(
-                '$heartCount',
-                style: SLTheme.quicksand(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isHeartDroppedToday
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  color: isHeartDroppedToday
+                      ? const Color(0xFFFF8FAF)
+                      : Colors.white,
+                  size: 18,
                 ),
-              ),
-            ],
+                SLSpacing.w8,
+                Text(
+                  '$heartCount',
+                  style: SLTheme.quicksand(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 /// ============================================================
 ///  QRLoginService — GRA (Logic/Bảo mật)
@@ -162,6 +163,8 @@ class QRLoginService {
       if (expiresAt > 0 && DateTime.now().millisecondsSinceEpoch > expiresAt) {
         await ref.remove();
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[QrLoginService] Cannot clean up the login session: $error');
+    }
   }
 }

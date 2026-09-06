@@ -54,25 +54,33 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
 
   String _topLabel(UiPrefsState uiState) {
     if (_isSingleMode) {
-      return _limitLabel(uiState.countdownTopLabel,
-          L10nService().translate('home_tuicati_5c654c'));
+      return _limitLabel(
+        uiState.countdownTopLabel,
+        L10nService().translate('home_tuicati_5c654c'),
+      );
     }
     return _limitLabel(
       uiState.countdownTopLabel,
       _limitLabel(
-          fallbackTopLabel, L10nService().translate('home_bnnhau_d90054')),
+        fallbackTopLabel,
+        L10nService().translate('home_bnnhau_d90054'),
+      ),
     );
   }
 
   String _bottomLabel(UiPrefsState uiState) {
     if (_isSingleMode) {
-      return _limitLabel(uiState.countdownBottomLabel,
-          L10nService().translate('home_ngytui_22bed4'));
+      return _limitLabel(
+        uiState.countdownBottomLabel,
+        L10nService().translate('home_ngytui_22bed4'),
+      );
     }
     return _limitLabel(
       uiState.countdownBottomLabel,
       _limitLabel(
-          fallbackBottomLabel, L10nService().translate('home_ngy_48e4b0')),
+        fallbackBottomLabel,
+        L10nService().translate('home_ngy_48e4b0'),
+      ),
     );
   }
 
@@ -104,15 +112,18 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
     final widthBasedMax = shortest >= 820
         ? 470.0
         : shortest >= 660
-            ? 420.0
-            : shortest >= 520
-                ? 380.0
-                : 326.0;
+        ? 420.0
+        : shortest >= 520
+        ? 380.0
+        : 326.0;
     final reservedHeight = showAvatarCard ? 332.0 : 200.0;
-    final heightBasedMax =
-        (constraints.maxHeight - reservedHeight).clamp(220.0, widthBasedMax);
-    final maxSize =
-        widthBasedMax < heightBasedMax ? widthBasedMax : heightBasedMax;
+    final heightBasedMax = (constraints.maxHeight - reservedHeight).clamp(
+      220.0,
+      widthBasedMax,
+    );
+    final maxSize = widthBasedMax < heightBasedMax
+        ? widthBasedMax
+        : heightBasedMax;
     final baseSize = uiState.countdownSizePx + (showAvatarCard ? 8 : 32);
     return baseSize.clamp(220.0, maxSize).roundToDouble();
   }
@@ -121,10 +132,9 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
     if (anchorDate == null) {
       return L10nService().translate('countdown_mode_no_date_desc');
     }
-    return L10nService().translate('countdown_mode_since').replaceFirst(
-          '{date}',
-          DateInputUtils.formatDisplayDate(anchorDate),
-        );
+    return L10nService()
+        .translate('countdown_mode_since')
+        .replaceFirst('{date}', DateInputUtils.formatDisplayDate(anchorDate));
   }
 
   Future<void> _handleAction(
@@ -154,8 +164,9 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
           uiState.transparentMode,
         );
         final anchorDate = _resolveAnchorDate();
-        final value =
-            anchorDate == null ? '--' : _daysSince(anchorDate).toString();
+        final value = anchorDate == null
+            ? '--'
+            : _daysSince(anchorDate).toString();
         const showAvatarCard = true;
 
         return Scaffold(
@@ -189,7 +200,7 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                       fit: BoxFit.cover,
                       filterQuality: FilterQuality.medium,
                       memCacheWidth: 1080,
-                      errorWidget: (_, __, ___) => const SizedBox.shrink(),
+                      errorWidget: (_, _, _) => const SizedBox.shrink(),
                     ),
                   ),
                 ),
@@ -212,10 +223,12 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                       uiState,
                       showAvatarCard: showAvatarCard,
                     );
-                    final topPadding =
-                        constraints.maxHeight < 720 ? 86.0 : 104.0;
-                    final bottomPadding =
-                        constraints.maxHeight < 720 ? 20.0 : 28.0;
+                    final topPadding = constraints.maxHeight < 720
+                        ? 86.0
+                        : 104.0;
+                    final bottomPadding = constraints.maxHeight < 720
+                        ? 20.0
+                        : 28.0;
                     return Stack(
                       children: [
                         Positioned(
@@ -236,16 +249,18 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                 value: _CountdownModeMenuAction.appearance,
                                 child: _CountdownModeMenuRow(
                                   icon: Icons.palette_outlined,
-                                  label: L10nService()
-                                      .translate('countdown_mode_appearance'),
+                                  label: L10nService().translate(
+                                    'countdown_mode_appearance',
+                                  ),
                                 ),
                               ),
                               PopupMenuItem(
                                 value: _CountdownModeMenuAction.exit,
                                 child: _CountdownModeMenuRow(
                                   icon: Icons.close_rounded,
-                                  label: L10nService()
-                                      .translate('countdown_mode_exit'),
+                                  label: L10nService().translate(
+                                    'countdown_mode_exit',
+                                  ),
                                 ),
                               ),
                             ],
@@ -254,11 +269,13 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                               height: 52,
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(
-                                    alpha: themeData.isDark ? 0.14 : 0.80),
+                                  alpha: themeData.isDark ? 0.14 : 0.80,
+                                ),
                                 borderRadius: BorderRadius.circular(18),
                                 border: Border.all(
                                   color: Colors.white.withValues(
-                                      alpha: themeData.isDark ? 0.24 : 0.92),
+                                    alpha: themeData.isDark ? 0.24 : 0.92,
+                                  ),
                                 ),
                                 boxShadow: [
                                   BoxShadow(
@@ -288,14 +305,16 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                             ),
                             child: ConstrainedBox(
                               constraints: BoxConstraints(
-                                minHeight: constraints.maxHeight -
+                                minHeight:
+                                    constraints.maxHeight -
                                     topPadding -
                                     bottomPadding,
                               ),
                               child: Center(
                                 child: ConstrainedBox(
-                                  constraints:
-                                      const BoxConstraints(maxWidth: 420),
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 420,
+                                  ),
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     mainAxisSize: MainAxisSize.min,
@@ -310,8 +329,9 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                               size: circleSize,
                                               value: value,
                                               topLabel: _topLabel(uiState),
-                                              bottomLabel:
-                                                  _bottomLabel(uiState),
+                                              bottomLabel: _bottomLabel(
+                                                uiState,
+                                              ),
                                               styleData: styleData,
                                               fontKey: uiState.fontKey,
                                               styleKey:
@@ -331,11 +351,12 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                         textAlign: TextAlign.center,
                                         style: SLTheme.textStyleForKey(
                                           uiState.fontKey,
-                                          color:
-                                              themeData.foreground.withValues(
-                                            alpha:
-                                                themeData.isDark ? 0.82 : 0.72,
-                                          ),
+                                          color: themeData.foreground
+                                              .withValues(
+                                                alpha: themeData.isDark
+                                                    ? 0.82
+                                                    : 0.72,
+                                              ),
                                           fontSize: 13.5,
                                           fontWeight: FontWeight.w700,
                                           height: 1.4,
@@ -346,19 +367,23 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                         _CountdownModeAvatarCard(
                                           isSingleMode: _isSingleMode,
                                           leftName: nameU1.trim().isEmpty
-                                              ? L10nService()
-                                                  .translate('home_bn_1fd75b')
+                                              ? L10nService().translate(
+                                                  'home_bn_1fd75b',
+                                                )
                                               : nameU1.trim(),
                                           rightName: _isSingleMode
-                                              ? L10nService()
-                                                  .translate('home_ngiy_5bab37')
+                                              ? L10nService().translate(
+                                                  'home_ngiy_5bab37',
+                                                )
                                               : (nameU2.trim().isEmpty
-                                                  ? L10nService().translate(
-                                                      'home_ngiy_5bab37')
-                                                  : nameU2.trim()),
+                                                    ? L10nService().translate(
+                                                        'home_ngiy_5bab37',
+                                                      )
+                                                    : nameU2.trim()),
                                           leftAvatarUrl: avatarUrl1,
-                                          rightAvatarUrl:
-                                              _isSingleMode ? '' : avatarUrl2,
+                                          rightAvatarUrl: _isSingleMode
+                                              ? ''
+                                              : avatarUrl2,
                                           avatarFrameKey:
                                               uiState.avatarFrameKey,
                                           fontKey: uiState.fontKey,
@@ -367,27 +392,38 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                           currentHouseId: currentHouseId,
                                           onCenterIconTap: () {
                                             if (!_isSingleMode) {
-                                              unawaited(SoulMergeService()
-                                                  .sendInteractiveEvent(
-                                                      type: 'photo_shot'));
+                                              unawaited(
+                                                SoulMergeService()
+                                                    .sendInteractiveEvent(
+                                                      type: 'photo_shot',
+                                                    ),
+                                              );
                                             }
-                                            final size =
-                                                MediaQuery.sizeOf(context);
+                                            final size = MediaQuery.sizeOf(
+                                              context,
+                                            );
                                             final randomPaths = [
                                               'assets/images/interaction_stickers/custom/numbered/sticker_001.png',
                                               'assets/images/interaction_stickers/custom/numbered/sticker_002.png',
                                               'assets/images/interaction_stickers/custom/numbered/sticker_003.png',
                                             ];
-                                            final assetPath = randomPaths[
-                                                DateTime.now().millisecondsSinceEpoch %
+                                            final assetPath =
+                                                randomPaths[DateTime.now()
+                                                        .millisecondsSinceEpoch %
                                                     randomPaths.length];
                                             _heartsOverlayKey.currentState
                                                 ?.spawnFlyingStickers(
-                                              Offset(size.width / 2, size.height * 0.42),
-                                              Offset(size.width / 2, size.height * 0.74),
-                                              assetPath,
-                                              count: 3,
-                                            );
+                                                  Offset(
+                                                    size.width / 2,
+                                                    size.height * 0.42,
+                                                  ),
+                                                  Offset(
+                                                    size.width / 2,
+                                                    size.height * 0.74,
+                                                  ),
+                                                  assetPath,
+                                                  count: 3,
+                                                );
                                             HapticFeedback.mediumImpact();
                                           },
                                         ),
@@ -577,8 +613,9 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
                   decoration: BoxDecoration(
                     color: const Color(0xFF101A2B),
                     borderRadius: BorderRadius.circular(28),
-                    border:
-                        Border.all(color: Colors.white.withValues(alpha: 0.10)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.10),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.28),
@@ -596,8 +633,9 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
                           children: [
                             Expanded(
                               child: Text(
-                                L10nService()
-                                    .translate('home_chnkhnggia_68d5e3'),
+                                L10nService().translate(
+                                  'home_chnkhnggia_68d5e3',
+                                ),
                                 style: SLTheme.quicksand(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
@@ -650,7 +688,7 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
                             child: ListView.separated(
                               shrinkWrap: true,
                               itemCount: friends.length,
-                              separatorBuilder: (_, __) =>
+                              separatorBuilder: (_, _) =>
                                   const SizedBox(height: 10),
                               itemBuilder: (context, index) {
                                 final friend = friends[index];
@@ -685,15 +723,13 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
     }
 
     final settingsList = await Future.wait<HouseSettings?>(
-      friendIds.map(
-        (houseId) async {
-          try {
-            return await _houseSettingsService.fetchSettings(houseId);
-          } catch (_) {
-            return null;
-          }
-        },
-      ),
+      friendIds.map((houseId) async {
+        try {
+          return await _houseSettingsService.fetchSettings(houseId);
+        } catch (_) {
+          return null;
+        }
+      }),
     );
 
     final targets = <_CountdownModeFriendTarget>[];
@@ -706,8 +742,8 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
       final displayName = settings.houseName.trim().isNotEmpty
           ? settings.houseName.trim()
           : (settings.nameU1.trim().isNotEmpty
-              ? settings.nameU1.trim()
-              : friendIds[index]);
+                ? settings.nameU1.trim()
+                : friendIds[index]);
       final avatarUrl = settings.houseAvatar.trim().isNotEmpty
           ? settings.houseAvatar.trim()
           : settings.avtUser1.trim();
@@ -734,10 +770,7 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
 
   void _showHint(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -751,8 +784,9 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
             Icon(
               Icons.hub_rounded,
               size: 18,
-              color: widget.foreground
-                  .withValues(alpha: widget.isDark ? 0.90 : 0.72),
+              color: widget.foreground.withValues(
+                alpha: widget.isDark ? 0.90 : 0.72,
+              ),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -768,8 +802,10 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
             ),
             if (_selectedFriend != null)
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF4BA7FF).withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(999),
@@ -809,7 +845,9 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
             final houseId = widget.currentHouseId?.trim() ?? '';
             if (houseId.isNotEmpty) {
               await prefs.setString(
-                  'il_countdown_mode_center_icon_type_$houseId', type);
+                'il_countdown_mode_center_icon_type_$houseId',
+                type,
+              );
             }
           },
           onCenterIconTap: widget.onCenterIconTap,
@@ -881,7 +919,9 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
         Text(
           _selectedFriend == null
               ? L10nService().translate('home_khungbnphi_61a4e8')
-              : 'Đã ghép với ${_selectedFriend!.displayName}. Bạn có thể đổi người hoặc vào ngay không gian của họ.',
+              : context
+                    .tr('p7_paired_friend_hint')
+                    .replaceAll('{name}', _selectedFriend!.displayName),
           textAlign: TextAlign.center,
           style: SLTheme.textStyleForKey(
             widget.fontKey,

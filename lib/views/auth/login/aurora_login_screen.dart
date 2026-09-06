@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'auth_page_scaffold.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -22,14 +23,11 @@ import '../dialogs/auth_feedback_dialogs.dart';
 import '../dialogs/forgot_gmail_recovery_helper.dart';
 import '../dialogs/math_captcha_dialog.dart';
 import '../dialogs/support_dialog.dart';
-import 'auth_language_toggle.dart';
 import 'forgot_password_launcher.dart';
 import 'social_auth_action_helper.dart';
 import '../../home/screens/document_viewer_screen.dart';
 import '../../app_entry.dart';
 
-import 'aurora_hero_background.dart';
-import 'aurora_decorative_orbs.dart';
 import 'aurora_login_shell.dart';
 import 'aurora_login_form.dart';
 import 'aurora_register_form.dart';
@@ -71,7 +69,6 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
 
   // ─── Animation controllers ───────────────────────────────────────────
   late final AnimationController _successScaleCtrl;
-  late final Animation<double> _successScaleAnim;
 
   @override
   void initState() {
@@ -79,12 +76,6 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
     _successScaleCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
-    );
-    _successScaleAnim = Tween<double>(begin: 1.0, end: 1.06).animate(
-      CurvedAnimation(
-        parent: _successScaleCtrl,
-        curve: Curves.easeOutBack,
-      ),
     );
 
     _loadRememberedEmail();
@@ -137,9 +128,9 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
   void _rememberProxyStateAtLogin() {
     unawaited(
       SecurityService().isProxyOrVpnActive().then(
-            SecurityService().setProxyAtLogin,
-            onError: (_) {},
-          ),
+        SecurityService().setProxyAtLogin,
+        onError: (_) {},
+      ),
     );
   }
 
@@ -155,13 +146,15 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
     final normalizedAccountKey = accountKey.trim().toLowerCase();
     if (normalizedAccountKey.isEmpty) return null;
 
-    final cachedMode = await _authService
-        .getCachedRelationshipModeForEmail(normalizedAccountKey);
+    final cachedMode = await _authService.getCachedRelationshipModeForEmail(
+      normalizedAccountKey,
+    );
     if (cachedMode != null) return cachedMode;
 
     try {
-      final existingHouseId =
-          await _houseService.getCurrentHouseId(preferFresh: false);
+      final existingHouseId = await _houseService.getCurrentHouseId(
+        preferFresh: false,
+      );
       if (existingHouseId != null && existingHouseId.isNotEmpty) {
         const defaultMode = 'couple';
         await _authService.cacheRelationshipModeForEmail(
@@ -170,7 +163,9 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
         );
         return defaultMode;
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[AuroraLogin] Cannot load relationship mode: $error');
+    }
 
     if (!mounted) return null;
 
@@ -212,7 +207,9 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Bạn thao tác hơi nhanh. Vui lòng chờ một lát rồi thử lại.'),
+          content: const Text(
+            'Bạn thao tác hơi nhanh. Vui lòng chờ một lát rồi thử lại.',
+          ),
           duration: Duration(seconds: math.min(cooldown, 5)),
           behavior: SnackBarBehavior.floating,
         ),
@@ -225,8 +222,9 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
     final prefs = await SharedPreferences.getInstance();
     if (accountKey != null && accountKey.trim().isNotEmpty) {
       final normalizedAccountKey = accountKey.trim().toLowerCase();
-      final savedPerAccount =
-          prefs.getString('il_saved_gender_$normalizedAccountKey')?.trim();
+      final savedPerAccount = prefs
+          .getString('il_saved_gender_$normalizedAccountKey')
+          ?.trim();
       if (savedPerAccount == 'user1' || savedPerAccount == 'user2') {
         return savedPerAccount;
       }
@@ -240,8 +238,9 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try {
-        final houseId =
-            await _houseService.getCurrentHouseId(preferFresh: false);
+        final houseId = await _houseService.getCurrentHouseId(
+          preferFresh: false,
+        );
         if (houseId != null && houseId.isNotEmpty) {
           final snap = await FirebaseDatabase.instance
               .ref('houses/$houseId/members/${user.uid}/role')
@@ -252,13 +251,17 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
             if (accountKey != null && accountKey.isNotEmpty) {
               final normalizedAccountKey = accountKey.trim().toLowerCase();
               await prefs.setString(
-                  'il_saved_gender_$normalizedAccountKey', roleInDb!);
+                'il_saved_gender_$normalizedAccountKey',
+                roleInDb!,
+              );
             }
             return roleInDb;
           }
           return 'user1';
         }
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[AuroraLogin] Cannot infer the current user role: $error');
+      }
     }
     return null;
   }
@@ -337,13 +340,12 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
       '@proton.me',
       '@protonmail.com',
     ];
-    final isDomainAllowed = allowedDomains
-        .any((domain) => email.endsWith(domain));
+    final isDomainAllowed = allowedDomains.any(
+      (domain) => email.endsWith(domain),
+    );
 
     if (!isDomainAllowed) {
-      _showErrorDialog(
-        L10nService().translate('auth_supported_domains_only'),
-      );
+      _showErrorDialog(L10nService().translate('auth_supported_domains_only'));
       return;
     }
 
@@ -370,8 +372,10 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
     if (sessionRole != null) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('il_role', sessionRole);
-      await SecureStorageService.instance
-          .write(SecureStorageService.keyRole, sessionRole);
+      await SecureStorageService.instance.write(
+        SecureStorageService.keyRole,
+        sessionRole,
+      );
     }
 
     // Captcha check for returning users
@@ -382,6 +386,7 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
     }
 
     // Security flow guard
+    if (!mounted) return;
     if (_isLoginTab) {
       final canContinue = await _securityFlowGuard.guard(
         context,
@@ -427,8 +432,10 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
         final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
           await prefs.setString('il_auth_uid', user.uid);
-          await SecureStorageService.instance
-              .write(SecureStorageService.keyAuthUid, user.uid);
+          await SecureStorageService.instance.write(
+            SecureStorageService.keyAuthUid,
+            user.uid,
+          );
 
           // Fetch house ID
           try {
@@ -437,8 +444,10 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
                 .timeout(const Duration(seconds: 15));
             if (houseId != null && houseId.isNotEmpty) {
               await prefs.setString('il_house_id', houseId);
-              await SecureStorageService.instance
-                  .write(SecureStorageService.keyHouseId, houseId);
+              await SecureStorageService.instance.write(
+                SecureStorageService.keyHouseId,
+                houseId,
+              );
             }
           } catch (e) {
             debugPrint('[AuroraLogin] Error fetching houseId: $e');
@@ -454,9 +463,9 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
         _successScaleCtrl.forward();
         await Future<void>.delayed(const Duration(milliseconds: 700));
         if (!mounted) return;
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const AppEntry()),
-        );
+        Navigator.of(
+          context,
+        ).pushReplacement(MaterialPageRoute(builder: (_) => const AppEntry()));
         return;
       } else {
         // Register mode: ensure relationship mode first
@@ -476,9 +485,9 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
         _successScaleCtrl.forward();
         await Future<void>.delayed(const Duration(milliseconds: 700));
         if (!mounted) return;
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const AppEntry()),
-        );
+        Navigator.of(
+          context,
+        ).pushReplacement(MaterialPageRoute(builder: (_) => const AppEntry()));
         return;
       }
     } catch (e) {
@@ -491,7 +500,8 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
             : l10n.translate('auth_signup_unavailable'),
       );
 
-      final isAccountNotFound = _isLoginTab &&
+      final isAccountNotFound =
+          _isLoginTab &&
           (errorInfo.message.contains('Tài khoản không tồn tại') ||
               errorInfo.message.contains('Account does not exist'));
 
@@ -504,7 +514,8 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
           onCreateNew: () => _setAuthTab(false),
         );
       } else {
-        final showRecovery = !isAccountNotFound &&
+        final showRecovery =
+            !isAccountNotFound &&
             _isLoginTab &&
             (AppErrorMapper.shouldOfferPasswordRecovery(e) ||
                 AppErrorMapper.shouldOfferPasswordRecovery(errorInfo.message));
@@ -561,8 +572,10 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('il_role', selectedRole);
-    await SecureStorageService.instance
-        .write(SecureStorageService.keyRole, selectedRole);
+    await SecureStorageService.instance.write(
+      SecureStorageService.keyRole,
+      selectedRole,
+    );
 
     if (mounted) setState(() => _isLoading = true);
 
@@ -576,9 +589,7 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
       if (result == null || result.user == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              SocialAuthActionHelper.cancelledMessage(provider),
-            ),
+            content: Text(SocialAuthActionHelper.cancelledMessage(provider)),
           ),
         );
         return;
@@ -587,8 +598,10 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
       final user = result.user!;
       final email = (user.email ?? '').trim().toLowerCase();
       await prefs.setString('il_auth_uid', user.uid);
-      await SecureStorageService.instance
-          .write(SecureStorageService.keyAuthUid, user.uid);
+      await SecureStorageService.instance.write(
+        SecureStorageService.keyAuthUid,
+        user.uid,
+      );
 
       if (email.isNotEmpty) {
         await prefs.setString('il_saved_gender_$email', selectedRole);
@@ -600,8 +613,10 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
             .timeout(const Duration(seconds: 15));
         if (houseId != null && houseId.isNotEmpty) {
           await prefs.setString('il_house_id', houseId);
-          await SecureStorageService.instance
-              .write(SecureStorageService.keyHouseId, houseId);
+          await SecureStorageService.instance.write(
+            SecureStorageService.keyHouseId,
+            houseId,
+          );
         }
       } catch (e) {
         debugPrint('[AuroraLogin][Social] Error fetching houseId: $e');
@@ -611,9 +626,9 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
       setState(() => _isLoading = false);
       await Future<void>.delayed(const Duration(milliseconds: 120));
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const AppEntry()),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const AppEntry()));
     } catch (e) {
       _failedAuthAttempts++;
       final resolvedMessage = AppErrorMapper.resolve(
@@ -621,7 +636,8 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
         fallbackMessage: L10nService().translate('auth_login_unavailable'),
       ).message;
       debugPrint(
-          '[AuroraLogin][Social] social login failed ($provider): $resolvedMessage');
+        '[AuroraLogin][Social] social login failed ($provider): $resolvedMessage',
+      );
       if (!mounted) return;
       _showErrorDialog(
         resolvedMessage.isEmpty
@@ -718,7 +734,10 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
               child: Dialog(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
-                insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                insetPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 18,
+                ),
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
                   child: Container(
@@ -733,7 +752,9 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFA65370).withValues(alpha: 0.18),
+                          color: const Color(
+                            0xFFA65370,
+                          ).withValues(alpha: 0.18),
                           blurRadius: 34,
                           offset: const Offset(0, 18),
                         ),
@@ -745,11 +766,16 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFFE8EE),
                                 borderRadius: BorderRadius.circular(15),
-                                border: Border.all(color: const Color(0xFFEEC2CE)),
+                                border: Border.all(
+                                  color: const Color(0xFFEEC2CE),
+                                ),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -826,7 +852,9 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
                         const SizedBox(height: 16),
                         _buildSyncStepCard(
                           stepNumber: '1',
-                          title: l10n.translate('Mỗi người đăng nhập tài khoản riêng'),
+                          title: l10n.translate(
+                            'Mỗi người đăng nhập tài khoản riêng',
+                          ),
                           description: l10n.translate(
                             'Đăng ký hoặc đăng nhập trên điện thoại của mình bằng Email, Google hoặc Apple.',
                           ),
@@ -844,7 +872,9 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
                         ),
                         _buildSyncStepCard(
                           stepNumber: '3',
-                          title: l10n.translate('Cùng cập nhật không gian chung'),
+                          title: l10n.translate(
+                            'Cùng cập nhật không gian chung',
+                          ),
                           description: l10n.translate(
                             'Kỷ niệm, nhật ký, album và dữ liệu đôi sẽ được cập nhật sau khi hai tài khoản đã kết nối.',
                           ),
@@ -855,7 +885,10 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
                         const SizedBox(height: 4),
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFFF5E6),
                             borderRadius: BorderRadius.circular(18),
@@ -1032,308 +1065,50 @@ class _AuroraLoginScreenState extends State<AuroraLoginScreen>
   // ─── Build ──────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    return SensitiveContentGuard(
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        backgroundColor: const Color(0xFFFFF5F7),
-        body: GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-          child: Stack(
-            children: [
-              // ── Animated aurora background ──────────────────────
-              const Positioned.fill(child: AuroraHeroBackground()),
-
-              // ── Decorative floating orbs ──────────────────────
-              const Positioned.fill(child: AuroraDecorativeOrbs()),
-
-              // ── Main content ───────────────────────────────────
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final isDesktop = constraints.maxWidth >= 920;
-                  final isTablet = constraints.maxWidth >= 680 &&
-                      constraints.maxWidth < 920;
-                  final isCompact = constraints.maxWidth < 450;
-
-                  // Responsive padding
-                  double horizontalPadding;
-                  if (constraints.maxWidth >= 920) {
-                    horizontalPadding = 32;
-                  } else if (constraints.maxWidth >= 680) {
-                    horizontalPadding = 24;
-                  } else if (constraints.maxWidth >= 450) {
-                    horizontalPadding = 18;
-                  } else {
-                    horizontalPadding = 10;
-                  }
-
-                  final authPanelWidth = isDesktop
-                      ? 408.0
-                      : math.min(
-                          520.0,
-                          constraints.maxWidth -
-                              (isCompact ? 20 : 32),
-                        );
-
-                  return Center(
-                    child: SingleChildScrollView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      physics: const BouncingScrollPhysics(),
-                      padding: EdgeInsets.only(
-                        left: horizontalPadding,
-                        right: horizontalPadding,
-                        top: 10,
-                        bottom:
-                            10 + MediaQuery.of(context).viewInsets.bottom,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // ── Top bar: sync guide hint + language toggle ──
-                          SafeArea(
-                            bottom: false,
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                bottom: isCompact ? 12 : 16,
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  // Compact Sync Guide Icon Button
-                                  Tooltip(
-                                    message: L10nService()
-                                        .translate('auth_sync_guide'),
-                                    child: GestureDetector(
-                                      onTap: () =>
-                                          _showSyncGuideDialog(context),
-                                      child: Container(
-                                        width: 36,
-                                        height: 36,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white
-                                              .withValues(alpha: 0.82),
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: const Color(0xFFFFD166),
-                                            width: 1.2,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: const Color(0xFFFFB703)
-                                                  .withValues(alpha: 0.18),
-                                              blurRadius: 10,
-                                              offset: const Offset(0, 3),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Center(
-                                          child: ShaderMask(
-                                            shaderCallback: (bounds) =>
-                                                const LinearGradient(
-                                              colors: [
-                                                Color(0xFFFFB703),
-                                                Color(0xFFFB8500),
-                                              ],
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                            ).createShader(bounds),
-                                            child: const Icon(
-                                              Icons.lightbulb_rounded,
-                                              size: 19,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-
-                                  // Language toggle
-                                  ListenableBuilder(
-                                    listenable: L10nService(),
-                                    builder: (context, _) {
-                                      return AuthLanguageToggle(
-                                        currentLocale:
-                                            L10nService().localeCode,
-                                        onSelect: (code) {
-                                          L10nService().setLocale(code);
-                                        },
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-
-                          // ── Auth panel ───────────────────────────
-                          AnimatedOpacity(
-                            duration: const Duration(milliseconds: 500),
-                            curve: Curves.easeOutCubic,
-                            opacity: _isSuccessTransition ? 0.0 : 1.0,
-                            child: ScaleTransition(
-                              scale: _successScaleAnim,
-                              child: SizedBox(
-                                width: authPanelWidth,
-                                child: _AuroraGlassPanel(
-                                  child: AuroraLoginShell(
-                                    compact: !isDesktop &&
-                                        (isCompact || isTablet),
-                                    isLoginTab: _isLoginTab,
-                                    onSelectLogin: () => _setAuthTab(true),
-                                    onSelectRegister: () => _setAuthTab(false),
-                                    authSection: _isLoginTab
-                                        ? AuroraLoginForm(
-                                            emailController: _emailController,
-                                            passwordController:
-                                                _passwordController,
-                                            obscurePassword: _obscurePassword,
-                                            isLoading: _isLoading,
-                                            rememberMe: _rememberMe,
-                                            onToggleObscure: () => setState(
-                                              () =>
-                                                  _obscurePassword =
-                                                      !_obscurePassword,
-                                            ),
-                                            onRememberMeChanged: (value) =>
-                                                setState(
-                                              () => _rememberMe = value ?? true,
-                                            ),
-                                            onLogin: _handleAuthAction,
-                                            onForgotPassword:
-                                                _handleForgotPasswordAction,
-                                            onSocialLogin: _handleSocialLogin,
-                                          )
-                                        : AuroraRegisterForm(
-                                            emailController: _emailController,
-                                            passwordController:
-                                                _passwordController,
-                                            obscurePassword: _obscurePassword,
-                                            isLoading: _isLoading,
-                                            acceptTerms: _acceptTerms,
-                                            onToggleObscure: () => setState(
-                                              () =>
-                                                  _obscurePassword =
-                                                      !_obscurePassword,
-                                            ),
-                                            onAcceptTermsChanged: (value) =>
-                                                setState(
-                                              () => _acceptTerms =
-                                                  value ?? false,
-                                            ),
-                                            onRegister: _handleAuthAction,
-                                            onSocialLogin: _handleSocialLogin,
-                                            onTermsTap: _openTermsDocument,
-                                            onPrivacyTap: _openPrivacyDocument,
-                                          ),
-                                    onOpenGuide: _openGuideDocument,
-                                    onOpenContact: _showContactDialog,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-
-              // ── Copyright watermark ───────────────────────────
-              SafeArea(
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                        bottom: MediaQuery.of(context).padding.bottom > 0
-                            ? 8
-                            : 16),
-                    child: Text(
-                      'SoulLocket © ${DateTime.now().year} — Tame Trương Việt Hoàng',
-                      style: TextStyle(
-                        fontFamily: 'Quicksand',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF7D6971).withValues(alpha: 0.52),
-                      ),
-                    ),
+    return ListenableBuilder(
+      listenable: L10nService(),
+      builder: (context, _) => SensitiveContentGuard(
+        child: AuthPageScaffold(
+          copyrightYear: DateTime.now().year.toString(),
+          transitioning: _isSuccessTransition,
+          onSyncGuide: () => _showSyncGuideDialog(context),
+          contentBuilder: (compact) => AuroraLoginShell(
+            compact: compact,
+            isLoginTab: _isLoginTab,
+            onSelectLogin: () => _setAuthTab(true),
+            onSelectRegister: () => _setAuthTab(false),
+            authSection: _isLoginTab
+                ? AuroraLoginForm(
+                    emailController: _emailController,
+                    passwordController: _passwordController,
+                    obscurePassword: _obscurePassword,
+                    isLoading: _isLoading,
+                    rememberMe: _rememberMe,
+                    onToggleObscure: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
+                    onRememberMeChanged: (value) =>
+                        setState(() => _rememberMe = value ?? true),
+                    onLogin: _handleAuthAction,
+                    onForgotPassword: _handleForgotPasswordAction,
+                    onSocialLogin: _handleSocialLogin,
+                  )
+                : AuroraRegisterForm(
+                    emailController: _emailController,
+                    passwordController: _passwordController,
+                    obscurePassword: _obscurePassword,
+                    isLoading: _isLoading,
+                    acceptTerms: _acceptTerms,
+                    onToggleObscure: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
+                    onAcceptTermsChanged: (value) =>
+                        setState(() => _acceptTerms = value ?? false),
+                    onRegister: _handleAuthAction,
+                    onSocialLogin: _handleSocialLogin,
+                    onTermsTap: _openTermsDocument,
+                    onPrivacyTap: _openPrivacyDocument,
                   ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Soft paper panel used by the redesigned authentication screen.
-class _AuroraGlassPanel extends StatelessWidget {
-  final Widget child;
-
-  const _AuroraGlassPanel({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF8).withValues(alpha: 0.96),
-        borderRadius: BorderRadius.circular(31),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.96),
-          width: 1.6,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF9C6475).withValues(alpha: 0.14),
-            blurRadius: 34,
-            offset: const Offset(0, 17),
-          ),
-          BoxShadow(
-            color: Colors.white.withValues(alpha: 0.78),
-            blurRadius: 0,
-            spreadRadius: 1,
-            offset: const Offset(0, -1),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(31),
-        child: Stack(
-          children: [
-            const Positioned(
-              top: -28,
-              right: -26,
-              child: _PanelPaperSeal(),
-            ),
-            child,
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PanelPaperSeal extends StatelessWidget {
-  const _PanelPaperSeal();
-
-  @override
-  Widget build(BuildContext context) {
-    return Transform.rotate(
-      angle: 0.18,
-      child: Container(
-        width: 92,
-        height: 54,
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFE5ED).withValues(alpha: 0.72),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: const Color(0xFFF2BFCE).withValues(alpha: 0.66),
+            onOpenGuide: _openGuideDocument,
+            onOpenContact: _showContactDialog,
           ),
         ),
       ),
@@ -1345,10 +1120,7 @@ class _AuroraDialogButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
 
-  const _AuroraDialogButton({
-    required this.label,
-    this.onPressed,
-  });
+  const _AuroraDialogButton({required this.label, this.onPressed});
 
   @override
   State<_AuroraDialogButton> createState() => _AuroraDialogButtonState();
@@ -1366,9 +1138,10 @@ class _AuroraDialogButtonState extends State<_AuroraDialogButton>
       vsync: this,
       duration: const Duration(milliseconds: 120),
     );
-    _pressAnim = Tween<double>(begin: 1.0, end: 0.97).animate(
-      CurvedAnimation(parent: _pressCtrl, curve: Curves.easeOutCubic),
-    );
+    _pressAnim = Tween<double>(
+      begin: 1.0,
+      end: 0.97,
+    ).animate(CurvedAnimation(parent: _pressCtrl, curve: Curves.easeOutCubic));
   }
 
   @override
@@ -1399,17 +1172,12 @@ class _AuroraDialogButtonState extends State<_AuroraDialogButton>
             height: 50,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [
-                  Color(0xFFEE6386),
-                  Color(0xFFE24B70),
-                ],
+                colors: [Color(0xFFEE6386), Color(0xFFE24B70)],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
               borderRadius: BorderRadius.circular(19),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.40),
-              ),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.40)),
               boxShadow: disabled
                   ? const []
                   : [
@@ -1459,8 +1227,18 @@ class _SyncLoveThreadPainter extends CustomPainter {
     final leftCenter = Offset(size.width * 0.27, size.height * 0.53);
     final rightCenter = Offset(size.width * 0.73, size.height * 0.53);
 
-    _drawPhone(canvas, leftCenter, const Color(0xFFFFE7ED), const Color(0xFFD85C7C));
-    _drawPhone(canvas, rightCenter, const Color(0xFFEDE7FF), const Color(0xFF7F69BB));
+    _drawPhone(
+      canvas,
+      leftCenter,
+      const Color(0xFFFFE7ED),
+      const Color(0xFFD85C7C),
+    );
+    _drawPhone(
+      canvas,
+      rightCenter,
+      const Color(0xFFEDE7FF),
+      const Color(0xFF7F69BB),
+    );
 
     final thread = Path()
       ..moveTo(leftCenter.dx + 28, leftCenter.dy - 6)
@@ -1484,10 +1262,7 @@ class _SyncLoveThreadPainter extends CustomPainter {
     const gap = 5.0;
     while (distance < metric.length) {
       canvas.drawPath(
-        metric.extractPath(
-          distance,
-          math.min(distance + dash, metric.length),
-        ),
+        metric.extractPath(distance, math.min(distance + dash, metric.length)),
         linePaint,
       );
       distance += dash + gap;
@@ -1526,22 +1301,13 @@ class _SyncLoveThreadPainter extends CustomPainter {
     }
   }
 
-  void _drawPhone(
-    Canvas canvas,
-    Offset center,
-    Color fill,
-    Color accent,
-  ) {
+  void _drawPhone(Canvas canvas, Offset center, Color fill, Color accent) {
     final shadow = Paint()
       ..color = accent.withValues(alpha: 0.10)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: center.translate(0, 5),
-          width: 58,
-          height: 82,
-        ),
+        Rect.fromCenter(center: center.translate(0, 5), width: 58, height: 82),
         const Radius.circular(16),
       ),
       shadow,
@@ -1562,11 +1328,7 @@ class _SyncLoveThreadPainter extends CustomPainter {
 
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: center.translate(0, 1),
-          width: 42,
-          height: 56,
-        ),
+        Rect.fromCenter(center: center.translate(0, 1), width: 42, height: 56),
         const Radius.circular(11),
       ),
       Paint()..color = Colors.white.withValues(alpha: 0.86),

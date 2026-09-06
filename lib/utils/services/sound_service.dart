@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
 
@@ -16,7 +17,9 @@ class SoundService {
 
     try {
       await SystemSound.play(SystemSoundType.click);
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[SoundService] Click sound is unavailable: $error');
+    }
   }
 
   Future<void> playSuccess() async {
@@ -26,6 +29,8 @@ class SoundService {
 
     try {
       await SystemSound.play(SystemSoundType.click);
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[SoundService] Success sound is unavailable: $error');
+    }
   }
 }

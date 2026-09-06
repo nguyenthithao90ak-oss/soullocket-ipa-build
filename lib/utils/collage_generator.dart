@@ -65,10 +65,7 @@ class CollagePhotoTransform {
   final double scale;
   final Offset offset;
 
-  const CollagePhotoTransform({
-    this.scale = 1,
-    this.offset = Offset.zero,
-  });
+  const CollagePhotoTransform({this.scale = 1, this.offset = Offset.zero});
 }
 
 class CollageRenderOptions {
@@ -150,42 +147,81 @@ class CollageGenerator {
     switch (styleType) {
       case 'polaroid':
         canvasSize = _drawPolaroidCollage(
-            canvas, images, title, effectiveDecor, options);
+          canvas,
+          images,
+          title,
+          effectiveDecor,
+          options,
+        );
         break;
       case 'masonry':
-        canvasSize =
-            _drawMasonryCollage(canvas, images, title, effectiveDecor, options);
+        canvasSize = _drawMasonryCollage(
+          canvas,
+          images,
+          title,
+          effectiveDecor,
+          options,
+        );
         break;
       case 'story':
-        canvasSize =
-            _drawStoryCollage(canvas, images, title, effectiveDecor, options);
+        canvasSize = _drawStoryCollage(
+          canvas,
+          images,
+          title,
+          effectiveDecor,
+          options,
+        );
         break;
       case 'scatter':
-        canvasSize =
-            _drawScatterCollage(canvas, images, title, effectiveDecor, options);
+        canvasSize = _drawScatterCollage(
+          canvas,
+          images,
+          title,
+          effectiveDecor,
+          options,
+        );
         break;
       case 'heart':
-        canvasSize =
-            _drawHeartCollage(canvas, images, title, effectiveDecor, options);
+        canvasSize = _drawHeartCollage(
+          canvas,
+          images,
+          title,
+          effectiveDecor,
+          options,
+        );
         break;
       case 'poster':
-        canvasSize =
-            _drawPosterCollage(canvas, images, title, effectiveDecor, options);
+        canvasSize = _drawPosterCollage(
+          canvas,
+          images,
+          title,
+          effectiveDecor,
+          options,
+        );
         break;
       case 'grid':
       default:
-        canvasSize =
-            _drawGridCollage(canvas, images, title, effectiveDecor, options);
+        canvasSize = _drawGridCollage(
+          canvas,
+          images,
+          title,
+          effectiveDecor,
+          options,
+        );
         break;
     }
     if (renderScale != 1.0) {
       canvas.restore();
     }
 
-    final outputWidth =
-        (canvasSize.width * renderScale).round().clamp(1, 8192).toInt();
-    final outputHeight =
-        (canvasSize.height * renderScale).round().clamp(1, 8192).toInt();
+    final outputWidth = (canvasSize.width * renderScale)
+        .round()
+        .clamp(1, 8192)
+        .toInt();
+    final outputHeight = (canvasSize.height * renderScale)
+        .round()
+        .clamp(1, 8192)
+        .toInt();
 
     final picture = recorder.endRecording();
     final img = await picture.toImage(outputWidth, outputHeight);
@@ -214,12 +250,7 @@ class CollageGenerator {
       fontStyle: fontStyle,
     );
     final paragraphBuilder = ui.ParagraphBuilder(paragraphStyle)
-      ..pushStyle(
-        ui.TextStyle(
-          color: color,
-          letterSpacing: letterSpacing,
-        ),
-      )
+      ..pushStyle(ui.TextStyle(color: color, letterSpacing: letterSpacing))
       ..addText(text);
     final paragraph = paragraphBuilder.build()
       ..layout(ui.ParagraphConstraints(width: maxWidth));
@@ -256,12 +287,7 @@ class CollageGenerator {
       ellipsis: '…',
     );
     final paragraphBuilder = ui.ParagraphBuilder(paragraphStyle)
-      ..pushStyle(
-        ui.TextStyle(
-          color: color,
-          letterSpacing: letterSpacing,
-        ),
-      )
+      ..pushStyle(ui.TextStyle(color: color, letterSpacing: letterSpacing))
       ..addText(text);
     final paragraph = paragraphBuilder.build()
       ..layout(ui.ParagraphConstraints(width: contentRect.width));
@@ -288,11 +314,10 @@ class CollageGenerator {
     }
 
     final paint = Paint()
-      ..shader = ui.Gradient.linear(
-        const Offset(0, 0),
-        Offset(width, height),
-        [decor.backgroundTop, decor.backgroundBottom],
-      );
+      ..shader = ui.Gradient.linear(const Offset(0, 0), Offset(width, height), [
+        decor.backgroundTop,
+        decor.backgroundBottom,
+      ]);
     canvas.drawRect(rect, paint);
 
     canvas.drawCircle(
@@ -431,24 +456,51 @@ class CollageGenerator {
         );
         break;
       case 'heart':
-        _drawBubbleCloudTheme(canvas, width, height, decor, options,
-            bubbleBias: 0.6, heartBias: 0.35);
+        _drawBubbleCloudTheme(
+          canvas,
+          width,
+          height,
+          decor,
+          options,
+          bubbleBias: 0.6,
+          heartBias: 0.35,
+        );
         break;
       case 'scatter':
-        _drawBubbleCloudTheme(canvas, width, height, decor, options,
-            bubbleBias: 0.75, heartBias: 0.12);
+        _drawBubbleCloudTheme(
+          canvas,
+          width,
+          height,
+          decor,
+          options,
+          bubbleBias: 0.75,
+          heartBias: 0.12,
+        );
         break;
       case 'story':
       case 'poster':
-        _drawSkyCloudTheme(canvas, width, height, decor, options,
-            denserTopBand: true);
+        _drawSkyCloudTheme(
+          canvas,
+          width,
+          height,
+          decor,
+          options,
+          denserTopBand: true,
+        );
         break;
       case 'polaroid':
         _drawPaperCloudTheme(canvas, width, height, decor, options);
         break;
       case 'masonry':
-        _drawBubbleCloudTheme(canvas, width, height, decor, options,
-            bubbleBias: 0.4, heartBias: 0.18);
+        _drawBubbleCloudTheme(
+          canvas,
+          width,
+          height,
+          decor,
+          options,
+          bubbleBias: 0.4,
+          heartBias: 0.18,
+        );
         break;
       case 'grid':
       default:
@@ -468,11 +520,10 @@ class CollageGenerator {
     canvas.drawRect(
       rect,
       Paint()
-        ..shader = ui.Gradient.linear(
-          rect.topLeft,
-          rect.bottomRight,
-          [top, bottom],
-        ),
+        ..shader = ui.Gradient.linear(rect.topLeft, rect.bottomRight, [
+          top,
+          bottom,
+        ]),
     );
     canvas.drawCircle(
       Offset(width * 0.18, height * 0.18),
@@ -512,15 +563,17 @@ class CollageGenerator {
         : (denserTopBand ? 8 : 6);
     for (int i = 0; i < cloudCount; i++) {
       final x = width * (0.08 + random.nextDouble() * 0.84);
-      final y = height *
+      final y =
+          height *
           (denserTopBand
               ? (0.06 + random.nextDouble() * 0.18)
               : (0.08 + random.nextDouble() * 0.24));
       final size = min(width, height) * (0.055 + random.nextDouble() * 0.05);
       final tint = i.isEven
           ? Colors.white.withValues(alpha: cloudTint == null ? 0.22 : 0.34)
-          : (cloudTint ?? decor.secondary)
-              .withValues(alpha: cloudTint == null ? 0.14 : 0.24);
+          : (cloudTint ?? decor.secondary).withValues(
+              alpha: cloudTint == null ? 0.14 : 0.24,
+            );
       _drawCloudPuff(canvas, Offset(x, y), size, tint);
     }
 
@@ -533,8 +586,9 @@ class CollageGenerator {
         canvas,
         Offset(x, y),
         size,
-        (sparkleTint ?? Colors.white)
-            .withValues(alpha: sparkleTint == null ? 0.16 : 0.22),
+        (sparkleTint ?? Colors.white).withValues(
+          alpha: sparkleTint == null ? 0.16 : 0.22,
+        ),
       );
     }
   }
@@ -560,11 +614,15 @@ class CollageGenerator {
       );
       final fill = i / bubbleCount < bubbleBias
           ? (bubbleTint ?? decor.secondary).withValues(
-              alpha: (bubbleTint == null ? 0.10 : 0.18) +
-                  random.nextDouble() * 0.10)
+              alpha:
+                  (bubbleTint == null ? 0.10 : 0.18) +
+                  random.nextDouble() * 0.10,
+            )
           : (accentTint ?? decor.primary).withValues(
-              alpha: (accentTint == null ? 0.07 : 0.14) +
-                  random.nextDouble() * 0.08);
+              alpha:
+                  (accentTint == null ? 0.07 : 0.14) +
+                  random.nextDouble() * 0.08,
+            );
       canvas.drawCircle(center, radius, Paint()..color = fill);
       canvas.drawCircle(
         center,
@@ -593,16 +651,18 @@ class CollageGenerator {
           canvas,
           center,
           size,
-          (accentTint ?? decor.primary)
-              .withValues(alpha: accentTint == null ? 0.12 : 0.18),
+          (accentTint ?? decor.primary).withValues(
+            alpha: accentTint == null ? 0.12 : 0.18,
+          ),
         );
       } else {
         _drawCloudPuff(
           canvas,
           center,
           size * 1.1,
-          (bubbleTint ?? Colors.white)
-              .withValues(alpha: bubbleTint == null ? 0.12 : 0.16),
+          (bubbleTint ?? Colors.white).withValues(
+            alpha: bubbleTint == null ? 0.12 : 0.16,
+          ),
         );
       }
     }
@@ -619,19 +679,15 @@ class CollageGenerator {
   }) {
     final random = _layoutRandom(options, 0x0FACE);
     final bandPaint = Paint()
-      ..color = (bandTint ?? Colors.white)
-          .withValues(alpha: bandTint == null ? 0.08 : 0.16);
+      ..color = (bandTint ?? Colors.white).withValues(
+        alpha: bandTint == null ? 0.08 : 0.16,
+      );
     final bandCount = options.isPreviewQuality ? 2 : 3;
     for (int i = 0; i < bandCount; i++) {
       final top = height * (0.12 + i * 0.22);
       canvas.drawRRect(
         RRect.fromRectAndRadius(
-          Rect.fromLTWH(
-            width * 0.06,
-            top,
-            width * 0.88,
-            height * 0.08,
-          ),
+          Rect.fromLTWH(width * 0.06, top, width * 0.88, height * 0.08),
           const Radius.circular(999),
         ),
         bandPaint,
@@ -647,8 +703,9 @@ class CollageGenerator {
           height * (0.10 + random.nextDouble() * 0.78),
         ),
         min(width, height) * (0.036 + random.nextDouble() * 0.03),
-        (i.isEven ? Colors.white : (cloudTint ?? decor.secondary))
-            .withValues(alpha: cloudTint == null ? 0.14 : 0.22),
+        (i.isEven ? Colors.white : (cloudTint ?? decor.secondary)).withValues(
+          alpha: cloudTint == null ? 0.14 : 0.22,
+        ),
       );
     }
     canvas.drawCircle(
@@ -666,11 +723,20 @@ class CollageGenerator {
   ) {
     final paint = Paint()..color = color;
     canvas.drawCircle(
-        Offset(center.dx - size * 0.56, center.dy), size * 0.48, paint);
-    canvas.drawCircle(Offset(center.dx - size * 0.12, center.dy - size * 0.18),
-        size * 0.58, paint);
+      Offset(center.dx - size * 0.56, center.dy),
+      size * 0.48,
+      paint,
+    );
     canvas.drawCircle(
-        Offset(center.dx + size * 0.42, center.dy), size * 0.44, paint);
+      Offset(center.dx - size * 0.12, center.dy - size * 0.18),
+      size * 0.58,
+      paint,
+    );
+    canvas.drawCircle(
+      Offset(center.dx + size * 0.42, center.dy),
+      size * 0.44,
+      paint,
+    );
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromCenter(
@@ -1004,8 +1070,10 @@ class CollageGenerator {
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 6),
     );
 
-    final double badgeWidth =
-        min(max(148, decor.badge.length * 10.0 + 36), width - 120).toDouble();
+    final double badgeWidth = min(
+      max(148, decor.badge.length * 10.0 + 36),
+      width - 120,
+    ).toDouble();
     final badgeRect = RRect.fromRectAndRadius(
       Rect.fromCenter(
         center: Offset(headerCenterX, 133),
@@ -1032,8 +1100,10 @@ class CollageGenerator {
 
     const double titleY = 154;
     final double titleSize = width < 420 ? 44 : 58;
-    final double titleMaxWidth =
-        min(max(190, width - 132).toDouble(), headerRect.outerRect.width - 82);
+    final double titleMaxWidth = min(
+      max(190, width - 132).toDouble(),
+      headerRect.outerRect.width - 82,
+    );
     _drawText(
       canvas,
       title,
@@ -1056,8 +1126,10 @@ class CollageGenerator {
     );
 
     final double occasionY = titleY + titleH + 14;
-    final double occasionMaxWidth =
-        min(headerRect.outerRect.width - 120, titleMaxWidth + 8);
+    final double occasionMaxWidth = min(
+      headerRect.outerRect.width - 120,
+      titleMaxWidth + 8,
+    );
     final double occasionH = _drawText(
       canvas,
       decor.occasionLabel,
@@ -1074,8 +1146,10 @@ class CollageGenerator {
     // 4. Message (Lời chúc) - Chỉ vẽ nếu có
     if (decor.showBlessing && decor.message.trim().isNotEmpty) {
       final double messageY = occasionY + occasionH + 18;
-      final double messageBoxW =
-          min(width - 136, headerRect.outerRect.width - 56);
+      final double messageBoxW = min(
+        width - 136,
+        headerRect.outerRect.width - 56,
+      );
 
       // Đo chiều cao message để vẽ background chuẩn
       final paragraphStyle = ui.ParagraphStyle(
@@ -1256,9 +1330,7 @@ class CollageGenerator {
     }
   }
 
-  static Future<void> _loadStickerImages(
-    List<String> stickers,
-  ) async {
+  static Future<void> _loadStickerImages(List<String> stickers) async {
     final assetStickers = stickers
         .where(
           (sticker) =>
@@ -1274,7 +1346,11 @@ class CollageGenerator {
         );
         final frame = await codec.getNextFrame();
         _loadedStickerImages[sticker] = frame.image;
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[SuppressedError] lib/utils/collage_generator.dart: $error',
+        );
+      }
     }
   }
 
@@ -1334,10 +1410,12 @@ class CollageGenerator {
 
       final double availableX = max(0.0, img.width - sourceWidth);
       final double availableY = max(0.0, img.height - sourceHeight);
-      final double normalizedX =
-          transform.offset.dx.clamp(-1.0, 1.0).toDouble();
-      final double normalizedY =
-          transform.offset.dy.clamp(-1.0, 1.0).toDouble();
+      final double normalizedX = transform.offset.dx
+          .clamp(-1.0, 1.0)
+          .toDouble();
+      final double normalizedY = transform.offset.dy
+          .clamp(-1.0, 1.0)
+          .toDouble();
       final double sx = availableX / 2 + normalizedX * availableX / 2;
       final double sy = availableY / 2 + normalizedY * availableY / 2;
       return Rect.fromLTWH(sx, sy, sourceWidth, sourceHeight);
@@ -1369,8 +1447,10 @@ class CollageGenerator {
     double radius = 28,
     CollagePhotoTransform? transform,
   }) {
-    final clipRRect =
-        RRect.fromRectAndRadius(imageRect, Radius.circular(radius));
+    final clipRRect = RRect.fromRectAndRadius(
+      imageRect,
+      Radius.circular(radius),
+    );
 
     canvas.save();
     canvas.clipRRect(clipRRect);
@@ -1512,7 +1592,13 @@ class CollageGenerator {
     _drawFooter(canvas, contentWidth, contentHeight, decor);
     canvas.restore();
     _drawSelectedStickers(
-        canvas, frame.width, frame.height, options.stickers, decor, options);
+      canvas,
+      frame.width,
+      frame.height,
+      options.stickers,
+      decor,
+      options,
+    );
 
     return Size(frame.width, frame.height);
   }
@@ -1546,10 +1632,7 @@ class CollageGenerator {
       final int itemsThisRow = min(cols, remaining);
       final double rowWidth =
           itemsThisRow * colWidth + max(0, itemsThisRow - 1) * padding;
-      final double startX = max(
-        padding,
-        (contentWidth - rowWidth) / 2,
-      );
+      final double startX = max(padding, (contentWidth - rowWidth) / 2);
 
       for (int col = 0; col < itemsThisRow; col++) {
         final ui.Image img = images[imageIndex];
@@ -1604,7 +1687,13 @@ class CollageGenerator {
     _drawFooter(canvas, contentWidth, contentHeight, decor);
     canvas.restore();
     _drawSelectedStickers(
-        canvas, frame.width, frame.height, options.stickers, decor, options);
+      canvas,
+      frame.width,
+      frame.height,
+      options.stickers,
+      decor,
+      options,
+    );
 
     return Size(frame.width, frame.height);
   }
@@ -1707,7 +1796,13 @@ class CollageGenerator {
     _drawFooter(canvas, contentWidth, contentHeight, decor);
     canvas.restore();
     _drawSelectedStickers(
-        canvas, frame.width, frame.height, options.stickers, decor, options);
+      canvas,
+      frame.width,
+      frame.height,
+      options.stickers,
+      decor,
+      options,
+    );
     return Size(frame.width, frame.height);
   }
 
@@ -1791,7 +1886,13 @@ class CollageGenerator {
     _drawFooter(canvas, contentWidth, contentHeight, decor);
     canvas.restore();
     _drawSelectedStickers(
-        canvas, frame.width, frame.height, options.stickers, decor, options);
+      canvas,
+      frame.width,
+      frame.height,
+      options.stickers,
+      decor,
+      options,
+    );
     return Size(frame.width, frame.height);
   }
 
@@ -1820,13 +1921,12 @@ class CollageGenerator {
     int index = 1;
 
     while (index < images.length) {
-      final bool useWideTile = (index % 5 == 0 || images.length - index == 1) &&
+      final bool useWideTile =
+          (index % 5 == 0 || images.length - index == 1) &&
           index < images.length;
       if (useWideTile) {
         final double wideHeight = tileHeight * 0.84;
-        extraRects.add(
-          Rect.fromLTWH(padding, cursorY, innerWidth, wideHeight),
-        );
+        extraRects.add(Rect.fromLTWH(padding, cursorY, innerWidth, wideHeight));
         cursorY += wideHeight + padding;
         index += 1;
         continue;
@@ -1887,7 +1987,13 @@ class CollageGenerator {
     _drawFooter(canvas, contentWidth, contentHeight, decor);
     canvas.restore();
     _drawSelectedStickers(
-        canvas, frame.width, frame.height, options.stickers, decor, options);
+      canvas,
+      frame.width,
+      frame.height,
+      options.stickers,
+      decor,
+      options,
+    );
     return Size(frame.width, frame.height);
   }
 
@@ -1904,8 +2010,9 @@ class CollageGenerator {
     const double footerH = 118.0;
     final double contentWidth = max(1180.0, 1320.0 * photoScale);
     final double innerWidth = contentWidth - padding * 2;
-    final double leadWidth =
-        images.length == 1 ? innerWidth : innerWidth * 0.58;
+    final double leadWidth = images.length == 1
+        ? innerWidth
+        : innerWidth * 0.58;
     final double leadHeight = max(410.0, 560.0 * photoScale);
     final double sideWidth = innerWidth - leadWidth - padding;
     const double topY = headerH + padding;
@@ -1916,38 +2023,36 @@ class CollageGenerator {
 
     int imageIndex = 1;
     if (images.length == 2) {
-      placements.add(
-        (
-          1,
-          Rect.fromLTWH(
-              padding + leadWidth + padding, topY, sideWidth, leadHeight)
+      placements.add((
+        1,
+        Rect.fromLTWH(
+          padding + leadWidth + padding,
+          topY,
+          sideWidth,
+          leadHeight,
         ),
-      );
+      ));
       imageIndex = 2;
     } else if (images.length > 2) {
       final double stackHeight = (leadHeight - padding) / 2;
-      placements.add(
-        (
-          1,
-          Rect.fromLTWH(
-            padding + leadWidth + padding,
-            topY,
-            sideWidth,
-            stackHeight,
-          )
+      placements.add((
+        1,
+        Rect.fromLTWH(
+          padding + leadWidth + padding,
+          topY,
+          sideWidth,
+          stackHeight,
         ),
-      );
-      placements.add(
-        (
-          2,
-          Rect.fromLTWH(
-            padding + leadWidth + padding,
-            topY + stackHeight + padding,
-            sideWidth,
-            stackHeight,
-          )
+      ));
+      placements.add((
+        2,
+        Rect.fromLTWH(
+          padding + leadWidth + padding,
+          topY + stackHeight + padding,
+          sideWidth,
+          stackHeight,
         ),
-      );
+      ));
       imageIndex = 3;
     }
 
@@ -1960,17 +2065,15 @@ class CollageGenerator {
       while (imageIndex < images.length) {
         final int rowCount = min(cols, images.length - imageIndex);
         for (int col = 0; col < rowCount; col++) {
-          placements.add(
-            (
-              imageIndex + col,
-              Rect.fromLTWH(
-                padding + col * (tileWidth + padding),
-                cursorY,
-                tileWidth,
-                tileHeight,
-              ),
+          placements.add((
+            imageIndex + col,
+            Rect.fromLTWH(
+              padding + col * (tileWidth + padding),
+              cursorY,
+              tileWidth,
+              tileHeight,
             ),
-          );
+          ));
         }
         imageIndex += rowCount;
         cursorY += tileHeight + padding;
@@ -2009,7 +2112,13 @@ class CollageGenerator {
     _drawFooter(canvas, contentWidth, contentHeight, decor);
     canvas.restore();
     _drawSelectedStickers(
-        canvas, frame.width, frame.height, options.stickers, decor, options);
+      canvas,
+      frame.width,
+      frame.height,
+      options.stickers,
+      decor,
+      options,
+    );
     return Size(frame.width, frame.height);
   }
 
@@ -2049,7 +2158,11 @@ class CollageGenerator {
     final double startOffset = random.nextDouble() * stepSize;
 
     Offset getHeartPoint(
-        double t, double scale, double offsetX, double offsetY) {
+      double t,
+      double scale,
+      double offsetX,
+      double offsetY,
+    ) {
       final double x = 16 * pow(sin(t), 3).toDouble();
       final double y =
           13 * cos(t) - 5 * cos(2 * t) - 2 * cos(3 * t) - cos(4 * t);
@@ -2109,7 +2222,13 @@ class CollageGenerator {
     _drawFooter(canvas, contentWidth, contentHeight, decor);
     canvas.restore();
     _drawSelectedStickers(
-        canvas, frame.width, frame.height, options.stickers, decor, options);
+      canvas,
+      frame.width,
+      frame.height,
+      options.stickers,
+      decor,
+      options,
+    );
     return Size(frame.width, frame.height);
   }
 }

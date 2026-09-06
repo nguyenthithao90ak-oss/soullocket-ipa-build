@@ -146,7 +146,9 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
   Future<void> _stopScanner() async {
     try {
       await _scannerCtrl.stop();
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[CoupleConnect] Cannot stop QR scanner: $error');
+    }
   }
 
   Future<void> _restartScanner() async {

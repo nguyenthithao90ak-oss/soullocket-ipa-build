@@ -12,8 +12,9 @@ class AppCheckHttpHeaders {
   static const String headerName = 'X-Firebase-AppCheck';
   static const String appSignatureHeaderName = 'X-App-Signature';
 
-  static const MethodChannel _bootstrapChannel =
-      MethodChannel('soul_locket/bootstrap');
+  static const MethodChannel _bootstrapChannel = MethodChannel(
+    'soul_locket/bootstrap',
+  );
 
   /// Cache the app signature status across headers calls
   static String? _cachedSignatureHash;
@@ -24,22 +25,14 @@ class AppCheckHttpHeaders {
     Map<String, String> headers, {
     bool forceRefresh = false,
   }) {
-    return withToken(
-      headers,
-      forceRefresh: forceRefresh,
-      requiredToken: false,
-    );
+    return withToken(headers, forceRefresh: forceRefresh, requiredToken: false);
   }
 
   static Future<Map<String, String>> withRequiredToken(
     Map<String, String> headers, {
     bool forceRefresh = false,
   }) {
-    return withToken(
-      headers,
-      forceRefresh: forceRefresh,
-      requiredToken: true,
-    );
+    return withToken(headers, forceRefresh: forceRefresh, requiredToken: true);
   }
 
   static Future<Map<String, String>> withToken(
@@ -50,8 +43,11 @@ class AppCheckHttpHeaders {
     final mergedHeaders = Map<String, String>.from(headers);
 
     // ── 1. App Check token ─────────────────────────────────────
-    await _addAppCheckToken(mergedHeaders,
-        forceRefresh: forceRefresh, requiredToken: requiredToken);
+    await _addAppCheckToken(
+      mergedHeaders,
+      forceRefresh: forceRefresh,
+      requiredToken: requiredToken,
+    );
 
     // ── 2. App Signature header (chống resign) ─────────────────
     await _addAppSignatureHeader(mergedHeaders);
@@ -94,11 +90,16 @@ class AppCheckHttpHeaders {
             headers[headerName] = normalizedFallbackToken;
             return;
           }
-        } catch (_) {}
+        } catch (fallbackError) {
+          if (kDebugMode) {
+            debugPrint('App Check fallback token failed: $fallbackError');
+          }
+        }
       }
       if (kDebugMode) {
         debugPrint(
-            'App Check token unavailable for HTTP headers: ${AppErrorMapper.resolve(error).message}');
+          'App Check token unavailable for HTTP headers: ${AppErrorMapper.resolve(error).message}',
+        );
       }
       if (requiredToken) {
         rethrow;
@@ -111,7 +112,8 @@ class AppCheckHttpHeaders {
   /// Giá trị là SHA-256 hash của chữ ký app thật (từ native Kotlin).
   /// Server sẽ kiểm tra hash này để phát hiện app đã bị resign.
   static Future<void> _addAppSignatureHeader(
-      Map<String, String> headers) async {
+    Map<String, String> headers,
+  ) async {
     if (kIsWeb) return;
 
     // Use cached value if fresh enough
@@ -151,7 +153,8 @@ class AppCheckHttpHeaders {
     } catch (e) {
       if (kDebugMode) {
         debugPrint(
-            'Failed to read app signature: ${AppErrorMapper.resolve(e).message}');
+          'Failed to read app signature: ${AppErrorMapper.resolve(e).message}',
+        );
       }
     }
   }

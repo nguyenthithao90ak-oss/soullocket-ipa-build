@@ -181,7 +181,8 @@ class _CountdownModeEditorScreenState
         prefs.getInt('il_countdown_unlock_weekly_expiry_v2') ?? 0;
     if (legacyExpiry > now) {
       loaded.addAll(
-          _CountdownModeIndependentScreenState._premiumCountdownStyleKeys);
+        _CountdownModeIndependentScreenState._premiumCountdownStyleKeys,
+      );
     } else {
       final legacyTs = prefs.getInt('il_countdown_unlock_ad_ts') ?? 0;
       if (legacyTs > 0) {
@@ -189,7 +190,8 @@ class _CountdownModeEditorScreenState
             legacyTs + const Duration(days: 7).inMilliseconds;
         if (fallbackExpiry > now) {
           loaded.addAll(
-              _CountdownModeIndependentScreenState._premiumCountdownStyleKeys);
+            _CountdownModeIndependentScreenState._premiumCountdownStyleKeys,
+          );
         }
       }
     }
@@ -203,13 +205,20 @@ class _CountdownModeEditorScreenState
   Future<void> _copyFromMainCountdown() async {
     final houseId = widget.currentHouseId;
     if (houseId == null || houseId.isEmpty) {
-      _showMessage('Không tìm thấy mã nhà hiện tại.');
+      _showMessage(context.tr('p7_current_house_missing'));
       return;
     }
+    final loadFailedMessage = context.tr('p7_main_countdown_load_failed');
+    final daysInLoveLabel = context.tr('p7_days_in_love');
+    final copiedMessage = context.tr('p7_main_countdown_copied');
+    final copyFailedTemplate = context.tr('p7_main_countdown_copy_failed');
     try {
       final settings = await HouseSettingsService().fetchSettings(houseId);
+      if (!mounted) {
+        return;
+      }
       if (settings == null) {
-        _showMessage('Không thể tải cấu hình Vòng Đếm chính.');
+        _showMessage(loadFailedMessage);
         return;
       }
       setState(() {
@@ -221,7 +230,7 @@ class _CountdownModeEditorScreenState
             : settings.houseName;
         _bottomCtrl.text = settings.countdownBottomLabel.isNotEmpty
             ? settings.countdownBottomLabel
-            : 'ngày yêu';
+            : daysInLoveLabel;
         _leftCtrl.text = settings.nameU1;
         _rightCtrl.text = settings.nameU2;
         _leftAvatarCtrl.text = settings.avtUser1;
@@ -234,9 +243,14 @@ class _CountdownModeEditorScreenState
             : 'theme-default';
         _transparentMode = settings.transparentMode;
       });
-      _showMessage('Đã sao chép dữ liệu từ Vòng Đếm chính.');
+      _showMessage(copiedMessage);
     } catch (e) {
-      _showMessage('Lỗi khi sao chép: ${AppErrorMapper.resolve(e).message}');
+      _showMessage(
+        copyFailedTemplate.replaceAll(
+          '{error}',
+          AppErrorMapper.resolve(e).message,
+        ),
+      );
     }
   }
 
@@ -262,9 +276,8 @@ class _CountdownModeEditorScreenState
         ? widget.themeKey
         : _themeOptions.first.value;
     final initialStyleKey = widget.styleKey.trim().toLowerCase();
-    _styleKey = _countdownStyleOptions.any(
-      (item) => item.value == initialStyleKey,
-    )
+    _styleKey =
+        _countdownStyleOptions.any((item) => item.value == initialStyleKey)
         ? initialStyleKey
         : 'default';
     _frameKey = _avatarFrameOptions.any((item) => item.value == widget.frameKey)
@@ -272,11 +285,12 @@ class _CountdownModeEditorScreenState
         : _avatarFrameOptions.first.value;
     _fontKey =
         SLTheme.cleanFontOptions.any((item) => item.key == widget.fontKey)
-            ? widget.fontKey
-            : SLTheme.cleanFontOptions.first.key;
+        ? widget.fontKey
+        : SLTheme.cleanFontOptions.first.key;
     _customBackgroundUrl = widget.customBackgroundUrl.trim();
-    _centerIconType =
-        _normalizeCountdownModeCenterIconType(widget.centerIconType);
+    _centerIconType = _normalizeCountdownModeCenterIconType(
+      widget.centerIconType,
+    );
     _transparentMode = widget.transparentMode;
     _sizePx = widget.sizePx.clamp(200.0, UiPrefs.maxCountdownSizePx).toDouble();
     _unlockedStyles = {};
@@ -371,10 +385,12 @@ class _CountdownModeEditorScreenState
     if (avatarPendingKey == null || backgroundPendingKey == null) {
       return;
     }
-    final avatarPending =
-        await PendingUploadService.instance.load(avatarPendingKey);
-    final backgroundPending =
-        await PendingUploadService.instance.load(backgroundPendingKey);
+    final avatarPending = await PendingUploadService.instance.load(
+      avatarPendingKey,
+    );
+    final backgroundPending = await PendingUploadService.instance.load(
+      backgroundPendingKey,
+    );
     if (avatarPending == null && backgroundPending == null) {
       return;
     }
@@ -400,8 +416,9 @@ class _CountdownModeEditorScreenState
   Future<void> _retryPendingUpload() async {
     final avatarPendingKey = _pendingAvatarUploadKey;
     if (avatarPendingKey != null) {
-      final avatarPending =
-          await PendingUploadService.instance.load(avatarPendingKey);
+      final avatarPending = await PendingUploadService.instance.load(
+        avatarPendingKey,
+      );
       if (avatarPending != null) {
         final filePath = avatarPending['filePath']?.toString().trim() ?? '';
         if (filePath.isNotEmpty) {
@@ -414,7 +431,11 @@ class _CountdownModeEditorScreenState
               );
               return;
             }
-          } catch (_) {}
+          } catch (error) {
+            debugPrint(
+              '[SuppressedError] lib/views/home/tabs/settings/countdown/countdown_mode_editor_part.dart: $error',
+            );
+          }
         }
         await PendingUploadService.instance.clear(avatarPendingKey);
       }
@@ -424,8 +445,9 @@ class _CountdownModeEditorScreenState
     if (backgroundPendingKey == null) {
       return;
     }
-    final backgroundPending =
-        await PendingUploadService.instance.load(backgroundPendingKey);
+    final backgroundPending = await PendingUploadService.instance.load(
+      backgroundPendingKey,
+    );
     if (backgroundPending == null) {
       return;
     }
@@ -454,25 +476,27 @@ class _CountdownModeEditorScreenState
   void _rememberUploadedUrl({
     required String previousUrl,
     required String nextUrl,
-  }) =>
-      _rememberUploadedUrlImpl(
-        previousUrl: previousUrl,
-        nextUrl: nextUrl,
-      );
+  }) => _rememberUploadedUrlImpl(previousUrl: previousUrl, nextUrl: nextUrl);
 
   void _preserveCurrentUploads() => _preserveCurrentUploadsImpl();
 
   Future<void> _handleCountdownStyleSelection(String styleKey) async {
     final normalized = styleKey.trim().toLowerCase();
-    final exists =
-        _countdownStyleOptions.any((item) => item.value == normalized);
+    final exists = _countdownStyleOptions.any(
+      (item) => item.value == normalized,
+    );
     if (!exists) {
-      _showMessage('Giao diện vòng đếm không hợp lệ: $styleKey');
+      _showMessage(
+        context
+            .tr('p7_invalid_countdown_style')
+            .replaceAll('{style}', styleKey),
+      );
       return;
     }
     final requiresAd =
         _CountdownModeIndependentScreenState._isPremiumCountdownStyleKey(
-            normalized);
+          normalized,
+        );
     if (!requiresAd || widget.isVipActive) {
       setState(() => _styleKey = normalized);
       return;
@@ -511,7 +535,15 @@ class _CountdownModeEditorScreenState
         _styleKey = normalized;
       });
       _showMessage(
-          'Đã mở khóa "${_countdownStyleOptions.firstWhere((e) => e.value == normalized).key}" trong 5 tiếng!');
+        context
+            .tr('p7_countdown_style_unlocked_week')
+            .replaceAll(
+              '{style}',
+              _countdownStyleOptions
+                  .firstWhere((e) => e.value == normalized)
+                  .key,
+            ),
+      );
     } finally {
       if (mounted) {
         setState(() => _isUnlockingCountdownStyle = false);
@@ -540,6 +572,7 @@ class _CountdownModeEditorScreenState
     if (_uploadingAvatarRole != null) {
       return;
     }
+    final uploadFailedTemplate = context.tr('p7_avatar_upload_failed');
 
     XFile? file = presetFile ?? await _storageService.pickImage();
     if (file == null) {
@@ -562,13 +595,10 @@ class _CountdownModeEditorScreenState
       }
       final pendingKey = _pendingAvatarUploadKey;
       if (pendingKey != null) {
-        await PendingUploadService.instance.save(
-          pendingKey,
-          <String, dynamic>{
-            'role': role,
-            'filePath': file.path,
-          },
-        );
+        await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
+          'role': role,
+          'filePath': file.path,
+        });
       }
       final url = await _storageService.uploadImage(
         houseId,
@@ -598,7 +628,12 @@ class _CountdownModeEditorScreenState
         await PendingUploadService.instance.clear(pendingKey);
       }
     } catch (e) {
-      _showMessage('Không thể tải avatar: $e');
+      _showMessage(
+        uploadFailedTemplate.replaceAll(
+          '{error}',
+          AppErrorMapper.resolve(e).message,
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -618,6 +653,7 @@ class _CountdownModeEditorScreenState
     if (_isUploadingBackground) {
       return;
     }
+    final uploadFailedTemplate = context.tr('p7_background_upload_failed');
     final allowUpload = await _ensureBackgroundUploadAccess();
     if (!allowUpload || !mounted) {
       return;
@@ -644,10 +680,9 @@ class _CountdownModeEditorScreenState
       }
       final pendingKey = _pendingBackgroundUploadKey;
       if (pendingKey != null) {
-        await PendingUploadService.instance.save(
-          pendingKey,
-          <String, dynamic>{'filePath': file.path},
-        );
+        await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
+          'filePath': file.path,
+        });
       }
       final url = await _storageService.uploadImage(
         houseId,
@@ -676,7 +711,12 @@ class _CountdownModeEditorScreenState
         await PendingUploadService.instance.clear(pendingKey);
       }
     } catch (e) {
-      _showMessage('Không thể tải nền: $e');
+      _showMessage(
+        uploadFailedTemplate.replaceAll(
+          '{error}',
+          AppErrorMapper.resolve(e).message,
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -692,8 +732,7 @@ class _CountdownModeEditorScreenState
     required String label,
     String? hint,
     bool dark = false,
-  }) =>
-      _fieldDecorationImpl(label: label, hint: hint, dark: dark);
+  }) => _fieldDecorationImpl(label: label, hint: hint, dark: dark);
 
   Widget _sectionCard({
     required IconData icon,
@@ -701,26 +740,25 @@ class _CountdownModeEditorScreenState
     required String subtitle,
     List<Color>? iconGradient,
     required Widget child,
-  }) =>
-      _sectionCardImpl(
-        icon: icon,
-        title: title,
-        subtitle: subtitle,
-        iconGradient: iconGradient,
-        child: child,
-      );
+  }) => _sectionCardImpl(
+    icon: icon,
+    title: title,
+    subtitle: subtitle,
+    iconGradient: iconGradient,
+    child: child,
+  );
 
   Future<void> _pickAnchorDate() => _pickAnchorDateImpl();
 
   _CountdownModeSettingsResult _buildResult(
     _CountdownModeSettingsAction action,
-  ) =>
-      _buildResultImpl(action);
+  ) => _buildResultImpl(action);
 
   @override
   Widget build(BuildContext context) {
-    final themeData =
-        _CountdownModeThemeData.resolve(_resolveThemeKey(_themeKey));
+    final themeData = _CountdownModeThemeData.resolve(
+      _resolveThemeKey(_themeKey),
+    );
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -764,8 +802,9 @@ class _CountdownModeEditorScreenState
                   alignment: Alignment.topCenter,
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
-                      maxWidth:
-                          constraints.maxWidth > 680 ? 620 : double.infinity,
+                      maxWidth: constraints.maxWidth > 680
+                          ? 620
+                          : double.infinity,
                     ),
                     child: SingleChildScrollView(
                       physics: const ClampingScrollPhysics(),

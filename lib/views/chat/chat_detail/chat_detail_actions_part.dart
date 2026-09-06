@@ -218,7 +218,11 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
             await _pickImage(presetImage: file);
             return;
           }
-        } catch (_) {}
+        } catch (error) {
+          debugPrint(
+            '[SuppressedError] lib/views/chat/chat_detail/chat_detail_actions_part.dart: $error',
+          );
+        }
         await PendingUploadService.instance.clear(_pendingChatImageUploadKey);
       }
     }
@@ -231,8 +235,9 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
     }
     final filePath = pendingBackground['filePath']?.toString().trim() ?? '';
     if (filePath.isEmpty) {
-      await PendingUploadService.instance
-          .clear(_pendingChatBackgroundUploadKey);
+      await PendingUploadService.instance.clear(
+        _pendingChatBackgroundUploadKey,
+      );
       return;
     }
     final file = XFile(filePath);
@@ -244,8 +249,9 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
         return;
       }
     } catch (_) {
-      await PendingUploadService.instance
-          .clear(_pendingChatBackgroundUploadKey);
+      await PendingUploadService.instance.clear(
+        _pendingChatBackgroundUploadKey,
+      );
       return;
     }
     await _pickAndSaveChatBackground(
@@ -282,7 +288,8 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       debugPrint('Error checking chat image limit: $e');
     }
 
-    final XFile? image = presetImage ??
+    final XFile? image =
+        presetImage ??
         await AppLifecyclePresenceGuard.guard(
           () => ImagePickerRecoveryService.instance.pickImage(
             picker: _picker,
@@ -358,9 +365,9 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
     final roomId = msg.callRoomId;
     if (roomId == null || roomId.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Không tìm thấy phòng gọi')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Không tìm thấy phòng gọi')));
       return;
     }
 
@@ -449,8 +456,10 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isChatMuted = !nextValue);
-      _showNotice('Chưa thể cập nhật thông báo lúc này. Vui lòng thử lại.',
-          error: true);
+      _showNotice(
+        'Chưa thể cập nhật thông báo lúc này. Vui lòng thử lại.',
+        error: true,
+      );
     }
   }
 
@@ -470,10 +479,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
         .toDouble();
     final croppedFile = await ImageCropper().cropImage(
       sourcePath: file.path,
-      aspectRatio: CropAspectRatio(
-        ratioX: size.width,
-        ratioY: cropHeight,
-      ),
+      aspectRatio: CropAspectRatio(ratioX: size.width, ratioY: cropHeight),
       compressFormat: ImageCompressFormat.jpg,
       compressQuality: 86,
       maxWidth: 1440,
@@ -522,14 +528,12 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
     var didPersistNewBackground = false;
     Object? cleanupError;
     try {
-      await PendingUploadService.instance.save(
-        _pendingChatBackgroundUploadKey,
-        <String, dynamic>{
-          'filePath': file.path,
-          'currentBackgroundUrl': currentBackgroundUrl,
-          'currentBackgroundStoragePath': currentBackgroundStoragePath,
-        },
-      );
+      await PendingUploadService.instance
+          .save(_pendingChatBackgroundUploadKey, <String, dynamic>{
+            'filePath': file.path,
+            'currentBackgroundUrl': currentBackgroundUrl,
+            'currentBackgroundStoragePath': currentBackgroundStoragePath,
+          });
       uploadResult = await _storageService.uploadManagedImage(
         widget.myHouseId,
         _chatBackgroundFolderName,
@@ -563,15 +567,17 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       }
       if (cleanupError != null) {
         debugPrint(
-            'Delete old chat background after commit failed: ${AppErrorMapper.cleanMessage(cleanupError)}');
+          'Delete old chat background after commit failed: ${AppErrorMapper.cleanMessage(cleanupError)}',
+        );
         _showNotice(
           'Đã cập nhật nền chat nhưng chưa xóa được file cũ. Vui lòng thử lại.',
           error: true,
         );
         return;
       }
-      await PendingUploadService.instance
-          .clear(_pendingChatBackgroundUploadKey);
+      await PendingUploadService.instance.clear(
+        _pendingChatBackgroundUploadKey,
+      );
       _showNotice('Đã cập nhật nền chat.');
     } catch (e) {
       if (!didPersistNewBackground) {
@@ -591,8 +597,10 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
           }
         }
       }
-      _showNotice('Chưa thể cập nhật nền chat lúc này. Vui lòng thử lại.',
-          error: true);
+      _showNotice(
+        'Chưa thể cập nhật nền chat lúc này. Vui lòng thử lại.',
+        error: true,
+      );
     } finally {
       if (mounted) {
         setState(() => _isUpdatingChatBackground = false);
@@ -608,7 +616,8 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       return;
     }
 
-    final hasBackground = currentBackgroundUrl.trim().isNotEmpty ||
+    final hasBackground =
+        currentBackgroundUrl.trim().isNotEmpty ||
         currentBackgroundStoragePath.trim().isNotEmpty;
     if (!hasBackground) {
       _showNotice('Đoạn chat này chưa có nền riêng.');
@@ -631,8 +640,10 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       );
       _showNotice('Đã xóa nền chat.');
     } catch (e) {
-      _showNotice('Chưa thể xóa nền chat lúc này. Vui lòng thử lại.',
-          error: true);
+      _showNotice(
+        'Chưa thể xóa nền chat lúc này. Vui lòng thử lại.',
+        error: true,
+      );
     } finally {
       if (mounted) {
         setState(() => _isUpdatingChatBackground = false);

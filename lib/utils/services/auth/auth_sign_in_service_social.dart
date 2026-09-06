@@ -8,7 +8,9 @@ extension AuthSignInServiceSocial on AuthSignInService {
     try {
       await user.reload();
       user = _auth.currentUser ?? user;
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[AuthSocial] Không tải lại được provider hiện tại: $error');
+    }
 
     final providerData = user?.providerData ?? <firebase_auth.UserInfo>[];
     return providerData.any((provider) => provider.providerId == providerId);
@@ -58,15 +60,18 @@ extension AuthSignInServiceSocial on AuthSignInService {
         final googleSignIn = _googleSignIn ??= _googleSignInBuilder();
         if (!AuthSignInService._isGoogleSignInInitialized) {
           final initCompleter = Completer<void>();
-          googleSignIn.initialize().then((_) {
-            if (!initCompleter.isCompleted) initCompleter.complete();
-          }).catchError((error) {
-            if (!initCompleter.isCompleted) {
-              initCompleter.completeError(error);
-            } else {
-              debugPrint('Late Google init error swallowed: $error');
-            }
-          });
+          googleSignIn
+              .initialize()
+              .then((_) {
+                if (!initCompleter.isCompleted) initCompleter.complete();
+              })
+              .catchError((error) {
+                if (!initCompleter.isCompleted) {
+                  initCompleter.completeError(error);
+                } else {
+                  debugPrint('Late Google init error swallowed: $error');
+                }
+              });
           await initCompleter.future.timeout(
             const Duration(seconds: 15),
             onTimeout: () =>
@@ -78,20 +83,23 @@ extension AuthSignInServiceSocial on AuthSignInService {
         // Sign out trước để force hiện picker, tránh cached token expired
         try {
           await googleSignIn.signOut();
-        } catch (_) {}
+        } catch (error) {
+          debugPrint('[AuthSocial] Không xóa được phiên Google cũ: $error');
+        }
 
         final authCompleter = Completer<dynamic>();
-        googleSignIn.authenticate(
-          scopeHint: const ['email'],
-        ).then((user) {
-          if (!authCompleter.isCompleted) authCompleter.complete(user);
-        }).catchError((error) {
-          if (!authCompleter.isCompleted) {
-            authCompleter.completeError(error);
-          } else {
-            debugPrint('Late Google auth error swallowed: $error');
-          }
-        });
+        googleSignIn
+            .authenticate(scopeHint: const ['email'])
+            .then((user) {
+              if (!authCompleter.isCompleted) authCompleter.complete(user);
+            })
+            .catchError((error) {
+              if (!authCompleter.isCompleted) {
+                authCompleter.completeError(error);
+              } else {
+                debugPrint('Late Google auth error swallowed: $error');
+              }
+            });
 
         final googleUser = await authCompleter.future.timeout(
           const Duration(seconds: 20),
@@ -197,8 +205,10 @@ extension AuthSignInServiceSocial on AuthSignInService {
               : _buildAppleWebAuthenticationOptions(),
         );
 
-        final oauthCredential =
-            _buildAppleFirebaseCredential(appleCredential, rawNonce);
+        final oauthCredential = _buildAppleFirebaseCredential(
+          appleCredential,
+          rawNonce,
+        );
         await user.linkWithCredential(oauthCredential);
       }
 
@@ -300,14 +310,17 @@ extension AuthSignInServiceSocial on AuthSignInService {
     user = _auth.currentUser ?? user;
     try {
       await _houseContextService.syncSecurityEmailForCurrentUser(user: user);
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[AuthSocial] Không đồng bộ được email bảo mật: $error');
+    }
   }
 
   Future<void> _reauthenticateCurrentUserWithLinkedProvider(
     firebase_auth.User user,
   ) async {
-    final providerIds =
-        user.providerData.map((provider) => provider.providerId).toSet();
+    final providerIds = user.providerData
+        .map((provider) => provider.providerId)
+        .toSet();
     if (providerIds.contains('google.com')) {
       await _reauthenticateCurrentUserWithGoogle(user);
       return;
@@ -332,15 +345,18 @@ extension AuthSignInServiceSocial on AuthSignInService {
       final googleSignIn = _googleSignIn ??= _googleSignInBuilder();
       if (!AuthSignInService._isGoogleSignInInitialized) {
         final initCompleter = Completer<void>();
-        googleSignIn.initialize().then((_) {
-          if (!initCompleter.isCompleted) initCompleter.complete();
-        }).catchError((error) {
-          if (!initCompleter.isCompleted) {
-            initCompleter.completeError(error);
-          } else {
-            debugPrint('Late Google init error swallowed: $error');
-          }
-        });
+        googleSignIn
+            .initialize()
+            .then((_) {
+              if (!initCompleter.isCompleted) initCompleter.complete();
+            })
+            .catchError((error) {
+              if (!initCompleter.isCompleted) {
+                initCompleter.completeError(error);
+              } else {
+                debugPrint('Late Google init error swallowed: $error');
+              }
+            });
         await initCompleter.future.timeout(
           const Duration(seconds: 15),
           onTimeout: () =>
@@ -352,20 +368,23 @@ extension AuthSignInServiceSocial on AuthSignInService {
       // Sign out trước để force hiện picker, tránh cached token expired
       try {
         await googleSignIn.signOut();
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[AuthSocial] Không xóa được phiên Google cũ: $error');
+      }
 
       final authCompleter = Completer<dynamic>();
-      googleSignIn.authenticate(
-        scopeHint: const ['email'],
-      ).then((user) {
-        if (!authCompleter.isCompleted) authCompleter.complete(user);
-      }).catchError((error) {
-        if (!authCompleter.isCompleted) {
-          authCompleter.completeError(error);
-        } else {
-          debugPrint('Late Google auth error swallowed: $error');
-        }
-      });
+      googleSignIn
+          .authenticate(scopeHint: const ['email'])
+          .then((user) {
+            if (!authCompleter.isCompleted) authCompleter.complete(user);
+          })
+          .catchError((error) {
+            if (!authCompleter.isCompleted) {
+              authCompleter.completeError(error);
+            } else {
+              debugPrint('Late Google auth error swallowed: $error');
+            }
+          });
 
       final googleUser = await authCompleter.future.timeout(
         const Duration(seconds: 20),

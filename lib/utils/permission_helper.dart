@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../core/sl_theme.dart';
 import 'services/app_lifecycle_presence_guard.dart';
@@ -31,8 +32,11 @@ class PermissionHelper {
     }
 
     if (!context.mounted) return false;
-    final shouldRequest =
-        await _showDisclosureDialog(context, title, disclosure);
+    final shouldRequest = await _showDisclosureDialog(
+      context,
+      title,
+      disclosure,
+    );
 
     if (shouldRequest == true) {
       final result = await _withLifecyclePresenceGuard(permission.request);
@@ -78,8 +82,11 @@ class PermissionHelper {
 
     if (!context.mounted) return false;
 
-    final shouldRequest =
-        await _showDisclosureDialog(context, title, disclosure);
+    final shouldRequest = await _showDisclosureDialog(
+      context,
+      title,
+      disclosure,
+    );
     if (shouldRequest != true) return false;
 
     for (final permission in pending) {
@@ -102,6 +109,12 @@ class PermissionHelper {
         status == LocationPermission.always) {
       return true;
     }
+
+    if (status == LocationPermission.deniedForever || !context.mounted) {
+      return false;
+    }
+    final accepted = await _showDisclosureDialog(context, title, disclosure);
+    if (accepted != true || !context.mounted) return false;
 
     final result = await _withLifecyclePresenceGuard(
       Geolocator.requestPermission,
@@ -128,7 +141,10 @@ class PermissionHelper {
   }
 
   static Future<bool?> _showDisclosureDialog(
-      BuildContext context, String title, String disclosure) {
+    BuildContext context,
+    String title,
+    String disclosure,
+  ) {
     if (!context.mounted) return Future.value(false);
     return showDialog<bool>(
       context: context,
@@ -144,12 +160,13 @@ class PermissionHelper {
         ),
         content: Text(
           disclosure,
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.w600,
-            height: 1.5,
-          ),
+          style: SLTheme.quicksand(fontWeight: FontWeight.w600, height: 1.5),
         ),
         actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(ctx.tr('map_refresh_not_now')),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF5E35B1),
@@ -159,7 +176,7 @@ class PermissionHelper {
             ),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              'Tiếp tục',
+              ctx.tr('map_refresh_continue'),
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.bold,
                 color: Colors.white,

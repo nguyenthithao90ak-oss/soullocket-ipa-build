@@ -131,17 +131,13 @@ class _UtilitiesHubTileContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = appConfig[app.id] ??
-        {
-          'icon': app.icon,
-          'colors': app.colors,
-          'title': app.title,
-        };
+    final config =
+        appConfig[app.id] ??
+        {'icon': app.icon, 'colors': app.colors, 'title': app.title};
     final List<Color> colors = List<Color>.from(config['colors'] as List);
     final IconData iconData = config['icon'] as IconData;
 
     final Color startColor = colors.first;
-    final Color endColor = colors.last;
     final dpr = MediaQuery.devicePixelRatioOf(context);
 
     return Material(
@@ -177,10 +173,7 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                         ],
                       ),
                       borderRadius: BorderRadius.circular(22),
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 2.0,
-                      ),
+                      border: Border.all(color: Colors.white, width: 2.0),
                       boxShadow: [
                         BoxShadow(
                           color: startColor.withValues(alpha: 0.22),

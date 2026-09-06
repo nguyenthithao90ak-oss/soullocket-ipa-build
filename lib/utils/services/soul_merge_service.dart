@@ -39,30 +39,31 @@ class SoulMergeService {
   /// Listen to the bump times of both partners (resolved by server time).
   /// Key trong map là role ('user1'/'user2').
   Stream<Map<String, int>> watchMergeTimes() {
-    return Stream.fromFuture(_houseService.getCurrentHouseId())
-        .asyncExpand<Map<String, int>>((houseId) {
+    return Stream.fromFuture(
+      _houseService.getCurrentHouseId(),
+    ).asyncExpand<Map<String, int>>((houseId) {
       if (houseId == null || houseId.isEmpty) return const Stream.empty();
       return _db
           .ref('houses/$houseId/soul_merge')
           .onValue
           .asBroadcastStream()
           .map((event) {
-        final data = event.snapshot.value as Map<dynamic, dynamic>?;
-        if (data == null) return const <String, int>{};
+            final data = event.snapshot.value as Map<dynamic, dynamic>?;
+            if (data == null) return const <String, int>{};
 
-        final map = <String, int>{};
-        data.forEach((key, value) {
-          final keyStr = key.toString();
-          // Chỉ nhận key hợp lệ là role
-          if (keyStr != 'user1' && keyStr != 'user2') return;
-          if (value is int) {
-            map[keyStr] = value;
-          } else if (value is num) {
-            map[keyStr] = value.toInt();
-          }
-        });
-        return map;
-      });
+            final map = <String, int>{};
+            data.forEach((key, value) {
+              final keyStr = key.toString();
+              // Chỉ nhận key hợp lệ là role
+              if (keyStr != 'user1' && keyStr != 'user2') return;
+              if (value is int) {
+                map[keyStr] = value;
+              } else if (value is num) {
+                map[keyStr] = value.toInt();
+              }
+            });
+            return map;
+          });
     }).asBroadcastStream();
   }
 
@@ -114,8 +115,8 @@ class SoulMergeService {
       final body = trimmed.isNotEmpty
           ? trimmed
           : (imageUrl != null
-              ? 'Đã gửi một ảnh'
-              : 'Đã thì thầm với bạn trong Soul Merge 💕');
+                ? 'Đã gửi một ảnh'
+                : 'Đã thì thầm với bạn trong Soul Merge 💕');
 
       // Lấy tên đúng từ house settings theo role của người gửi
       String myName = 'Người ấy';
@@ -133,7 +134,9 @@ class SoulMergeService {
             if (dn != null && dn.isNotEmpty) myName = dn;
           }
         }
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[SoulMergeService] Cannot resolve sender name: $error');
+      }
 
       NotificationService().sendPartnerNotification(
         houseId: houseId,
@@ -167,8 +170,9 @@ class SoulMergeService {
 
   /// Watch real-time temporary messages in Soul Merge
   Stream<List<Map<String, dynamic>>> watchSoulMessages() {
-    return Stream.fromFuture(_houseService.getCurrentHouseId())
-        .asyncExpand<List<Map<String, dynamic>>>((houseId) {
+    return Stream.fromFuture(
+      _houseService.getCurrentHouseId(),
+    ).asyncExpand<List<Map<String, dynamic>>>((houseId) {
       if (houseId == null || houseId.isEmpty) return const Stream.empty();
       return _db
           .ref('houses/$houseId/soul_merge/chat')
@@ -177,24 +181,24 @@ class SoulMergeService {
           .onValue
           .asBroadcastStream()
           .map((event) {
-        final data = event.snapshot.value;
-        final list = <Map<String, dynamic>>[];
-        if (data is Map) {
-          data.forEach((key, val) {
-            if (val is Map) {
-              final msg = Map<String, dynamic>.from(val);
-              msg['id'] = key.toString();
-              list.add(msg);
+            final data = event.snapshot.value;
+            final list = <Map<String, dynamic>>[];
+            if (data is Map) {
+              data.forEach((key, val) {
+                if (val is Map) {
+                  final msg = Map<String, dynamic>.from(val);
+                  msg['id'] = key.toString();
+                  list.add(msg);
+                }
+              });
+              list.sort((a, b) {
+                final t1 = a['timestamp'] as int? ?? 0;
+                final t2 = b['timestamp'] as int? ?? 0;
+                return t1.compareTo(t2);
+              });
             }
+            return list;
           });
-          list.sort((a, b) {
-            final t1 = a['timestamp'] as int? ?? 0;
-            final t2 = b['timestamp'] as int? ?? 0;
-            return t1.compareTo(t2);
-          });
-        }
-        return list;
-      });
     }).asBroadcastStream();
   }
 
@@ -221,8 +225,9 @@ class SoulMergeService {
       if (houseId == null || houseId.isEmpty) return 0;
       final prefs = await SharedPreferences.getInstance();
       final role = _normalizeRole(prefs.getString('il_role'));
-      final snap =
-          await _db.ref('houses/$houseId/soul_merge/lastSeen/$role').get();
+      final snap = await _db
+          .ref('houses/$houseId/soul_merge/lastSeen/$role')
+          .get();
       return (snap.value as num?)?.toInt() ?? 0;
     } catch (e) {
       debugPrint('[SoulMergeService] getLastSeenTimestamp error: $e');
@@ -231,8 +236,12 @@ class SoulMergeService {
   }
 
   /// Send an interactive event (e.g. photo shot or heart tap) to the partner
-  Future<void> sendInteractiveEvent(
-      {required String type, String? url, double? x, double? y}) async {
+  Future<void> sendInteractiveEvent({
+    required String type,
+    String? url,
+    double? x,
+    double? y,
+  }) async {
     try {
       final user = _auth.currentUser;
       if (user == null) return;
@@ -244,9 +253,11 @@ class SoulMergeService {
       final role = _normalizeRole(prefs.getString('il_role'));
 
       final oppositeRole = role == 'user1' ? 'user2' : 'user1';
-      final presenceSnap = await _db.ref('houses/$houseId/presence/$oppositeRole').get();
+      final presenceSnap = await _db
+          .ref('houses/$houseId/presence/$oppositeRole')
+          .get();
       final presenceData = presenceSnap.value as Map<dynamic, dynamic>?;
-      
+
       // Nếu người kia offline, ta không cần gửi event vì đằng nào họ cũng không thấy được (event realtime)
       // Điều này giúp tiết kiệm lượt ghi/đọc (bandwidth) đáng kể cho Firebase.
       if (!PresenceService.isPresenceOnline(presenceData)) {
@@ -287,8 +298,9 @@ class SoulMergeService {
 
   /// Watch real-time interactive events
   Stream<Map<String, dynamic>> watchInteractiveEvents() {
-    return Stream.fromFuture(_houseService.getCurrentHouseId())
-        .asyncExpand<Map<String, dynamic>>((houseId) {
+    return Stream.fromFuture(
+      _houseService.getCurrentHouseId(),
+    ).asyncExpand<Map<String, dynamic>>((houseId) {
       if (houseId == null || houseId.isEmpty) return const Stream.empty();
 
       final now = DateTime.now().millisecondsSinceEpoch;
@@ -300,14 +312,14 @@ class SoulMergeService {
           .onChildAdded
           .asBroadcastStream()
           .map((event) {
-        final data = event.snapshot.value;
-        if (data is Map) {
-          final msg = Map<String, dynamic>.from(data);
-          msg['id'] = event.snapshot.key;
-          return msg;
-        }
-        return <String, dynamic>{};
-      });
+            final data = event.snapshot.value;
+            if (data is Map) {
+              final msg = Map<String, dynamic>.from(data);
+              msg['id'] = event.snapshot.key;
+              return msg;
+            }
+            return <String, dynamic>{};
+          });
     }).asBroadcastStream();
   }
 

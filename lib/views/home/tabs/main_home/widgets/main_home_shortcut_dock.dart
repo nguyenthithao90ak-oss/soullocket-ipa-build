@@ -167,12 +167,16 @@ extension _MainHomeShortcutDockExt on _MainHomeTabState {
                     ),
                   ],
                 ),
-                child: buildUtilityStickerIcon(
-                  utilityId: app.id,
-                  fallbackIcon: app.icon,
-                  fallbackColor: Colors.white,
-                  fallbackSize: 20,
-                  padding: const EdgeInsets.all(3),
+                child: HomeStickerMotion(
+                  motion: SoulLocketStickerMotion.sway,
+                  motionSeed: app.id,
+                  child: buildUtilityStickerIcon(
+                    utilityId: app.id,
+                    fallbackIcon: app.icon,
+                    fallbackColor: Colors.white,
+                    fallbackSize: 20,
+                    padding: const EdgeInsets.all(3),
+                  ),
                 ),
               ),
               SLSpacing.h4,

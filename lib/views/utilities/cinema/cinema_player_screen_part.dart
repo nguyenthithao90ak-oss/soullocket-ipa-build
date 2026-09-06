@@ -43,8 +43,9 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
     super.initState();
     _index = widget.initialIndex.clamp(0, widget.reel.items.length - 1);
     _pageController = PageController(initialPage: _index);
-    _titleController =
-        TextEditingController(text: _buildDefaultExportTitle(widget.reel));
+    _titleController = TextEditingController(
+      text: _buildDefaultExportTitle(widget.reel),
+    );
     _startTimer();
   }
 
@@ -111,7 +112,9 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
     if (cleaned.isEmpty) {
       return context.tr('util_knimtrongn_4bf058');
     }
-    return 'Kỷ niệm $cleaned';
+    return L10nScope.of(
+      context,
+    ).format('p8_cinema_memory_label', <String, Object?>{'label': cleaned});
   }
 
   String get _currentExportSignature {
@@ -147,7 +150,10 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
     if (cleaned.toLowerCase().startsWith(context.tr('util_knim_61098c'))) {
       return cleaned;
     }
-    return 'Kỷ niệm album ảnh $cleaned';
+    return L10nScope.of(context).format(
+      'p8_cinema_album_memory_title',
+      <String, Object?>{'label': cleaned},
+    );
   }
 
   void _toggleTitleAdjustment() {
@@ -160,16 +166,22 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
   }
 
   void _updateTitleAnchor(Offset delta, Size viewport, double titleWidth) {
-    final maxX =
-        ((viewport.width - titleWidth - 16) / viewport.width).clamp(0.03, 1.0);
+    final maxX = ((viewport.width - titleWidth - 16) / viewport.width).clamp(
+      0.03,
+      1.0,
+    );
     final maxY = ((viewport.height - 220) / viewport.height).clamp(0.12, 0.82);
 
     setState(() {
       _titleAnchor = Offset(
-        (_titleAnchor.dx + (delta.dx / viewport.width))
-            .clamp(0.03, maxX.toDouble()),
-        (_titleAnchor.dy + (delta.dy / viewport.height))
-            .clamp(0.12, maxY.toDouble()),
+        (_titleAnchor.dx + (delta.dx / viewport.width)).clamp(
+          0.03,
+          maxX.toDouble(),
+        ),
+        (_titleAnchor.dy + (delta.dy / viewport.height)).clamp(
+          0.12,
+          maxY.toDouble(),
+        ),
       );
       _exportedVideoPath = null;
       _exportedVideoSignature = null;
@@ -236,30 +248,33 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                   Row(
                     children: <Widget>[
                       Expanded(
-                        child: Builder(builder: (context) {
-                          final count = widget.reel.items.length;
-                          final gap = count > 50
-                              ? 0.0
-                              : (count > 25 ? 1.0 : (count > 10 ? 2.0 : 4.0));
-                          return Row(
-                            children: List<Widget>.generate(
-                              count,
-                              (segmentIndex) {
+                        child: Builder(
+                          builder: (context) {
+                            final count = widget.reel.items.length;
+                            final gap = count > 50
+                                ? 0.0
+                                : (count > 25 ? 1.0 : (count > 10 ? 2.0 : 4.0));
+                            return Row(
+                              children: List<Widget>.generate(count, (
+                                segmentIndex,
+                              ) {
                                 final isDone = segmentIndex < _index;
                                 final isActive = segmentIndex == _index;
                                 return Expanded(
                                   child: Padding(
                                     padding: EdgeInsets.only(
-                                      right:
-                                          segmentIndex == count - 1 ? 0 : gap,
+                                      right: segmentIndex == count - 1
+                                          ? 0
+                                          : gap,
                                     ),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(999),
                                       child: SizedBox(
                                         height: 4,
                                         child: ColoredBox(
-                                          color: Colors.white
-                                              .withValues(alpha: 0.16),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.16,
+                                          ),
                                           child: Align(
                                             alignment: Alignment.centerLeft,
                                             child: isActive
@@ -273,17 +288,22 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                                                     ),
                                                     duration:
                                                         _kCinemaFrameDuration,
-                                                    builder: (context, value,
-                                                        child) {
-                                                      return FractionallySizedBox(
-                                                        widthFactor: value,
-                                                        child: child,
-                                                      );
-                                                    },
+                                                    builder:
+                                                        (
+                                                          context,
+                                                          value,
+                                                          child,
+                                                        ) {
+                                                          return FractionallySizedBox(
+                                                            widthFactor: value,
+                                                            child: child,
+                                                          );
+                                                        },
                                                     child: ColoredBox(
                                                       color: Colors.white
                                                           .withValues(
-                                                              alpha: 0.9),
+                                                            alpha: 0.9,
+                                                          ),
                                                     ),
                                                   )
                                                 : FractionallySizedBox(
@@ -291,7 +311,8 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                                                     child: ColoredBox(
                                                       color: Colors.white
                                                           .withValues(
-                                                              alpha: 0.88),
+                                                            alpha: 0.88,
+                                                          ),
                                                     ),
                                                   ),
                                           ),
@@ -300,33 +321,27 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                                     ),
                                   ),
                                 );
-                              },
-                            ),
-                          );
-                        }),
+                              }),
+                            );
+                          },
+                        ),
                       ),
                       const SizedBox(width: 12),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () => Navigator.of(context).maybePop(),
-                          borderRadius: BorderRadius.circular(18),
-                          child: Ink(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.32),
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.14),
-                              ),
-                            ),
-                            child: const Icon(
-                              Icons.close_rounded,
-                              color: Colors.white,
+                      IconButton(
+                        tooltip: context.tr('p8_cinema_close_player'),
+                        onPressed: () => Navigator.of(context).maybePop(),
+                        style: IconButton.styleFrom(
+                          minimumSize: const Size(48, 48),
+                          backgroundColor: Colors.black.withValues(alpha: 0.32),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            side: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.14),
                             ),
                           ),
                         ),
+                        icon: const Icon(Icons.close_rounded),
                       ),
                     ],
                   ),
@@ -335,11 +350,13 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                     children: <Widget>[
                       _playerArrow(
                         icon: Icons.chevron_left_rounded,
+                        tooltip: context.tr('p8_cinema_previous_frame'),
                         onTap: _showPrevious,
                       ),
                       const Spacer(),
                       _playerArrow(
                         icon: Icons.chevron_right_rounded,
+                        tooltip: context.tr('p8_cinema_next_frame'),
                         onTap: _showNext,
                       ),
                     ],
@@ -385,8 +402,21 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                               const SizedBox(height: 4),
                               Text(
                                 item.authorName.isEmpty
-                                    ? '${_index + 1}/${widget.reel.items.length} - Video kỷ niệm trong ngày'
-                                    : '${_index + 1}/${widget.reel.items.length} - Ảnh được lưu bởi ${item.authorName}',
+                                    ? L10nScope.of(context).format(
+                                        'p8_cinema_reel_item_video',
+                                        <String, Object?>{
+                                          'index': _index + 1,
+                                          'total': widget.reel.items.length,
+                                        },
+                                      )
+                                    : L10nScope.of(context).format(
+                                        'p8_cinema_reel_item_photo',
+                                        <String, Object?>{
+                                          'index': _index + 1,
+                                          'total': widget.reel.items.length,
+                                          'name': item.authorName,
+                                        },
+                                      ),
                                 style: SLTheme.quicksand(
                                   fontSize: 13.5,
                                   color: Colors.white.withValues(alpha: 0.74),

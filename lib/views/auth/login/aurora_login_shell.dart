@@ -1,12 +1,9 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
-
+import 'auth_visual_style.dart';
 import 'aurora_tab_switcher.dart';
 
-/// Main presentation shell for the redesigned authentication card.
-/// Auth callbacks and business logic are intentionally kept outside this file.
+/// Khung xác thực dùng chung, tự đổi bố cục theo chiều rộng khả dụng.
 class AuroraLoginShell extends StatelessWidget {
   final bool compact;
   final bool isLoginTab;
@@ -29,57 +26,211 @@ class AuroraLoginShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = L10nService();
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        compact ? 16 : 24,
-        compact ? 18 : 24,
-        compact ? 16 : 24,
-        compact ? 16 : 22,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _LocketBrandHeader(compact: compact, l10n: l10n),
-          SizedBox(height: compact ? 16 : 20),
-          AuroraTabSwitcher(
-            isLoginTab: isLoginTab,
-            onSelectLogin: onSelectLogin,
-            onSelectRegister: onSelectRegister,
+    final style = AuthVisualStyle.of(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 800;
+        final header = _AuthBrandHeader(isLoginTab: isLoginTab, wide: wide);
+        final form = Material(
+          color: style.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+            side: BorderSide(color: style.border),
           ),
-          const SizedBox(height: 18),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 260),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, animation) {
-              final fade = CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutCubic,
-              );
-              return FadeTransition(
-                opacity: fade,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.025),
-                    end: Offset.zero,
-                  ).animate(fade),
-                  child: child,
+          child: Padding(
+            padding: EdgeInsets.all(compact ? 20 : 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AuroraTabSwitcher(
+                  isLoginTab: isLoginTab,
+                  onSelectLogin: onSelectLogin,
+                  onSelectRegister: onSelectRegister,
                 ),
-              );
-            },
-            child: KeyedSubtree(
-              key: ValueKey(isLoginTab ? 'cute_login' : 'cute_register'),
-              child: authSection,
+                const SizedBox(height: 24),
+                AnimatedSize(
+                  duration: MediaQuery.of(context).disableAnimations
+                      ? Duration.zero
+                      : const Duration(milliseconds: 180),
+                  alignment: Alignment.topCenter,
+                  child: authSection,
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 15),
-          _TinyHelpRow(
-            compact: compact,
-            l10n: l10n,
-            onOpenGuide: onOpenGuide,
-            onOpenContact: onOpenContact,
+        );
+        final help = Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 20,
+            children: [
+              _HelpLink(
+                icon: Icons.help_outline_rounded,
+                label: context.tr('auth_refresh_guide'),
+                onTap: onOpenGuide,
+              ),
+              _HelpLink(
+                icon: Icons.chat_bubble_outline_rounded,
+                label: context.tr('auth_refresh_support'),
+                onTap: onOpenContact,
+              ),
+            ],
+          ),
+        );
+        if (wide) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 64),
+                  child: header,
+                ),
+              ),
+              SizedBox(
+                width: 420,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [form, help],
+                ),
+              ),
+            ],
+          );
+        }
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 24),
+              child: header,
+            ),
+            form,
+            help,
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _AuthBrandHeader extends StatelessWidget {
+  final bool isLoginTab;
+  final bool wide;
+  const _AuthBrandHeader({required this.isLoginTab, required this.wide});
+
+  @override
+  Widget build(BuildContext context) {
+    final style = AuthVisualStyle.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const AuthLocketMark(size: 38),
+            const SizedBox(width: 10),
+            Text(
+              context.tr('auth_refresh_brand'),
+              style: style
+                  .text(size: 20, weight: FontWeight.w600)
+                  .copyWith(letterSpacing: -0.6),
+            ),
+          ],
+        ),
+        SizedBox(height: wide ? 40 : 22),
+        Text(
+          context.tr(
+            isLoginTab
+                ? 'auth_refresh_login_title'
+                : 'auth_refresh_register_title',
+          ),
+          style: style
+              .text(size: wide ? 48 : 30, height: 1.13, weight: FontWeight.w600)
+              .copyWith(letterSpacing: wide ? -1.8 : -0.9),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          context.tr(
+            isLoginTab
+                ? 'auth_refresh_login_subtitle'
+                : 'auth_refresh_register_subtitle',
+          ),
+          style: style.text(
+            size: wide ? 16 : 14,
+            color: style.muted,
+            height: 1.5,
+          ),
+        ),
+        if (wide) ...[
+          const SizedBox(height: 48),
+          const ExcludeSemantics(child: _LocketArtwork()),
+        ],
+      ],
+    );
+  }
+}
+
+class AuthLocketMark extends StatelessWidget {
+  final double size;
+  const AuthLocketMark({super.key, this.size = 38});
+
+  @override
+  Widget build(BuildContext context) {
+    final style = AuthVisualStyle.of(context);
+    return ExcludeSemantics(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: style.accentFill,
+          borderRadius: BorderRadius.circular(size * 0.32),
+        ),
+        child: Icon(
+          Icons.favorite_border_rounded,
+          size: size * 0.57,
+          color: style.accent,
+        ),
+      ),
+    );
+  }
+}
+
+class _LocketArtwork extends StatelessWidget {
+  const _LocketArtwork();
+
+  @override
+  Widget build(BuildContext context) {
+    final style = AuthVisualStyle.of(context);
+    return SizedBox(
+      height: 190,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            left: 20,
+            top: 12,
+            child: Transform.rotate(
+              angle: -0.13,
+              child: _MemoryFrame(
+                color: style.lavender,
+                fill: style.field,
+                icon: Icons.nightlight_outlined,
+              ),
+            ),
+          ),
+          Positioned(
+            left: 112,
+            top: 34,
+            child: Transform.rotate(
+              angle: 0.11,
+              child: _MemoryFrame(
+                color: style.accent,
+                fill: style.accentFill,
+                icon: Icons.favorite_outline_rounded,
+              ),
+            ),
           ),
         ],
       ),
@@ -87,129 +238,70 @@ class AuroraLoginShell extends StatelessWidget {
   }
 }
 
-class _LocketBrandHeader extends StatelessWidget {
-  final bool compact;
-  final L10nService l10n;
-
-  const _LocketBrandHeader({required this.compact, required this.l10n});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          width: compact ? 90 : 102,
-          height: compact ? 82 : 92,
-          child: const RepaintBoundary(
-            child: CustomPaint(
-              painter: _LocketBadgePainter(),
-            ),
-          ),
-        ),
-        const SizedBox(height: 2),
-        ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: [Color(0xFFD95078), Color(0xFF8C72C9)],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ).createShader(bounds),
-          child: Text(
-            'SoulLocket',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Quicksand',
-              fontSize: compact ? 30 : 34,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-              letterSpacing: 0.5,
-              height: 1.0,
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFF4F6),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFF3D8DF)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.auto_awesome_rounded,
-                size: 13,
-                color: Color(0xFFC49342),
-              ),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  l10n.translate('Nơi lưu giữ những khoảnh khắc yêu thương'),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: 'Quicksand',
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF7B666E),
-                    height: 1.25,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _TinyHelpRow extends StatelessWidget {
-  final bool compact;
-  final L10nService l10n;
-  final VoidCallback onOpenGuide;
-  final VoidCallback onOpenContact;
-
-  const _TinyHelpRow({
-    required this.compact,
-    required this.l10n,
-    required this.onOpenGuide,
-    required this.onOpenContact,
+class _MemoryFrame extends StatelessWidget {
+  final Color color;
+  final Color fill;
+  final IconData icon;
+  const _MemoryFrame({
+    required this.color,
+    required this.fill,
+    required this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _MiniHelpButton(
-            icon: Icons.menu_book_rounded,
-            label: l10n.translate('Hướng dẫn'),
-            onTap: onOpenGuide,
+    final style = AuthVisualStyle.of(context);
+    return Container(
+      width: 136,
+      height: 162,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: style.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: style.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
           ),
-        ),
-        const SizedBox(width: 9),
-        Expanded(
-          child: _MiniHelpButton(
-            icon: Icons.chat_bubble_outline_rounded,
-            label: l10n.translate('Hỗ trợ'),
-            onTap: onOpenContact,
+        ],
+      ),
+      child: Column(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: fill,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(child: Icon(icon, color: color, size: 38)),
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              width: 48,
+              height: 3,
+              decoration: BoxDecoration(
+                color: style.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+        ],
+      ),
     );
   }
 }
 
-class _MiniHelpButton extends StatelessWidget {
+class _HelpLink extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-
-  const _MiniHelpButton({
+  const _HelpLink({
     required this.icon,
     required this.label,
     required this.onTap,
@@ -217,132 +309,16 @@ class _MiniHelpButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          height: 42,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFFAF8).withValues(alpha: 0.88),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFEEDDE2)),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 16, color: const Color(0xFFD45A7C)),
-              const SizedBox(width: 7),
-              Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: 'Quicksand',
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF725D66),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+    final style = AuthVisualStyle.of(context);
+    return TextButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, size: 17),
+      label: Text(label),
+      style: TextButton.styleFrom(
+        foregroundColor: style.muted,
+        minimumSize: const Size(48, 48),
+        textStyle: style.text(size: 12, weight: FontWeight.w500),
       ),
     );
   }
-}
-
-class _LocketBadgePainter extends CustomPainter {
-  const _LocketBadgePainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height * 0.48);
-    final short = math.min(size.width, size.height);
-
-    final shadowPaint = Paint()
-      ..color = const Color(0xFFB14D6B).withValues(alpha: 0.12)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 9);
-    canvas.drawCircle(center.translate(0, 6), short * 0.34, shadowPaint);
-
-    final outer = Paint()
-      ..shader = const LinearGradient(
-        colors: [Color(0xFFFFD5DF), Color(0xFFD9CCFF)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ).createShader(Rect.fromCircle(center: center, radius: short * 0.36));
-    canvas.drawCircle(center, short * 0.35, outer);
-
-    final rim = Paint()
-      ..color = Colors.white.withValues(alpha: 0.92)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4;
-    canvas.drawCircle(center, short * 0.31, rim);
-
-    final face = Paint()..color = const Color(0xFFFFFBF8);
-    canvas.drawCircle(center, short * 0.26, face);
-
-    final heart = Path()
-      ..moveTo(center.dx, center.dy + short * 0.08)
-      ..cubicTo(
-        center.dx - short * 0.22,
-        center.dy - short * 0.06,
-        center.dx - short * 0.13,
-        center.dy - short * 0.24,
-        center.dx,
-        center.dy - short * 0.10,
-      )
-      ..cubicTo(
-        center.dx + short * 0.13,
-        center.dy - short * 0.24,
-        center.dx + short * 0.22,
-        center.dy - short * 0.06,
-        center.dx,
-        center.dy + short * 0.08,
-      );
-    canvas.drawPath(heart, Paint()..color = const Color(0xFFE8698B));
-
-    final eyePaint = Paint()
-      ..color = const Color(0xFF684D58)
-      ..strokeWidth = 1.7
-      ..strokeCap = StrokeCap.round;
-    final eyeY = center.dy - short * 0.025;
-    canvas.drawLine(
-      Offset(center.dx - short * 0.073, eyeY),
-      Offset(center.dx - short * 0.045, eyeY + 1),
-      eyePaint,
-    );
-    canvas.drawLine(
-      Offset(center.dx + short * 0.045, eyeY + 1),
-      Offset(center.dx + short * 0.073, eyeY),
-      eyePaint,
-    );
-
-    final loopPaint = Paint()
-      ..color = const Color(0xFF9879C9)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.4
-      ..strokeCap = StrokeCap.round;
-    final loopRect = Rect.fromCenter(
-      center: Offset(center.dx, size.height * 0.11),
-      width: short * 0.18,
-      height: short * 0.18,
-    );
-    canvas.drawArc(loopRect, math.pi, math.pi, false, loopPaint);
-
-    final sparkle = Paint()
-      ..color = const Color(0xFFD6A34E)
-      ..strokeWidth = 1.5
-      ..strokeCap = StrokeCap.round;
-    final s = Offset(size.width * 0.84, size.height * 0.30);
-    canvas.drawLine(Offset(s.dx - 5, s.dy), Offset(s.dx + 5, s.dy), sparkle);
-    canvas.drawLine(Offset(s.dx, s.dy - 5), Offset(s.dx, s.dy + 5), sparkle);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

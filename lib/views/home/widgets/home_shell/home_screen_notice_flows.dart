@@ -20,12 +20,14 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
           .getCurrentDeviceTrustState(autoApprove: true);
       if (!trustState.isPendingApproval || !mounted) return;
 
-      final effectiveSettings =
-          await MilitaryLockService().getEffectiveLockSettings(
-        houseId:
-            trustState.houseId.trim().isNotEmpty ? trustState.houseId : null,
-      );
-      final locksSecuritySettings = effectiveSettings.enabled &&
+      final effectiveSettings = await MilitaryLockService()
+          .getEffectiveLockSettings(
+            houseId: trustState.houseId.trim().isNotEmpty
+                ? trustState.houseId
+                : null,
+          );
+      final locksSecuritySettings =
+          effectiveSettings.enabled &&
           effectiveSettings.isScopeEnabled(LockScope.security);
       if (!locksSecuritySettings || !mounted) return;
 
@@ -37,7 +39,11 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
         confirmText: context.tr('home_hiu_93c4c0'),
         cancelText: context.tr('home_ng_f63d1e'),
       );
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/home/widgets/home_shell/home_screen_notice_flows.dart: $error',
+      );
+    }
   }
 
   // ignore: unused_element
@@ -79,9 +85,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
 
     Navigator.push(
       context,
-      SLRoute(
-        builder: (_) => CoupleConnectScreen(houseId: houseId),
-      ),
+      SLRoute(builder: (_) => CoupleConnectScreen(houseId: houseId)),
     );
   }
 
@@ -102,10 +106,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
         settings?.isSingle ?? (prefs.getString('il_rel_mode') == 'single');
 
     if (!mounted) return;
-    await _showFirstSetupGuideDialog(
-      houseId: houseId,
-      isSingle: isSingle,
-    );
+    await _showFirstSetupGuideDialog(houseId: houseId, isSingle: isSingle);
   }
 
   Future<void> _replayFirstSetupGuideFromSettings() async {
@@ -118,10 +119,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
         settings?.isSingle ?? (prefs.getString('il_rel_mode') == 'single');
 
     if (!mounted) return;
-    await _showFirstSetupGuideDialog(
-      houseId: houseId,
-      isSingle: isSingle,
-    );
+    await _showFirstSetupGuideDialog(houseId: houseId, isSingle: isSingle);
   }
 
   Future<void> _showFirstSetupGuideDialog({
@@ -177,8 +175,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
         FirstSetupSpotlightStep(
           targetKey: _firstGuideEntertainmentTabKey,
           title: L10nService().translate('home_giaitri tròchoi'),
-          description:
-              L10nService().translate('home_khamphatroi_game_desc'),
+          description: L10nService().translate('home_khamphatroi_game_desc'),
           icon: Icons.sports_esports_rounded,
           color: const Color(0xFF00B0FF),
         ),
@@ -352,13 +349,13 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     final title = request.isProcessing
         ? context.tr('home_angxlxadli_9bb5cf')
         : request.isScheduled
-            ? context.tr('home_lnlchxadli_6e8028')
-            : context.tr('home_yucuxaangc_2cf9cc');
+        ? context.tr('home_lnlchxadli_6e8028')
+        : context.tr('home_yucuxaangc_2cf9cc');
     final message = request.isProcessing
         ? context.tr('home_hthngangxl_2041f8')
         : request.isScheduled
-            ? 'Yêu cầu xóa hiện đã được lên lịch. Dữ liệu sẽ bị xóa vào ${_formatBreakupDateTime(request.deleteAt)} nếu bạn không rút lại trước thời điểm đó.'
-            : 'Yêu cầu xóa hiện vẫn đang chờ xác nhận từ thiết bị tin cậy bên kia hoặc chờ đến ${_formatBreakupDateTime(request.expireAt)} để chuyển sang lịch xóa.';
+        ? 'Yêu cầu xóa hiện đã được lên lịch. Dữ liệu sẽ bị xóa vào ${_formatBreakupDateTime(request.deleteAt)} nếu bạn không rút lại trước thời điểm đó.'
+        : 'Yêu cầu xóa hiện vẫn đang chờ xác nhận từ thiết bị tin cậy bên kia hoặc chờ đến ${_formatBreakupDateTime(request.expireAt)} để chuyển sang lịch xóa.';
 
     try {
       await showDialog<void>(
@@ -499,14 +496,14 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       final fallbackMessage = context.tr('home_chathangdn_3f5a7a');
       try {
-        await _HomeScreenState._appControlChannel
-            .invokeMethod<bool>('moveTaskToBack');
+        await _HomeScreenState._appControlChannel.invokeMethod<bool>(
+          'moveTaskToBack',
+        );
         return;
       } catch (e) {
-        debugPrint('moveTaskToBack failed: ${AppErrorMapper.resolve(
-          e,
-          fallbackMessage: fallbackMessage,
-        ).message}');
+        debugPrint(
+          'moveTaskToBack failed: ${AppErrorMapper.resolve(e, fallbackMessage: fallbackMessage).message}',
+        );
       }
     }
     await SystemNavigator.pop();
@@ -522,8 +519,10 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
   void _resetInactivityTimer() {
     if (!mounted) return;
     _inactivityTimer?.cancel();
-    _inactivityTimer =
-        Timer(_HomeScreenState._inactivityTimeout, _onInactivityTimeout);
+    _inactivityTimer = Timer(
+      _HomeScreenState._inactivityTimeout,
+      _onInactivityTimeout,
+    );
   }
 
   void _onInactivityTimeout() {
@@ -609,14 +608,18 @@ class _InactivityCountdownDialogState
               context.tr('home_khonghd_inactivity') != 'home_khonghd_inactivity'
                   ? context.tr('home_khonghd_inactivity')
                   : 'Không có hoạt động',
-              style:
-                  SLTheme.quicksand(fontSize: 16, fontWeight: FontWeight.w700),
+              style: SLTheme.quicksand(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],
       ),
       content: Text(
-        L10nService().format('home_autoclose_countdown', {'seconds': _remaining}),
+        L10nService().format('home_autoclose_countdown', {
+          'seconds': _remaining,
+        }),
         style: SLTheme.quicksand(fontSize: 14),
       ),
       actions: [
@@ -633,12 +636,15 @@ class _InactivityCountdownDialogState
         FilledButton(
           style: FilledButton.styleFrom(
             backgroundColor: SLColors.brandPink,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
           onPressed: () => Navigator.of(context).pop(true),
           child: Text(
-            L10nService().format('home_tieptuc_inactivity', {'seconds': _remaining}),
+            L10nService().format('home_tieptuc_inactivity', {
+              'seconds': _remaining,
+            }),
             style: SLTheme.quicksand(
               color: Colors.white,
               fontWeight: FontWeight.w700,
@@ -777,7 +783,11 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
           }
         }
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/home/widgets/home_shell/home_screen_notice_flows.dart: $error',
+      );
+    }
   }
 
   void _showExpiredProGraceDialog({
@@ -800,8 +810,11 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
                 color: SLColors.brandPink.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.warning_amber_rounded,
-                  color: SLColors.brandPink, size: 24),
+              child: const Icon(
+                Icons.warning_amber_rounded,
+                color: SLColors.brandPink,
+                size: 24,
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -840,7 +853,8 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
             style: FilledButton.styleFrom(
               backgroundColor: SLColors.brandPink,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             onPressed: () {
               Navigator.pop(ctx);
@@ -880,8 +894,11 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
                 color: const Color(0xFF00C853).withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.info_outline_rounded,
-                  color: Color(0xFF00C853), size: 24),
+              child: const Icon(
+                Icons.info_outline_rounded,
+                color: Color(0xFF00C853),
+                size: 24,
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -910,7 +927,8 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF00C853),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             onPressed: () => Navigator.pop(ctx),
             child: Text(

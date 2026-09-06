@@ -220,7 +220,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           setState(() => _targetBio = bio);
           return;
         }
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[SuppressedError] lib/views/chat/chat_detail_screen.dart: $error',
+        );
+      }
     }
   }
 

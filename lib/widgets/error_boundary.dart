@@ -121,7 +121,11 @@ class _DefaultErrorFallback extends StatelessWidget {
                       onPressed: () {
                         try {
                           SystemNavigator.pop();
-                        } catch (_) {}
+                        } catch (error) {
+                          debugPrint(
+                            '[SuppressedError] lib/widgets/error_boundary.dart: $error',
+                          );
+                        }
                       },
                       icon: const Icon(Icons.close_rounded, size: 16),
                       label: Text(l10n.translate('core_err_widget_close')),

@@ -6,10 +6,7 @@ import 'aurora_social_buttons.dart';
 class SocialAuthButtons extends StatelessWidget {
   final ValueChanged<String> onProviderTap;
 
-  const SocialAuthButtons({
-    super.key,
-    required this.onProviderTap,
-  });
+  const SocialAuthButtons({super.key, required this.onProviderTap});
 
   @override
   Widget build(BuildContext context) {

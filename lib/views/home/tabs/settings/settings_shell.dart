@@ -419,27 +419,36 @@ extension _SettingsTabShell on _SettingsTabState {
         child: Row(
           children: [
             if (!widget.embedded)
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.08)
-                        : _kSettingsHeaderSurface,
+              Semantics(
+                button: true,
+                label: context.tr('p6_back'),
+                child: Tooltip(
+                  message: context.tr('p6_back'),
+                  excludeFromSemantics: true,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(context),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.12)
-                          : _kSettingsHeaderBorder,
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.08)
+                            : _kSettingsHeaderSurface,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.12)
+                              : _kSettingsHeaderBorder,
+                        ),
+                        boxShadow: SLShadow.subtle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: SLColors.primaryActive,
+                        size: 15,
+                      ),
                     ),
-                    boxShadow: SLShadow.subtle,
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    color: SLColors.primaryActive,
-                    size: 15,
                   ),
                 ),
               )

@@ -94,10 +94,9 @@ class WidgetService {
         await refreshWidgetShell();
       }
     } catch (error) {
-      debugPrint('Widget bootstrap error: ${AppErrorMapper.resolve(
-        error,
-        fallbackMessage: 'Không thể khởi tạo widget lúc này.',
-      ).message}');
+      debugPrint(
+        'Widget bootstrap error: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể khởi tạo widget lúc này.').message}',
+      );
     }
   }
 
@@ -207,14 +206,11 @@ class WidgetService {
   }
 
   static ({bool showDiaryOnWidget, bool heartAnimated})
-      normalizeWidgetDisplayMode({
+  normalizeWidgetDisplayMode({
     required bool showDiaryOnWidget,
     required bool heartAnimated,
   }) {
-    return (
-      showDiaryOnWidget: showDiaryOnWidget,
-      heartAnimated: true,
-    );
+    return (showDiaryOnWidget: showDiaryOnWidget, heartAnimated: true);
   }
 
   static String normalizeWidgetStyleKey(String? value) {
@@ -353,8 +349,9 @@ class WidgetService {
     final storedWidgetStyleKey = await HomeWidget.getWidgetData<String>(
       'widgetStyleKey',
     );
-    final normalizedWidgetStyleKey =
-        normalizeWidgetStyleKey(storedWidgetStyleKey);
+    final normalizedWidgetStyleKey = normalizeWidgetStyleKey(
+      storedWidgetStyleKey,
+    );
     if (storedWidgetStyleKey != normalizedWidgetStyleKey) {
       await HomeWidget.saveWidgetData<String>(
         'widgetStyleKey',
@@ -414,10 +411,9 @@ class WidgetService {
         }
       }
     } catch (e) {
-      debugPrint('Widget cleanup error ($prefix): ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể dọn dữ liệu widget lúc này.',
-      ).message}');
+      debugPrint(
+        'Widget cleanup error ($prefix): ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể dọn dữ liệu widget lúc này.').message}',
+      );
     }
   }
 
@@ -439,8 +435,9 @@ class WidgetService {
       return;
     }
 
-    final limitedUrls =
-        urls.take(maxDiaryImagesForWidget).toList(growable: false);
+    final limitedUrls = urls
+        .take(maxDiaryImagesForWidget)
+        .toList(growable: false);
     final nextSignature = _stableFileToken(limitedUrls.join('|'));
     final savedSignature =
         (await _readWidgetData<String>('diaryImageUrlSignature'))?.trim() ?? '';
@@ -574,10 +571,11 @@ class WidgetService {
       );
       await _saveWidgetDataIfChanged<String>('startDateRaw', loveDate.trim());
       await _saveWidgetDataIfChanged<String>(
-          'dayUnitText',
-          daysText.trim().replaceFirst(RegExp(r'^\d+\s*'), '').trim().isEmpty
-              ? 'ngày'
-              : daysText.trim().replaceFirst(RegExp(r'^\d+\s*'), '').trim());
+        'dayUnitText',
+        daysText.trim().replaceFirst(RegExp(r'^\d+\s*'), '').trim().isEmpty
+            ? 'ngày'
+            : daysText.trim().replaceFirst(RegExp(r'^\d+\s*'), '').trim(),
+      );
       // Battery of each user (partner perspective)
       if (battery1 >= 0) {
         await _saveWidgetDataIfChanged<int>('battery1', battery1);
@@ -661,10 +659,9 @@ class WidgetService {
 
       await _dispatchWidgetUpdate();
     } catch (e) {
-      debugPrint('Error updating widget: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể cập nhật widget lúc này.',
-      ).message}');
+      debugPrint(
+        'Error updating widget: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể cập nhật widget lúc này.').message}',
+      );
     }
   }
 
@@ -674,10 +671,9 @@ class WidgetService {
       await _saveWidgetDataIfChanged<String>('bgTheme', bgTheme);
       await _dispatchWidgetUpdate();
     } catch (e) {
-      debugPrint('Error updating widget theme: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể cập nhật giao diện widget lúc này.',
-      ).message}');
+      debugPrint(
+        'Error updating widget theme: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể cập nhật giao diện widget lúc này.').message}',
+      );
     }
   }
 
@@ -742,10 +738,9 @@ class WidgetService {
       );
       await _dispatchWidgetUpdate();
     } catch (e) {
-      debugPrint('Error updating widget appearance: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể cập nhật giao diện widget lúc này.',
-      ).message}');
+      debugPrint(
+        'Error updating widget appearance: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể cập nhật giao diện widget lúc này.').message}',
+      );
     }
   }
 
@@ -777,10 +772,9 @@ class WidgetService {
         return sharedPath;
       }
     } catch (e) {
-      debugPrint('Widget shared container copy error: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể sao chép dữ liệu widget sang vùng chia sẻ.',
-      ).message}');
+      debugPrint(
+        'Widget shared container copy error: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể sao chép dữ liệu widget sang vùng chia sẻ.').message}',
+      );
     }
 
     return sourcePath;
@@ -826,14 +820,13 @@ class WidgetService {
       // 💾 Lưu ảnh đã compress
       await file.writeAsBytes(compressedBytes, flush: true);
       debugPrint(
-          '✅ Widget image saved: ${(compressedBytes.length / 1024).toStringAsFixed(2)}KB');
+        '✅ Widget image saved: ${(compressedBytes.length / 1024).toStringAsFixed(2)}KB',
+      );
       return file.path;
     } catch (e) {
       debugPrint(
-          '❌ Error downloading/compressing image: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể tải hoặc nén ảnh widget.',
-      ).message}');
+        '❌ Error downloading/compressing image: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể tải hoặc nén ảnh widget.').message}',
+      );
     }
     return null;
   }
@@ -869,19 +862,20 @@ class WidgetService {
           );
           await file.writeAsBytes(compressedBytes, flush: true);
           debugPrint(
-              '✅ Widget avatar compressed and saved: ${(compressedBytes.length / 1024).toStringAsFixed(2)}KB');
+            '✅ Widget avatar compressed and saved: ${(compressedBytes.length / 1024).toStringAsFixed(2)}KB',
+          );
         } catch (compressErr) {
           debugPrint(
-              '⚠️ Error compressing widget avatar, fallback to raw: $compressErr');
+            '⚠️ Error compressing widget avatar, fallback to raw: $compressErr',
+          );
           await file.writeAsBytes(bytes, flush: true);
         }
         return file.path;
       }
     } catch (e) {
-      debugPrint('Error downloading image for widget: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể tải ảnh cho widget.',
-      ).message}');
+      debugPrint(
+        'Error downloading image for widget: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể tải ảnh cho widget.').message}',
+      );
     }
     return null;
   }
@@ -889,8 +883,9 @@ class WidgetService {
   static Future<void> checkAndProcessPendingWidgetActions() async {
     if (kIsWeb || !Platform.isIOS) return;
     try {
-      final actionStr =
-          await HomeWidget.getWidgetData<String>('pendingWidgetAction');
+      final actionStr = await HomeWidget.getWidgetData<String>(
+        'pendingWidgetAction',
+      );
       if (actionStr == null || actionStr.trim().isEmpty) return;
 
       final parts = actionStr.split('_');
@@ -910,26 +905,28 @@ class WidgetService {
       final houseId = await HouseService().getCurrentHouseId();
       if (houseId == null || houseId.trim().isEmpty) return;
 
-      final currentRole =
-          prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
+      final currentRole = prefs.getString('il_role') == 'user2'
+          ? 'user2'
+          : 'user1';
       final partnerRole = currentRole == 'user1' ? 'user2' : 'user1';
 
       final data = await HouseService().getHouseSettings(houseId);
       if (data == null) return;
-      final myName = (currentRole == 'user1' ? data['nameU1'] : data['nameU2'])
+      final myName =
+          (currentRole == 'user1' ? data['nameU1'] : data['nameU2'])
               ?.toString()
               .trim() ??
           'Bạn';
       final partnerName =
           (partnerRole == 'user1' ? data['nameU1'] : data['nameU2'])
-                  ?.toString()
-                  .trim() ??
-              'Người ấy';
+              ?.toString()
+              .trim() ??
+          'Người ấy';
       final myAvatar =
           (currentRole == 'user1' ? data['avtUser1'] : data['avtUser2'])
-                  ?.toString()
-                  .trim() ??
-              '';
+              ?.toString()
+              .trim() ??
+          '';
 
       final String title;
       final String body;
@@ -965,13 +962,11 @@ class WidgetService {
       };
 
       final dbRef = FirebaseDatabase.instance.ref();
-      final inboxRef =
-          dbRef.child('houses/$houseId/partner_inbox/$partnerRole').push();
+      final inboxRef = dbRef
+          .child('houses/$houseId/partner_inbox/$partnerRole')
+          .push();
       await dbRef.child('houses/$houseId/alerts').push().set(payload);
-      await inboxRef.set({
-        ...payload,
-        'timestamp': ServerValue.timestamp,
-      });
+      await inboxRef.set({...payload, 'timestamp': ServerValue.timestamp});
       await dbRef.child('houses/$houseId/interactions/miss').set({
         ...payload,
         'timestamp': ServerValue.timestamp,
@@ -989,11 +984,15 @@ class WidgetService {
             'houseId': houseId,
           },
         );
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('Widget partner notification failed: $error');
+      }
 
       try {
         await DailyQuestService().recordProgress('partner_interaction');
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('Widget daily quest progress failed: $error');
+      }
 
       await prefs.setString('il_last_processed_widget_action', actionStr);
       await HomeWidget.saveWidgetData<String>('pendingWidgetAction', '');
@@ -1011,14 +1010,12 @@ class WidgetService {
   }) async {
     if (kIsWeb || !Platform.isIOS) return null;
     try {
-      final String? activityId = await _iosWidgetBridge.invokeMethod<String>(
-        'startLiveActivity',
-        <String, dynamic>{
-          'title': title,
-          'label': label,
-          'endTimeMs': endTime.millisecondsSinceEpoch.toDouble(),
-        },
-      );
+      final String? activityId = await _iosWidgetBridge
+          .invokeMethod<String>('startLiveActivity', <String, dynamic>{
+            'title': title,
+            'label': label,
+            'endTimeMs': endTime.millisecondsSinceEpoch.toDouble(),
+          });
       return activityId;
     } catch (e) {
       debugPrint('Error starting Live Activity: $e');
@@ -1033,14 +1030,12 @@ class WidgetService {
   }) async {
     if (kIsWeb || !Platform.isIOS) return false;
     try {
-      final bool? success = await _iosWidgetBridge.invokeMethod<bool>(
-        'updateLiveActivity',
-        <String, dynamic>{
-          'activityId': activityId,
-          'label': label,
-          'endTimeMs': endTime.millisecondsSinceEpoch.toDouble(),
-        },
-      );
+      final bool? success = await _iosWidgetBridge
+          .invokeMethod<bool>('updateLiveActivity', <String, dynamic>{
+            'activityId': activityId,
+            'label': label,
+            'endTimeMs': endTime.millisecondsSinceEpoch.toDouble(),
+          });
       return success ?? false;
     } catch (e) {
       debugPrint('Error updating Live Activity: $e');
@@ -1048,16 +1043,12 @@ class WidgetService {
     }
   }
 
-  static Future<bool> endLiveActivity({
-    required String activityId,
-  }) async {
+  static Future<bool> endLiveActivity({required String activityId}) async {
     if (kIsWeb || !Platform.isIOS) return false;
     try {
       final bool? success = await _iosWidgetBridge.invokeMethod<bool>(
         'endLiveActivity',
-        <String, dynamic>{
-          'activityId': activityId,
-        },
+        <String, dynamic>{'activityId': activityId},
       );
       return success ?? false;
     } catch (e) {
@@ -1066,13 +1057,12 @@ class WidgetService {
     }
   }
 
-  static Future<void> syncCycleWidgetData({
-    required String houseId,
-  }) async {
+  static Future<void> syncCycleWidgetData({required String houseId}) async {
     if (kIsWeb || !Platform.isAndroid) return;
     try {
-      final hasConsent = await SharedPreferences.getInstance()
-          .then((prefs) => prefs.getBool('il_health_consent') ?? false);
+      final hasConsent = await SharedPreferences.getInstance().then(
+        (prefs) => prefs.getBool('il_health_consent') ?? false,
+      );
       if (!hasConsent) {
         await _saveWidgetDataIfChanged<bool>('cycle_enabled', false);
         await HomeWidget.updateWidget(
@@ -1123,13 +1113,12 @@ class WidgetService {
     }
   }
 
-  static Future<void> syncCalendarWidgetData({
-    required String houseId,
-  }) async {
+  static Future<void> syncCalendarWidgetData({required String houseId}) async {
     if (kIsWeb || !Platform.isAndroid) return;
     try {
-      final snap =
-          await FirebaseDatabase.instance.ref('houses/$houseId/calendar').get();
+      final snap = await FirebaseDatabase.instance
+          .ref('houses/$houseId/calendar')
+          .get();
       if (!snap.exists || snap.value is! Map) {
         await _saveWidgetDataIfChanged<bool>('calendar_enabled', false);
         await HomeWidget.updateWidget(
@@ -1140,7 +1129,8 @@ class WidgetService {
       }
 
       final data = Map<String, dynamic>.from(
-          Map<dynamic, dynamic>.from(snap.value as Map));
+        Map<dynamic, dynamic>.from(snap.value as Map),
+      );
       final today = DateTime.now();
       final todayMidnight = DateTime(today.year, today.month, today.day);
 
@@ -1160,16 +1150,17 @@ class WidgetService {
         if (eventDate.isBefore(todayMidnight)) return;
 
         final eventsMap = Map<String, dynamic>.from(
-            Map<dynamic, dynamic>.from(dateEventsRaw));
+          Map<dynamic, dynamic>.from(dateEventsRaw),
+        );
         final sortedList = eventsMap.entries.map((e) {
           final val = Map<String, dynamic>.from(
-              Map<dynamic, dynamic>.from(e.value as Map));
+            Map<dynamic, dynamic>.from(e.value as Map),
+          );
           return {
             'title': val['title']?.toString() ?? '',
             'ts': val['ts'] as int? ?? 0,
           };
-        }).toList()
-          ..sort((a, b) => (a['ts'] as int).compareTo(b['ts'] as int));
+        }).toList()..sort((a, b) => (a['ts'] as int).compareTo(b['ts'] as int));
 
         final titles = sortedList
             .map((item) => item['title'] as String)
@@ -1210,7 +1201,7 @@ class WidgetService {
         'Thứ Năm',
         'Thứ Sáu',
         'Thứ Bảy',
-        'Chủ Nhật'
+        'Chủ Nhật',
       ];
       final weekdayStr = weekdays[nearestDate!.weekday - 1];
       final dateLabel =
@@ -1220,10 +1211,14 @@ class WidgetService {
 
       await _saveWidgetDataIfChanged<bool>('calendar_enabled', true);
       await _saveWidgetDataIfChanged<String>(
-          'calendar_countdown', countdownText);
+        'calendar_countdown',
+        countdownText,
+      );
       await _saveWidgetDataIfChanged<String>('calendar_next_date', dateLabel);
       await _saveWidgetDataIfChanged<String>(
-          'calendar_events_text', eventsText);
+        'calendar_events_text',
+        eventsText,
+      );
 
       await HomeWidget.updateWidget(
         androidName: androidWidgetCalendarName,
@@ -1249,9 +1244,7 @@ class WidgetService {
     }
   }
 
-  static Future<void> syncSoulEventWidgetData({
-    required String houseId,
-  }) async {
+  static Future<void> syncSoulEventWidgetData({required String houseId}) async {
     if (kIsWeb) return;
     await ensureInitialized();
 
@@ -1267,19 +1260,28 @@ class WidgetService {
 
         final now = DateTime.now();
         final today = DateTime(now.year, now.month, now.day);
-        DateTime? parsedDate =
-            DateInputUtils.parse(customDate, firstYear: 1900, lastYear: 2100);
+        DateTime? parsedDate = DateInputUtils.parse(
+          customDate,
+          firstYear: 1900,
+          lastYear: 2100,
+        );
 
         String daysStr = '0';
         String labelStr = 'ngày nữa';
         if (parsedDate != null) {
-          var nextDate =
-              DateTime(parsedDate.year, parsedDate.month, parsedDate.day);
+          var nextDate = DateTime(
+            parsedDate.year,
+            parsedDate.month,
+            parsedDate.day,
+          );
           if (nextDate.isBefore(today)) {
             nextDate = DateTime(today.year, parsedDate.month, parsedDate.day);
             if (nextDate.isBefore(today)) {
-              nextDate =
-                  DateTime(today.year + 1, parsedDate.month, parsedDate.day);
+              nextDate = DateTime(
+                today.year + 1,
+                parsedDate.month,
+                parsedDate.day,
+              );
             }
           }
           final diff = nextDate.difference(today).inDays;
@@ -1293,10 +1295,14 @@ class WidgetService {
           }
         }
 
-        await _saveWidgetDataIfChanged('se_title',
-            customTitle.isEmpty ? 'Sự kiện & Kỷ niệm' : customTitle);
         await _saveWidgetDataIfChanged(
-            'se_date', customDate.isEmpty ? '--/--/----' : customDate);
+          'se_title',
+          customTitle.isEmpty ? 'Sự kiện & Kỷ niệm' : customTitle,
+        );
+        await _saveWidgetDataIfChanged(
+          'se_date',
+          customDate.isEmpty ? '--/--/----' : customDate,
+        );
         await _saveWidgetDataIfChanged('se_days', daysStr);
         await _saveWidgetDataIfChanged('se_label', labelStr);
         await _saveWidgetDataIfChanged('se_color', customColor);
@@ -1351,8 +1357,10 @@ class WidgetService {
         final isToday = nextDate.isAtSameMomentAs(today);
 
         await _saveWidgetDataIfChanged('se_title', topEvent.title);
-        await _saveWidgetDataIfChanged('se_date',
-            '${nextDate.day.toString().padLeft(2, '0')}/${nextDate.month.toString().padLeft(2, '0')}/${nextDate.year}');
+        await _saveWidgetDataIfChanged(
+          'se_date',
+          '${nextDate.day.toString().padLeft(2, '0')}/${nextDate.month.toString().padLeft(2, '0')}/${nextDate.year}',
+        );
 
         if (isToday) {
           await _saveWidgetDataIfChanged('se_days', 'HÔM NAY');
@@ -1362,8 +1370,9 @@ class WidgetService {
           await _saveWidgetDataIfChanged('se_label', 'ngày nữa');
         }
 
-        final colorHex =
-            topEvent.colorHex.isNotEmpty ? topEvent.colorHex : '#FF4D94';
+        final colorHex = topEvent.colorHex.isNotEmpty
+            ? topEvent.colorHex
+            : '#FF4D94';
         await _saveWidgetDataIfChanged('se_color', colorHex);
       } else {
         await _saveWidgetDataIfChanged('se_title', 'Sự kiện & Kỷ niệm');
@@ -1381,7 +1390,8 @@ class WidgetService {
       }
     } catch (e) {
       debugPrint(
-          'Error syncing soul event widget: \${AppErrorMapper.resolve(e).message}');
+        'Error syncing soul event widget: \${AppErrorMapper.resolve(e).message}',
+      );
     }
   }
 
@@ -1412,7 +1422,8 @@ class WidgetService {
       }
     } catch (e) {
       debugPrint(
-          'Error syncing soul merge widget: ${AppErrorMapper.resolve(e).message}');
+        'Error syncing soul merge widget: ${AppErrorMapper.resolve(e).message}',
+      );
     }
   }
 
@@ -1432,7 +1443,9 @@ class WidgetService {
       await _saveWidgetDataIfChanged<String>('sleep_partner_name', partnerName);
       await _saveWidgetDataIfChanged<String>('sleep_my_status', myStatus);
       await _saveWidgetDataIfChanged<String>(
-          'sleep_partner_status', partnerStatus);
+        'sleep_partner_status',
+        partnerStatus,
+      );
       await _saveWidgetDataIfChanged<String>('sleep_my_time', myTime);
       await _saveWidgetDataIfChanged<String>('sleep_partner_time', partnerTime);
       await _saveWidgetDataIfChanged<String>('sleep_summary', summary);

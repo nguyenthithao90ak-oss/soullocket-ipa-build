@@ -9,29 +9,38 @@ extension HeaderEditorExt on _CountdownModeEditorScreenState {
     return [
       Row(
         children: [
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => Navigator.of(context).pop(),
-              borderRadius: BorderRadius.circular(15),
-              child: Ink(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(
-                    alpha: themeData.isDark ? 0.14 : 0.82,
-                  ),
+          Tooltip(
+            message: context.tr('p7_back'),
+            excludeFromSemantics: true,
+            child: Semantics(
+              button: true,
+              label: context.tr('p7_back'),
+              excludeSemantics: true,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => Navigator.of(context).pop(),
                   borderRadius: BorderRadius.circular(15),
-                  border: Border.all(
-                    color: Colors.white.withValues(
-                      alpha: themeData.isDark ? 0.22 : 0.94,
+                  child: Ink(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(
+                        alpha: themeData.isDark ? 0.14 : 0.82,
+                      ),
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(
+                        color: Colors.white.withValues(
+                          alpha: themeData.isDark ? 0.22 : 0.94,
+                        ),
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.arrow_back_rounded,
+                      color: themeData.foreground,
+                      size: 22,
                     ),
                   ),
-                ),
-                child: Icon(
-                  Icons.arrow_back_rounded,
-                  color: themeData.foreground,
-                  size: 22,
                 ),
               ),
             ),

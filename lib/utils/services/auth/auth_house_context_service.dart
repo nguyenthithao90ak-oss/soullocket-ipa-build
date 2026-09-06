@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:soullocket_app/utils/services/presence_service.dart';
@@ -66,7 +67,9 @@ class AuthHouseContextService {
         _memHouseIdTime = DateTime.now();
         return cached;
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[AuthHouseContext] Không đọc được house cache: $error');
+    }
     return null;
   }
 
@@ -171,7 +174,9 @@ class AuthHouseContextService {
           }
         }
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[AuthHouseContext] Không tải được relationship mode: $error');
+    }
 
     final finalRemoteMode = remoteMode ?? pendingMode;
     if (finalRemoteMode != null) {
@@ -361,7 +366,11 @@ class AuthHouseContextService {
         if (localRole == 'user1' || localRole == 'user2') {
           try {
             await _db.child('houses/$houseId/members/$uid/role').set(localRole);
-          } catch (_) {}
+          } catch (error) {
+            debugPrint(
+              '[AuthHouseContext] Không đồng bộ được member role: $error',
+            );
+          }
           return;
         }
 
@@ -372,7 +381,9 @@ class AuthHouseContextService {
           resolvedRole,
         );
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[AuthHouseContext] Không khôi phục được role: $error');
+    }
   }
 
   Future<String?> resolveCurrentHouseId({firebase_auth.User? user}) async {
@@ -437,7 +448,9 @@ class AuthHouseContextService {
         await _restoreRoleFromDatabase(primaryValue, resolvedUser.uid, prefs);
         return primaryValue;
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[AuthHouseContext] Không đọc được houseId chính: $error');
+    }
 
     try {
       final legacySnap = await _db
@@ -462,7 +475,9 @@ class AuthHouseContextService {
         await _restoreRoleFromDatabase(legacyValue, resolvedUser.uid, prefs);
         return legacyValue;
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[AuthHouseContext] Không đọc được houseId legacy: $error');
+    }
 
     return null;
   }

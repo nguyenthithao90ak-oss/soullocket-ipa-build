@@ -126,7 +126,9 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
             ),
           );
         }
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[MainHome] Invalid anniversary date: $error');
+      }
     }
 
     // 2. Sinh nhật
@@ -171,7 +173,9 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
             type: 'birthday',
           ),
         );
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[MainHome] Invalid birthday date: $error');
+      }
     }
 
     addBirthday(dobU1, nameU1);
@@ -281,6 +285,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
       child: _HomeScrapbookCard(
         accentColor: SLColors.thread,
         adornment: _HomeCardAdornment.postageStamp,
+        visualStyle: _HomeCardVisualStyle.milestone,
         padding: SLSpacing.all20,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -302,11 +307,11 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                       ),
                     ],
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(3.0),
-                    child: Image.asset(
+                  child: const Padding(
+                    padding: EdgeInsets.all(3.0),
+                    child: HomeStickerAsset(
                       'assets/icons/cute_3d/icon_bubble_lol_cloud.png',
-                      fit: BoxFit.contain,
+                      motion: SoulLocketStickerMotion.bounce,
                     ),
                   ),
                 ),
@@ -640,7 +645,10 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                     ),
                   ],
                 ),
-                child: Image.asset(imageAsset, fit: BoxFit.contain),
+                child: HomeStickerAsset(
+                  imageAsset,
+                  motion: SoulLocketStickerMotion.sway,
+                ),
               )
             else
               Text(emoji, style: const TextStyle(fontSize: 18)),
@@ -690,8 +698,9 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
       showHint: _showMapCardFirstTapHint,
       onTap: _handleMapCardTap,
       child: _HomeScrapbookCard(
-        accentColor: SLColors.secondary,
+        accentColor: const Color(0xFF3399D4),
         adornment: _HomeCardAdornment.threadKnot,
+        visualStyle: _HomeCardVisualStyle.map,
         padding: SLSpacing.all20,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -965,6 +974,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
       child: _HomeScrapbookCard(
         accentColor: SLColors.accentPurple,
         adornment: _HomeCardAdornment.heartPin,
+        visualStyle: _HomeCardVisualStyle.insight,
         padding: SLSpacing.all20,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

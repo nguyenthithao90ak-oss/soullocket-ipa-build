@@ -4,6 +4,7 @@ import 'package:video_player/video_player.dart';
 import '../../../../../utils/services/private_media_url_service.dart';
 import '../../../../../utils/services/cloudflare_r2_service.dart';
 import '../../../../../utils/app_cache_manager.dart';
+
 class MemoryZoomDraggableWrapper extends StatefulWidget {
   final Widget child;
   final VoidCallback onDismiss;
@@ -37,7 +38,9 @@ class _MemoryZoomDraggableWrapperState extends State<MemoryZoomDraggableWrapper>
   void initState() {
     super.initState();
     _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 280));
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+    );
     _controller.addListener(() {
       setState(() {
         final double curveValue = CurvedAnimation(
@@ -101,7 +104,7 @@ class MemoryViewerPage extends StatefulWidget {
   final ValueNotifier<bool> isZoomedInNotifier;
   final VoidCallback onLongPress;
   final ImageProvider<Object> Function(String, {int? maxWidth})
-      imageProviderBuilder;
+  imageProviderBuilder;
 
   const MemoryViewerPage({
     super.key,
@@ -179,8 +182,10 @@ class _MemoryViewerPageState extends State<MemoryViewerPage> {
         valueListenable: _panEnabledVN,
         builder: (context, panEnabled, _) {
           return AnimatedBuilder(
-            animation: Listenable.merge(
-                [widget.dragOffsetNotifier, widget.dragScaleNotifier]),
+            animation: Listenable.merge([
+              widget.dragOffsetNotifier,
+              widget.dragScaleNotifier,
+            ]),
             builder: (context, child) {
               return Transform.translate(
                 offset: widget.dragOffsetNotifier.value,
@@ -191,14 +196,16 @@ class _MemoryViewerPageState extends State<MemoryViewerPage> {
                     panEnabled: panEnabled,
                     minScale: 1.0,
                     maxScale: 4.5,
-                    boundaryMargin:
-                        panEnabled ? const EdgeInsets.all(24) : EdgeInsets.zero,
+                    boundaryMargin: panEnabled
+                        ? const EdgeInsets.all(24)
+                        : EdgeInsets.zero,
                     clipBehavior: Clip.none,
                     interactionEndFrictionCoefficient: 0.00008,
                     child: _isVideo
                         ? _MemoryVideoWidget(
                             url: widget.item['url']?.toString() ?? '',
-                            houseId: widget.item['houseId']?.toString() ??
+                            houseId:
+                                widget.item['houseId']?.toString() ??
                                 widget.item['house_id']?.toString(),
                             memoryId: widget.item['id']?.toString(),
                           )
@@ -213,9 +220,9 @@ class _MemoryViewerPageState extends State<MemoryViewerPage> {
                               gaplessPlayback: true,
                               errorBuilder: (context, error, stackTrace) =>
                                   const Icon(
-                                Icons.broken_image,
-                                color: Colors.grey,
-                              ),
+                                    Icons.broken_image,
+                                    color: Colors.grey,
+                                  ),
                             ),
                           ),
                   ),
@@ -234,11 +241,7 @@ class _MemoryVideoWidget extends StatefulWidget {
   final String? houseId;
   final String? memoryId;
 
-  const _MemoryVideoWidget({
-    required this.url,
-    this.houseId,
-    this.memoryId,
-  });
+  const _MemoryVideoWidget({required this.url, this.houseId, this.memoryId});
 
   @override
   State<_MemoryVideoWidget> createState() => _MemoryVideoWidgetState();
@@ -270,7 +273,11 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
             kind: 'memory_image',
           );
           playUrl = res.url;
-        } catch (_) {}
+        } catch (error) {
+          debugPrint(
+            '[SuppressedError] lib/views/home/tabs/diary/widgets/memory_viewer_page.dart: $error',
+          );
+        }
       }
 
       if (playUrl.isEmpty) {
@@ -282,18 +289,13 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
 
       VideoPlayerController controller;
       try {
-        File? cachedFile;
-        final fileInfo = await AppCacheManager.instance.getFileFromCache(playUrl);
-        if (fileInfo != null) {
-          cachedFile = fileInfo.file;
-        } else {
-          cachedFile = await AppCacheManager.instance.getSingleFile(playUrl);
-        }
-        if (cachedFile != null) {
-          controller = VideoPlayerController.file(cachedFile);
-        } else {
-          controller = VideoPlayerController.networkUrl(Uri.parse(playUrl));
-        }
+        final fileInfo = await AppCacheManager.instance.getFileFromCache(
+          playUrl,
+        );
+        final cachedFile =
+            fileInfo?.file ??
+            await AppCacheManager.instance.getSingleFile(playUrl);
+        controller = VideoPlayerController.file(cachedFile);
       } catch (_) {
         controller = VideoPlayerController.networkUrl(Uri.parse(playUrl));
       }
@@ -320,18 +322,13 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
           final freshUri = Uri.parse(freshPlayUrl);
           VideoPlayerController controller;
           try {
-            File? cachedFile;
-            final fileInfo = await AppCacheManager.instance.getFileFromCache(freshPlayUrl);
-            if (fileInfo != null) {
-              cachedFile = fileInfo.file;
-            } else {
-              cachedFile = await AppCacheManager.instance.getSingleFile(freshPlayUrl);
-            }
-            if (cachedFile != null) {
-              controller = VideoPlayerController.file(cachedFile);
-            } else {
-              controller = VideoPlayerController.networkUrl(freshUri);
-            }
+            final fileInfo = await AppCacheManager.instance.getFileFromCache(
+              freshPlayUrl,
+            );
+            final cachedFile =
+                fileInfo?.file ??
+                await AppCacheManager.instance.getSingleFile(freshPlayUrl);
+            controller = VideoPlayerController.file(cachedFile);
           } catch (_) {
             controller = VideoPlayerController.networkUrl(freshUri);
           }
@@ -343,7 +340,11 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
             controller.play();
             return;
           }
-        } catch (_) {}
+        } catch (error) {
+          debugPrint(
+            '[SuppressedError] lib/views/home/tabs/diary/widgets/memory_viewer_page.dart: $error',
+          );
+        }
       }
       if (mounted) setState(() => _hasError = true);
     }
@@ -362,11 +363,18 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.white, size: 48),
+            const Icon(
+              Icons.error_outline_rounded,
+              color: Colors.white,
+              size: 48,
+            ),
             const SizedBox(height: 8),
             const Text(
               'Không thể phát video',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 12),
             ElevatedButton.icon(
@@ -400,11 +408,18 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline_rounded, color: Colors.white, size: 48),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: Colors.white,
+                  size: 48,
+                ),
                 const SizedBox(height: 8),
                 const Text(
                   'Không thể phát video',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 ElevatedButton.icon(
@@ -453,8 +468,9 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
                       )
                     : Center(
                         child: AspectRatio(
-                          aspectRatio:
-                              value.aspectRatio > 0 ? value.aspectRatio : 16 / 9,
+                          aspectRatio: value.aspectRatio > 0
+                              ? value.aspectRatio
+                              : 16 / 9,
                           child: VideoPlayer(controller),
                         ),
                       ),

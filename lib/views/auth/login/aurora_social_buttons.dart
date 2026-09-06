@@ -1,140 +1,69 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'auth_visual_style.dart';
 
 class AuroraSocialButtons extends StatelessWidget {
   final ValueChanged<String> onProviderTap;
-
-  const AuroraSocialButtons({super.key, required this.onProviderTap});
+  final bool enabled;
+  const AuroraSocialButtons({
+    super.key,
+    required this.onProviderTap,
+    this.enabled = true,
+  });
 
   @override
   Widget build(BuildContext context) {
-    const providers = <_ProviderData>[
-      _ProviderData(
-        id: 'Google',
-        caption: 'Google',
-        kind: _ProviderKind.google,
-        foreground: Color(0xFF54464B),
-        background: Colors.white,
-        border: Color(0xFFECDDE2),
-        shadow: Color(0xFFE5889E),
-      ),
-      _ProviderData(
-        id: 'Apple',
-        caption: 'Apple',
-        kind: _ProviderKind.apple,
-        foreground: Color(0xFF1E1B1D),
-        background: Colors.white,
-        border: Color(0xFFECDDE2),
-        shadow: Color(0xFFE5889E),
-      ),
-    ];
-
+    final style = AuthVisualStyle.of(context);
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        for (var i = 0; i < providers.length; i++) ...[
-          _SocialIconButton(
-            provider: providers[i],
-            onTap: () => onProviderTap(providers[i].id),
+        for (final provider in ['Google', 'Apple']) ...[
+          if (provider == 'Apple') const SizedBox(width: 12),
+          Expanded(
+            child: Tooltip(
+              message: L10nService().format('auth_refresh_social_provider', {
+                'provider': provider,
+              }),
+              child: OutlinedButton(
+                onPressed: enabled ? () => onProviderTap(provider) : null,
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: style.surface,
+                  foregroundColor: style.ink,
+                  side: BorderSide(color: style.border),
+                  minimumSize: const Size(0, 52),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  textStyle: style.text(size: 14, weight: FontWeight.w500),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ExcludeSemantics(
+                      child: SvgPicture.string(
+                        provider == 'Google' ? _googleLogo : _appleLogo,
+                        width: 20,
+                        height: 20,
+                        colorFilter: provider == 'Apple'
+                            ? ColorFilter.mode(style.ink, BlendMode.srcIn)
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Flexible(child: Text(provider)),
+                  ],
+                ),
+              ),
+            ),
           ),
-          if (i != providers.length - 1) const SizedBox(width: 18),
         ],
       ],
     );
   }
-}
-
-class _SocialIconButton extends StatefulWidget {
-  final _ProviderData provider;
-  final VoidCallback onTap;
-
-  const _SocialIconButton({required this.provider, required this.onTap});
-
-  @override
-  State<_SocialIconButton> createState() => _SocialIconButtonState();
-}
-
-class _SocialIconButtonState extends State<_SocialIconButton> {
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = L10nService();
-    final tooltipText =
-        '${l10n.translate('Tiếp tục với')} ${widget.provider.caption}';
-
-    return Tooltip(
-      message: tooltipText,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTapDown: (_) => setState(() => _pressed = true),
-        onTapCancel: () => setState(() => _pressed = false),
-        onTapUp: (_) {
-          setState(() => _pressed = false);
-          widget.onTap();
-        },
-        child: AnimatedScale(
-          scale: _pressed ? 0.91 : 1.0,
-          duration: const Duration(milliseconds: 110),
-          curve: Curves.easeOutCubic,
-          child: Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: widget.provider.background,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: widget.provider.border,
-                width: 1.25,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: widget.provider.shadow.withValues(alpha: 0.12),
-                  blurRadius: 14,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Center(
-              child: _providerIcon(widget.provider.kind),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _providerIcon(_ProviderKind kind) {
-    switch (kind) {
-      case _ProviderKind.google:
-        return SvgPicture.string(_googleLogo, width: 24, height: 24);
-      case _ProviderKind.apple:
-        return SvgPicture.string(_appleLogo, width: 23, height: 23);
-    }
-  }
-}
-
-enum _ProviderKind { google, apple }
-
-class _ProviderData {
-  final String id;
-  final String caption;
-  final _ProviderKind kind;
-  final Color foreground;
-  final Color background;
-  final Color border;
-  final Color shadow;
-
-  const _ProviderData({
-    required this.id,
-    required this.caption,
-    required this.kind,
-    required this.foreground,
-    required this.background,
-    required this.border,
-    required this.shadow,
-  });
 }
 
 const String _googleLogo = '''

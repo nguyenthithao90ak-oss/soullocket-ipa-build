@@ -17,7 +17,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
   Future<void> _rememberInteractionRotationType(String type) async {
     final normalized = type.trim();
     if (normalized.isEmpty) return;
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     await prefs.setString(_kInteractionRotationLastTypePrefsKey, normalized);
   }
@@ -52,7 +53,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
 
     if (_rotationQueue.isNotEmpty) {
       final nextType = _rotationQueue.removeAt(0);
-      final nextPreset = _maybePresetForInteractionType(nextType) ??
+      final nextPreset =
+          _maybePresetForInteractionType(nextType) ??
           _defaultSmartInteractionPreset();
       _smartInteractionPreset = nextPreset;
       unawaited(_rememberInteractionRotationType(nextPreset.type));
@@ -73,7 +75,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
     }
     if (_rotationQueue.isNotEmpty) {
       final nextType = _rotationQueue.removeAt(0);
-      final nextPreset = _maybePresetForInteractionType(nextType) ??
+      final nextPreset =
+          _maybePresetForInteractionType(nextType) ??
           _defaultSmartInteractionPreset();
       _smartInteractionPreset = nextPreset;
       unawaited(_rememberInteractionRotationType(nextPreset.type));
@@ -87,8 +90,9 @@ extension _MainHomeInteractions on _MainHomeTabState {
     }
     if (!mounted) return;
 
-    final currentList =
-        List<_HomeReactionFlight>.from(_reactionFlightsNotifier.value);
+    final currentList = List<_HomeReactionFlight>.from(
+      _reactionFlightsNotifier.value,
+    );
     currentList.removeWhere((item) => item.id == flight.id);
     currentList.add(flight);
     if (currentList.length > _kMaxVisibleReactionFlights) {
@@ -102,8 +106,9 @@ extension _MainHomeInteractions on _MainHomeTabState {
 
   void _removeReactionFlight(String id) {
     if (!mounted) return;
-    final currentList =
-        List<_HomeReactionFlight>.from(_reactionFlightsNotifier.value);
+    final currentList = List<_HomeReactionFlight>.from(
+      _reactionFlightsNotifier.value,
+    );
     final initialLength = currentList.length;
     currentList.removeWhere((item) => item.id == id);
     if (currentList.length != initialLength) {
@@ -139,10 +144,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
 
   void _showReactionThrowLimitSnack() {
     final message = L10nService().translate('home_bnthaotchi_00f319');
-    _showLatestSnackBar(
-      message,
-      duration: const Duration(seconds: 2),
-    );
+    _showLatestSnackBar(message, duration: const Duration(seconds: 2));
   }
 
   void _sendReactionFlight(String type, String emoji) {
@@ -173,22 +175,29 @@ extension _MainHomeInteractions on _MainHomeTabState {
     _showReactionFlight(flight);
 
     unawaited(
-      _dbRef.child('houses/$houseId/reaction_flights').push().set({
-        'clientEventId': eventId,
-        'type': type,
-        'emoji': emoji,
-        'assetPath': preset?.assetPath ?? '',
-        if (randomImageUrl != null) 'imageUrl': randomImageUrl,
-        'fromUid': user.uid,
-        'fromRole': _currentRole,
-        'toRole': _partnerRole,
-        'sentAt': nowMs,
-        'ts': ServerValue.timestamp,
-      }).then((_) {
-        HapticFeedback.lightImpact();
-      }).catchError((_) {
-        _showLatestSnackBar(L10nService().translate('home_khnggicico_202368'));
-      }),
+      _dbRef
+          .child('houses/$houseId/reaction_flights')
+          .push()
+          .set({
+            'clientEventId': eventId,
+            'type': type,
+            'emoji': emoji,
+            'assetPath': preset?.assetPath ?? '',
+            if (randomImageUrl != null) 'imageUrl': randomImageUrl,
+            'fromUid': user.uid,
+            'fromRole': _currentRole,
+            'toRole': _partnerRole,
+            'sentAt': nowMs,
+            'ts': ServerValue.timestamp,
+          })
+          .then((_) {
+            HapticFeedback.lightImpact();
+          })
+          .catchError((_) {
+            _showLatestSnackBar(
+              L10nService().translate('home_khnggicico_202368'),
+            );
+          }),
     );
 
     if (_random.nextInt(10) == 0) {
@@ -226,7 +235,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
           body = partnerOnline
               ? '$partnerName đang ở nơi khá nóng, lời nhắc đáng yêu này hiện ngay rồi.'
               : '$partnerName chưa mở nhà, lời nhắc uống nước sẽ đợi sẵn để người ấy mở ra là thấy.';
-          message = customMessage ??
+          message =
+              customMessage ??
               L10nService().translate('home_tribnbnnng_6be553');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy lời dặn này ngay luôn.'
@@ -237,7 +247,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
           body = partnerOnline
               ? '$partnerName đang ở nơi mưa hoặc lạnh, lời nhắc giữ ấm đã tới ngay rồi.'
               : '$partnerName chưa mở nhà, lời nhắc giữ ấm sẽ đợi sẵn để người ấy mở ra là thấy.';
-          message = customMessage ??
+          message =
+              customMessage ??
               L10nService().translate('home_bnbncvlnhn_a92b57');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy lời dặn này ngay luôn.'
@@ -248,7 +259,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
           body = partnerOnline
               ? '$partnerName đang online, nụ hôn này bay tới ngay luôn.'
               : '$partnerName chưa mở nhà, nụ hôn sẽ nằm chờ xinh xắn khi người ấy quay lại.';
-          message = customMessage ??
+          message =
+              customMessage ??
               L10nService().translate('home_chtmtcitht_f7bbad');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
@@ -259,7 +271,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
           body = partnerOnline
               ? '$partnerName đang online, cái ôm mềm này tới ngay rồi.'
               : '$partnerName chưa mở nhà, cái ôm sẽ đợi sẵn để người ấy mở ra là thấy.';
-          message = customMessage ??
+          message =
+              customMessage ??
               L10nService().translate('home_mbnmtcitht_a0ec5e');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
@@ -270,7 +283,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
           body = partnerOnline
               ? '$partnerName đang online, lời dỗi yêu này hiện lên ngay rồi.'
               : '$partnerName chưa mở nhà, lời dỗi yêu sẽ nằm chờ để người ấy dỗ bạn sau.';
-          message = customMessage ??
+          message =
+              customMessage ??
               L10nService().translate('home_hmangdixut_2726ac');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
@@ -281,7 +295,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
           body = partnerOnline
               ? '$partnerName đang online, cơn tức đỏ rực này hiện lên ngay rồi.'
               : '$partnerName chưa mở nhà, cơn tức đỏ rực này sẽ chờ sẵn để người ấy dỗ bạn sau.';
-          message = customMessage ??
+          message =
+              customMessage ??
               L10nService().translate('home_mnhangtcth_dfdd25');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
@@ -292,7 +307,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
           body = partnerOnline
               ? '$partnerName đang online, cú chọc yêu này bật ra ngay rồi.'
               : '$partnerName chưa mở nhà, cú trêu nghịch này sẽ nằm chờ khi người ấy quay lại.';
-          message = customMessage ??
+          message =
+              customMessage ??
               L10nService().translate('home_mnhvachcbn_f70061');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
@@ -303,7 +319,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
           body = partnerOnline
               ? '$partnerName đang online, tín hiệu mít ướt này hiện lên ngay rồi.'
               : '$partnerName chưa mở nhà, tín hiệu cần dỗ dành sẽ chờ khi người ấy quay lại.';
-          message = customMessage ??
+          message =
+              customMessage ??
               L10nService().translate('home_hmnaymnhhi_105e19');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
@@ -314,7 +331,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
           body = partnerOnline
               ? '$partnerName đang online, cú trêu này bật ra ngay rồi.'
               : '$partnerName chưa mở nhà, cú trêu nghịch này sẽ chờ sẵn khi người ấy quay lại.';
-          message = customMessage ??
+          message =
+              customMessage ??
               L10nService().translate('home_nmnhmtcctr_3e8a1f');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
@@ -326,7 +344,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
           body = partnerOnline
               ? '$partnerName đang online, nỗi nhớ này chạm tới ngay luôn.'
               : '$partnerName chưa mở nhà, nỗi nhớ sẽ đợi sẵn để người ấy mở ra là nhận được.';
-          message = customMessage ??
+          message =
+              customMessage ??
               L10nService().translate('home_mnhnhbnnhi_88a6c7');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
@@ -351,13 +370,11 @@ extension _MainHomeInteractions on _MainHomeTabState {
         'ts': ServerValue.timestamp,
       };
 
-      final inboxRef =
-          _dbRef.child('houses/$_houseId/partner_inbox/$_partnerRole').push();
+      final inboxRef = _dbRef
+          .child('houses/$_houseId/partner_inbox/$_partnerRole')
+          .push();
       await _dbRef.child('houses/$_houseId/alerts').push().set(payload);
-      await inboxRef.set({
-        ...payload,
-        'timestamp': ServerValue.timestamp,
-      });
+      await inboxRef.set({...payload, 'timestamp': ServerValue.timestamp});
       await _dbRef.child('houses/$_houseId/interactions/$type').set({
         ...payload,
         'timestamp': ServerValue.timestamp,
@@ -381,7 +398,9 @@ extension _MainHomeInteractions on _MainHomeTabState {
             },
           );
         }
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[MainHome] Partner notification failed: $error');
+      }
 
       // Record daily quest progress
       await DailyQuestService().recordProgress('partner_interaction');

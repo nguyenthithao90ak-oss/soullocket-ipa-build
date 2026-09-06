@@ -383,7 +383,9 @@ class GroupChatService {
                         change.doc.data()!,
                       );
                       controller.add(msg);
-                    } catch (_) {}
+                    } catch (error) {
+                      debugPrint('[GroupChat] Bỏ qua tin nhắn lỗi: $error');
+                    }
                   }
                 }
               },

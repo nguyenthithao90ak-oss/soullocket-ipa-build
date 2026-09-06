@@ -1,12 +1,8 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum PerformanceTier {
-  low,
-  medium,
-  high,
-}
+enum PerformanceTier { low, medium, high }
 
 class PerformanceProfileService {
   PerformanceProfileService._();
@@ -44,7 +40,9 @@ class PerformanceProfileService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_prefKey, tier.name);
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[PerformanceProfileService] Cannot persist tier: $error');
+    }
   }
 
   PerformanceTier _parseTier(String name) {

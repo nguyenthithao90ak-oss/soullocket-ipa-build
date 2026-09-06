@@ -109,7 +109,9 @@ class AiCounselorService {
             if (payload['text'] != null) {
               yield payload['text'] as String;
             }
-          } catch (_) {}
+          } catch (parseError) {
+            debugPrint('[AiCounselor] Bỏ qua stream chunk lỗi: $parseError');
+          }
         }
       }
     } catch (e) {

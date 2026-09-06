@@ -669,6 +669,10 @@ class _MainHomeHeroCountdownCircleState
         (widget.countdownStyleKey.isEmpty ||
             widget.countdownStyleKey == 'default' ||
             widget.countdownStyleKey == 'balanced');
+    final isBalancedStyle =
+        widget.countdownStyleKey.isEmpty ||
+        widget.countdownStyleKey == 'default' ||
+        widget.countdownStyleKey == 'balanced';
 
     final selectedFont = UiPrefs.notifier.value.fontKey;
     final labelFont =
@@ -686,7 +690,11 @@ class _MainHomeHeroCountdownCircleState
         customTextColor = Color(
           int.parse(countdownTextColorStr.replaceFirst('#', '0xFF')),
         );
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[SuppressedError] lib/views/home/widgets/main_home/hero/main_home_hero_countdown.dart: $error',
+        );
+      }
     }
     const multiColorGradient = [
       Color(0xFF00C6FF),
@@ -770,6 +778,9 @@ class _MainHomeHeroCountdownCircleState
                     widget.countdownShapeKey,
                     side: widget.isMilestone
                         ? milestoneBorderSide
+                        : !isBalancedStyle &&
+                              countdownVisual.outerBorder != null
+                        ? countdownVisual.outerBorder!.top
                         : BorderSide.none,
                   ),
                   color:
@@ -798,7 +809,9 @@ class _MainHomeHeroCountdownCircleState
                             spreadRadius: 4,
                           ),
                         ]
-                      : SLShadows.glowingPrimary,
+                      : isBalancedStyle
+                      ? SLShadows.glowingPrimary
+                      : countdownVisual.shadows,
                 ),
                 child: Stack(
                   alignment: Alignment.center,
@@ -878,6 +891,19 @@ class _MainHomeHeroCountdownCircleState
                                                 enableMotion: enableMotion,
                                               ),
                                             ),
+                                          if (!transparentMode &&
+                                              !isBalancedStyle)
+                                            Positioned.fill(
+                                              child: RepaintBoundary(
+                                                child:
+                                                    _CountdownThemeStickerOverlay(
+                                                      styleKey: widget
+                                                          .countdownStyleKey,
+                                                      enableMotion:
+                                                          enableMotion,
+                                                    ),
+                                              ),
+                                            ),
                                           if (isJournalStyle)
                                             const Positioned.fill(
                                               child: IgnorePointer(
@@ -903,7 +929,11 @@ class _MainHomeHeroCountdownCircleState
                           return ValueListenableBuilder<bool>(
                             valueListenable: widget.isScrollingNotifier!,
                             builder: (context, isScrolling, _) =>
-                                buildBackground(widget.enableMotionBase),
+                                buildBackground(
+                                  isBalancedStyle
+                                      ? widget.enableMotionBase
+                                      : widget.enableMotionBase && !isScrolling,
+                                ),
                           );
                         },
                       ),

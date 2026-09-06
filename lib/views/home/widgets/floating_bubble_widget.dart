@@ -155,7 +155,8 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
     final hId = _houseId;
     if (hId == null || hId.isEmpty) {
       debugPrint(
-          '[Overlay] _houseId is null or empty, cannot start listening chat');
+        '[Overlay] _houseId is null or empty, cannot start listening chat',
+      );
       return;
     }
     _soulMessagesSub = FirebaseDatabase.instance
@@ -163,32 +164,35 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
         .orderByChild('timestamp')
         .limitToLast(50)
         .onValue
-        .listen((event) {
-      final data = event.snapshot.value;
-      final list = <Map<String, dynamic>>[];
-      if (data is Map) {
-        data.forEach((key, val) {
-          if (val is Map) {
-            final msg = Map<String, dynamic>.from(val);
-            msg['id'] = key.toString();
-            list.add(msg);
-          }
-        });
-        list.sort((a, b) {
-          final t1 = a['timestamp'] as int? ?? 0;
-          final t2 = b['timestamp'] as int? ?? 0;
-          return t1.compareTo(t2);
-        });
-      }
-      if (mounted) {
-        setState(() {
-          _chatHistory = list;
-        });
-        _scrollToBottom();
-      }
-    }, onError: (e) {
-      debugPrint('[Overlay] watch messages error: $e');
-    });
+        .listen(
+          (event) {
+            final data = event.snapshot.value;
+            final list = <Map<String, dynamic>>[];
+            if (data is Map) {
+              data.forEach((key, val) {
+                if (val is Map) {
+                  final msg = Map<String, dynamic>.from(val);
+                  msg['id'] = key.toString();
+                  list.add(msg);
+                }
+              });
+              list.sort((a, b) {
+                final t1 = a['timestamp'] as int? ?? 0;
+                final t2 = b['timestamp'] as int? ?? 0;
+                return t1.compareTo(t2);
+              });
+            }
+            if (mounted) {
+              setState(() {
+                _chatHistory = list;
+              });
+              _scrollToBottom();
+            }
+          },
+          onError: (e) {
+            debugPrint('[Overlay] watch messages error: $e');
+          },
+        );
   }
 
   void _scrollToBottom() {
@@ -223,7 +227,11 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
             t.cancel();
           }
         }
-      } catch (_) {}
+      } catch (error) {
+        debugPrint(
+          '[SuppressedError] lib/views/home/widgets/floating_bubble_widget.dart: $error',
+        );
+      }
     });
   }
 
@@ -361,10 +369,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
         'timestamp': ServerValue.timestamp,
       });
 
-      final payload = jsonEncode({
-        'action': 'overlay_sent_msg',
-        'text': text,
-      });
+      final payload = jsonEncode({'action': 'overlay_sent_msg', 'text': text});
       FlutterOverlayWindow.shareData(payload);
     } catch (e) {
       debugPrint('[Overlay] send message error: $e');
@@ -395,8 +400,10 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
             Flexible(
               child: Container(
                 margin: const EdgeInsets.only(right: 8),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.85),
                   borderRadius: BorderRadius.circular(16),
@@ -475,8 +482,9 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFFF4F93)
-                                  .withValues(alpha: 0.45),
+                              color: const Color(
+                                0xFFFF4F93,
+                              ).withValues(alpha: 0.45),
                               blurRadius: 12,
                               spreadRadius: 1,
                             ),
@@ -532,10 +540,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
             decoration: BoxDecoration(
               color: const Color(0xEE160B1F),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: const Color(0x33FF4F93),
-                width: 1.0,
-              ),
+              border: Border.all(color: const Color(0x33FF4F93), width: 1.0),
             ),
             child: Column(
               children: [
@@ -582,16 +587,22 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                           ),
                           // Maximize / Open Main App
                           IconButton(
-                            icon: const Icon(Icons.open_in_new_rounded,
-                                color: Colors.white70, size: 18),
+                            icon: const Icon(
+                              Icons.open_in_new_rounded,
+                              color: Colors.white70,
+                              size: 18,
+                            ),
                             onPressed: () {
                               FlutterOverlayWindow.shareData('launch_app');
                               FlutterOverlayWindow.closeOverlay();
                             },
                           ),
                           IconButton(
-                            icon: const Icon(Icons.close_rounded,
-                                color: Colors.white70, size: 18),
+                            icon: const Icon(
+                              Icons.close_rounded,
+                              color: Colors.white70,
+                              size: 18,
+                            ),
                             onPressed: _shrinkOverlay,
                           ),
                         ],
@@ -610,122 +621,126 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                               'Đang đồng bộ dữ liệu...\nVui lòng mở lại ứng dụng nếu chờ lâu 💕',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.6),
-                                  fontSize: 13,
-                                  height: 1.5),
+                                color: Colors.white.withValues(alpha: 0.6),
+                                fontSize: 13,
+                                height: 1.5,
+                              ),
                             ),
                           ),
                         )
                       : _chatHistory.isEmpty
-                          ? Center(
-                              child: Text(
-                                'Hãy gửi lời thì thầm tâm hồn... 💕',
-                                style: GoogleFonts.quicksand(
-                                  color: Colors.white.withValues(alpha: 0.4),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            )
-                          : ListView.builder(
-                              controller: _scrollController,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 10),
-                              itemCount: _chatHistory.length,
-                              itemBuilder: (context, index) {
-                                final msg = _chatHistory[index];
-                                final text = msg['text']?.toString() ?? '';
-                                final sender = msg['sender']?.toString() ?? '';
-                                final isSelf = (sender == _myRole);
-                                final imageUrl =
-                                    msg['imageUrl']?.toString() ?? '';
+                      ? Center(
+                          child: Text(
+                            'Hãy gửi lời thì thầm tâm hồn... 💕',
+                            style: GoogleFonts.quicksand(
+                              color: Colors.white.withValues(alpha: 0.4),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          itemCount: _chatHistory.length,
+                          itemBuilder: (context, index) {
+                            final msg = _chatHistory[index];
+                            final text = msg['text']?.toString() ?? '';
+                            final sender = msg['sender']?.toString() ?? '';
+                            final isSelf = (sender == _myRole);
+                            final imageUrl = msg['imageUrl']?.toString() ?? '';
 
-                                return Align(
-                                  alignment: isSelf
-                                      ? Alignment.centerRight
-                                      : Alignment.centerLeft,
-                                  child: Container(
-                                    margin:
-                                        const EdgeInsets.symmetric(vertical: 4),
-                                    padding: EdgeInsets.all(
-                                        imageUrl.isNotEmpty ? 4 : 12),
-                                    constraints:
-                                        const BoxConstraints(maxWidth: 270),
-                                    decoration: BoxDecoration(
-                                      color: isSelf
-                                          ? const Color(0xFFFF4F93)
-                                          : Colors.white
-                                              .withValues(alpha: 0.15),
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: const Radius.circular(18),
-                                        topRight: const Radius.circular(18),
-                                        bottomLeft:
-                                            Radius.circular(isSelf ? 18 : 4),
-                                        bottomRight:
-                                            Radius.circular(isSelf ? 4 : 18),
-                                      ),
+                            return Align(
+                              alignment: isSelf
+                                  ? Alignment.centerRight
+                                  : Alignment.centerLeft,
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(vertical: 4),
+                                padding: EdgeInsets.all(
+                                  imageUrl.isNotEmpty ? 4 : 12,
+                                ),
+                                constraints: const BoxConstraints(
+                                  maxWidth: 270,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isSelf
+                                      ? const Color(0xFFFF4F93)
+                                      : Colors.white.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: const Radius.circular(18),
+                                    topRight: const Radius.circular(18),
+                                    bottomLeft: Radius.circular(
+                                      isSelf ? 18 : 4,
                                     ),
-                                    child: Column(
-                                      crossAxisAlignment: isSelf
-                                          ? CrossAxisAlignment.end
-                                          : CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        if (imageUrl.isNotEmpty)
-                                          ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(14),
-                                            child: CachedNetworkImage(
-                                              imageUrl: imageUrl,
-                                              fit: BoxFit.cover,
-                                              width: 200,
-                                              memCacheWidth:
-                                                  200, // RAM optimization
-                                              errorWidget:
-                                                  (context, url, error) =>
-                                                      Container(
+                                    bottomRight: Radius.circular(
+                                      isSelf ? 4 : 18,
+                                    ),
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: isSelf
+                                      ? CrossAxisAlignment.end
+                                      : CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (imageUrl.isNotEmpty)
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(14),
+                                        child: CachedNetworkImage(
+                                          imageUrl: imageUrl,
+                                          fit: BoxFit.cover,
+                                          width: 200,
+                                          memCacheWidth:
+                                              200, // RAM optimization
+                                          errorWidget: (context, url, error) =>
+                                              Container(
                                                 width: 200,
                                                 height: 150,
                                                 color: Colors.white12,
                                                 child: const Icon(
-                                                    Icons.broken_image,
-                                                    color: Colors.white54),
+                                                  Icons.broken_image,
+                                                  color: Colors.white54,
+                                                ),
                                               ),
-                                            ),
+                                        ),
+                                      ),
+                                    if (text.isNotEmpty)
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                          top: imageUrl.isNotEmpty ? 6 : 0,
+                                          left: imageUrl.isNotEmpty ? 4 : 0,
+                                          right: imageUrl.isNotEmpty ? 4 : 0,
+                                        ),
+                                        child: Text(
+                                          text,
+                                          style: GoogleFonts.quicksand(
+                                            color: Colors.white,
+                                            fontSize: 14.5,
+                                            fontWeight: FontWeight.w600,
                                           ),
-                                        if (text.isNotEmpty)
-                                          Padding(
-                                            padding: EdgeInsets.only(
-                                                top:
-                                                    imageUrl.isNotEmpty ? 6 : 0,
-                                                left:
-                                                    imageUrl.isNotEmpty ? 4 : 0,
-                                                right: imageUrl.isNotEmpty
-                                                    ? 4
-                                                    : 0),
-                                            child: Text(
-                                              text,
-                                              style: GoogleFonts.quicksand(
-                                                color: Colors.white,
-                                                fontSize: 14.5,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                 ),
 
                 if (_spamWarning != null)
                   Container(
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 4,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFF4F4F).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
@@ -774,11 +789,17 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.add_circle_outline_rounded,
-                          color: Colors.white.withValues(alpha: 0.5), size: 24),
+                      Icon(
+                        Icons.add_circle_outline_rounded,
+                        color: Colors.white.withValues(alpha: 0.5),
+                        size: 24,
+                      ),
                       const SizedBox(width: 10),
-                      Icon(Icons.camera_alt_outlined,
-                          color: Colors.white.withValues(alpha: 0.5), size: 24),
+                      Icon(
+                        Icons.camera_alt_outlined,
+                        color: Colors.white.withValues(alpha: 0.5),
+                        size: 24,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Container(
@@ -791,7 +812,9 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                             ),
                           ),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 4),
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
                           child: TextField(
                             controller: _textController,
                             style: GoogleFonts.quicksand(
@@ -807,8 +830,9 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                               ),
                               border: InputBorder.none,
                               isDense: true,
-                              contentPadding:
-                                  const EdgeInsets.symmetric(vertical: 8),
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 8,
+                              ),
                             ),
                           ),
                         ),

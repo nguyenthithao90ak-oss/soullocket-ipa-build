@@ -27,9 +27,7 @@ class SettingsSyncService {
       'il_settings_restore_notice_pending';
   static const String restoreNoticeUidPrefKey =
       'il_settings_restore_notice_uid';
-  static const List<String> _legacySecretKeys = [
-    'il_imgbb_api_key',
-  ];
+  static const List<String> _legacySecretKeys = ['il_imgbb_api_key'];
   static const List<String> _legacyCloudSensitiveKeys = [
     'il_app_lock_enabled',
     'il_lock_scope_app',
@@ -110,7 +108,8 @@ class SettingsSyncService {
     final user = _auth.currentUser;
     if (user == null) return;
 
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     await _purgeLegacySensitivePrefs(prefs);
     final Map<String, dynamic> settings = {};
@@ -153,9 +152,9 @@ class SettingsSyncService {
     if (houseId != null && houseId.isNotEmpty && houseBackup.isNotEmpty) {
       houseBackup['updatedAt'] = ServerValue.timestamp;
       houseBackup['schemaVersion'] = 1;
-      await _db.child('houses/$houseId/settings_backups/${user.uid}').set(
-            houseBackup,
-          );
+      await _db
+          .child('houses/$houseId/settings_backups/${user.uid}')
+          .set(houseBackup);
     }
 
     await prefs.setString(
@@ -166,10 +165,12 @@ class SettingsSyncService {
 
   Future<SettingsBackupStatus> getBackupStatus() async {
     final user = _auth.currentUser;
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    final localBackupAt =
-        DateTime.tryParse(prefs.getString(lastBackupAtPrefKey) ?? '');
+    final localBackupAt = DateTime.tryParse(
+      prefs.getString(lastBackupAtPrefKey) ?? '',
+    );
 
     if (user == null) {
       return SettingsBackupStatus(
@@ -202,15 +203,13 @@ class SettingsSyncService {
   Future<void> restoreSettingsFromCloud(String uid) async {
     try {
       final snapshot = await _db.child('users/$uid/settings').get();
-      final prefs = OfflineCacheService.getPrefsSync() ??
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
       final hadLocalBackupMarker =
           (prefs.getString(lastBackupAtPrefKey) ?? '').isNotEmpty;
       await _purgeLegacySensitivePrefs(prefs);
-      await _clearLocalSyncedSettingsFromPrefs(
-        prefs,
-        reloadUiPrefs: false,
-      );
+      await _clearLocalSyncedSettingsFromPrefs(prefs, reloadUiPrefs: false);
 
       if (snapshot.exists && snapshot.value != null) {
         final settings = Map<String, dynamic>.from(snapshot.value as Map);
@@ -230,7 +229,8 @@ class SettingsSyncService {
           }
 
           // Tránh khôi phục các cài đặt chỉ lưu cục bộ (không nằm trong _syncKeys và không phải widget)
-          final isWidgetKey = key.startsWith('il_widget_theme_') ||
+          final isWidgetKey =
+              key.startsWith('il_widget_theme_') ||
               key.startsWith('il_widget_style_') ||
               key.startsWith('il_widget_show_diary_') ||
               key.startsWith('il_widget_heart_animated_') ||
@@ -260,7 +260,9 @@ class SettingsSyncService {
             restoredAnySetting = true;
           } else if (value is List) {
             await prefs.setStringList(
-                key, value.map((e) => e.toString()).toList());
+              key,
+              value.map((e) => e.toString()).toList(),
+            );
             restoredAnySetting = true;
           }
         }
@@ -285,15 +287,15 @@ class SettingsSyncService {
       // inheriting the previous account's local state.
       await UiPrefs.reload();
     } catch (e) {
-      debugPrint('Error restoring settings: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể khôi phục cài đặt.',
-      ).message}');
+      debugPrint(
+        'Error restoring settings: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể khôi phục cài đặt.').message}',
+      );
     }
   }
 
   Future<bool> consumePendingRestoreNotice(String uid) async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     final pending = prefs.getBool(restoreNoticePendingPrefKey) ?? false;
     final pendingUid = prefs.getString(restoreNoticeUidPrefKey);
@@ -307,10 +309,9 @@ class SettingsSyncService {
     return true;
   }
 
-  Future<void> clearLocalSyncedSettings({
-    bool reloadUiPrefs = true,
-  }) async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+  Future<void> clearLocalSyncedSettings({bool reloadUiPrefs = true}) async {
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     await _clearLocalSyncedSettingsFromPrefs(
       prefs,
@@ -328,10 +329,7 @@ class SettingsSyncService {
     SharedPreferences prefs, {
     required bool reloadUiPrefs,
   }) async {
-    final keysToRemove = <String>{
-      ..._syncKeys,
-      ..._legacyGlobalWidgetKeys,
-    };
+    final keysToRemove = <String>{..._syncKeys, ..._legacyGlobalWidgetKeys};
 
     for (final key in keysToRemove) {
       await prefs.remove(key);
@@ -344,23 +342,30 @@ class SettingsSyncService {
 
   Future<String?> _resolveHouseId(SharedPreferences prefs, String uid) async {
     await SecureStorageService.instance.migrateFromPrefs(
-        SecureStorageService.keyHouseId, prefs.getString('il_house_id'));
+      SecureStorageService.keyHouseId,
+      prefs.getString('il_house_id'),
+    );
     await SecureStorageService.instance.migrateFromPrefs(
-        SecureStorageService.keyAuthUid, prefs.getString('il_auth_uid'));
-    final cached = (await SecureStorageService.instance
-                .read(SecureStorageService.keyHouseId))
-            ?.trim() ??
+      SecureStorageService.keyAuthUid,
+      prefs.getString('il_auth_uid'),
+    );
+    final cached =
+        (await SecureStorageService.instance.read(
+          SecureStorageService.keyHouseId,
+        ))?.trim() ??
         '';
-    final cachedAuthUid = (await SecureStorageService.instance
-                .read(SecureStorageService.keyAuthUid))
-            ?.trim() ??
+    final cachedAuthUid =
+        (await SecureStorageService.instance.read(
+          SecureStorageService.keyAuthUid,
+        ))?.trim() ??
         '';
     if (cached.isNotEmpty) {
       if (cachedAuthUid == uid) {
         return cached;
       }
-      await SecureStorageService.instance
-          .delete(SecureStorageService.keyHouseId);
+      await SecureStorageService.instance.delete(
+        SecureStorageService.keyHouseId,
+      );
       await SecureStorageService.instance.delete(SecureStorageService.keyRole);
       await prefs.remove('il_house_id');
       await prefs.remove('il_role');
@@ -370,15 +375,21 @@ class SettingsSyncService {
       final snap = await _db.child('users/$uid/houseId').get();
       final houseId = snap.value?.toString().trim() ?? '';
       if (houseId.isNotEmpty) {
-        await SecureStorageService.instance
-            .write(SecureStorageService.keyHouseId, houseId);
-        await SecureStorageService.instance
-            .write(SecureStorageService.keyAuthUid, uid);
+        await SecureStorageService.instance.write(
+          SecureStorageService.keyHouseId,
+          houseId,
+        );
+        await SecureStorageService.instance.write(
+          SecureStorageService.keyAuthUid,
+          uid,
+        );
         await prefs.remove('il_house_id');
         await prefs.remove('il_auth_uid');
         return houseId;
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[SettingsSyncService] Cannot resolve current house: $error');
+    }
     return null;
   }
 }

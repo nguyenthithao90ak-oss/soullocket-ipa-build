@@ -5,139 +5,109 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
   Future<void> _initAudio() async {
     final errorFallback = context.tr('util_khngthkhit_0ee520');
     try {
-      _tapSfxBytes = _buildWaveBytes(
-        <_SoulSfxTone>[
-          _tone(57, 18, 0.90, noiseMix: 0.32),
-          _tone(64, 28, 0.46, noiseMix: 0.14),
-        ],
-        masterGain: 0.54,
-      );
-      _liftSfxBytes = await _loadAudioAssetBytes(
-            'assets/audio/soul_block/drag_lift.mp3',
-          ) ??
-          _buildWaveBytes(
-            <_SoulSfxTone>[
-              _tone(60, 24, 0.84, noiseMix: 0.22),
-              _tone(67, 38, 0.56, noiseMix: 0.08),
-              _tone(72, 42, 0.32, noiseMix: 0.04),
-            ],
-            masterGain: 0.62,
-          );
-      _placeSfxBytes = await _loadAudioAssetBytes(
+      _tapSfxBytes = _buildWaveBytes(<_SoulSfxTone>[
+        _tone(57, 18, 0.90, noiseMix: 0.32),
+        _tone(64, 28, 0.46, noiseMix: 0.14),
+      ], masterGain: 0.54);
+      _liftSfxBytes =
+          await _loadAudioAssetBytes('assets/audio/soul_block/drag_lift.mp3') ??
+          _buildWaveBytes(<_SoulSfxTone>[
+            _tone(60, 24, 0.84, noiseMix: 0.22),
+            _tone(67, 38, 0.56, noiseMix: 0.08),
+            _tone(72, 42, 0.32, noiseMix: 0.04),
+          ], masterGain: 0.62);
+      _placeSfxBytes =
+          await _loadAudioAssetBytes(
             'assets/audio/soul_block/big_win_place_first_half.mp3',
           ) ??
-          _buildWaveBytes(
-            <_SoulSfxTone>[
-              _tone(50, 26, 0.92, noiseMix: 0.34),
-              _tone(57, 46, 0.66, noiseMix: 0.14),
-              _tone(62, 32, 0.36, noiseMix: 0.06),
-            ],
-            masterGain: 0.68,
-          );
-      _clearSfxBytes = await _loadAudioAssetBytes(
+          _buildWaveBytes(<_SoulSfxTone>[
+            _tone(50, 26, 0.92, noiseMix: 0.34),
+            _tone(57, 46, 0.66, noiseMix: 0.14),
+            _tone(62, 32, 0.36, noiseMix: 0.06),
+          ], masterGain: 0.68);
+      _clearSfxBytes =
+          await _loadAudioAssetBytes(
             'assets/audio/soul_block/clear_burst.mp3',
           ) ??
-          _buildWaveBytes(
-            <_SoulSfxTone>[
-              _tone(62, 24, 0.88, noiseMix: 0.16),
-              _tone(69, 30, 0.78, noiseMix: 0.12),
-              _tone(76, 54, 0.76, noiseMix: 0.06),
-              _tone(83, 84, 0.56, noiseMix: 0.03),
-            ],
-            masterGain: 0.70,
-          );
-      _bombSfxBytes = await _loadAudioAssetBytes(
+          _buildWaveBytes(<_SoulSfxTone>[
+            _tone(62, 24, 0.88, noiseMix: 0.16),
+            _tone(69, 30, 0.78, noiseMix: 0.12),
+            _tone(76, 54, 0.76, noiseMix: 0.06),
+            _tone(83, 84, 0.56, noiseMix: 0.03),
+          ], masterGain: 0.70);
+      _bombSfxBytes =
+          await _loadAudioAssetBytes(
             'assets/audio/soul_block/bomb_explosion.mp3',
           ) ??
-          _buildWaveBytes(
-            <_SoulSfxTone>[
-              _tone(36, 120, 1.0, noiseMix: 0.94),
-              _tone(43, 90, 0.88, noiseMix: 0.86),
-              _tone(48, 70, 0.64, noiseMix: 0.72),
-            ],
-            masterGain: 0.90,
-          );
+          _buildWaveBytes(<_SoulSfxTone>[
+            _tone(36, 120, 1.0, noiseMix: 0.94),
+            _tone(43, 90, 0.88, noiseMix: 0.86),
+            _tone(48, 70, 0.64, noiseMix: 0.72),
+          ], masterGain: 0.90);
       _comboSfxLevels = <Uint8List>[
-        _buildWaveBytes(
-          <_SoulSfxTone>[
-            _tone(64, 24, 0.88, noiseMix: 0.14),
-            _tone(71, 28, 0.78, noiseMix: 0.11),
-            _tone(78, 44, 0.66, noiseMix: 0.05),
-          ],
-          masterGain: 0.70,
-        ),
-        _buildWaveBytes(
-          <_SoulSfxTone>[
-            _tone(67, 20, 0.90, noiseMix: 0.12),
-            _tone(74, 28, 0.84, noiseMix: 0.10),
-            _tone(79, 40, 0.80, noiseMix: 0.06),
-            _tone(84, 62, 0.58, noiseMix: 0.03),
-          ],
-          masterGain: 0.74,
-        ),
-        _buildWaveBytes(
-          <_SoulSfxTone>[
-            _tone(69, 20, 0.90, noiseMix: 0.11),
-            _tone(76, 26, 0.86, noiseMix: 0.08),
-            _tone(81, 36, 0.82, noiseMix: 0.06),
-            _tone(86, 48, 0.72, noiseMix: 0.04),
-            _tone(91, 76, 0.60, noiseMix: 0.02),
-          ],
-          masterGain: 0.78,
-        ),
-        _buildWaveBytes(
-          <_SoulSfxTone>[
-            _tone(71, 18, 0.92, noiseMix: 0.10),
-            _tone(78, 24, 0.90, noiseMix: 0.08),
-            _tone(83, 32, 0.86, noiseMix: 0.06),
-            _tone(88, 44, 0.82, noiseMix: 0.05),
-            _tone(91, 54, 0.74, noiseMix: 0.03),
-            _tone(95, 90, 0.64, noiseMix: 0.02),
-          ],
-          masterGain: 0.82,
-        ),
+        _buildWaveBytes(<_SoulSfxTone>[
+          _tone(64, 24, 0.88, noiseMix: 0.14),
+          _tone(71, 28, 0.78, noiseMix: 0.11),
+          _tone(78, 44, 0.66, noiseMix: 0.05),
+        ], masterGain: 0.70),
+        _buildWaveBytes(<_SoulSfxTone>[
+          _tone(67, 20, 0.90, noiseMix: 0.12),
+          _tone(74, 28, 0.84, noiseMix: 0.10),
+          _tone(79, 40, 0.80, noiseMix: 0.06),
+          _tone(84, 62, 0.58, noiseMix: 0.03),
+        ], masterGain: 0.74),
+        _buildWaveBytes(<_SoulSfxTone>[
+          _tone(69, 20, 0.90, noiseMix: 0.11),
+          _tone(76, 26, 0.86, noiseMix: 0.08),
+          _tone(81, 36, 0.82, noiseMix: 0.06),
+          _tone(86, 48, 0.72, noiseMix: 0.04),
+          _tone(91, 76, 0.60, noiseMix: 0.02),
+        ], masterGain: 0.78),
+        _buildWaveBytes(<_SoulSfxTone>[
+          _tone(71, 18, 0.92, noiseMix: 0.10),
+          _tone(78, 24, 0.90, noiseMix: 0.08),
+          _tone(83, 32, 0.86, noiseMix: 0.06),
+          _tone(88, 44, 0.82, noiseMix: 0.05),
+          _tone(91, 54, 0.74, noiseMix: 0.03),
+          _tone(95, 90, 0.64, noiseMix: 0.02),
+        ], masterGain: 0.82),
       ];
-      _streakSfxBytes = _buildWaveBytes(
-        <_SoulSfxTone>[
-          _tone(64, 24, 0.84, noiseMix: 0.12),
-          _tone(71, 30, 0.78, noiseMix: 0.10),
-          _tone(78, 42, 0.70, noiseMix: 0.05),
-          _tone(83, 66, 0.58, noiseMix: 0.02),
-        ],
-        masterGain: 0.70,
-      );
-      _bestScoreSfxBytes = await _loadAudioAssetBytes(
-            'assets/audio/soul_block/big_win.mp3',
-          ) ??
-          _buildWaveBytes(
-            <_SoulSfxTone>[
-              _tone(67, 24, 0.86, noiseMix: 0.12),
-              _tone(74, 30, 0.84, noiseMix: 0.10),
-              _tone(81, 42, 0.80, noiseMix: 0.06),
-              _tone(86, 64, 0.76, noiseMix: 0.03),
-              _tone(91, 96, 0.64, noiseMix: 0.02),
-            ],
-            masterGain: 0.76,
-          );
-      _memoryBurstSfxBytes = await _loadAudioAssetBytes(
+      _streakSfxBytes = _buildWaveBytes(<_SoulSfxTone>[
+        _tone(64, 24, 0.84, noiseMix: 0.12),
+        _tone(71, 30, 0.78, noiseMix: 0.10),
+        _tone(78, 42, 0.70, noiseMix: 0.05),
+        _tone(83, 66, 0.58, noiseMix: 0.02),
+      ], masterGain: 0.70);
+      _bestScoreSfxBytes =
+          await _loadAudioAssetBytes('assets/audio/soul_block/big_win.mp3') ??
+          _buildWaveBytes(<_SoulSfxTone>[
+            _tone(67, 24, 0.86, noiseMix: 0.12),
+            _tone(74, 30, 0.84, noiseMix: 0.10),
+            _tone(81, 42, 0.80, noiseMix: 0.06),
+            _tone(86, 64, 0.76, noiseMix: 0.03),
+            _tone(91, 96, 0.64, noiseMix: 0.02),
+          ], masterGain: 0.76);
+      _memoryBurstSfxBytes =
+          await _loadAudioAssetBytes(
             'assets/audio/soul_block/big_win_memory_second_half.mp3',
           ) ??
           _bestScoreSfxBytes;
       _audioReady = true;
       unawaited(_initBgm());
     } catch (error) {
-      debugPrint('Soul Block audio init failed: ${AppErrorMapper.resolve(
-        error,
-        fallbackMessage: errorFallback,
-      ).message}');
+      debugPrint(
+        'Soul Block audio init failed: ${AppErrorMapper.resolve(error, fallbackMessage: errorFallback).message}',
+      );
       _audioReady = false;
     }
   }
 
   Future<Source> _getBgmSource() async {
     const fileName = 'soul_block_bgm.mp3';
-    final localPath =
-        await GameDownloadService().getLocalPath('soul_block', fileName);
+    final localPath = await GameDownloadService().getLocalPath(
+      'soul_block',
+      fileName,
+    );
     if (await File(localPath).exists()) {
       debugPrint('Soul Block: Using LOCAL BGM: $localPath');
       return DeviceFileSource(localPath);
@@ -155,10 +125,9 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
       await _bgmPlayer.setSource(source);
       await _syncBgmWithSound(restartIfStopped: true);
     } catch (error) {
-      debugPrint('Soul Block bgm init failed: ${AppErrorMapper.resolve(
-        error,
-        fallbackMessage: bgmErrorFallback,
-      ).message}');
+      debugPrint(
+        'Soul Block bgm init failed: ${AppErrorMapper.resolve(error, fallbackMessage: bgmErrorFallback).message}',
+      );
     }
   }
 
@@ -181,7 +150,11 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
         try {
           final source = await _getBgmSource();
           await _bgmPlayer.play(source, volume: 0.52);
-        } catch (_) {}
+        } catch (error) {
+          debugPrint(
+            '[SuppressedError] lib/views/utilities/soul_block/soul_block_feedback_section.dart: $error',
+          );
+        }
       }
     }
   }
@@ -193,7 +166,11 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
       } else {
         await _bgmPlayer.pause();
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/utilities/soul_block/soul_block_feedback_section.dart: $error',
+      );
+    }
   }
 
   _SoulSfxTone _tone(
@@ -264,22 +241,26 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
             (2 / pi) * asin(sin((phase * 0.5) + (pi / 7))) * 0.24;
         final double shimmer = sin((phase * 2.02) + 0.4) * 0.07;
         final double sub = sin(phase * 0.5) * 0.18;
-        final double harmonic =
-            (sine + square + triangle + shimmer + sub).clamp(-1.0, 1.0);
-        final double transient =
-            pow(1 - (i / stepSamples), 1.8).toDouble().clamp(0.0, 1.0);
-        final double noise = (sin(
-                  ((sampleIndex + 1) * 12.9898) + (step.frequency * 0.014),
-                ) *
-                cos(((sampleIndex + 1) * 78.233) + (step.frequency * 0.021)))
+        final double harmonic = (sine + square + triangle + shimmer + sub)
             .clamp(-1.0, 1.0);
+        final double transient = pow(
+          1 - (i / stepSamples),
+          1.8,
+        ).toDouble().clamp(0.0, 1.0);
+        final double noise =
+            (sin(((sampleIndex + 1) * 12.9898) + (step.frequency * 0.014)) *
+                    cos(
+                      ((sampleIndex + 1) * 78.233) + (step.frequency * 0.021),
+                    ))
+                .clamp(-1.0, 1.0);
         final double knock =
             ((noise * 0.58) + (sin(phase * 4.2) * 0.12) + (square * 0.14))
                 .clamp(-1.0, 1.0);
-        final double sampleValue = ((harmonic * (1 - step.noiseMix)) +
-                (knock * step.noiseMix * transient) +
-                (harmonic * step.noiseMix * 0.22))
-            .clamp(-1.0, 1.0);
+        final double sampleValue =
+            ((harmonic * (1 - step.noiseMix)) +
+                    (knock * step.noiseMix * transient) +
+                    (harmonic * step.noiseMix * 0.22))
+                .clamp(-1.0, 1.0);
         final int pcm =
             (sampleValue * envelope * step.volume * masterGain * 32767)
                 .round()
@@ -296,8 +277,10 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     final loadSfxErrorFallback = context.tr('util_khngthtihi_635113');
     try {
       final fileName = p.basename(assetPath);
-      final localPath =
-          await GameDownloadService().getLocalPath('soul_block', fileName);
+      final localPath = await GameDownloadService().getLocalPath(
+        'soul_block',
+        fileName,
+      );
       final localFile = File(localPath);
 
       if (await localFile.exists()) {
@@ -310,10 +293,8 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
       return data.buffer.asUint8List();
     } catch (e) {
       debugPrint(
-          'Soul Block: Error loading SFX ($assetPath): ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: loadSfxErrorFallback,
-      ).message}');
+        'Soul Block: Error loading SFX ($assetPath): ${AppErrorMapper.resolve(e, fallbackMessage: loadSfxErrorFallback).message}',
+      );
       return null;
     }
   }
@@ -408,10 +389,7 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
         }
 
         unawaited(
-          _playSfx(
-            selectedBytes,
-            volume: volume.clamp(0.0, 1.0).toDouble(),
-          ),
+          _playSfx(selectedBytes, volume: volume.clamp(0.0, 1.0).toDouble()),
         );
       } else {
         unawaited(SystemSound.play(SystemSoundType.alert));
@@ -449,17 +427,11 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
       return;
     }
     if (clearedCount == 2) {
-      _showFloatingMessage(
-        'COMBO x2',
-        color: const Color(0xFF67E8FF),
-      );
+      _showFloatingMessage('COMBO x2', color: const Color(0xFF67E8FF));
       return;
     }
     if (clearedCount == 3) {
-      _showFloatingMessage(
-        'COMBO x3',
-        color: const Color(0xFFFFB347),
-      );
+      _showFloatingMessage('COMBO x3', color: const Color(0xFFFFB347));
       return;
     }
     _showFloatingMessage(
@@ -479,17 +451,11 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
       return;
     }
     if (streakCount == 2) {
-      _showFloatingMessage(
-        'STREAK 2',
-        color: const Color(0xFF67E8FF),
-      );
+      _showFloatingMessage('STREAK 2', color: const Color(0xFF67E8FF));
       return;
     }
     if (streakCount == 3) {
-      _showFloatingMessage(
-        'STREAK 3',
-        color: const Color(0xFFFFA1B7),
-      );
+      _showFloatingMessage('STREAK 3', color: const Color(0xFFFFA1B7));
       return;
     }
     _showFloatingMessage(
@@ -498,10 +464,7 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     );
   }
 
-  void _showFloatingMessage(
-    String message, {
-    required Color color,
-  }) {
+  void _showFloatingMessage(String message, {required Color color}) {
     setState(() {
       _floatingText = message;
       _floatingTextColor = color;
@@ -538,15 +501,9 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
 
     final List<Offset> anchors = <Offset>[
       for (final int row in clearedRows)
-        _boardCellCenter(
-          row.toDouble(),
-          (_boardSize - 1) / 2,
-        ),
+        _boardCellCenter(row.toDouble(), (_boardSize - 1) / 2),
       for (final int col in clearedCols)
-        _boardCellCenter(
-          (_boardSize - 1) / 2,
-          col.toDouble(),
-        ),
+        _boardCellCenter((_boardSize - 1) / 2, col.toDouble()),
     ];
     if (anchors.isEmpty) {
       return;
@@ -570,12 +527,14 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     final int particleCount = subtle
         ? min((6 + (clearedCount * 2)).clamp(6, 12), profile.subtleParticleCap)
         : min(
-            (10 + (clearedCount * 3)).clamp(12, 20), profile.strongParticleCap);
+            (10 + (clearedCount * 3)).clamp(12, 20),
+            profile.strongParticleCap,
+          );
     final double maxDistance = subtle
         ? ((60 + (clearedCount * 12)).clamp(70, 140).toDouble() *
-            profile.subtleDistanceScale)
+              profile.subtleDistanceScale)
         : ((90 + (clearedCount * 15)).clamp(100, 180).toDouble() *
-            profile.strongDistanceScale);
+              profile.strongDistanceScale);
     final List<_ExplosionParticle> particles = <_ExplosionParticle>[];
 
     for (int index = 0; index < particleCount; index++) {
@@ -583,8 +542,10 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
       final double angle = _random.nextDouble() * pi * 2.0;
       // Further distance for more spectacular bursts
       final double distance =
-          (15.0 + (_random.nextDouble() * maxDistance * 0.85))
-              .clamp(15.0, 140.0);
+          (15.0 + (_random.nextDouble() * maxDistance * 0.85)).clamp(
+            15.0,
+            140.0,
+          );
       final bool isShard = index.isEven;
       particles.add(
         _ExplosionParticle(
@@ -596,21 +557,24 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
           color: _kSoulBurstPalette[_random.nextInt(_kSoulBurstPalette.length)],
           size: subtle
               ? (isShard
-                  ? 3.0 + (_random.nextDouble() * 2.0)
-                  : 1.5 + (_random.nextDouble() * 1.5))
+                    ? 3.0 + (_random.nextDouble() * 2.0)
+                    : 1.5 + (_random.nextDouble() * 1.5))
               : isShard
-                  ? 5.0 + (_random.nextDouble() * 3.0)
-                  : 2.5 + (_random.nextDouble() * 2.0),
+              ? 5.0 + (_random.nextDouble() * 3.0)
+              : 2.5 + (_random.nextDouble() * 2.0),
           rotation: _random.nextDouble() * pi * 2,
-          twist: (subtle ? 0.6 : 1.2) *
+          twist:
+              (subtle ? 0.6 : 1.2) *
               _random.nextDouble() *
               (_random.nextBool() ? 1 : -1),
-          opacity: ((subtle
-                      ? 0.35 + (_random.nextDouble() * 0.15)
-                      : 0.50 + (_random.nextDouble() * 0.20)) *
-                  profile.opacityScale)
-              .clamp(0.18, 0.76),
-          delayFraction: (_random.nextDouble() * (subtle ? 0.10 : 0.16)) *
+          opacity:
+              ((subtle
+                          ? 0.35 + (_random.nextDouble() * 0.15)
+                          : 0.50 + (_random.nextDouble() * 0.20)) *
+                      profile.opacityScale)
+                  .clamp(0.18, 0.76),
+          delayFraction:
+              (_random.nextDouble() * (subtle ? 0.10 : 0.16)) *
               profile.delayScale,
           isShard: isShard,
           simpleDraw: simpleParticles,
@@ -643,8 +607,9 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     final List<String> warmedGallery = _memoryBurstGallery
         .where(_memoryBurstWarmUrls.contains)
         .toList(growable: false);
-    final List<String> selectionPool =
-        warmedGallery.isNotEmpty ? warmedGallery : _memoryBurstGallery;
+    final List<String> selectionPool = warmedGallery.isNotEmpty
+        ? warmedGallery
+        : _memoryBurstGallery;
     final String imageUrl = _pickMemoryBurstImage(selectionPool);
     final Color accent =
         _kSoulBurstPalette[_random.nextInt(_kSoulBurstPalette.length)];
@@ -665,34 +630,34 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
             'Our Day in Lights',
           ]
         : clearedCount >= 4
-            ? const <String>[
-                'Soul Bloom',
-                'Locket Spark',
-                'Memory Glow',
-                'Little Love Pop',
-                'Our Soft Flash',
-                'Heartbeat Shine',
-                'Sweet Memory Beat',
-                'Soul Note Light',
-                'Photo Glow Up',
-                'Love Story Pop',
-                'Tiny Star Moment',
-                'Dreamy Heart Sync',
-              ]
-            : const <String>[
-                'Soft Memory',
-                'Soul Wink',
-                'Locket Glow',
-                'Love Flicker',
-                'Our Little Frame',
-                'Heartnote Spark',
-                'Sweet Tiny Burst',
-                'Memory Blink',
-                'Photo Kiss',
-                'Soul Thread',
-                'Quiet Heart Glow',
-                'Mini Love Flash',
-              ];
+        ? const <String>[
+            'Soul Bloom',
+            'Locket Spark',
+            'Memory Glow',
+            'Little Love Pop',
+            'Our Soft Flash',
+            'Heartbeat Shine',
+            'Sweet Memory Beat',
+            'Soul Note Light',
+            'Photo Glow Up',
+            'Love Story Pop',
+            'Tiny Star Moment',
+            'Dreamy Heart Sync',
+          ]
+        : const <String>[
+            'Soft Memory',
+            'Soul Wink',
+            'Locket Glow',
+            'Love Flicker',
+            'Our Little Frame',
+            'Heartnote Spark',
+            'Sweet Tiny Burst',
+            'Memory Blink',
+            'Photo Kiss',
+            'Soul Thread',
+            'Quiet Heart Glow',
+            'Mini Love Flash',
+          ];
     final List<String> subtitles = megaBurst
         ? <String>[
             'Combo x$streakCount • tim rung lên một nhịp đẹp',
@@ -705,24 +670,24 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
             'Chuỗi $streakCount • hôm nay của mình đẹp ghê',
           ]
         : clearedCount >= 4
-            ? <String>[
-                'Clear $clearedCount dòng • ký ức bật lên thật xinh',
-                'Clear $clearedCount dòng • một khung ảnh vừa sáng dịu',
-                'Chuỗi $streakCount • ảnh hiện ra ở đúng khoảnh khắc đẹp',
-                'Clear $clearedCount dòng • Soul Locket vừa nở sáng',
-                'Chuỗi $streakCount • một chút đáng yêu vừa chạm tới',
-                'Clear $clearedCount dòng • tấm này lên hình rất tình',
-                'Chuỗi $streakCount • nhìn như một chiếc locket đang mở',
-              ]
-            : <String>[
-                'Chuỗi $streakCount • một mẩu ký ức vừa lóe lên',
-                'Clear $clearedCount dòng • ảnh nhỏ mà vẫn rất xinh',
-                'Chuỗi $streakCount • một góc thương vừa hiện ra',
-                'Clear $clearedCount dòng • cảm giác như mở locket nhỏ',
-                'Chuỗi $streakCount • nhẹ thôi nhưng rất dễ thương',
-                'Clear $clearedCount dòng • giữ lại khoảnh khắc này nhé',
-                'Chuỗi $streakCount • một tấm ảnh, một nhịp tim',
-              ];
+        ? <String>[
+            'Clear $clearedCount dòng • ký ức bật lên thật xinh',
+            'Clear $clearedCount dòng • một khung ảnh vừa sáng dịu',
+            'Chuỗi $streakCount • ảnh hiện ra ở đúng khoảnh khắc đẹp',
+            'Clear $clearedCount dòng • Soul Locket vừa nở sáng',
+            'Chuỗi $streakCount • một chút đáng yêu vừa chạm tới',
+            'Clear $clearedCount dòng • tấm này lên hình rất tình',
+            'Chuỗi $streakCount • nhìn như một chiếc locket đang mở',
+          ]
+        : <String>[
+            'Chuỗi $streakCount • một mẩu ký ức vừa lóe lên',
+            'Clear $clearedCount dòng • ảnh nhỏ mà vẫn rất xinh',
+            'Chuỗi $streakCount • một góc thương vừa hiện ra',
+            'Clear $clearedCount dòng • cảm giác như mở locket nhỏ',
+            'Chuỗi $streakCount • nhẹ thôi nhưng rất dễ thương',
+            'Clear $clearedCount dòng • giữ lại khoảnh khắc này nhé',
+            'Chuỗi $streakCount • một tấm ảnh, một nhịp tim',
+          ];
     final String label = labels[_random.nextInt(labels.length)];
     final String subtitle = subtitles[_random.nextInt(subtitles.length)];
 

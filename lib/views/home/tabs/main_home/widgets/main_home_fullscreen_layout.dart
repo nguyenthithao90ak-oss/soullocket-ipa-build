@@ -394,9 +394,9 @@ class _FullscreenHomeBody extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Image.asset(
+                child: HomeStickerAsset(
                   'assets/icons/cute_3d/avatar_puppy_heart.png',
-                  fit: BoxFit.contain,
+                  motion: SoulLocketStickerMotion.breathe,
                   errorBuilder: (context, error, stackTrace) => const Icon(
                     Icons.pets_rounded,
                     color: SLColors.thread,

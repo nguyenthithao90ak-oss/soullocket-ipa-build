@@ -8,7 +8,6 @@ import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:io';
 
 import '../../../models/social_post.dart';
 import '../../../utils/services/social_service.dart';
@@ -19,6 +18,8 @@ import '../../../core/sl_theme.dart';
 import '../../../utils/app_cache_manager.dart';
 import '../../../utils/sl_notice.dart';
 import '../../../utils/app_error_mapper.dart';
+import 'short_video_cached_video_controller.dart'
+    if (dart.library.html) 'short_video_cached_video_controller_web.dart';
 
 part 'short_video_feed_post_card.dart';
 part 'short_video_feed_comment_sheet.dart';
@@ -31,9 +32,9 @@ part 'short_video_feed_effects.dart';
 class ShortVideoFeedScreen extends StatefulWidget {
   final String houseId; // The ID of the currently logged in house (viewer)
   final String?
-      targetHouseId; // The ID of the house to fetch feed for (if filterType == 'house')
+  targetHouseId; // The ID of the house to fetch feed for (if filterType == 'house')
   final String
-      filterType; // 'global' | 'friends' | 'tophot' | 'house' | 'liked'
+  filterType; // 'global' | 'friends' | 'tophot' | 'house' | 'liked'
   final int initialIndex;
   final List<SocialPost>? initialPosts;
 
@@ -82,14 +83,14 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
         .ref('houses/${widget.houseId}/blocked_users')
         .onValue
         .listen((event) {
-      if (!mounted) return;
-      final v = event.snapshot.value;
-      final next = <String, dynamic>{};
-      if (v is Map) {
-        v.forEach((k, val) => next[k.toString()] = val);
-      }
-      setState(() => _blockedUsers = next);
-    });
+          if (!mounted) return;
+          final v = event.snapshot.value;
+          final next = <String, dynamic>{};
+          if (v is Map) {
+            v.forEach((k, val) => next[k.toString()] = val);
+          }
+          setState(() => _blockedUsers = next);
+        });
   }
 
   Future<void> _loadInitialFeed() async {
@@ -139,21 +140,31 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
 
   Future<List<SocialPost>> _fetchPage(int? endBeforeTs) async {
     if (widget.filterType == 'house' && widget.targetHouseId != null) {
-      return _socialService.fetchHouseFeedPage(widget.targetHouseId!,
-          endBeforeTs: endBeforeTs);
+      return _socialService.fetchHouseFeedPage(
+        widget.targetHouseId!,
+        endBeforeTs: endBeforeTs,
+      );
     } else if (widget.filterType == 'liked' && widget.targetHouseId != null) {
-      return _socialService.fetchLikedFeedPage(widget.targetHouseId!,
-          endBeforeTs: endBeforeTs);
+      return _socialService.fetchLikedFeedPage(
+        widget.targetHouseId!,
+        endBeforeTs: endBeforeTs,
+      );
     } else if (widget.filterType == 'repost' && widget.targetHouseId != null) {
-      return _socialService.fetchRepostFeedPage(widget.targetHouseId!,
-          endBeforeTs: endBeforeTs);
+      return _socialService.fetchRepostFeedPage(
+        widget.targetHouseId!,
+        endBeforeTs: endBeforeTs,
+      );
     } else if (widget.filterType == 'private' && widget.targetHouseId != null) {
-      return _socialService.fetchPrivateFeedPage(widget.targetHouseId!,
-          endBeforeTs: endBeforeTs);
+      return _socialService.fetchPrivateFeedPage(
+        widget.targetHouseId!,
+        endBeforeTs: endBeforeTs,
+      );
     } else if (widget.filterType == 'locket_profile' &&
         widget.targetHouseId != null) {
-      return _socialService.fetchLocketFeedPage(widget.targetHouseId!,
-          endBeforeTs: endBeforeTs);
+      return _socialService.fetchLocketFeedPage(
+        widget.targetHouseId!,
+        endBeforeTs: endBeforeTs,
+      );
     } else {
       return _socialService.fetchFeedByTypePage(
         feedType: widget.filterType,
@@ -166,10 +177,12 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
   void _triggerHeartEffect(Offset position) {
     for (int i = 0; i < 6; i++) {
       setState(() {
-        _flyingHearts.add(_FlyingHeart(
-          id: DateTime.now().millisecondsSinceEpoch + i,
-          position: position,
-        ));
+        _flyingHearts.add(
+          _FlyingHeart(
+            id: DateTime.now().millisecondsSinceEpoch + i,
+            position: position,
+          ),
+        );
       });
     }
   }
@@ -191,8 +204,10 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
         elevation: 0,
         title: Text(
           L10nService().translate('community_title'),
-          style:
-              const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -203,89 +218,100 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
         children: [
           if (_isLoading)
             const Center(
-                child: CircularProgressIndicator(color: Color(0xFFE91E8C)))
+              child: CircularProgressIndicator(color: Color(0xFFE91E8C)),
+            )
           else if (_posts.isEmpty)
             _buildEmpty()
           else
-            Builder(builder: (context) {
-              final viewerId = widget.houseId;
-              final isMe = viewerId == widget.targetHouseId;
-              final mediaPosts = _posts.where((p) {
-                if (p.imageUrl.isEmpty && p.videoUrl.isEmpty) {
-                  return false;
-                }
-                if (_blockedUsers.containsKey(p.houseId) &&
-                    _blockedUsers[p.houseId] == true) {
-                  return false;
-                }
-                if (isMe) {
+            Builder(
+              builder: (context) {
+                final viewerId = widget.houseId;
+                final isMe = viewerId == widget.targetHouseId;
+                final mediaPosts = _posts.where((p) {
+                  if (p.imageUrl.isEmpty && p.videoUrl.isEmpty) {
+                    return false;
+                  }
+                  if (_blockedUsers.containsKey(p.houseId) &&
+                      _blockedUsers[p.houseId] == true) {
+                    return false;
+                  }
+                  if (isMe) {
+                    return true;
+                  }
+                  if (p.privacy == 'private') {
+                    return false;
+                  }
                   return true;
-                }
-                if (p.privacy == 'private') {
-                  return false;
-                }
-                return true;
-              }).toList();
+                }).toList();
 
-              if (mediaPosts.isEmpty) return _buildEmpty();
+                if (mediaPosts.isEmpty) return _buildEmpty();
 
-              return PageView.builder(
-                physics: const SLPagePhysics(),
-                controller: _pageCtrl,
-                scrollDirection: Axis.vertical,
-                itemCount: mediaPosts.length + (_hasMore ? 1 : 0),
-                onPageChanged: (i) {
-                  setState(() => _currentIndex = i);
-                  if (i >= mediaPosts.length - 2) {
-                    _loadMoreFeed();
-                  }
-                },
-                itemBuilder: (context, index) {
-                  if (index >= mediaPosts.length) {
-                    return const Center(
-                      child:
-                          CircularProgressIndicator(color: Color(0xFFE91E8C)),
+                return PageView.builder(
+                  physics: const SLPagePhysics(),
+                  controller: _pageCtrl,
+                  scrollDirection: Axis.vertical,
+                  itemCount: mediaPosts.length + (_hasMore ? 1 : 0),
+                  onPageChanged: (i) {
+                    setState(() => _currentIndex = i);
+                    if (i >= mediaPosts.length - 2) {
+                      _loadMoreFeed();
+                    }
+                  },
+                  itemBuilder: (context, index) {
+                    if (index >= mediaPosts.length) {
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFFE91E8C),
+                        ),
+                      );
+                    }
+                    final post = mediaPosts[index];
+                    return _ShortVideoFeedPostCard(
+                      key: ValueKey(
+                        '${post.id}_${post.videoUrl}_${post.imageUrl}',
+                      ),
+                      post: post,
+                      houseId: widget.houseId,
+                      blockedUsers: _blockedUsers,
+                      isActive: index == _currentIndex,
+                      onDoubleTap: (pos) => _triggerHeartEffect(pos),
                     );
-                  }
-                  final post = mediaPosts[index];
-                  return _ShortVideoFeedPostCard(
-                    key: ValueKey(
-                        '${post.id}_${post.videoUrl}_${post.imageUrl}'),
-                    post: post,
-                    houseId: widget.houseId,
-                    blockedUsers: _blockedUsers,
-                    isActive: index == _currentIndex,
-                    onDoubleTap: (pos) => _triggerHeartEffect(pos),
-                  );
-                },
-              );
-            }),
-          ..._flyingHearts.map((h) => _HeartAnimation(
-                key: ValueKey(h.id),
-                heart: h,
-                onComplete: () {
-                  setState(() =>
-                      _flyingHearts.removeWhere((item) => item.id == h.id));
-                },
-              )),
+                  },
+                );
+              },
+            ),
+          ..._flyingHearts.map(
+            (h) => _HeartAnimation(
+              key: ValueKey(h.id),
+              heart: h,
+              onComplete: () {
+                setState(
+                  () => _flyingHearts.removeWhere((item) => item.id == h.id),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildEmpty() => Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.photo_library_outlined,
-                size: 64, color: Colors.white24),
-            SLSpacing.h16,
-            Text(
-              L10nService().translate('diary_msg_no_posts_yet'),
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white38, fontSize: 15),
-            ),
-          ],
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(
+          Icons.photo_library_outlined,
+          size: 64,
+          color: Colors.white24,
         ),
-      );
+        SLSpacing.h16,
+        Text(
+          L10nService().translate('diary_msg_no_posts_yet'),
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white38, fontSize: 15),
+        ),
+      ],
+    ),
+  );
 }
