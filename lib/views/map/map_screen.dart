@@ -1343,7 +1343,13 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       final zoom = _myLocation != null
           ? (_isRoleLive(widget.myRole) ? 16.2 : 15.6)
           : (_partnerLocation != null ? 15.2 : 14.8);
-      _mapController.move(focusPoint, zoom);
+      _mapController.fitCamera(
+        fm.CameraFit.coordinates(
+          coordinates: [focusPoint],
+          padding: _mapCameraPadding,
+          maxZoom: zoom,
+        ),
+      );
       _didAutoFit = true;
     } catch (_) {
       await Future<void>.delayed(const Duration(milliseconds: 240));
@@ -1389,25 +1395,13 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
 
     _isFitting = true;
     try {
-      if (uniquePoints.length == 1) {
-        _mapController.move(uniquePoints.first, 15.8);
-      } else {
-        final size = MediaQuery.sizeOf(context);
-        final bottomPadding = (size.height * 0.32).clamp(210.0, 310.0);
-        final horizontalPadding = (size.width * 0.10).clamp(34.0, 56.0);
-        _mapController.fitCamera(
-          fm.CameraFit.coordinates(
-            coordinates: uniquePoints,
-            padding: EdgeInsets.fromLTRB(
-              horizontalPadding,
-              118,
-              horizontalPadding,
-              bottomPadding,
-            ),
-            maxZoom: 15.4,
-          ),
-        );
-      }
+      _mapController.fitCamera(
+        fm.CameraFit.coordinates(
+          coordinates: uniquePoints,
+          padding: _mapCameraPadding,
+          maxZoom: uniquePoints.length == 1 ? 15.8 : 15.4,
+        ),
+      );
       _didAutoFit = true;
     } catch (_) {
       await Future<void>.delayed(const Duration(milliseconds: 280));

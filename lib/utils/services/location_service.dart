@@ -185,9 +185,12 @@ class LocationService {
 
     try {
       final initialPosition = await Geolocator.getCurrentPosition(
-        locationSettings: LocationSettings(accuracy: _bestForegroundAccuracy),
+        locationSettings: LocationSettings(
+          accuracy: _bestForegroundAccuracy,
+          timeLimit: _kInitialPositionTimeout,
+        ),
       ).timeout(_kInitialPositionTimeout);
-      await _handlePositionUpdate(
+      _queuePositionUpdate(
         normalizedHouseId,
         normalizedRole,
         initialPosition,
@@ -204,9 +207,11 @@ class LocationService {
         }
       }
       try {
-        final lastKnown = await Geolocator.getLastKnownPosition();
+        final lastKnown = await Geolocator.getLastKnownPosition().timeout(
+          const Duration(seconds: 3),
+        );
         if (lastKnown != null && _isFreshEnoughLastKnown(lastKnown)) {
-          await _handlePositionUpdate(
+          _queuePositionUpdate(
             normalizedHouseId,
             normalizedRole,
             lastKnown,
@@ -229,11 +234,8 @@ class LocationService {
               ? _backgroundCapableLocationSettings
               : _foregroundLocationSettings,
         ).listen(
-          (Position position) => _handlePositionUpdate(
-            normalizedHouseId,
-            normalizedRole,
-            position,
-          ),
+          (Position position) =>
+              _queuePositionUpdate(normalizedHouseId, normalizedRole, position),
           onError: (e, st) {
             if (kDebugMode) {
               debugPrint(
@@ -278,7 +280,7 @@ class LocationService {
     }
 
     try {
-      await _dbRef.update(updates);
+      await _dbRef.update(updates).timeout(const Duration(seconds: 8));
     } catch (e, st) {
       final errStr = e.toString().toLowerCase();
       if (errStr.contains('permission-denied') ||
@@ -369,6 +371,31 @@ class LocationService {
       );
     }
     return _foregroundLocationSettings;
+  }
+
+  /// Không giữ màn hình ở trạng thái khởi động trong lúc Firebase chờ mạng.
+  /// Lỗi đồng bộ được ghi lại; luồng GPS vẫn có thể nhận các điểm tiếp theo.
+  void _queuePositionUpdate(
+    String houseId,
+    String role,
+    Position position, {
+    bool forceWrite = false,
+  }) {
+    unawaited(
+      _handlePositionUpdate(
+        houseId,
+        role,
+        position,
+        forceWrite: forceWrite,
+      ).catchError((Object error, StackTrace stack) {
+        ErrorLoggerService.instance.logError(
+          error,
+          stack,
+          reason: 'LocationService position sync failed',
+          fatal: false,
+        );
+      }),
+    );
   }
 
   Future<void> _handlePositionUpdate(

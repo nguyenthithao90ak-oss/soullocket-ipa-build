@@ -591,9 +591,11 @@ class HouseService {
   Future<void> joinHouseByAcceptedInvite() async {
     try {
       await _refreshCallableSecurityContext(force: false);
+      final uid = _auth.currentUser?.uid;
       final prefs = await SharedPreferences.getInstance();
       final response = await CloudFunctionsHelper.callSecure<dynamic>(
         'joinHouseByInvite',
+        requireAppCheck: true,
         payload: const <String, dynamic>{},
         fallbackErrorMessage:
             'Yêu cầu ghép nối chưa được chấp nhận hoặc đã hết hạn.',
@@ -602,9 +604,32 @@ class HouseService {
       final map = _asStringDynamicMap(response.data);
       if (map != null && map['houseId'] != null) {
         final newHouseId = map['houseId'].toString();
-        await prefs.setString('il_house_id', newHouseId);
-        if (map['assignedRole'] != null) {
-          await prefs.setString('il_role', map['assignedRole'].toString());
+        // getCurrentHouseId ưu tiên secure storage; phải cập nhật cùng nơi
+        // sau khi server chuyển nhà, tránh màn ghép nối đọc lại nhà cũ.
+        if (uid != null && _auth.currentUser?.uid == uid) {
+          await SecureStorageService.instance.write(
+            SecureStorageService.keyHouseId,
+            newHouseId,
+          );
+          await SecureStorageService.instance.write(
+            SecureStorageService.keyAuthUid,
+            uid,
+          );
+          if (map['assignedRole'] != null) {
+            await SecureStorageService.instance.write(
+              SecureStorageService.keyRole,
+              map['assignedRole'].toString(),
+            );
+          }
+          await SecureStorageService.instance.write(
+            SecureStorageService.keyRelMode,
+            'couple',
+          );
+          await prefs.remove('il_house_id');
+          await prefs.remove('il_role');
+          await prefs.remove(_authUidPrefsKey);
+          _cachedSettings = null;
+          await prefs.remove('il_offline_cache_home_settings');
         }
         return;
       }

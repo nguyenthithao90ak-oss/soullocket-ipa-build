@@ -230,129 +230,57 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
   }
 
   Widget _buildMapBottomSheet() {
-    return NotificationListener<DraggableScrollableNotification>(
-      onNotification: (notification) {
-        _panelExtent.value = notification.extent;
-        return false;
-      },
-      child: DraggableScrollableSheet(
-        controller: _panelController,
-        initialChildSize: .42,
-        minChildSize: .20,
-        maxChildSize: .84,
-        snap: true,
-        snapSizes: const [.20, .42, .84],
-        builder: (context, scrollController) {
-          final colors = Theme.of(context).colorScheme;
-          return Align(
-            alignment: Alignment.bottomCenter,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: colors.surface,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(28),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: .10),
-                      blurRadius: 28,
-                      offset: const Offset(0, -4),
-                    ),
-                  ],
+    final colors = Theme.of(context).colorScheme;
+    return MapSlidingPanel(
+      controller: _panelController,
+      extent: _panelExtent,
+      single: _isSingleRelationship,
+      onToggle: _toggleMapPanel,
+      children: [
+        _buildSummaryCard(),
+        _buildPeopleStatusRow(),
+        const SizedBox(height: 14),
+        _buildLocationAccessCard(),
+        const SizedBox(height: 14),
+        Divider(color: colors.outlineVariant.withValues(alpha: .6)),
+        MapDetailsSection(
+          title: context.tr('map_lchsdichuy_2cc14d'),
+          icon: Icons.route_outlined,
+          child: _buildHistoryCard(),
+        ),
+        MapDetailsSection(
+          title: context.tr('map_refresh_memories'),
+          icon: Icons.bookmark_border_rounded,
+          child: _buildMemoryAndCheckinCard(),
+        ),
+        MapDetailsSection(
+          title: context.tr('map_refresh_privacy'),
+          icon: Icons.shield_outlined,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                context.tr(
+                  kIsWeb
+                      ? 'map_refresh_browser_body'
+                      : 'map_refresh_privacy_body',
                 ),
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(28),
-                  ),
-                  child: ListView(
-                    controller: scrollController,
-                    padding: EdgeInsets.fromLTRB(
-                      18,
-                      10,
-                      18,
-                      MediaQuery.paddingOf(context).bottom + 24,
-                    ),
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 36,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: colors.outlineVariant,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ValueListenableBuilder<double>(
-                        valueListenable: _panelExtent,
-                        builder: (context, extent, _) => MapPanelHeading(
-                          single: _isSingleRelationship,
-                          expanded: extent > .55,
-                          onToggle: _toggleMapPanel,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      _buildSummaryCard(),
-                      _buildLocationAccessCard(),
-                      const SizedBox(height: 14),
-                      _buildPeopleStatusRow(),
-                      const SizedBox(height: 14),
-                      Divider(
-                        color: colors.outlineVariant.withValues(alpha: .6),
-                      ),
-                      MapDetailsSection(
-                        title: context.tr('map_lchsdichuy_2cc14d'),
-                        icon: Icons.route_outlined,
-                        child: _buildHistoryCard(),
-                      ),
-                      MapDetailsSection(
-                        title: context.tr('map_refresh_memories'),
-                        icon: Icons.bookmark_border_rounded,
-                        child: _buildMemoryAndCheckinCard(),
-                      ),
-                      MapDetailsSection(
-                        title: context.tr('map_refresh_privacy'),
-                        icon: Icons.shield_outlined,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              context.tr(
-                                kIsWeb
-                                    ? 'map_refresh_browser_body'
-                                    : 'map_refresh_privacy_body',
-                              ),
-                              style: TextStyle(
-                                fontSize: 12,
-                                height: 1.6,
-                                color: colors.onSurfaceVariant,
-                              ),
-                            ),
-                            if (!kIsWeb)
-                              TextButton.icon(
-                                onPressed: _openLocationAppSettings,
-                                icon: const Icon(
-                                  Icons.settings_outlined,
-                                  size: 18,
-                                ),
-                                label: Text(
-                                  context.tr('map_refresh_open_settings'),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                style: TextStyle(
+                  fontSize: 12,
+                  height: 1.6,
+                  color: colors.onSurfaceVariant,
                 ),
               ),
-            ),
-          );
-        },
-      ),
+              if (!kIsWeb)
+                TextButton.icon(
+                  onPressed: _openLocationAppSettings,
+                  icon: const Icon(Icons.settings_outlined, size: 18),
+                  label: Text(context.tr('map_refresh_open_settings')),
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

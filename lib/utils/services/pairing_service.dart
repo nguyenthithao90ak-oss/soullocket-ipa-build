@@ -62,6 +62,7 @@ class PairingService {
 
     final response = await CloudFunctionsHelper.callSecure<dynamic>(
       'createPairingInvite',
+      requireAppCheck: true,
       payload: <String, dynamic>{'durationMinutes': durationMinutes},
       fallbackErrorMessage: 'Không thể tạo mã ghép nối lúc này.',
     );
@@ -76,6 +77,7 @@ class PairingService {
     if (user == null) throw Exception('Chưa đăng nhập');
     await CloudFunctionsHelper.callSecure<dynamic>(
       'requestPairingInvite',
+      requireAppCheck: true,
       payload: <String, dynamic>{'code': code},
       fallbackErrorMessage: 'Mã ghép nối không hợp lệ hoặc đã hết hạn.',
     );
@@ -133,6 +135,7 @@ class PairingService {
     if (user == null) return;
     await CloudFunctionsHelper.callSecure<dynamic>(
       'cancelPairingRequest',
+      requireAppCheck: true,
       payload: const <String, dynamic>{},
       fallbackErrorMessage: 'Không thể hủy yêu cầu ghép nối.',
     );
@@ -164,6 +167,7 @@ class PairingService {
   Future<void> acceptRequest(String requestId) async {
     await CloudFunctionsHelper.callSecure<dynamic>(
       'respondPairingRequest',
+      requireAppCheck: true,
       payload: <String, dynamic>{'requestId': requestId, 'accept': true},
       fallbackErrorMessage: 'Không thể chấp nhận yêu cầu ghép nối.',
     );
@@ -173,6 +177,7 @@ class PairingService {
   Future<void> rejectRequest(String requestId) async {
     await CloudFunctionsHelper.callSecure<dynamic>(
       'respondPairingRequest',
+      requireAppCheck: true,
       payload: <String, dynamic>{'requestId': requestId, 'accept': false},
       fallbackErrorMessage: 'Không thể từ chối yêu cầu ghép nối.',
     );
@@ -205,6 +210,7 @@ class PairingService {
   Future<void> deleteCode(String code) async {
     await CloudFunctionsHelper.callSecure<dynamic>(
       'revokePairingInvite',
+      requireAppCheck: true,
       payload: <String, dynamic>{'code': code},
       fallbackErrorMessage: 'Không thể hủy mã ghép nối.',
     );

@@ -30,6 +30,7 @@ class AuroraTabSwitcher extends StatelessWidget {
               child: _AuthTab(
                 active: isLoginTab,
                 label: context.tr('auth_refresh_login_tab'),
+                icon: Icons.favorite_outline_rounded,
                 onTap: onSelectLogin,
               ),
             ),
@@ -37,6 +38,7 @@ class AuroraTabSwitcher extends StatelessWidget {
               child: _AuthTab(
                 active: !isLoginTab,
                 label: context.tr('auth_refresh_register_tab'),
+                icon: Icons.auto_awesome_outlined,
                 onTap: onSelectRegister,
               ),
             ),
@@ -50,10 +52,12 @@ class AuroraTabSwitcher extends StatelessWidget {
 class _AuthTab extends StatelessWidget {
   final bool active;
   final String label;
+  final IconData icon;
   final VoidCallback onTap;
   const _AuthTab({
     required this.active,
     required this.label,
+    required this.icon,
     required this.onTap,
   });
 
@@ -65,8 +69,8 @@ class _AuthTab extends StatelessWidget {
       child: TextButton(
         onPressed: onTap,
         style: TextButton.styleFrom(
-          foregroundColor: active ? style.ink : style.muted,
-          backgroundColor: active ? style.surface : Colors.transparent,
+          foregroundColor: active ? style.accent : style.muted,
+          backgroundColor: active ? style.accentFill : Colors.transparent,
           minimumSize: const Size(0, 48),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
           shape: RoundedRectangleBorder(
@@ -78,7 +82,19 @@ class _AuthTab extends StatelessWidget {
             weight: active ? FontWeight.w600 : FontWeight.w400,
           ),
         ),
-        child: Text(label, textAlign: TextAlign.center),
+        child: LayoutBuilder(
+          builder: (context, constraints) => Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (constraints.maxWidth >= 130 &&
+                  MediaQuery.textScalerOf(context).scale(14) < 19) ...[
+                Icon(icon, size: 16),
+                const SizedBox(width: 6),
+              ],
+              Flexible(child: Text(label, textAlign: TextAlign.center)),
+            ],
+          ),
+        ),
       ),
     );
   }

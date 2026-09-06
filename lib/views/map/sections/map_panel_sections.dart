@@ -24,7 +24,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
             style: SLTheme.quicksand(
               fontSize: 14,
               fontWeight: FontWeight.w900,
-              color: SLColors.textPrimary,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ),
@@ -389,7 +389,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: SLRadius.xlAll,
         border: Border.all(
           color: _kMapPinkDeep.withValues(alpha: 0.15),
@@ -443,7 +443,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
               style: SLTheme.quicksand(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w900,
-                color: _kMapTextSoft,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             SLSpacing.h8,
@@ -473,7 +473,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
               style: SLTheme.quicksand(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w900,
-                color: _kMapTextSoft,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             SLSpacing.h8,
@@ -530,7 +530,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
               style: SLTheme.quicksand(
                 fontSize: 11.5,
                 fontWeight: FontWeight.w800,
-                color: _kMapTextSoft,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ),
@@ -551,7 +551,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       decoration: BoxDecoration(
-        color: SLColors.bgMuted,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: SLRadius.lgAll,
         border: Border.all(color: _kMapPanelBorder.withValues(alpha: 0.72)),
       ),
@@ -576,7 +576,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                   style: SLTheme.quicksand(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w900,
-                    color: _kMapTextSoft,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 SLSpacing.h4,
@@ -587,7 +587,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                   style: SLTheme.quicksand(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: _kMapTextMuted,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],

@@ -100,7 +100,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     });
     String? houseId;
     try {
-      houseId = await HouseService().getCurrentHouseId();
+      houseId = await HouseService().getCurrentHouseId(preferFresh: true);
     } catch (error) {
       handleLoadError(error);
       return;

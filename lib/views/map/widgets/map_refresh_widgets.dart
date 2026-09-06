@@ -6,6 +6,100 @@ import '../map_location_access.dart';
 const mapRose = Color(0xFFB64F6C);
 const mapBlue = Color(0xFF477DAD);
 
+class MapSlidingPanel extends StatelessWidget {
+  const MapSlidingPanel({
+    super.key,
+    required this.controller,
+    required this.extent,
+    required this.single,
+    required this.onToggle,
+    required this.children,
+  });
+
+  final DraggableScrollableController controller;
+  final ValueNotifier<double> extent;
+  final bool single;
+  final VoidCallback onToggle;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return NotificationListener<DraggableScrollableNotification>(
+      onNotification: (notification) {
+        extent.value = notification.extent;
+        return false;
+      },
+      child: DraggableScrollableSheet(
+        controller: controller,
+        initialChildSize: .42,
+        minChildSize: .20,
+        maxChildSize: .84,
+        snap: true,
+        snapSizes: const [.20, .42, .84],
+        builder: (context, scrollController) => Align(
+          alignment: Alignment.bottomCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: colors.surface,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: .10),
+                    blurRadius: 28,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
+                child: ListView(
+                  controller: scrollController,
+                  padding: EdgeInsets.fromLTRB(
+                    18,
+                    10,
+                    18,
+                    MediaQuery.paddingOf(context).bottom + 24,
+                  ),
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: colors.outlineVariant,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ValueListenableBuilder<double>(
+                      valueListenable: extent,
+                      builder: (context, value, _) => MapPanelHeading(
+                        single: single,
+                        expanded: value > .55,
+                        onToggle: onToggle,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ...children,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class MapPanelHeading extends StatelessWidget {
   const MapPanelHeading({
     super.key,
@@ -217,7 +311,10 @@ class MapAccessNotice extends StatelessWidget {
                     borderRadius: BorderRadius.circular(13),
                   ),
                 ),
-                onPressed: access.approximate && !web && onSettings != null
+                onPressed:
+                    actionKey == 'map_refresh_open_settings' &&
+                        !web &&
+                        onSettings != null
                     ? onSettings
                     : onAction,
                 icon: Icon(icon, size: 18),

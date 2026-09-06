@@ -114,12 +114,18 @@ class _AuroraTextFieldState extends State<AuroraTextField> {
             hintStyle: style.text(size: 14, color: style.muted),
             prefixIcon: widget.prefixIcon == null
                 ? null
-                : IconTheme(
-                    data: IconThemeData(
-                      size: 20,
-                      color: focused ? style.accent : style.muted,
+                : Padding(
+                    padding: const EdgeInsets.all(9),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: style.accentFill,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: IconTheme(
+                        data: IconThemeData(size: 20, color: style.accent),
+                        child: widget.prefixIcon!,
+                      ),
                     ),
-                    child: widget.prefixIcon!,
                   ),
             prefixIconConstraints: const BoxConstraints(
               minWidth: 48,
@@ -165,6 +171,7 @@ class AuroraPrimaryButton extends StatelessWidget {
   final VoidCallback? onDisabledTap;
   final bool isLoading;
   final bool enabled;
+  final IconData icon;
 
   const AuroraPrimaryButton({
     super.key,
@@ -173,6 +180,7 @@ class AuroraPrimaryButton extends StatelessWidget {
     this.onDisabledTap,
     this.isLoading = false,
     this.enabled = true,
+    this.icon = Icons.arrow_forward_rounded,
   });
 
   @override
@@ -214,7 +222,7 @@ class AuroraPrimaryButton extends StatelessWidget {
                 children: [
                   Expanded(child: Text(label, textAlign: TextAlign.center)),
                   const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward_rounded, size: 19),
+                  Icon(icon, size: 19),
                 ],
               ),
       ),
