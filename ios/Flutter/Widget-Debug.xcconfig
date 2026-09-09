@@ -1,0 +1,2 @@
+#include? "Pods/Target Support Files/Pods-SoulLocketWidget/Pods-SoulLocketWidget.debug.xcconfig"
+#include "NativeTarget.xcconfig"

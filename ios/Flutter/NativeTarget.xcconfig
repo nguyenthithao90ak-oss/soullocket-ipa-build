@@ -1,0 +1,5 @@
+// Áp dụng riêng cho target phụ; không gắn Flutter config vào toàn project.
+// Cần cùng version với Runner, nhưng không được liên kết Pods-Runner vào widget.
+#include "Generated.xcconfig"
+#include "AppConfig.xcconfig"
+#include? "AppConfig.local.xcconfig"
