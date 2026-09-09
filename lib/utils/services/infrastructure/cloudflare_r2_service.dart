@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:video_compress/video_compress.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
+import 'package:soullocket_app/utils/services/infrastructure/r2_upload_policy.dart';
 
 class CloudflareR2Service {
   static final CloudflareR2Service instance = CloudflareR2Service._internal();
@@ -36,29 +37,27 @@ class CloudflareR2Service {
     return rawUrl;
   }
 
-  String _getMimeType(String filePath) {
-    final ext = path.extension(filePath).toLowerCase();
-    switch (ext) {
-      case '.png':
-        return 'image/png';
-      case '.webp':
-        return 'image/webp';
-      case '.gif':
-        return 'image/gif';
-      case '.mp4':
-        return 'video/mp4';
-      case '.mov':
-        return 'video/quicktime';
-      case '.webm':
-        return 'video/webm';
-      case '.m4v':
-        return 'video/x-m4v';
-      case '.3gp':
-        return 'video/3gpp';
-      case '.jpg':
-      case '.jpeg':
-      default:
-        return 'image/jpeg';
+  Future<http.Response> _sendBytes(
+    String method,
+    Uri uri, {
+    required Map<String, String> headers,
+    required List<int> bytes,
+    Duration timeout = const Duration(minutes: 2),
+  }) async {
+    R2UploadPolicy.requireHttps(uri.toString());
+    // Không theo redirect: tránh chuyển token hoặc nội dung riêng tư sang host khác.
+    final request = http.Request(method, uri)
+      ..followRedirects = false
+      ..headers.addAll(headers)
+      ..bodyBytes = bytes;
+    final client = http.Client();
+    try {
+      return await client
+          .send(request)
+          .then(http.Response.fromStream)
+          .timeout(timeout);
+    } finally {
+      client.close();
     }
   }
 
@@ -69,6 +68,9 @@ class CloudflareR2Service {
     String extension = 'jpg',
   }) async {
     try {
+      final imageExtension = R2UploadPolicy.imageExtension(extension);
+      final fileName = 'image.$imageExtension';
+      final contentType = R2UploadPolicy.mimeTypeForPath(fileName);
       String cleanBase64 = base64Data;
       if (base64Data.contains(',')) {
         cleanBase64 = base64Data.split(',').last;
@@ -79,52 +81,65 @@ class CloudflareR2Service {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return null;
       final idToken = await user.getIdToken();
+      if (idToken == null || idToken.isEmpty) return null;
 
-      final url = Uri.parse(
+      final url = R2UploadPolicy.requireHttps(
         '${AppConfig.cloudflareWorkerUrl}/api/getSignedUploadUrl',
       );
-      final response = await http.post(
+      final response = await _sendBytes(
+        'POST',
         url,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $idToken',
         },
-        body: jsonEncode({
-          'fileName': 'image_$extension',
-          'contentType': 'image/$extension',
-          'folderPath': folderPath,
-          'fileSize': bytes.length,
-        }),
+        bytes: utf8.encode(
+          jsonEncode({
+            'fileName': fileName,
+            'contentType': contentType,
+            'folderPath': folderPath,
+            'fileSize': bytes.length,
+          }),
+        ),
+        timeout: const Duration(seconds: 30),
       );
 
       if (response.statusCode != 200) {
-        debugPrint('[CloudflareR2] Worker returned error: ${response.body}');
+        debugPrint(
+          '[CloudflareR2] Worker returned error: ${response.statusCode}',
+        );
         return null;
       }
 
       final resData = jsonDecode(response.body)['result'] as Map;
-      final uploadUrl = resData['uploadUrl'] as String;
+      final uploadUri = R2UploadPolicy.requireHttps(
+        resData['uploadUrl'] as String,
+      );
       final publicUrl = resData['publicUrl'] as String;
-      final headers = Map<String, String>.from(resData['headers'] ?? {});
-      headers['Authorization'] = 'Bearer $idToken';
+      final headers = R2UploadPolicy.uploadHeaders(
+        workerUri: url,
+        uploadUri: uploadUri,
+        idToken: idToken,
+        contentType: contentType,
+        providedHeaders: resData['headers'],
+      );
 
       // Tiến hành upload nhị phân trực tiếp bằng HTTP PUT qua proxy Worker hoặc R2
-      final putResponse = await http.put(
-        Uri.parse(uploadUrl),
+      final putResponse = await _sendBytes(
+        'PUT',
+        uploadUri,
         headers: headers,
-        body: bytes,
+        bytes: bytes,
       );
 
       if (putResponse.statusCode == 200 || putResponse.statusCode == 201) {
         return publicUrl;
       } else {
-        debugPrint(
-          '[CloudflareR2] PUT failed: ${putResponse.statusCode} - ${putResponse.body}',
-        );
+        debugPrint('[CloudflareR2] PUT failed: ${putResponse.statusCode}');
         return null;
       }
     } catch (e) {
-      debugPrint('[CloudflareR2] Upload Base64 failed: $e');
+      debugPrint('[CloudflareR2] Upload Base64 failed: ${e.runtimeType}');
       return null;
     }
   }
@@ -137,8 +152,9 @@ class CloudflareR2Service {
   }) async {
     try {
       String fileName = path.basename(file.path);
-      final contentType = _getMimeType(file.path);
-      final isVideo = contentType.startsWith('video/');
+      final isVideo = R2UploadPolicy.mimeTypeForPath(
+        file.path,
+      ).startsWith('video/');
 
       File finalFile = file;
 
@@ -176,6 +192,8 @@ class CloudflareR2Service {
         }
       }
 
+      // VideoCompress có thể đổi MOV sang MP4; ký MIME của file thực sự được gửi.
+      final contentType = R2UploadPolicy.mimeTypeForPath(finalFile.path);
       final fileSize = await finalFile.length();
       debugPrint(
         '[CloudflareR2] Upload file: $fileName, size: ${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB, type: $contentType',
@@ -187,47 +205,57 @@ class CloudflareR2Service {
         return null;
       }
       final idToken = await user.getIdToken();
+      if (idToken == null || idToken.isEmpty) return null;
 
-      final url = Uri.parse(
+      final url = R2UploadPolicy.requireHttps(
         '${AppConfig.cloudflareWorkerUrl}/api/getSignedUploadUrl',
       );
-      final response = await http.post(
+      final response = await _sendBytes(
+        'POST',
         url,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $idToken',
         },
-        body: jsonEncode({
-          'fileName': fileName,
-          'contentType': contentType,
-          'folderPath': folderPath,
-          'fileSize': fileSize,
-          'exactPath': storagePathOverride,
-        }),
+        bytes: utf8.encode(
+          jsonEncode({
+            'fileName': fileName,
+            'contentType': contentType,
+            'folderPath': folderPath,
+            'fileSize': fileSize,
+            'exactPath': storagePathOverride,
+          }),
+        ),
+        timeout: const Duration(seconds: 30),
       );
 
       if (response.statusCode != 200) {
         debugPrint(
-          '[CloudflareR2] Worker returned error (${response.statusCode}): ${response.body}',
+          '[CloudflareR2] Worker returned error (${response.statusCode})',
         );
         return null;
       }
 
       final resData = jsonDecode(response.body)['result'] as Map;
-      final uploadUrl = resData['uploadUrl'] as String;
+      final uploadUri = R2UploadPolicy.requireHttps(
+        resData['uploadUrl'] as String,
+      );
       final publicUrl = resData['publicUrl'] as String;
-      final headers = Map<String, String>.from(resData['headers'] ?? {});
-      headers['Authorization'] = 'Bearer $idToken';
+      final headers = R2UploadPolicy.uploadHeaders(
+        workerUri: url,
+        uploadUri: uploadUri,
+        idToken: idToken,
+        contentType: contentType,
+        providedHeaders: resData['headers'],
+      );
 
       // Video lớn: dùng streamed request để không load hết vào RAM
       if (isVideo && fileSize > 5 * 1024 * 1024) {
         debugPrint(
           '[CloudflareR2] Using streamed upload for video ($fileName)...',
         );
-        final streamedRequest = http.StreamedRequest(
-          'PUT',
-          Uri.parse(uploadUrl),
-        );
+        final streamedRequest = http.StreamedRequest('PUT', uploadUri)
+          ..followRedirects = false;
         streamedRequest.headers.addAll(headers);
         streamedRequest.contentLength = fileSize;
 
@@ -245,34 +273,34 @@ class CloudflareR2Service {
         final statusCode = streamedResponse.statusCode;
 
         if (statusCode == 200 || statusCode == 201) {
-          debugPrint(
-            '[CloudflareR2] ✅ Video uploaded successfully: $publicUrl',
-          );
+          await streamedResponse.stream.drain<void>();
+          debugPrint('[CloudflareR2] ✅ Video uploaded successfully');
           return publicUrl;
         } else {
-          final body = await streamedResponse.stream.bytesToString();
-          debugPrint('[CloudflareR2] Video PUT failed ($statusCode): $body');
+          await streamedResponse.stream.drain<void>();
+          debugPrint('[CloudflareR2] Video PUT failed ($statusCode)');
           return null;
         }
       }
 
       // Ảnh hoặc file nhỏ: dùng readAsBytes như cũ
       final bytes = await finalFile.readAsBytes();
-      final putResponse = await http
-          .put(Uri.parse(uploadUrl), headers: headers, body: bytes)
-          .timeout(const Duration(minutes: 2));
+      final putResponse = await _sendBytes(
+        'PUT',
+        uploadUri,
+        headers: headers,
+        bytes: bytes,
+      );
 
       if (putResponse.statusCode == 200 || putResponse.statusCode == 201) {
-        debugPrint('[CloudflareR2] ✅ File uploaded successfully: $publicUrl');
+        debugPrint('[CloudflareR2] ✅ File uploaded successfully');
         return publicUrl;
       } else {
-        debugPrint(
-          '[CloudflareR2] PUT failed: ${putResponse.statusCode} - ${putResponse.body}',
-        );
+        debugPrint('[CloudflareR2] PUT failed: ${putResponse.statusCode}');
         return null;
       }
     } catch (e) {
-      debugPrint('[CloudflareR2] ❌ Lỗi khi upload: $e');
+      debugPrint('[CloudflareR2] ❌ Lỗi khi upload: ${e.runtimeType}');
       return null;
     }
   }
@@ -288,24 +316,27 @@ class CloudflareR2Service {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return false;
       final idToken = await user.getIdToken();
+      if (idToken == null || idToken.isEmpty) return false;
 
-      final apiUrl = Uri.parse(
+      final apiUrl = R2UploadPolicy.requireHttps(
         '${AppConfig.cloudflareWorkerUrl}/api/deleteR2Object',
       );
-      final response = await http.post(
+      final response = await _sendBytes(
+        'POST',
         apiUrl,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $idToken',
         },
-        body: jsonEncode({'objectUrl': url}),
+        bytes: utf8.encode(jsonEncode({'objectUrl': url})),
+        timeout: const Duration(seconds: 30),
       );
 
       if (response.statusCode != 200) return false;
       final resData = jsonDecode(response.body)['result'] as Map;
       return resData['success'] as bool? ?? false;
     } catch (e) {
-      debugPrint('[CloudflareR2] Lỗi xoá file: $e');
+      debugPrint('[CloudflareR2] Lỗi xoá file: ${e.runtimeType}');
       return false;
     }
   }
@@ -316,24 +347,27 @@ class CloudflareR2Service {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return false;
       final idToken = await user.getIdToken();
+      if (idToken == null || idToken.isEmpty) return false;
 
-      final apiUrl = Uri.parse(
+      final apiUrl = R2UploadPolicy.requireHttps(
         '${AppConfig.cloudflareWorkerUrl}/api/deleteR2Object',
       );
-      final response = await http.post(
+      final response = await _sendBytes(
+        'POST',
         apiUrl,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $idToken',
         },
-        body: jsonEncode({'objectPath': objectName}),
+        bytes: utf8.encode(jsonEncode({'objectPath': objectName})),
+        timeout: const Duration(seconds: 30),
       );
 
       if (response.statusCode != 200) return false;
       final resData = jsonDecode(response.body)['result'] as Map;
       return resData['success'] as bool? ?? false;
     } catch (e) {
-      debugPrint('[CloudflareR2] Lỗi xoá theo path: $e');
+      debugPrint('[CloudflareR2] Lỗi xoá theo path: ${e.runtimeType}');
       return false;
     }
   }

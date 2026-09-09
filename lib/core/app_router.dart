@@ -1,15 +1,39 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soullocket_app/views/app_entry.dart';
 import 'package:soullocket_app/utils/services/notification_service.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/widget_action_service.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:soullocket_app/utils/services/consent_service.dart';
 import 'package:soullocket_app/views/utilities/love_card_public_link_screen.dart';
 import 'package:soullocket_app/utils/services/love_card_link_service.dart';
 
 import 'constants/app_config.dart';
 import 'routing/external_link_startup.dart';
+
+class _ConsentAnalyticsObserver extends NavigatorObserver {
+  FirebaseAnalyticsObserver? _delegate;
+  FirebaseAnalyticsObserver? get _active {
+    if (!ConsentService.optionalCollectionAllowed.value) return null;
+    return _delegate ??= FirebaseAnalyticsObserver(
+      analytics: FirebaseAnalytics.instance,
+    );
+  }
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      _active?.didPush(route, previousRoute);
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      _active?.didPop(route, previousRoute);
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) =>
+      _active?.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+}
 
 class AppRouter {
   static final _startupUri = Uri.base;
@@ -20,9 +44,7 @@ class AppRouter {
     // Thiệp công khai mở trực tiếp, không phụ thuộc đăng nhập hoặc tải Home.
     overridePlatformDefaultLocation:
         kIsWeb && shouldStartAtAppEntry(_startupUri),
-    observers: [
-      FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
-    ],
+    observers: [_ConsentAnalyticsObserver()],
     routes: [
       GoRoute(path: '/', builder: (context, state) => const AppEntry()),
       GoRoute(

@@ -15,6 +15,7 @@
 library;
 
 import 'package:get_it/get_it.dart';
+import 'package:soullocket_app/utils/services/privacy_collection_service.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
 import 'package:soullocket_app/utils/services/house_settings_service.dart';
 import 'package:soullocket_app/utils/services/location_service.dart';
@@ -35,6 +36,7 @@ final GetIt locator = GetIt.instance;
 /// - Storage: secure storage, offline cache.
 /// - Insight/Utility: love insight, utility chung, note.
 void setupLocator() {
+  locator.registerLazySingleton(() => PrivacyCollectionService.instance);
   // ── House domain ────────────────────────────────────────────────────────
   locator.registerLazySingleton(() => HouseService());
   locator.registerLazySingleton(() => HouseSettingsService());

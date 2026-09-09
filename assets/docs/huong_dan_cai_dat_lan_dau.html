@@ -1,364 +1,57 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Hướng dẫn cài đặt lần đầu</title>
-  <style>
-    :root {
-      --primary: #7b1fa2;
-      --primary-dark: #4a148c;
-      --text: #1c1e21;
-      --text-secondary: #65676b;
-      --text-tertiary: #8a8d91;
-      --border: #e4e6ea;
-      --bg: #f0f2f5;
-      --surface: #ffffff;
-      --blue: #1877f2;
-      --note-bg: #e7f3ff;
-      --warning-bg: #fff4e5;
-      --th-bg: #f7f8fa;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      font-size: 15px;
-      line-height: 1.6;
-    }
-
-    .page {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 0 0 48px;
-    }
-
-    /* ── HERO ── */
-    .hero {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 28px 20px 24px;
-      position: static;
-      overflow: visible;
-    }
-
-    .hero::before, .hero::after { display: none; }
-
-    .badge {
-      display: inline-block;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--primary);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      margin-bottom: 10px;
-    }
-
-    h1 {
-      font-size: 24px;
-      font-weight: 800;
-      color: var(--text);
-      line-height: 1.25;
-      margin-bottom: 10px;
-    }
-
-    h2 {
-      font-size: 17px;
-      font-weight: 800;
-      color: var(--text);
-      margin-bottom: 12px;
-      padding-bottom: 10px;
-      border-bottom: 2px solid var(--primary);
-      display: inline-block;
-    }
-
-    h3 {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text);
-      margin: 16px 0 8px;
-    }
-
-    .lead {
-      font-size: 15px;
-      color: var(--text-secondary);
-      line-height: 1.55;
-      margin-bottom: 14px;
-    }
-
-    /* ── QUICK NAV (TOC) ── */
-    .quick-nav {
-      display: block;
-      padding: 0 20px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .quick-nav a {
-      display: flex;
-      align-items: center;
-      padding: 13px 0;
-      border-bottom: 1px solid var(--border);
-      color: var(--blue);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 600;
-      background: transparent;
-      border-radius: 0;
-      box-shadow: none;
-    }
-
-    .quick-nav a:last-child { border-bottom: none; }
-
-    .quick-nav a::after {
-      content: "›";
-      margin-left: auto;
-      color: var(--text-tertiary);
-      font-size: 16px;
-    }
-
-    /* ── GRID CARDS → FLAT LIST ── */
-    .grid { display: block; }
-
-    .card {
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
-      border-radius: 0;
-      background: transparent;
-    }
-
-    .card:last-child { border-bottom: none; }
-
-    .card strong {
-      display: block;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 3px;
-    }
-
-    /* ── SECTIONS & FOOTER ── */
-    .section, .footer-card {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 20px 20px;
-      border-radius: 0;
-      box-shadow: none;
-      backdrop-filter: none;
-      margin-top: 0;
-    }
-
-    p { margin-bottom: 10px; color: var(--text-secondary); font-size: 14px; }
-
-    ul, ol, .steps {
-      padding-left: 18px;
-      margin-bottom: 10px;
-    }
-
-    li {
-      font-size: 14px;
-      color: var(--text-secondary);
-      margin-bottom: 6px;
-      line-height: 1.5;
-    }
-
-    a {
-      color: var(--blue);
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    a:hover { text-decoration: underline; }
-
-    code {
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: #e4e6ea;
-      font-family: monospace;
-      font-size: 13px;
-    }
-
-    /* ── CALLOUTS ── */
-    .tip, .note, .warning {
-      border-radius: 6px;
-      padding: 12px 14px;
-      margin: 12px 0;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    .tip, .note {
-      background: var(--note-bg);
-      border-left: 3px solid var(--blue);
-    }
-
-    .warning {
-      background: var(--warning-bg);
-      border-left: 3px solid #f57c00;
-    }
-
-    .warning strong { color: #e65100; }
-
-    @media (max-width: 600px) {
-      .hero, .section, .footer-card, .quick-nav {
-        padding-left: 16px;
-        padding-right: 16px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Kiểm tra tài khoản, dữ liệu và quyền riêng tư trước khi sử dụng thường xuyên.">
+<meta name="soullocket-document-version" content="2026-09-09">
+<title>Thiết lập SoulLocket lần đầu</title>
+<style>
+:root{color-scheme:light;--ink:#30292d;--muted:#6d6067;--accent:#a13e5c;--line:#eadde2;--paper:#fff;--bg:#faf6f7}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 system-ui,-apple-system,"Segoe UI",sans-serif;overflow-wrap:anywhere}
+.page{max-width:880px;margin:auto;padding:28px 24px 56px}
+header,section,footer{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;margin:0 0 18px}
+.brand{font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:750;color:var(--accent)}
+h1{font-size:clamp(26px,5vw,36px);line-height:1.25;margin:12px 0 16px;letter-spacing:-.025em}
+h2{font-size:21px;line-height:1.4;margin:0 0 14px}h3{font-size:17px;margin:22px 0 10px}
+p{margin:0 0 14px}p:last-child,ul:last-child,ol:last-child{margin-bottom:0}
+.meta,.small{font-size:14px;color:var(--muted)}ul,ol{padding-left:24px;margin:10px 0 16px}li{margin:7px 0}
+a{color:var(--accent);text-underline-offset:3px}a:hover{text-decoration-thickness:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #7943ab;outline-offset:4px}
+nav{display:flex;flex-wrap:wrap;gap:10px 20px;margin:20px 0 0}nav a{font-size:14px}
+.note,.warning{padding:16px 18px;border-radius:10px;margin:16px 0;border-left:4px solid var(--accent);background:#fcf0f4}
+.warning{border-color:#a7641a;background:#fff6e8}.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}
+th{background:#faf5f7}button,.button{display:inline-block;padding:12px 18px;background:var(--accent);color:white;border:0;border-radius:10px;font:inherit;font-weight:650;cursor:pointer;text-decoration:none}
+button:disabled{opacity:.6;cursor:wait}label{display:block;font-weight:650;margin:16px 0 6px}
+input:not([type=checkbox]),textarea{width:100%;padding:12px;font:inherit;color:inherit;background:white;border:1px solid #a99aa2;border-radius:8px}
+textarea{resize:vertical;min-height:110px}.checkbox{display:flex;gap:12px;align-items:flex-start;margin:20px 0}
+.checkbox input{flex-shrink:0;width:20px;height:20px;margin-top:5px}.checkbox label{font-weight:400;margin:0}
+.status{display:none;padding:16px;margin-top:16px;border-radius:10px}.status.success{display:block;background:#eaf7ef;color:#245635}.status.error{display:block;background:#fff0f0;color:#96323c}
+.skip{position:absolute;top:-100px;left:16px;background:white;padding:12px;z-index:10}.skip:focus{top:10px}
+@media(max-width:560px){.page{padding:16px 12px 32px}header,section,footer{padding:20px 18px;border-radius:14px}th,td{padding:10px 8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{body{background:white}.page{max-width:none;padding:0}header,section,footer{border:0;padding:12px 0}nav,.skip,form{display:none}h2,h3{break-after:avoid}}
+</style>
 </head>
 <body>
-  <main class="page">
-    <section class="hero">
-      <div class="badge">🚀 Cài đặt lần đầu</div>
-      <h1>Thiết lập SoulLocket đúng ngay từ lần mở đầu tiên</h1>
-      <p class="lead">
-        Tài liệu này dành cho người vừa tạo nhà xong. Bạn chỉ cần đi lần lượt vài bước
-        dưới đây là app sẽ vào đúng luồng, dữ liệu lưu ổn định và phần riêng tư được bảo vệ ngay từ đầu.
-      </p>
+<a class="skip" href="#noi-dung-chinh">Đến nội dung chính</a>
+<main class="page" id="noi-dung-chinh">
+<header><div class="brand">SoulLocket · Tài liệu và hỗ trợ</div><h1>Thiết lập SoulLocket lần đầu</h1><p>Kiểm tra tài khoản, dữ liệu và quyền riêng tư trước khi sử dụng thường xuyên.</p><p class="meta">Cập nhật nội dung: <time datetime="2026-09-09">09/09/2026</time> · Phiên bản tài liệu 2026-09-09</p><nav aria-label="Ngôn ngữ tài liệu"><span lang="vi" aria-current="page">Tiếng Việt</span><a href="huong_dan_cai_dat_lan_dau-en.html" lang="en" hreflang="en">English</a></nav><nav aria-label="Mục lục"><a href="#tai-khoan">1. Kiểm tra tài khoản</a>
+<a href="#ghep-noi">2. Dùng một mình hoặc ghép nối</a>
+<a href="#bao-mat">3. Bảo vệ thiết bị và cấp quyền</a>
+<a href="#kiem-tra">4. Kiểm tra lưu dữ liệu</a>
+<a href="#ca-nhan-hoa">5. Cá nhân hóa</a></nav></header>
 
-      <div class="quick-nav">
-        <a href="#bat-dau">1. Bắt đầu ở đâu</a>
-        <a href="#bao-mat">2. Bảo mật bằng mã PIN</a>
-        <a href="#giao-dien">3. Giao diện và nhạc</a>
-        <a href="#tab-chinh">4. Các tab chính</a>
-        <a href="#single-couple">5. Độc thân và Couple</a>
-        <a href="#kiem-tra">6. Kiểm tra nhanh sau cài đặt</a>
-      </div>
-    </section>
-
-    <section id="bat-dau" class="section">
-      <h2>1. Bắt đầu ở đâu</h2>
-      <ol class="steps">
-        <li>Mở <code>Cài đặt</code> để kiểm tra tên ngôi nhà, tên hiển thị và các thông tin cơ bản.</li>
-        <li>Đảm bảo chế độ của bạn đang đúng: <code>Độc thân</code> hoặc <code>Couple</code>.</li>
-        <li>Nếu vừa tạo nhà xong, nên đọc bảng hướng dẫn nổi trong app một lần trước khi tùy chỉnh sâu.</li>
-      </ol>
-
-      <div class="grid">
-        <div class="card">
-          <strong>Vì sao phải làm bước này</strong>
-          Tên nhà, tên hiển thị và chế độ quan hệ sẽ ảnh hưởng tới Home, avatar, QR ghép đôi và nhiều tiện ích phía sau.
-        </div>
-        <div class="card">
-          <strong>Luồng an toàn nhất</strong>
-          Hoàn thiện nhà trước, bật mã PIN sau, rồi mới chỉnh giao diện và thử các tab khác.
-        </div>
-      </div>
-    </section>
-
-    <section id="bao-mat" class="section">
-      <h2>2. Bảo mật bằng mã PIN</h2>
-      <p>
-        Sau khi vào app lần đầu, nên bật mã PIN càng sớm càng tốt. Đây là lớp khóa cơ bản
-        để bảo vệ nhật ký, phần riêng tư và các dữ liệu nhạy cảm của bạn.
-      </p>
-      <ol class="steps">
-        <li>Vào <code>Cài đặt &gt; Bảo mật</code>.</li>
-        <li>Bật khóa app bằng <code>mã PIN</code>.</li>
-        <li>Nếu máy hỗ trợ, bạn có thể bật thêm sinh trắc học sau đó.</li>
-      </ol>
-      <div class="warning">
-        Nếu chưa bật mã PIN, người khác có thể cầm máy và mở trực tiếp app khi bạn quên thoát màn hình.
-      </div>
-    </section>
-
-    <section id="giao-dien" class="section">
-      <h2>3. Giao diện, hiệu ứng và nhạc nền</h2>
-      <p>
-        Phần này nằm trong <code>Cài đặt &gt; Giao diện</code>. Bạn có thể chỉnh theme, hiệu ứng rơi,
-        font chữ, nhạc nền và một số thông số hiển thị của ngôi nhà.
-      </p>
-
-      <div class="grid">
-        <div class="card">
-          <strong>Theme và hiệu ứng</strong>
-          Chọn nền, hiệu ứng rơi và màu khối để Home nhìn đúng phong cách bạn muốn.
-        </div>
-        <div class="card">
-          <strong>Âm nhạc</strong>
-          Dán link YouTube, MP3 hoặc MP4 để dùng làm nhạc nền cho nhà.
-        </div>
-        <div class="card">
-          <strong>Hiệu năng</strong>
-          Nếu máy yếu, ưu tiên cấu hình nhẹ để tránh lag và giảm tự làm mới ngoài ý muốn.
-        </div>
-      </div>
-
-      <div class="tip">
-        Sau khi chỉnh xong giao diện, quay lại Home để kiểm tra ngay xem font, màu và hiệu ứng đã đúng ý chưa.
-      </div>
-    </section>
-
-    <section id="tab-chinh" class="section">
-      <h2>4. Các tab chính nên thử ngay</h2>
-      <div class="grid">
-        <div class="card">
-          <strong>Home</strong>
-          Màn hình chính của ngôi nhà. Kiểm tra avatar, tên hiển thị, đếm ngày và các khối thông tin.
-        </div>
-        <div class="card">
-          <strong>Nhật ký</strong>
-          Thử viết một mục <em>Tâm tư</em> hoặc thêm một kỷ niệm đầu tiên để kiểm tra dữ liệu đã lưu.
-        </div>
-        <div class="card">
-          <strong>Tiện ích</strong>
-          Khám phá các công cụ nhanh như ghi chú, quà tặng, lịch sử, ảnh và các tiện ích đôi.
-        </div>
-        <div class="card">
-          <strong>Cộng đồng</strong>
-          Xem feed, luật đăng bài và cách hiển thị bình luận trước khi dùng thường xuyên.
-        </div>
-      </div>
-    </section>
-
-    <section id="single-couple" class="section">
-      <h2>5. Độc thân và Couple khác nhau thế nào</h2>
-      <h3>Nếu đang ở chế độ Độc thân</h3>
-      <p>
-        Bạn vẫn dùng app bình thường. Khi muốn ghép đôi, hãy mở QR kết nối để chuyển sang luồng đôi.
-        Một số tính năng sẽ chỉ mở đầy đủ sau khi ghép đôi thành công.
-      </p>
-
-      <h3>Nếu đang ở chế độ Couple</h3>
-      <p>
-        Nên kiểm tra lại tên hai người, avatar, đếm ngày và các quyền riêng tư liên quan đến nhà chung.
-      </p>
-
-      <div class="note">
-        Chế độ quan hệ là nền tảng để app phân luồng. Nếu tạo sai ngay từ đầu, một số khu vực sẽ hiển thị không đúng kỳ vọng.
-      </div>
-    </section>
-
-    <section id="kiem-tra" class="section">
-      <h2>6. Kiểm tra nhanh sau khi cài xong</h2>
-      <ol class="steps">
-        <li>Thoát ra Home và xác nhận tên nhà hiển thị đúng.</li>
-        <li>Vào Nhật ký, tạo một mục ngắn để kiểm tra lưu dữ liệu.</li>
-        <li>Vào Cài đặt, chắc chắn rằng mã PIN đã bật nếu bạn cần bảo vệ riêng tư.</li>
-        <li>Thử mở Tiện ích hoặc Âm nhạc để xem theme và hiệu ứng đã hoạt động đúng chưa.</li>
-      </ol>
-
-      <div class="tip">
-        Nếu thấy giao diện chưa ổn, dữ liệu không hiển thị đúng hoặc quyền chưa được cấp đủ,
-        hãy mở lại mục <code>Hỗ trợ &amp; Pháp lý</code> trong Cài đặt để xem tài liệu và liên hệ hỗ trợ.
-      </div>
-    </section>
-
-    <section class="footer-card">
-      <strong style="display:block; margin-bottom:8px; color:var(--pink); font-size:16px;">Tóm tắt ngắn</strong>
-      <p style="margin:0;">
-        Thứ tự khuyến nghị: <code>Cài đặt cơ bản</code> → <code>Bật mã PIN</code> → <code>Chỉnh giao diện/nhạc</code> →
-        <code>Viết nhật ký đầu tiên</code> → <code>Khám phá các tab còn lại</code>.
-      </p>
-      <p style="margin:12px 0 0; color:var(--muted); font-size:13px;">
-        Cập nhật lần cuối: 07/08/2026
-      </p>
-    </section>
-  </main>
+<section id="tai-khoan"><h2>1. Kiểm tra tài khoản</h2><p>Mở Cài đặt, kiểm tra email, tên, ảnh và House hiện tại. Khi đổi máy, dùng đúng tài khoản cũ; không tạo tài khoản mới để khôi phục dữ liệu.</p><p>Đọc <a href="privacy.html">Chính sách bảo mật</a> và <a href="cookie-policy.html">giới hạn lựa chọn cookie</a>. Không phải mọi SDK đều bị tắt khi chọn “Thiết yếu”.</p></section>
+<section id="ghep-noi"><h2>2. Dùng một mình hoặc ghép nối</h2><p>Bạn có thể dùng một mình. Khi muốn kết nối, mở <strong>Kết nối nửa kia</strong>: một người tạo mã mời/QR, người còn lại nhập/quét rồi chờ duyệt. Chế độ Couple không tự ghép tài khoản.</p><p><strong>Sao lưu trước:</strong> người nhập mã chuyển sang House của người tạo; dữ liệu House cũ không tự hợp nhất và House cũ không còn thành viên có thể bị dọn. Khi xong hãy kiểm tra hai avatar và ngày kết nối. Xem <a href="huong_dan.html#tai-khoan">hướng dẫn ghép nối</a>.</p></section>
+<section id="bao-mat"><h2>3. Bảo vệ thiết bị và cấp quyền</h2><p>Bật PIN khóa app và sinh trắc học nếu muốn thêm lớp khóa. Chỉ cấp camera, micro, vị trí, sức khỏe hoặc thông báo cho tính năng bạn sử dụng; có thể thu hồi trong cài đặt hệ điều hành.</p><p>Nếu bật chia sẻ vị trí nền/giấc ngủ, kiểm tra ai trong House có thể thấy trạng thái. PIN không tự hạn chế quyền của thành viên còn lại.</p></section>
+<section id="kiem-tra"><h2>4. Kiểm tra lưu dữ liệu</h2><ol><li>Mở Nhật ký → Tâm sự, nhập nội dung ngắn và bấm lưu.</li><li>Chờ thông báo thành công, quay lại danh sách để kiểm tra.</li><li>Thử thêm ảnh kỷ niệm, đợi tải lên xong rồi mở lại.</li><li>Nếu lỗi, giữ bản nháp và báo hỗ trợ. Chưa xóa app, xóa bộ nhớ hoặc ghép lại khi chưa rõ dữ liệu đã đồng bộ.</li></ol></section>
+<section id="ca-nhan-hoa"><h2>5. Cá nhân hóa</h2><p>Chỉnh giao diện, ngày kỷ niệm, âm nhạc hoặc lối tắt tại các mục đang hiển thị trong Cài đặt. Chỉ dùng nội dung/đường dẫn có quyền chia sẻ; nội dung bên ngoài có thể kết nối tới nhà cung cấp riêng.</p><p>Giữ bản sao nội dung quan trọng. Khi cần trợ giúp, mở <a href="support.html">Hỗ trợ</a>; khi muốn ngừng sử dụng và xóa dữ liệu, đọc <a href="delete-account.html">quy trình xóa tài khoản/House</a>.</p></section>
+<footer><h2>Tài liệu SoulLocket</h2><nav aria-label="Tài liệu liên quan"><a href="about.html">Giới thiệu</a><a href="huong_dan.html">Hướng dẫn</a><a href="huong_dan_cai_dat_lan_dau.html">Thiết lập lần đầu</a><a href="privacy.html">Bảo mật</a><a href="terms.html">Điều khoản</a><a href="cookie-policy.html">Cookie</a><a href="delete-account.html">Xóa tài khoản</a><a href="support.html">Hỗ trợ</a></nav><p class="small">Quyền riêng tư và hỗ trợ: <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p></footer>
+</main>
 </body>
 </html>

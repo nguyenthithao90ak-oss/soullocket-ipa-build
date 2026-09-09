@@ -501,24 +501,6 @@ class ChatService {
     }
   }
 
-  String _previewTextForLastMessage({
-    required String type,
-    required String text,
-  }) {
-    switch (type) {
-      case 'image':
-        return '[Hình ảnh]';
-      case 'call_invite':
-        return '[Cuộc gọi]';
-      case 'watch_invite':
-        return '[Xem cùng]';
-      case 'share':
-        return '[Chia sẻ]';
-      default:
-        return text;
-    }
-  }
-
   // --- TIN NHẮN TỚI NHÀ KHÁC (Inter-house Social Chat) ---
 
   Map<String, dynamic> _buildMessageWriteMap({
@@ -542,6 +524,24 @@ class ChatService {
     };
   }
 
+  String _previewTextForLastMessage({
+    required String type,
+    required String text,
+  }) {
+    switch (type) {
+      case 'image':
+        return '[Hình ảnh]';
+      case 'call_invite':
+        return '[Cuộc gọi]';
+      case 'watch_invite':
+        return '[Xem cùng]';
+      case 'share':
+        return '[Chia sẻ]';
+      default:
+        return text;
+    }
+  }
+
   Map<String, dynamic> _lastMessageWriteMap({
     required String senderId,
     required String type,
@@ -563,6 +563,17 @@ class ChatService {
       if (callMode != null) 'callMode': callMode,
       if (sharedUrl != null) 'sharedUrl': sharedUrl,
     };
+  }
+
+  Future<void> _syncDirectChatMetadata(String roomId, String messageId) async {
+    try {
+      await _functions
+          .httpsCallable('updateDirectChatMetadataSecure')
+          .call<void>({'roomId': roomId, 'messageId': messageId});
+    } catch (error) {
+      // Tin đã lưu thành công; không báo gửi thất bại khiến người dùng gửi trùng.
+      debugPrint('[ChatService] Direct chat metadata sync failed: $error');
+    }
   }
 
   Future<void> sendMessage(
@@ -603,23 +614,7 @@ class ChatService {
             .add(msgPayload);
         final messageId = docRef.id;
 
-        unawaited(
-          _dbRef
-              .update({
-                'chats/$roomId/lastMessage': _lastMessageWriteMap(
-                  senderId: myHouseId,
-                  type: type,
-                  text: safeText,
-                  messageId: messageId,
-                ),
-                'chats/$roomId/updatedAt': ServerValue.timestamp,
-              })
-              .catchError((e) {
-                debugPrint(
-                  '[ChatService] Failed to update chat metadata on RTDB: $e',
-                );
-              }),
-        );
+        unawaited(_syncDirectChatMetadata(roomId, messageId));
       },
       permissionMessage:
           'Không thể gửi tin nhắn lúc này. Có thể một trong hai bên đã chặn nhau hoặc quyền Firebase chưa đồng bộ.',
@@ -804,44 +799,28 @@ class ChatService {
             _friendWelcomeTemplates.length,
           )];
 
-      final docRef = FirebaseFirestore.instance
+      final messages = FirebaseFirestore.instance
           .collection('chats')
           .doc(roomId)
-          .collection('messages')
-          .doc();
-      final messageId = docRef.id;
-
-      final roomRef = _dbRef.child('chats/$roomId');
-      final tx = await roomRef.runTransaction((Object? data) {
-        if (data != null && data is! Map) {
-          return Transaction.abort();
-        }
-
-        final roomData = data is Map
-            ? Map<dynamic, dynamic>.from(data)
-            : <dynamic, dynamic>{};
-        if (roomData['lastMessage'] != null) {
-          return Transaction.abort();
-        }
-
-        roomData['lastMessage'] = _lastMessageWriteMap(
+          .collection('messages');
+      final existing = await messages.limit(1).get();
+      if (existing.docs.isNotEmpty) return;
+      // ID cố định và transaction Firestore để hai thiết bị không tạo trùng lời chào.
+      final docRef = messages.doc('friend_welcome');
+      final inserted = await FirebaseFirestore.instance.runTransaction<bool>((
+        tx,
+      ) async {
+        if ((await tx.get(docRef)).exists) return false;
+        final payload = _buildMessageWriteMap(
           senderId: myHouseId,
-          type: 'text',
           text: welcomeText,
-          messageId: messageId,
+          type: 'text',
         );
-        roomData['updatedAt'] = ServerValue.timestamp;
-        return Transaction.success(roomData);
+        payload['ts'] = DateTime.now().millisecondsSinceEpoch;
+        tx.set(docRef, payload);
+        return true;
       });
-      if (!tx.committed) return;
-
-      final msgPayload = _buildMessageWriteMap(
-        senderId: myHouseId,
-        text: welcomeText,
-        type: 'text',
-      );
-      msgPayload['ts'] = DateTime.now().millisecondsSinceEpoch;
-      await docRef.set(msgPayload);
+      if (inserted) await _syncDirectChatMetadata(roomId, docRef.id);
     });
   }
 
@@ -886,22 +865,7 @@ class ChatService {
           });
       final messageId = docRef.id;
 
-      await _dbRef.update({
-        'chats/$chatRoomId/lastMessage': {
-          'text': _previewTextForLastMessage(
-            type: 'call_invite',
-            text: message.text,
-          ),
-          'ts': ServerValue.timestamp,
-          'senderId': myHouseId,
-          'isRead': false,
-          'type': 'call_invite',
-          'callRoomId': roomId,
-          'callMode': label,
-          'messageId': messageId,
-        },
-        'chats/$chatRoomId/updatedAt': ServerValue.timestamp,
-      });
+      await _syncDirectChatMetadata(chatRoomId, messageId);
     });
   }
 
@@ -939,21 +903,7 @@ class ChatService {
           });
       final messageId = docRef.id;
 
-      await _dbRef.update({
-        'chats/$chatRoomId/lastMessage': {
-          'text': _previewTextForLastMessage(
-            type: 'watch_invite',
-            text: message.text,
-          ),
-          'ts': ServerValue.timestamp,
-          'senderId': myHouseId,
-          'isRead': false,
-          'type': 'watch_invite',
-          'sharedUrl': url,
-          'messageId': messageId,
-        },
-        'chats/$chatRoomId/updatedAt': ServerValue.timestamp,
-      });
+      await _syncDirectChatMetadata(chatRoomId, messageId);
     });
   }
 
@@ -1353,10 +1303,8 @@ class ChatService {
   Future<void> clearConversation(String myHouseId, String targetHouseId) async {
     await _runExternalChatAction(() async {
       final roomId = _getRoomId(myHouseId, targetHouseId);
-      await _dbRef.update({
-        'chats/$roomId/messages': null,
-        'chats/$roomId/lastMessage': null,
-        'chats/$roomId/updatedAt': ServerValue.timestamp,
+      await _functions.httpsCallable('clearLegacyDirectChatSecure').call<void>({
+        'roomId': roomId,
       });
     });
   }

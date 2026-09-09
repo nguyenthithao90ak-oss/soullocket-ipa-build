@@ -22,8 +22,7 @@ import 'package:soullocket_app/utils/services/core/background_tracking_service.d
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:app_tracking_transparency/app_tracking_transparency.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:soullocket_app/utils/services/admob_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/material.dart';
@@ -410,28 +409,13 @@ void main() {
   );
 }
 
-Future<void> _requestIosTrackingAuthorization() async {
-  if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
-    return;
-  }
-
-  try {
-    final status = await AppTrackingTransparency.trackingAuthorizationStatus;
-    if (status == TrackingStatus.notDetermined) {
-      await AppTrackingTransparency.requestTrackingAuthorization();
-    }
-  } catch (e) {
-    debugPrint('ATT request skipped: $e');
-  }
-}
-
 Future<void> _initializeGoogleMobileAds() async {
   if (kIsWeb) {
     return;
   }
 
   try {
-    await MobileAds.instance.initialize();
+    await AdMobService().initialize();
     debugPrint('Google Mobile Ads initialized successfully');
   } catch (e) {
     debugPrint(
@@ -481,7 +465,6 @@ void _scheduleDeferredBootstrap() {
           unawaited(
             Future.delayed(const Duration(seconds: 3), () {
               unawaited(_initializeGoogleMobileAds());
-              unawaited(_requestIosTrackingAuthorization());
             }),
           );
         } catch (error, stackTrace) {

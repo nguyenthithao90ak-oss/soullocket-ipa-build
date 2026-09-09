@@ -16,6 +16,7 @@ import '../../../models/diary_post.dart';
 import '../../../utils/services/interaction_metrics_service.dart';
 import '../../../utils/app_error_mapper.dart';
 import '../../../utils/services/admob_service.dart';
+import 'package:soullocket_app/widgets/consent_ad_view.dart';
 import '../../../utils/services/memory_share_allowance_service.dart';
 import '../../../utils/services/memory_share_service.dart';
 import '../../../utils/sl_notice.dart';

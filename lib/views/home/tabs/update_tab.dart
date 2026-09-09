@@ -1059,11 +1059,13 @@ class _UpdateTabState extends State<UpdateTab> {
             ),
             Icons.open_in_new_rounded,
             const Color(0xFFAD1457),
-            () => _openExternal(
-              context,
-              Uri.parse(AppConfig.deleteAccountPageUrl),
-              clipboardFallback: AppConfig.deleteAccountPageUrl,
-            ),
+            () {
+              final uri = AppConfig.legalDocumentUri(
+                'delete-account.html',
+                languageCode: L10nService().locale.languageCode,
+              );
+              _openExternal(context, uri, clipboardFallback: uri.toString());
+            },
           ),
           SLSpacing.h16,
           Container(
@@ -1077,10 +1079,7 @@ class _UpdateTabState extends State<UpdateTab> {
               border: Border.all(color: const Color(0xFFE8EDF4)),
             ),
             child: Text(
-              _tr(
-                L10nService().translate('home_mimcsmtrct_0fb470'),
-                'Each item opens the full document directly: about, app guide, first setup, privacy, terms, cookie, and data deletion. Last updated: 19/04/2026.',
-              ),
+              context.tr('legal_documents_overview'),
               style: _bodyStyle(
                 color: const Color(0xFF64748B),
                 fontSize: 11.5,

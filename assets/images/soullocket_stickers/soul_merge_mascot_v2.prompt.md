@@ -1,0 +1,7 @@
+# Soul Merge mascot v2
+
+Mode: built-in ImageGen. Project asset: `soul_merge_mascot_v2.png`.
+
+Final prompt:
+
+Use case: illustration-story. Asset type: one original transparent PNG mascot sticker for SoulLocket Soul Merge, a romantic couple chat app. Primary request: a beautiful, refined, readable at tiny sizes matching mascot for the app's floating Home shortcut and its larger interactive centerpiece. Create one centered compact duo: a small cream-white rounded kitten and a peach-pink rounded bunny, snuggled cheek to cheek, their small paws together holding ONE rose pink heart at chest height. Equal size characters, both upright, happy relaxed closed eyes, tiny blush cheeks. Warm dark cocoa clean outline, warm ivory highlights, softly shaded sticker illustration with subtle plush volume; elegant Japanese stationery / soft gouache sticker look, clean polished edges. Composition: square canvas, the entire connected duo fits centrally and fills 85% of canvas, ears, feet and heart fully visible; minimal negative space, visually simple silhouette. Palette: ivory, pale peach, dusty blush and raspberry pink matching a soft off-white and pink app. Very thin white cutout edge, no heavy glow. Background must be genuinely transparent alpha, not a drawn checkerboard. No circular container, no border frame, no locket/jewelry, no ribbons, no typography, no logos, no additional stickers, no extra limbs, no busy sparkles. Single finished production asset.

@@ -29,7 +29,35 @@ class _CountdownVisualSpec {
     required this.numberShadows,
   });
 
-  factory _CountdownVisualSpec.resolve(String styleKey, bool transparentMode) {
+  factory _CountdownVisualSpec.resolve(
+    String styleKey,
+    bool transparentMode, {
+    bool dark = false,
+  }) {
+    if (styleKey.isEmpty || styleKey == 'default' || styleKey == 'balanced') {
+      final palette = BalancedCountdownPalette(
+        dark: dark,
+        transparent: transparentMode,
+      );
+      return _CountdownVisualSpec(
+        outerColor: null,
+        outerGradient: palette.outerGradient,
+        outerBorder: Border.all(color: palette.border, width: 1.4),
+        shadows: const [],
+        innerColor: null,
+        innerGradient: palette.innerGradient,
+        innerBorder: null,
+        numberGradient: palette.numberColors,
+        topLabelColor: palette.label,
+        bottomLabelColor: palette.label,
+        labelShadows: transparentMode
+            ? const [Shadow(color: Colors.black54, blurRadius: 6)]
+            : const [],
+        numberShadows: transparentMode
+            ? const [Shadow(color: Colors.black54, blurRadius: 10)]
+            : const [],
+      );
+    }
     final isBasicStyle =
         styleKey == 'default' ||
         styleKey == 'glass' ||

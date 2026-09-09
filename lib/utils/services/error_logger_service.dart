@@ -3,33 +3,39 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'consent_service.dart';
 
 class ErrorLoggerService {
   static final ErrorLoggerService instance = ErrorLoggerService._internal();
 
   ErrorLoggerService._internal();
 
+  bool _collectionEnabled = false;
+  bool get _canRecord =>
+      !kIsWeb &&
+      !kDebugMode &&
+      _collectionEnabled &&
+      ConsentService.optionalCollectionAllowed.value;
+
   Future<void> initialize() async {
-    if (kIsWeb) {
-      return;
-    }
-    if (kDebugMode) {
-      // In debug mode: disable Crashlytics entirely — do NOT attach error
-      // handlers so the SDK never processes errors and shows no debug overlays.
-      await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
-      return;
-    }
+    await setCollectionAllowed(ConsentService.optionalCollectionAllowed.value);
+  }
 
-    // NOTE: Error handlers are already set up in main.dart (FlutterError.onError &
-    // PlatformDispatcher.instance.onError). Those handlers filter asset errors,
-    // log via ErrorLoggerService.instance.logError() (which calls Crashlytics),
-    // AND send to RevenueSecurityTelemetryService. We do NOT replace them here
-    // to avoid losing the telemetry pipeline.
-    //
-    // We only enable Crashlytics collection so the main.dart error handlers'
-    // calls to logError() actually get forwarded to Crashlytics.
-
-    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+  Future<void> setCollectionAllowed(bool allowed) async {
+    _collectionEnabled = false;
+    if (kIsWeb) return;
+    final sdk = FirebaseCrashlytics.instance;
+    await sdk.setCrashlyticsCollectionEnabled(false);
+    // Không gửi báo cáo native đã lưu trong thời gian chưa đồng ý.
+    await sdk.deleteUnsentReports();
+    if (allowed &&
+        !kDebugMode &&
+        ConsentService.optionalCollectionAllowed.value) {
+      await sdk.setCrashlyticsCollectionEnabled(true);
+      _collectionEnabled = ConsentService.optionalCollectionAllowed.value;
+    } else {
+      await sdk.setUserIdentifier('');
+    }
   }
 
   Future<void> logError(
@@ -38,6 +44,7 @@ class ErrorLoggerService {
     String? reason,
     bool fatal = false,
   }) async {
+    if (!_canRecord) return;
     if (kIsWeb) {
       debugPrint(
         'Crashlytics logging skipped on Web: ${AppErrorMapper.resolve(error).message}',
@@ -61,17 +68,17 @@ class ErrorLoggerService {
   }
 
   Future<void> setUserId(String userId) async {
-    if (kIsWeb) return;
+    if (!_canRecord) return;
     await FirebaseCrashlytics.instance.setUserIdentifier(userId);
   }
 
   Future<void> log(String message) async {
-    if (kIsWeb) return;
+    if (!_canRecord) return;
     await FirebaseCrashlytics.instance.log(message);
   }
 
   Future<void> setCustomKey(String key, dynamic value) async {
-    if (kIsWeb) return;
+    if (!_canRecord) return;
     await FirebaseCrashlytics.instance.setCustomKey(key, value);
   }
 }

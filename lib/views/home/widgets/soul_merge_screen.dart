@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'package:lottie/lottie.dart';
+import 'package:soullocket_app/widgets/soul_merge_mascot.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -25,6 +25,8 @@ import 'package:soullocket_app/utils/services/giftcode_service.dart';
 import 'package:soullocket_app/utils/sl_notice.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
 import 'package:soullocket_app/views/relationship/video_call_screen.dart';
+import 'soul_merge/soul_merge_chat_bar.dart';
+import 'soul_merge/sticker_bottom_sheet.dart';
 
 part 'soul_merge/exploding_photo_part.dart';
 part 'soul_merge/particle_explosion_part.dart';
@@ -42,15 +44,12 @@ class SoulMergeScreen extends StatefulWidget {
   State<SoulMergeScreen> createState() => _SoulMergeScreenState();
 }
 
-class _SoulMergeScreenState extends State<SoulMergeScreen>
-    with SingleTickerProviderStateMixin {
+class _SoulMergeScreenState extends State<SoulMergeScreen> {
   late BumpDetector _bumpDetector;
   final SoulMergeService _mergeService = SoulMergeService();
   StreamSubscription<Map<String, int>>? _mergeTimesSub;
 
   bool _isMerged = false;
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnim;
 
   // Memory photos lists and timers
   List<Map<String, String>> _memoriesData = [];
@@ -103,15 +102,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
-
-    _pulseAnim = Tween<double>(begin: 1.0, end: 1.15).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-
     _bumpDetector = BumpDetector(
       threshold: 3.5, // Sensitive enough for a gentle bump
       onBump: _handleLocalBump,
@@ -407,10 +397,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       }
     }
 
-    // Speed up heart beating pulse
-    _pulseController.duration = const Duration(milliseconds: 400);
-    _pulseController.repeat(reverse: true);
-
     // Continuous heart spawning & haptic feedback timer - optimized for performance
     _continuousHeartsTimer?.cancel();
     int tickCount = 0;
@@ -441,18 +427,12 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _continuousHeartsTimer?.cancel();
     _continuousHeartsTimer = null;
     _interactiveScaleNotifier.value = 1.0;
-    // Reset heart beating pulse to normal speed
-    _pulseController.duration = const Duration(milliseconds: 1500);
-    _pulseController.repeat(reverse: true);
   }
 
   void _onTapCancel() {
     _continuousHeartsTimer?.cancel();
     _continuousHeartsTimer = null;
     _interactiveScaleNotifier.value = 1.0;
-    // Reset heart beating pulse to normal speed
-    _pulseController.duration = const Duration(milliseconds: 1500);
-    _pulseController.repeat(reverse: true);
   }
 
   // ignore: unused_element
@@ -478,50 +458,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       return const Color(0xFFFF7FB2);
     }
     return Colors.white70;
-  }
-
-  List<Widget> _buildSparkles() {
-    const double radius = 45;
-    // 4 sparkles thay vì 6 — tiết kiệm render
-    const fixedSizes = [6.0, 4.5, 6.0, 4.5];
-    const sparkleColors = [
-      Color(0xFFFF80B3),
-      Color(0xFFD8A4FF),
-      Color(0xFFFFEAA0),
-      Color(0xFFFFB7D5),
-    ];
-    final sparkleAngles = [0.0, 90.0, 180.0, 270.0];
-    final pulseVal = _pulseAnim.value; // 0.0 → 1.0
-    return List.generate(sparkleAngles.length, (i) {
-      final angleRad = sparkleAngles[i] * math.pi / 180;
-      final dx = math.cos(angleRad) * radius;
-      final dy = math.sin(angleRad) * radius;
-      // Use FIXED size for position math — positions never shift
-      final size = fixedSizes[i];
-      // Alternate sparkles breathe in/out opposite phases
-      final opacity =
-          (i % 2 == 0 ? (0.3 + 0.65 * pulseVal) : (0.95 - 0.65 * pulseVal))
-              .clamp(0.0, 1.0);
-      return Positioned(
-        // 80 = half of the 160px Container — static center
-        left: 80 + dx - size / 2,
-        top: 80 + dy - size / 2,
-        child: IgnorePointer(
-          child: Opacity(
-            opacity: opacity,
-            child: Container(
-              width: size,
-              height: size,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: sparkleColors[i % sparkleColors.length],
-                // BoxShadow removed for Flat performance
-              ),
-            ),
-          ),
-        ),
-      );
-    });
   }
 
   Future<List<Map<String, String>>> _fetchMemoriesData() async {
@@ -628,7 +564,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       _isMerged = true;
     });
     _bumpDetector.stop();
-    _pulseController.stop();
     HapticFeedback.heavyImpact();
     Future.delayed(const Duration(milliseconds: 200), () {
       HapticFeedback.heavyImpact();
@@ -722,7 +657,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _bumpDetector.stop();
     _mergeTimesSub?.cancel();
     _overlayListenerSub?.cancel();
-    _pulseController.dispose();
     _explosionTimer?.cancel();
     _tempBlockTimer?.cancel();
     unawaited(_mergeService.clearBumps());
@@ -762,105 +696,57 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         : photoMessages;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1A0533),
+      backgroundColor: const Color(0xFFFFF8FA),
       extendBodyBehindAppBar: true,
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background Gradient — super cute pastel pink
+          // Bề mặt yên tĩnh để hội thoại và sticker là điểm nhấn chính.
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFFFFF0F5), // Lavender blush
-                  Color(0xFFFFE4E1), // Misty rose
-                  Color(0xFFFFD1DC), // Pastel pink
-                  Color(0xFFFFC0CB), // Pink
-                  Color(0xFFFFB6C1), // Light pink
+                  Color(0xFFFFFCFD),
+                  Color(0xFFFFF2F5),
+                  Color(0xFFFFEAF0),
                 ],
-                stops: [0.0, 0.25, 0.5, 0.75, 1.0],
+                stops: [0.0, 0.54, 1.0],
               ),
             ),
           ),
 
-          // Lớp họa tiết dễ thương — emoji tim & hoa rải toàn màn hình
-          Positioned.fill(
-            child: RepaintBoundary(
-              child: IgnorePointer(
-                child: CustomPaint(painter: _CuteBgPatternPainter()),
-              ),
-            ),
-          ),
-
-          // Orb trên cùng bên phải — hồng sáng
+          // Hai lớp sáng mờ tạo chiều sâu mà không làm rối vùng chat.
           Positioned(
-            top: -40,
-            right: -50,
+            top: -90,
+            right: -76,
             child: Container(
-              width: 240,
-              height: 240,
+              width: 290,
+              height: 290,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFFFF80BB).withValues(alpha: 0.30),
-                    const Color(0xFFFF80BB).withValues(alpha: 0.0),
+                    const Color(0xFFFF8FB3).withValues(alpha: 0.18),
+                    const Color(0xFFFF8FB3).withValues(alpha: 0),
                   ],
                 ),
               ),
             ),
           ),
-          // Orb giữa trái — tím mộng mơ
           Positioned(
-            top: 220,
-            left: -70,
+            bottom: 58,
+            left: -104,
             child: Container(
-              width: 260,
-              height: 260,
+              width: 250,
+              height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFFBF55EC).withValues(alpha: 0.22),
-                    const Color(0xFFBF55EC).withValues(alpha: 0.0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          // Orb dưới phải — đào nhạt
-          Positioned(
-            bottom: 100,
-            right: -40,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFFFFA0C0).withValues(alpha: 0.25),
-                    const Color(0xFFFFA0C0).withValues(alpha: 0.0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          // Orb nhỏ trên trái — vàng ánh nhẹ
-          Positioned(
-            top: 80,
-            left: 20,
-            child: Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFFFFD580).withValues(alpha: 0.18),
-                    const Color(0xFFFFD580).withValues(alpha: 0.0),
+                    const Color(0xFFCBB9E9).withValues(alpha: 0.14),
+                    const Color(0xFFCBB9E9).withValues(alpha: 0),
                   ],
                 ),
               ),
@@ -928,115 +814,10 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                             child: child,
                           );
                         },
-                        child: ScaleTransition(
-                          scale: _pulseAnim,
-                          child: Container(
-                            width: 160,
-                            height: 160,
-                            color: Colors.transparent,
-                            child: RepaintBoundary(
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  // Vòng neon thở bên ngoài (Breathing neon ring)
-                                  AnimatedBuilder(
-                                    animation: _pulseAnim,
-                                    builder: (context, _) {
-                                      final scale = _pulseAnim
-                                          .value; // dao động từ 1.0 -> 1.15
-                                      // Chuyển đổi thành tỉ lệ từ 0.0 -> 1.0 để làm mờ dần khi mở rộng
-                                      final normalized = (scale - 1.0) / 0.15;
-                                      return Container(
-                                        width: 120 * scale,
-                                        height: 120 * scale,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: const Color(0xFFFF9A9E)
-                                                .withValues(
-                                                  alpha:
-                                                      (0.8 * (1.0 - normalized))
-                                                          .clamp(0.0, 1.0),
-                                                ),
-                                            width: 2.5,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: const Color(0xFFFF9A9E)
-                                                  .withValues(
-                                                    alpha:
-                                                        (0.3 *
-                                                                (1.0 -
-                                                                    normalized))
-                                                            .clamp(0.0, 1.0),
-                                                  ),
-                                              blurRadius: 16,
-                                              spreadRadius: 4,
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  // Bong bóng xà phòng trung tâm (Soap bubble glass core)
-                                  Container(
-                                    width: 110,
-                                    height: 110,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.white.withValues(
-                                        alpha: 0.35,
-                                      ), // Frosted white
-                                      border: Border.all(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.8,
-                                        ),
-                                        width: 2.0,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: const Color(0xFFFFB6C1)
-                                              .withValues(
-                                                alpha: 0.5,
-                                              ), // Soft pink glow
-                                          blurRadius: 20,
-                                          spreadRadius: 4,
-                                        ),
-                                        // Highlight shadow for bubble effect
-                                        BoxShadow(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.5,
-                                          ),
-                                          blurRadius: 10,
-                                          spreadRadius: -2,
-                                          offset: const Offset(-2, -2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Center(
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(55),
-                                        child: Lottie.asset(
-                                          'assets/images/soul_merge_sticker.json',
-                                          width: 90,
-                                          height: 90,
-                                          fit: BoxFit.contain,
-                                          options: LottieOptions(
-                                            enableMergePaths: true,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  // Sparkle dots
-                                  AnimatedBuilder(
-                                    animation: _pulseAnim,
-                                    builder: (context, _) =>
-                                        Stack(children: _buildSparkles()),
-                                  ),
-                                ],
-                              ),
-                            ),
+                        child: const SizedBox.square(
+                          dimension: 160,
+                          child: Center(
+                            child: SoulMergeMascot(size: 146, framed: true),
                           ),
                         ),
                       ),
@@ -1145,212 +926,216 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                 child: SafeArea(
                   bottom: false,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    child: Row(
-                      children: [
-                        // ← Nút quay lại
-                        Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () => Navigator.of(context).pop(),
-                            borderRadius: BorderRadius.circular(20),
-                            child: Container(
-                              width: 38,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white.withValues(alpha: 0.5),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.pink.withValues(alpha: 0.1),
-                                    blurRadius: 8,
+                    padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.76),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.92),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(
+                              0xFF875364,
+                            ).withValues(alpha: 0.09),
+                            blurRadius: 18,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        child: Row(
+                          children: [
+                            // ← Nút quay lại
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => Navigator.of(context).pop(),
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  width: 38,
+                                  height: 38,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white.withValues(alpha: 0.5),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.pink.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                        blurRadius: 8,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    Icons.arrow_back_ios_new_rounded,
+                                    size: 18,
+                                    color: Colors.pink.shade700,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+
+                            // Cùng hình đôi với lối vào Home và điểm chạm chính.
+                            if (!isCompactHeader) ...[
+                              const SoulMergeMascot(
+                                size: 42,
+                                framed: true,
+                                animate: false,
+                              ),
+                              const SizedBox(width: 10),
+                            ],
+
+                            // Tên
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    context.tr('p4_soul_title'),
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.pink.shade800,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 1),
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.favorite_rounded,
+                                        size: 10,
+                                        color: Color(0xFFE985A2),
+                                      ),
+                                      const SizedBox(width: 5),
+                                      Expanded(
+                                        child: Text(
+                                          _partnerName,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.pink.shade500,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                              child: Icon(
-                                Icons.arrow_back_ios_new_rounded,
-                                size: 18,
-                                color: Colors.pink.shade700,
-                              ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
 
-                        // Avatar Lottie
-                        if (!isCompactHeader) ...[
-                          Container(
-                            width: 42,
-                            height: 42,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFFFF6B9D),
-                                  Color(0xFFC44FE2),
-                                  Color(0xFF6366F1),
-                                ],
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(
-                                    0xFFFF6B9D,
-                                  ).withValues(alpha: 0.4),
-                                  blurRadius: 12,
-                                  spreadRadius: 2,
-                                ),
+                            // ═══ NÚT GỌI THOẠI ═══
+                            _SoulMergeCallButton(
+                              icon: Icons.phone_rounded,
+                              gradientColors: const [
+                                Color(0xFF58CFA2),
+                                Color(0xFF49BA9B),
                               ],
+                              glowColor: const Color(0xFF58CFA2),
+                              onTap: () => _startCoupleCall(isVideo: false),
+                              tooltip: context.tr('p4_soul_voice_call'),
                             ),
-                            padding: const EdgeInsets.all(2.5),
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                              ),
-                              child: ClipOval(
-                                child: Lottie.asset(
-                                  'assets/images/soul_merge_sticker.json',
-                                  width: 35,
-                                  height: 35,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                        ],
+                            const SizedBox(width: 8),
 
-                        // Tên
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                context.tr('p4_soul_title'),
-                                style: TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.pink.shade800,
-                                  letterSpacing: 0.5,
+                            // ═══ NÚT GỌI VIDEO ═══
+                            _SoulMergeCallButton(
+                              icon: Icons.videocam_rounded,
+                              gradientColors: const [
+                                Color(0xFF9A7DE1),
+                                Color(0xFF8068C8),
+                              ],
+                              glowColor: const Color(0xFF9A7DE1),
+                              onTap: () => _startCoupleCall(isVideo: true),
+                              tooltip: context.tr('p4_soul_video_call'),
+                            ),
+                            const SizedBox(width: 8),
+
+                            // ═══ NÚT HIỆU ỨNG ═══
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: _showHeartStyleSheet,
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white.withValues(alpha: 0.5),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(
+                                          0xFFFF6B9D,
+                                        ).withValues(alpha: 0.2),
+                                        blurRadius: 8,
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.auto_awesome_rounded,
+                                    size: 18,
+                                    color: Color(0xFFFF6B9D),
+                                  ),
                                 ),
                               ),
-                              const SizedBox(height: 1),
-                              Text(
-                                '💕 $_partnerName',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.pink.shade500,
-                                  fontWeight: FontWeight.w600,
+                            ),
+
+                            // ═══ BONG BÓNG NỔI (Android only) ═══
+                            if (!isCompactHeader &&
+                                !kIsWeb &&
+                                defaultTargetPlatform ==
+                                    TargetPlatform.android) ...[
+                              const SizedBox(width: 6),
+                              Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: _toggleOverlaySetting,
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color:
+                                              (_overlayEnabled
+                                                      ? const Color(0xFFFF4F93)
+                                                      : Colors.pink)
+                                                  .withValues(alpha: 0.2),
+                                          blurRadius: 8,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Icon(
+                                      _overlayEnabled
+                                          ? Icons.chat_bubble_rounded
+                                          : Icons.chat_bubble_outline_rounded,
+                                      size: 16,
+                                      color: _overlayEnabled
+                                          ? const Color(0xFFFF4F93)
+                                          : Colors.pink.shade700,
+                                    ),
+                                  ),
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
-                          ),
-                        ),
-
-                        // ═══ NÚT GỌI THOẠI ═══
-                        _SoulMergeCallButton(
-                          icon: Icons.phone_rounded,
-                          gradientColors: const [
-                            Color(0xFF43E97B),
-                            Color(0xFF38F9D7),
                           ],
-                          glowColor: const Color(0xFF43E97B),
-                          onTap: () => _startCoupleCall(isVideo: false),
-                          tooltip: context.tr('p4_soul_voice_call'),
                         ),
-                        const SizedBox(width: 8),
-
-                        // ═══ NÚT GỌI VIDEO ═══
-                        _SoulMergeCallButton(
-                          icon: Icons.videocam_rounded,
-                          gradientColors: const [
-                            Color(0xFF667EEA),
-                            Color(0xFFA855F7),
-                          ],
-                          glowColor: const Color(0xFF667EEA),
-                          onTap: () => _startCoupleCall(isVideo: true),
-                          tooltip: context.tr('p4_soul_video_call'),
-                        ),
-                        const SizedBox(width: 8),
-
-                        // ═══ NÚT HIỆU ỨNG ═══
-                        Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: _showHeartStyleSheet,
-                            borderRadius: BorderRadius.circular(20),
-                            child: Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white.withValues(alpha: 0.5),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(
-                                      0xFFFF6B9D,
-                                    ).withValues(alpha: 0.2),
-                                    blurRadius: 8,
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.auto_awesome_rounded,
-                                size: 18,
-                                color: Color(0xFFFF6B9D),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        // ═══ BONG BÓNG NỔI (Android only) ═══
-                        if (!isCompactHeader &&
-                            !kIsWeb &&
-                            defaultTargetPlatform ==
-                                TargetPlatform.android) ...[
-                          const SizedBox(width: 6),
-                          Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: _toggleOverlaySetting,
-                              borderRadius: BorderRadius.circular(20),
-                              child: Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.white.withValues(alpha: 0.5),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color:
-                                          (_overlayEnabled
-                                                  ? const Color(0xFFFF4F93)
-                                                  : Colors.pink)
-                                              .withValues(alpha: 0.2),
-                                      blurRadius: 8,
-                                    ),
-                                  ],
-                                ),
-                                child: Icon(
-                                  _overlayEnabled
-                                      ? Icons.chat_bubble_rounded
-                                      : Icons.chat_bubble_outline_rounded,
-                                  size: 16,
-                                  color: _overlayEnabled
-                                      ? const Color(0xFFFF4F93)
-                                      : Colors.pink.shade700,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -1697,56 +1482,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   }
 
   void _showStickerBottomSheet() {
-    showModalBottomSheet(
+    StickerBottomSheet.show(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          child: Column(
-            children: [
-              Container(
-                width: 40,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                  ),
-                  itemCount: 35 - 7, // 35 minus 7 deleted stickers
-                  itemBuilder: (context, index) {
-                    final validStickers = [
-                      for (int i = 1; i <= 35; i++)
-                        if (![4, 5, 10, 11, 19, 26, 29].contains(i)) i,
-                    ];
-                    final stickerPath =
-                        'assets/images/anhtomau_stickers/sticker_${validStickers[index]}.gif';
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                        _sendStickerMessage(stickerPath);
-                      },
-                      child: Image.asset(stickerPath),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+      onStickerSelected: _sendStickerMessage,
     );
   }
 
@@ -1826,492 +1564,21 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   }
 
   Widget _buildChatInputBar() {
-    final presetsBefore = [
-      L10nService().format('p4_soul_preset_check_in', {'name': _partnerName}),
-      L10nService().format('p4_soul_preset_hello', {'name': _partnerName}),
-      L10nService().format('p4_soul_preset_miss', {'name': _partnerName}),
-    ];
-    final presetsAfter = [
-      context.tr('p4_soul_preset_love'),
-      context.tr('p4_soul_preset_miss_short'),
-      context.tr('p4_soul_preset_surprise'),
-    ];
-
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final hoursSinceLastMsg = _lastAnyMsgTimestamp == 0
-        ? 999
-        : (now - _lastAnyMsgTimestamp) / (1000 * 60 * 60);
-    final showPresetsBefore = hoursSinceLastMsg >= 24;
-
-    final presets = _isMerged
-        ? presetsAfter
-        : (showPresetsBefore ? presetsBefore : <String>[]);
-
-    return Padding(
-      padding: EdgeInsets.zero,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (_spamWarning != null)
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFF4F4F).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: const Color(0xFFFF4F4F).withValues(alpha: 0.4),
-                  width: 1.0,
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.warning_amber_rounded,
-                    color: Color(0xFFFF4F4F),
-                    size: 18,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _spamWarning!,
-                      style: SLTheme.quicksand(
-                        color: const Color(0xFFFFD1D1),
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          // Chat History List Container (Glassmorphic)
-          Container(
-            constraints: const BoxConstraints(maxHeight: 500),
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: _chatHistory.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.favorite_outline_rounded,
-                            color: Colors.white.withValues(alpha: 0.35),
-                            size: 24,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            context.tr('p4_soul_chat_empty'),
-                            style: SLTheme.quicksand(
-                              color: Colors.white.withValues(alpha: 0.35),
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : RepaintBoundary(
-                      child: ListView.builder(
-                        controller: _chatScrollController,
-                        reverse: true,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        itemCount: _chatHistory.length,
-                        itemBuilder: (context, index) {
-                          final msg = _chatHistory.reversed.elementAt(index);
-                          final sender = (msg['sender'] ?? '').toString();
-                          final isSelf = (sender == _myRole);
-                          final text = (msg['text'] ?? '').toString();
-                          final imageUrl = (msg['imageUrl'] ?? '').toString();
-                          final timeStr = _formatTime(msg['timestamp'] as int?);
-                          final isSticker = imageUrl.startsWith(
-                            'assets/images/anhtomau_stickers/',
-                          );
-
-                          return Align(
-                            alignment: isSelf
-                                ? Alignment.centerRight
-                                : Alignment.centerLeft,
-                            child: Container(
-                              margin: EdgeInsets.only(
-                                top: 2,
-                                bottom: 2,
-                                left: isSelf ? 48 : 0,
-                                right: isSelf ? 0 : 48,
-                              ),
-                              padding: isSticker
-                                  ? EdgeInsets.zero
-                                  : (imageUrl.isNotEmpty
-                                        ? const EdgeInsets.all(6)
-                                        : const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 11,
-                                          )),
-                              decoration: isSticker
-                                  ? null
-                                  : BoxDecoration(
-                                      gradient: isSelf
-                                          ? const LinearGradient(
-                                              colors: [
-                                                Color(0xFFFF9A9E),
-                                                Color(0xFFFECFEF),
-                                              ],
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                            )
-                                          : null,
-                                      color: isSelf
-                                          ? null
-                                          : Colors.white.withValues(
-                                              alpha: 0.75,
-                                            ),
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: const Radius.circular(24),
-                                        topRight: const Radius.circular(24),
-                                        bottomLeft: Radius.circular(
-                                          isSelf ? 24 : 6,
-                                        ),
-                                        bottomRight: Radius.circular(
-                                          isSelf ? 6 : 24,
-                                        ),
-                                      ),
-                                      border: Border.all(
-                                        color: isSelf
-                                            ? Colors.white.withValues(
-                                                alpha: 0.6,
-                                              )
-                                            : Colors.white.withValues(
-                                                alpha: 0.9,
-                                              ),
-                                        width: 1.2,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: isSelf
-                                              ? const Color(
-                                                  0xFFFF9A9E,
-                                                ).withValues(alpha: 0.4)
-                                              : Colors.black.withValues(
-                                                  alpha: 0.06,
-                                                ),
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                              child: Column(
-                                crossAxisAlignment: isSelf
-                                    ? CrossAxisAlignment.end
-                                    : CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (imageUrl.isNotEmpty)
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(
-                                        isSticker ? 0 : 14,
-                                      ),
-                                      child: imageUrl.startsWith('assets/')
-                                          ? Image.asset(
-                                              imageUrl,
-                                              fit: BoxFit.contain,
-                                              width: isSticker ? 160 : 200,
-                                            )
-                                          : CachedNetworkImage(
-                                              imageUrl: imageUrl,
-                                              fit: BoxFit.cover,
-                                              width: 200,
-                                              memCacheWidth: 400,
-                                              placeholder: (context, url) =>
-                                                  Container(
-                                                    width: 200,
-                                                    height: 150,
-                                                    color: Colors.white12,
-                                                    child: const Center(
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                            color:
-                                                                Colors.white54,
-                                                            strokeWidth: 2,
-                                                          ),
-                                                    ),
-                                                  ),
-                                              errorWidget:
-                                                  (context, url, error) =>
-                                                      Container(
-                                                        width: 200,
-                                                        height: 150,
-                                                        color: Colors.white12,
-                                                        child: const Icon(
-                                                          Icons.broken_image,
-                                                          color: Colors.white54,
-                                                        ),
-                                                      ),
-                                            ),
-                                    ),
-                                  if (text.isNotEmpty)
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                        top: imageUrl.isNotEmpty ? 6 : 0,
-                                        left: imageUrl.isNotEmpty ? 4 : 0,
-                                        right: imageUrl.isNotEmpty ? 4 : 0,
-                                        bottom: 2,
-                                      ),
-                                      child: Text(
-                                        text,
-                                        style:
-                                            SLTheme.quicksand(
-                                              color: isSelf
-                                                  ? Colors.white
-                                                  : const Color(0xFF6B5B6D),
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w700,
-                                              height: 1.3,
-                                            ).copyWith(
-                                              shadows: isSelf
-                                                  ? const [
-                                                      Shadow(
-                                                        color: Colors.black26,
-                                                        blurRadius: 2,
-                                                        offset: Offset(0, 1),
-                                                      ),
-                                                    ]
-                                                  : null,
-                                            ),
-                                      ),
-                                    ),
-                                  if (timeStr.isNotEmpty)
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                        left: imageUrl.isNotEmpty ? 4 : 0,
-                                        right: imageUrl.isNotEmpty ? 4 : 0,
-                                        top: 2,
-                                        bottom: imageUrl.isNotEmpty ? 4 : 0,
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            timeStr,
-                                            style: SLTheme.quicksand(
-                                              color: isSelf
-                                                  ? Colors.white.withValues(
-                                                      alpha: 0.8,
-                                                    )
-                                                  : const Color(0xFF9E8B9F),
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          if (isSelf) ...[
-                                            const SizedBox(width: 4),
-                                            Icon(
-                                              Icons.check_circle,
-                                              size: 10,
-                                              color: Colors.white.withValues(
-                                                alpha: 0.8,
-                                              ),
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-            ),
-          ),
-          if (presets.isNotEmpty)
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: presets.map((text) {
-                  return Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    child: InkWell(
-                      onTap: () => _sendSoulMessage(text),
-                      borderRadius: BorderRadius.circular(20),
-                      child: Ink(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              const Color(0xFFFF758F).withValues(alpha: 0.25),
-                              const Color(0xFFFF4F93).withValues(alpha: 0.15),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: const Color(
-                              0xFFFF758F,
-                            ).withValues(alpha: 0.4),
-                            width: 1,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(
-                                0xFFFF4F93,
-                              ).withValues(alpha: 0.1),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          text,
-                          style: SLTheme.quicksand(
-                            color: Colors.white,
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.45),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.8),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFFFB6C1).withValues(alpha: 0.2),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: _pickAndSendChatImage,
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 4),
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.6),
-                    ),
-                    child: _isUploadingPhoto
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Color(0xFFFF9A9E),
-                            ),
-                          )
-                        : const Icon(
-                            Icons.add_photo_alternate_rounded,
-                            color: Color(0xFF6B5B6D),
-                            size: 22,
-                          ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: _showStickerBottomSheet,
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 4),
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.6),
-                    ),
-                    child: const Icon(
-                      Icons.emoji_emotions_rounded,
-                      color: Color(0xFF6B5B6D),
-                      size: 22,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: TextField(
-                      controller: _customMsgController,
-                      style: SLTheme.quicksand(
-                        color: const Color(0xFF5A4A5E),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: context.tr('p4_soul_message_hint'),
-                        hintStyle: SLTheme.quicksand(
-                          color: const Color(0xFF9E8B9F),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        filled: false,
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                      ),
-                      onSubmitted: (_) => _sendCustomMessage(),
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: _sendCustomMessage,
-                  child: Container(
-                    width: 38,
-                    height: 38,
-                    margin: const EdgeInsets.only(right: 2),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFFF9A9E), Color(0xFFFECFEF)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFFF9A9E).withValues(alpha: 0.4),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.send_rounded,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return SoulMergeChatBar(
+      chatHistory: _chatHistory,
+      myRole: _myRole,
+      partnerName: _partnerName,
+      spamWarning: _spamWarning,
+      textController: _customMsgController,
+      scrollController: _chatScrollController,
+      isUploadingPhoto: _isUploadingPhoto,
+      lastAnyMsgTimestamp: _lastAnyMsgTimestamp,
+      isMerged: _isMerged,
+      onSendCustomMessage: _sendCustomMessage,
+      onPickImage: _pickAndSendChatImage,
+      onShowSticker: _showStickerBottomSheet,
+      onSendPreset: (message) => unawaited(_sendSoulMessage(message)),
+      formatTime: _formatTime,
     );
   }
 

@@ -20,6 +20,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_config.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/admob_service.dart';
+import 'package:soullocket_app/widgets/consent_ad_view.dart';
 import '../../utils/services/house_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../premium/premium_store_screen.dart';
@@ -36,11 +37,7 @@ part 'soul_block/soul_block_menu_widgets.dart';
 part 'soul_block/soul_block_panel_section.dart';
 part 'soul_block/soul_block_strategy_logic.dart';
 
-enum _SoulGameView {
-  splash,
-  menu,
-  gameplay,
-}
+enum _SoulGameView { splash, menu, gameplay }
 
 class SoulBlockGame extends StatefulWidget {
   SoulBlockGame({
@@ -48,8 +45,9 @@ class SoulBlockGame extends StatefulWidget {
     this.storageKeyPrefix = 'soul_block',
     this.gameTitle = 'SOUL BLOCK',
     String? loadErrorMessage,
-  }) : loadErrorMessage = loadErrorMessage ??
-            L10nService().translate('util_khngthkhin_d28984');
+  }) : loadErrorMessage =
+           loadErrorMessage ??
+           L10nService().translate('util_khngthkhin_d28984');
 
   final String storageKeyPrefix;
   final String gameTitle;
@@ -231,35 +229,38 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       duration: const Duration(milliseconds: 280),
     );
 
-    _floatingController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 960),
-    )..addStatusListener((AnimationStatus status) {
-        if (status == AnimationStatus.completed && mounted) {
-          setState(() => _floatingText = null);
-        }
-      });
+    _floatingController =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 960),
+        )..addStatusListener((AnimationStatus status) {
+          if (status == AnimationStatus.completed && mounted) {
+            setState(() => _floatingText = null);
+          }
+        });
 
-    _explosionController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 760),
-    )..addStatusListener((AnimationStatus status) {
-        if (status == AnimationStatus.completed && mounted) {
-          setState(() {
-            _explosionParticles = <_ExplosionParticle>[];
-            _explosionCenter = Offset.zero;
-          });
-        }
-      });
+    _explosionController =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 760),
+        )..addStatusListener((AnimationStatus status) {
+          if (status == AnimationStatus.completed && mounted) {
+            setState(() {
+              _explosionParticles = <_ExplosionParticle>[];
+              _explosionCenter = Offset.zero;
+            });
+          }
+        });
 
-    _memoryBurstController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1820),
-    )..addStatusListener((AnimationStatus status) {
-        if (status == AnimationStatus.completed && mounted) {
-          setState(() => _memoryBurstSnapshot = null);
-        }
-      });
+    _memoryBurstController =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 1820),
+        )..addStatusListener((AnimationStatus status) {
+          if (status == AnimationStatus.completed && mounted) {
+            setState(() => _memoryBurstSnapshot = null);
+          }
+        });
 
     unawaited(_initAudio());
     _bootstrap();
@@ -448,10 +449,13 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     }
 
     final int trayLength = _tray.length;
-    final int replacementCount =
-        trayLength == 1 ? 1 : min(trayLength, 1 + _random.nextInt(2));
-    final List<int> shuffledIndices =
-        List<int>.generate(trayLength, (int index) => index)..shuffle(_random);
+    final int replacementCount = trayLength == 1
+        ? 1
+        : min(trayLength, 1 + _random.nextInt(2));
+    final List<int> shuffledIndices = List<int>.generate(
+      trayLength,
+      (int index) => index,
+    )..shuffle(_random);
     final List<_SoulPieceOption> replacementPool = _buildSmartBatch(_board);
     if (replacementPool.isEmpty) {
       return false;
@@ -465,8 +469,9 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
     var nextRecommended = _recommendMoveFor(_board, nextTray);
     if (nextRecommended == null) {
-      nextTray =
-          _buildSmartBatch(_board).take(trayLength).toList(growable: false);
+      nextTray = _buildSmartBatch(
+        _board,
+      ).take(trayLength).toList(growable: false);
       if (nextTray.length != trayLength) {
         return false;
       }
@@ -515,7 +520,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   }
 
   void _clearDragVisualState({bool notify = true}) {
-    final bool hadDragVisualState = _draggingPiece != null ||
+    final bool hadDragVisualState =
+        _draggingPiece != null ||
         _previewRow != -1 ||
         _previewCol != -1 ||
         _dragBoardMask != null;
@@ -595,10 +601,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     }
     final _PreparedSoulRun? preparedRun = _preparedMenuRun;
     _preparedMenuRun = null;
-    _startNewGame(
-      openGameplay: true,
-      preparedRun: preparedRun,
-    );
+    _startNewGame(openGameplay: true, preparedRun: preparedRun);
   }
 
   _PreparedSoulRun _prepareFreshRun() {
@@ -662,8 +665,9 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _snapBackPieceId = null;
       _isBusy = false;
       _isGameOver = nextRun.tray.isEmpty || nextRun.recommendedMove == null;
-      _continueUsedThisRun =
-          restoringExistingRun ? _continueUsedThisRun : false;
+      _continueUsedThisRun = restoringExistingRun
+          ? _continueUsedThisRun
+          : false;
       _isReviving = false;
       _isRestarting = false;
       _isOpeningGameplay = false;
@@ -699,7 +703,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     final view = WidgetsBinding.instance.platformDispatcher.views.isNotEmpty
         ? WidgetsBinding.instance.platformDispatcher.views.first
         : null;
-    final Size logicalSize = mediaQuery?.size ??
+    final Size logicalSize =
+        mediaQuery?.size ??
         (view == null
             ? const Size(392, 800)
             : view.physicalSize / view.devicePixelRatio);
@@ -724,18 +729,24 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     final double devicePixelRatio =
         mediaQuery?.devicePixelRatio ?? view?.devicePixelRatio ?? 1.0;
     final _SoulBlockPerformanceProfile profile = _performanceProfile;
-    final double cappedDevicePixelRatio =
-        devicePixelRatio.clamp(1.0, profile.maxImageDevicePixelRatio);
-    final double logicalWidth =
-        min((mediaQuery?.size.width ?? 392.0) * 0.72, 276.0);
+    final double cappedDevicePixelRatio = devicePixelRatio.clamp(
+      1.0,
+      profile.maxImageDevicePixelRatio,
+    );
+    final double logicalWidth = min(
+      (mediaQuery?.size.width ?? 392.0) * 0.72,
+      276.0,
+    );
     final double logicalHeight = logicalWidth / _memoryBurstCardAspectRatio;
     return (
-      width: (logicalWidth * cappedDevicePixelRatio)
-          .round()
-          .clamp(220, profile.maxImageCacheWidth),
-      height: (logicalHeight * cappedDevicePixelRatio)
-          .round()
-          .clamp(240, profile.maxImageCacheHeight),
+      width: (logicalWidth * cappedDevicePixelRatio).round().clamp(
+        220,
+        profile.maxImageCacheWidth,
+      ),
+      height: (logicalHeight * cappedDevicePixelRatio).round().clamp(
+        240,
+        profile.maxImageCacheHeight,
+      ),
     );
   }
 
@@ -756,9 +767,9 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       return;
     }
 
-    final ImageStream stream = _memoryBurstImageProvider(normalizedUrl).resolve(
-      createLocalImageConfiguration(context),
-    );
+    final ImageStream stream = _memoryBurstImageProvider(
+      normalizedUrl,
+    ).resolve(createLocalImageConfiguration(context));
     final Completer<double?> completer = Completer<double?>();
     late final ImageStreamListener listener;
     listener = ImageStreamListener(
@@ -824,9 +835,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     }
 
     final List<({String url, double weight})> weightedPool = selectionPool
-        .map(
-          (String url) => (url: url, weight: _memoryBurstFitWeight(url)),
-        )
+        .map((String url) => (url: url, weight: _memoryBurstFitWeight(url)))
         .toList(growable: false);
     final double totalWeight = weightedPool.fold<double>(
       0,
@@ -863,10 +872,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       }
 
       try {
-        await precacheImage(
-          _memoryBurstImageProvider(normalizedUrl),
-          context,
-        );
+        await precacheImage(_memoryBurstImageProvider(normalizedUrl), context);
       } catch (_) {
         continue;
       }
@@ -957,7 +963,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
             'imageUrl',
             'photoUrl',
             'mediaUrl',
-            'thumbUrl'
+            'thumbUrl',
           ]) {
             final url = (data[key] as String? ?? '').trim();
             if (url.isNotEmpty && url.startsWith('http') && seenUrls.add(url)) {
@@ -986,8 +992,9 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       }
       setState(() {
         _memoryBurstGallery = nextGallery;
-        _memoryBurstAspectRatios
-            .removeWhere((String url, _) => !seenUrls.contains(url));
+        _memoryBurstAspectRatios.removeWhere(
+          (String url, _) => !seenUrls.contains(url),
+        );
       });
       unawaited(
         _warmMemoryBurstImages(
@@ -997,10 +1004,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       );
     } catch (error) {
       debugPrint(
-        'Soul Block memory burst gallery load failed: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: context.tr('util_khngthtinh_a304c7'),
-        ).message}',
+        'Soul Block memory burst gallery load failed: ${AppErrorMapper.resolve(error, fallbackMessage: context.tr('util_khngthtinh_a304c7')).message}',
       );
     } finally {
       _isRefreshingMemoryBurstGallery = false;
@@ -1017,11 +1021,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   List<List<_SoulTile?>> _createOpeningBoard() {
     final List<List<_SoulTile?>> board = _createEmptyBoard();
 
-    void placeCells(
-      List<Point<int>> cells,
-      int toneIndex,
-      int pieceId,
-    ) {
+    void placeCells(List<Point<int>> cells, int toneIndex, int pieceId) {
       for (final Point<int> cell in cells) {
         if (cell.y >= 0 &&
             cell.y < _boardSize &&
@@ -1038,8 +1038,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
     // Smart opening: Row/col gần đầy để người dùng nổ nhanh
     // Mỗi pattern có 4 nhóm khối, tổng ~20-24 ô được lấp
-    final List<List<List<Point<int>>>> smartOpeningPatterns =
-        <List<List<Point<int>>>>[
+    final List<List<List<Point<int>>>>
+    smartOpeningPatterns = <List<List<Point<int>>>>[
       // Pattern A: Row 7 (6/8) + Col 7 (6/8) + row 0 (6/8) → user đặt 3 ô là nổ
       <List<Point<int>>>[
         <Point<int>>[
@@ -1278,7 +1278,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     double boardExtent, {
     required double devicePixelRatio,
   }) {
-    final double usableBoardExtent = boardExtent -
+    final double usableBoardExtent =
+        boardExtent -
         (_boardPanelPadding * 2) -
         (_boardGap * (_boardSize - 1)) -
         _boardLayoutSafetyInset;
@@ -1325,7 +1326,9 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     }
     return top
         .clamp(
-            topInset, max(topInset, screenHeight - bottomInset - pieceHeight))
+          topInset,
+          max(topInset, screenHeight - bottomInset - pieceHeight),
+        )
         .toDouble();
   }
 
@@ -1379,8 +1382,11 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     );
   }
 
-  void _startDrag(_SoulPieceOption piece, Offset globalPosition,
-      {bool fromHold = false}) {
+  void _startDrag(
+    _SoulPieceOption piece,
+    Offset globalPosition, {
+    bool fromHold = false,
+  }) {
     if (_isGameOver || _isBusy || _view != _SoulGameView.gameplay) {
       return;
     }
@@ -1399,8 +1405,11 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     _dragPosition = globalPosition;
     _previewRow = preview.row;
     _previewCol = preview.col;
-    _dragPreviewFootprintKeys =
-        _previewFootprintKeys(piece, preview.row, preview.col);
+    _dragPreviewFootprintKeys = _previewFootprintKeys(
+      piece,
+      preview.row,
+      preview.col,
+    );
     _markDragVisualDirty();
     _markTrayVisualDirty();
     _markDragOverlayDirty();
@@ -1418,7 +1427,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         preview.row != _previewRow || preview.col != _previewCol;
     final bool movedEnoughForPreview =
         (globalPosition - previousPosition).distanceSquared >=
-            (_dragUpdateEpsilon * _dragUpdateEpsilon);
+        (_dragUpdateEpsilon * _dragUpdateEpsilon);
     if (!movedEnoughForPreview && !previewChanged) {
       return;
     }
@@ -1427,14 +1436,17 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     _previewRow = preview.row;
     _previewCol = preview.col;
     if (previewChanged) {
-      _dragPreviewFootprintKeys =
-          _previewFootprintKeys(draggingPiece, preview.row, preview.col);
+      _dragPreviewFootprintKeys = _previewFootprintKeys(
+        draggingPiece,
+        preview.row,
+        preview.col,
+      );
       _markDragVisualDirty();
     }
 
     final bool movedEnoughForOverlay =
         (globalPosition - previousPosition).distanceSquared >=
-            (_dragOverlayUpdateEpsilon * _dragOverlayUpdateEpsilon);
+        (_dragOverlayUpdateEpsilon * _dragOverlayUpdateEpsilon);
     if (previewChanged || movedEnoughForOverlay) {
       _markDragOverlayDirty();
     }
@@ -1450,8 +1462,12 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     if (box == null) return false;
     final position = box.localToGlobal(Offset.zero);
     final size = box.size;
-    return Rect.fromLTWH(position.dx, position.dy, size.width, size.height)
-        .contains(globalPosition);
+    return Rect.fromLTWH(
+      position.dx,
+      position.dy,
+      size.width,
+      size.height,
+    ).contains(globalPosition);
   }
 
   Future<void> _endDrag() async {
@@ -1506,11 +1522,13 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     final cellFullSize = _boardCellExtent + _boardGap;
     final Offset pieceOffset = _dragReferencePosition(piece, globalPosition);
 
-    final relativeX = pieceOffset.dx -
+    final relativeX =
+        pieceOffset.dx -
         _boardOrigin.dx -
         _boardPanelPadding -
         _boardContentInset;
-    final relativeY = pieceOffset.dy -
+    final relativeY =
+        pieceOffset.dy -
         _boardOrigin.dy -
         _boardPanelPadding -
         _boardContentInset;
@@ -1582,11 +1600,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         false;
   }
 
-  Future<void> _placePieceAt(
-    _SoulPieceOption piece,
-    int row,
-    int col,
-  ) async {
+  Future<void> _placePieceAt(_SoulPieceOption piece, int row, int col) async {
     if (_isGameOver || _isBusy) {
       return;
     }
@@ -1680,18 +1694,12 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _triggerScreenPulse();
     }
     if (piece.isGold) {
-      _showFloatingMessage(
-        'GOLD! X2 POINTS',
-        color: const Color(0xFFFFD700),
-      );
+      _showFloatingMessage('GOLD! X2 POINTS', color: const Color(0xFFFFD700));
       _triggerScreenPulse();
     }
 
     if (clearedNow > 0) {
-      _emitClearFeedback(
-        clearedCount: clearedNow,
-        streakCount: nextStreak,
-      );
+      _emitClearFeedback(clearedCount: clearedNow, streakCount: nextStreak);
       _triggerScreenPulse();
       if (clearedNow >= 2) {
         _showComboBurst(clearedNow);
@@ -1745,8 +1753,9 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       }
     }
 
-    final replenishedTray =
-        remainingTray.isEmpty ? _buildSmartBatch(resolvedBoard) : remainingTray;
+    final replenishedTray = remainingTray.isEmpty
+        ? _buildSmartBatch(resolvedBoard)
+        : remainingTray;
     final nextRecommended = _recommendMoveFor(resolvedBoard, replenishedTray);
     final noMovesLeft = replenishedTray.isEmpty || nextRecommended == null;
 
@@ -1784,7 +1793,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         subtle: false,
       );
     }
-    final bool shouldTriggerBurst = (clearedNow >= 2) ||
+    final bool shouldTriggerBurst =
+        (clearedNow >= 2) ||
         (clearedNow == 1 && nextStreak.isEven && nextStreak >= 2);
     if (clearedNow > 0 && shouldTriggerBurst) {
       _triggerMemoryBurstReward(
@@ -1965,10 +1975,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     });
 
     _triggerScreenPulse();
-    _showFloatingMessage(
-      'Continue!',
-      color: const Color(0xFF00FF66),
-    );
+    _showFloatingMessage('Continue!', color: const Color(0xFF00FF66));
     _emitClearFeedback(
       clearedCount: max(1, revivedRows.length),
       streakCount: max(1, revivedRows.length),
@@ -2007,9 +2014,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       final entries = decoded
           .whereType<Map>()
           .map(
-            (item) => _LeaderboardEntry.fromJson(
-              Map<String, dynamic>.from(item),
-            ),
+            (item) =>
+                _LeaderboardEntry.fromJson(Map<String, dynamic>.from(item)),
           )
           .toList(growable: false);
       entries.sort(_sortLeaderboard);
@@ -2094,11 +2100,12 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     }
     final Map<String, dynamic> json = Map<String, dynamic>.from(raw);
     final String templateId = (json['templateId'] as String? ?? '').trim();
-    final _SoulPieceTemplate? template =
-        _kSoulBlockTemplates.cast<_SoulPieceTemplate?>().firstWhere(
-              (_SoulPieceTemplate? item) => item?.id == templateId,
-              orElse: () => null,
-            );
+    final _SoulPieceTemplate? template = _kSoulBlockTemplates
+        .cast<_SoulPieceTemplate?>()
+        .firstWhere(
+          (_SoulPieceTemplate? item) => item?.id == templateId,
+          orElse: () => null,
+        );
     if (template == null) {
       return null;
     }
@@ -2162,13 +2169,15 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       if (boardRows.length != savedBoardSize) {
         return null;
       }
-      final List<List<_SoulTile?>> board = boardRows.map((Object? row) {
-        final List<dynamic> cells = row is List ? row : <dynamic>[];
-        if (cells.length != savedBoardSize) {
-          throw const FormatException('invalid board row');
-        }
-        return cells.map(_tileFromJson).toList(growable: false);
-      }).toList(growable: false);
+      final List<List<_SoulTile?>> board = boardRows
+          .map((Object? row) {
+            final List<dynamic> cells = row is List ? row : <dynamic>[];
+            if (cells.length != savedBoardSize) {
+              throw const FormatException('invalid board row');
+            }
+            return cells.map(_tileFromJson).toList(growable: false);
+          })
+          .toList(growable: false);
       final List<_SoulPieceOption> tray =
           ((json['tray'] as List?) ?? <dynamic>[])
               .map(_pieceFromJson)
@@ -2181,7 +2190,9 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _pieceSequence = max(
         (json['pieceSequence'] as num?)?.toInt() ?? 0,
         tray.fold<int>(
-            0, (int maxId, _SoulPieceOption piece) => max(maxId, piece.id)),
+          0,
+          (int maxId, _SoulPieceOption piece) => max(maxId, piece.id),
+        ),
       );
       _score = (json['score'] as num?)?.toInt() ?? 0;
       _bestScore = max(_bestScore, (json['bestScore'] as num?)?.toInt() ?? 0);
@@ -2190,13 +2201,15 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _turn = (json['turn'] as num?)?.toInt() ?? 0;
       _clearedLines = (json['clearedLines'] as num?)?.toInt() ?? 0;
       _continueUsedThisRun = json['continueUsedThisRun'] == true;
-      final _SoulPieceOption? holdPiece =
-          json['holdPiece'] == null ? null : _pieceFromJson(json['holdPiece']);
+      final _SoulPieceOption? holdPiece = json['holdPiece'] == null
+          ? null
+          : _pieceFromJson(json['holdPiece']);
       return _PreparedSoulRun(
         board: board,
         tray: tray,
         recommendedMove: recommendedMove,
-        sessionId: (json['sessionId'] as num?)?.toInt() ??
+        sessionId:
+            (json['sessionId'] as num?)?.toInt() ??
             DateTime.now().microsecondsSinceEpoch,
         holdPiece: holdPiece,
         boardSize: savedBoardSize,
@@ -2230,16 +2243,13 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
     return Scaffold(
       backgroundColor: const Color(0xFF050814),
-      bottomNavigationBar:
-          _view == _SoulGameView.gameplay ? _buildBannerDock() : null,
+      bottomNavigationBar: _view == _SoulGameView.gameplay
+          ? _buildBannerDock()
+          : null,
       body: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: <Color>[
-              _kSoulStageTop,
-              _kSoulStageMid,
-              _kSoulStageBottom,
-            ],
+            colors: <Color>[_kSoulStageTop, _kSoulStageMid, _kSoulStageBottom],
             stops: <double>[0, 0.54, 1],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -2251,34 +2261,22 @@ class _SoulBlockGameState extends State<SoulBlockGame>
             const Positioned(
               top: -70,
               left: -24,
-              child: _GlowOrb(
-                color: Color(0x24FFB86B),
-                size: 230,
-              ),
+              child: _GlowOrb(color: Color(0x24FFB86B), size: 230),
             ),
             const Positioned(
               right: -46,
               top: 118,
-              child: _GlowOrb(
-                color: Color(0x2258C7FF),
-                size: 210,
-              ),
+              child: _GlowOrb(color: Color(0x2258C7FF), size: 210),
             ),
             const Positioned(
               left: -42,
               bottom: 74,
-              child: _GlowOrb(
-                color: Color(0x2057F0A0),
-                size: 220,
-              ),
+              child: _GlowOrb(color: Color(0x2057F0A0), size: 220),
             ),
             const Positioned(
               right: 18,
               bottom: -70,
-              child: _GlowOrb(
-                color: Color(0x1FFF5FA2),
-                size: 210,
-              ),
+              child: _GlowOrb(color: Color(0x1FFF5FA2), size: 210),
             ),
             AnimatedBuilder(
               animation: _flashController,
@@ -2288,8 +2286,9 @@ class _SoulBlockGameState extends State<SoulBlockGame>
                 }
                 return IgnorePointer(
                   child: ColoredBox(
-                    color: const Color(0xFFFFE398)
-                        .withValues(alpha: _backgroundFlashOpacity),
+                    color: const Color(
+                      0xFFFFE398,
+                    ).withValues(alpha: _backgroundFlashOpacity),
                   ),
                 );
               },
@@ -2326,10 +2325,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
                     return const SizedBox.shrink();
                   }
                   final ({double left, double top}) overlayOffset =
-                      _dragPieceOverlayOffsetFromPosition(
-                    piece,
-                    _dragPosition,
-                  );
+                      _dragPieceOverlayOffsetFromPosition(piece, _dragPosition);
                   return Positioned(
                     left: _clampDragPieceLeft(
                       overlayOffset.left,
@@ -2343,8 +2339,9 @@ class _SoulBlockGameState extends State<SoulBlockGame>
                     height: _dragOverlayHeight,
                     child: IgnorePointer(
                       child: Transform.scale(
-                        scale:
-                            _previewRow >= 0 && _previewCol >= 0 ? 1.02 : 1.0,
+                        scale: _previewRow >= 0 && _previewCol >= 0
+                            ? 1.02
+                            : 1.0,
                         child: Opacity(
                           opacity: _previewRow >= 0 && _previewCol >= 0
                               ? 0.98

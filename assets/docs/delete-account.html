@@ -1,550 +1,138 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Hướng dẫn xóa tài khoản và dữ liệu - SoulLocket</title>
-  <style>
-    :root {
-      --primary: #e53935;
-      --primary-dark: #b71c1c;
-      --text: #1c1e21;
-      --text-secondary: #65676b;
-      --text-tertiary: #8a8d91;
-      --border: #e4e6ea;
-      --bg: #f0f2f5;
-      --surface: #ffffff;
-      --blue: #1877f2;
-      --note-bg: #e7f3ff;
-      --warning-bg: #fdf2f2;
-      --th-bg: #f7f8fa;
-      --line: #ccd0d5;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      font-size: 15px;
-      line-height: 1.6;
-    }
-
-    .page {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 0 0 48px;
-    }
-
-    /* ── HERO ── */
-    .hero {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 28px 20px 24px;
-      position: static;
-      overflow: visible;
-    }
-
-    .hero::before, .hero::after { display: none; }
-
-    .badge {
-      display: inline-block;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--primary);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      margin-bottom: 10px;
-    }
-
-    h1 {
-      font-size: 24px;
-      font-weight: 800;
-      color: var(--text);
-      line-height: 1.25;
-      margin-bottom: 10px;
-    }
-
-    h2 {
-      font-size: 17px;
-      font-weight: 800;
-      color: var(--text);
-      margin-bottom: 12px;
-      padding-bottom: 10px;
-      border-bottom: 2px solid var(--primary);
-      display: inline-block;
-    }
-
-    h3 {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text);
-      margin: 16px 0 8px;
-    }
-
-    .lead {
-      font-size: 15px;
-      color: var(--text-secondary);
-      line-height: 1.55;
-      margin-bottom: 14px;
-    }
-
-    .meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px 12px;
-      font-size: 12px;
-      color: var(--text-tertiary);
-      font-weight: 600;
-    }
-
-    .meta span::before { content: "· "; }
-    .meta span:first-child::before { content: ""; }
-
-    /* ── TOC & SUMMARY ── */
-    .toc, .summary-grid {
-      display: block;
-      padding: 0 20px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .toc a {
-      display: flex;
-      align-items: center;
-      padding: 13px 0;
-      border-bottom: 1px solid var(--border);
-      color: var(--blue);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 600;
-      background: transparent;
-      border-radius: 0;
-      box-shadow: none;
-    }
-
-    .toc a:last-child { border-bottom: none; }
-
-    .toc a::after {
-      content: "›";
-      margin-left: auto;
-      color: var(--text-tertiary);
-      font-size: 16px;
-    }
-
-    .summary-card {
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
-      border-radius: 0;
-      background: transparent;
-      box-shadow: none;
-    }
-
-    .summary-card:last-child { border-bottom: none; }
-
-    .summary-card strong {
-      display: block;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 3px;
-    }
-
-    /* ── SECTIONS & CONTACT ── */
-    .section, .contact {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 20px 20px;
-      border-radius: 0;
-      box-shadow: none;
-      backdrop-filter: none;
-      margin-top: 0;
-    }
-
-    p { margin-bottom: 10px; color: var(--text-secondary); font-size: 14px; }
-
-    ul, ol {
-      padding-left: 18px;
-      margin-bottom: 10px;
-    }
-
-    li {
-      font-size: 14px;
-      color: var(--text-secondary);
-      margin-bottom: 6px;
-      line-height: 1.5;
-    }
-
-    a {
-      color: var(--blue);
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    a:hover { text-decoration: underline; }
-
-    /* ── CALLOUTS ── */
-    .note, .warning {
-      border-radius: 6px;
-      padding: 12px 14px;
-      margin: 12px 0;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    .note {
-      background: var(--note-bg);
-      border-left: 3px solid var(--blue);
-    }
-
-    .note strong { color: #1565c0; }
-
-    .warning {
-      background: var(--warning-bg);
-      border-left: 3px solid var(--primary);
-    }
-
-    .warning strong { color: var(--primary-dark); }
-
-    /* ── TABLE ── */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 12px 0;
-      font-size: 13px;
-    }
-
-    th, td {
-      padding: 10px 12px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-      vertical-align: top;
-    }
-
-    th {
-      background: var(--th-bg);
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: .04em;
-    }
-
-    tr:last-child td { border-bottom: none; }
-
-    /* ── FORM ── */
-    form {
-      display: grid;
-      gap: 14px;
-      margin-top: 14px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 4px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text);
-    }
-
-    input, textarea {
-      width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 14px;
-      font-family: inherit;
-    }
-
-    input:focus, textarea:focus {
-      outline: none;
-      border-color: var(--blue);
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 12px 20px;
-      border-radius: 8px;
-      background: var(--primary);
-      color: #fff;
-      font-size: 14px;
-      font-weight: 700;
-      border: none;
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    .btn:hover {
-      background: var(--primary-dark);
-      text-decoration: none;
-    }
-
-    .link-btn {
-      display: inline-block;
-      margin-top: 8px;
-    }
-
-    .muted { color: var(--text-tertiary); font-size: 13px; }
-
-    @media (max-width: 600px) {
-      .hero, .section, .contact, .toc, .summary-grid {
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Có hai thao tác khác nhau: xóa tài khoản đăng nhập của bạn và xóa dữ liệu House dùng chung. Gửi yêu cầu không có nghĩa dữ liệu đã được xóa ngay.">
+<meta name="soullocket-document-version" content="2026-09-09">
+<title>Xóa tài khoản và dữ liệu SoulLocket</title>
+<style>
+:root{color-scheme:light;--ink:#30292d;--muted:#6d6067;--accent:#a13e5c;--line:#eadde2;--paper:#fff;--bg:#faf6f7}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 system-ui,-apple-system,"Segoe UI",sans-serif;overflow-wrap:anywhere}
+.page{max-width:880px;margin:auto;padding:28px 24px 56px}
+header,section,footer{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;margin:0 0 18px}
+.brand{font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:750;color:var(--accent)}
+h1{font-size:clamp(26px,5vw,36px);line-height:1.25;margin:12px 0 16px;letter-spacing:-.025em}
+h2{font-size:21px;line-height:1.4;margin:0 0 14px}h3{font-size:17px;margin:22px 0 10px}
+p{margin:0 0 14px}p:last-child,ul:last-child,ol:last-child{margin-bottom:0}
+.meta,.small{font-size:14px;color:var(--muted)}ul,ol{padding-left:24px;margin:10px 0 16px}li{margin:7px 0}
+a{color:var(--accent);text-underline-offset:3px}a:hover{text-decoration-thickness:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #7943ab;outline-offset:4px}
+nav{display:flex;flex-wrap:wrap;gap:10px 20px;margin:20px 0 0}nav a{font-size:14px}
+.note,.warning{padding:16px 18px;border-radius:10px;margin:16px 0;border-left:4px solid var(--accent);background:#fcf0f4}
+.warning{border-color:#a7641a;background:#fff6e8}.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}
+th{background:#faf5f7}button,.button{display:inline-block;padding:12px 18px;background:var(--accent);color:white;border:0;border-radius:10px;font:inherit;font-weight:650;cursor:pointer;text-decoration:none}
+button:disabled{opacity:.6;cursor:wait}label{display:block;font-weight:650;margin:16px 0 6px}
+input:not([type=checkbox]),textarea{width:100%;padding:12px;font:inherit;color:inherit;background:white;border:1px solid #a99aa2;border-radius:8px}
+textarea{resize:vertical;min-height:110px}.checkbox{display:flex;gap:12px;align-items:flex-start;margin:20px 0}
+.checkbox input{flex-shrink:0;width:20px;height:20px;margin-top:5px}.checkbox label{font-weight:400;margin:0}
+.status{display:none;padding:16px;margin-top:16px;border-radius:10px}.status.success{display:block;background:#eaf7ef;color:#245635}.status.error{display:block;background:#fff0f0;color:#96323c}
+.skip{position:absolute;top:-100px;left:16px;background:white;padding:12px;z-index:10}.skip:focus{top:10px}
+@media(max-width:560px){.page{padding:16px 12px 32px}header,section,footer{padding:20px 18px;border-radius:14px}th,td{padding:10px 8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{body{background:white}.page{max-width:none;padding:0}header,section,footer{border:0;padding:12px 0}nav,.skip,form{display:none}h2,h3{break-after:avoid}}
+</style>
 </head>
 <body>
-  <div class="page">
-    <section class="hero">
-      <div class="badge">SoulLocket · Delete account</div>
-      <h1>Hướng dẫn xóa tài khoản và dữ liệu SoulLocket</h1>
-      <p class="lead">
-        Trang này mô tả rõ hai luồng đang có của SoulLocket: <strong>Xóa tài khoản và dữ liệu</strong> cho tài khoản hiện tại,
-        và <strong>Chia tay / Xóa dữ liệu House</strong> cho dữ liệu dùng chung. Nếu bạn không vào được app,
-        biểu mẫu bên dưới cho phép gửi yêu cầu xóa tài khoản ngoài ứng dụng.
-      </p>
-      <div class="meta">
-        <span>Trong app: ưu tiên khi bạn còn đăng nhập được</span>
-        <span>Ngoài app: gửi yêu cầu công khai khi không thể đăng nhập</span>
-        <span>Biểu mẫu công khai được hỗ trợ xử lý tối đa 7 ngày làm việc sau khi xác minh</span>
-      </div>
-      <div class="summary-grid">
-        <div class="summary-card">
-          <strong>Trong app</strong>
-          Dùng khi bạn còn đăng nhập được. Luồng này cho phép hệ thống dọn dữ liệu nhanh và chính xác hơn.
-        </div>
-        <div class="summary-card">
-          <strong>Ngoài app</strong>
-          Dùng khi bạn không thể đăng nhập. Yêu cầu sẽ được ghi nhận để đội hỗ trợ xác minh và xử lý thủ công hoặc bán tự động.
-        </div>
-        <div class="summary-card">
-          <strong>Phạm vi</strong>
-          House, dữ liệu chung, dữ liệu riêng gắn với tài khoản, token thiết bị và các tham chiếu lưu trữ liên quan sẽ đi vào quy trình dọn dẹp.
-        </div>
-      </div>
-      <div class="toc">
-        <a href="#flow">1. Luồng hiện có trong app là gì</a>
-        <a href="#timeline">2. Mốc thời gian xóa dữ liệu</a>
-        <a href="#scope">3. Những gì có thể bị xóa theo luồng hiện tại</a>
-        <a href="#steps">4. Cách thao tác trong app</a>
-        <a href="#public-form">5. Gửi yêu cầu ngoài app</a>
-        <a href="#contact">6. Liên hệ hỗ trợ</a>
-      </div>
-    </section>
+<a class="skip" href="#noi-dung-chinh">Đến nội dung chính</a>
+<main class="page" id="noi-dung-chinh">
+<header><div class="brand">SoulLocket · Tài liệu và hỗ trợ</div><h1>Xóa tài khoản và dữ liệu SoulLocket</h1><p>Có hai thao tác khác nhau: xóa tài khoản đăng nhập của bạn và xóa dữ liệu House dùng chung. Gửi yêu cầu không có nghĩa dữ liệu đã được xóa ngay.</p><p class="meta">Cập nhật nội dung: <time datetime="2026-09-09">09/09/2026</time> · Phiên bản tài liệu 2026-09-09</p><nav aria-label="Ngôn ngữ tài liệu"><span lang="vi" aria-current="page">Tiếng Việt</span><a href="delete-account-en.html" lang="en" hreflang="en">English</a></nav><nav aria-label="Mục lục"><a href="#flow">1. Chọn đúng phạm vi</a>
+<a href="#timeline">2. Thời gian chờ trong luồng hiện tại</a>
+<a href="#scope">3. Dữ liệu được xử lý và các giới hạn hiện tại</a>
+<a href="#steps">4. Thao tác trong ứng dụng</a>
+<a href="#public-form">5. Gửi yêu cầu ngoài ứng dụng</a></nav></header>
 
-    <section class="section" id="flow">
-      <h2>1. Luồng hiện có trong app là gì</h2>
-      <p>
-        SoulLocket hiện có luồng xóa tài khoản và dữ liệu ngay trong ứng dụng. Đây là cách nên ưu tiên nếu bạn còn truy cập được tài khoản.
-      </p>
-      <h3>Hai trường hợp bạn có thể gặp</h3>
-      <ul>
-        <li><strong>Xóa tài khoản và dữ liệu:</strong> xóa tài khoản đăng nhập hiện tại cùng các dữ liệu liên quan.</li>
-        <li><strong>Chia tay / Xóa dữ liệu House:</strong> dọn dữ liệu House hoặc không gian dùng chung theo trạng thái quan hệ và thiết kế hiện hành của app.</li>
-      </ul>
-      <div class="note">
-        Nếu bạn vẫn đăng nhập được, hãy vào <strong>Cài đặt</strong> và dùng trực tiếp nút <strong>Xóa tài khoản và dữ liệu</strong> trong app.
-      </div>
-    </section>
-
-    <section class="section" id="timeline">
-      <h2>2. Mốc thời gian xóa dữ liệu</h2>
-      <ul>
-        <li>Luồng <strong>Xóa tài khoản và dữ liệu</strong> trong app là luồng dành cho tài khoản hiện tại và dữ liệu liên quan của account đó.</li>
-        <li>Nếu bạn gửi yêu cầu qua biểu mẫu công khai bên dưới, đội hỗ trợ sẽ xác minh rồi xử lý trong tối đa <strong>7 ngày làm việc</strong>.</li>
-        <li>Luồng <strong>Chia tay / Xóa dữ liệu House</strong> mới là luồng có thể tạo yêu cầu chờ xác nhận tối đa <strong>30 ngày</strong>.</li>
-        <li>Nếu có thiết bị tin cậy khác xác nhận sớm, yêu cầu xóa House có thể chuyển sang trạng thái đã lên lịch xóa ngay.</li>
-        <li>Khi yêu cầu xóa House được lên lịch, hệ thống có thể giữ thêm <strong>1 ngày cuối</strong> trước khi dọn vĩnh viễn.</li>
-        <li>Trong khoảng thời gian chờ hoặc đã lên lịch nhưng chưa đến hạn, bạn vẫn có thể rút lại yêu cầu nếu hệ thống chưa bắt đầu xử lý xóa.</li>
-      </ul>
-      <table>
-        <thead>
-          <tr>
-            <th>Trạng thái</th>
-            <th>Ý nghĩa</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Đang chờ</td>
-            <td>Yêu cầu xóa House đã được ghi nhận nhưng chưa sang giai đoạn dọn dữ liệu cuối cùng.</td>
-          </tr>
-          <tr>
-            <td>Đã lên lịch</td>
-            <td>Dữ liệu House đã được đưa vào hàng chờ xóa; vẫn có thể còn khoảng thời gian rút lại nếu chưa bắt đầu xử lý.</td>
-          </tr>
-          <tr>
-            <td>Đang xử lý</td>
-            <td>Quy trình dọn dữ liệu House đã bắt đầu; đây là giai đoạn không thể phục hồi bằng giao diện người dùng.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <section class="section" id="scope">
-      <h2>3. Những gì có thể bị xóa theo luồng hiện tại</h2>
-      <ul>
-        <li>Dữ liệu House và hồ sơ House.</li>
-        <li>Tin nhắn, lời nhắc hoặc thông báo, lời mời, dữ liệu cuộc gọi và danh sách bạn bè gắn với House.</li>
-        <li>Dữ liệu GPS, lịch sử GPS và một số dữ liệu cộng đồng gắn trực tiếp với House.</li>
-        <li>Media hoặc tệp Firebase Storage mà hệ thống thu thập được tham chiếu từ House.</li>
-        <li>Liên kết House trên tài khoản thành viên và một số khóa cục bộ như House ID hoặc chế độ quan hệ trên thiết bị hiện tại.</li>
-        <li>Tài khoản đăng nhập chỉ bị xóa khi bạn dùng luồng <strong>Xóa tài khoản và dữ liệu</strong> riêng cho account hiện tại.</li>
-      </ul>
-      <div class="warning">
-        Một số nội dung cộng đồng có thể được giữ ở dạng <strong>ẩn danh</strong> thay vì giữ nguyên tên tài khoản cũ,
-        nhằm bảo toàn ngữ cảnh của luồng tương tác cộng đồng theo thiết kế hiện tại của hệ thống.
-      </div>
-    </section>
-
-    <section class="section" id="steps">
-      <h2>4. Cách thao tác trong app</h2>
-      <ol>
-        <li>Mở SoulLocket và vào <strong>Cài đặt</strong>.</li>
-        <li>Kéo xuống khu hành động cuối màn hình và chọn <strong>Xóa tài khoản và dữ liệu</strong> hoặc <strong>Chia tay / Xóa dữ liệu</strong> theo trạng thái hiện tại.</li>
-        <li>Đọc kỹ hai bước xác nhận hiển thị trên màn hình.</li>
-        <li>Nếu app yêu cầu xác minh PIN bảo mật, hãy hoàn tất xác minh.</li>
-        <li>Sau khi gửi thành công, theo dõi trạng thái ngay trong phần Cài đặt.</li>
-        <li>Nếu còn trong thời gian cho phép, bạn có thể rút lại yêu cầu trước khi hệ thống bắt đầu xử lý xóa vĩnh viễn.</li>
-      </ol>
-    </section>
-
-    <section class="section" id="public-form">
-      <h2>5. Gửi yêu cầu ngoài app</h2>
-      <p>
-        Nếu bạn không thể đăng nhập vào ứng dụng, hãy dùng biểu mẫu bên dưới để gửi yêu cầu công khai.
-        Biểu mẫu này sẽ tạo một yêu cầu hỗ trợ tại hệ thống để đội ngũ kiểm tra và xử lý.
-      </p>
-
-      <form id="deleteForm" novalidate>
-        <div>
-          <label for="email">Email tài khoản</label>
-          <input id="email" name="email" type="email" autocomplete="email" placeholder="ban@example.com" required>
-        </div>
-
-        <div>
-          <label for="displayName">Tên hiển thị (tùy chọn)</label>
-          <input id="displayName" name="displayName" type="text" maxlength="80" placeholder="Tên bạn đang dùng trong app">
-        </div>
-
-        <div>
-          <label for="houseId">Mã nhà / House ID (nếu nhớ)</label>
-          <input id="houseId" name="houseId" type="text" maxlength="120" placeholder="Ví dụ: house_123456">
-        </div>
-
-        <div>
-          <label for="reason">Ghi chú thêm (tùy chọn)</label>
-          <textarea id="reason" name="reason" maxlength="500" placeholder="Mô tả ngắn giúp đội hỗ trợ xác minh nhanh hơn."></textarea>
-        </div>
-
-        <div class="checkbox">
-          <input id="confirmPermanentDeletion" name="confirmPermanentDeletion" type="checkbox" required>
-          <label for="confirmPermanentDeletion">
-            Tôi xác nhận đây là yêu cầu xóa vĩnh viễn tài khoản và dữ liệu liên quan. Tôi hiểu rằng dữ liệu đã bị xóa sẽ không thể khôi phục.
-          </label>
-        </div>
-
-        <div class="actions">
-          <button id="submitButton" type="submit">Gửi yêu cầu xóa</button>
-          <a class="link-btn" href="/privacy.html">Xem chính sách bảo mật</a>
-        </div>
-      </form>
-
-      <div id="statusBox" class="status" role="status" aria-live="polite"></div>
-    </section>
-
-    <section class="contact" id="contact">
-      <h2>6. Liên hệ hỗ trợ</h2>
-      <p><strong>Email hỗ trợ:</strong> <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p>
-      <p><strong>Kênh trong app:</strong> tab Update/Hỗ trợ hoặc màn chat hỗ trợ người dùng.</p>
-      <div class="links">
-        <a href="/privacy.html">Chính sách bảo mật</a>
-        <a href="/terms.html">Điều khoản sử dụng</a>
-        <a href="/cookie-policy.html">Chính sách Cookie</a>
-      </div>
-    </section>
-  </div>
-
-  <script>
-    const endpoint = 'https://us-central1-soullockket.cloudfunctions.net/requestDeleteAccountPublic';
-    const form = document.getElementById('deleteForm');
-    const statusBox = document.getElementById('statusBox');
-    const submitButton = document.getElementById('submitButton');
-
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('email')) {
-      document.getElementById('email').value = params.get('email');
-    }
-    if (params.get('houseId')) {
-      document.getElementById('houseId').value = params.get('houseId');
-    }
-
-    function setStatus(kind, message) {
-      statusBox.className = `status ${kind}`;
-      statusBox.textContent = message;
-    }
-
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      statusBox.className = 'status';
-      statusBox.textContent = '';
-
-      const payload = {
-        email: document.getElementById('email').value.trim(),
-        displayName: document.getElementById('displayName').value.trim(),
-        houseId: document.getElementById('houseId').value.trim(),
-        reason: document.getElementById('reason').value.trim(),
-        confirmPermanentDeletion: document.getElementById('confirmPermanentDeletion').checked,
-        source: 'public_delete_page',
-      };
-
-      if (!payload.email) {
-        setStatus('error', 'Vui lòng nhập email tài khoản.');
-        return;
-      }
-
-      if (!payload.confirmPermanentDeletion) {
-        setStatus('error', 'Bạn cần xác nhận yêu cầu xóa vĩnh viễn trước khi gửi.');
-        return;
-      }
-
-      submitButton.disabled = true;
-      submitButton.textContent = 'Đang gửi...';
-
-      try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok || result.ok !== true) {
-          if (result.error === 'invalid_email') {
-            throw new Error('Email không hợp lệ.');
-          }
-          if (result.error === 'confirmation_required') {
-            throw new Error('Bạn cần xác nhận yêu cầu xóa vĩnh viễn trước khi gửi.');
-          }
-          if (result.error === 'rate_limited') {
-            throw new Error('Bạn vừa gửi yêu cầu gần đây. Vui lòng thử lại sau khoảng 12 giờ.');
-          }
-          throw new Error('Không thể ghi nhận yêu cầu lúc này. Vui lòng thử lại sau ít phút.');
-        }
-
-        form.reset();
-        setStatus(
-          'success',
-          `Yêu cầu đã được ghi nhận. Mã yêu cầu: ${result.requestId}. Đội hỗ trợ sẽ xác minh và xử lý trong tối đa 7 ngày làm việc.`
-        );
-      } catch (error) {
-        setStatus('error', error.message || 'Không thể gửi yêu cầu lúc này.');
-      } finally {
-        submitButton.disabled = false;
-        submitButton.textContent = 'Gửi yêu cầu xóa';
-      }
+<section id="flow"><h2>1. Chọn đúng phạm vi</h2><ul><li><strong>Xóa tài khoản:</strong> yêu cầu đóng tài khoản đăng nhập hiện tại và xử lý dữ liệu liên quan. Không đồng nghĩa tự động xóa toàn bộ House của người còn lại.</li><li><strong>Chia tay / Xóa dữ liệu House:</strong> yêu cầu dọn không gian dùng chung, có thể ảnh hưởng dữ liệu của cả hai. Thao tác này không tự xóa tài khoản đăng nhập.</li><li><strong>Xóa một nội dung:</strong> dùng nút xóa nhật ký, ảnh, bài đăng hoặc tiện ích tương ứng nếu bạn chỉ muốn xóa một phần.</li></ul><div class="warning">Hãy xuất/lưu dữ liệu cần giữ trước khi xác nhận. Gỡ app hoặc đăng xuất không thay thế yêu cầu xóa. Xóa tài khoản cũng không tự hủy gói thuê bao ở cửa hàng thanh toán.</div></section>
+<section id="timeline"><h2>2. Thời gian chờ trong luồng hiện tại</h2><p>Mốc chính xác là thời gian máy chủ trả về và hiển thị trong ứng dụng. Các mốc dưới đây mô tả mã xử lý hiện tại, không phải cam kết hoàn tất xóa mọi bản sao đúng từng phút.</p><div class="table-wrap"><table><thead><tr><th>Yêu cầu</th><th>Cách lên lịch</th></tr></thead><tbody>
+<tr><td>Xóa tài khoản không có House được xác định hợp lệ</td><td>Lên lịch sau 3 ngày kể từ yêu cầu.</td></tr>
+<tr><td>Xóa tài khoản có House</td><td>Luồng hiện tại đặt thời gian chờ 30 ngày, kể cả khi House chưa có hai thành viên. Nếu người còn lại đủ điều kiện xác nhận, thời điểm được đặt lại thành 3 ngày sau lần xác nhận đó.</td></tr>
+<tr><td>Xóa House ở chế độ độc thân</td><td>Lên lịch sau 3 ngày.</td></tr>
+<tr><td>Chia tay / xóa House cặp đôi</td><td>Chờ người thành viên khác xác nhận hoặc đến hạn chờ 30 ngày. Khi chuyển sang trạng thái đã lên lịch, có thêm 1 ngày trước thời điểm xóa.</td></tr>
+<tr><td>Gửi yêu cầu ngoài app</td><td>Tạo yêu cầu hỗ trợ để xác minh và xử lý, không tự xóa ngay và không có cam kết tự động hoàn tất trong 7 ngày. Hỗ trợ cần thông báo tiến độ/thời hạn phù hợp sau khi xác minh.</td></tr></tbody></table></div>
+<p>Đối với House chung, người gửi không thể tự xác nhận bằng cách đổi sang thiết bị khác của cùng tài khoản. Trước khi đến hạn và trước khi hệ thống bắt đầu xử lý, bạn có thể dùng thao tác hủy/rút yêu cầu nếu giao diện còn cho phép. Khi đã xóa vĩnh viễn, không có chức năng khôi phục bảo đảm.</p></section>
+<section id="scope"><h2>3. Dữ liệu được xử lý và các giới hạn hiện tại</h2><p>Luồng xóa tài khoản hiện dọn hồ sơ tài khoản, liên kết thành viên, hiện diện/token thiết bị và một số yêu cầu hỗ trợ/báo cáo gắn UID; sau đó xóa tài khoản xác thực. Luồng xóa House dọn House, hồ sơ công khai, các nhánh tin nhắn, thông báo, bạn bè, GPS, lời mời và dữ liệu được liên kết theo House trong phạm vi xử lý.</p>
+<p><strong>Không nên hiểu rằng xóa tài khoản đã đồng thời xóa mọi nội dung cũ.</strong> Nội dung House chung, media Cloudflare R2, một số dữ liệu Firestore hoặc bản ghi khác có thể cần rà soát và xử lý bổ sung. Cơ chế hiện tại chưa đủ để cam kết dọn sạch toàn bộ các kho này. Nếu muốn xóa dữ liệu cá nhân còn lại, hãy ghi rõ phạm vi trong yêu cầu hỗ trợ.</p>
+<p>Bản sao người khác đã tải, ảnh chụp màn hình và tệp xuất trên thiết bị không bị thu hồi từ xa. Dữ liệu cần giữ vì nghĩa vụ pháp luật hoặc xử lý gian lận/tranh chấp phải được giới hạn; bạn có thể yêu cầu giải thích loại dữ liệu, lý do và thời hạn giữ. Không có cam kết rằng mọi nội dung cộng đồng sẽ tự chuyển thành ẩn danh.</p></section>
+<section id="steps"><h2>4. Thao tác trong ứng dụng</h2><ol><li>Đăng nhập đúng tài khoản, mở <strong>Cài đặt</strong> và tìm <strong>Xóa tài khoản và dữ liệu</strong> hoặc <strong>Chia tay / Xóa dữ liệu</strong>.</li><li>Đọc phạm vi ảnh hưởng và các bước xác nhận. Luồng xóa tài khoản có bước xác minh email/OTP; chỉ nhập mã trong app chính thức, không gửi mã cho hỗ trợ.</li><li>Kiểm tra thông báo thành công và thời điểm lên lịch. Ứng dụng có thể đăng xuất sau khi tạo yêu cầu xóa tài khoản.</li><li>Nếu cần rút yêu cầu trước hạn, đăng nhập lại và xem hành động hủy yêu cầu đang chờ; nếu không truy cập được, liên hệ hỗ trợ ngay.</li></ol><p>Không tạo thêm yêu cầu khi chưa biết trạng thái của yêu cầu trước. Một lỗi mạng không chứng minh máy chủ chưa nhận yêu cầu.</p></section>
+<section id="public-form"><h2>5. Gửi yêu cầu ngoài ứng dụng</h2><p>Bạn có thể dùng biểu mẫu này mà không cần cài lại hoặc đăng nhập vào app. Sau khi tiếp nhận, hỗ trợ cần xác minh bạn là chủ tài khoản trước khi thực hiện; việc biết email/House ID không cho phép xóa dữ liệu của người khác.</p><p class="small">Thông tin nhập, IP và thông tin trình duyệt được xử lý để tiếp nhận, xác minh và chống lạm dụng theo <a href="privacy.html">Chính sách bảo mật</a>. Không nhập mật khẩu, PIN, OTP hoặc giấy tờ nhạy cảm vào ghi chú.</p>
+<form id="deleteForm" method="post">
+<label for="email">Email tài khoản</label><input id="email" name="email" type="email" autocomplete="email" maxlength="320" required placeholder="ban@example.com">
+<label for="displayName">Tên hiển thị (tùy chọn)</label><input id="displayName" name="displayName" type="text" autocomplete="nickname" maxlength="80">
+<label for="houseId">Mã House (nếu nhớ, không phải mã mời ghép nối)</label><input id="houseId" name="houseId" type="text" maxlength="120" autocomplete="off">
+<label for="reason">Phạm vi dữ liệu cần xóa / ghi chú (tùy chọn)</label><textarea id="reason" name="reason" maxlength="500" aria-describedby="form-help"></textarea>
+<p class="small" id="form-help">Ví dụ: yêu cầu xóa tài khoản và rà soát ảnh hoặc nhật ký cá nhân còn lại. Không yêu cầu xóa tài khoản của người khác.</p>
+<div class="checkbox"><input id="confirmPermanentDeletion" name="confirmPermanentDeletion" type="checkbox" required><label for="confirmPermanentDeletion">Tôi yêu cầu xóa tài khoản của mình và dữ liệu cá nhân liên quan sau khi xác minh. Tôi đã đọc phạm vi, thời gian chờ và hiểu rằng dữ liệu bị xóa vĩnh viễn không thể khôi phục.</label></div>
+<button id="submitButton" type="submit" disabled>Gửi yêu cầu xóa</button>
+</form><noscript><p>Trình duyệt đang tắt JavaScript. Bạn vẫn có thể <a href="mailto:hotroviethoangdev.lo.ve@gmail.com?subject=SoulLocket%20-%20Yeu%20cau%20xoa%20tai%20khoan">gửi yêu cầu qua email hỗ trợ</a>.</p></noscript>
+<div id="statusBox" class="status" role="status" aria-live="polite" tabindex="-1"></div>
+<p class="small">Nếu không gửi được, hãy email đến <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a> từ email tài khoản khi có thể. Giữ mã yêu cầu để hỏi tiến độ; trạng thái “đã ghi nhận” không phải xác nhận “đã xóa”.</p></section>
+<footer><h2>Tài liệu SoulLocket</h2><nav aria-label="Tài liệu liên quan"><a href="about.html">Giới thiệu</a><a href="huong_dan.html">Hướng dẫn</a><a href="huong_dan_cai_dat_lan_dau.html">Thiết lập lần đầu</a><a href="privacy.html">Bảo mật</a><a href="terms.html">Điều khoản</a><a href="cookie-policy.html">Cookie</a><a href="delete-account.html">Xóa tài khoản</a><a href="support.html">Hỗ trợ</a></nav><p class="small">Quyền riêng tư và hỗ trợ: <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p></footer>
+</main>
+<script>
+'use strict';
+const endpoint = 'https://us-central1-soullockket.cloudfunctions.net/requestDeleteAccountPublic';
+const form = document.getElementById('deleteForm');
+const statusBox = document.getElementById('statusBox');
+const submitButton = document.getElementById('submitButton');
+let submitting = false;
+function setStatus(kind, message) {
+  statusBox.className = 'status ' + kind;
+  statusBox.textContent = message;
+  statusBox.focus();
+}
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (submitting || !form.reportValidity()) return;
+  const payload = {
+    email: document.getElementById('email').value.trim(),
+    displayName: document.getElementById('displayName').value.trim(),
+    houseId: document.getElementById('houseId').value.trim(),
+    reason: document.getElementById('reason').value.trim(),
+    confirmPermanentDeletion: document.getElementById('confirmPermanentDeletion').checked,
+    source: 'public_delete_page',
+  };
+  if (!payload.email || !payload.confirmPermanentDeletion) return;
+  submitting = true;
+  submitButton.disabled = true;
+  submitButton.textContent = 'Đang gửi…';
+  statusBox.className = 'status';
+  statusBox.textContent = '';
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      credentials: 'omit', referrerPolicy: 'no-referrer',
+      body: JSON.stringify(payload), signal: controller.signal,
     });
-  </script>
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || result.ok !== true) {
+      if (result.error === 'invalid_email') throw new Error('Email không hợp lệ.');
+      if (result.error === 'confirmation_required') throw new Error('Bạn cần xác nhận yêu cầu xóa trước khi gửi.');
+      if (response.status === 429 || result.error === 'rate_limited') throw new Error('Yêu cầu bị giới hạn tần suất. Kiểm tra yêu cầu trước hoặc thử lại sau khoảng 12 giờ; bạn cũng có thể liên hệ qua email.');
+      throw new Error('Chưa xác nhận được việc tiếp nhận. Vui lòng liên hệ email hỗ trợ nếu lỗi tiếp diễn.');
+    }
+    form.reset();
+    const id = typeof result.requestId === 'string' ? result.requestId.slice(0, 120) : '';
+    setStatus('success', 'Đã ghi nhận yêu cầu' + (id ? '. Mã yêu cầu: ' + id : '') + '. Hỗ trợ sẽ xác minh trước khi xử lý. Đây chưa phải xác nhận tài khoản đã được xóa.');
+  } catch (error) {
+    const message = error.name === 'AbortError' || error instanceof TypeError
+      ? 'Chưa xác nhận được do kết nối gián đoạn. Máy chủ có thể đã nhận yêu cầu; liên hệ email hỗ trợ trước khi gửi lại nhiều lần.'
+      : error.message || 'Không thể gửi yêu cầu. Bạn có thể gửi qua email hỗ trợ.';
+    setStatus('error', message);
+  } finally {
+    clearTimeout(timeout);
+    submitting = false;
+    submitButton.disabled = false;
+    submitButton.textContent = 'Gửi yêu cầu xóa';
+  }
+});
+// Chỉ cho gửi sau khi đã gắn bộ xử lý POST, tránh lộ dữ liệu qua URL khi JS bị chặn.
+submitButton.disabled = false;
+</script>
 </body>
 </html>

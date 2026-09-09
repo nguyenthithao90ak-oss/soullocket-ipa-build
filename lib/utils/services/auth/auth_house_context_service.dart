@@ -204,12 +204,26 @@ class AuthHouseContextService {
       try {
         final token = await _auth.currentUser?.getIdTokenResult();
         final isAdmin = hasAdminClaim(token?.claims);
-        final houseSnapshot = await _db.child('houses/${houseId.trim()}').get();
-        final house = _asStringDynamicMap(houseSnapshot.value);
-        final banned = house?['isBanned'] == true || house?['banned'] == true;
+        // Không đọc nguyên nhà: vùng này có các trường bảo mật bị giới hạn riêng.
+        const fields = [
+          'isBanned',
+          'banned',
+          'banUntil',
+          'bannedUntil',
+          'banReason',
+        ];
+        final snapshots = await Future.wait(
+          fields.map(
+            (field) => _db.child('houses/${houseId.trim()}/$field').get(),
+          ),
+        );
+        final house = <String, dynamic>{
+          for (var i = 0; i < fields.length; i++) fields[i]: snapshots[i].value,
+        };
+        final banned = house['isBanned'] == true || house['banned'] == true;
         final bannedUntil =
             int.tryParse(
-              (house?['banUntil'] ?? house?['bannedUntil'] ?? 0).toString(),
+              (house['banUntil'] ?? house['bannedUntil'] ?? 0).toString(),
             ) ??
             0;
         final banIsActive =
@@ -217,7 +231,7 @@ class AuthHouseContextService {
             (bannedUntil <= 0 ||
                 bannedUntil > _nowProvider().millisecondsSinceEpoch);
         if (banIsActive && !isAdmin) {
-          final reason = house?['banReason']?.toString().trim();
+          final reason = house['banReason']?.toString().trim();
           await onForcedSignOut();
           throw reason == null || reason.isEmpty
               ? 'Tài khoản này đã bị khóa truy cập. Vui lòng liên hệ quản trị viên.'

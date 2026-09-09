@@ -22,7 +22,7 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _authService = AuthService();
-  final SecurityFlowGuard _securityFlowGuard = SecurityFlowGuard.instance;
+  late final SecurityFlowGuard _securityFlowGuard = SecurityFlowGuard.instance;
   final houseCtrl = TextEditingController();
   final answerCtrl = TextEditingController();
   final emailCtrl = TextEditingController();
@@ -804,7 +804,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               style: _style.text(size: 15),
               onSubmitted: (_) => isBusy ? null : handleHouseLookup(),
               decoration: _recoveryInputDecoration(
-                hintText: context.tr('forgot_pwd_hint_house_or_email'),
+                hintText: context.tr('auth_cute_recovery_account_hint'),
                 icon: Icons.vpn_key_rounded,
               ),
             ),
@@ -828,12 +828,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       child: AuthRecoveryLayout(
         busy: isBusy,
         onBack: () => Navigator.of(context).pop(),
-        child: AnimatedSwitcher(
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 200),
-          child: KeyedSubtree(key: ValueKey(step), child: buildStepBody()),
-        ),
         footer: TextButton.icon(
           key: const ValueKey('auth_recovery_previous'),
           onPressed: isBusy
@@ -868,6 +862,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   : 'forgot_pwd_btn_back_step',
             ),
           ),
+        ),
+        child: AnimatedSwitcher(
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 200),
+          child: KeyedSubtree(key: ValueKey(step), child: buildStepBody()),
         ),
       ),
     );

@@ -67,58 +67,103 @@ class AiCounselorService {
     lastErrorMessage = null;
     final user = FirebaseAuth.instance.currentUser;
     final token = await user?.getIdToken();
-    if (token == null) {
-      lastErrorMessage = 'Bạn cần đăng nhập để dùng tính năng này.';
+
+    bool hasYielded = false;
+
+    if (token != null) {
+      final projectId = FirebaseFunctions.instance.app.options.projectId;
+      final url =
+          'https://us-central1-$projectId.cloudfunctions.net/generateAiReplyStream';
+
+      final client = http.Client();
+      try {
+        final request = http.Request('POST', Uri.parse(url));
+        request.headers.addAll(
+          await AppCheckHttpHeaders.withRequiredToken({
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          }),
+        );
+        request.body = jsonEncode({
+          'data': {
+            'prompt': prompt,
+            'systemInstruction': systemInstruction,
+            'memoryScope': memoryScope,
+            'memoryText': memoryText,
+            'persona': persona,
+          },
+        });
+
+        final response = await client
+            .send(request)
+            .timeout(const Duration(seconds: 12));
+        if (response.statusCode == 401 ||
+            response.statusCode == 403 ||
+            response.statusCode == 429) {
+          lastErrorMessage = _mapFunctionsError(
+            FirebaseFunctionsException(
+              message: '',
+              code: response.statusCode == 429
+                  ? 'resource-exhausted'
+                  : 'unauthenticated',
+            ),
+          );
+          // Không chuyển provider khi server đã từ chối quyền/hạn mức.
+          return;
+        }
+        if (response.statusCode == 200) {
+          await for (var line
+              in response.stream
+                  .transform(utf8.decoder)
+                  .transform(const LineSplitter())) {
+            if (line.startsWith('data: ')) {
+              try {
+                final payload = jsonDecode(line.substring(6));
+                if (payload['chunk'] != null) {
+                  hasYielded = true;
+                  yield payload['chunk'] as String;
+                }
+                if (payload['text'] != null) {
+                  hasYielded = true;
+                  yield payload['text'] as String;
+                }
+              } catch (_) {}
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint(
+          '[AiCounselor] streamTextGeneration stream attempt failed: $e',
+        );
+      } finally {
+        client.close();
+      }
+    }
+
+    if (hasYielded) {
       return;
     }
 
-    final projectId = FirebaseFunctions.instance.app.options.projectId;
-    final url =
-        'https://us-central1-$projectId.cloudfunctions.net/generateAiReplyStream';
+    // Tự động chuyển tiếp sang callTextGeneration khi stream endpoint không khả dụng
+    final fallbackReply = await callTextGeneration(
+      prompt,
+      systemInstruction,
+      memoryScope: memoryScope,
+      memoryText: memoryText,
+    );
 
-    try {
-      final request = http.Request('POST', Uri.parse(url));
-      request.headers['Authorization'] = 'Bearer $token';
-      request.headers['Content-Type'] = 'application/json';
-      request.body = jsonEncode({
-        'data': {
-          'prompt': prompt,
-          'systemInstruction': systemInstruction,
-          'memoryScope': memoryScope,
-          'memoryText': memoryText,
-          'persona': persona,
-        },
-      });
-
-      final response = await http.Client().send(request);
-      if (response.statusCode != 200) {
-        lastErrorMessage = 'Lỗi kết nối máy chủ (Mã: ${response.statusCode})';
-        return;
+    if (fallbackReply != null && fallbackReply.trim().isNotEmpty) {
+      final words = fallbackReply.trim().split(' ');
+      for (int i = 0; i < words.length; i++) {
+        final chunk = (i == 0 ? '' : ' ') + words[i];
+        yield chunk;
+        await Future.delayed(const Duration(milliseconds: 20));
       }
-
-      await for (var line
-          in response.stream
-              .transform(utf8.decoder)
-              .transform(const LineSplitter())) {
-        if (line.startsWith('data: ')) {
-          try {
-            final payload = jsonDecode(line.substring(6));
-            if (payload['chunk'] != null) {
-              yield payload['chunk'] as String;
-            }
-            if (payload['text'] != null) {
-              yield payload['text'] as String;
-            }
-          } catch (parseError) {
-            debugPrint('[AiCounselor] Bỏ qua stream chunk lỗi: $parseError');
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint('[AiCounselor] streamTextGeneration failed: $e');
-      lastErrorMessage =
-          'Mình đang gặp lỗi kết nối nên chưa trả lời được. Bạn thử lại sau nhé!';
+      return;
     }
+
+    lastErrorMessage =
+        'Mình đang gặp lỗi kết nối nên chưa trả lời được. Bạn thử lại sau nhé!';
   }
 
   Future<String?> callTextGeneration(
@@ -128,21 +173,34 @@ class AiCounselorService {
     String? memoryText,
   }) async {
     lastErrorMessage = null;
-    final openAiReply = await _callOpenAiFunction(
-      prompt,
-      systemInstruction,
-      memoryScope: memoryScope,
-      memoryText: memoryText,
-    );
+    String? openAiReply;
+    try {
+      openAiReply = await _callOpenAiFunction(
+        prompt,
+        systemInstruction,
+        memoryScope: memoryScope,
+        memoryText: memoryText,
+      );
+    } on FirebaseFunctionsException {
+      // Lỗi xác thực/hạn mức đã được ánh xạ; không thử backend khác để vượt chặn.
+      return null;
+    }
     if (openAiReply != null && openAiReply.isNotEmpty) {
       return openAiReply;
     }
-    return _callWorkerAi(
+
+    final workerReply = await _callWorkerAi(
       prompt,
       systemInstruction,
       endpoint: '/api/v1/ai/chat',
       memoryContext: memoryText,
     );
+    if (workerReply != null && workerReply.isNotEmpty) {
+      return workerReply;
+    }
+
+    // Mọi fallback đều qua backend có xác thực; client không giữ API key AI.
+    return null;
   }
 
   Future<bool> reportAiReply({
@@ -202,6 +260,14 @@ class AiCounselorService {
       return text;
     } on FirebaseFunctionsException catch (error) {
       lastErrorMessage = _mapFunctionsError(error);
+      if (const {
+        'unauthenticated',
+        'permission-denied',
+        'resource-exhausted',
+        'invalid-argument',
+      }.contains(error.code.trim().toLowerCase())) {
+        rethrow;
+      }
       debugPrint(
         '[AiCounselor] generateAiReply failed: ${AppErrorMapper.resolve(error).message}',
       );
@@ -222,13 +288,15 @@ class AiCounselorService {
     try {
       final user = FirebaseAuth.instance.currentUser;
       final idToken = await user?.getIdToken();
+      if (idToken == null || idToken.isEmpty) {
+        return null;
+      }
 
       var headers = <String, String>{
         'Content-Type': 'application/json',
-        if (idToken != null && idToken.isNotEmpty)
-          'Authorization': 'Bearer $idToken',
+        'Authorization': 'Bearer $idToken',
       };
-      headers = await AppCheckHttpHeaders.withOptionalToken(headers);
+      headers = await AppCheckHttpHeaders.withRequiredToken(headers);
 
       final workerUrl = AppConfig.cloudflareWorkerUrl.isNotEmpty
           ? AppConfig.cloudflareWorkerUrl

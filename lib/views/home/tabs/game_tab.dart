@@ -10,6 +10,7 @@ import '../../utilities/block_blast_game.dart';
 import '../../../utils/app_error_mapper.dart';
 import '../../../utils/services/games/game_download_service.dart';
 import '../../../utils/services/admob_service.dart';
+import 'package:soullocket_app/widgets/consent_ad_view.dart';
 
 class GameTab extends StatefulWidget {
   const GameTab({super.key});
@@ -602,7 +603,7 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
                                     child: SizedBox(
                                       width: _bannerAd!.size.width.toDouble(),
                                       height: _bannerAd!.size.height.toDouble(),
-                                      child: AdWidget(ad: _bannerAd!),
+                                      child: ConsentAdView(ad: _bannerAd!),
                                     ),
                                   ),
                                 ),

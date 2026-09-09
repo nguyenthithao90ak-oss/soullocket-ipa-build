@@ -159,8 +159,9 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                                     gradient: _kSoulSplashProgressGradient,
                                     boxShadow: <BoxShadow>[
                                       BoxShadow(
-                                        color: const Color(0xFF53E0FF)
-                                            .withValues(alpha: 0.34),
+                                        color: const Color(
+                                          0xFF53E0FF,
+                                        ).withValues(alpha: 0.34),
                                         blurRadius: 14,
                                         spreadRadius: -6,
                                         offset: const Offset(0, 4),
@@ -483,34 +484,34 @@ extension _SoulBlockPanels on _SoulBlockGameState {
         final double horizontalPadding = wideStage
             ? 12
             : ultraCompact
-                ? 4
-                : narrowWidth
-                    ? 6
-                    : 8;
+            ? 4
+            : narrowWidth
+            ? 6
+            : 8;
         final double stageGap = ultraCompact
             ? 6
             : compactLayout
-                ? 8
-                : 10;
+            ? 8
+            : 10;
         final double topBarHeight = ultraCompact
             ? 82
             : compactLayout
-                ? 90
-                : 104;
+            ? 90
+            : 104;
         return Padding(
           padding: EdgeInsets.fromLTRB(
             horizontalPadding,
             ultraCompact
                 ? 4
                 : compactLayout
-                    ? 6
-                    : 10,
+                ? 6
+                : 10,
             horizontalPadding,
             ultraCompact
                 ? 2
                 : compactLayout
-                    ? 4
-                    : 6,
+                ? 4
+                : 6,
           ),
           child: Column(
             children: <Widget>[
@@ -530,67 +531,83 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                       maxWidth: wideStage ? 980 : 860,
                     ),
                     child: LayoutBuilder(
-                      builder: (BuildContext context,
-                          BoxConstraints stageConstraints) {
-                        final double minTrayHeight = ultraCompact
-                            ? 76
-                            : compactLayout
+                      builder:
+                          (
+                            BuildContext context,
+                            BoxConstraints stageConstraints,
+                          ) {
+                            final double minTrayHeight = ultraCompact
+                                ? 76
+                                : compactLayout
                                 ? 84
                                 : 96;
-                        final double maxTrayHeight = ultraCompact
-                            ? 96
-                            : compactLayout
+                            final double maxTrayHeight = ultraCompact
+                                ? 96
+                                : compactLayout
                                 ? 108
                                 : 124;
-                        double trayHeight = (stageConstraints.maxHeight *
-                                (ultraCompact
-                                    ? 0.175
-                                    : compactLayout
-                                        ? 0.19
-                                        : 0.205))
-                            .clamp(minTrayHeight, maxTrayHeight)
-                            .toDouble();
-                        double boardExtent = min(
-                          stageConstraints.maxWidth,
-                          stageConstraints.maxHeight - trayHeight - stageGap,
-                        );
-                        if (boardExtent < 244) {
-                          final double deficit = 244 - boardExtent;
-                          trayHeight = max(minTrayHeight, trayHeight - deficit);
-                          boardExtent = min(
-                            stageConstraints.maxWidth,
-                            stageConstraints.maxHeight - trayHeight - stageGap,
-                          );
-                        }
-                        final double safeBoardExtent = max(0.0, boardExtent);
-                        final bool trayCompact =
-                            compactLayout || safeBoardExtent < 380;
+                            double trayHeight =
+                                (stageConstraints.maxHeight *
+                                        (ultraCompact
+                                            ? 0.175
+                                            : compactLayout
+                                            ? 0.19
+                                            : 0.205))
+                                    .clamp(minTrayHeight, maxTrayHeight)
+                                    .toDouble();
+                            double boardExtent = min(
+                              stageConstraints.maxWidth,
+                              stageConstraints.maxHeight -
+                                  trayHeight -
+                                  stageGap,
+                            );
+                            if (boardExtent < 244) {
+                              final double deficit = 244 - boardExtent;
+                              trayHeight = max(
+                                minTrayHeight,
+                                trayHeight - deficit,
+                              );
+                              boardExtent = min(
+                                stageConstraints.maxWidth,
+                                stageConstraints.maxHeight -
+                                    trayHeight -
+                                    stageGap,
+                              );
+                            }
+                            final double safeBoardExtent = max(
+                              0.0,
+                              boardExtent,
+                            );
+                            final bool trayCompact =
+                                compactLayout || safeBoardExtent < 380;
 
-                        return Column(
-                          children: <Widget>[
-                            if (safeBoardExtent > 0)
-                              SizedBox.square(
-                                dimension: safeBoardExtent,
-                                child: ValueListenableBuilder<int>(
-                                  valueListenable: _dragVisualTick,
-                                  builder: (context, _, __) {
-                                    return _buildBoardPanel();
-                                  },
+                            return Column(
+                              children: <Widget>[
+                                if (safeBoardExtent > 0)
+                                  SizedBox.square(
+                                    dimension: safeBoardExtent,
+                                    child: ValueListenableBuilder<int>(
+                                      valueListenable: _dragVisualTick,
+                                      builder: (context, _, __) {
+                                        return _buildBoardPanel();
+                                      },
+                                    ),
+                                  ),
+                                SizedBox(height: stageGap),
+                                SizedBox(
+                                  height: trayHeight,
+                                  child: ValueListenableBuilder<int>(
+                                    valueListenable: _trayVisualTick,
+                                    builder: (context, _, __) {
+                                      return _buildTrayPanel(
+                                        compact: trayCompact,
+                                      );
+                                    },
+                                  ),
                                 ),
-                              ),
-                            SizedBox(height: stageGap),
-                            SizedBox(
-                              height: trayHeight,
-                              child: ValueListenableBuilder<int>(
-                                valueListenable: _trayVisualTick,
-                                builder: (context, _, __) {
-                                  return _buildTrayPanel(compact: trayCompact);
-                                },
-                              ),
-                            ),
-                          ],
-                        );
-                      },
+                              ],
+                            );
+                          },
                     ),
                   ),
                 ),
@@ -609,8 +626,8 @@ extension _SoulBlockPanels on _SoulBlockGameState {
     final double sideGap = ultraCompact
         ? 6
         : compact
-            ? 8
-            : 10;
+        ? 8
+        : 10;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
@@ -627,24 +644,24 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                 top: ultraCompact
                     ? 8
                     : compact
-                        ? 10
-                        : 12,
+                    ? 10
+                    : 12,
                 right: ultraCompact
                     ? 8
                     : compact
-                        ? 10
-                        : 12,
+                    ? 10
+                    : 12,
                 child: SizedBox(
                   width: ultraCompact
                       ? 40
                       : compact
-                          ? 44
-                          : 48,
+                      ? 44
+                      : 48,
                   height: ultraCompact
                       ? 40
                       : compact
-                          ? 44
-                          : 48,
+                      ? 44
+                      : 48,
                   child: _buildSettingsButton(
                     compact: compact,
                     ultraCompact: ultraCompact,
@@ -660,8 +677,8 @@ extension _SoulBlockPanels on _SoulBlockGameState {
           width: ultraCompact
               ? 108
               : compact
-                  ? 116
-                  : 128,
+              ? 116
+              : 128,
           child: Column(
             children: <Widget>[
               Expanded(
@@ -701,23 +718,23 @@ extension _SoulBlockPanels on _SoulBlockGameState {
         ultraCompact
             ? 12
             : compact
-                ? 14
-                : 16,
+            ? 14
+            : 16,
         ultraCompact
             ? 10
             : compact
-                ? 12
-                : 14,
+            ? 12
+            : 14,
         ultraCompact
             ? 12
             : compact
-                ? 14
-                : 16,
+            ? 14
+            : 16,
         ultraCompact
             ? 10
             : compact
-                ? 12
-                : 14,
+            ? 12
+            : 14,
       ),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -730,9 +747,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.18),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
         boxShadow: <BoxShadow>[
           BoxShadow(
             color: const Color(0xFF162F6E).withValues(alpha: 0.34),
@@ -765,13 +780,13 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                   horizontal: ultraCompact
                       ? 6
                       : compact
-                          ? 7
-                          : 9,
+                      ? 7
+                      : 9,
                   vertical: ultraCompact
                       ? 4
                       : compact
-                          ? 5
-                          : 6,
+                      ? 5
+                      : 6,
                 ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFD166).withValues(alpha: 0.18),
@@ -786,8 +801,8 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                     fontSize: ultraCompact
                         ? 8.6
                         : compact
-                            ? 9.4
-                            : 10.2,
+                        ? 9.4
+                        : 10.2,
                     fontWeight: FontWeight.w900,
                     color: const Color(0xFFFFF1C2),
                     letterSpacing: 0.25,
@@ -800,13 +815,13 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                   horizontal: ultraCompact
                       ? 6
                       : compact
-                          ? 7
-                          : 9,
+                      ? 7
+                      : 9,
                   vertical: ultraCompact
                       ? 4
                       : compact
-                          ? 5
-                          : 6,
+                      ? 5
+                      : 6,
                 ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.10),
@@ -821,15 +836,15 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                     fontSize: ultraCompact
                         ? 8.4
                         : compact
-                            ? 9.2
-                            : 10.0,
+                        ? 9.2
+                        : 10.0,
                     fontWeight: FontWeight.w800,
                     color: Colors.white.withValues(alpha: 0.78),
                     letterSpacing: ultraCompact
                         ? 0.58
                         : compact
-                            ? 0.8
-                            : 0.95,
+                        ? 0.8
+                        : 0.95,
                   ),
                 ),
               ),
@@ -842,8 +857,8 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                 fontSize: ultraCompact
                     ? 30
                     : compact
-                        ? 34
-                        : 42,
+                    ? 34
+                    : 42,
                 fontWeight: FontWeight.w900,
                 color: Colors.white,
                 letterSpacing: 0.12,
@@ -883,13 +898,14 @@ extension _SoulBlockPanels on _SoulBlockGameState {
   }) {
     final double radius = mini
         ? (ultraCompact
-            ? 13
-            : compact
-                ? 15
-                : 16)
+              ? 13
+              : compact
+              ? 15
+              : 16)
         : 18;
-    final double iconSize =
-        mini ? (ultraCompact ? 18 : 20) : (ultraCompact ? 18 : 20);
+    final double iconSize = mini
+        ? (ultraCompact ? 18 : 20)
+        : (ultraCompact ? 18 : 20);
     return InkWell(
       onTap: _openSettingsSheet,
       borderRadius: BorderRadius.circular(radius),
@@ -897,18 +913,12 @@ extension _SoulBlockPanels on _SoulBlockGameState {
         height: mini ? double.infinity : (compact ? 50 : 56),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: <Color>[
-              _kSoulPanelTop,
-              _kSoulPanelMid,
-              _kSoulPanelBottom,
-            ],
+            colors: <Color>[_kSoulPanelTop, _kSoulPanelMid, _kSoulPanelBottom],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(radius),
-          border: Border.all(
-            color: _kSoulChrome.withValues(alpha: 0.24),
-          ),
+          border: Border.all(color: _kSoulChrome.withValues(alpha: 0.24)),
           boxShadow: <BoxShadow>[
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.16),
@@ -947,8 +957,9 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                     color: const Color(0xFF0D121D).withValues(alpha: 0.65),
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(
-                        color: const Color(0xFF00C3FF).withValues(alpha: 0.2),
-                        width: 1.5),
+                      color: const Color(0xFF00C3FF).withValues(alpha: 0.2),
+                      width: 1.5,
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: const Color(0xFF00C3FF).withValues(alpha: 0.1),
@@ -1102,7 +1113,10 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
-                                    colors: [Color(0xFF00E5FF), Color(0xFF7C3AED)],
+                                    colors: [
+                                      Color(0xFF00E5FF),
+                                      Color(0xFF7C3AED),
+                                    ],
                                   ),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -1130,7 +1144,9 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                                     color: Colors.white.withValues(alpha: 0.08),
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: Colors.white.withValues(alpha: 0.12),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.12,
+                                      ),
                                     ),
                                   ),
                                   child: const Icon(
@@ -1144,7 +1160,9 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            l10n.translate('Tùy chỉnh âm thanh, độ mượt và lối tắt nhanh'),
+                            l10n.translate(
+                              'Tùy chỉnh âm thanh, độ mượt và lối tắt nhanh',
+                            ),
                             textAlign: TextAlign.center,
                             style: SLTheme.quicksand(
                               fontSize: 12.5,
@@ -1275,10 +1293,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: <Color>[
-              Color(0xFF0B1220),
-              Color(0xFF0F172A),
-            ],
+            colors: <Color>[Color(0xFF0B1220), Color(0xFF0F172A)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -1299,22 +1314,23 @@ extension _SoulBlockPanels on _SoulBlockGameState {
         child: SizedBox(
           width: bannerAd.size.width.toDouble(),
           height: bannerAd.size.height.toDouble(),
-          child: AdWidget(ad: bannerAd),
+          child: ConsentAdView(ad: bannerAd),
         ),
       ),
     );
   }
 
   Widget _buildFloatingToast() {
-    final slide = Tween<Offset>(
-      begin: const Offset(0, 0.24),
-      end: const Offset(0, -0.62),
-    ).animate(
-      CurvedAnimation(
-        parent: _floatingController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+    final slide =
+        Tween<Offset>(
+          begin: const Offset(0, 0.24),
+          end: const Offset(0, -0.62),
+        ).animate(
+          CurvedAnimation(
+            parent: _floatingController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
 
     return Positioned.fill(
       child: IgnorePointer(
@@ -1389,24 +1405,25 @@ extension _SoulBlockPanels on _SoulBlockGameState {
       return const SizedBox.shrink();
     }
     final _SoulBlockPerformanceProfile profile = _performanceProfile;
-    final double cardWidth =
-        min(MediaQuery.sizeOf(context).width * 0.72, 276.0);
+    final double cardWidth = min(
+      MediaQuery.sizeOf(context).width * 0.72,
+      276.0,
+    );
 
     return Positioned.fill(
       child: IgnorePointer(
         child: AnimatedBuilder(
           animation: _memoryBurstController,
           child: RepaintBoundary(
-            child: _buildMemoryBurstCard(
-              snapshot: snapshot,
-              profile: profile,
-            ),
+            child: _buildMemoryBurstCard(snapshot: snapshot, profile: profile),
           ),
           builder: (BuildContext context, Widget? child) {
             final double progress = _memoryBurstController.value;
-            final double appear =
-                Curves.easeOutBack.transform((progress / 0.28).clamp(0.0, 1.0));
-            final double fadeOut = 1 -
+            final double appear = Curves.easeOutBack.transform(
+              (progress / 0.28).clamp(0.0, 1.0),
+            );
+            final double fadeOut =
+                1 -
                 Curves.easeIn.transform(
                   ((progress - 0.84) / 0.16).clamp(0.0, 1.0),
                 );
@@ -1414,7 +1431,8 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                 0.80 + (appear * profile.memoryBurstScaleBoost);
             final double offsetY =
                 34 - (Curves.easeOutCubic.transform(progress) * 64);
-            final double rotation = (1 - progress) *
+            final double rotation =
+                (1 - progress) *
                 0.05 *
                 profile.memoryBurstRotationScale *
                 sin((progress * pi * 3.5) + 0.4);
@@ -1491,11 +1509,14 @@ extension _SoulBlockPanels on _SoulBlockGameState {
     final Color accentGlow = snapshot.accent.withValues(alpha: 0.86);
     final Color whiteGlow = Colors.white.withValues(alpha: 0.96);
     return <Widget>[
-      for (int index = 0;
-          index < min(sparkleCount, _kMemoryBurstSparkleAngles.length);
-          index++)
+      for (
+        int index = 0;
+        index < min(sparkleCount, _kMemoryBurstSparkleAngles.length);
+        index++
+      )
         Positioned(
-          left: (cardWidth / 2) +
+          left:
+              (cardWidth / 2) +
               (cos(_kMemoryBurstSparkleAngles[index]) * 110) -
               16,
           top: 124 + (sin(_kMemoryBurstSparkleAngles[index]) * 76) - 16,
@@ -1507,11 +1528,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(999),
                   gradient: LinearGradient(
-                    colors: <Color>[
-                      accentTransparent,
-                      accentGlow,
-                      whiteGlow,
-                    ],
+                    colors: <Color>[accentTransparent, accentGlow, whiteGlow],
                   ),
                 ),
                 child: const SizedBox(width: 32, height: 10),
@@ -1546,15 +1563,17 @@ extension _SoulBlockPanels on _SoulBlockGameState {
             ? null
             : <BoxShadow>[
                 BoxShadow(
-                  color: snapshot.accent
-                      .withValues(alpha: 0.28 * profile.memoryBurstShadowScale),
+                  color: snapshot.accent.withValues(
+                    alpha: 0.28 * profile.memoryBurstShadowScale,
+                  ),
                   blurRadius: 28 * profile.memoryBurstShadowScale,
                   spreadRadius: -6,
                   offset: const Offset(0, 18),
                 ),
                 BoxShadow(
-                  color: Colors.black
-                      .withValues(alpha: 0.34 * profile.memoryBurstShadowScale),
+                  color: Colors.black.withValues(
+                    alpha: 0.34 * profile.memoryBurstShadowScale,
+                  ),
                   blurRadius: 30 * profile.memoryBurstShadowScale,
                   spreadRadius: -10,
                   offset: const Offset(0, 20),
@@ -1599,7 +1618,8 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                           clipBehavior: Clip.hardEdge,
                           child: SizedBox(
                             width: 100,
-                            height: 100 /
+                            height:
+                                100 /
                                 _SoulBlockGameState._memoryBurstCardAspectRatio,
                             child: Image(
                               image: imageProvider,

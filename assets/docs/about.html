@@ -1,425 +1,57 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Giới thiệu SoulLocket</title>
-  <style>
-    :root {
-      --primary: #d81b60;
-      --primary-dark: #ad1457;
-      --text: #1c1e21;
-      --text-secondary: #65676b;
-      --text-tertiary: #8a8d91;
-      --border: #e4e6ea;
-      --bg: #f0f2f5;
-      --surface: #ffffff;
-      --blue: #1877f2;
-      --note-bg: #e7f3ff;
-      --warning-bg: #fff4e5;
-      --th-bg: #f7f8fa;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      font-size: 15px;
-      line-height: 1.6;
-    }
-
-    .page {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 0 0 48px;
-    }
-
-    /* ── HERO ── */
-    .hero {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 28px 20px 24px;
-      position: static;
-      overflow: visible;
-    }
-
-    .hero::before, .hero::after { display: none; }
-
-    .badge {
-      display: inline-block;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--primary);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      margin-bottom: 10px;
-    }
-
-    h1 {
-      font-size: 24px;
-      font-weight: 800;
-      color: var(--text);
-      line-height: 1.25;
-      margin-bottom: 10px;
-    }
-
-    h2 {
-      font-size: 17px;
-      font-weight: 800;
-      color: var(--text);
-      margin-bottom: 12px;
-      padding-bottom: 10px;
-      border-bottom: 2px solid var(--primary);
-      display: inline-block;
-    }
-
-    h3 {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text);
-      margin: 16px 0 8px;
-    }
-
-    .lead {
-      font-size: 15px;
-      color: var(--text-secondary);
-      line-height: 1.55;
-      margin-bottom: 14px;
-    }
-
-    .meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px 12px;
-      font-size: 12px;
-      color: var(--text-tertiary);
-      font-weight: 600;
-    }
-
-    .meta span::before { content: "· "; }
-    .meta span:first-child::before { content: ""; }
-
-    /* ── QUICK NAV (TOC) ── */
-    .quick-nav {
-      display: block;
-      padding: 0 20px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .quick-nav a {
-      display: flex;
-      align-items: center;
-      padding: 13px 0;
-      border-bottom: 1px solid var(--border);
-      color: var(--blue);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 600;
-      background: transparent;
-      border-radius: 0;
-      box-shadow: none;
-    }
-
-    .quick-nav a:last-child { border-bottom: none; }
-
-    .quick-nav a::after {
-      content: "›";
-      margin-left: auto;
-      color: var(--text-tertiary);
-      font-size: 16px;
-    }
-
-    /* ── GRID CARDS → FLAT LIST ── */
-    .grid {
-      display: block;
-    }
-
-    .card {
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
-      border-radius: 0;
-      background: transparent;
-    }
-
-    .card:last-child { border-bottom: none; }
-
-    .card strong {
-      display: block;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 3px;
-    }
-
-    /* ── SECTIONS & FOOTER ── */
-    .section, .footer-card {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 20px 20px;
-      border-radius: 0;
-      box-shadow: none;
-      backdrop-filter: none;
-      margin-top: 0;
-    }
-
-    p { margin-bottom: 10px; color: var(--text-secondary); font-size: 14px; }
-
-    ul, ol {
-      padding-left: 18px;
-      margin-bottom: 10px;
-    }
-
-    li {
-      font-size: 14px;
-      color: var(--text-secondary);
-      margin-bottom: 6px;
-      line-height: 1.5;
-    }
-
-    a {
-      color: var(--blue);
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    a:hover { text-decoration: underline; }
-    .muted { color: var(--text-tertiary); font-size: 13px; }
-
-    /* ── CALLOUTS ── */
-    .note, .warning {
-      border-radius: 6px;
-      padding: 12px 14px;
-      margin: 12px 0;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    .note {
-      background: var(--note-bg);
-      border-left: 3px solid var(--blue);
-    }
-
-    .note strong { color: #1565c0; }
-
-    .warning {
-      background: var(--warning-bg);
-      border-left: 3px solid #f57c00;
-    }
-
-    .warning strong { color: #e65100; }
-
-    @media (max-width: 600px) {
-      .hero, .section, .footer-card, .quick-nav {
-        padding-left: 16px;
-        padding-right: 16px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Một không gian để cá nhân hoặc hai người lưu kỷ niệm, ghi tâm sự và giữ liên lạc.">
+<meta name="soullocket-document-version" content="2026-09-09">
+<title>Về SoulLocket</title>
+<style>
+:root{color-scheme:light;--ink:#30292d;--muted:#6d6067;--accent:#a13e5c;--line:#eadde2;--paper:#fff;--bg:#faf6f7}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 system-ui,-apple-system,"Segoe UI",sans-serif;overflow-wrap:anywhere}
+.page{max-width:880px;margin:auto;padding:28px 24px 56px}
+header,section,footer{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;margin:0 0 18px}
+.brand{font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:750;color:var(--accent)}
+h1{font-size:clamp(26px,5vw,36px);line-height:1.25;margin:12px 0 16px;letter-spacing:-.025em}
+h2{font-size:21px;line-height:1.4;margin:0 0 14px}h3{font-size:17px;margin:22px 0 10px}
+p{margin:0 0 14px}p:last-child,ul:last-child,ol:last-child{margin-bottom:0}
+.meta,.small{font-size:14px;color:var(--muted)}ul,ol{padding-left:24px;margin:10px 0 16px}li{margin:7px 0}
+a{color:var(--accent);text-underline-offset:3px}a:hover{text-decoration-thickness:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #7943ab;outline-offset:4px}
+nav{display:flex;flex-wrap:wrap;gap:10px 20px;margin:20px 0 0}nav a{font-size:14px}
+.note,.warning{padding:16px 18px;border-radius:10px;margin:16px 0;border-left:4px solid var(--accent);background:#fcf0f4}
+.warning{border-color:#a7641a;background:#fff6e8}.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}
+th{background:#faf5f7}button,.button{display:inline-block;padding:12px 18px;background:var(--accent);color:white;border:0;border-radius:10px;font:inherit;font-weight:650;cursor:pointer;text-decoration:none}
+button:disabled{opacity:.6;cursor:wait}label{display:block;font-weight:650;margin:16px 0 6px}
+input:not([type=checkbox]),textarea{width:100%;padding:12px;font:inherit;color:inherit;background:white;border:1px solid #a99aa2;border-radius:8px}
+textarea{resize:vertical;min-height:110px}.checkbox{display:flex;gap:12px;align-items:flex-start;margin:20px 0}
+.checkbox input{flex-shrink:0;width:20px;height:20px;margin-top:5px}.checkbox label{font-weight:400;margin:0}
+.status{display:none;padding:16px;margin-top:16px;border-radius:10px}.status.success{display:block;background:#eaf7ef;color:#245635}.status.error{display:block;background:#fff0f0;color:#96323c}
+.skip{position:absolute;top:-100px;left:16px;background:white;padding:12px;z-index:10}.skip:focus{top:10px}
+@media(max-width:560px){.page{padding:16px 12px 32px}header,section,footer{padding:20px 18px;border-radius:14px}th,td{padding:10px 8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{body{background:white}.page{max-width:none;padding:0}header,section,footer{border:0;padding:12px 0}nav,.skip,form{display:none}h2,h3{break-after:avoid}}
+</style>
 </head>
 <body>
-  <main class="page">
-    <section class="hero">
-      <div class="badge">💗 Giới thiệu chính thức trong app</div>
-      <h1>SoulLocket là gì?</h1>
-      <p class="lead">
-        SoulLocket là ứng dụng tổ chức không gian riêng cho cá nhân hoặc cặp đôi để lưu kỷ niệm,
-        nhắn tin, gọi, ghi nhật ký, dùng các tiện ích chung và quản lý trải nghiệm hằng ngày trong cùng một hệ sinh thái.
-        Tài liệu này chỉ mô tả những nhóm chức năng đang có thật trong mã nguồn và giao diện hiện tại của app.
-      </p>
-      <div class="meta">
-        <span>Phiên bản áp dụng: SoulLocket v2.0.1+55</span>
-        <span>Cập nhật tài liệu: 07/08/2026</span>
-        <span>Phạm vi: app, web viewer trong app và kênh hỗ trợ liên quan</span>
-      </div>
-      <div class="quick-nav">
-        <a href="#tong-quan">1. Tổng quan sản phẩm</a>
-        <a href="#khu-chinh">2. Các khu chính trong app</a>
-        <a href="#du-lieu">3. Dữ liệu được tổ chức ra sao</a>
-        <a href="#van-hanh">4. Vận hành và bảo mật</a>
-        <a href="#gioi-han">5. Những gì app không cam kết</a>
-      </div>
-    </section>
+<a class="skip" href="#noi-dung-chinh">Đến nội dung chính</a>
+<main class="page" id="noi-dung-chinh">
+<header><div class="brand">SoulLocket · Tài liệu và hỗ trợ</div><h1>Về SoulLocket</h1><p>Một không gian để cá nhân hoặc hai người lưu kỷ niệm, ghi tâm sự và giữ liên lạc.</p><p class="meta">Cập nhật nội dung: <time datetime="2026-09-09">09/09/2026</time> · Phiên bản tài liệu 2026-09-09</p><nav aria-label="Ngôn ngữ tài liệu"><span lang="vi" aria-current="page">Tiếng Việt</span><a href="about-en.html" lang="en" hreflang="en">English</a></nav><nav aria-label="Mục lục"><a href="#tong-quan">1. Tài khoản và không gian chung</a>
+<a href="#tinh-nang">2. Các nhóm tính năng</a>
+<a href="#du-lieu">3. Dữ liệu và hạ tầng</a>
+<a href="#gioi-han">4. Những giới hạn cần biết</a>
+<a href="#ban-quyen">5. Bản quyền và hỗ trợ</a></nav></header>
 
-    <section class="section" id="tong-quan">
-      <h2>1. Tổng quan sản phẩm</h2>
-      <p>
-        SoulLocket được xây theo mô hình <strong>tài khoản + House</strong>. Tài khoản dùng để đăng nhập, xác thực,
-        quản lý thiết bị và quyền truy cập. House là không gian dữ liệu để lưu các thông tin dùng riêng hoặc dùng chung,
-        ví dụ như tên nhà, avatar, nhật ký, kỷ niệm, ghi chú, lịch, tài chính, ảnh, nội dung cộng đồng và các cài đặt hiển thị.
-      </p>
-      <div class="grid">
-        <div class="card">
-          <strong>Phù hợp cho 2 trạng thái sử dụng</strong>
-          App hiện có luồng cho người dùng <b>Độc thân</b> và <b>Couple</b>. Một số khu như ghép đôi, dữ liệu nhà chung,
-          gọi trực tiếp hoặc chia sẻ House chỉ mở đầy đủ khi đi vào đúng trạng thái.
-        </div>
-        <div class="card">
-          <strong>Tập trung vào dữ liệu riêng tư và dùng lâu dài</strong>
-          SoulLocket không chỉ là nơi đăng bài. App còn có nhật ký, memories, vault, time capsule, notes, lịch, tài chính,
-          photobook, playlist, voice và nhiều tiện ích dài hạn khác.
-        </div>
-        <div class="card">
-          <strong>Đi theo hướng “mọi thứ trong một nhà”</strong>
-          Thay vì tách nhiều app nhỏ, SoulLocket gom Home, Community, Messenger, Diary, Utilities, Games và Support
-          vào một hệ điều hướng chung để người dùng chuyển qua lại nhanh hơn.
-        </div>
-        <div class="card">
-          <strong>Có lớp miễn phí, thưởng và trả phí</strong>
-          Một số tính năng hoặc giới hạn được mở bằng VIP/Premium, quà tặng, reward store hoặc quảng cáo thưởng,
-          tùy module và cấu hình hiện hành của app.
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="khu-chinh">
-      <h2>2. Các khu chính trong SoulLocket</h2>
-
-      <h3>2.1 Home và không gian House</h3>
-      <p>
-        Đây là màn trung tâm của app. Từ đây người dùng xem đếm ngày, avatar, trạng thái hiện diện, highlights,
-        insight, bản đồ, dòng hoạt động, shortcut dock và các thẻ thông tin nhanh gắn với House.
-      </p>
-
-      <h3>2.2 Community, hồ sơ và khám phá</h3>
-      <p>
-        App có feed cộng đồng, composer đăng bài, bình luận, reaction, top hot, tìm kiếm, thiết lập community
-        và luồng QR nhà để chia sẻ/ghé thăm House công khai hoặc phạm vi được cho phép.
-      </p>
-
-      <h3>2.3 Messenger, gọi và xem cùng nhau</h3>
-      <p>
-        SoulLocket hiện có messenger, chat detail, group chat, gọi audio/video và luồng Watch Together.
-        Ngoài ra còn có khu <strong>Single Match</strong> cho người dùng public hồ sơ và thực hiện audio call/video call
-        theo bộ lọc phù hợp.
-      </p>
-
-      <h3>2.4 Diary và Memories</h3>
-      <p>
-        Khu nhật ký gồm phần viết tâm sự, kho kỷ niệm ảnh, mood, export HTML, quyền riêng tư cho diary
-        và các thao tác chọn/lưu/xóa memory. Đây là một trong các phần được đầu tư sâu nhất trong app hiện tại.
-      </p>
-
-      <h3>2.5 Utilities</h3>
-      <p>
-        Kho tiện ích hiện có rất rộng, bao gồm nhiều màn hình độc lập như: ghi âm, bucket list, ghi chú chung,
-        wish list, time capsule, tài chính, thói quen, điểm danh, vòng quay, photobook, secret vault, rạp phim,
-        lịch chung, sức khỏe, gift maker, tarot, ghép ảnh, reward store, giftcode, age zodiac, creative diary,
-        love card, date spot, travel planner, sleep sync, shared playlist, songs, diary export, drawing studio
-        và các module mở rộng khác đang có mặt trong repo.
-      </p>
-
-      <h3>2.6 Game Center và Update/Support</h3>
-      <p>
-        App có game center riêng với các game như Soul Block, Soul Rhythm, Block Blast, Caro Neon, Heart Catcher
-        và một số trải nghiệm mini-game khác. Khu Update/Support dùng để mở changelog, tài liệu, guide, chính sách,
-        liên hệ support chat và email hỗ trợ.
-      </p>
-
-      <div class="note">
-        <strong>Phạm vi thực tế:</strong> vị trí menu, icon và cách nhóm module có thể thay đổi theo bản cập nhật,
-        nhưng các nhóm chức năng nêu trên đều đang có dấu vết màn hình hoặc luồng xử lý trong mã nguồn hiện tại.
-      </div>
-    </section>
-
-    <section class="section" id="du-lieu">
-      <h2>3. Dữ liệu được tổ chức ra sao</h2>
-      <ul>
-        <li><strong>Tài khoản:</strong> email đăng nhập, UID, phiên xác thực, thiết bị đã duyệt, token thông báo và quyền bảo mật.</li>
-        <li><strong>House:</strong> tên nhà, avatar, thành viên, ngày bắt đầu, theme, quyền riêng tư, trạng thái quan hệ và cấu hình hiển thị.</li>
-        <li><strong>Nội dung do người dùng tạo:</strong> bài cộng đồng, chat, nhật ký, memories, notes, tài chính, habit, calendar, photobook, voice, capsule, card và media.</li>
-        <li><strong>Dữ liệu theo tính năng:</strong> bản đồ, QR, watch together, video call, reward, VIP, support ticket, AI prompt và phản hồi AI khi người dùng chủ động dùng module đó.</li>
-        <li><strong>Dữ liệu cục bộ:</strong> consent, theme, trạng thái khóa app, cache tải ảnh/tài liệu, một số trạng thái phục hồi giao diện và token kỹ thuật.</li>
-      </ul>
-      <div class="warning">
-        Một số dữ liệu là <strong>dùng chung trong House</strong>, một số chỉ thuộc <strong>tài khoản hiện tại</strong>,
-        và một số nằm ở <strong>bộ nhớ cục bộ của thiết bị</strong>. Vì vậy “xóa House”, “xóa nội dung” và “xóa tài khoản”
-        là ba phạm vi khác nhau, không nên hiểu là một thao tác duy nhất.
-      </div>
-    </section>
-
-    <section class="section" id="van-hanh">
-      <h2>4. Vận hành, tích hợp và bảo mật</h2>
-      <div class="grid">
-        <div class="card">
-          <strong>Hạ tầng chính</strong>
-          Ở thời điểm rà soát, app dùng Firebase cho nhiều phần cốt lõi như xác thực, realtime database,
-          thông báo đẩy và một phần lưu trữ media/dữ liệu đồng bộ.
-        </div>
-        <div class="card">
-          <strong>Tích hợp đang thấy trong mã nguồn</strong>
-          Google Sign-In, Google Maps, QR login, Google Play Billing, Google AdMob, dịch vụ AI
-          và một số lớp support/bảo mật nội bộ đều đang xuất hiện trong repo.
-        </div>
-        <div class="card">
-          <strong>Lớp bảo vệ người dùng</strong>
-          SoulLocket có PIN khóa app, sinh trắc học, quản lý thiết bị, device trust, scope bảo mật
-          và các luồng kiểm soát thao tác nhạy cảm trước khi cho sửa/xóa dữ liệu quan trọng.
-        </div>
-        <div class="card">
-          <strong>Kênh hỗ trợ chính thức</strong>
-          Người dùng có thể mở support chat trong app, gửi email hỗ trợ, đọc guide/chính sách trong app
-          và dùng trang xóa dữ liệu ngoài app khi không còn đăng nhập được.
-        </div>
-      </div>
-      <p class="muted">
-        SoulLocket có sử dụng hạ tầng và SDK của bên thứ ba để vận hành. Phạm vi dữ liệu tương ứng được giải thích chi tiết hơn
-        ở tài liệu Chính sách bảo mật và Chính sách Cookie.
-      </p>
-    </section>
-
-    <section class="section" id="gioi-han">
-      <h2>5. Những gì app không cam kết</h2>
-      <ul>
-        <li>Không phải ứng dụng cứu hộ, y tế khẩn cấp, tư vấn pháp lý hay trị liệu chuyên môn.</li>
-        <li>Không cam kết mọi tính năng luôn giống nhau trên mọi thiết bị, mọi quốc gia hoặc mọi bản phát hành.</li>
-        <li>Không cam kết mọi nội dung AI luôn đúng tuyệt đối; AI chỉ là lớp hỗ trợ tham khảo.</li>
-        <li>Không xem mọi dữ liệu đều là công khai; rất nhiều nội dung phụ thuộc vào House, quyền riêng tư và quyền của từng thành viên.</li>
-      </ul>
-      <div class="note">
-        Nếu bạn cần phần chi tiết theo hướng pháp lý/dữ liệu, hãy đọc tiếp <strong>Hướng dẫn sử dụng</strong>,
-        <strong>Chính sách bảo mật</strong>, <strong>Điều khoản sử dụng</strong> và <strong>Chính sách Cookie</strong>
-        ngay trong cùng khu tài liệu của app.
-      </div>
-    </section>
-
-    <section class="footer-card">
-      <h2>🛡️ Bản quyền và trách nhiệm pháp lý</h2>
-      <!--
-      <div class="warning" style="border-color: var(--pink); background: rgba(216,27,96,0.06);">
-        <p style="font-size: 16px; font-weight: 800; color: var(--pink-dark); margin: 0 0 10px;">
-          ⚠️ SoulLocket — Sản phẩm có bản quyền
-        </p>
-        <p><strong>SoulLocket</strong> là ứng dụng được phát hành chính thức bởi <strong>Tame Trương Việt Hoàng</strong>.
-        Mọi quyền sở hữu trí tuệ, mã nguồn, thiết kế giao diện, thương hiệu và nội dung trong ứng dụng đều thuộc về tác giả và được bảo hộ theo quy định pháp luật.</p>
-        <p><strong>Nghiêm cấm các hành vi sau:</strong></p>
-        <ul>
-          <li>Bẻ khóa (crack), can thiệp trái phép vào mã nguồn, cơ chế thanh toán hoặc xác thực của ứng dụng.</li>
-          <li>Sửa đổi, phân phối lại, sao chép trái phép một phần hoặc toàn bộ ứng dụng dưới bất kỳ hình thức nào.</li>
-          <li>Chèn quảng cáo, script, hoặc nội dung không được phép vào ứng dụng.</li>
-          <li>Giả mạo thương hiệu, phát hành bản mod, bản đã chỉnh sửa trái phép.</li>
-          <li>Tự động hóa, khai thác lỗ hổng hoặc can thiệp vào dữ liệu người dùng khác.</li>
-        </ul>
-        <p style="margin-top: 12px;"><strong>Lưu ý:</strong> Mọi công nghệ bảo vệ, mã hóa và cơ chế kiểm tra trong SoulLocket được thiết kế để bảo vệ trải nghiệm người dùng và dữ liệu cá nhân. Việc can thiệp trái phép vào ứng dụng không chỉ vi phạm bản quyền mà còn có thể dẫn đến rủi ro bảo mật cho chính người thực hiện.</p>
-        <p style="margin-top: 10px; font-style: italic; color: var(--muted);">SoulLocket sử dụng nhiều lớp bảo vệ đan xen — từ mã hóa, xác thực thiết bị, App Check, Play Integrity đến các cơ chế phát hiện gian lận nội bộ. Dù bạn có dùng AI hay công cụ tự động hóa, việc can thiệp trái phép vào ứng dụng là không thể và sẽ bị phát hiện.</p>
-      </div>
-      -->
-      <p style="margin-top: 12px;"><strong>Liên hệ bản quyền:</strong> <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p>
-
-      <h2 style="margin-top: 28px;">Tài liệu liên quan</h2>
-      <p><a href="huong_dan.html">Hướng dẫn sử dụng app</a></p>
-      <p><a href="privacy.html">Chính sách bảo mật</a></p>
-      <p><a href="terms.html">Điều khoản sử dụng</a></p>
-      <p><a href="cookie-policy.html">Chính sách Cookie</a></p>
-      <p><a href="delete-account.html">Hướng dẫn xóa dữ liệu</a></p>
-      <p class="muted">
-        Kênh hỗ trợ chính thức hiện hiển thị trong app qua support chat và email:
-        <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a>.
-      </p>
-    </section>
-  </main>
+<section id="tong-quan"><h2>1. Tài khoản và không gian chung</h2><p>Tài khoản dùng để đăng nhập và quản lý quyền truy cập. House là không gian chứa hồ sơ, nhật ký, kỷ niệm và nội dung chung. Bạn có thể dùng một mình; khi muốn kết nối, mở <strong>Cài đặt → Kết nối nửa kia</strong> để tạo hoặc nhập/quét lời mời.</p><p>Khi đã ghép nối, màn hình hiển thị hai avatar, tên và ngày kết nối; ô truy cập bên ngoài hiển thị hai avatar cùng trạng thái đã ghép nối. Chọn chế độ Couple không thay thế việc ghép hai tài khoản.</p></section>
+<section id="tinh-nang"><h2>2. Các nhóm tính năng</h2><ul><li>Trang chủ: avatar, đếm ngày, hiện diện và lối tắt.</li><li>Nhật ký/kỷ niệm: viết tâm sự, lưu ảnh và xem nội dung đã đồng bộ.</li><li>Trò chuyện/cộng đồng: gửi nội dung, tương tác và chia sẻ theo phạm vi của tính năng.</li><li>Tiện ích, trò chơi và nội dung sáng tạo được cung cấp theo bản ứng dụng.</li><li>Cài đặt, bảo mật, hỗ trợ và các lựa chọn quyền riêng tư.</li></ul><p>Danh mục thực tế tùy nền tảng, phiên bản, quyền thiết bị và cấu hình. Một tệp tính năng có trong mã nguồn không có nghĩa chức năng đó đã mở hoặc hoạt động trên mọi bản phát hành.</p></section>
+<section id="du-lieu"><h2>3. Dữ liệu và hạ tầng</h2><p>SoulLocket sử dụng Firebase cho xác thực, cơ sở dữ liệu và thông báo, cùng Cloudflare R2/Workers cho các luồng tệp hoặc dịch vụ tương ứng. Ngoài dữ liệu máy chủ, thiết bị có thể giữ bản nháp, cache và tệp đã tải.</p><p>Nội dung chung có thể được người cùng House truy cập theo tính năng; khóa PIN không tự biến nội dung chung thành dữ liệu chỉ mình bạn xem. Trước khi ghép nối, đọc cảnh báo về House cũ và sao lưu nội dung cần giữ.</p><p>Xem <a href="privacy.html">Chính sách bảo mật</a> để hiểu các nhà cung cấp, dữ liệu và quyền của bạn.</p></section>
+<section id="gioi-han"><h2>4. Những giới hạn cần biết</h2><p>SoulLocket không bảo đảm an toàn tuyệt đối, hoạt động liên tục hoặc khôi phục mọi dữ liệu. App không thay thế dịch vụ khẩn cấp hay tư vấn chuyên môn. Nội dung AI, bản đồ và trạng thái hiện diện có thể không chính xác hoặc chậm cập nhật.</p><p>Không dùng SoulLocket để theo dõi bí mật, ép buộc người khác hay chia sẻ dữ liệu không có quyền sử dụng.</p></section>
+<section id="ban-quyen"><h2>5. Bản quyền và hỗ trợ</h2><p>Thương hiệu, phần mềm và tài liệu thuộc chủ sở hữu tương ứng. Nội dung người dùng và tài sản bên thứ ba vẫn theo quyền/giấy phép của họ. Không coi toàn bộ nội dung trong ứng dụng là tài sản độc quyền của SoulLocket.</p><p>Liên hệ tài khoản, bản quyền hoặc quyền riêng tư qua <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a> hoặc khu hỗ trợ trong app. Không gửi mật khẩu, PIN hoặc OTP.</p></section>
+<footer><h2>Tài liệu SoulLocket</h2><nav aria-label="Tài liệu liên quan"><a href="about.html">Giới thiệu</a><a href="huong_dan.html">Hướng dẫn</a><a href="huong_dan_cai_dat_lan_dau.html">Thiết lập lần đầu</a><a href="privacy.html">Bảo mật</a><a href="terms.html">Điều khoản</a><a href="cookie-policy.html">Cookie</a><a href="delete-account.html">Xóa tài khoản</a><a href="support.html">Hỗ trợ</a></nav><p class="small">Quyền riêng tư và hỗ trợ: <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p></footer>
+</main>
 </body>
 </html>

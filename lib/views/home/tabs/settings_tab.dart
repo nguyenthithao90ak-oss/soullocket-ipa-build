@@ -85,6 +85,10 @@ import '../../../utils/services/auth_service.dart';
 import '../../../utils/services/device_manager_service.dart';
 import '../../../utils/services/security_flow_guard.dart';
 import '../../../utils/services/admob_service.dart';
+import 'package:soullocket_app/widgets/consent_ad_view.dart';
+import '../../../utils/services/consent_service.dart';
+import '../../../utils/services/privacy_collection_service.dart';
+import '../../consent/widgets/startup_privacy_dialog.dart';
 import '../../../utils/services/breakup_service.dart';
 import '../../../utils/services/critical_data_sync_service.dart';
 import '../../../utils/services/house_service.dart';
@@ -121,6 +125,7 @@ import 'settings/controllers/settings_notifications_controller.dart';
 import 'settings/controllers/settings_widget_controller.dart';
 import 'settings/relationship/relationship_actions.dart';
 import 'settings/pairing/pairing_dashboard_screen.dart';
+import 'settings/pairing/pairing_settings_shortcut.dart';
 part 'settings/settings_shared_widgets.dart';
 part 'settings/settings_state_helpers.dart';
 part 'settings/settings_persistence.dart';
@@ -608,7 +613,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
               child: SizedBox(
                 width: bannerAd.size.width.toDouble(),
                 height: bannerAd.size.height.toDouble(),
-                child: AdWidget(ad: bannerAd),
+                child: ConsentAdView(ad: bannerAd),
               ),
             ),
           ),

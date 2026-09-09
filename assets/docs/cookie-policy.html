@@ -1,563 +1,61 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Chính sách Cookie - SoulLocket</title>
-  <style>
-    :root {
-      --primary: #ef6c00;
-      --primary-dark: #c25b00;
-      --text: #1c1e21;
-      --text-secondary: #65676b;
-      --text-tertiary: #8a8d91;
-      --border: #e4e6ea;
-      --bg: #f0f2f5;
-      --surface: #ffffff;
-      --blue: #1877f2;
-      --note-bg: #fff8f0;
-      --warning-bg: #fff4e5;
-      --notice-bg: #fef3e2;
-      --th-bg: #f7f8fa;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      font-size: 15px;
-      line-height: 1.6;
-    }
-
-    .page {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 0 0 48px;
-    }
-
-    /* ── HERO ── */
-    .hero {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 28px 20px 24px;
-      position: static;
-      overflow: visible;
-    }
-
-    .hero::before, .hero::after { display: none; }
-
-    .badge {
-      display: inline-block;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--primary);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      margin-bottom: 10px;
-    }
-
-    h1 {
-      font-size: 24px;
-      font-weight: 800;
-      color: var(--text);
-      line-height: 1.25;
-      margin-bottom: 10px;
-    }
-
-    h2 {
-      font-size: 17px;
-      font-weight: 800;
-      color: var(--text);
-      margin-bottom: 12px;
-      padding-bottom: 10px;
-      border-bottom: 2px solid var(--primary);
-      display: inline-block;
-    }
-
-    h3 {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text);
-      margin: 16px 0 8px;
-    }
-
-    .lead {
-      font-size: 15px;
-      color: var(--text-secondary);
-      line-height: 1.55;
-      margin-bottom: 14px;
-    }
-
-    .meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px 12px;
-      font-size: 12px;
-      color: var(--text-tertiary);
-      font-weight: 600;
-    }
-
-    .meta span::before { content: "· "; }
-    .meta span:first-child::before { content: ""; }
-
-    /* ── SUMMARY GRID → flat cards ── */
-    .summary-grid {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 20px;
-      display: block;
-    }
-
-    .summary-card {
-      padding: 14px 0;
-      border-bottom: 1px solid var(--border);
-      border-radius: 0;
-      background: transparent;
-    }
-
-    .summary-card:last-child { border-bottom: none; }
-
-    .summary-card strong {
-      display: block;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 4px;
-    }
-
-    .summary-card p {
-      font-size: 13px;
-      color: var(--text-secondary);
-      margin: 0;
-    }
-
-    /* ── MINI CARDS (definitions) → flat ── */
-    .card-grid {
-      display: block;
-    }
-
-    .mini-card {
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
-      border-radius: 0;
-      background: transparent;
-    }
-
-    .mini-card:last-child { border-bottom: none; }
-
-    .mini-card strong {
-      display: block;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 3px;
-    }
-
-    .mini-card p { font-size: 13px; color: var(--text-secondary); margin: 0; }
-
-    /* ── PROVIDER ── */
-    .provider-grid, .stack {
-      display: block;
-    }
-
-    .provider {
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
-      border-radius: 0;
-      background: transparent;
-    }
-
-    .provider:last-child { border-bottom: none; }
-
-    .provider strong {
-      display: block;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 3px;
-    }
-
-    .provider p { font-size: 13px; color: var(--text-secondary); margin: 0; }
-
-    /* ── TOC ── */
-    .toc {
-      display: block;
-      padding: 0 20px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .toc a {
-      display: flex;
-      align-items: center;
-      padding: 13px 0;
-      border-bottom: 1px solid var(--border);
-      color: var(--blue);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 600;
-      background: transparent;
-      border-radius: 0;
-      box-shadow: none;
-    }
-
-    .toc a:last-child { border-bottom: none; }
-
-    .toc a::after {
-      content: "›";
-      margin-left: auto;
-      color: var(--text-tertiary);
-      font-size: 16px;
-    }
-
-    /* ── SECTIONS ── */
-    .section {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 20px 20px;
-      border-radius: 0;
-      box-shadow: none;
-      backdrop-filter: none;
-    }
-
-    p { margin-bottom: 10px; color: var(--text-secondary); font-size: 14px; }
-
-    ul, ol {
-      padding-left: 18px;
-      margin-bottom: 10px;
-    }
-
-    li {
-      font-size: 14px;
-      color: var(--text-secondary);
-      margin-bottom: 6px;
-      line-height: 1.5;
-    }
-
-    a {
-      color: var(--blue);
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    a:hover { text-decoration: underline; }
-    .small { color: var(--text-tertiary); font-size: 13px; }
-
-    /* ── CALLOUTS ── */
-    .notice, .callout {
-      border-radius: 6px;
-      padding: 12px 14px;
-      margin: 12px 0;
-      font-size: 13px;
-      line-height: 1.5;
-      border-left: 3px solid var(--primary);
-      background: var(--notice-bg);
-      color: #5f2a00;
-    }
-
-    .callout {
-      background: #e7f3ff;
-      border-left-color: var(--blue);
-      color: #1a3a5c;
-    }
-
-    .callout strong, .notice strong { display: block; margin-bottom: 4px; font-weight: 700; }
-
-    /* ── TABLE ── */
-    .table-wrap {
-      overflow-x: auto;
-      border-radius: 0;
-      border: none;
-      background: transparent;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 12px 0;
-      font-size: 13px;
-      min-width: auto;
-    }
-
-    th, td {
-      padding: 10px 12px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-      vertical-align: top;
-    }
-
-    th {
-      background: var(--th-bg);
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: .04em;
-    }
-
-    tr:last-child td { border-bottom: none; }
-
-    /* ── CONTACT ── */
-    .contact-box {
-      background: transparent;
-      border-radius: 0;
-      border: none;
-      padding: 0;
-    }
-
-    @media (max-width: 600px) {
-      .hero, .section, .toc, .summary-grid {
-        padding-left: 16px;
-        padding-right: 16px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Phân biệt dữ liệu cần để ứng dụng hoạt động với đo lường, quảng cáo và các lựa chọn quyền riêng tư. Tài liệu áp dụng cho SoulLocket trên thiết bị, web và nội dung nhúng.">
+<meta name="soullocket-document-version" content="2026-09-09">
+<title>Chính sách Cookie và lưu trữ cục bộ</title>
+<style>
+:root{color-scheme:light;--ink:#30292d;--muted:#6d6067;--accent:#a13e5c;--line:#eadde2;--paper:#fff;--bg:#faf6f7}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 system-ui,-apple-system,"Segoe UI",sans-serif;overflow-wrap:anywhere}
+.page{max-width:880px;margin:auto;padding:28px 24px 56px}
+header,section,footer{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;margin:0 0 18px}
+.brand{font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:750;color:var(--accent)}
+h1{font-size:clamp(26px,5vw,36px);line-height:1.25;margin:12px 0 16px;letter-spacing:-.025em}
+h2{font-size:21px;line-height:1.4;margin:0 0 14px}h3{font-size:17px;margin:22px 0 10px}
+p{margin:0 0 14px}p:last-child,ul:last-child,ol:last-child{margin-bottom:0}
+.meta,.small{font-size:14px;color:var(--muted)}ul,ol{padding-left:24px;margin:10px 0 16px}li{margin:7px 0}
+a{color:var(--accent);text-underline-offset:3px}a:hover{text-decoration-thickness:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #7943ab;outline-offset:4px}
+nav{display:flex;flex-wrap:wrap;gap:10px 20px;margin:20px 0 0}nav a{font-size:14px}
+.note,.warning{padding:16px 18px;border-radius:10px;margin:16px 0;border-left:4px solid var(--accent);background:#fcf0f4}
+.warning{border-color:#a7641a;background:#fff6e8}.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}
+th{background:#faf5f7}button,.button{display:inline-block;padding:12px 18px;background:var(--accent);color:white;border:0;border-radius:10px;font:inherit;font-weight:650;cursor:pointer;text-decoration:none}
+button:disabled{opacity:.6;cursor:wait}label{display:block;font-weight:650;margin:16px 0 6px}
+input:not([type=checkbox]),textarea{width:100%;padding:12px;font:inherit;color:inherit;background:white;border:1px solid #a99aa2;border-radius:8px}
+textarea{resize:vertical;min-height:110px}.checkbox{display:flex;gap:12px;align-items:flex-start;margin:20px 0}
+.checkbox input{flex-shrink:0;width:20px;height:20px;margin-top:5px}.checkbox label{font-weight:400;margin:0}
+.status{display:none;padding:16px;margin-top:16px;border-radius:10px}.status.success{display:block;background:#eaf7ef;color:#245635}.status.error{display:block;background:#fff0f0;color:#96323c}
+.skip{position:absolute;top:-100px;left:16px;background:white;padding:12px;z-index:10}.skip:focus{top:10px}
+@media(max-width:560px){.page{padding:16px 12px 32px}header,section,footer{padding:20px 18px;border-radius:14px}th,td{padding:10px 8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{body{background:white}.page{max-width:none;padding:0}header,section,footer{border:0;padding:12px 0}nav,.skip,form{display:none}h2,h3{break-after:avoid}}
+</style>
 </head>
 <body>
-  <main class="page">
-    <section class="hero">
-      <span class="badge">Cookie, Local Storage & SDK Cache</span>
-      <h1>Chính sách Cookie của SoulLocket</h1>
-      <p>
-        Chính sách này giải thích cách SoulLocket sử dụng cookie, localStorage, sessionStorage, bộ nhớ cục bộ trong ứng dụng
-        và các công nghệ tương tự để duy trì đăng nhập, ghi nhớ tùy chọn, hỗ trợ bảo mật và vận hành ổn định trên Android,
-        web và các màn hình nhúng WebView.
-      </p>
-      <div class="meta">
-        <span>Ngày hiệu lực: 07/08/2026</span>
-        <span>Phiên bản tài liệu: v2.0.1+55</span>
-        <span>Áp dụng cho: SoulLocket mobile app, webview và website liên quan</span>
-      </div>
+<a class="skip" href="#noi-dung-chinh">Đến nội dung chính</a>
+<main class="page" id="noi-dung-chinh">
+<header><div class="brand">SoulLocket · Tài liệu và hỗ trợ</div><h1>Chính sách Cookie và lưu trữ cục bộ</h1><p>Phân biệt dữ liệu cần để ứng dụng hoạt động với đo lường, quảng cáo và các lựa chọn quyền riêng tư. Tài liệu áp dụng cho SoulLocket trên thiết bị, web và nội dung nhúng.</p><p class="meta">Cập nhật nội dung: <time datetime="2026-09-09">09/09/2026</time> · Phiên bản tài liệu 2026-09-09</p><nav aria-label="Ngôn ngữ tài liệu"><span lang="vi" aria-current="page">Tiếng Việt</span><a href="cookie-policy-en.html" lang="en" hreflang="en">English</a></nav><nav aria-label="Mục lục"><a href="#khai-niem">1. Những công nghệ được sử dụng</a>
+<a href="#phan-loai">2. Các nhóm dữ liệu được lưu</a>
+<a href="#lua-chon">3. “Thiết yếu” và “Tất cả” hiện có ý nghĩa gì</a>
+<a href="#ben-thu-ba">4. Nhà cung cấp liên quan</a>
+<a href="#quan-ly">5. Cách quản lý và rút lựa chọn</a>
+<a href="#luu-tru">6. Thời gian lưu và hậu quả khi xóa</a>
+<a href="#cap-nhat">7. Cập nhật và liên hệ</a></nav></header>
 
-      <div class="summary-grid">
-        <article class="summary-card">
-          <strong>Mức đồng ý hiện có</strong>
-          <p>Ứng dụng hiện dùng 2 mức lựa chọn là <b>Thiết yếu</b> và <b>Tất cả</b>. Hiện chưa có công tắc tách riêng cho từng nhóm marketing hoặc analytics.</p>
-        </article>
-        <article class="summary-card">
-          <strong>Dữ liệu cục bộ được lưu</strong>
-          <p>App có thể lưu trạng thái đăng nhập, cờ đồng ý pháp lý, thiết lập giao diện, khóa ứng dụng, phiên làm việc và dữ liệu tạm giúp tải nhanh hơn.</p>
-        </article>
-        <article class="summary-card">
-          <strong>Dịch vụ bên thứ ba liên quan</strong>
-          <p>Một số SDK như Firebase, Google Sign-In, Google Maps, AdMob và Play Billing có thể dùng cơ chế lưu trữ riêng để hoạt động đúng.</p>
-        </article>
-      </div>
-    </section>
-
-    <div class="stack">
-      <section class="section">
-        <h2>Mục lục nhanh</h2>
-        <div class="toc">
-          <a href="#pham-vi">1. Phạm vi áp dụng</a>
-          <a href="#khai-niem">2. Cookie và công nghệ tương tự là gì</a>
-          <a href="#phan-loai">3. Các nhóm lưu trữ SoulLocket sử dụng</a>
-          <a href="#vi-du">4. Ví dụ dữ liệu được ghi nhớ</a>
-          <a href="#ben-thu-ba">5. Công nghệ từ bên thứ ba</a>
-          <a href="#quan-ly">6. Cách quản lý và rút lại đồng ý</a>
-          <a href="#luu-tru">7. Thời gian lưu và xóa dữ liệu cục bộ</a>
-          <a href="#cap-nhat">8. Cập nhật chính sách</a>
-          <a href="#lien-he">9. Liên hệ</a>
-        </div>
-      </section>
-
-      <section class="section" id="pham-vi">
-        <h2>1. Phạm vi áp dụng</h2>
-        <p>
-          Chính sách này áp dụng cho các thành phần có sử dụng công nghệ lưu trữ cục bộ của SoulLocket, bao gồm ứng dụng di động,
-          các màn hình WebView mở tài liệu hoặc nội dung hỗ trợ, cùng các dịch vụ tích hợp cần duy trì phiên làm việc.
-        </p>
-        <p>
-          Trong tài liệu này, thuật ngữ "cookie" được dùng theo nghĩa rộng để chỉ cookie trình duyệt, localStorage, sessionStorage,
-          SharedPreferences, cache SDK, token đăng nhập, bộ nhớ cục bộ của ứng dụng và công nghệ tương đương giúp dịch vụ hoạt động.
-        </p>
-      </section>
-
-      <section class="section" id="khai-niem">
-        <h2>2. Cookie và công nghệ tương tự là gì</h2>
-        <div class="card-grid">
-          <article class="mini-card">
-            <strong>Cookie trình duyệt</strong>
-            <p>Các tệp nhỏ do website hoặc dịch vụ web tạo ra để duy trì phiên, ghi nhớ lựa chọn và xử lý xác thực trong môi trường web.</p>
-          </article>
-          <article class="mini-card">
-            <strong>LocalStorage / SessionStorage</strong>
-            <p>Bộ nhớ do engine web cung cấp cho trang HTML hoặc WebView để lưu lại cài đặt, trạng thái hoặc dữ liệu phiên trong thiết bị.</p>
-          </article>
-          <article class="mini-card">
-            <strong>Bộ nhớ ứng dụng</strong>
-            <p>Trên app mobile, SoulLocket có thể lưu các cờ trạng thái hoặc tùy chọn người dùng bằng SharedPreferences, secure storage, SQLite cục bộ, cache tạm hoặc cơ chế tương đương.</p>
-          </article>
-          <article class="mini-card">
-            <strong>SDK cache</strong>
-            <p>Một số SDK tích hợp như xác thực, bản đồ, thông báo đẩy hoặc quảng cáo có thể tạo token, session hoặc cache cục bộ riêng theo chuẩn của nhà cung cấp.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="section" id="phan-loai">
-        <h2>3. Các nhóm lưu trữ SoulLocket sử dụng</h2>
-        <div class="notice">
-          SoulLocket hiện triển khai màn hình đồng ý cookie/lưu trữ với 2 lựa chọn: <b>Thiết yếu</b> và <b>Tất cả</b>. Vì vậy các nhóm dưới đây được
-          diễn giải để minh bạch hơn, nhưng trong thực tế trải nghiệm consent hiện tại sẽ gom chúng theo hai mức này.
-        </div>
-
-        <div class="card-grid">
-          <article class="mini-card">
-            <strong>Nhóm thiết yếu</strong>
-            <p>Dùng để duy trì đăng nhập, xác thực, ghi nhận trạng thái đồng ý pháp lý, bảo vệ phiên làm việc, chống lỗi và giữ các màn hình cốt lõi hoạt động ổn định.</p>
-            <p>Đây là nhóm cần thiết để bạn dùng được ứng dụng. Nếu tắt hoặc xóa, bạn có thể phải đăng nhập lại hoặc một số tính năng không còn hoạt động bình thường.</p>
-          </article>
-          <article class="mini-card">
-            <strong>Nhóm chức năng và cá nhân hóa</strong>
-            <p>Dùng để ghi nhớ theme, kiểu hiển thị, tab gần nhất, thiết lập khóa ứng dụng, lựa chọn chế độ quan hệ, một số bộ lọc, bố cục và trạng thái giao diện.</p>
-            <p>Nhóm này thường được cho phép khi bạn chọn mức <b>Tất cả</b>, hoặc được khởi tạo trong phạm vi cần thiết để phục hồi trải nghiệm người dùng.</p>
-          </article>
-          <article class="mini-card">
-            <strong>Nhóm hiệu năng và chẩn đoán</strong>
-            <p>Dùng để lưu cache tạm, tăng tốc tải ảnh hoặc dữ liệu, giảm request lặp, xác định phiên bị gián đoạn và hỗ trợ điều tra lỗi kỹ thuật.</p>
-            <p>Không phải mọi dữ liệu cache đều gắn với danh tính; nhiều phần chỉ là dữ liệu kỹ thuật phục vụ vận hành.</p>
-          </article>
-          <article class="mini-card">
-            <strong>Nhóm quảng cáo, thưởng và thanh toán</strong>
-            <p>Khi bạn dùng tính năng quảng cáo thưởng, VIP hoặc khôi phục giao dịch, một số SDK có thể lưu session, token hoặc trạng thái xác minh giao dịch để chống lạm dụng.</p>
-            <p>Nhóm này chịu thêm chính sách của Google Play Billing, Google AdMob hoặc nền tảng tương ứng.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="section" id="vi-du">
-        <h2>4. Ví dụ dữ liệu được ghi nhớ trên thiết bị</h2>
-        <p>Dưới đây là các loại trạng thái mà SoulLocket hoặc SDK liên quan có thể lưu trên thiết bị để phục vụ trải nghiệm sử dụng:</p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Loại dữ liệu cục bộ</th>
-                <th>Mục đích</th>
-                <th>Ví dụ minh họa</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Cờ đồng ý pháp lý</td>
-                <td>Ghi nhận rằng bạn đã xem hoặc đã chấp nhận các tài liệu bắt buộc.</td>
-                <td>Các khóa như <code>il_tos_accepted</code>, <code>il_privacy_accepted</code>, <code>il_cookie_storage_consent</code>.</td>
-              </tr>
-              <tr>
-                <td>Phiên đăng nhập và xác thực</td>
-                <td>Giữ trạng thái đăng nhập, thiết bị đã duyệt hoặc phiên xác thực giữa các lần mở app.</td>
-                <td>Firebase Auth token, Google Sign-In session, trạng thái thiết bị được phê duyệt.</td>
-              </tr>
-              <tr>
-                <td>Tùy chọn giao diện</td>
-                <td>Khôi phục bố cục, theme, lựa chọn tab, sắp xếp hiển thị và trải nghiệm cá nhân hóa.</td>
-                <td>Theme, chế độ hiển thị, tùy chọn thanh điều hướng, cấu hình màn hình tiện ích và trạng thái đồng ý pháp lý.</td>
-              </tr>
-              <tr>
-                <td>Bảo mật cục bộ</td>
-                <td>Ghi nhớ việc bật khóa ứng dụng, sinh trắc học, thời gian hết hạn mở khóa hoặc lớp xác nhận cục bộ.</td>
-                <td>Trạng thái bật khóa, yêu cầu xác thực lại khi mở nhật ký riêng hoặc chat nhạy cảm.</td>
-              </tr>
-              <tr>
-                <td>Cache hiệu năng</td>
-                <td>Tăng tốc tải ảnh, video, danh sách, tài liệu và giảm tải khi mở lại màn hình.</td>
-                <td>Bộ nhớ tạm ảnh, cache danh sách bài viết, trạng thái tải dở hoặc nội dung WebView.</td>
-              </tr>
-              <tr>
-                <td>Quảng cáo thưởng và giao dịch</td>
-                <td>Ngăn cộng thưởng lặp, xác minh giao dịch hoặc phục hồi quyền lợi VIP đúng cách.</td>
-                <td>Session xem quảng cáo thưởng, trạng thái purchase restore, mã giao dịch đã xử lý.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="small">
-          Ví dụ trên mang tính minh họa cho nhóm dữ liệu. Tên khóa hoặc cấu trúc kỹ thuật nội bộ có thể thay đổi theo từng phiên bản ứng dụng.
-        </p>
-      </section>
-
-      <section class="section" id="ben-thu-ba">
-        <h2>5. Công nghệ từ bên thứ ba</h2>
-        <p>Một số nhà cung cấp dịch vụ tích hợp vào SoulLocket có thể dùng cơ chế lưu trữ riêng để hoàn thành chức năng mà bạn chủ động sử dụng:</p>
-        <div class="provider-grid">
-          <article class="provider">
-            <strong>Firebase</strong>
-            <p>Được dùng cho xác thực, cơ sở dữ liệu thời gian thực, lưu trữ tệp và thông báo đẩy. Các dịch vụ này có thể giữ token, session và metadata kỹ thuật.</p>
-          </article>
-          <article class="provider">
-            <strong>Google Sign-In</strong>
-            <p>Được dùng khi bạn đăng nhập bằng tài khoản Google. Dịch vụ có thể lưu session xác thực để bạn không phải cấp quyền lại liên tục.</p>
-          </article>
-          <article class="provider">
-            <strong>Google Maps và dịch vụ vị trí</strong>
-            <p>Khi bạn mở tính năng bản đồ, check-in hoặc gợi ý địa điểm, SDK bản đồ có thể dùng cache bản đồ, tile hoặc session kỹ thuật cần thiết cho hiển thị.</p>
-          </article>
-          <article class="provider">
-            <strong>Google AdMob</strong>
-            <p>Khi bạn dùng quảng cáo thưởng hoặc hiển thị quảng cáo trong vùng cho phép, SDK quảng cáo có thể lưu session kỹ thuật, trạng thái lượt hiển thị và chống gian lận.</p>
-          </article>
-          <article class="provider">
-            <strong>Google Play Billing</strong>
-            <p>Khi bạn mua VIP hoặc khôi phục giao dịch, nền tảng thanh toán có thể lưu thông tin phiên, token xác minh và dấu vết kỹ thuật liên quan đến giao dịch.</p>
-          </article>
-        </div>
-
-        <div class="callout">
-          <strong>Quan trọng</strong>
-          <p>
-            SoulLocket không mô tả mọi cơ chế lưu trữ nội bộ của từng nhà cung cấp bên thứ ba ở cấp độ hạ tầng. Các nhà cung cấp này có thể áp dụng thêm chính sách riêng
-            và bạn nên tham khảo chính sách của họ khi cần hiểu sâu hơn về cách SDK tương ứng hoạt động.
-          </p>
-        </div>
-      </section>
-
-      <section class="section" id="quan-ly">
-        <h2>6. Cách quản lý và rút lại đồng ý</h2>
-        <ul>
-          <li>Bạn có thể chọn mức đồng ý tại màn hình consent của SoulLocket khi ứng dụng yêu cầu hoặc khi tài liệu pháp lý được hiển thị lại.</li>
-          <li>Nếu muốn xóa dữ liệu cục bộ, bạn có thể đăng xuất, xóa dữ liệu ứng dụng, gỡ cài đặt rồi cài lại hoặc dùng công cụ xóa dữ liệu của trình duyệt đối với phiên bản web.</li>
-          <li>Việc xóa cookie hoặc cache thiết yếu có thể khiến bạn bị đăng xuất, mất một số tùy chọn đã lưu, phải xác thực lại thiết bị hoặc tải lại dữ liệu từ đầu.</li>
-          <li>Nếu bạn chỉ đồng ý mức <b>Thiết yếu</b>, các thành phần không bắt buộc cho trải nghiệm mở rộng có thể bị hạn chế hoặc hoạt động khác đi so với mức <b>Tất cả</b>.</li>
-        </ul>
-        <div class="notice">
-          Hiện tại SoulLocket chưa cung cấp bảng điều khiển chi tiết để bật/tắt từng nhóm cookie riêng lẻ trong app. Trải nghiệm consent đang theo hai lựa chọn tổng quát:
-          <b>Thiết yếu</b> hoặc <b>Tất cả</b>.
-        </div>
-      </section>
-
-      <section class="section" id="luu-tru">
-        <h2>7. Thời gian lưu và xóa dữ liệu cục bộ</h2>
-        <p>
-          Thời gian lưu phụ thuộc vào loại dữ liệu, phiên làm việc và nhà cung cấp dịch vụ. Một số dữ liệu chỉ tồn tại trong một phiên, trong khi dữ liệu khác có thể
-          được giữ lại cho đến khi bạn đăng xuất, xóa bộ nhớ ứng dụng, thay đổi cài đặt hoặc gỡ ứng dụng.
-        </p>
-        <p>
-          Dữ liệu cục bộ không đồng nghĩa với dữ liệu chỉ tồn tại trên thiết bị. Một số trạng thái được lưu đồng thời trên máy chủ để đồng bộ nhiều thiết bị hoặc phục vụ
-          bảo mật. Để hiểu phạm vi dữ liệu máy chủ, vui lòng xem thêm tài liệu <a href="privacy.html">Chính sách bảo mật</a>.
-        </p>
-      </section>
-
-      <section class="section" id="cap-nhat">
-        <h2>8. Cập nhật chính sách</h2>
-        <p>
-          SoulLocket có thể cập nhật Chính sách Cookie khi có thay đổi về luồng đăng nhập, cơ chế consent, nhà cung cấp dịch vụ, mô hình quảng cáo, thanh toán
-          hoặc hạ tầng lưu trữ cục bộ. Bản cập nhật mới sẽ được đăng trong ứng dụng hoặc tại các tài liệu liên quan.
-        </p>
-      </section>
-
-      <section class="section" id="lien-he">
-        <h2>9. Liên hệ</h2>
-        <div class="contact-box">
-          <p>Nếu bạn cần giải thích thêm về cookie, local storage, bộ nhớ cục bộ hoặc quyền kiểm soát dữ liệu liên quan, vui lòng liên hệ:</p>
-          <p><a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p>
-          <p class="small">Khi gửi yêu cầu, bạn nên mô tả rõ nền tảng đang dùng (Android/web), phiên bản ứng dụng và thao tác đang gặp để đội hỗ trợ phản hồi chính xác hơn.</p>
-        </div>
-      </section>
-    </div>
-  </main>
+<section id="khai-niem"><h2>1. Những công nghệ được sử dụng</h2><p>Trên web có thể có cookie, localStorage, sessionStorage và IndexedDB. Trên ứng dụng có SharedPreferences, bộ nhớ xác thực an toàn, cơ sở dữ liệu cục bộ và cache ảnh/tệp. Chúng không phải cùng một loại cookie, nhưng đều có thể lưu dữ liệu trên thiết bị.</p><p>Các trang chính sách này không nhúng mã quảng cáo hoặc Analytics. Biểu mẫu xóa tài khoản chỉ gửi dữ liệu khi bạn bấm gửi; ứng dụng chính và các trang nội dung khác có cơ chế xử lý riêng.</p></section>
+<section id="phan-loai"><h2>2. Các nhóm dữ liệu được lưu</h2><div class="table-wrap"><table><thead><tr><th>Nhóm</th><th>Mục đích và ví dụ</th></tr></thead><tbody><tr><td>Xác thực và an toàn</td><td>Phiên đăng nhập, token, trạng thái thiết bị, lựa chọn pháp lý; giúp duy trì và bảo vệ truy cập.</td></tr><tr><td>Cài đặt do bạn chọn</td><td>Ngôn ngữ, giao diện, tab, cấu hình khóa hoặc hiển thị; các lựa chọn này có thể được lưu kể cả khi chọn “Thiết yếu”.</td></tr><tr><td>Dữ liệu và cache</td><td>Bản nháp, hàng chờ đồng bộ, ảnh/tệp đã tải, cơ sở dữ liệu cục bộ; có thể chứa nội dung riêng tư, không mặc nhiên là dữ liệu vô danh.</td></tr><tr><td>Chẩn đoán/đo lường</td><td>Firebase Analytics và Crashlytics có thể xử lý sự kiện, thông tin thiết bị, lỗi và định danh kỹ thuật theo cách tích hợp.</td></tr><tr><td>Quảng cáo và giao dịch</td><td>Trạng thái đồng ý quảng cáo, mã quảng cáo, lượt tương tác, token xác minh mua hàng hoặc thưởng; không nên gộp mọi hoạt động quảng cáo vào lưu trữ thiết yếu.</td></tr></tbody></table></div></section>
+<section id="lua-chon"><h2>3. “Thiết yếu” và “Tất cả” có ý nghĩa gì</h2><p>Trong bản tích hợp mới, “Thiết yếu” tắt thu thập Analytics/Crashlytics và chặn khởi tạo, tải quảng cáo qua luồng của app. “Tất cả” cho phép các SDK tùy chọn này; quảng cáo vẫn phải được Google UMP cho phép và tuân theo quyền hệ điều hành. App ghi nhận lựa chọn, thời điểm và phiên bản tài liệu trên thiết bị; lựa chọn cũ thiếu phiên bản phải được xác nhận lại.</p><p>Rút đồng ý chặn các yêu cầu mới và gỡ quảng cáo đã tải trong app; không thu hồi được dữ liệu đã gửi trước đó hay kết nối đang diễn ra. SDK native có thể giữ báo cáo lỗi cục bộ; app yêu cầu loại bỏ báo cáo chưa gửi trước khi bật thu thập. Bản app cũ có thể chưa có cơ chế này.</p><div class="warning">“Thiết yếu” không tắt đăng nhập, đồng bộ, giao dịch, an toàn hệ thống hoặc mọi kết nối bên thứ ba. Lựa chọn này không thay thế quyền dữ liệu nhạy cảm, quyền hệ điều hành hay sự đồng ý quảng cáo riêng.</div></section>
+<section id="ben-thu-ba"><h2>4. Nhà cung cấp liên quan</h2><p>Firebase/Google Sign-In, Facebook khi dùng đăng nhập tương ứng, Google Mobile Ads/AdMob, nền tảng thanh toán, dịch vụ bản đồ và hạ tầng Cloudflare có thể sử dụng token, cache hoặc trạng thái kỹ thuật phục vụ tính năng. Nội dung nhúng, font và tệp bên ngoài có thể tạo kết nối mạng đến nhà cung cấp khi tải.</p><p>Danh mục dữ liệu, mục đích và phạm vi chia sẻ được nêu trong <a href="privacy.html">Chính sách bảo mật</a>. Chính sách nhà cung cấp không thay thế trách nhiệm của SoulLocket đối với việc tích hợp.</p></section>
+<section id="quan-ly"><h2>5. Cách quản lý và rút lựa chọn</h2><ul><li>Mở Cài đặt → Lựa chọn quyền riêng tư để đổi giữa “Thiết yếu” và “Tất cả”. Chọn “Thiết yếu” để rút đồng ý với nhóm SDK tùy chọn; không cần xóa dữ liệu app. Mục Lựa chọn quyền riêng tư quảng cáo mở lựa chọn của Google UMP khi có áp dụng.</li><li>Quản lý quyền vị trí, camera, micro, thông báo, sức khỏe và quảng cáo/theo dõi trong cài đặt hệ điều hành. Phạm vi điều khiển tùy thiết bị.</li><li>Dùng cài đặt quyền riêng tư của trình duyệt để xem/xóa dữ liệu website. Việc chặn dữ liệu thiết yếu có thể làm mất phiên đăng nhập hoặc gián đoạn chức năng.</li><li>Gửi yêu cầu về quyền riêng tư tới hỗ trợ nếu giao diện chưa có thao tác cần thiết. Không coi xóa dữ liệu ứng dụng là cách duy nhất để thực hiện quyền rút đồng ý.</li></ul></section>
+<section id="luu-tru"><h2>6. Thời gian lưu và hậu quả khi xóa</h2><p>Dữ liệu phiên có thể hết hạn khi phiên kết thúc; tùy chọn và cơ sở dữ liệu cục bộ có thể tồn tại đến khi bạn xóa dữ liệu app/website. Cache có thời hạn riêng và có thể được tải lại. Đăng xuất không bảo đảm xóa mọi cache, tệp đã tải hoặc bản sao dự phòng của thiết bị.</p><p><strong>Hãy xuất hoặc đồng bộ dữ liệu chưa lưu trước khi dọn bộ nhớ.</strong> Gỡ app, xóa cookie hay tắt quyền không xóa tài khoản, dữ liệu máy chủ hoặc thuê bao. Xem <a href="delete-account.html">Hướng dẫn xóa tài khoản và dữ liệu</a>.</p></section>
+<section id="cap-nhat"><h2>7. Cập nhật và liên hệ</h2><p>Khi cơ chế lưu trữ, SDK hoặc lựa chọn thay đổi, tài liệu cần được cập nhật tương ứng. Gửi câu hỏi tới <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a>, nêu nền tảng và bản app; không gửi mật khẩu, PIN hay OTP.</p></section>
+<footer><h2>Tài liệu SoulLocket</h2><nav aria-label="Tài liệu liên quan"><a href="about.html">Giới thiệu</a><a href="huong_dan.html">Hướng dẫn</a><a href="huong_dan_cai_dat_lan_dau.html">Thiết lập lần đầu</a><a href="privacy.html">Bảo mật</a><a href="terms.html">Điều khoản</a><a href="cookie-policy.html">Cookie</a><a href="delete-account.html">Xóa tài khoản</a><a href="support.html">Hỗ trợ</a></nav><p class="small">Quyền riêng tư và hỗ trợ: <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p></footer>
+</main>
 </body>
 </html>

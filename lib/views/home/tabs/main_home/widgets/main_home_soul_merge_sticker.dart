@@ -352,44 +352,9 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                     _loadSettings();
                   }
                 },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 100),
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFF85A1), Color(0xFFF15BB5)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFFF4F93).withValues(alpha: 0.38),
-                        blurRadius: 14,
-                        spreadRadius: 2.5,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(2.5),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.15),
-                      ),
-                      child: Center(
-                        child: SoulLocketAnimatedSticker(
-                          sticker: SoulLocketStickerCatalog.find(
-                            'heart_locket',
-                          )!,
-                          size: 46,
-                          semanticLabel: context.tr('Mặt dây chuyền tình yêu'),
-                        ),
-                      ),
-                    ),
-                  ),
+                child: Tooltip(
+                  message: context.tr('p4_soul_title'),
+                  child: const SoulMergeMascot(size: 52, framed: true),
                 ),
               ),
             ],

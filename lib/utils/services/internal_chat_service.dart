@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_database/firebase_database.dart'
     show DatabaseReference, FirebaseDatabase, ServerValue;
 import 'package:flutter/foundation.dart';
@@ -7,7 +8,7 @@ import 'package:soullocket_app/models/chat_message.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 
 /// InternalChatService — quản lý tin nhắn nội bộ (giữa 2 người trong 1 house)
-/// Firestore path: houses/{houseId}/chat_room/messages/{msgId}
+/// Firestore path: houses/{houseId}/chat_room_messages/{msgId}
 /// RTDB chỉ giữ lastMessage + metadata nhẹ để hiển thị badge thông báo
 class InternalChatService {
   static final InternalChatService _instance = InternalChatService._internal();
@@ -17,6 +18,8 @@ class InternalChatService {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final DatabaseReference _rtdb = FirebaseDatabase.instance.ref();
+  final Set<String> _migratedHouses = {};
+  final Map<String, Future<void>> _migrationInFlight = {};
 
   // ── Collection Reference ──────────────────────────────────────────────
   CollectionReference<Map<String, dynamic>> _messagesRef(String houseId) {
@@ -32,32 +35,40 @@ class InternalChatService {
       throw Exception('Tin nhắn vượt quá giới hạn 2000 ký tự.');
     }
     final now = DateTime.now().millisecondsSinceEpoch;
-    final payload = <String, dynamic>{
-      ...message.toMap(),
-      'ts': now,
-    };
+    final payload = <String, dynamic>{...message.toMap(), 'ts': now};
 
     // Ghi tin nhắn vào Firestore
     final docRef = await _messagesRef(houseId).add(payload);
 
     // Cập nhật lastMessage lên RTDB (chạy ngầm bất đồng bộ để gửi tin nhắn siêu tốc)
-    unawaited(_rtdb.child('houses/$houseId/chat_room/lastMessage').set({
-      'text': message.type == 'image' ? '[Hình ảnh]' : message.text,
-      'ts': now,
-      'senderId': message.senderId,
-      'isRead': false,
-      'type': message.type,
-      'messageId': docRef.id,
-    }).catchError((e) {
-      debugPrint('[InternalChatService] Failed to set lastMessage on RTDB: $e');
-    }));
+    unawaited(
+      _rtdb
+          .child('houses/$houseId/chat_room/lastMessage')
+          .set({
+            'text': message.type == 'image' ? '[Hình ảnh]' : message.text,
+            'ts': now,
+            'senderId': message.senderId,
+            'isRead': false,
+            'type': message.type,
+            'messageId': docRef.id,
+          })
+          .catchError((e) {
+            debugPrint(
+              '[InternalChatService] Failed to set lastMessage on RTDB: $e',
+            );
+          }),
+    );
 
-    unawaited(_rtdb
-        .child('houses/$houseId/chat_room/updatedAt')
-        .set(ServerValue.timestamp)
-        .catchError((e) {
-      debugPrint('[InternalChatService] Failed to set updatedAt on RTDB: $e');
-    }));
+    unawaited(
+      _rtdb
+          .child('houses/$houseId/chat_room/updatedAt')
+          .set(ServerValue.timestamp)
+          .catchError((e) {
+            debugPrint(
+              '[InternalChatService] Failed to set updatedAt on RTDB: $e',
+            );
+          }),
+    );
 
     return docRef.id;
   }
@@ -68,17 +79,22 @@ class InternalChatService {
         .where('ts', isGreaterThan: afterTs)
         .orderBy('ts')
         .snapshots()
-        .expand((snapshot) => snapshot.docChanges
-                .where((change) =>
+        .expand(
+          (snapshot) => snapshot.docChanges
+              .where(
+                (change) =>
                     change.type == DocumentChangeType.added ||
-                    change.type == DocumentChangeType.modified)
-                .map((change) {
-              try {
-                return ChatMessage.fromMap(change.doc.id, change.doc.data()!);
-              } catch (_) {
-                return null;
-              }
-            }).whereType<ChatMessage>());
+                    change.type == DocumentChangeType.modified,
+              )
+              .map((change) {
+                try {
+                  return ChatMessage.fromMap(change.doc.id, change.doc.data()!);
+                } catch (_) {
+                  return null;
+                }
+              })
+              .whereType<ChatMessage>(),
+        );
   }
 
   // ── LẤY trang tin nhắn (phân trang) ──────────────────────────────────
@@ -87,8 +103,9 @@ class InternalChatService {
     int limit = 40,
     int? beforeTs,
   }) async {
-    Query<Map<String, dynamic>> query =
-        _messagesRef(houseId).orderBy('ts', descending: true).limit(limit);
+    Query<Map<String, dynamic>> query = _messagesRef(
+      houseId,
+    ).orderBy('ts', descending: true).limit(limit);
 
     if (beforeTs != null) {
       query = query.where('ts', isLessThan: beforeTs);
@@ -109,11 +126,15 @@ class InternalChatService {
 
   // ── THÊM REACTION ─────────────────────────────────────────────────────
   Future<void> addReaction(
-      String houseId, String messageId, String senderRole, String emoji) async {
+    String houseId,
+    String messageId,
+    String senderRole,
+    String emoji,
+  ) async {
     final normalizedRole = senderRole == 'user2' ? 'user2' : 'user1';
-    await _messagesRef(houseId)
-        .doc(messageId)
-        .update({'reactions.$normalizedRole': emoji});
+    await _messagesRef(
+      houseId,
+    ).doc(messageId).update({'reactions.$normalizedRole': emoji});
   }
 
   // ── XÓA CONVERSATION ─────────────────────────────────────────────────
@@ -137,39 +158,41 @@ class InternalChatService {
   }
 
   // ── MIGRATION từ RTDB sang Firestore ──────────────────────────────────
-  Future<void> migrateFromRTDB(String houseId) async {
+  Future<void> migrateFromRTDB(String houseId) {
+    if (_migratedHouses.contains(houseId)) return Future.value();
+    return _migrationInFlight.putIfAbsent(
+      houseId,
+      () => _migrateFromRTDB(houseId).whenComplete(() {
+        _migrationInFlight.remove(houseId);
+      }),
+    );
+  }
+
+  Future<void> _migrateFromRTDB(String houseId) async {
     try {
-      final snap =
-          await _rtdb.child('houses/$houseId/chat_room/messages').get();
-      if (!snap.exists || snap.value == null) return;
-      final raw = snap.value;
-      if (raw is! Map) return;
-
-      // Kiểm tra xem Firestore đã có dữ liệu chưa (tránh migrate 2 lần)
-      final existingCount = await _messagesRef(houseId).limit(1).get();
-      if (existingCount.docs.isNotEmpty) return;
-
-      final batch = _firestore.batch();
-      int count = 0;
-      raw.forEach((key, value) {
-        if (value is Map) {
-          final docRef = _messagesRef(houseId).doc(key.toString());
-          batch.set(docRef, Map<String, dynamic>.from(value),
-              SetOptions(merge: true));
-          count++;
-          // Firestore batch tối đa 500 operations
-          if (count >= 490) return;
-        }
-      });
-
-      if (count > 0) {
-        await batch.commit();
-        debugPrint(
-            '[InternalChatService] Migrated $count messages for house $houseId');
+      final source = await _rtdb
+          .child('houses/$houseId/chat_room/messages')
+          .limitToFirst(1)
+          .get();
+      if (!source.exists) {
+        _migratedHouses.add(houseId);
+        return;
       }
+      String? cursor;
+      do {
+        // Server lấy bản gốc từ RTDB; client không được giả danh người còn lại.
+        final payload = <String, dynamic>{'houseId': houseId};
+        if (cursor != null) payload['afterKey'] = cursor;
+        final result = await FirebaseFunctions.instance
+            .httpsCallable('migrateInternalChatSecure')
+            .call<Map<String, dynamic>>(payload);
+        cursor = result.data['nextCursor'] as String?;
+      } while (cursor != null);
+      _migratedHouses.add(houseId);
     } catch (e) {
       debugPrint(
-          '[InternalChatService] Migration error: ${AppErrorMapper.resolve(e).message}');
+        '[InternalChatService] Migration error: ${AppErrorMapper.resolve(e).message}',
+      );
     }
   }
 }

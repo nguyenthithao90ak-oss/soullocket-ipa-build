@@ -1,3 +1,5 @@
+import 'legal_documents.dart';
+
 class AppConfig {
   static const String _defaultFirebaseAuthLinkHost =
       'soullockket.firebaseapp.com';
@@ -96,6 +98,7 @@ class AppConfig {
     'R2_PUBLIC_DOMAIN',
     defaultValue: 'https://pub-e3f21ed5012d4c02ba42d23dd6d01dfa.r2.dev',
   );
+  // Khóa và model AI chỉ cấu hình ở server; không đưa secret vào dart-define.
   static const String maintenanceModePath = 'sys_settings/is_maintenance';
   static const String legacyMaintenanceModePath =
       'system/maintenance/is_active';
@@ -231,15 +234,24 @@ class AppConfig {
     defaultValue:
         'https://us-central1-soullockket.cloudfunctions.net/reportAdResolutionHttp',
   );
-  static const String deleteAccountPageUrl =
-      'https://soullocketwitget.web.app/delete-account.html';
+  static const String deleteAccountPageUrl = '$webBaseUrl/delete-account.html';
   static const String supportPageUrl = '$webBaseUrl/support.html';
-  static const String privacyPolicyUrl =
-      'https://soullocketwitget.web.app/privacy.html';
-  static const String termsOfUseUrl =
-      'https://soullocketwitget.web.app/terms.html';
-  static const String cookiePolicyUrl =
-      'https://soullocketwitget.web.app/cookie-policy.html';
+  static const String privacyPolicyUrl = '$webBaseUrl/privacy.html';
+  static const String termsOfUseUrl = '$webBaseUrl/terms.html';
+  static const String cookiePolicyUrl = '$webBaseUrl/cookie-policy.html';
+
+  /// Tạo liên kết tài liệu theo ngôn ngữ tại lúc mở, không lưu locale từ trước.
+  static Uri legalDocumentUri(String fileName, {required String languageCode}) {
+    if (!legalDocumentFileNames.contains(fileName)) {
+      throw ArgumentError.value(fileName, 'fileName', 'Unknown legal document');
+    }
+    final localizedName = localizedLegalDocumentFileName(
+      fileName,
+      languageCode: languageCode,
+    );
+    // Tài liệu ở gốc Hosting; không truyền query/fragment của URL cấu hình.
+    return Uri.parse(webBaseUrl).resolve('/$localizedName');
+  }
 
   // ── TELEGRAM ALERTS ──────────────────────────────────────────────────
   static Uri webUri(String path, {Map<String, dynamic>? queryParameters}) {

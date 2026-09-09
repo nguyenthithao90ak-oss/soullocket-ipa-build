@@ -2,11 +2,13 @@
 import 'package:lottie/lottie.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
+import 'package:soullocket_app/widgets/soul_merge_mascot.dart';
 import 'package:soullocket_app/views/home/widgets/home_sticker_motion.dart';
 import 'package:soullocket_app/views/utilities/tarot/tarot_screen.dart';
 import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/map_tilt_card.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/hero/heartbeat_thread_painter.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/hero/balanced_countdown_style.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/widgets/sl_bouncing_button.dart';
 import 'package:soullocket_app/views/home/widgets/anniversary_sparkle_painter.dart';

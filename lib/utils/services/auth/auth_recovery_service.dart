@@ -222,28 +222,15 @@ class AuthRecoveryService {
             .get()
             .timeout(const Duration(seconds: 3)),
         _db
-            .child('houses/$houseId/recovery_q')
-            .get()
-            .timeout(const Duration(seconds: 3)),
-        _db
-            .child('houses/$houseId/recovery_a')
-            .get()
-            .timeout(const Duration(seconds: 3)),
-        _db
             .child('houses/$houseId/email')
             .get()
             .timeout(const Duration(seconds: 3)),
       ]);
 
       final securitySnap = snaps[0];
-      final recoveryQSnap = snaps[1];
-      final recoveryASnap = snaps[2];
-      final emailSnap = snaps[3];
+      final emailSnap = snaps[1];
 
-      if (!securitySnap.exists &&
-          !recoveryQSnap.exists &&
-          !recoveryASnap.exists &&
-          !emailSnap.exists) {
+      if (!securitySnap.exists && !emailSnap.exists) {
         return null;
       }
 
@@ -251,16 +238,11 @@ class AuthRecoveryService {
           _asStringDynamicMap(securitySnap.value) ?? <String, dynamic>{};
       final recovery =
           _asStringDynamicMap(security['recovery']) ?? <String, dynamic>{};
-      final question =
-          (recovery['question'] ??
-                  recoveryQSnap.value ??
-                  security['question'] ??
-                  '')
-              .toString()
-              .trim();
+      final question = (recovery['question'] ?? security['question'] ?? '')
+          .toString()
+          .trim();
       final answerHash =
           (recovery['answerHash'] ??
-                  recoveryASnap.value ??
                   security['answer'] ??
                   security['answerHash'] ??
                   '')

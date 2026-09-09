@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
-import 'package:soullocket_app/utils/services/error_logger_service.dart';
+import 'package:soullocket_app/utils/services/privacy_collection_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -68,6 +68,8 @@ Future<void> _initializeFirebaseBootstrapOnce() async {
     throw StateError(L10nService().translate('core_err_firebase_not_init'));
   }
 
+  await PrivacyCollectionService.instance.initialize();
+
   if (!kIsWeb) {
     await _initializeNativeFirebaseAppCheck();
     try {
@@ -88,7 +90,6 @@ Future<void> _initializeFirebaseBootstrapOnce() async {
     } catch (e) {
       debugPrint('Firestore persistence error: $e');
     }
-    await ErrorLoggerService.instance.initialize();
   }
 }
 

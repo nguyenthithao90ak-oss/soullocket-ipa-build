@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="A space for individuals or two people to save memories, write personal reflections and stay in touch.">
+<meta name="soullocket-document-version" content="2026-09-09">
+<title>About SoulLocket</title>
+<style>
+:root{color-scheme:light;--ink:#30292d;--muted:#6d6067;--accent:#a13e5c;--line:#eadde2;--paper:#fff;--bg:#faf6f7}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 system-ui,-apple-system,"Segoe UI",sans-serif;overflow-wrap:anywhere}
+.page{max-width:880px;margin:auto;padding:28px 24px 56px}
+header,section,footer{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;margin:0 0 18px}
+.brand{font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:750;color:var(--accent)}
+h1{font-size:clamp(26px,5vw,36px);line-height:1.25;margin:12px 0 16px;letter-spacing:-.025em}
+h2{font-size:21px;line-height:1.4;margin:0 0 14px}h3{font-size:17px;margin:22px 0 10px}
+p{margin:0 0 14px}p:last-child,ul:last-child,ol:last-child{margin-bottom:0}
+.meta,.small{font-size:14px;color:var(--muted)}ul,ol{padding-left:24px;margin:10px 0 16px}li{margin:7px 0}
+a{color:var(--accent);text-underline-offset:3px}a:hover{text-decoration-thickness:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #7943ab;outline-offset:4px}
+nav{display:flex;flex-wrap:wrap;gap:10px 20px;margin:20px 0 0}nav a{font-size:14px}
+.note,.warning{padding:16px 18px;border-radius:10px;margin:16px 0;border-left:4px solid var(--accent);background:#fcf0f4}
+.warning{border-color:#a7641a;background:#fff6e8}.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}
+th{background:#faf5f7}button,.button{display:inline-block;padding:12px 18px;background:var(--accent);color:white;border:0;border-radius:10px;font:inherit;font-weight:650;cursor:pointer;text-decoration:none}
+button:disabled{opacity:.6;cursor:wait}label{display:block;font-weight:650;margin:16px 0 6px}
+input:not([type=checkbox]),textarea{width:100%;padding:12px;font:inherit;color:inherit;background:white;border:1px solid #a99aa2;border-radius:8px}
+textarea{resize:vertical;min-height:110px}.checkbox{display:flex;gap:12px;align-items:flex-start;margin:20px 0}
+.checkbox input{flex-shrink:0;width:20px;height:20px;margin-top:5px}.checkbox label{font-weight:400;margin:0}
+.status{display:none;padding:16px;margin-top:16px;border-radius:10px}.status.success{display:block;background:#eaf7ef;color:#245635}.status.error{display:block;background:#fff0f0;color:#96323c}
+.skip{position:absolute;top:-100px;left:16px;background:white;padding:12px;z-index:10}.skip:focus{top:10px}
+@media(max-width:560px){.page{padding:16px 12px 32px}header,section,footer{padding:20px 18px;border-radius:14px}th,td{padding:10px 8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{body{background:white}.page{max-width:none;padding:0}header,section,footer{border:0;padding:12px 0}nav,.skip,form{display:none}h2,h3{break-after:avoid}}
+</style>
+</head>
+<body>
+<a class="skip" href="#noi-dung-chinh">Skip to main content</a>
+<main class="page" id="noi-dung-chinh">
+<header><div class="brand">SoulLocket · Documents and support</div><h1>About SoulLocket</h1><p>A space for individuals or two people to save memories, write personal reflections and stay in touch.</p><p class="meta">Content updated: <time datetime="2026-09-09">9 September 2026</time> · Document version 2026-09-09</p><nav aria-label="Document language"><a href="about.html" lang="vi" hreflang="vi">Tiếng Việt</a><span lang="en" aria-current="page">English</span></nav><p class="small">English translation of the same document version. Contact support if any wording is unclear or differs between languages.</p><nav aria-label="Contents"><a href="#tong-quan">1. Accounts and shared spaces</a>
+<a href="#tinh-nang">2. Feature groups</a>
+<a href="#du-lieu">3. Data and infrastructure</a>
+<a href="#gioi-han">4. Limitations to know</a>
+<a href="#ban-quyen">5. Copyright and support</a></nav></header>
+
+<section id="tong-quan"><h2>1. Accounts and shared spaces</h2><p>Your account is used to sign in and manage access. A House is the space holding profiles, diaries, memories and shared content. You can use the app on your own; to connect, open <strong>Settings → Connect with your partner</strong> to create, enter or scan an invitation.</p><p>Once paired, the screen shows both avatars, names and the connection date; the shortcut outside this screen shows both avatars and the paired status. Choosing Couple mode does not replace pairing two accounts.</p></section>
+<section id="tinh-nang"><h2>2. Feature groups</h2><ul><li>Home: avatars, day counters, presence and shortcuts.</li><li>Diaries/memories: personal reflections, saved photos and synchronized content.</li><li>Chat/community: content, interactions and sharing within each feature's scope.</li><li>Utilities, games and creative content available in your app version.</li><li>Settings, security, support and privacy choices.</li></ul><p>Availability depends on the platform, version, device permissions and configuration. A feature file in the source code does not mean that feature is enabled or works in every release.</p></section>
+<section id="du-lieu"><h2>3. Data and infrastructure</h2><p>SoulLocket uses Firebase for authentication, databases and notifications, together with Cloudflare R2/Workers for relevant file and service flows. Besides server data, devices may hold drafts, caches and downloads.</p><p>Your House partner may access shared content according to the feature; a PIN lock does not itself make shared content visible only to you. Before pairing, read the old House warning and back up anything you need to keep.</p><p>See the <a href="privacy-en.html">Privacy Policy</a> for providers, data and your rights.</p></section>
+<section id="gioi-han"><h2>4. Limitations to know</h2><p>SoulLocket does not guarantee absolute security, uninterrupted operation or recovery of every piece of data. It does not replace emergency services or professional advice. AI content, maps and presence status may be inaccurate or delayed.</p><p>Do not use SoulLocket to secretly track people, coerce others or share data you are not entitled to use.</p></section>
+<section id="ban-quyen"><h2>5. Copyright and support</h2><p>Branding, software and documents belong to their respective owners. User content and third-party assets retain their own rights/licenses. Do not assume all content in the app is SoulLocket's exclusive property.</p><p>For account, copyright or privacy matters, contact <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a> or the in-app support area. Do not send passwords, PINs or one-time codes.</p></section>
+<footer><h2>SoulLocket documents</h2><nav aria-label="Related documents"><a href="about-en.html">About</a><a href="huong_dan-en.html">User guide</a><a href="huong_dan_cai_dat_lan_dau-en.html">First setup</a><a href="privacy-en.html">Privacy</a><a href="terms-en.html">Terms</a><a href="cookie-policy-en.html">Cookies</a><a href="delete-account-en.html">Delete account</a><a href="support-en.html">Support</a></nav><p class="small">Privacy and support: <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p></footer>
+</main>
+</body>
+</html>

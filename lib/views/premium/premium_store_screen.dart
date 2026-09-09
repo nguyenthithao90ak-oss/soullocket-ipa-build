@@ -1631,7 +1631,12 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
             children: [
               _buildFooterLink(
                 label: _t('p5_premium_terms'),
-                onTap: () => _openExternalUrl(AppConfig.termsOfUseUrl),
+                onTap: () => _openExternalUrl(
+                  AppConfig.legalDocumentUri(
+                    'terms.html',
+                    languageCode: L10nService().locale.languageCode,
+                  ).toString(),
+                ),
               ),
               Text(
                 '•',
@@ -1642,7 +1647,12 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
               ),
               _buildFooterLink(
                 label: _t('p5_premium_privacy'),
-                onTap: () => _openExternalUrl(AppConfig.privacyPolicyUrl),
+                onTap: () => _openExternalUrl(
+                  AppConfig.legalDocumentUri(
+                    'privacy.html',
+                    languageCode: L10nService().locale.languageCode,
+                  ).toString(),
+                ),
               ),
             ],
           ),

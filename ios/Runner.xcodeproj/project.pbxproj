@@ -242,6 +242,14 @@
 		442F4E28A87B6CB37ADD77E2 /* icon_aurora_ipad@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon_aurora_ipad@2x.png"; path = "Runner/icon_aurora_ipad@2x.png"; sourceTree = SOURCE_ROOT; };
 		44C44ED5B49E4944127A2B1E /* icon_gold@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon_gold@3x.png"; path = "Runner/icon_gold@3x.png"; sourceTree = SOURCE_ROOT; };
 		4A7F00000000000000000002 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		4A8F00000000000000000001 /* Profile.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Profile.xcconfig; path = Flutter/Profile.xcconfig; sourceTree = "<group>"; };
+		4A8F00000000000000000002 /* NativeTarget.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = NativeTarget.xcconfig; path = Flutter/NativeTarget.xcconfig; sourceTree = "<group>"; };
+		4A8F00000000000000000003 /* RunnerTests-Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "RunnerTests-Debug.xcconfig"; path = "Flutter/RunnerTests-Debug.xcconfig"; sourceTree = "<group>"; };
+		4A8F00000000000000000004 /* RunnerTests-Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "RunnerTests-Release.xcconfig"; path = "Flutter/RunnerTests-Release.xcconfig"; sourceTree = "<group>"; };
+		4A8F00000000000000000005 /* RunnerTests-Profile.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "RunnerTests-Profile.xcconfig"; path = "Flutter/RunnerTests-Profile.xcconfig"; sourceTree = "<group>"; };
+		4A8F00000000000000000006 /* Widget-Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "Widget-Debug.xcconfig"; path = "Flutter/Widget-Debug.xcconfig"; sourceTree = "<group>"; };
+		4A8F00000000000000000007 /* Widget-Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "Widget-Release.xcconfig"; path = "Flutter/Widget-Release.xcconfig"; sourceTree = "<group>"; };
+		4A8F00000000000000000008 /* Widget-Profile.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "Widget-Profile.xcconfig"; path = "Flutter/Widget-Profile.xcconfig"; sourceTree = "<group>"; };
 		58224978964F05B99F296AFA /* icon_aurora@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon_aurora@3x.png"; path = "Runner/icon_aurora@3x.png"; sourceTree = SOURCE_ROOT; };
 		597242F7B2649D4AC61DD26A /* icon_violet@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon_violet@2x.png"; path = "Runner/icon_violet@2x.png"; sourceTree = SOURCE_ROOT; };
 		5C204AB8AF6E3388CBE2F5A9 /* icon_rose_ipad@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon_rose_ipad@2x.png"; path = "Runner/icon_rose_ipad@2x.png"; sourceTree = SOURCE_ROOT; };
@@ -322,6 +330,14 @@
 				3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */,
 				9740EEB21CF90195004384FC /* Debug.xcconfig */,
 				7AFA3C8E1D35360C0083082E /* Release.xcconfig */,
+				4A8F00000000000000000001 /* Profile.xcconfig */,
+				4A8F00000000000000000002 /* NativeTarget.xcconfig */,
+				4A8F00000000000000000003 /* RunnerTests-Debug.xcconfig */,
+				4A8F00000000000000000004 /* RunnerTests-Release.xcconfig */,
+				4A8F00000000000000000005 /* RunnerTests-Profile.xcconfig */,
+				4A8F00000000000000000006 /* Widget-Debug.xcconfig */,
+				4A8F00000000000000000007 /* Widget-Release.xcconfig */,
+				4A8F00000000000000000008 /* Widget-Profile.xcconfig */,
 				9740EEB31CF90195004384FC /* Generated.xcconfig */,
 			);
 			name = Flutter;
@@ -870,7 +886,7 @@
 		};
 		249021D4217E4FDB00AE95B9 /* Profile */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
+			baseConfigurationReference = 4A8F00000000000000000001 /* Profile.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -894,6 +910,7 @@
 		};
 		331C8088294A63A400263BE5 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4A8F00000000000000000003 /* RunnerTests-Debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -912,6 +929,7 @@
 		};
 		331C8089294A63A400263BE5 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4A8F00000000000000000004 /* RunnerTests-Release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -928,6 +946,7 @@
 		};
 		331C808A294A63A400263BE5 /* Profile */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4A8F00000000000000000005 /* RunnerTests-Profile.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -1104,6 +1123,7 @@
 		};
 		A10000000000000000000035 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4A8F00000000000000000006 /* Widget-Debug.xcconfig */;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_MODULES = YES;
@@ -1133,6 +1153,7 @@
 		};
 		A10000000000000000000036 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4A8F00000000000000000007 /* Widget-Release.xcconfig */;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_MODULES = YES;
@@ -1162,6 +1183,7 @@
 		};
 		A10000000000000000000037 /* Profile */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4A8F00000000000000000008 /* Widget-Profile.xcconfig */;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_MODULES = YES;

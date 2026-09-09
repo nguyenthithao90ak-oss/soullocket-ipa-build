@@ -3,6 +3,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../../../core/sl_theme.dart';
 import '../../../../utils/services/admob_service.dart';
+import 'package:soullocket_app/widgets/consent_ad_view.dart';
 import '../../../../utils/services/utility_service.dart';
 import 'utilities_hub_item.dart';
 import 'utilities_hub_shortcuts.dart';
@@ -140,7 +141,7 @@ class UtilitiesHubGrid extends StatelessWidget {
               child: SizedBox(
                 width: bannerAd.size.width.toDouble(),
                 height: bannerAd.size.height.toDouble(),
-                child: AdWidget(ad: bannerAd),
+                child: ConsentAdView(ad: bannerAd),
               ),
             ),
           ),

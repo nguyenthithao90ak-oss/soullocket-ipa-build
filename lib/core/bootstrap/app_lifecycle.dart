@@ -8,8 +8,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:app_tracking_transparency/app_tracking_transparency.dart';
+import 'package:soullocket_app/utils/services/admob_service.dart';
 import 'package:soullocket_app/core/bootstrap/app_bootstrap.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/connectivity_service.dart';
@@ -181,7 +180,6 @@ void scheduleDeferredBootstrap() {
           unawaited(
             Future.delayed(const Duration(seconds: 3), () {
               unawaited(_initializeGoogleMobileAds());
-              unawaited(_requestIosTrackingAuthorization());
             }),
           );
         } catch (error, stackTrace) {
@@ -297,26 +295,11 @@ Future<void> _initializeGoogleMobileAds() async {
   }
 
   try {
-    await MobileAds.instance.initialize();
+    await AdMobService().initialize();
     debugPrint('Google Mobile Ads initialized successfully');
   } catch (e) {
     debugPrint(
       'Google Mobile Ads init error: ${AppErrorMapper.resolve(e, fallbackMessage: 'Could not initialize Google Mobile Ads').message}',
     );
-  }
-}
-
-Future<void> _requestIosTrackingAuthorization() async {
-  if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
-    return;
-  }
-
-  try {
-    final status = await AppTrackingTransparency.trackingAuthorizationStatus;
-    if (status == TrackingStatus.notDetermined) {
-      await AppTrackingTransparency.requestTrackingAuthorization();
-    }
-  } catch (e) {
-    debugPrint('ATT request skipped: $e');
   }
 }

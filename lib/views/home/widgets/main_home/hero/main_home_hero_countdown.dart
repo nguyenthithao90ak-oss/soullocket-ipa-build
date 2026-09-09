@@ -663,16 +663,13 @@ class _MainHomeHeroCountdownCircleState
     final countdownVisual = _CountdownVisualSpec.resolve(
       widget.countdownStyleKey,
       transparentMode,
+      dark: Theme.of(context).brightness == Brightness.dark,
     );
-    final isJournalStyle =
-        !transparentMode &&
-        (widget.countdownStyleKey.isEmpty ||
-            widget.countdownStyleKey == 'default' ||
-            widget.countdownStyleKey == 'balanced');
     final isBalancedStyle =
         widget.countdownStyleKey.isEmpty ||
         widget.countdownStyleKey == 'default' ||
         widget.countdownStyleKey == 'balanced';
+    final useKeepsakeSurface = isBalancedStyle && !widget.isMilestone;
 
     final selectedFont = UiPrefs.notifier.value.fontKey;
     final labelFont =
@@ -707,7 +704,12 @@ class _MainHomeHeroCountdownCircleState
     final topLen = topClean.length;
     final int topMaxLines =
         (topLen > 12 || (topLen > 8 && topClean.contains(' '))) ? 2 : 1;
-    final double topFontSize = topLen <= 8
+    final double topFontSize = useKeepsakeSurface
+        ? (widget.circleSize * (topMaxLines > 1 ? .075 : .095)).clamp(
+            14.0,
+            32.0,
+          )
+        : topLen <= 8
         ? (widget.circleSize * 0.14).clamp(22.0, 50.0)
         : topLen <= 14
         ? (widget.circleSize * 0.11).clamp(17.0, 38.0)
@@ -719,7 +721,12 @@ class _MainHomeHeroCountdownCircleState
         (bottomLen > 12 || (bottomLen > 8 && bottomClean.contains(' ')))
         ? 2
         : 1;
-    final double bottomFontSize = bottomLen <= 8
+    final double bottomFontSize = useKeepsakeSurface
+        ? (widget.circleSize * (bottomMaxLines > 1 ? .075 : .095)).clamp(
+            14.0,
+            32.0,
+          )
+        : bottomLen <= 8
         ? (widget.circleSize * 0.14).clamp(22.0, 50.0)
         : bottomLen <= 14
         ? (widget.circleSize * 0.11).clamp(17.0, 38.0)
@@ -732,12 +739,12 @@ class _MainHomeHeroCountdownCircleState
         (widget.circleSize * (bottomMaxLines > 1 ? 0.22 : 0.18))
             .clamp(28.0, 84.0)
             .toDouble();
-    final numberHeight = (widget.circleSize * 0.44)
+    final numberHeight = (widget.circleSize * (useKeepsakeSurface ? .36 : .44))
         .clamp(70.0, 180.0)
         .toDouble();
     final topLabelWidth = widget.circleSize * 0.58;
     final bottomLabelWidth = widget.circleSize * 0.58;
-    final numberWidth = widget.circleSize * 0.82;
+    final numberWidth = widget.circleSize * (useKeepsakeSurface ? .70 : .82);
     final topGap = (widget.circleSize * 0.04).clamp(6.0, 20.0).toDouble();
     final bottomGap = (widget.circleSize * 0.03).clamp(4.0, 16.0).toDouble();
 
@@ -773,171 +780,177 @@ class _MainHomeHeroCountdownCircleState
               child: Container(
                 width: widget.circleSize,
                 height: widget.circleSize,
-                decoration: ShapeDecoration(
-                  shape: SlCountdownShapes.getShapeBorderForKey(
-                    widget.countdownShapeKey,
-                    side: widget.isMilestone
-                        ? milestoneBorderSide
-                        : !isBalancedStyle &&
-                              countdownVisual.outerBorder != null
-                        ? countdownVisual.outerBorder!.top
-                        : BorderSide.none,
-                  ),
-                  color:
-                      (widget.isMilestone ||
-                          countdownVisual.outerGradient != null)
-                      ? null
-                      : countdownVisual.outerColor,
-                  gradient: widget.isMilestone
-                      ? const RadialGradient(
-                          center: Alignment.topLeft,
-                          radius: 1.2,
-                          colors: [
-                            Color(0xFFFFE082),
-                            Color(0xFFFF6FA3),
-                            Color(0xFFAD1457),
-                          ],
-                        )
-                      : countdownVisual.outerGradient,
-                  shadows: widget.isMilestone
-                      ? [
-                          BoxShadow(
-                            color: const Color(
-                              0xFFFFD700,
-                            ).withValues(alpha: 0.55),
-                            blurRadius: 28,
-                            spreadRadius: 4,
-                          ),
-                        ]
-                      : isBalancedStyle
-                      ? SLShadows.glowingPrimary
-                      : countdownVisual.shadows,
-                ),
+                decoration: useKeepsakeSurface
+                    ? null
+                    : ShapeDecoration(
+                        shape: SlCountdownShapes.getShapeBorderForKey(
+                          widget.countdownShapeKey,
+                          side: widget.isMilestone
+                              ? milestoneBorderSide
+                              : !isBalancedStyle &&
+                                    countdownVisual.outerBorder != null
+                              ? countdownVisual.outerBorder!.top
+                              : BorderSide.none,
+                        ),
+                        color:
+                            (widget.isMilestone ||
+                                countdownVisual.outerGradient != null)
+                            ? null
+                            : countdownVisual.outerColor,
+                        gradient: widget.isMilestone
+                            ? const RadialGradient(
+                                center: Alignment.topLeft,
+                                radius: 1.2,
+                                colors: [
+                                  Color(0xFFFFE082),
+                                  Color(0xFFFF6FA3),
+                                  Color(0xFFAD1457),
+                                ],
+                              )
+                            : countdownVisual.outerGradient,
+                        shadows: widget.isMilestone
+                            ? [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFFFFD700,
+                                  ).withValues(alpha: 0.55),
+                                  blurRadius: 28,
+                                  spreadRadius: 4,
+                                ),
+                              ]
+                            : countdownVisual.shadows,
+                      ),
                 child: Stack(
                   alignment: Alignment.center,
                   clipBehavior: Clip.none,
                   children: [
-                    Positioned.fill(
-                      child: Builder(
-                        builder: (context) {
-                          Widget buildBackground(bool enableMotion) {
-                            return Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Positioned.fill(
-                                  child: Padding(
-                                    padding:
-                                        (countdownVisual.outerColor != null ||
-                                            countdownVisual.outerGradient !=
-                                                null ||
-                                            countdownVisual.outerBorder != null)
-                                        ? SLSpacing.all12
-                                        : EdgeInsets.zero,
-                                    child: Container(
-                                      clipBehavior: Clip.antiAlias,
-                                      decoration: ShapeDecoration(
-                                        shape:
-                                            SlCountdownShapes.getShapeBorderForKey(
-                                              widget.countdownShapeKey,
-                                              side:
-                                                  (countdownVisual.innerBorder
-                                                      is Border)
-                                                  ? (countdownVisual.innerBorder
-                                                            as Border)
-                                                        .top
-                                                  : BorderSide.none,
-                                            ),
-                                        color:
-                                            countdownVisual.innerGradient !=
-                                                null
-                                            ? null
-                                            : countdownVisual.innerColor,
-                                        gradient: countdownVisual.innerGradient,
-                                      ),
-                                      child: Stack(
-                                        fit: StackFit.expand,
-                                        children: [
-                                          RepaintBoundary(
-                                            child: AnimatedWaveBackground(
-                                              styleKey:
-                                                  (transparentMode ||
-                                                      UiPrefs
-                                                          .notifier
-                                                          .value
-                                                          .liteMode)
-                                                  ? 'plain'
-                                                  : widget.countdownStyleKey,
-                                              enableMotion: enableMotion,
-                                              transparentMode: transparentMode,
-                                            ),
-                                          ),
-                                          if (_cachedPhotoUrls.isNotEmpty &&
-                                              widget.countdownStyleKey ==
-                                                  'floating_hearts')
+                    if (useKeepsakeSurface)
+                      Positioned.fill(
+                        child: BalancedCountdownSurface(
+                          shapeKey: widget.countdownShapeKey,
+                          transparent: transparentMode,
+                        ),
+                      )
+                    else
+                      Positioned.fill(
+                        child: Builder(
+                          builder: (context) {
+                            Widget buildBackground(bool enableMotion) {
+                              return Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  Positioned.fill(
+                                    child: Padding(
+                                      padding:
+                                          (countdownVisual.outerColor != null ||
+                                              countdownVisual.outerGradient !=
+                                                  null ||
+                                              countdownVisual.outerBorder !=
+                                                  null)
+                                          ? SLSpacing.all12
+                                          : EdgeInsets.zero,
+                                      child: Container(
+                                        clipBehavior: Clip.antiAlias,
+                                        decoration: ShapeDecoration(
+                                          shape:
+                                              SlCountdownShapes.getShapeBorderForKey(
+                                                widget.countdownShapeKey,
+                                                side:
+                                                    (countdownVisual.innerBorder
+                                                        is Border)
+                                                    ? (countdownVisual
+                                                                  .innerBorder
+                                                              as Border)
+                                                          .top
+                                                    : BorderSide.none,
+                                              ),
+                                          color:
+                                              countdownVisual.innerGradient !=
+                                                  null
+                                              ? null
+                                              : countdownVisual.innerColor,
+                                          gradient:
+                                              countdownVisual.innerGradient,
+                                        ),
+                                        child: Stack(
+                                          fit: StackFit.expand,
+                                          children: [
                                             RepaintBoundary(
-                                              child: SnowGlobePhotoLayer(
-                                                photoUrls: _cachedPhotoUrls
-                                                    .take(3)
-                                                    .toList(),
-                                                circleSize: widget.circleSize,
+                                              child: AnimatedWaveBackground(
+                                                styleKey:
+                                                    (transparentMode ||
+                                                        UiPrefs
+                                                            .notifier
+                                                            .value
+                                                            .liteMode)
+                                                    ? 'plain'
+                                                    : widget.countdownStyleKey,
                                                 enableMotion: enableMotion,
+                                                transparentMode:
+                                                    transparentMode,
                                               ),
                                             ),
-                                          if (widget.countdownStyleKey ==
-                                              'floating_hearts')
-                                            RepaintBoundary(
-                                              child: FloatingHeartsRingOverlay(
-                                                size: widget.circleSize,
-                                                enableMotion: enableMotion,
+                                            if (_cachedPhotoUrls.isNotEmpty &&
+                                                widget.countdownStyleKey ==
+                                                    'floating_hearts')
+                                              RepaintBoundary(
+                                                child: SnowGlobePhotoLayer(
+                                                  photoUrls: _cachedPhotoUrls
+                                                      .take(3)
+                                                      .toList(),
+                                                  circleSize: widget.circleSize,
+                                                  enableMotion: enableMotion,
+                                                ),
                                               ),
-                                            ),
-                                          if (!transparentMode &&
-                                              !isBalancedStyle)
-                                            Positioned.fill(
-                                              child: RepaintBoundary(
+                                            if (widget.countdownStyleKey ==
+                                                'floating_hearts')
+                                              RepaintBoundary(
                                                 child:
-                                                    _CountdownThemeStickerOverlay(
-                                                      styleKey: widget
-                                                          .countdownStyleKey,
+                                                    FloatingHeartsRingOverlay(
+                                                      size: widget.circleSize,
                                                       enableMotion:
                                                           enableMotion,
                                                     ),
                                               ),
-                                            ),
-                                          if (isJournalStyle)
-                                            const Positioned.fill(
-                                              child: IgnorePointer(
-                                                child: CustomPaint(
-                                                  painter:
-                                                      _CountdownJournalPainter(),
+                                            if (!transparentMode &&
+                                                !isBalancedStyle)
+                                              Positioned.fill(
+                                                child: RepaintBoundary(
+                                                  child:
+                                                      _CountdownThemeStickerOverlay(
+                                                        styleKey: widget
+                                                            .countdownStyleKey,
+                                                        enableMotion:
+                                                            enableMotion,
+                                                      ),
                                                 ),
                                               ),
-                                            ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              );
+                            }
+
+                            if (widget.isScrollingNotifier == null) {
+                              return buildBackground(widget.enableMotionBase);
+                            }
+
+                            return ValueListenableBuilder<bool>(
+                              valueListenable: widget.isScrollingNotifier!,
+                              builder: (context, isScrolling, _) =>
+                                  buildBackground(
+                                    isBalancedStyle
+                                        ? widget.enableMotionBase
+                                        : widget.enableMotionBase &&
+                                              !isScrolling,
+                                  ),
                             );
-                          }
-
-                          if (widget.isScrollingNotifier == null) {
-                            return buildBackground(widget.enableMotionBase);
-                          }
-
-                          return ValueListenableBuilder<bool>(
-                            valueListenable: widget.isScrollingNotifier!,
-                            builder: (context, isScrolling, _) =>
-                                buildBackground(
-                                  isBalancedStyle
-                                      ? widget.enableMotionBase
-                                      : widget.enableMotionBase && !isScrolling,
-                                ),
-                          );
-                        },
+                          },
+                        ),
                       ),
-                    ),
                     Column(
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -978,7 +991,9 @@ class _MainHomeHeroCountdownCircleState
                                             SLTheme.textStyleForKey(
                                               labelFont,
                                               fontSize: topFontSize,
-                                              fontWeight: FontWeight.w900,
+                                              fontWeight: useKeepsakeSurface
+                                                  ? FontWeight.w700
+                                                  : FontWeight.w900,
                                               letterSpacing: topLen > 10
                                                   ? 0.4
                                                   : 0.8,
@@ -1005,7 +1020,9 @@ class _MainHomeHeroCountdownCircleState
                                           SLTheme.textStyleForKey(
                                             labelFont,
                                             fontSize: topFontSize,
-                                            fontWeight: FontWeight.w900,
+                                            fontWeight: useKeepsakeSurface
+                                                ? FontWeight.w700
+                                                : FontWeight.w900,
                                             letterSpacing: topLen > 10
                                                 ? 0.4
                                                 : 0.8,
@@ -1071,12 +1088,20 @@ class _MainHomeHeroCountdownCircleState
                                     textAlign: TextAlign.center,
                                     style: widget.state
                                         ._uiTextStyle(
-                                          fontSize: (widget.circleSize * 0.44)
-                                              .clamp(64.0, 180.0),
-                                          fontWeight: FontWeight.w900,
+                                          fontSize:
+                                              (widget.circleSize *
+                                                      (useKeepsakeSurface
+                                                          ? .36
+                                                          : .44))
+                                                  .clamp(64.0, 180.0),
+                                          fontWeight: useKeepsakeSurface
+                                              ? FontWeight.w700
+                                              : FontWeight.w900,
                                           color: Colors.white,
                                           height: 0.96,
-                                          letterSpacing: 2.0,
+                                          letterSpacing: useKeepsakeSurface
+                                              ? -1.5
+                                              : 2.0,
                                         )
                                         .copyWith(
                                           shadows: [
@@ -1133,7 +1158,9 @@ class _MainHomeHeroCountdownCircleState
                                             SLTheme.textStyleForKey(
                                               labelFont,
                                               fontSize: bottomFontSize,
-                                              fontWeight: FontWeight.w900,
+                                              fontWeight: useKeepsakeSurface
+                                                  ? FontWeight.w700
+                                                  : FontWeight.w900,
                                               letterSpacing: bottomLen > 10
                                                   ? 0.4
                                                   : 0.8,
@@ -1160,7 +1187,9 @@ class _MainHomeHeroCountdownCircleState
                                           SLTheme.textStyleForKey(
                                             labelFont,
                                             fontSize: bottomFontSize,
-                                            fontWeight: FontWeight.w900,
+                                            fontWeight: useKeepsakeSurface
+                                                ? FontWeight.w700
+                                                : FontWeight.w900,
                                             letterSpacing: bottomLen > 10
                                                 ? 0.4
                                                 : 0.8,
@@ -1189,29 +1218,6 @@ class _MainHomeHeroCountdownCircleState
                 ),
               ),
             ),
-
-            if (isJournalStyle)
-              Positioned(
-                top: widget.circleSize * 0.055,
-                child: IgnorePointer(
-                  child: Transform.rotate(
-                    angle: -0.04,
-                    child: Container(
-                      width: widget.circleSize * 0.23,
-                      height: widget.circleSize * 0.055,
-                      decoration: BoxDecoration(
-                        color: SLColors.washi.withValues(alpha: 0.76),
-                        borderRadius: BorderRadius.circular(3),
-                        border: Border.all(
-                          color: const Color(
-                            0xFFF0B996,
-                          ).withValues(alpha: 0.40),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
 
             // 2. Outer ring & clickable heart badge (positioned in the larger parent stack)
             if (widget.countdownStyleKey == 'floating_hearts') ...[
@@ -1311,71 +1317,6 @@ class _MainHomeHeroCountdownCircleState
       ),
     );
   }
-}
-
-class _CountdownJournalPainter extends CustomPainter {
-  const _CountdownJournalPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (size.width < 40 || size.height < 40) return;
-
-    final stitchPath = Path()
-      ..addOval(Rect.fromLTWH(9, 9, size.width - 18, size.height - 18));
-    final stitchPaint = Paint()
-      ..color = SLColors.thread.withValues(alpha: 0.25)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2
-      ..strokeCap = StrokeCap.round;
-    for (final metric in stitchPath.computeMetrics()) {
-      var distance = 0.0;
-      while (distance < metric.length) {
-        final end = min(distance + 5.0, metric.length);
-        canvas.drawPath(metric.extractPath(distance, end), stitchPaint);
-        distance += 9.5;
-      }
-    }
-
-    final heartPaint = Paint()
-      ..color = SLColors.thread.withValues(alpha: 0.17)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.8
-      ..strokeCap = StrokeCap.round;
-    final center = Offset(size.width * 0.76, size.height * 0.24);
-    final heart = Path()
-      ..moveTo(center.dx, center.dy + 6)
-      ..cubicTo(
-        center.dx - 13,
-        center.dy - 2,
-        center.dx - 7,
-        center.dy - 10,
-        center.dx,
-        center.dy - 4,
-      )
-      ..cubicTo(
-        center.dx + 7,
-        center.dy - 10,
-        center.dx + 13,
-        center.dy - 2,
-        center.dx,
-        center.dy + 6,
-      );
-    canvas.drawPath(heart, heartPaint);
-
-    canvas.drawCircle(
-      Offset(size.width * 0.25, size.height * 0.73),
-      2.2,
-      Paint()..color = SLColors.secondary.withValues(alpha: 0.30),
-    );
-    canvas.drawCircle(
-      Offset(size.width * 0.29, size.height * 0.77),
-      1.5,
-      Paint()..color = SLColors.primary.withValues(alpha: 0.24),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _CountdownJournalPainter oldDelegate) => false;
 }
 
 class _MainHomeHeroCountdownTapTarget extends StatelessWidget {

@@ -2,6 +2,20 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
+		<key>FIREBASE_ANALYTICS_COLLECTION_ENABLED</key>
+		<false/>
+		<key>FirebaseCrashlyticsCollectionEnabled</key>
+		<false/>
+		<key>GOOGLE_ANALYTICS_DEFAULT_ALLOW_ANALYTICS_STORAGE</key>
+		<false/>
+		<key>GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_STORAGE</key>
+		<false/>
+		<key>GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_USER_DATA</key>
+		<false/>
+		<key>GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS</key>
+		<false/>
+		<key>GADDelayAppMeasurementInit</key>
+		<true/>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true/>
 		<key>CFBundleDevelopmentRegion</key>
@@ -228,7 +242,7 @@
 			<dict>
 				<key>CFBundleURLSchemes</key>
 				<array>
-					<string>com.googleusercontent.apps.89966120534-dqis396hu338iu3e8tmresjp8l1e7drn</string>
+					<string>com.googleusercontent.apps.89966120534-ba1qjme6oct845598r351ovngdvplkfr</string>
 				</array>
 			</dict>
 			<dict>

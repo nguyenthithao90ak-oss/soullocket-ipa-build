@@ -41,10 +41,7 @@ extension DiaryTabAdSection on _DiaryTabState {
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
         child: Center(
           child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 8,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               color: SLColors.bgElevated.withValues(alpha: 0.72),
               borderRadius: SLRadius.lgAll,
@@ -58,7 +55,7 @@ extension DiaryTabAdSection on _DiaryTabState {
               child: SizedBox(
                 width: bannerAd.size.width.toDouble(),
                 height: bannerAd.size.height.toDouble(),
-                child: AdWidget(ad: bannerAd),
+                child: ConsentAdView(ad: bannerAd),
               ),
             ),
           ),
@@ -90,14 +87,16 @@ extension DiaryTabAdSection on _DiaryTabState {
     final adMob = AdMobService();
     if (await adMob.isProUser()) return;
 
-    final hasRecent =
-        adMob.hasRecentFullscreenAd(cooldown: const Duration(minutes: 15));
+    final hasRecent = adMob.hasRecentFullscreenAd(
+      cooldown: const Duration(minutes: 15),
+    );
     if (hasRecent) {
       return;
     }
 
     debugPrint(
-        'DiaryTab: Showing forced interstitial ad after 15 minutes of activity.');
+      'DiaryTab: Showing forced interstitial ad after 15 minutes of activity.',
+    );
     final shown = await adMob.showInterstitialAd();
     if (shown) {
       _activeSecondsInDiary = 0;

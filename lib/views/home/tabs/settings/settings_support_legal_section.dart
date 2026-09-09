@@ -1,6 +1,39 @@
 part of '../settings_tab.dart';
 
 extension _SettingsTabSupportLegalSection on _SettingsTabState {
+  Future<void> _openPrivacyChoices() async {
+    await showDialog<String>(
+      context: context,
+      builder: (ctx) => StartupPrivacyDialog(
+        allowDismiss: true,
+        onContinue: (value) async {
+          await ConsentService().recordStartupConsent(value);
+          await PrivacyCollectionService.instance.settled;
+          if (ctx.mounted) Navigator.of(ctx).pop(value);
+        },
+        onOpenDocument: (title, path) => Navigator.of(ctx).push<void>(
+          MaterialPageRoute(
+            builder: (_) => DocumentViewerScreen(title: title, assetPath: path),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openAdPrivacyChoices() async {
+    if (!ConsentService.optionalCollectionAllowed.value) {
+      SLNotice.showInfo(context, context.tr('privacy_ads_disabled'));
+      return;
+    }
+    try {
+      await AdMobService().showPrivacyOptions();
+    } catch (_) {
+      if (mounted) {
+        SLNotice.showError(context, context.tr('privacy_ads_options_failed'));
+      }
+    }
+  }
+
   void _openPolicyOverview() {
     if (!mounted) return;
     Navigator.push(
@@ -151,7 +184,10 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   }
 
   void _openDeleteAccountRequestPage() {
-    final uri = Uri.parse(AppConfig.deleteAccountPageUrl);
+    final uri = AppConfig.legalDocumentUri(
+      'delete-account.html',
+      languageCode: L10nService().locale.languageCode,
+    );
     unawaited(
       launchUrl(
         uri,
@@ -322,6 +358,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
             borderRadius: BorderRadius.circular(24),
           ),
           backgroundColor: Colors.white,
+          scrollable: true,
           title: Row(
             children: [
               const Icon(
@@ -362,7 +399,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
                   border: Border.all(color: Colors.red.shade200),
                 ),
                 child: Text(
-                  context.tr('home_saukhigiyu_b063c7'),
+                  context.tr('legal_account_deletion_warning'),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
@@ -613,6 +650,22 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
             color: const Color(0xFFF57C00),
             onTap: _openCookieDocument,
           ),
+          const SizedBox(height: 10),
+          _buildLegalBtn(
+            icon: Icons.tune_rounded,
+            label: context.tr('privacy_choices_title'),
+            color: const Color(0xFF1976D2),
+            onTap: _openPrivacyChoices,
+          ),
+          if (!kIsWeb) ...[
+            const SizedBox(height: 10),
+            _buildLegalBtn(
+              icon: Icons.ads_click_rounded,
+              label: context.tr('privacy_ads_options_title'),
+              color: const Color(0xFF1976D2),
+              onTap: _openAdPrivacyChoices,
+            ),
+          ],
           const SizedBox(height: 10),
           _buildLegalBtn(
             icon: Icons.info_outline_rounded,

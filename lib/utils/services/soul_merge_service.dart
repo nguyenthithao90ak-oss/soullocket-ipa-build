@@ -334,12 +334,11 @@ class SoulMergeService {
       final partnerRole = myRole == 'user1' ? 'user2' : 'user1';
 
       // 1. Get Partner Name
-      final houseSnap = await _db.ref('houses/$houseId').get();
-      if (!houseSnap.exists) return;
-      final houseData = houseSnap.value as Map<dynamic, dynamic>?;
-      if (houseData == null) return;
-
-      final users = houseData['users'] as Map<dynamic, dynamic>?;
+      final profileSnapshots = await Future.wait([
+        _db.ref('houses/$houseId/users').get(),
+        _db.ref('houses/$houseId/settings').get(),
+      ]);
+      final users = profileSnapshots[0].value as Map<dynamic, dynamic>?;
       String partnerName = 'Người ấy';
       if (users != null && users[partnerRole] != null) {
         final partnerInfo = users[partnerRole] as Map<dynamic, dynamic>;
@@ -348,7 +347,7 @@ class SoulMergeService {
       }
 
       // 2. Get house settings for names
-      final settingsData = houseData['settings'] as Map<dynamic, dynamic>?;
+      final settingsData = profileSnapshots[1].value as Map<dynamic, dynamic>?;
       final nameU1 = (settingsData?['nameU1'] as String?)?.trim();
       final nameU2 = (settingsData?['nameU2'] as String?)?.trim();
 

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 
@@ -17,21 +16,11 @@ class SingleMatchService {
   static final SingleMatchService instance = SingleMatchService._();
   static const String _profileIndexRoot = 'single_match_profiles';
   static const String _activePoolRoot = 'single_match_active_pool';
-  static const Duration _profileIndexCacheTtl = Duration(minutes: 30);
-  static const Duration _poolCacheTtl = Duration(minutes: 15);
-  static const int _batchSize = 100; // ignore: unused_field
 
   final DatabaseReference _db = FirebaseDatabase.instance.ref();
   final HouseService _houseService = HouseService();
   final Random _random = Random();
 
-  // Cache profile index để tránh listen realtime liên tục
-  Map<String, Map<dynamic, dynamic>>? _profileIndexCache;
-  DateTime? _profileIndexCachedAt;
-
-  // Cache active pool (chỉ user đang bật single match)
-  Map<String, Map<dynamic, dynamic>>? _activePoolCache;
-  DateTime? _activePoolCachedAt;
   final Map<String, String> _secretMatchIds = <String, String>{};
 
   static String profileIndexPath(String houseId) =>
@@ -82,68 +71,22 @@ class SingleMatchService {
     return SingleMatchPreferences.fromMap(snap.value as Map);
   }
 
-  /// Legacy: stream toàn bộ candidates từ profile index.
-  /// Dùng cho tab Ghép đôi (cần UI scoring chi tiết).
-  /// Cache 30 phút. Với 10k users, active pool ~2-3k, fit ~400KB.
+  /// Server lọc quyền riêng tư và danh sách chặn trước khi trả hồ sơ hiển thị.
   Stream<List<SingleMatchCandidate>> streamCandidates({
     required String currentHouseId,
-  }) {
-    late final StreamController<List<SingleMatchCandidate>> controller;
-    var indexedProfiles = <String, Map<dynamic, dynamic>>{};
-    var fallbackProfiles = <String, Map<dynamic, dynamic>>{};
-
-    void emitMergedCandidates() {
-      if (controller.isClosed) {
-        return;
-      }
-
-      final allHouseIds = <String>{
-        ...fallbackProfiles.keys,
-        ...indexedProfiles.keys,
-      };
-      final candidates = <SingleMatchCandidate>[];
-
-      for (final houseId in allHouseIds) {
-        final mergedProfile = _mergeProfileMaps(
-          fallbackProfiles[houseId],
-          indexedProfiles[houseId],
-        );
-        final candidate = _candidateFromProfile(
-          houseId,
-          mergedProfile,
-          currentHouseId: currentHouseId,
-        );
-        if (candidate != null) {
-          candidates.add(candidate);
-        }
-      }
-
-      controller.add(_sortCandidates(candidates));
+  }) async* {
+    yield const <SingleMatchCandidate>[];
+    final profiles = await _fetchVisibleProfiles();
+    final candidates = <SingleMatchCandidate>[];
+    for (final entry in profiles.entries) {
+      final candidate = _candidateFromProfile(
+        entry.key,
+        entry.value,
+        currentHouseId: currentHouseId,
+      );
+      if (candidate != null) candidates.add(candidate);
     }
-
-    controller = StreamController<List<SingleMatchCandidate>>(
-      onListen: () {
-        controller.add(const <SingleMatchCandidate>[]);
-        // Dùng cache thay vì listen realtime toàn bộ single_match_profiles
-        unawaited(
-          _fetchProfileIndexWithCache()
-              .then((profiles) {
-                if (!controller.isClosed) {
-                  indexedProfiles = profiles;
-                  emitMergedCandidates();
-                }
-              })
-              .catchError((Object error) {
-                debugPrint(
-                  '[SingleMatch] profile index fetch failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('err_single_match_profile_index_stream_failed')).message}',
-                );
-                emitMergedCandidates();
-              }),
-        );
-      },
-    );
-
-    return controller.stream;
+    yield _sortCandidates(candidates);
   }
 
   Future<Set<String>> fetchBlockedHouseIds(String houseId) async {
@@ -181,28 +124,14 @@ class SingleMatchService {
       ),
     };
 
-    // Active pool: chỉ lưu khi enabled
+    // Pool chỉ là chỉ mục tìm kiếm; hồ sơ được server đọc theo quyền hiện tại.
     if (preferences.enabled) {
-      updates['$_activePoolRoot/$houseId'] = {
-        'displayName': displayName,
-        'avatarUrl': avatarUrl,
-        'goal': preferences.goal,
-        'voiceStyle': preferences.voiceStyle,
-        'tags': preferences.tags,
-        'intro': preferences.intro,
-        'allowAudioCalls': preferences.allowAudioCalls,
-        'allowVideoCalls': preferences.allowVideoCalls,
-        'updatedAt': nowMs,
-      };
+      updates['$_activePoolRoot/$houseId'] = {'updatedAt': nowMs};
     } else {
       updates['$_activePoolRoot/$houseId'] = null; // delete
     }
 
     await _db.update(updates);
-
-    // Clear cache để lần fetch sau lấy mới
-    _activePoolCache = null;
-    _activePoolCachedAt = null;
   }
 
   Future<void> updateOwnDob({
@@ -216,18 +145,14 @@ class SingleMatchService {
     final updates = <String, dynamic>{
       'houses/$houseId/settings/dobU1': normalized,
       'houses/$houseId/updatedAt': ServerValue.timestamp,
+      // Xóa bản sao ngày sinh cũ; không nhân đôi dữ liệu riêng vào pool.
+      '$_activePoolRoot/$houseId/dobU1': null,
       ...profileIndexUpdates(
         houseId: houseId,
         dobU1: normalized,
         updatedAt: nowMs,
       ),
     };
-
-    // Update active pool nếu entry tồn tại
-    final activeEntry = await _db.child('$_activePoolRoot/$houseId').get();
-    if (activeEntry.exists) {
-      updates['$_activePoolRoot/$houseId/dobU1'] = normalized;
-    }
 
     await _db.update(updates);
   }
@@ -388,88 +313,34 @@ class SingleMatchService {
     return fallback;
   }
 
-  // ===== Active Pool =====
-
-  /// Fetch active pool (cached 15 phút).
-  /// Chỉ chứa user đang bật single match — nhỏ hơn nhiều so với profile index.
-  Future<Map<String, Map<dynamic, dynamic>>> _fetchActivePoolWithCache({
-    bool forceFetch = false,
-  }) async {
-    final now = DateTime.now();
-    if (!forceFetch &&
-        _activePoolCache != null &&
-        _activePoolCachedAt != null &&
-        now.difference(_activePoolCachedAt!) < _poolCacheTtl) {
-      return _activePoolCache!;
+  /// Không tải index riêng tư hoặc giữ cache dùng chung qua các tài khoản.
+  Future<Map<String, Map<dynamic, dynamic>>> _fetchVisibleProfiles() async {
+    final requestUid = _houseService.currentUser?.uid;
+    if (requestUid == null) {
+      throw Exception(L10nService().translate('core_err_general'));
     }
-    final snap = await _db.child(_activePoolRoot).get();
-    final result = _readProfileMap(snap.value);
-    _activePoolCache = result;
-    _activePoolCachedAt = now;
-    return result;
-  }
-
-  // ===== Profile Index (legacy) =====
-
-  Future<Map<String, Map<dynamic, dynamic>>>
-  _fetchProfileIndexWithCache() async {
-    final now = DateTime.now();
-    if (_profileIndexCache != null &&
-        _profileIndexCachedAt != null &&
-        now.difference(_profileIndexCachedAt!) < _profileIndexCacheTtl) {
-      return _profileIndexCache!;
+    final response = await CloudFunctionsHelper.callSecure<dynamic>(
+      'listSingleMatchCandidates',
+      fallbackErrorMessage: L10nService().translate('core_err_general'),
+    );
+    if (_houseService.currentUser?.uid != requestUid) {
+      throw Exception(L10nService().translate('core_err_general'));
     }
-    final snap = await _db.child(_profileIndexRoot).get();
-    final result = _readProfileMap(snap.value);
-    _profileIndexCache = result;
-    _profileIndexCachedAt = now;
-    return result;
-  }
-
-  Map<String, Map<dynamic, dynamic>> _readProfileMap(Object? rawValue) {
-    if (rawValue is! Map) {
-      return const <String, Map<dynamic, dynamic>>{};
+    final data = response.data;
+    if (data is! Map || data['candidates'] is! List) {
+      throw Exception(L10nService().translate('core_err_general'));
     }
-
     final profiles = <String, Map<dynamic, dynamic>>{};
-    final rawProfiles = Map<dynamic, dynamic>.from(rawValue);
-    rawProfiles.forEach((key, value) {
-      if (value is! Map) {
-        return;
-      }
-      final houseId = key.toString().trim();
-      if (houseId.isEmpty) {
-        return;
-      }
-      profiles[houseId] = Map<dynamic, dynamic>.from(value);
-    });
+    for (final value in data['candidates'] as List) {
+      if (value is! Map) continue;
+      final houseId = value['houseId']?.toString().trim() ?? '';
+      if (houseId.isEmpty) continue;
+      profiles[houseId] = <dynamic, dynamic>{
+        ...Map<dynamic, dynamic>.from(value),
+        'singleMatch': Map<dynamic, dynamic>.from(value),
+      };
+    }
     return profiles;
-  }
-
-  Map<dynamic, dynamic> _mergeProfileMaps(
-    Map<dynamic, dynamic>? base,
-    Map<dynamic, dynamic>? overlay,
-  ) {
-    final merged = <dynamic, dynamic>{};
-    if (base != null) {
-      merged.addAll(base);
-    }
-    if (overlay == null) {
-      return merged;
-    }
-
-    overlay.forEach((key, value) {
-      final current = merged[key];
-      if (current is Map && value is Map) {
-        merged[key] = _mergeProfileMaps(
-          Map<dynamic, dynamic>.from(current),
-          Map<dynamic, dynamic>.from(value),
-        );
-        return;
-      }
-      merged[key] = value;
-    });
-    return merged;
   }
 
   SingleMatchCandidate? _candidateFromProfile(
@@ -514,6 +385,7 @@ class SingleMatchService {
     }
 
     final prefs = SingleMatchPreferences.fromMap(singleMatch);
+    if (!prefs.enabled) return null;
     final avatarUrl =
         (profile['avatarUrl'] ??
                 profile['houseAvatar'] ??
@@ -541,9 +413,7 @@ class SingleMatchService {
           settings['updatedAt'] ??
           singleMatch['updatedAt'],
     );
-    final age = ageFromDob(
-      (profile['dobU1'] ?? settings['dobU1'] ?? '').toString(),
-    );
+    final age = (profile['age'] as num?)?.toInt();
 
     return SingleMatchCandidate(
       houseId: houseId,
@@ -675,17 +545,9 @@ class SingleMatchService {
     });
   }
 
-  // ===== Scored Random Match (scale 10k) =====
+  // ===== Scored Random Match =====
 
-  /// Pick ứng viên qua Cloud Function (ưu tiên) hoặc fallback client-side.
-  ///
-  /// Với 1M users:
-  /// - Server chỉ đọc 100 user gần đây từ active pool (limitToLast)
-  /// - Score + filter trong RAM server (nhanh, < 50ms)
-  /// - Mỗi request = 1 function invocation + 100 RTDB reads
-  /// - Blaze cost: ~$0.02/tháng cho 300k request
-  ///
-  /// Fallback client-side khi không internet hoặc function lỗi.
+  /// Chấm điểm trên danh sách đã được server lọc quyền riêng tư.
   Future<SingleMatchCandidate?> pickScoredMatch({
     required String currentHouseId,
     required Set<String> excludeHouseIds,
@@ -698,85 +560,8 @@ class SingleMatchService {
     bool needAudio = false,
     bool needVideo = false,
   }) async {
-    // Thử server match trước
-    try {
-      final result = await FirebaseFunctions.instance
-          .httpsCallable('singleMatchPick')
-          .call({
-            'currentHouseId': currentHouseId,
-            'excludeHouseIds': excludeHouseIds.toList(),
-            'goal': goal,
-            'voiceStyle': voiceStyle,
-            'myTags': myTags,
-            'myAge': myAge,
-            'preferredAgeMin': preferredAgeMin,
-            'preferredAgeMax': preferredAgeMax,
-            'needAudio': needAudio,
-            'needVideo': needVideo,
-          })
-          .timeout(const Duration(seconds: 10));
-
-      final data = result.data as Map<String, dynamic>?;
-      if (data != null && data['match'] is Map) {
-        final match = Map<String, dynamic>.from(data['match'] as Map);
-        if (match['houseId'] != null) {
-          return SingleMatchCandidate(
-            houseId: match['houseId'].toString(),
-            displayName: (match['displayName'] ?? '').toString().trim(),
-            houseName: (match['displayName'] ?? '').toString().trim(),
-            avatarUrl: (match['avatarUrl'] ?? '').toString().trim(),
-            bio: (match['bio'] ?? '').toString().trim(),
-            intro: (match['intro'] ?? '').toString().trim(),
-            goal: (match['goal'] ?? '').toString().trim(),
-            voiceStyle: (match['voiceStyle'] ?? '').toString().trim(),
-            tags:
-                (match['tags'] as List?)?.map((e) => e.toString()).toList() ??
-                const [],
-            allowAudioCalls: match['allowAudioCalls'] == true,
-            allowVideoCalls: match['allowVideoCalls'] == true,
-            enabled: true,
-            privacy: 'public',
-            updatedAt: DateTime.now().millisecondsSinceEpoch,
-            age: match['age'] as int?,
-          );
-        }
-      }
-    } on FirebaseFunctionsException catch (e) {
-      debugPrint('[SingleMatch] server match failed: ${e.code} ${e.message}');
-    } catch (e) {
-      debugPrint('[SingleMatch] server match error: $e');
-    }
-
-    // Fallback client-side (active pool cache)
-    return _pickScoredMatchClient(
-      currentHouseId: currentHouseId,
-      excludeHouseIds: excludeHouseIds,
-      goal: goal,
-      voiceStyle: voiceStyle,
-      myTags: myTags,
-      myAge: myAge,
-      preferredAgeMin: preferredAgeMin,
-      preferredAgeMax: preferredAgeMax,
-      needAudio: needAudio,
-      needVideo: needVideo,
-    );
-  }
-
-  /// Client-side fallback scoring (khi không thể gọi Cloud Function).
-  Future<SingleMatchCandidate?> _pickScoredMatchClient({
-    required String currentHouseId,
-    required Set<String> excludeHouseIds,
-    required String goal,
-    required String voiceStyle,
-    required List<String> myTags,
-    int? myAge,
-    int preferredAgeMin = 18,
-    int preferredAgeMax = 60,
-    bool needAudio = false,
-    bool needVideo = false,
-  }) async {
-    var pool = await _fetchActivePoolWithCache();
-    var scored = _scorePool(
+    final pool = await _fetchVisibleProfiles();
+    final scored = _scorePool(
       pool,
       currentHouseId,
       excludeHouseIds,
@@ -789,24 +574,6 @@ class SingleMatchService {
       needAudio,
       needVideo,
     );
-
-    if (scored.isEmpty) {
-      // Force fetch nếu cache không tìm thấy ai phù hợp
-      pool = await _fetchActivePoolWithCache(forceFetch: true);
-      scored = _scorePool(
-        pool,
-        currentHouseId,
-        excludeHouseIds,
-        goal,
-        voiceStyle,
-        myTags,
-        myAge,
-        preferredAgeMin,
-        preferredAgeMax,
-        needAudio,
-        needVideo,
-      );
-    }
 
     if (scored.isEmpty) return null;
 
@@ -825,17 +592,14 @@ class SingleMatchService {
 
     final picked = scored[_random.nextInt(topN)];
 
-    // Lấy data gốc từ pool cache
-    final poolData = await _fetchActivePoolWithCache();
-    final rawEntry = poolData[picked.houseId];
+    final rawEntry = pool[picked.houseId];
     if (rawEntry is! Map) return null;
 
     final prefs = SingleMatchPreferences.fromMap(rawEntry);
-    final peerDob = (rawEntry['dobU1'] ?? '').toString().trim();
     final peerName = (rawEntry['displayName'] ?? '').toString().trim();
     return SingleMatchCandidate(
       houseId: picked.houseId,
-      displayName: peerName.isNotEmpty ? peerName : 'Người ấy',
+      displayName: peerName,
       houseName: peerName,
       avatarUrl: (rawEntry['avatarUrl'] ?? '').toString().trim(),
       bio: (rawEntry['bio'] ?? '').toString().trim(),
@@ -848,7 +612,7 @@ class SingleMatchService {
       enabled: true,
       privacy: 'public',
       updatedAt: prefs.updatedAt,
-      age: peerDob.isNotEmpty ? ageFromDob(peerDob) : null,
+      age: (rawEntry['age'] as num?)?.toInt(),
     );
   }
 
@@ -873,7 +637,7 @@ class SingleMatchService {
       if (hid == currentHouseId || excludeHouseIds.contains(hid)) continue;
       final data = entry.value;
 
-      final peerEnabled = _readBool(data['enabled'], fallback: true);
+      final peerEnabled = _readBool(data['enabled'], fallback: false);
       if (!peerEnabled) continue;
 
       final peerAudio = _readBool(data['allowAudioCalls'], fallback: true);
@@ -910,8 +674,7 @@ class SingleMatchService {
       if (bio.isNotEmpty) score += 7;
 
       // Age
-      final peerDob = (data['dobU1'] ?? '').toString().trim();
-      final peerAge = peerDob.isNotEmpty ? ageFromDob(peerDob) : null;
+      final peerAge = (data['age'] as num?)?.toInt();
       if (peerAge != null && myAge != null) {
         if (peerAge >= preferredAgeMin && peerAge <= preferredAgeMax) {
           score += 12;

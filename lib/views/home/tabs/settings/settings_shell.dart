@@ -774,43 +774,52 @@ extension _SettingsTabShell on _SettingsTabState {
   Widget _buildSettingsQuickActions(bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildSettingsQuickAction(
-              icon: Icons.favorite_border_rounded,
-              color: SLColors.primary,
-              title: context.tr('settings_partner_connect'),
-              isDark: isDark,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const PairingDashboardScreen(),
-                ),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: PairingSettingsShortcut(
+                houseId: _houseId,
+                isDark: isDark,
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PairingDashboardScreen(),
+                    ),
+                  );
+                  if (!mounted) return;
+                  // Người nhập mã có thể vừa chuyển nhà; cập nhật nguồn của ô này.
+                  final houseId = await _houseService.getCurrentHouseId(
+                    preferFresh: true,
+                  );
+                  if (mounted) setState(() => _houseId = houseId);
+                },
               ),
             ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _buildSettingsQuickAction(
-              icon: Icons.timelapse_rounded,
-              color: SLColors.secondary,
-              title: context.tr('settings_countdown_space_label'),
-              isDark: isDark,
-              onTap: () => _togglePanel('countdownMode'),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildSettingsQuickAction(
+                icon: Icons.timelapse_rounded,
+                color: SLColors.secondary,
+                title: context.tr('settings_countdown_space_label'),
+                isDark: isDark,
+                onTap: () => _togglePanel('countdownMode'),
+              ),
             ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _buildSettingsQuickAction(
-              icon: Icons.palette_outlined,
-              color: SLColors.accentPurple,
-              title: context.tr('theme'),
-              isDark: isDark,
-              onTap: () => _togglePanel('theme'),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildSettingsQuickAction(
+                icon: Icons.palette_outlined,
+                color: SLColors.accentPurple,
+                title: context.tr('theme'),
+                isDark: isDark,
+                onTap: () => _togglePanel('theme'),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

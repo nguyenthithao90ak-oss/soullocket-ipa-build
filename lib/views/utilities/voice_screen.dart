@@ -510,9 +510,7 @@ class _VoiceScreenState extends State<VoiceScreen>
     }
     headers.putIfAbsent('Content-Type', () => mimeType);
 
-    debugPrint(
-      '[VoiceScreen] Uploading voice bytes to R2 signed URL: $uploadUrl',
-    );
+    debugPrint('[VoiceScreen] Uploading voice bytes to R2.');
 
     try {
       final uploadResponse = await http
@@ -522,20 +520,24 @@ class _VoiceScreenState extends State<VoiceScreen>
         '[VoiceScreen] R2 response status: ${uploadResponse.statusCode}',
       );
       if (uploadResponse.statusCode < 200 || uploadResponse.statusCode >= 300) {
-        throw Exception(
-          'Tải audio lên máy chủ thất bại (${uploadResponse.statusCode}). Response: ${uploadResponse.body}',
+        throw http.ClientException(
+          'Voice upload HTTP ${uploadResponse.statusCode}',
         );
       }
     } catch (e, stackTrace) {
-      debugPrint('[VoiceScreen] HTTP put to R2 error: $e');
+      // ClientException có thể chứa URL ký; chỉ chuyển lỗi đã bỏ thông tin nhạy cảm.
+      final safeError = e is TimeoutException
+          ? TimeoutException('Voice upload timed out.', e.duration)
+          : http.ClientException('Voice upload failed (${e.runtimeType}).');
+      debugPrint('[VoiceScreen] HTTP put to R2 error: $safeError');
       unawaited(
         ErrorLoggerService.instance.logError(
-          e,
+          safeError,
           stackTrace,
           reason: 'r2_upload_put_error',
         ),
       );
-      rethrow;
+      Error.throwWithStackTrace(safeError, stackTrace);
     }
 
     // Đợi 500ms để Cloudflare R2 đồng bộ file hoàn chỉnh

@@ -4,6 +4,7 @@ import 'package:soullocket_app/utils/services/house_service.dart';
 import 'package:soullocket_app/utils/services/pairing_service.dart';
 import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_create_code_sheet.dart';
 import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_enter_code_sheet.dart';
+import 'pairing_connection_widgets.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
@@ -129,8 +130,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
             _settingsPaired = settings['isPaired'] == true;
             _nameU1 = settings['nameU1']?.toString();
             _nameU2 = settings['nameU2']?.toString();
-            _avatarU1 = settings['avatarU1']?.toString();
-            _avatarU2 = settings['avatarU2']?.toString();
+            _avatarU1 = pairingAvatarUrl(settings, 'user1');
+            _avatarU2 = pairingAvatarUrl(settings, 'user2');
           });
           _applyPairingStatus();
         }, onError: handleLoadError);
@@ -748,86 +749,14 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   }
 
   Widget _buildPairedState() {
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: constraints.maxHeight),
-          child: Center(
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 520),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: _buildAvatarWidget(
-                          _avatarU1,
-                          _nameU1 ?? _t('role_male'),
-                          'user1',
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.fromLTRB(8, 24, 8, 0),
-                        child: Icon(
-                          Icons.favorite_rounded,
-                          color: Color(0xFFB9516D),
-                          size: 28,
-                        ),
-                      ),
-                      Expanded(
-                        child: _buildAvatarWidget(
-                          _avatarU2,
-                          _nameU2 ?? _t('role_female'),
-                          'user2',
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 22,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFEEE5E4)),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          _t('pairing_start_date'),
-                          textAlign: TextAlign.center,
-                          style: SLTheme.quicksand(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: SLColors.textSecond,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          _startDateStr ?? _t('pairing_no_info'),
-                          textAlign: TextAlign.center,
-                          style: SLTheme.quicksand(
-                            fontSize: _startDateStr == null ? 16 : 26,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFFB9516D),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+    return PairingConnectedView(
+      firstName: _nameU1 ?? _t('role_male'),
+      secondName: _nameU2 ?? _t('role_female'),
+      firstAvatar: _avatarU1,
+      secondAvatar: _avatarU2,
+      connectionDate: _startDateStr,
+      onEditFirst: () => _updateAvatar('user1'),
+      onEditSecond: () => _updateAvatar('user2'),
     );
   }
 
@@ -856,90 +785,6 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  Widget _buildAvatarWidget(String? url, String label, String role) {
-    return GestureDetector(
-      onTap: () => _updateAvatar(role),
-      child: Column(
-        children: [
-          Stack(
-            alignment: Alignment.bottomRight,
-            children: [
-              Container(
-                width: 88,
-                height: 88,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 4),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFD81B60).withValues(alpha: 0.15),
-                      blurRadius: 16,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                  color: Colors.grey.shade100,
-                ),
-                child: url != null && url.isNotEmpty
-                    ? ClipOval(
-                        child: SizedBox(
-                          width: 80,
-                          height: 80,
-                          child: CachedNetworkImage(
-                            imageUrl: url,
-                            fit: BoxFit.cover,
-                            memCacheWidth: 300,
-                            memCacheHeight: 300,
-                            placeholder: (context, url) => const Icon(
-                              Icons.person,
-                              color: Colors.grey,
-                              size: 40,
-                            ),
-                            errorWidget: (context, url, error) => const Icon(
-                              Icons.person,
-                              color: Colors.grey,
-                              size: 40,
-                            ),
-                          ),
-                        ),
-                      )
-                    : const Icon(Icons.person, color: Colors.grey, size: 40),
-              ),
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFD81B60),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.camera_alt_rounded,
-                    color: Colors.white,
-                    size: 14,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: SLTheme.quicksand(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: const Color(0xFF2C1B22),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildActionRow({
