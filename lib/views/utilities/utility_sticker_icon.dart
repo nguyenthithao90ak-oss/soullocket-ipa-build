@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../widgets/living_sticker.dart';
+import '../../widgets/living_sticker_scene.dart';
 
 const double _kUtilityStickerLogicalSize = 64;
 const Set<String> _kUtilityStickerIds = <String>{
@@ -153,6 +155,19 @@ Widget buildUtilityStickerIcon({
     return fallback;
   }
 
+  final normalizedId = utilityId.trim().toLowerCase();
+  final scene = LivingStickerCatalog.utility(
+    _kUtilityAliases[normalizedId] ?? normalizedId,
+  );
+  if (scene != null) {
+    return SizedBox.expand(
+      child: Padding(
+        padding: padding,
+        child: LivingSticker(scene: scene),
+      ),
+    );
+  }
+
   // Fast path: DPR known at call site → build image directly, no extra widget.
   if (devicePixelRatio != null) {
     final provider = utilityStickerImageProviderForId(
@@ -173,7 +188,7 @@ Widget buildUtilityStickerIcon({
             if (wasSynchronouslyLoaded || frame != null) return child;
             return fallback;
           },
-          errorBuilder: (_, __, ___) => fallback,
+          errorBuilder: (_, _, _) => fallback,
         ),
       ),
     );
@@ -205,7 +220,7 @@ Widget buildUtilityStickerIcon({
               }
               return fallback;
             },
-            errorBuilder: (_, __, ___) => fallback,
+            errorBuilder: (_, _, _) => fallback,
           ),
         ),
       );

@@ -212,16 +212,17 @@ class _StableAvatarNetworkImage extends StatelessWidget {
     return CachedNetworkImage(
       imageUrl: url,
       fit: fit,
-      maxWidthDiskCache: 256,
-      maxHeightDiskCache: 256,
-      memCacheWidth: 256,
-      memCacheHeight: 256,
+      maxWidthDiskCache: HomeImagePolicy.avatarPixels,
+      maxHeightDiskCache: HomeImagePolicy.avatarPixels,
+      memCacheWidth: HomeImagePolicy.avatarPixels,
+      memCacheHeight: HomeImagePolicy.avatarPixels,
       placeholder: (context, url) {
         if (startupFile != null &&
             startupFile.existsSync() &&
             startupFile.lengthSync() > 0) {
           return Image.file(
             startupFile,
+            cacheWidth: HomeImagePolicy.avatarPixels,
             fit: fit,
             gaplessPlayback: true,
             errorBuilder: (_, __, ___) => buildFallback(fit),

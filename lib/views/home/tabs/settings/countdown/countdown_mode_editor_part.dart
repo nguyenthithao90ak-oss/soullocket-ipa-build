@@ -165,41 +165,11 @@ class _CountdownModeEditorScreenState
   Set<String> _unlockedStyles = {};
 
   Future<void> _loadUnlockedStyles() async {
-    final prefs = await SharedPreferences.getInstance();
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final loaded = <String>{};
-    for (final styleKey
-        in _CountdownModeIndependentScreenState._premiumCountdownStyleKeys) {
-      final expiryKey = 'il_countdown_style_unlock_expiry_$styleKey';
-      final expiry = prefs.getInt(expiryKey) ?? 0;
-      if (expiry > now) {
-        loaded.add(styleKey);
-      }
-    }
-    // Migration: legacy global unlocks
-    final legacyExpiry =
-        prefs.getInt('il_countdown_unlock_weekly_expiry_v2') ?? 0;
-    if (legacyExpiry > now) {
-      loaded.addAll(
-        _CountdownModeIndependentScreenState._premiumCountdownStyleKeys,
-      );
-    } else {
-      final legacyTs = prefs.getInt('il_countdown_unlock_ad_ts') ?? 0;
-      if (legacyTs > 0) {
-        final fallbackExpiry =
-            legacyTs + const Duration(days: 7).inMilliseconds;
-        if (fallbackExpiry > now) {
-          loaded.addAll(
-            _CountdownModeIndependentScreenState._premiumCountdownStyleKeys,
-          );
-        }
-      }
-    }
-    if (mounted) {
+    final loaded = await AdMobService().verifiedCountdownStyles();
+    if (mounted)
       setState(() {
         _unlockedStyles = loaded;
       });
-    }
   }
 
   Future<void> _copyFromMainCountdown() async {
@@ -512,20 +482,16 @@ class _CountdownModeEditorScreenState
     }
     setState(() => _isUnlockingCountdownStyle = true);
     try {
-      final adSuccess = await AdMobService().showRewardedAd();
+      final expiry = await AdMobService().unlockCountdownStyleWithAd(
+        normalized,
+      );
       if (!mounted) {
         return;
       }
-      if (!adSuccess) {
+      if (expiry == null) {
         _showMessage(context.tr('home_cnxemqungc_fe69b5'));
         return;
       }
-      final prefs = await SharedPreferences.getInstance();
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final expiry = now + const Duration(days: 7).inMilliseconds;
-      final expiryKey = 'il_countdown_style_unlock_expiry_$normalized';
-      await prefs.setInt(expiryKey, expiry);
-      await prefs.setInt('il_last_any_rewarded_ad_ts', now);
 
       if (!mounted) {
         return;

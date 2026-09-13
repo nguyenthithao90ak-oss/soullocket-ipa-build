@@ -259,7 +259,7 @@ class _DiaryComposerState extends State<DiaryComposer> {
                         width: active ? 53 : 47,
                         height: active ? 53 : 47,
                         fit: BoxFit.contain,
-                        animateLocalSticker: active,
+                        animateLocalSticker: true,
                         errorWidget: Text(
                           mood['icon'] as String,
                           style: TextStyle(fontSize: active ? 34 : 30),

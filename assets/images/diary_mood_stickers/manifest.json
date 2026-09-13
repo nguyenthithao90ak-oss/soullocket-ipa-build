@@ -1,13 +1,13 @@
 {
-  "version": 1,
-  "atlas": "diary_mood_atlas_v1.png",
+  "version": 2,
+  "atlas": "../transparent_stickers/diary_mood_atlas_v2_transparent.webp",
   "grid": {
     "columns": 3,
     "rows": 3,
     "pixelWidth": 1254,
     "pixelHeight": 1254
   },
-  "background": "#FFF7FA",
+  "background": "transparent",
   "stickers": [
     { "id": "diary_reflective", "emoji": "📝", "column": 0, "row": 0 },
     { "id": "diary_shy", "emoji": "🙈", "column": 1, "row": 0 },

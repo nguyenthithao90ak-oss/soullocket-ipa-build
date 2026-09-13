@@ -1276,120 +1276,19 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
   }
 
   void _showStickerBottomSheet() {
-    showModalBottomSheet(
+    var sending = false;
+    var pickerOpen = true;
+    StickerBottomSheet.show(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        final stickerGroups = {
-          'B? 1': List.generate(
-            35,
-            (i) => 'assets/images/anhtomau_stickers/sticker_${i + 1}.gif',
-          ),
-        };
-        final labels = stickerGroups.keys.toList();
-
-        return DefaultTabController(
-          length: labels.length,
-          initialIndex: 0,
-          child: Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(context).height * 0.62,
-              minHeight: MediaQuery.sizeOf(context).height < 700 ? 220 : 280,
-            ),
-            margin: SLSpacing.all12,
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(28),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.16),
-                  blurRadius: 22,
-                  offset: const Offset(0, 12),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Sticker SoulLocket',
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 18,
-                    color: const Color(0xFF0A7CFF),
-                  ),
-                ),
-                SLSpacing.h4,
-                Text(
-                  'Chọn nhanh theo cảm xúc để gửi đúng tâm trạng hiện tại.',
-                  style: SLTheme.quicksand(
-                    color: const Color(0xFF6B7280),
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                SLSpacing.h12,
-                TabBar(
-                  isScrollable: true,
-                  labelColor: const Color(0xFFD81B60),
-                  unselectedLabelColor: const Color(0xFF94A3B8),
-                  indicatorColor: const Color(0xFFD81B60),
-                  labelStyle: SLTheme.quicksand(fontWeight: FontWeight.w900),
-                  tabs: labels.map((label) => Tab(text: label)).toList(),
-                ),
-                SLSpacing.h8,
-                Expanded(
-                  child: TabBarView(
-                    physics: const SLPagePhysics(),
-                    children: labels.map((label) {
-                      final stickers = stickerGroups[label]!;
-                      return GridView.builder(
-                        clipBehavior: Clip.none,
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 4,
-                              crossAxisSpacing: 10,
-                              mainAxisSpacing: 10,
-                            ),
-                        itemCount: stickers.length,
-                        itemBuilder: (context, index) {
-                          final sticker = stickers[index];
-                          return GestureDetector(
-                            onTap: () async {
-                              final sent = await _sendSticker(sticker);
-                              if (sent && mounted) {
-                                Navigator.of(this.context).pop();
-                              }
-                            },
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFFF4F8),
-                                borderRadius: SLRadius.lgAll,
-                                border: Border.all(
-                                  color: const Color(0x1AD81B60),
-                                ),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8),
-                                child: AnimatedRabbitSticker(
-                                  sticker,
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
+      closeOnSelect: false,
+      onStickerSelected: (reference) async {
+        if (sending) return;
+        sending = true;
+        final sent = await _sendSticker(reference);
+        sending = false;
+        if (sent && mounted && pickerOpen) Navigator.of(context).pop();
       },
-    );
+    ).whenComplete(() => pickerOpen = false);
   }
 
   void _showReactionPicker(ChatMessage msg) {

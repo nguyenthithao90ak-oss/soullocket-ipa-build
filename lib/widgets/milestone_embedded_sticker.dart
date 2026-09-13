@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
+import 'living_sticker.dart';
+import 'living_sticker_scene.dart';
 
 class MilestoneEmbeddedSticker extends StatelessWidget {
   final String stickerKey;
@@ -49,6 +51,10 @@ class MilestoneEmbeddedSticker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scene = LivingStickerCatalog.milestone(stickerKey);
+    if (scene != null) {
+      return LivingSticker(scene: scene, width: width, height: height);
+    }
     final assetPath = _assetByKey[stickerKey];
     if (assetPath != null) {
       return Image.asset(

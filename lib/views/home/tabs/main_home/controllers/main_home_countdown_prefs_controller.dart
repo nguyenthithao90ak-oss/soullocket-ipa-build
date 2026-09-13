@@ -1,34 +1,8 @@
 part of '../../main_home_tab.dart';
 
 extension MainHomeCountdownPrefsController on _MainHomeTabState {
-  Future<Set<String>> _getUnlockedCountdownStyles() async {
-    final prefs = await SharedPreferences.getInstance();
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final result = <String>{};
-    for (final styleKey in _MainHomeTabState._kCountdownQuickPremiumStyleKeys) {
-      final expiryKey = 'il_countdown_style_unlock_expiry_$styleKey';
-      final expiry = prefs.getInt(expiryKey) ?? 0;
-      if (expiry > now) {
-        result.add(styleKey);
-      }
-    }
-    final legacyExpiry =
-        prefs.getInt('il_countdown_unlock_weekly_expiry_v2') ?? 0;
-    if (legacyExpiry > now) {
-      result.addAll(_MainHomeTabState._kCountdownQuickPremiumStyleKeys);
-    } else {
-      final legacyTs = prefs.getInt('il_countdown_unlock_ad_ts') ?? 0;
-      if (legacyTs > 0) {
-        final fallbackExpiry =
-            legacyTs +
-            _MainHomeTabState._kCountdownQuickUnlockWindow.inMilliseconds;
-        if (fallbackExpiry > now) {
-          result.addAll(_MainHomeTabState._kCountdownQuickPremiumStyleKeys);
-        }
-      }
-    }
-    return result;
-  }
+  Future<Set<String>> _getUnlockedCountdownStyles() =>
+      AdMobService().verifiedCountdownStyles();
 
   Future<void> _saveCountdownQuickUiPrefs({
     String? countdownShapeKey,

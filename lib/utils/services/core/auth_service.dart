@@ -10,6 +10,7 @@ import 'package:soullocket_app/utils/services/auth/auth_sign_in_service.dart';
 import 'package:soullocket_app/utils/services/auth/auth_support.dart'
     as auth_support;
 import 'package:soullocket_app/utils/services/consent_service.dart';
+import 'package:soullocket_app/models/account_deletion_status.dart';
 
 export 'package:soullocket_app/utils/services/auth/play_integrity_service.dart'
     show
@@ -292,6 +293,10 @@ class AuthService {
 
   Future<void> undoScheduledDeletion() {
     return _signInService.undoScheduledDeletion();
+  }
+
+  Future<AccountDeletionStatus?> getOwnAccountDeletionStatus() {
+    return _signInService.getOwnAccountDeletionStatus();
   }
 
   Future<void> revokeOtherSessionsAfterPasswordChange() {

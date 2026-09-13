@@ -3,8 +3,9 @@ part of '../soul_block_game.dart';
 
 extension _SoulBlockBootstrap on _SoulBlockGameState {
   Future<void> _bootstrap() async {
-    final splashDelay =
-        Future<void>.delayed(const Duration(milliseconds: 1100));
+    final splashDelay = Future<void>.delayed(
+      const Duration(milliseconds: 1100),
+    );
     try {
       final prefs = await _prefsFuture;
       final bestScore = prefs.getInt(_bestScoreKey) ?? 0;
@@ -13,9 +14,7 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
       final smoothGraphics = prefs.getBool(_smoothGraphicsKey) ?? true;
       final storedAutoTrayShuffleEnabled =
           prefs.getBool(_autoTrayShuffleEnabledKey) ?? false;
-      final leaderboard = _decodeLeaderboard(
-        prefs.getString(_leaderboardKey),
-      );
+      final leaderboard = _decodeLeaderboard(prefs.getString(_leaderboardKey));
       final houseId = await _houseService.getCurrentHouseId();
       final isPremiumUser = await _readPremiumStatus();
       final memoryBurstGallery = _decodeMemoryBurstGallery(
@@ -101,32 +100,40 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
     await _bootstrap();
   }
 
+  void _onBannerPrivacyChanged() {
+    if (!mounted) return;
+    if (_bannerAd != null && !_adMob.isBannerUsable(_bannerAd!)) {
+      _adMob.disposeBanner(_bannerAd);
+      setState(() {
+        _bannerAd = null;
+      });
+    }
+    if (_adMob.canRequestAds) unawaited(_prepareBannerAd());
+  }
+
   Future<void> _prepareBannerAd() async {
-    if (_bannerAd != null) {
-      return;
+    if (_bannerAd != null || _loadingBanner || !mounted) return;
+    _loadingBanner = true;
+    final revision = _adMob.adRevision.value;
+    try {
+      final banner = await _adMob.createBannerAd(onAdLoaded: (_) {});
+      if (!mounted) {
+        _adMob.disposeBanner(banner);
+        return;
+      }
+      setState(() {
+        _bannerAd = banner;
+      });
+    } catch (error) {
+      debugPrint('Soul Block banner load failed: $error');
+    } finally {
+      _loadingBanner = false;
+      if (mounted &&
+          _adMob.canRequestAds &&
+          revision != _adMob.adRevision.value) {
+        unawaited(_prepareBannerAd());
+      }
     }
-
-    // Không hiển thị quảng cáo nếu người dùng đang dùng VIP/Pro
-    if (await _adMob.isProUser()) {
-      return;
-    }
-
-    final banner = await _adMob.createBannerAd(
-      onAdLoaded: (_) {
-        if (mounted) {
-          setState(() {});
-        }
-      },
-    );
-
-    if (!mounted) {
-      banner?.dispose();
-      return;
-    }
-
-    setState(() {
-      _bannerAd = banner;
-    });
   }
 
   Future<void> _syncBannerAfterPremium() async {
@@ -136,7 +143,7 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
     }
 
     if (isPro) {
-      _bannerAd?.dispose();
+      AdMobService().disposeBanner(_bannerAd);
       setState(() {
         _bannerAd = null;
       });

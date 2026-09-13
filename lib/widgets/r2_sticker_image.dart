@@ -6,6 +6,8 @@ import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/services/storage/storage_download_cache_helper.dart';
 import 'package:lottie/lottie.dart';
 import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
+import 'living_sticker.dart';
+import 'living_sticker_scene.dart';
 
 class R2StickerImage extends StatelessWidget {
   final String assetPath;
@@ -22,7 +24,7 @@ class R2StickerImage extends StatelessWidget {
     this.width,
     this.height,
     this.errorWidget,
-    this.animateLocalSticker = false,
+    this.animateLocalSticker = true,
   });
 
   // Lưu trữ in-memory cache của các sticker file đã được nạp thành công để tránh nháy khi rebuild
@@ -70,6 +72,32 @@ class R2StickerImage extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context) {
+    if (assetPath.startsWith(SoulLocketStickerCatalog.originalAssetPrefix)) {
+      final path = assetPath.substring(
+        SoulLocketStickerCatalog.originalAssetPrefix.length,
+      );
+      // Chỉ dùng cho bản gốc đã đóng gói, không đổi URL ảnh người dùng.
+      return Image.asset(
+        path,
+        fit: fit,
+        width: width,
+        height: height,
+        errorBuilder: (context, error, stack) =>
+            errorWidget ?? const Icon(Icons.image_not_supported_outlined),
+      );
+    }
+    final original = assetPath.startsWith(
+      SoulLocketStickerCatalog.originalPrefix,
+    );
+    final scene = original ? null : LivingStickerCatalog.asset(assetPath);
+    if (scene != null && SoulLocketStickerCatalog.find(assetPath) == null) {
+      return LivingSticker(
+        scene: scene,
+        width: width,
+        height: height,
+        animate: animateLocalSticker,
+      );
+    }
     final localSticker = SoulLocketStickerCatalog.find(assetPath);
     if (localSticker != null) {
       final resolvedWidth = width ?? height ?? 72;
@@ -83,6 +111,7 @@ class R2StickerImage extends StatelessWidget {
             sticker: localSticker,
             size: stickerSize,
             animate: animateLocalSticker,
+            originalArtwork: original,
           ),
         ),
       );

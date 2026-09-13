@@ -1,0 +1,65 @@
+{
+  "version": 2,
+  "generatedOn": "2026-09-12",
+  "method": "deterministic-background-extraction",
+  "grid": {
+    "columns": 3,
+    "rows": 3
+  },
+  "preservesOriginalRgb": true,
+  "appIntegration": "catalog-and-explicit-webp-bundle",
+  "atlases": [
+    {
+      "source": "assets/images/diary_mood_stickers/diary_mood_atlas_v1.png",
+      "sourceSha256": "5f632e22d60d7361613b341e595bf2a70c0aee0dfa627bfe3f35f9256681a6df",
+      "output": "assets/images/transparent_stickers/diary_mood_atlas_v2_transparent.webp",
+      "width": 1254,
+      "height": 1254,
+      "removedPixels": 838833,
+      "opaquePixels": 723422,
+      "pngBytes": 2396879,
+      "webpBytes": 885194,
+      "foregroundRgbChanges": 0,
+      "encodedAlphaChanges": 0
+    },
+    {
+      "source": "assets/images/soullocket_stickers/soul_merge_comfort_atlas_v1.png",
+      "sourceSha256": "00226eec0a2d5a2507545cf23eb9a0f9b4bd06831db75cda703b225ec8dcecb9",
+      "output": "assets/images/transparent_stickers/soul_merge_comfort_atlas_v2_transparent.webp",
+      "width": 1254,
+      "height": 1254,
+      "removedPixels": 915889,
+      "opaquePixels": 643162,
+      "pngBytes": 2384413,
+      "webpBytes": 913220,
+      "foregroundRgbChanges": 0,
+      "encodedAlphaChanges": 0
+    },
+    {
+      "source": "assets/images/soullocket_stickers/soul_merge_love_atlas_v1.png",
+      "sourceSha256": "ec78b8bf5f6447c2b3cbb3a5a882d47902cf5eaaac60f5e13e849e2647376646",
+      "output": "assets/images/transparent_stickers/soul_merge_love_atlas_v2_transparent.webp",
+      "width": 1254,
+      "height": 1254,
+      "removedPixels": 919715,
+      "opaquePixels": 635997,
+      "pngBytes": 2486719,
+      "webpBytes": 989644,
+      "foregroundRgbChanges": 0,
+      "encodedAlphaChanges": 0
+    },
+    {
+      "source": "assets/images/soullocket_stickers/soul_merge_playful_atlas_v1.png",
+      "sourceSha256": "06b107f3561e8af86278a2c01599a0653dfd68872f6849eec14d3637bb2150e6",
+      "output": "assets/images/transparent_stickers/soul_merge_playful_atlas_v2_transparent.webp",
+      "width": 1254,
+      "height": 1254,
+      "removedPixels": 879984,
+      "opaquePixels": 677009,
+      "pngBytes": 2514561,
+      "webpBytes": 987976,
+      "foregroundRgbChanges": 0,
+      "encodedAlphaChanges": 0
+    }
+  ]
+}

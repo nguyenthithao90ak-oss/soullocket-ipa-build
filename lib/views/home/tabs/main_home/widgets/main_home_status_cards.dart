@@ -283,6 +283,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
         _openMilestonesDetail();
       },
       child: _HomeScrapbookCard(
+        companionId: 'home-highlights',
         accentColor: SLColors.thread,
         adornment: _HomeCardAdornment.postageStamp,
         visualStyle: _HomeCardVisualStyle.milestone,
@@ -698,6 +699,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
       showHint: _showMapCardFirstTapHint,
       onTap: _handleMapCardTap,
       child: _HomeScrapbookCard(
+        companionId: 'home-map',
         accentColor: const Color(0xFF3399D4),
         adornment: _HomeCardAdornment.threadKnot,
         visualStyle: _HomeCardVisualStyle.map,
@@ -972,6 +974,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
       showHint: _showInsightCardFirstTapHint,
       onTap: _handleInsightCardTap,
       child: _HomeScrapbookCard(
+        companionId: 'home-insight',
         accentColor: SLColors.accentPurple,
         adornment: _HomeCardAdornment.heartPin,
         visualStyle: _HomeCardVisualStyle.insight,

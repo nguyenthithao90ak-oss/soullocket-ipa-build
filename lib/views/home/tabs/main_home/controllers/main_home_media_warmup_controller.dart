@@ -38,26 +38,7 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
   }
 
   ({int width, int height}) _resolveHomeBackgroundCacheSize() {
-    final mediaQuery = MediaQuery.maybeOf(context);
-    final view = ui.PlatformDispatcher.instance.views.isNotEmpty
-        ? ui.PlatformDispatcher.instance.views.first
-        : null;
-    final devicePixelRatio =
-        mediaQuery?.devicePixelRatio ?? view?.devicePixelRatio ?? 1.0;
-    final logicalWidth =
-        mediaQuery?.size.width ??
-        ((view?.physicalSize.width ?? 0) / devicePixelRatio);
-    final logicalHeight =
-        mediaQuery?.size.height ??
-        ((view?.physicalSize.height ?? 0) / devicePixelRatio);
-    final qualityScale = devicePixelRatio >= 2.5 ? 0.75 : 0.85;
-    final cacheWidth = (logicalWidth * devicePixelRatio * qualityScale)
-        .round()
-        .clamp(600, 1280);
-    final cacheHeight = (logicalHeight * devicePixelRatio * qualityScale)
-        .round()
-        .clamp(960, 1920);
-    return (width: cacheWidth, height: cacheHeight);
+    return HomeImagePolicy.backgroundSize(context: context);
   }
 
   Future<void> _precacheHomeMedia({
@@ -67,46 +48,9 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
   }) async {
     if (!mounted) return;
 
-    final providers = <ImageProvider<Object>>[];
-
-    // Helper chuyển đổi assetPath thành R2 URL để tải online
-    String getR2Url(String path) {
-      if (path.startsWith('assets/images/')) {
-        final filename = path.substring('assets/images/'.length);
-        return '${AppConfig.r2PublicDomain}/stickers/$filename';
-      }
-      return path;
-    }
-
-    // Các tài nguyên mặc định cần tải trước (avatar nam/nữ mặc định + các sticker hay dùng tại Home)
-    final List<String> defaultAssets = [
-      'assets/images/avatar_male.jpg',
-      'assets/images/avatar_female.jpg',
-      'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_343.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_339.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_228.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_270.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_276.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_165.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_173.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_008.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_108.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_158.png',
+    final providers = <ImageProvider<Object>>[
+      for (final asset in HomeImagePolicy.bundledAssets) AssetImage(asset),
     ];
-
-    for (final asset in defaultAssets) {
-      final r2Url = getR2Url(asset);
-      providers.add(
-        CachedNetworkImageProvider(
-          r2Url,
-          // Tối ưu cache size nhỏ cho sticker và avatar mặc định
-          maxWidth: 200,
-          maxHeight: 200,
-        ),
-      );
-    }
 
     final safeAvatarUrl1 = avatarUrl1.trim();
     final safeAvatarUrl2 = avatarUrl2.trim();
@@ -115,8 +59,8 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
         providers.add(
           CachedNetworkImageProvider(
             safeAvatarUrl1,
-            maxWidth: 720,
-            maxHeight: 720,
+            maxWidth: HomeImagePolicy.avatarPixels,
+            maxHeight: HomeImagePolicy.avatarPixels,
           ),
         );
       }
@@ -126,8 +70,8 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
         providers.add(
           CachedNetworkImageProvider(
             safeAvatarUrl2,
-            maxWidth: 720,
-            maxHeight: 720,
+            maxWidth: HomeImagePolicy.avatarPixels,
+            maxHeight: HomeImagePolicy.avatarPixels,
           ),
         );
       }
@@ -145,10 +89,14 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
     }
     if (providers.isEmpty) return;
 
+    final configuration = createLocalImageConfiguration(context);
     await Future.wait<void>(
       providers.map((provider) async {
         try {
-          await precacheImage(provider, context);
+          await HomeImagePolicy.warmImage(
+            provider,
+            configuration: configuration,
+          );
         } catch (error) {
           debugPrint('[MainHome] Image warm-up failed: $error');
         }
@@ -185,10 +133,11 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
     final shouldReleaseDeferredMotion = delayMotion || _deferHeavyHomeMotion;
 
     final token = ++_homeMediaWarmupToken;
+    // Hiệu ứng chỉ chờ nhịp ổn định đầu màn, không chờ mạng tải xong ảnh.
+    if (shouldReleaseDeferredMotion) {
+      unawaited(_releaseDeferredHomeMotion(token));
+    }
     if (!force && signature == _lastHomeMediaWarmupSignature) {
-      if (shouldReleaseDeferredMotion) {
-        unawaited(_releaseDeferredHomeMotion(token));
-      }
       return;
     }
 
@@ -200,9 +149,6 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
         avatarUrl2: avatarUrl2,
         backgroundUrl: backgroundUrl,
       );
-      if (shouldReleaseDeferredMotion) {
-        unawaited(_releaseDeferredHomeMotion(token));
-      }
     });
   }
 }

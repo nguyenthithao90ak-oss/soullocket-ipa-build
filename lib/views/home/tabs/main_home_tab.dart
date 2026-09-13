@@ -2,8 +2,13 @@
 import 'package:lottie/lottie.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
+import 'package:soullocket_app/widgets/home_interaction_stickers.dart';
 import 'package:soullocket_app/widgets/soul_merge_mascot.dart';
 import 'package:soullocket_app/views/home/widgets/home_sticker_motion.dart';
+import 'package:soullocket_app/views/home/widgets/companion/home_companion_scene.dart';
+import 'package:soullocket_app/views/home/widgets/companion/home_companion_motion.dart';
+import 'package:soullocket_app/views/home/widgets/companion/home_companion_painter.dart';
+import 'package:soullocket_app/utils/services/music_service.dart';
 import 'package:soullocket_app/views/utilities/tarot/tarot_screen.dart';
 import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/map_tilt_card.dart';
@@ -48,6 +53,7 @@ import 'dart:math';
 import 'package:soullocket_app/utils/services/offline_cache_service.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
 import 'package:soullocket_app/utils/services/home_startup_media_cache.dart';
+import 'package:soullocket_app/utils/home_image_policy.dart';
 import 'package:soullocket_app/utils/services/love_insight_service.dart';
 import 'package:soullocket_app/utils/services/location_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -575,24 +581,22 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   Future<void> _loadCustomStickers() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      final restored =
+          prefs.getBool(HomeInteractionStickers.restoredPreference) ?? false;
       for (final preset in _kPartnerInteractionPresets) {
         final prefsKey = 'custom_sticker_${preset.type}';
         final customPath = prefs.getString(prefsKey)?.trim();
-        final isLegacyGif =
-            customPath?.toLowerCase().startsWith(
-              'assets/images/anhtomau_stickers/',
-            ) ??
-            false;
-        if (customPath != null && customPath.isNotEmpty && !isLegacyGif) {
-          preset.assetPath = customPath;
-        } else {
-          final defaultPath = _defaultStickerReferenceForInteractionType(
-            preset.type,
-          );
-          preset.assetPath = defaultPath;
-          if (isLegacyGif) await prefs.setString(prefsKey, defaultPath);
+        final resolved = HomeInteractionStickers.resolve(
+          preset.type,
+          customPath,
+          restored: restored,
+        );
+        preset.assetPath = resolved;
+        if (customPath != null && customPath != resolved) {
+          await prefs.setString(prefsKey, resolved);
         }
       }
+      await prefs.setBool(HomeInteractionStickers.restoredPreference, true);
     } catch (error) {
       debugPrint('[MainHome] Cannot migrate interaction presets: $error');
     }

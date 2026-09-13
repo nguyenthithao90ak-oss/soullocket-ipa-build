@@ -7,6 +7,9 @@ import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
+import 'package:soullocket_app/widgets/living_sticker_packs.dart';
+import 'package:soullocket_app/widgets/home_interaction_stickers.dart';
+import 'package:soullocket_app/views/utilities/sticker_library_screen.dart';
 
 // Kho sticker dùng cho hiệu ứng bắn qua lại trên màn Home.
 class InteractionStickerEditorScreen extends StatefulWidget {
@@ -19,16 +22,12 @@ class InteractionStickerEditorScreen extends StatefulWidget {
 
 class _InteractionStickerEditorScreenState
     extends State<InteractionStickerEditorScreen> {
-  static const _legacyStickerPrefix = 'assets/images/anhtomau_stickers/';
-
   final List<_EditableStickerSlot> _activeSlots = [
     _EditableStickerSlot(
       type: 'miss',
       labelKey: 'home_nh_dbe2a3',
       emoji: '💖',
-      defaultReference: SoulLocketStickerCatalog.referenceFor(
-        'novelty_star_love',
-      ),
+      defaultReference: HomeInteractionStickers.defaultFor('miss'),
       gradient: const [Color(0xFFFFE2EC), Color(0xFFFFF7F9)],
       accent: const Color(0xFFE84D83),
     ),
@@ -36,7 +35,7 @@ class _InteractionStickerEditorScreenState
       type: 'angry',
       labelKey: 'home_gin_6a4c8c',
       emoji: '😾',
-      defaultReference: SoulLocketStickerCatalog.referenceFor('heart_healing'),
+      defaultReference: HomeInteractionStickers.defaultFor('angry'),
       gradient: const [Color(0xFFFFE8D9), Color(0xFFFFF7EF)],
       accent: const Color(0xFFE87548),
     ),
@@ -44,9 +43,7 @@ class _InteractionStickerEditorScreenState
       type: 'furious',
       labelKey: 'home_tc_b95b66',
       emoji: '😡',
-      defaultReference: SoulLocketStickerCatalog.referenceFor(
-        'heart_heartbeat',
-      ),
+      defaultReference: HomeInteractionStickers.defaultFor('furious'),
       gradient: const [Color(0xFFFFDDE3), Color(0xFFFFF2F4)],
       accent: const Color(0xFFE54850),
     ),
@@ -54,9 +51,7 @@ class _InteractionStickerEditorScreenState
       type: 'kiss',
       labelKey: 'home_hn_fac010',
       emoji: '💋',
-      defaultReference: SoulLocketStickerCatalog.referenceFor(
-        'novelty_moon_kiss',
-      ),
+      defaultReference: HomeInteractionStickers.defaultFor('kiss'),
       gradient: const [Color(0xFFFFE1F0), Color(0xFFFFF7FB)],
       accent: const Color(0xFFD94A91),
     ),
@@ -64,9 +59,7 @@ class _InteractionStickerEditorScreenState
       type: 'tease',
       labelKey: 'home_tru_d66cdf',
       emoji: '🤪',
-      defaultReference: SoulLocketStickerCatalog.referenceFor(
-        'novelty_ghost_tease',
-      ),
+      defaultReference: HomeInteractionStickers.defaultFor('tease'),
       gradient: const [Color(0xFFEAE2FF), Color(0xFFF9F6FF)],
       accent: const Color(0xFF8064D8),
     ),
@@ -74,9 +67,7 @@ class _InteractionStickerEditorScreenState
       type: 'hug',
       labelKey: 'home_m_07a3b7',
       emoji: '🫂',
-      defaultReference: SoulLocketStickerCatalog.referenceFor(
-        'novelty_cloud_hug',
-      ),
+      defaultReference: HomeInteractionStickers.defaultFor('hug'),
       gradient: const [Color(0xFFDDF7F2), Color(0xFFF4FFFC)],
       accent: const Color(0xFF2A9D8F),
     ),
@@ -84,9 +75,7 @@ class _InteractionStickerEditorScreenState
       type: 'cry',
       labelKey: 'home_khc_92394f',
       emoji: '🥺',
-      defaultReference: SoulLocketStickerCatalog.referenceFor(
-        'novelty_raindrop_comfort',
-      ),
+      defaultReference: HomeInteractionStickers.defaultFor('cry'),
       gradient: const [Color(0xFFDDEEFF), Color(0xFFF4F9FF)],
       accent: const Color(0xFF4B83D1),
     ),
@@ -94,15 +83,33 @@ class _InteractionStickerEditorScreenState
       type: 'poop',
       labelKey: 'interaction_sticker_slot_playful',
       emoji: '🎮',
-      defaultReference: SoulLocketStickerCatalog.referenceFor(
-        'novelty_game_party',
-      ),
+      defaultReference: HomeInteractionStickers.defaultFor('poop'),
       gradient: const [Color(0xFFFFE8BD), Color(0xFFFFF8EA)],
       accent: const Color(0xFFC77931),
     ),
   ];
 
   late final List<_StickerLibraryGroup> _libraryGroups = [
+    _StickerLibraryGroup(
+      id: 'originals',
+      labelKey: 'sticker_collection_originals',
+      icon: Icons.favorite_border_rounded,
+      accent: const Color(0xFFB87952),
+      references: [
+        for (final sticker in SoulLocketStickerCatalog.originals)
+          SoulLocketStickerCatalog.originalReferenceFor(sticker.id),
+      ],
+    ),
+    for (final pack in livingStickerPacks.where(
+      (pack) => !const {'novelty', 'hearts', 'couple'}.contains(pack.id),
+    ))
+      _StickerLibraryGroup(
+        id: pack.id,
+        labelKey: pack.titleKey,
+        icon: pack.icon,
+        accent: pack.accent,
+        references: _referencesOf(pack.stickers),
+      ),
     _StickerLibraryGroup(
       id: 'novelty',
       labelKey: 'interaction_sticker_category_novelty',
@@ -129,11 +136,7 @@ class _InteractionStickerEditorScreenState
       labelKey: 'interaction_sticker_category_all',
       icon: Icons.grid_view_rounded,
       accent: const Color(0xFF2A9D8F),
-      references: _referencesOf([
-        ...SoulLocketStickerCatalog.noveltyStickers,
-        ...SoulLocketStickerCatalog.heartStickers,
-        ...SoulLocketStickerCatalog.motionStickers,
-      ]),
+      references: _referencesOf(SoulLocketStickerCatalog.all),
     ),
   ];
 
@@ -157,18 +160,18 @@ class _InteractionStickerEditorScreenState
     final prefs = await SharedPreferences.getInstance();
     final resolvedPaths = <String>[];
     final migratedSlots = <_EditableStickerSlot>[];
+    final restored =
+        prefs.getBool(HomeInteractionStickers.restoredPreference) ?? false;
 
     for (final slot in _activeSlots) {
       final saved = prefs.getString('custom_sticker_${slot.type}')?.trim();
-      final mustMigrate =
-          saved != null &&
-          saved.isNotEmpty &&
-          saved.toLowerCase().startsWith(_legacyStickerPrefix);
-      final resolved = saved == null || saved.isEmpty || mustMigrate
-          ? slot.defaultReference
-          : saved;
+      final resolved = HomeInteractionStickers.resolve(
+        slot.type,
+        saved,
+        restored: restored,
+      );
       resolvedPaths.add(resolved);
-      if (mustMigrate) migratedSlots.add(slot);
+      if (saved != null && saved != resolved) migratedSlots.add(slot);
     }
 
     if (!mounted) return;
@@ -178,13 +181,14 @@ class _InteractionStickerEditorScreenState
       }
     });
 
-    // Ghi lại URI mới để màn Home không nạp lại các GIF lỗi ở lần sau.
+    // Chỉ đổi mặc định của bản trước; giữ nguyên mọi ảnh/GIF tự chọn khác.
     for (final slot in migratedSlots) {
       await prefs.setString(
         'custom_sticker_${slot.type}',
         slot.defaultReference,
       );
     }
+    await prefs.setBool(HomeInteractionStickers.restoredPreference, true);
   }
 
   Future<void> _saveChanges() async {
@@ -242,6 +246,18 @@ class _InteractionStickerEditorScreenState
           backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
+          actions: [
+            IconButton(
+              tooltip: context.tr('sticker_collection_open'),
+              icon: const Icon(Icons.inventory_2_outlined),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      StickerLibraryScreen(onStickerSelected: _replaceSticker),
+                ),
+              ),
+            ),
+          ],
           iconTheme: const IconThemeData(color: Color(0xFF6C55C5)),
           title: Text(
             context.tr('interaction_sticker_editor_title'),

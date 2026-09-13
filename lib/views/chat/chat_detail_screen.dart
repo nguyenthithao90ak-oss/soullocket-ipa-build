@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/core/sl_page_physics.dart';
+import 'package:soullocket_app/views/home/widgets/soul_merge/sticker_bottom_sheet.dart';
 import '../../utils/services/l10n_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';

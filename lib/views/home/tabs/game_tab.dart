@@ -26,11 +26,13 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
 
   BannerAd? _bannerAd;
   bool _isBannerReady = false;
+  bool _loadingBanner = false;
 
   @override
   void initState() {
     super.initState();
     _loadDownloadStatus();
+    AdMobService().adRevision.addListener(_onBannerPrivacyChanged);
     Future<void>.delayed(const Duration(seconds: 20), () {
       if (mounted) unawaited(_loadBannerAd());
     });
@@ -41,7 +43,8 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
   @override
   void dispose() {
     GameDownloadService().removeListener(_onDownloadServiceChanged);
-    _bannerAd?.dispose();
+    AdMobService().adRevision.removeListener(_onBannerPrivacyChanged);
+    AdMobService().disposeBanner(_bannerAd);
     super.dispose();
   }
 
@@ -50,34 +53,45 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
     unawaited(_loadDownloadStatus());
   }
 
+  void _onBannerPrivacyChanged() {
+    if (!mounted) return;
+    final service = AdMobService();
+    if (_bannerAd != null && !service.isBannerUsable(_bannerAd!)) {
+      service.disposeBanner(_bannerAd);
+      setState(() {
+        _bannerAd = null;
+        _isBannerReady = false;
+      });
+    }
+    if (service.canRequestAds) unawaited(_loadBannerAd());
+  }
+
   Future<void> _loadBannerAd() async {
-    final adErrorFallback = L10nService().translate('home_khngthtiqu_b7dcec');
+    if (_loadingBanner || _bannerAd != null || !mounted) return;
+    _loadingBanner = true;
+    final service = AdMobService();
+    final revision = service.adRevision.value;
     try {
-      final adMob = AdMobService();
-      await adMob.initialize();
-
-      if (await adMob.isProUser()) {
-        return;
-      }
-
-      final banner = await adMob.createBannerAd(
-        onAdLoaded: (ad) {
-          if (mounted) {
-            setState(() {
-              _isBannerReady = true;
-            });
-          }
-        },
-      );
+      final banner = await service.createBannerAd(onAdLoaded: (_) {});
       if (!mounted) {
-        banner?.dispose();
+        service.disposeBanner(banner);
         return;
       }
-      _bannerAd = banner;
-    } catch (e) {
+      setState(() {
+        _bannerAd = banner;
+        _isBannerReady = banner != null;
+      });
+    } catch (error) {
       debugPrint(
-        'GameTab banner load failed: ${AppErrorMapper.resolve(e, fallbackMessage: adErrorFallback).message}',
+        'Game banner failed: ${AppErrorMapper.resolve(error).message}',
       );
+    } finally {
+      _loadingBanner = false;
+      if (mounted &&
+          service.canRequestAds &&
+          revision != service.adRevision.value) {
+        unawaited(_loadBannerAd());
+      }
     }
   }
 
@@ -564,47 +578,37 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
                           );
                         }
                         return Semantics(
-                          button: true,
                           label: context.tr('p9_game_ad_semantics'),
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.translucent,
-                            onTap: () {
-                              // Tap vùng ngoài ad → trigger interstitial (doanh thu cao hơn banner)
-                              AdMobService().showInterstitialAd();
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(0, 24, 0, 0),
-                              child: Center(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 6,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 24, 0, 0),
+                            child: Center(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.4),
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.6),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.4,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.05,
                                       ),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
                                     ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.05,
-                                        ),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: SizedBox(
-                                      width: _bannerAd!.size.width.toDouble(),
-                                      height: _bannerAd!.size.height.toDouble(),
-                                      child: ConsentAdView(ad: _bannerAd!),
-                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: SizedBox(
+                                    width: _bannerAd!.size.width.toDouble(),
+                                    height: _bannerAd!.size.height.toDouble(),
+                                    child: ConsentAdView(ad: _bannerAd!),
                                   ),
                                 ),
                               ),

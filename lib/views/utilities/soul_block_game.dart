@@ -124,6 +124,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   _SoulBlockPerformanceProfile _performanceProfile =
       _SoulBlockPerformanceProfile.mid;
   BannerAd? _bannerAd;
+  bool _loadingBanner = false;
 
   String? _houseId;
   String? _loadError;
@@ -263,18 +264,20 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         });
 
     unawaited(_initAudio());
+    _adMob.adRevision.addListener(_onBannerPrivacyChanged);
     _bootstrap();
   }
 
   @override
   void dispose() {
+    _adMob.adRevision.removeListener(_onBannerPrivacyChanged);
     _adMob.resumeAutoInterstitial();
     WidgetsBinding.instance.removeObserver(this);
     _autoTrayShuffleTimer?.cancel();
     _dragVisualTick.dispose();
     _trayVisualTick.dispose();
     _dragOverlayTick.dispose();
-    _bannerAd?.dispose();
+    AdMobService().disposeBanner(_bannerAd);
     _playPulseController.dispose();
     _shakeController.dispose();
     _flashController.dispose();

@@ -2,6 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'living_sticker.dart';
+import 'living_sticker_scene.dart';
+import 'original_sticker.dart';
+
 enum SoulLocketStickerMotion {
   gentleFloat,
   pulse,
@@ -34,27 +38,39 @@ class SoulLocketStickerSpec {
     required this.motion,
     this.duration = const Duration(milliseconds: 2600),
   });
+
+  const SoulLocketStickerSpec.living(this.id)
+    : assetPath = '',
+      column = 0,
+      row = 0,
+      columns = 1,
+      rows = 1,
+      motion = SoulLocketStickerMotion.breathe,
+      duration = const Duration(milliseconds: 4800);
 }
 
 /// Kho sticker nội bộ có URI ổn định để thay asset mà không đổi dữ liệu đã lưu.
 abstract final class SoulLocketStickerCatalog {
   static const String uriPrefix = 'soullocket://sticker/';
+  // Tách phiên bản hình để việc chọn bộ cũ không bị renderer bộ mới ghi đè.
+  static const String originalPrefix = 'soullocket://original-sticker/';
+  static const String originalAssetPrefix = 'soullocket://original-asset/';
   static const String motionAtlas =
-      'assets/images/soullocket_stickers/motion_couple_atlas_v1.png';
+      'assets/images/soullocket_stickers/motion_couple_atlas_v1.webp';
   static const String heartAtlas =
-      'assets/images/soullocket_stickers/heart_atlas_v1.png';
+      'assets/images/soullocket_stickers/heart_atlas_v1.webp';
   static const String noveltyAtlas =
-      'assets/images/soullocket_stickers/novelty_atlas_v1.png';
+      'assets/images/soullocket_stickers/novelty_atlas_v1.webp';
   static const String diaryMoodAtlas =
-      'assets/images/diary_mood_stickers/diary_mood_atlas_v1.png';
+      'assets/images/transparent_stickers/diary_mood_atlas_v2_transparent.webp';
   static const String soulMergeJoyAtlas =
-      'assets/images/soullocket_stickers/soul_merge_joy_atlas_v1.png';
+      'assets/images/soullocket_stickers/soul_merge_joy_atlas_v1.webp';
   static const String soulMergeComfortAtlas =
-      'assets/images/soullocket_stickers/soul_merge_comfort_atlas_v1.png';
+      'assets/images/transparent_stickers/soul_merge_comfort_atlas_v2_transparent.webp';
   static const String soulMergeLoveAtlas =
-      'assets/images/soullocket_stickers/soul_merge_love_atlas_v1.png';
+      'assets/images/transparent_stickers/soul_merge_love_atlas_v2_transparent.webp';
   static const String soulMergePlayfulAtlas =
-      'assets/images/soullocket_stickers/soul_merge_playful_atlas_v1.png';
+      'assets/images/transparent_stickers/soul_merge_playful_atlas_v2_transparent.webp';
 
   /// Bộ sticker đồ vật và nhân vật tưởng tượng, tránh lặp lại gấu/thỏ.
   static const List<SoulLocketStickerSpec> noveltyStickers = [
@@ -801,6 +817,18 @@ abstract final class SoulLocketStickerCatalog {
     ),
   ];
 
+  static const List<SoulLocketStickerSpec> sulkingStickers = [
+    SoulLocketStickerSpec.living('mood_pout'),
+    SoulLocketStickerSpec.living('mood_crossed_arms'),
+    SoulLocketStickerSpec.living('mood_angry'),
+    SoulLocketStickerSpec.living('mood_furious'),
+    SoulLocketStickerSpec.living('mood_sulking'),
+    SoulLocketStickerSpec.living('mood_sorry'),
+    SoulLocketStickerSpec.living('mood_make_up'),
+    SoulLocketStickerSpec.living('mood_jealous'),
+    SoulLocketStickerSpec.living('mood_peace'),
+  ];
+
   static const List<SoulLocketStickerSpec> all = [
     ...noveltyStickers,
     ...motionStickers,
@@ -810,16 +838,30 @@ abstract final class SoulLocketStickerCatalog {
     ...soulMergeComfortStickers,
     ...soulMergeLoveStickers,
     ...soulMergePlayfulStickers,
+    ...sulkingStickers,
   ];
 
   static String referenceFor(String id) => '$uriPrefix$id';
 
+  static String originalReferenceFor(String id) => '$originalPrefix$id';
+
+  static String originalAssetReferenceFor(String path) =>
+      '$originalAssetPrefix$path';
+
+  static Iterable<SoulLocketStickerSpec> get originals =>
+      all.where((sticker) => sticker.assetPath.isNotEmpty);
+
   static SoulLocketStickerSpec? find(String idOrReference) {
-    final id = idOrReference.startsWith(uriPrefix)
+    final original = idOrReference.startsWith(originalPrefix);
+    final id = original
+        ? idOrReference.substring(originalPrefix.length)
+        : idOrReference.startsWith(uriPrefix)
         ? idOrReference.substring(uriPrefix.length)
         : idOrReference;
     for (final sticker in all) {
-      if (sticker.id == id) return sticker;
+      if (sticker.id == id && (!original || sticker.assetPath.isNotEmpty)) {
+        return sticker;
+      }
     }
     return null;
   }
@@ -831,6 +873,7 @@ class SoulLocketAnimatedSticker extends StatelessWidget {
   final bool animate;
   final String? semanticLabel;
   final FilterQuality filterQuality;
+  final bool originalArtwork;
 
   const SoulLocketAnimatedSticker({
     super.key,
@@ -839,20 +882,33 @@ class SoulLocketAnimatedSticker extends StatelessWidget {
     this.animate = true,
     this.semanticLabel,
     this.filterQuality = FilterQuality.medium,
+    this.originalArtwork = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final visual = SoulLocketStickerMotionView(
-      motion: sticker.motion,
-      duration: sticker.duration,
-      animate: animate,
-      child: _SoulLocketAtlasCell(
-        sticker: sticker,
-        size: size,
-        filterQuality: filterQuality,
-      ),
-    );
+    final scene = originalArtwork
+        ? null
+        : LivingStickerCatalog.find(sticker.id);
+    final visual = scene != null
+        ? LivingSticker(
+            scene: scene,
+            width: size,
+            height: size,
+            animate: animate,
+          )
+        : OriginalSticker(
+            assetPath: sticker.assetPath,
+            stickerId: sticker.id,
+            column: sticker.column,
+            row: sticker.row,
+            columns: sticker.columns,
+            rows: sticker.rows,
+            width: size,
+            height: size,
+            animate: animate,
+            filterQuality: filterQuality,
+          );
     if (semanticLabel == null) return visual;
     return Semantics(
       image: true,
@@ -1014,46 +1070,5 @@ class _SoulLocketStickerMotionViewState
             },
           )
         : sprite;
-  }
-}
-
-class _SoulLocketAtlasCell extends StatelessWidget {
-  final SoulLocketStickerSpec sticker;
-  final double size;
-  final FilterQuality filterQuality;
-
-  const _SoulLocketAtlasCell({
-    required this.sticker,
-    required this.size,
-    required this.filterQuality,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox.square(
-      dimension: size,
-      child: ClipRect(
-        child: Stack(
-          clipBehavior: Clip.hardEdge,
-          children: [
-            Positioned(
-              left: -sticker.column * size,
-              top: -sticker.row * size,
-              width: size * sticker.columns,
-              height: size * sticker.rows,
-              child: Image.asset(
-                sticker.assetPath,
-                fit: BoxFit.fill,
-                gaplessPlayback: true,
-                filterQuality: filterQuality,
-                errorBuilder: (context, error, stackTrace) => const Center(
-                  child: Icon(Icons.favorite_rounded, color: Color(0xFFFF6F91)),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

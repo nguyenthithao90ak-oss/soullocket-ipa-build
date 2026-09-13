@@ -199,6 +199,11 @@ class AppConfig {
     defaultValue:
         'https://us-central1-soullockket.cloudfunctions.net/grantRewardPointsHttp',
   );
+  static const String adRewardStatusUrl = String.fromEnvironment(
+    'AD_REWARD_STATUS_URL',
+    defaultValue:
+        'https://us-central1-soullockket.cloudfunctions.net/adRewardStatusHttp',
+  );
   static const String rewardRedeemProUrl = String.fromEnvironment(
     'REWARD_REDEEM_PRO_URL',
     defaultValue:

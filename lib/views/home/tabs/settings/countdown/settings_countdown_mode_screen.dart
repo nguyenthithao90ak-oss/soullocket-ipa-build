@@ -135,34 +135,8 @@ class _CountdownModeIndependentScreenState
     return normalized;
   }
 
-  static Future<Set<String>> _getUnlockedCountdownStyleKeys() async {
-    final prefs = await SharedPreferences.getInstance();
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final result = <String>{};
-    for (final styleKey in _premiumCountdownStyleKeys) {
-      final expiryKey = 'il_countdown_style_unlock_expiry_$styleKey';
-      final expiry = prefs.getInt(expiryKey) ?? 0;
-      if (expiry > now) {
-        result.add(styleKey);
-      }
-    }
-    // Migration: nếu đã có unlock hàng loạt cũ còn hiệu lực thì cộng vào
-    final legacyExpiry =
-        prefs.getInt('il_countdown_unlock_weekly_expiry_v2') ?? 0;
-    if (legacyExpiry > now) {
-      result.addAll(_premiumCountdownStyleKeys);
-    } else {
-      final legacyTs = prefs.getInt('il_countdown_unlock_ad_ts') ?? 0;
-      if (legacyTs > 0) {
-        final fallbackExpiry =
-            legacyTs + _countdownAdUnlockWindow.inMilliseconds;
-        if (fallbackExpiry > now) {
-          result.addAll(_premiumCountdownStyleKeys);
-        }
-      }
-    }
-    return result;
-  }
+  static Future<Set<String>> _getUnlockedCountdownStyleKeys() =>
+      AdMobService().verifiedCountdownStyles();
 
   static final List<MapEntry<String, String>> _avatarFrameOptions = [
     MapEntry(L10nService().translate('home_khngkhung_e37077'), 'off'),

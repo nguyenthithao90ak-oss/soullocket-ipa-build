@@ -34,6 +34,9 @@ import 'play_integrity_service.dart';
 import 'auth_admin_service.dart';
 import 'auth_house_context_service.dart';
 import 'auth_support.dart';
+import 'account_deletion_response.dart';
+import '../../../models/account_deletion_status.dart';
+import '../l10n_service.dart';
 
 part 'auth_sign_in_service_social.dart';
 
@@ -1226,6 +1229,7 @@ class AuthSignInService {
       }
       throw handleFirebaseAuthError(error);
     } catch (error) {
+      if (error is AppErrorInfo) rethrow;
       final normalized = error.toString().toLowerCase();
       if (normalized.contains('đăng nhập lại trước khi xóa tài khoản') ||
           normalized.contains('đăng nhập lại rồi thử xóa tài khoản') ||
@@ -1258,33 +1262,144 @@ class AuthSignInService {
     }
   }
 
+  Future<AccountDeletionStatus?> getOwnAccountDeletionStatus() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw AppErrorInfo(
+        kind: AppErrorKind.user,
+        message: AppErrorMapper.authSyncMessage,
+      );
+    }
+    try {
+      final uri = accountDeletionSiblingUri(
+        AppConfig.deleteAccountUrl,
+        'getOwnAccountDeletionStatusHttp',
+      );
+      final token = await user.getIdToken().timeout(const Duration(seconds: 8));
+      if (token == null || token.isEmpty) {
+        throw AppErrorInfo(
+          kind: AppErrorKind.user,
+          message: AppErrorMapper.authSyncMessage,
+        );
+      }
+      final headers = await AppCheckHttpHeaders.withOptionalToken({
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      }).timeout(const Duration(seconds: 8));
+      if (_auth.currentUser?.uid != user.uid) {
+        throw AppErrorInfo(
+          kind: AppErrorKind.user,
+          message: AppErrorMapper.authSyncMessage,
+        );
+      }
+      final response = await _httpPost(
+        uri,
+        headers: headers,
+        body: '{}',
+      ).timeout(const Duration(seconds: 8));
+      if (_auth.currentUser?.uid != user.uid) {
+        throw AppErrorInfo(
+          kind: AppErrorKind.user,
+          message: AppErrorMapper.authSyncMessage,
+        );
+      }
+      if (response.statusCode != 200) {
+        final error = accountDeletionError(response.body);
+        if (error != null) throw error;
+        if (response.statusCode == 401) {
+          throw AppErrorInfo(
+            kind: AppErrorKind.user,
+            message: AppErrorMapper.authSyncMessage,
+          );
+        }
+        throw const FormatException('deletion_status_failed');
+      }
+      return AccountDeletionStatus.fromOwnResponse(
+        jsonDecode(response.body),
+        uid: user.uid,
+      );
+    } catch (error) {
+      if (error is AppErrorInfo) rethrow;
+      throw AppErrorInfo(
+        kind: AppErrorKind.server,
+        message: L10nService().translate('account_deletion_status_unavailable'),
+      );
+    }
+  }
+
   Future<void> undoScheduledDeletion() async {
     final user = _auth.currentUser;
-    if (user == null) throw 'Bạn chưa đăng nhập.';
-    final idToken = await user.getIdToken(true) ?? '';
-    final undoEndpoint = AppConfig.deleteAccountUrl.trim().replaceAll(
-      'deleteUserDataHttp',
-      'undoAccountDeletionHttp',
-    );
-    final response = await _httpPost(
-      Uri.parse(undoEndpoint),
-      headers: await AppCheckHttpHeaders.withOptionalToken({
+    if (user == null) {
+      throw AppErrorInfo(
+        kind: AppErrorKind.user,
+        message: AppErrorMapper.authSyncMessage,
+      );
+    }
+    try {
+      final undoEndpoint = accountDeletionSiblingUri(
+        AppConfig.deleteAccountUrl,
+        'undoAccountDeletionHttp',
+      );
+      final idToken = await user
+          .getIdToken(true)
+          .timeout(const Duration(seconds: 8));
+      if (idToken == null || idToken.isEmpty) {
+        throw AppErrorInfo(
+          kind: AppErrorKind.user,
+          message: AppErrorMapper.authSyncMessage,
+        );
+      }
+      final headers = await AppCheckHttpHeaders.withOptionalToken({
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $idToken',
-      }),
-    );
-    if (response.statusCode != 200) {
-      unawaited(
-        RevenueSecurityTelemetryService.instance.logEvent(
-          type: 'undo_delete_failed',
-          reason: 'server_rejected',
-          severity: response.statusCode == 401 || response.statusCode == 403
-              ? 'high'
-              : 'medium',
-          extra: <String, Object?>{'statusCode': response.statusCode},
-        ),
+      }).timeout(const Duration(seconds: 8));
+      if (_auth.currentUser?.uid != user.uid) {
+        throw AppErrorInfo(
+          kind: AppErrorKind.user,
+          message: AppErrorMapper.authSyncMessage,
+        );
+      }
+      final response = await _httpPost(
+        undoEndpoint,
+        headers: headers,
+      ).timeout(const Duration(seconds: 8));
+      if (_auth.currentUser?.uid != user.uid) {
+        throw AppErrorInfo(
+          kind: AppErrorKind.user,
+          message: AppErrorMapper.authSyncMessage,
+        );
+      }
+      if (response.statusCode != 200) {
+        final deletionError = accountDeletionError(response.body);
+        if (deletionError != null) throw deletionError;
+        unawaited(
+          RevenueSecurityTelemetryService.instance.logEvent(
+            type: 'undo_delete_failed',
+            reason: 'server_rejected',
+            severity: response.statusCode == 401 || response.statusCode == 403
+                ? 'high'
+                : 'medium',
+            extra: <String, Object?>{'statusCode': response.statusCode},
+          ),
+        );
+        if (response.statusCode == 401) {
+          throw AppErrorInfo(
+            kind: AppErrorKind.user,
+            message: AppErrorMapper.authSyncMessage,
+          );
+        }
+        throw const FormatException('deletion_cancel_failed');
+      }
+      final result = jsonDecode(response.body);
+      if (result is! Map || result['ok'] != true) {
+        throw const FormatException('invalid_deletion_cancel_response');
+      }
+    } catch (error) {
+      if (error is AppErrorInfo) rethrow;
+      throw AppErrorInfo(
+        kind: AppErrorKind.server,
+        message: L10nService().translate('account_deletion_cancel_unconfirmed'),
       );
-      throw 'Không hoàn tác được: trạng thái tài khoản chưa khôi phục được, hãy kiểm tra mạng rồi thử lại.';
     }
   }
 
@@ -1644,6 +1759,8 @@ class AuthSignInService {
       }
 
       if (response.statusCode != 200) {
+        final deletionError = accountDeletionError(response.body);
+        if (deletionError != null) throw deletionError;
         if (response.statusCode == 409) {
           try {
             final decoded = jsonDecode(response.body);
@@ -1708,7 +1825,7 @@ class AuthSignInService {
           'Delete account endpoint error: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể gọi máy chủ xóa tài khoản lúc này.').message}',
         );
       }
-      if (error is String) rethrow;
+      if (error is String || error is AppErrorInfo) rethrow;
       throw 'Không hoàn tất xóa tài khoản: hãy kiểm tra mạng và đăng nhập lại nếu cần.';
     }
   }

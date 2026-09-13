@@ -21,6 +21,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 2),
           child: _HomeScrapbookCard(
+            companionId: 'home-avatars',
             padding: EdgeInsets.zero,
             radius: 28,
             accentColor: SLColors.thread,

@@ -169,20 +169,12 @@ class _CountdownQuickCustomizeSheetContentState
                 });
                 try {
                   final adMob = AdMobService();
-                  final adSuccess = await adMob.showRewardedAd();
+                  final expiry = await adMob.unlockCountdownStyleWithAd(
+                    option.value,
+                    quick: true,
+                  );
                   if (!mounted) return;
-                  if (adSuccess) {
-                    final prefs = await SharedPreferences.getInstance();
-                    final now = DateTime.now().millisecondsSinceEpoch;
-                    await prefs.setInt('il_last_any_rewarded_ad_ts', now);
-                    final expiry =
-                        now +
-                        _MainHomeTabState
-                            ._kCountdownQuickUnlockWindow
-                            .inMilliseconds;
-                    final expiryKey =
-                        'il_countdown_style_unlock_expiry_${option.value}';
-                    await prefs.setInt(expiryKey, expiry);
+                  if (expiry != null) {
                     setState(() {
                       _unlockedStyles = {..._unlockedStyles, option.value};
                     });

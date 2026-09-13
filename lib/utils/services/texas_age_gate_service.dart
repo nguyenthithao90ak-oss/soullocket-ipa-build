@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'package:flutter/services.dart';
 
 /// Texas SB 2420 Age Gate Service.
@@ -10,6 +11,8 @@ class TexasAgeGateService {
 
   static final TexasAgeGateService _instance = TexasAgeGateService._internal();
   factory TexasAgeGateService() => _instance;
+  @visibleForTesting
+  TexasAgeGateService.forTesting();
 
   static const MethodChannel _channel = MethodChannel('soul_locket/age_signal');
 
@@ -35,9 +38,9 @@ class TexasAgeGateService {
     }
 
     try {
-      final result = await _channel.invokeMethod<Map<dynamic, dynamic>>(
-        'getAgeSignal',
-      );
+      final result = await _channel
+          .invokeMethod<Map<dynamic, dynamic>>('getAgeSignal')
+          .timeout(const Duration(seconds: 5));
 
       if (result == null) {
         _classification = AgeClassification.unknown;
@@ -58,7 +61,9 @@ class TexasAgeGateService {
   }
 
   /// Convenience: true if the user is identified as a minor.
-  bool get isMinor => _classification == AgeClassification.minor;
+  bool get isMinor =>
+      _classification == AgeClassification.minor ||
+      _classification == AgeClassification.child;
 
   /// Convenience: true if the user is identified as an adult.
   bool get isAdult => _classification == AgeClassification.adult;
@@ -66,6 +71,8 @@ class TexasAgeGateService {
   AgeClassification _parseClassification(String? raw) {
     if (raw == null) return AgeClassification.unknown;
     switch (raw.toUpperCase()) {
+      case 'CHILD':
+        return AgeClassification.child;
       case 'MINOR':
         return AgeClassification.minor;
       case 'ADULT':
@@ -76,4 +83,4 @@ class TexasAgeGateService {
   }
 }
 
-enum AgeClassification { minor, adult, unknown }
+enum AgeClassification { child, minor, adult, unknown }

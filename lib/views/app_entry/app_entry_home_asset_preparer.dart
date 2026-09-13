@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/widgets.dart';
 
 import '../../core/sl_theme.dart';
+import '../../utils/home_image_policy.dart';
 import '../../utils/services/home_startup_media_cache.dart';
 import '../../utils/services/offline_cache_service.dart';
 import '../../utils/app_cache_manager.dart';
@@ -57,27 +58,24 @@ class AppEntryHomeAssetPreparer {
       await Future.wait(
         urls.map((url) async {
           try {
-            final file = await _cacheManager.getSingleFile(url);
+            final file = await _cacheManager
+                .getSingleFile(url)
+                .timeout(const Duration(seconds: 5));
             HomeStartupMediaCache.saveFile(url, file);
 
-            // Decode image vào bộ nhớ đệm (ImageCache) để frame đầu tiên hiển thị ngay lập tức,
-            // tránh tình trạng bị chớp màn hình nền cũ (transparent flash) trong 0.1s.
-            final provider = FileImage(file);
-            final stream = provider.resolve(ImageConfiguration.empty);
-            final completer = Completer<void>();
-            late final ImageStreamListener listener;
-            listener = ImageStreamListener(
-              (info, sync) {
-                stream.removeListener(listener);
-                if (!completer.isCompleted) completer.complete();
-              },
-              onError: (e, stack) {
-                stream.removeListener(listener);
-                if (!completer.isCompleted) completer.completeError(e);
-              },
+            // Giữ nguyên file gốc, chỉ giảm kích thước bản giải mã dùng ở Home.
+            final size = url == backgroundUrl
+                ? HomeImagePolicy.backgroundSize()
+                : (
+                    width: HomeImagePolicy.avatarPixels,
+                    height: HomeImagePolicy.avatarPixels,
+                  );
+            final provider = HomeImagePolicy.resized(
+              FileImage(file),
+              width: size.width,
+              height: size.height,
             );
-            stream.addListener(listener);
-            await completer.future.timeout(const Duration(milliseconds: 1500));
+            await HomeImagePolicy.warmImage(provider);
           } catch (error) {
             debugPrint(
               '[SuppressedError] lib/views/app_entry/app_entry_home_asset_preparer.dart: $error',
@@ -95,7 +93,7 @@ class AppEntryHomeAssetPreparer {
         await GoogleFonts.pendingFonts([
           GoogleFonts.comfortaa(fontWeight: FontWeight.w900),
           selectedUiFont,
-        ]);
+        ]).timeout(const Duration(seconds: 2));
       } catch (error) {
         debugPrint(
           '[SuppressedError] lib/views/app_entry/app_entry_home_asset_preparer.dart: $error',
@@ -106,8 +104,8 @@ class AppEntryHomeAssetPreparer {
     } finally {
       if (_preparingHouseId == houseId) {
         _preparingHouseId = null;
+        _prepareFuture = null;
       }
-      _prepareFuture = null;
     }
   }
 
@@ -124,7 +122,8 @@ class AppEntryHomeAssetPreparer {
     try {
       final settingsSnap = await _database
           .ref('houses/$houseId/settings')
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 2));
       if (settingsSnap.exists && settingsSnap.value is Map) {
         final settings = Map<String, dynamic>.from(
           Map<dynamic, dynamic>.from(settingsSnap.value as Map),

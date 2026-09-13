@@ -367,7 +367,7 @@ class MapPersonTile extends StatelessWidget {
           : 'map_refresh_not_shared',
     );
     final sticker = Image.asset(
-      'assets/images/soullocket_stickers/auth_gender_${role == 'user1' ? 'male' : 'female'}_v1.png',
+      'assets/images/soullocket_stickers/auth_gender_${role == 'user1' ? 'male' : 'female'}_v1.webp',
       fit: BoxFit.contain,
       cacheWidth: 120,
       errorBuilder: (_, _, _) => Icon(Icons.person_outline, color: accent),

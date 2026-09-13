@@ -548,17 +548,25 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
   }
 
   Future<void> _loadPendingAccountDeletionState() async {
+    if (!mounted || _accountDeletionStatusLoading) return;
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
     final houseId = _houseId?.trim() ?? '';
-    if (houseId.isEmpty) {
-      if (mounted) {
-        setState(() {
-          _pendingAccountDeletionAtMs = 0;
-          _pendingAccountDeletionUid = '';
-        });
-      }
-      return;
-    }
+    setState(() {
+      _accountDeletionStatusLoading = true;
+      _accountDeletionStatusError = null;
+    });
     try {
+      final own = await _authService.getOwnAccountDeletionStatus();
+      if (!mounted ||
+          _auth.currentUser?.uid != uid ||
+          (_houseId?.trim() ?? '') != houseId) {
+        return;
+      }
+      if (own != null || houseId.isEmpty) {
+        setState(() => _accountDeletionStatus = own);
+        return;
+      }
       final snaps = await Future.wait([
         _dbRef
             .child('houses/$houseId/scheduledDeletionAt')
@@ -568,25 +576,43 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
             .child('houses/$houseId/scheduledDeletionUid')
             .get()
             .timeout(const Duration(seconds: 3)),
+        _dbRef
+            .child('houses/$houseId/accountDeletionMirror')
+            .get()
+            .timeout(const Duration(seconds: 3)),
       ]);
 
       final deletionAtSnap = snaps[0];
       final deletionUidSnap = snaps[1];
 
-      final deletionAt = _toIntOrNull(deletionAtSnap.value) ?? 0;
-      final deletionUid = (deletionUidSnap.value ?? '').toString().trim();
-      if (!mounted) return;
+      final deletion = AccountDeletionStatus.fromHouseFields(
+        mirror: snaps[2].value,
+        scheduledAt: deletionAtSnap.value,
+        requesterUid: deletionUidSnap.value,
+      );
+      if (!mounted ||
+          _houseId?.trim() != houseId ||
+          _auth.currentUser?.uid != uid) {
+        return;
+      }
       setState(() {
-        _pendingAccountDeletionAtMs =
-            deletionAt > DateTime.now().millisecondsSinceEpoch ? deletionAt : 0;
-        _pendingAccountDeletionUid = _pendingAccountDeletionAtMs > 0
-            ? deletionUid
-            : '';
+        _accountDeletionStatus = deletion?.requesterUid == uid
+            ? null
+            : deletion;
       });
     } catch (error) {
-      debugPrint(
-        '[SuppressedError] lib/views/home/tabs/settings/settings_state_helpers.dart: $error',
-      );
+      if (mounted &&
+          _auth.currentUser?.uid == uid &&
+          (_houseId?.trim() ?? '') == houseId) {
+        setState(() {
+          _accountDeletionStatusError = AppErrorMapper.resolve(
+            error,
+            fallbackMessage: context.tr('account_deletion_status_unavailable'),
+          ).message;
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _accountDeletionStatusLoading = false);
     }
   }
 

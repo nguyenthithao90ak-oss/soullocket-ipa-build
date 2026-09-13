@@ -85,7 +85,8 @@ Future<void> _initializeFirebaseBootstrapOnce() async {
     try {
       FirebaseFirestore.instance.settings = const Settings(
         persistenceEnabled: true,
-        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+        // Ngưỡng dọn bản cache cũ; vẫn giữ persistence và dữ liệu trên máy chủ.
+        cacheSizeBytes: 100 * 1024 * 1024,
       );
     } catch (e) {
       debugPrint('Firestore persistence error: $e');

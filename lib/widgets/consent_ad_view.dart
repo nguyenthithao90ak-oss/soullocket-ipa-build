@@ -18,7 +18,13 @@ class ConsentAdView extends StatelessWidget {
     builder: (_, _) =>
         ConsentService.optionalCollectionAllowed.value &&
             AdMobService().isBannerUsable(ad)
-        ? AdWidget(ad: ad)
+        ? LayoutBuilder(builder: (context, constraints) {
+            if (constraints.maxWidth < ad.size.width ||
+                constraints.maxHeight < ad.size.height) {
+              return const SizedBox.shrink();
+            }
+            return AdWidget(ad: ad);
+          })
         : const SizedBox.shrink(),
   );
 }

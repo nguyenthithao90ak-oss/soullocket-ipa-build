@@ -306,7 +306,7 @@ class _UtilitiesTabState extends State<UtilitiesTab>
 
   @override
   void dispose() {
-    _bottomBannerAd?.dispose();
+    AdMobService().disposeBanner(_bottomBannerAd);
     super.dispose();
   }
 

@@ -397,6 +397,86 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                       onChanged: (value) =>
                           _updateThemeDraft(() => _draftEffectKey = value),
                     ),
+                    const SizedBox(height: 12),
+                    ValueListenableBuilder<UiPrefsState>(
+                      key: const ValueKey('home-companion-toggle'),
+                      valueListenable: UiPrefs.notifier,
+                      builder: (context, prefs, _) => MergeSemantics(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _SettingsToggleRow(
+                              icon: Icons.pets_rounded,
+                              iconColor: const Color(0xFFD05B80),
+                              label: context.tr('home_companion_setting_title'),
+                              switchValue: prefs.homeCompanionEnabled,
+                              onSwitchChanged: (enabled) async {
+                                try {
+                                  await UiPrefs.setHomeCompanionEnabled(enabled);
+                                } catch (_) {
+                                  if (!mounted) return;
+                                  _showToast(
+                                    this.context.tr('legacy_save_failed'),
+                                    success: false,
+                                  );
+                                }
+                              },
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 2, 12, 4),
+                              child: Text(
+                                context.tr('home_companion_setting_subtitle'),
+                                style: SLTheme.quicksand(
+                                  fontSize: 12,
+                                  height: 1.4,
+                                  color: SLColors.textSecond,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ValueListenableBuilder<UiPrefsState>(
+                      key: const ValueKey('home-companion-sound-toggle'),
+                      valueListenable: UiPrefs.notifier,
+                      builder: (context, prefs, _) => MergeSemantics(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _SettingsToggleRow(
+                              icon: Icons.volume_down_rounded,
+                              iconColor: const Color(0xFFD05B80),
+                              label: context.tr('home_companion_sound_title'),
+                              switchValue: prefs.homeCompanionSoundEnabled,
+                              onSwitchChanged: (enabled) async {
+                                try {
+                                  await UiPrefs.setHomeCompanionSoundEnabled(enabled);
+                                } catch (_) {
+                                  if (!mounted) return;
+                                  _showToast(
+                                    this.context.tr('legacy_save_failed'),
+                                    success: false,
+                                  );
+                                }
+                              },
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 2, 12, 4),
+                              child: Text(
+                                context.tr('home_companion_sound_subtitle'),
+                                style: SLTheme.quicksand(
+                                  fontSize: 12,
+                                  height: 1.4,
+                                  color: SLColors.textSecond,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     Row(
                       children: [

@@ -2,15 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
+import 'package:soullocket_app/widgets/living_sticker_packs.dart';
 
 class StickerBottomSheet extends StatefulWidget {
-  const StickerBottomSheet({super.key, required this.onStickerSelected});
+  const StickerBottomSheet({
+    super.key,
+    required this.onStickerSelected,
+    this.closeOnSelect = true,
+    this.titleKey = 'p4_soul_sticker_picker_title',
+    this.showHeader = true,
+  });
 
   final ValueChanged<String> onStickerSelected;
+  final bool closeOnSelect;
+  final String titleKey;
+  final bool showHeader;
 
   static Future<void> show({
     required BuildContext context,
     required ValueChanged<String> onStickerSelected,
+    bool closeOnSelect = true,
   }) {
     return showModalBottomSheet<void>(
       context: context,
@@ -19,7 +30,10 @@ class StickerBottomSheet extends StatefulWidget {
       useSafeArea: true,
       builder: (_) => SizedBox(
         height: MediaQuery.sizeOf(context).height * 0.72,
-        child: StickerBottomSheet(onStickerSelected: onStickerSelected),
+        child: StickerBottomSheet(
+          onStickerSelected: onStickerSelected,
+          closeOnSelect: closeOnSelect,
+        ),
       ),
     );
   }
@@ -29,40 +43,7 @@ class StickerBottomSheet extends StatefulWidget {
 }
 
 class _StickerBottomSheetState extends State<StickerBottomSheet> {
-  static const _packs = <_SoulStickerPack>[
-    _SoulStickerPack(
-      id: 'joy',
-      titleKey: 'p4_soul_sticker_pack_joy',
-      icon: Icons.sentiment_very_satisfied_rounded,
-      accent: Color(0xFFFFA02F),
-      surface: Color(0xFFFFF3DF),
-      stickers: SoulLocketStickerCatalog.soulMergeJoyStickers,
-    ),
-    _SoulStickerPack(
-      id: 'love',
-      titleKey: 'p4_soul_sticker_pack_love',
-      icon: Icons.favorite_rounded,
-      accent: Color(0xFFE9577D),
-      surface: Color(0xFFFFEAF0),
-      stickers: SoulLocketStickerCatalog.soulMergeLoveStickers,
-    ),
-    _SoulStickerPack(
-      id: 'sad',
-      titleKey: 'p4_soul_sticker_pack_sad',
-      icon: Icons.cloud_rounded,
-      accent: Color(0xFF7E81B8),
-      surface: Color(0xFFF0F0FB),
-      stickers: SoulLocketStickerCatalog.soulMergeComfortStickers,
-    ),
-    _SoulStickerPack(
-      id: 'playful',
-      titleKey: 'p4_soul_sticker_pack_playful',
-      icon: Icons.auto_awesome_rounded,
-      accent: Color(0xFF6389C8),
-      surface: Color(0xFFEAF3FF),
-      stickers: SoulLocketStickerCatalog.soulMergePlayfulStickers,
-    ),
-  ];
+  static const _packs = livingStickerPacks;
 
   var _selectedIndex = 0;
 
@@ -78,62 +59,66 @@ class _StickerBottomSheetState extends State<StickerBottomSheet> {
       ),
       child: Column(
         children: [
-          const SizedBox(height: 10),
-          Container(
-            width: 38,
-            height: 4,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE7DDE1),
-              borderRadius: BorderRadius.circular(999),
+          if (widget.showHeader) ...[
+            const SizedBox(height: 10),
+            Container(
+              width: 38,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE7DDE1),
+                borderRadius: BorderRadius.circular(999),
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 14, 10),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFE8EF),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(
-                    Icons.emoji_emotions_rounded,
-                    color: Color(0xFFE9577D),
-                  ),
-                ),
-                const SizedBox(width: 11),
-                Expanded(
-                  child: Text(
-                    context.tr('p4_soul_sticker_picker_title'),
-                    style: SLTheme.quicksand(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF382D36),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 14, 14, 10),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFE8EF),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(
+                      Icons.emoji_emotions_rounded,
+                      color: Color(0xFFE9577D),
                     ),
                   ),
-                ),
-                IconButton(
-                  tooltip: context.tr('p4_back'),
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(
-                    Icons.close_rounded,
-                    color: Color(0xFF7E6E76),
+                  const SizedBox(width: 11),
+                  Expanded(
+                    child: Text(
+                      context.tr(widget.titleKey),
+                      style: SLTheme.quicksand(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF382D36),
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                  IconButton(
+                    tooltip: context.tr('p4_back'),
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: Color(0xFF7E6E76),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
           SizedBox(
             height: 76,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Row(
+              child: ListView(
+                scrollDirection: Axis.horizontal,
                 children: List.generate(_packs.length, (index) {
                   final pack = _packs[index];
                   final selected = index == _selectedIndex;
-                  return Expanded(
+                  return SizedBox(
+                    width: 72,
                     child: Semantics(
                       button: true,
                       selected: selected,
@@ -208,6 +193,10 @@ class _StickerBottomSheetState extends State<StickerBottomSheet> {
                   ? Duration.zero
                   : const Duration(milliseconds: 180),
               child: GridView.builder(
+                // Tương thích cả kernel Flutter hiện dùng để chạy test.
+                // ignore: deprecated_member_use
+                cacheExtent: 0,
+                addAutomaticKeepAlives: false,
                 key: ValueKey(selectedPack.id),
                 padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -226,7 +215,7 @@ class _StickerBottomSheetState extends State<StickerBottomSheet> {
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: () {
-                          Navigator.of(context).pop();
+                          if (widget.closeOnSelect) Navigator.of(context).pop();
                           widget.onStickerSelected(
                             SoulLocketStickerCatalog.referenceFor(sticker.id),
                           );
@@ -243,10 +232,13 @@ class _StickerBottomSheetState extends State<StickerBottomSheet> {
                             ),
                           ),
                           child: Center(
-                            child: SoulLocketAnimatedSticker(
-                              sticker: sticker,
-                              size: 88,
-                              filterQuality: FilterQuality.medium,
+                            child: LayoutBuilder(
+                              builder: (context, constraints) =>
+                                  SoulLocketAnimatedSticker(
+                                    sticker: sticker,
+                                    size: constraints.maxWidth.clamp(0.0, 88.0),
+                                    filterQuality: FilterQuality.medium,
+                                  ),
                             ),
                           ),
                         ),
@@ -261,22 +253,4 @@ class _StickerBottomSheetState extends State<StickerBottomSheet> {
       ),
     );
   }
-}
-
-class _SoulStickerPack {
-  const _SoulStickerPack({
-    required this.id,
-    required this.titleKey,
-    required this.icon,
-    required this.accent,
-    required this.surface,
-    required this.stickers,
-  });
-
-  final String id;
-  final String titleKey;
-  final IconData icon;
-  final Color accent;
-  final Color surface;
-  final List<SoulLocketStickerSpec> stickers;
 }

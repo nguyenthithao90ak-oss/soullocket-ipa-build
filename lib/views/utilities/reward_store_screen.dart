@@ -7,7 +7,6 @@ import 'package:flutter/rendering.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:intl/intl.dart';
 import '../../utils/services/admob_service.dart';
 import '../../utils/services/daily_quest_service.dart';
@@ -126,42 +125,43 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
     final user = _auth.currentUser;
     if (user == null) return;
 
-    _userSubscription =
-        _dbRef.child('users/${user.uid}/checkinDays').onValue.listen(
-      (event) {
-        final rawData = event.snapshot.value;
-        final data = rawData is Map ? Map<dynamic, dynamic>.from(rawData) : {};
-        if (mounted) {
-          final nextDays = _parseCheckinDays(data);
-          final nextCheckedInToday = nextDays[_todayKey()] == true;
-          final nextStreak = _calculateStreak(nextDays);
+    _userSubscription = _dbRef
+        .child('users/${user.uid}/checkinDays')
+        .onValue
+        .listen(
+          (event) {
+            final rawData = event.snapshot.value;
+            final data = rawData is Map
+                ? Map<dynamic, dynamic>.from(rawData)
+                : {};
+            if (mounted) {
+              final nextDays = _parseCheckinDays(data);
+              final nextCheckedInToday = nextDays[_todayKey()] == true;
+              final nextStreak = _calculateStreak(nextDays);
 
-          if (_isCheckingIn && !nextCheckedInToday) {
-            return;
-          }
+              if (_isCheckingIn && !nextCheckedInToday) {
+                return;
+              }
 
-          if (!_isCheckinLoaded ||
-              _checkedInToday != nextCheckedInToday ||
-              _streak != nextStreak ||
-              !_sameCheckinDays(_checkinDays, nextDays)) {
-            setState(() {
-              _checkinDays = nextDays;
-              _checkedInToday = nextCheckedInToday;
-              _streak = nextStreak;
-              _isCheckinLoaded = true;
-            });
-          }
-        }
-      },
-      onError: (Object error) {
-        debugPrint(
-          'Reward check-in listener failed: ${AppErrorMapper.resolve(
-            error,
-            fallbackMessage: L10nService().translate('util_khngththeo_fed732'),
-          ).message}',
+              if (!_isCheckinLoaded ||
+                  _checkedInToday != nextCheckedInToday ||
+                  _streak != nextStreak ||
+                  !_sameCheckinDays(_checkinDays, nextDays)) {
+                setState(() {
+                  _checkinDays = nextDays;
+                  _checkedInToday = nextCheckedInToday;
+                  _streak = nextStreak;
+                  _isCheckinLoaded = true;
+                });
+              }
+            }
+          },
+          onError: (Object error) {
+            debugPrint(
+              'Reward check-in listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('util_khngththeo_fed732')).message}',
+            );
+          },
         );
-      },
-    );
   }
 
   String _todayKey([DateTime? date]) {
@@ -219,7 +219,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
     if (_checkedInToday) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text(L10nService().translate('util_hmnaybnimd_35fac7'))),
+          content: Text(L10nService().translate('util_hmnaybnimd_35fac7')),
+        ),
       );
       return;
     }
@@ -236,8 +237,10 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
     setState(() => _isCheckingIn = true);
 
     try {
-      if (!await SecurityService()
-          .guardAction(context, 'reward_daily_checkin')) {
+      if (!await SecurityService().guardAction(
+        context,
+        'reward_daily_checkin',
+      )) {
         if (mounted) {
           setState(() {
             _checkinDays = previousCheckinDays;
@@ -258,10 +261,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
         debugPrint(
           'Daily check-in failed: ${AppErrorMapper.resolve(error).message}',
         );
-        result = const RewardClaimResult(
-          ok: false,
-          error: 'network_error',
-        );
+        result = const RewardClaimResult(ok: false, error: 'network_error');
       }
       debugPrint(
         'Daily check-in result: ok=${result.ok} error=${result.error} '
@@ -296,8 +296,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
               if (!mounted) return;
               scaffoldMessenger.showSnackBar(
                 SnackBar(
-                  content:
-                      Text(L10nService().translate('util_imdanhdebu_ef8981')),
+                  content: Text(
+                    L10nService().translate('util_imdanhdebu_ef8981'),
+                  ),
                   backgroundColor: Colors.green,
                 ),
               );
@@ -393,6 +394,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       return L10nService().translate('util_khngktnicm_805f8a');
     }
     switch (result.error) {
+      case 'reward_pending':
+        return L10nService().translate('ad_reward_verification_pending');
       case 'rewarded_ad_temporarily_disabled':
       case 'rewarded_ad_disabled':
       case 'source_disabled':
@@ -513,9 +516,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
         proUntil > DateTime.now().millisecondsSinceEpoch) {
       scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: Text(
-            L10nService().translate('util_hydngimdan_c203ca'),
-          ),
+          content: Text(L10nService().translate('util_hydngimdan_c203ca')),
         ),
       );
       return;
@@ -524,9 +525,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
     if (_dailyAdCount >= _dailyAdLimit) {
       scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: Text(
-            L10nService().translate('util_bnchmmcltx_bdf8ba'),
-          ),
+          content: Text(L10nService().translate('util_bnchmmcltx_bdf8ba')),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -542,7 +541,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       bool worked = false;
 
       if (kIsWeb) {
-        worked = await _showWebRewardDialog();
+        worked = false; // AdMob không phát rewarded trên Web.
       } else {
         final navigator = Navigator.of(context);
         showDialog(
@@ -552,42 +551,15 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
             child: CircularProgressIndicator(color: SLTheme.primary),
           ),
         );
-        worked = await _adMob.showRewardedAd();
+        worked = await _adMob.showRewardedAd(verifiedPurpose: 'points');
         if (mounted && navigator.canPop()) {
           navigator.pop();
         }
       }
 
       if (worked) {
-        var result = await _adMob.claimRewardedAdPoints();
+        final result = await _adMob.claimRewardedAdPoints();
         if (!mounted) return;
-
-        // Fallback points grant in debug mode if claim fails
-        if (!result.ok && kDebugMode) {
-          try {
-            final debugRes = await FirebaseFunctions.instance
-                .httpsCallable('grantRewardPointsHttp')
-                .call({
-              'source': 'debug_ad',
-              'debug_secret': 'SoulLocketTest2026',
-            });
-            if (debugRes.data != null && debugRes.data['ok'] == true) {
-              result = const RewardClaimResult(
-                ok: true,
-                granted: AdMobService.rewardedMainPoints,
-              );
-              debugPrint(
-                  'AdMobService: Debug mode fallback points grant succeeded (+50 points).');
-              await _adMob.incrementDailyRewardedAdCountDebug();
-            } else {
-              debugPrint(
-                  'AdMobService: Debug mode fallback points grant failed from server.');
-            }
-          } catch (fallbackError) {
-            debugPrint(
-                'AdMobService: Debug mode fallback points grant exception: $fallbackError');
-          }
-        }
 
         if (!result.ok) {
           scaffoldMessenger.showSnackBar(
@@ -603,7 +575,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
         scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text(
-              '🎉 Nhận được +$grantedPoints điểm!',
+              L10nService()
+                  .translate('ad_reward_points_received')
+                  .replaceAll('{points}', '$grantedPoints'),
             ),
           ),
         );
@@ -611,7 +585,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
         if (!mounted) return;
         scaffoldMessenger.showSnackBar(
           SnackBar(
-              content: Text(L10nService().translate('util_khngticqun_ce9d80'))),
+            content: Text(L10nService().translate('util_khngticqun_ce9d80')),
+          ),
         );
       }
     } finally {
@@ -619,103 +594,6 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
         setState(() => _isWatchingAd = false);
       }
     }
-  }
-
-  Future<bool> _showWebRewardDialog() async {
-    bool canClose = false;
-    bool earned = false;
-    bool unlockScheduled = false;
-
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setDialogState) {
-            if (!unlockScheduled) {
-              unlockScheduled = true;
-              Future<void>.delayed(const Duration(seconds: 5), () {
-                if (!ctx.mounted || canClose) return;
-                setDialogState(() {
-                  canClose = true;
-                });
-              });
-            }
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28),
-              ),
-              contentPadding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 76,
-                    height: 76,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF0F7),
-                      borderRadius: SLRadius.xlAll,
-                    ),
-                    child: const Icon(
-                      Icons.ondemand_video_rounded,
-                      color: SLTheme.primary,
-                      size: 40,
-                    ),
-                  ),
-                  SLSpacing.h16,
-                  Text(
-                    L10nService().translate('util_qungcomphn_198acc'),
-                    textAlign: TextAlign.center,
-                    style: SLTheme.quicksand(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: SLTheme.textMain,
-                    ),
-                  ),
-                  SLSpacing.h8,
-                  Text(
-                    canClose
-                        ? L10nService().translate('util_bnxemthigi_1e583b')
-                        : L10nService().translate('util_videosmthn_f06a76'),
-                    textAlign: TextAlign.center,
-                    style: SLTheme.quicksand(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: SLTheme.textMuted,
-                      height: 1.45,
-                    ),
-                  ),
-                  SLSpacing.h16,
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: canClose
-                          ? () {
-                              earned = true;
-                              Navigator.of(ctx).pop();
-                            }
-                          : null,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: SLTheme.primary,
-                        disabledBackgroundColor: Colors.grey.shade300,
-                        minimumSize: const Size(double.infinity, 46),
-                      ),
-                      child: Text(
-                        canClose
-                            ? 'Đóng & Nhận ${AdMobService.rewardedMainPoints} điểm'
-                            : L10nService().translate('util_ihontt_4d59a1'),
-                        style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-    return earned;
   }
 
   Future<void> _redeemPlan(_RewardPlan plan) async {
@@ -753,9 +631,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
         return;
       }
 
-      var result = await _adMob.redeemProPlan(
-        planId: plan.id,
-      );
+      var result = await _adMob.redeemProPlan(planId: plan.id);
       if (!mounted) return;
       if (result.error == 'not_enough_points') {
         final latestPointsAfterFailure = await _adMob.getUserPoints();
@@ -768,9 +644,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
           );
           await Future<void>.delayed(const Duration(milliseconds: 350));
           if (!mounted) return;
-          result = await _adMob.redeemProPlan(
-            planId: plan.id,
-          );
+          result = await _adMob.redeemProPlan(planId: plan.id);
           if (!mounted) return;
         } else {
           scaffoldMessenger.showSnackBar(
@@ -845,24 +719,33 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
               final val = snapshot.data ?? 0;
               return Container(
                 margin: const EdgeInsets.only(right: 15, top: 10, bottom: 10),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.3),
                   borderRadius: SLRadius.pillAll,
-                  border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.45)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.45),
+                  ),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.stars_rounded,
-                        color: SLTheme.primary, size: 20),
+                    const Icon(
+                      Icons.stars_rounded,
+                      color: SLTheme.primary,
+                      size: 20,
+                    ),
                     SLSpacing.w4,
-                    Text('$val',
-                        style: SLTheme.quicksand(
-                            fontWeight: FontWeight.w900,
-                            color: SLTheme.textMain,
-                            fontSize: 16)),
+                    Text(
+                      '$val',
+                      style: SLTheme.quicksand(
+                        fontWeight: FontWeight.w900,
+                        color: SLTheme.textMain,
+                        fontSize: 16,
+                      ),
+                    ),
                   ],
                 ),
               );
@@ -930,11 +813,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFFFFF4E1),
-            Color(0xFFFFE8F1),
-            Color(0xFFF7E8FF),
-          ],
+          colors: [Color(0xFFFFF4E1), Color(0xFFFFE8F1), Color(0xFFF7E8FF)],
         ),
       ),
       child: Stack(
@@ -1000,7 +879,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
   }
 
   Widget _buildStatusCard(int points, int proUntil) {
-    final isPro = AppConfig.isPurchaseEnabled &&
+    final isPro =
+        AppConfig.isPurchaseEnabled &&
         proUntil > DateTime.now().millisecondsSinceEpoch;
     return Container(
       padding: SLSpacing.all16,
@@ -1025,28 +905,35 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                   color: const Color(0xFFFFE2EF),
                   borderRadius: SLRadius.lgAll,
                 ),
-                child: const Icon(Icons.card_giftcard_rounded,
-                    color: SLTheme.primary, size: 28),
+                child: const Icon(
+                  Icons.card_giftcard_rounded,
+                  color: SLTheme.primary,
+                  size: 28,
+                ),
               ),
               SLSpacing.w12,
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(L10nService().translate('util_imquynli_2a770a'),
-                        style: SLTheme.quicksand(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            color: SLTheme.textMain)),
+                    Text(
+                      L10nService().translate('util_imquynli_2a770a'),
+                      style: SLTheme.quicksand(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: SLTheme.textMain,
+                      ),
+                    ),
                     Text(
                       isPro
                           ? 'PRO đang hoạt động đến ${_formatDateTime(proUntil)}'
                           : L10nService().translate('util_bnanggithn_6ed061'),
                       style: SLTheme.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: SLTheme.textMuted,
-                          height: 1.45),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: SLTheme.textMuted,
+                        height: 1.45,
+                      ),
                     ),
                   ],
                 ),
@@ -1088,22 +975,31 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style: SLTheme.quicksand(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: SLTheme.textMuted)),
+          Text(
+            label,
+            style: SLTheme.quicksand(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: SLTheme.textMuted,
+            ),
+          ),
           SLSpacing.h4,
-          Text(value,
-              style: SLTheme.quicksand(
-                  fontSize: 18, fontWeight: FontWeight.w900, color: color)),
+          Text(
+            value,
+            style: SLTheme.quicksand(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: color,
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildWatchAdCard(int proUntil) {
-    final isPro = AppConfig.isPurchaseEnabled &&
+    final isPro =
+        AppConfig.isPurchaseEnabled &&
         proUntil > DateTime.now().millisecondsSinceEpoch;
     final isLimitReached = _dailyAdCount >= _dailyAdLimit;
 
@@ -1120,53 +1016,66 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
           Row(
             children: [
               Container(
-                  padding: SLSpacing.all16,
-                  decoration: BoxDecoration(
-                      color: SLTheme.primary.withValues(alpha: 0.14),
-                      shape: BoxShape.circle),
-                  child: const Icon(Icons.play_circle_filled,
-                      color: SLTheme.primary, size: 36)),
+                padding: SLSpacing.all16,
+                decoration: BoxDecoration(
+                  color: SLTheme.primary.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.play_circle_filled,
+                  color: SLTheme.primary,
+                  size: 36,
+                ),
+              ),
               SLSpacing.w16,
               Expanded(
                 child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(L10nService().translate('util_xemvideonh_dd1fb1'),
-                          style: SLTheme.quicksand(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: SLTheme.textMain)),
-                      Text(
-                          isPro
-                              ? (AppConfig.isPurchaseEnabled
-                                  ? L10nService()
-                                      .translate('util_tikhonnykh_357e73')
-                                  : L10nService()
-                                      .translate('util_tikhonnykh_357e73'))
-                              : isLimitReached
-                                  ? L10nService()
-                                      .translate('util_bntgiihnng_fd08ae')
-                                  : 'Mỗi video +${AdMobService.rewardedMainPoints} điểm thưởng.',
-                          style: SLTheme.quicksand(
-                              color: SLTheme.textMuted,
-                              fontSize: 12,
-                              height: 1.4)),
-                    ]),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      L10nService().translate('util_xemvideonh_dd1fb1'),
+                      style: SLTheme.quicksand(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: SLTheme.textMain,
+                      ),
+                    ),
+                    Text(
+                      isPro
+                          ? (AppConfig.isPurchaseEnabled
+                                ? L10nService().translate(
+                                    'util_tikhonnykh_357e73',
+                                  )
+                                : L10nService().translate(
+                                    'util_tikhonnykh_357e73',
+                                  ))
+                          : isLimitReached
+                          ? L10nService().translate('util_bntgiihnng_fd08ae')
+                          : 'Mỗi video +${AdMobService.rewardedMainPoints} điểm thưởng.',
+                      style: SLTheme.quicksand(
+                        color: SLTheme.textMuted,
+                        fontSize: 12,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               SLBouncingButton(
                 child: SLTheme.primaryButton(
-                    label: isPro
-                        ? 'PRO'
-                        : isLimitReached
-                            ? L10nService().translate('util_hmnayri_46d3f2')
-                            : _isWatchingAd
-                                ? L10nService().translate('util_angm_112640')
-                                : 'Xem ngay',
-                    onPressed: isPro || _isWatchingAd || isLimitReached
-                        ? () {}
-                        : () => _watchAd(proUntil),
-                    width: 112),
-              )
+                  label: isPro
+                      ? 'PRO'
+                      : isLimitReached
+                      ? L10nService().translate('util_hmnayri_46d3f2')
+                      : _isWatchingAd
+                      ? L10nService().translate('util_angm_112640')
+                      : 'Xem ngay',
+                  onPressed: isPro || _isWatchingAd || isLimitReached
+                      ? () {}
+                      : () => _watchAd(proUntil),
+                  width: 112,
+                ),
+              ),
             ],
           ),
           if (!isPro && !isLimitReached)
@@ -1288,7 +1197,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
 
   Widget _buildCheckinSection() {
     final List<DateTime> last7Days = List.generate(
-        7, (index) => DateTime.now().subtract(Duration(days: 6 - index)));
+      7,
+      (index) => DateTime.now().subtract(Duration(days: 6 - index)),
+    );
 
     return Container(
       padding: SLSpacing.all20,
@@ -1309,38 +1220,49 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                   color: const Color(0xFFFFF0F7),
                   borderRadius: SLRadius.lgAll,
                 ),
-                child: const Icon(Icons.calendar_month_rounded,
-                    color: SLTheme.primary, size: 28),
+                child: const Icon(
+                  Icons.calendar_month_rounded,
+                  color: SLTheme.primary,
+                  size: 28,
+                ),
               ),
               SLSpacing.w16,
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(L10nService().translate('util_imdanhhngn_d32a8b'),
-                        style: SLTheme.quicksand(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: SLTheme.textMain)),
                     Text(
-                        _checkedInToday
-                            ? 'Bạn đã điểm danh hôm nay! ✨\nChuỗi hiện tại: $_streak ngày'
-                            : L10nService().translate('util_imdanhngay_da87d4'),
-                        style: SLTheme.quicksand(
-                            color: SLTheme.textMuted,
-                            fontSize: 12,
-                            height: 1.4)),
+                      L10nService().translate('util_imdanhhngn_d32a8b'),
+                      style: SLTheme.quicksand(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: SLTheme.textMain,
+                      ),
+                    ),
+                    Text(
+                      _checkedInToday
+                          ? 'Bạn đã điểm danh hôm nay! ✨\nChuỗi hiện tại: $_streak ngày'
+                          : L10nService().translate('util_imdanhngay_da87d4'),
+                      style: SLTheme.quicksand(
+                        color: SLTheme.textMuted,
+                        fontSize: 12,
+                        height: 1.4,
+                      ),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
           SLSpacing.h16,
-          Text(L10nService().translate('util_lchs7ngy_03e02e'),
-              style: SLTheme.quicksand(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: SLTheme.textMuted)),
+          Text(
+            L10nService().translate('util_lchs7ngy_03e02e'),
+            style: SLTheme.quicksand(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: SLTheme.textMuted,
+            ),
+          ),
           SLSpacing.h12,
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1348,7 +1270,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
               final key = _todayKey(date);
               final checked = _checkinDays[key] == true;
               final now = DateTime.now();
-              final isToday = date.day == now.day &&
+              final isToday =
+                  date.day == now.day &&
                   date.month == now.month &&
                   date.year == now.year;
 
@@ -1382,8 +1305,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                     ),
                     child: Icon(
                       checked ? Icons.check : Icons.close,
-                      color:
-                          checked ? const Color(0xFF2EA86B) : SLTheme.textLight,
+                      color: checked
+                          ? const Color(0xFF2EA86B)
+                          : SLTheme.textLight,
                       size: 18,
                     ),
                   ),
@@ -1400,8 +1324,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                   : _executeCheckin,
               style: ElevatedButton.styleFrom(
                 backgroundColor: SLTheme.primary,
-                disabledBackgroundColor:
-                    SLTheme.primary.withValues(alpha: 0.35),
+                disabledBackgroundColor: SLTheme.primary.withValues(
+                  alpha: 0.35,
+                ),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: SLRadius.pillAll),
                 elevation: 0,
@@ -1419,8 +1344,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                       !_isCheckinLoaded
                           ? L10nService().translate('util_angtiimdan_3fdaf8')
                           : _checkedInToday
-                              ? L10nService().translate('util_imdanh_682dd9')
-                              : L10nService().translate('util_bmimdanh_d15143'),
+                          ? L10nService().translate('util_imdanh_682dd9')
+                          : L10nService().translate('util_bmimdanh_d15143'),
                       style: SLTheme.quicksand(
                         fontSize: 14,
                         fontWeight: FontWeight.w900,
@@ -1462,17 +1387,23 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(L10nService().translate('util_nhimvhngng_beafae'),
-                style: SLTheme.quicksand(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: SLTheme.textMain)),
+            Text(
+              L10nService().translate('util_nhimvhngng_beafae'),
+              style: SLTheme.quicksand(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: SLTheme.textMain,
+              ),
+            ),
             SLSpacing.h8,
-            Text(L10nService().translate('util_honthnhccn_0999c5'),
-                style: SLTheme.quicksand(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: SLTheme.textMuted)),
+            Text(
+              L10nService().translate('util_honthnhccn_0999c5'),
+              style: SLTheme.quicksand(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: SLTheme.textMuted,
+              ),
+            ),
             SLSpacing.h8,
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -1483,8 +1414,11 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline_rounded,
-                      size: 16, color: Color(0xFFD81B60)),
+                  const Icon(
+                    Icons.info_outline_rounded,
+                    size: 16,
+                    color: Color(0xFFD81B60),
+                  ),
                   SLSpacing.w8,
                   Expanded(
                     child: Text(
@@ -1500,101 +1434,122 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
               ),
             ),
             SLSpacing.h12,
-            ...quests.map((q) => Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: SLTheme.glassBorderThin),
-                    boxShadow: SLShadow.subtle,
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: SLColors.primaryLight,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(q['icon'] as String,
-                            style: const TextStyle(fontSize: 20)),
+            ...quests.map(
+              (q) => Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: SLTheme.glassBorderThin),
+                  boxShadow: SLShadow.subtle,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: SLColors.primaryLight,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      SLSpacing.w16,
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(q['title'] as String,
-                                style: SLTheme.quicksand(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                    color: SLTheme.textMain)),
-                            SLSpacing.h4,
-                            Text(q['desc'] as String,
-                                style: SLTheme.quicksand(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: SLTheme.textMuted)),
-                          ],
-                        ),
+                      child: Text(
+                        q['icon'] as String,
+                        style: const TextStyle(fontSize: 20),
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                    ),
+                    SLSpacing.w16,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: SLColors.warningLight,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                  color: SLColors.warningGold
-                                      .withValues(alpha: 0.5)),
+                          Text(
+                            q['title'] as String,
+                            style: SLTheme.quicksand(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: SLTheme.textMain,
                             ),
-                            child: Text(
-                                '+${q['points']} ${L10nService().translate('util_im_4e6ac8')}',
-                                style: SLTheme.quicksand(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color(0xFFB45309))),
                           ),
-                          SLSpacing.h8,
-                          SizedBox(
-                            height: 28,
-                            child: FilledButton(
-                              onPressed: () {},
-                              style: FilledButton.styleFrom(
-                                backgroundColor: (q['done'] as bool)
-                                    ? const Color(0xFF2EA86B)
-                                        .withValues(alpha: 0.15)
-                                    : SLColors.primaryLight,
-                                foregroundColor: (q['done'] as bool)
-                                    ? const Color(0xFF2EA86B)
-                                    : SLTheme.primary,
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              child: Text(
-                                  (q['done'] as bool)
-                                      ? L10nService()
-                                          .translate('util_honthnh_eb889c')
-                                      : (q['progress'] as String),
-                                  style: SLTheme.quicksand(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold)),
+                          SLSpacing.h4,
+                          Text(
+                            q['desc'] as String,
+                            style: SLTheme.quicksand(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: SLTheme.textMuted,
                             ),
-                          )
+                          ),
                         ],
                       ),
-                    ],
-                  ),
-                )),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: SLColors.warningLight,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: SLColors.warningGold.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                          ),
+                          child: Text(
+                            '+${q['points']} ${L10nService().translate('util_im_4e6ac8')}',
+                            style: SLTheme.quicksand(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFFB45309),
+                            ),
+                          ),
+                        ),
+                        SLSpacing.h8,
+                        SizedBox(
+                          height: 28,
+                          child: FilledButton(
+                            onPressed: () {},
+                            style: FilledButton.styleFrom(
+                              backgroundColor: (q['done'] as bool)
+                                  ? const Color(
+                                      0xFF2EA86B,
+                                    ).withValues(alpha: 0.15)
+                                  : SLColors.primaryLight,
+                              foregroundColor: (q['done'] as bool)
+                                  ? const Color(0xFF2EA86B)
+                                  : SLTheme.primary,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: Text(
+                              (q['done'] as bool)
+                                  ? L10nService().translate(
+                                      'util_honthnh_eb889c',
+                                    )
+                                  : (q['progress'] as String),
+                              style: SLTheme.quicksand(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         );
       },
@@ -1754,16 +1709,18 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
             width: double.infinity,
             height: compact ? 34 : 36,
             child: ElevatedButton.icon(
-              onPressed:
-                  affordable && !_isRedeeming ? () => _redeemPlan(plan) : null,
+              onPressed: affordable && !_isRedeeming
+                  ? () => _redeemPlan(plan)
+                  : null,
               style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      affordable ? SLTheme.primary : Colors.grey.shade400,
-                  disabledBackgroundColor: Colors.grey.shade400,
-                  disabledForegroundColor: Colors.white,
-                  padding: EdgeInsets.zero,
-                  shape:
-                      RoundedRectangleBorder(borderRadius: SLRadius.pillAll)),
+                backgroundColor: affordable
+                    ? SLTheme.primary
+                    : Colors.grey.shade400,
+                disabledBackgroundColor: Colors.grey.shade400,
+                disabledForegroundColor: Colors.white,
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(borderRadius: SLRadius.pillAll),
+              ),
               icon: const Icon(Icons.stars, color: Colors.white, size: 16),
               label: FittedBox(
                 fit: BoxFit.scaleDown,

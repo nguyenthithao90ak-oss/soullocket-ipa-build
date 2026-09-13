@@ -4,7 +4,7 @@
   "packs": [
     {
       "id": "couple_motion",
-      "asset": "assets/images/soullocket_stickers/motion_couple_atlas_v1.png",
+      "asset": "assets/images/soullocket_stickers/motion_couple_atlas_v1.webp",
       "columns": 3,
       "rows": 3,
       "stickers": [
@@ -21,7 +21,7 @@
     },
     {
       "id": "hearts",
-      "asset": "assets/images/soullocket_stickers/heart_atlas_v1.png",
+      "asset": "assets/images/soullocket_stickers/heart_atlas_v1.webp",
       "columns": 4,
       "rows": 3,
       "stickers": [
@@ -41,7 +41,7 @@
     },
     {
       "id": "soul_merge_joy",
-      "asset": "assets/images/soullocket_stickers/soul_merge_joy_atlas_v1.png",
+      "asset": "assets/images/soullocket_stickers/soul_merge_joy_atlas_v1.webp",
       "columns": 3,
       "rows": 3,
       "stickers": [
@@ -58,7 +58,7 @@
     },
     {
       "id": "soul_merge_comfort",
-      "asset": "assets/images/soullocket_stickers/soul_merge_comfort_atlas_v1.png",
+      "asset": "assets/images/transparent_stickers/soul_merge_comfort_atlas_v2_transparent.webp",
       "columns": 3,
       "rows": 3,
       "stickers": [
@@ -75,7 +75,7 @@
     },
     {
       "id": "soul_merge_love",
-      "asset": "assets/images/soullocket_stickers/soul_merge_love_atlas_v1.png",
+      "asset": "assets/images/transparent_stickers/soul_merge_love_atlas_v2_transparent.webp",
       "columns": 3,
       "rows": 3,
       "stickers": [
@@ -92,7 +92,7 @@
     },
     {
       "id": "soul_merge_playful",
-      "asset": "assets/images/soullocket_stickers/soul_merge_playful_atlas_v1.png",
+      "asset": "assets/images/transparent_stickers/soul_merge_playful_atlas_v2_transparent.webp",
       "columns": 3,
       "rows": 3,
       "stickers": [

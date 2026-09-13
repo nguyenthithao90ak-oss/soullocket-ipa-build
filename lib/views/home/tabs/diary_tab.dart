@@ -714,10 +714,7 @@ class _DiaryTabState extends State<DiaryTab>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _syncSelectionOverlayVisibility();
       unawaited(_prepareDiaryOnMount());
-      Future<void>.delayed(const Duration(seconds: 15), () {
-        if (!mounted) return;
-        _loadBottomBanner();
-      });
+      // Màn hiện tại không gắn banner; không tải native ad vô hình trong nền.
     });
   }
 
@@ -752,7 +749,7 @@ class _DiaryTabState extends State<DiaryTab>
   @override
   void dispose() {
     _stopDiaryActiveTimer();
-    _bottomBannerAd?.dispose();
+    AdMobService().disposeBanner(_bottomBannerAd);
     widget.onSelectionOverlayChanged?.call(false);
     widget.isActiveListenable.removeListener(_onActiveChanged);
     _feedController.removeListener(_handleFeedControllerChange);

@@ -275,7 +275,7 @@ class DiaryItem extends StatelessWidget {
                                 width: moodSize,
                                 height: moodSize,
                                 fit: BoxFit.contain,
-                                animateLocalSticker: isShortText,
+                                animateLocalSticker: true,
                                 errorWidget: Text(
                                   post.mood,
                                   textAlign: TextAlign.center,
@@ -521,35 +521,35 @@ class _DiaryItemVideoWidgetState extends State<_DiaryItemVideoWidget> {
 String _getMoodAsset(String moodEmoji) {
   switch (moodEmoji) {
     case '😍':
-      return SoulLocketStickerCatalog.referenceFor('diary_playful');
+      return SoulLocketStickerCatalog.originalReferenceFor('diary_playful');
     case '💖':
-      return SoulLocketStickerCatalog.referenceFor('diary_healing');
+      return SoulLocketStickerCatalog.originalReferenceFor('diary_healing');
     case '🤩':
-      return SoulLocketStickerCatalog.referenceFor('diary_proud');
+      return SoulLocketStickerCatalog.originalReferenceFor('diary_proud');
     case '🤒':
-      return SoulLocketStickerCatalog.referenceFor('diary_healing');
+      return SoulLocketStickerCatalog.originalReferenceFor('diary_healing');
     case '🌧️':
-      return SoulLocketStickerCatalog.referenceFor('diary_anxious');
+      return SoulLocketStickerCatalog.originalReferenceFor('diary_anxious');
     case '📝':
-      return SoulLocketStickerCatalog.referenceFor('diary_reflective');
+      return SoulLocketStickerCatalog.originalReferenceFor('diary_reflective');
     case '🙈':
-      return SoulLocketStickerCatalog.referenceFor('diary_shy');
+      return SoulLocketStickerCatalog.originalReferenceFor('diary_shy');
     case '💌':
-      return SoulLocketStickerCatalog.referenceFor('diary_missing');
+      return SoulLocketStickerCatalog.originalReferenceFor('diary_missing');
     case '⭐':
-      return SoulLocketStickerCatalog.referenceFor('diary_proud');
+      return SoulLocketStickerCatalog.originalReferenceFor('diary_proud');
     case '🌙':
-      return SoulLocketStickerCatalog.referenceFor('diary_sleepy');
+      return SoulLocketStickerCatalog.originalReferenceFor('diary_sleepy');
     case '🥺':
-      return SoulLocketStickerCatalog.referenceFor('diary_anxious');
+      return SoulLocketStickerCatalog.originalReferenceFor('diary_anxious');
     case '😤':
-      return SoulLocketStickerCatalog.referenceFor('diary_grumpy');
+      return SoulLocketStickerCatalog.originalReferenceFor('diary_grumpy');
     case '😉':
-      return SoulLocketStickerCatalog.referenceFor('diary_playful');
+      return SoulLocketStickerCatalog.originalReferenceFor('diary_playful');
     case '❤️‍🩹':
-      return SoulLocketStickerCatalog.referenceFor('diary_healing');
+      return SoulLocketStickerCatalog.originalReferenceFor('diary_healing');
     default:
-      return SoulLocketStickerCatalog.referenceFor('diary_reflective');
+      return SoulLocketStickerCatalog.originalReferenceFor('diary_reflective');
   }
 }
 

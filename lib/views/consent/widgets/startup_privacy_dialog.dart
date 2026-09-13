@@ -28,8 +28,9 @@ class _StartupPrivacyDialogState extends State<StartupPrivacyDialog> {
   static const _panel = Color(0xFF242527);
   static const _muted = Color(0xFFB0B3B8);
   static const _link = Color(0xFF80BBFF);
-  static const _essentialLabelBlue = Color(0xFF4599FF);
-  static const _allLabelBlue = Color(0xFFA8D4FF);
+  static const _essentialBackground = Color(0xFFDCEEFF);
+  static const _essentialForeground = Color(0xFF12375B);
+  static const _allBackground = Color(0xFF195FAD);
 
   @override
   Widget build(BuildContext context) {
@@ -154,7 +155,7 @@ class _StartupPrivacyDialogState extends State<StartupPrivacyDialog> {
                             style: const TextStyle(color: Color(0xFFFFB3B3)),
                           ),
                         ),
-                      // Hai nút ngang mức nhấn mạnh; không chọn sẵn mức "all".
+                      // Hai lựa chọn cùng kích thước; màu nền phân biệt, không chọn sẵn.
                       for (final level in ['essential', 'all']) ...[
                         SizedBox(
                           width: double.infinity,
@@ -165,9 +166,14 @@ class _StartupPrivacyDialogState extends State<StartupPrivacyDialog> {
                                 : () => _continue(level),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: level == 'essential'
-                                  ? _essentialLabelBlue
-                                  : _allLabelBlue,
-                              side: const BorderSide(color: _link),
+                                  ? _essentialForeground
+                                  : Colors.white,
+                              backgroundColor: level == 'essential'
+                                  ? _essentialBackground
+                                  : _allBackground,
+                              disabledForegroundColor: const Color(0xFFCDD8E5),
+                              disabledBackgroundColor: const Color(0xFF32465E),
+                              side: const BorderSide(color: _link, width: 1.5),
                               minimumSize: const Size(0, 50),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16,

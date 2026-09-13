@@ -325,6 +325,7 @@ class _HomeCardVisualSpec {
 
 class _HomeScrapbookCard extends StatelessWidget {
   final Widget child;
+  final String? companionId;
   final EdgeInsets padding;
   final Color accentColor;
   final Color? color;
@@ -335,6 +336,7 @@ class _HomeScrapbookCard extends StatelessWidget {
   const _HomeScrapbookCard({
     required this.child,
     required this.accentColor,
+    this.companionId,
     this.padding = const EdgeInsets.all(20),
     this.color,
     this.radius = 28,
@@ -355,7 +357,7 @@ class _HomeScrapbookCard extends StatelessWidget {
       accent: accentColor,
     );
 
-    return Stack(
+    final card = Stack(
       clipBehavior: Clip.none,
       children: [
         Positioned.fill(
@@ -709,6 +711,15 @@ class _HomeScrapbookCard extends StatelessWidget {
             ),
           ),
       ],
+    );
+    if (companionId == null) return card;
+    return HomeCompanionAnchor(
+      id: companionId!,
+      shape: HomeCompanionSurfaceShape.outline,
+      border: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(radius),
+      ),
+      child: card,
     );
   }
 }
@@ -1072,6 +1083,7 @@ class _HomeStoryLetterhead extends StatelessWidget {
     return Semantics(
       header: true,
       child: _HomeScrapbookCard(
+        companionId: 'home-letterhead',
         accentColor: accent,
         adornment: _HomeCardAdornment.washiTape,
         radius: 30,

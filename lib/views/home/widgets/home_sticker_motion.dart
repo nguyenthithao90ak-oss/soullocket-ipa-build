@@ -2,9 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../widgets/soullocket_animated_sticker.dart';
+import '../../../widgets/living_sticker.dart';
+import '../../../widgets/living_sticker_scene.dart';
 import '../../ui_prefs.dart';
 
-/// Chỉ hình sticker chuyển động; khung thẻ, chữ và vùng chạm giữ nguyên.
+/// Chỉ truyền chế độ tiết kiệm hiệu ứng; không lắc cả ảnh sticker.
 class HomeStickerMotion extends StatelessWidget {
   final Widget child;
   final SoulLocketStickerMotion motion;
@@ -19,8 +21,6 @@ class HomeStickerMotion extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Lệch pha ổn định để nhiều sticker không cùng nhún một nhịp.
-    final seed = motionSeed.codeUnits.fold<int>(0, (sum, code) => sum + code);
     return ValueListenableBuilder<UiPrefsState>(
       valueListenable: UiPrefs.notifier,
       child: child,
@@ -29,11 +29,10 @@ class HomeStickerMotion extends StatelessWidget {
           state: prefs,
           isWeb: kIsWeb,
         );
-        return SoulLocketStickerMotionView(
-          animate: effects.animationEnabled,
-          motion: motion,
-          phaseOffset: (seed % 19) / 19,
-          duration: Duration(milliseconds: 2800 + (seed % 7) * 130),
+        return StickerAnimationScope(
+          enabled:
+              effects.animationEnabled &&
+              StickerAnimationScope.enabledOf(context),
           child: visual!,
         );
       },
@@ -61,17 +60,20 @@ class HomeStickerAsset extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scene = LivingStickerCatalog.asset(assetPath);
     return HomeStickerMotion(
       motion: motion,
       motionSeed: assetPath,
-      child: Image.asset(
-        assetPath,
-        width: width,
-        height: height,
-        fit: fit,
-        gaplessPlayback: true,
-        errorBuilder: errorBuilder,
-      ),
+      child: scene != null
+          ? LivingSticker(scene: scene, width: width, height: height)
+          : Image.asset(
+              assetPath,
+              width: width,
+              height: height,
+              fit: fit,
+              gaplessPlayback: true,
+              errorBuilder: errorBuilder,
+            ),
     );
   }
 }

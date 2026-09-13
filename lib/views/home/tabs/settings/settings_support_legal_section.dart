@@ -566,8 +566,11 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
           final scheduledAt = result['scheduledAt'];
           if (scheduledAt is num) {
             setState(() {
-              _pendingAccountDeletionAtMs = scheduledAt.toInt();
-              _pendingAccountDeletionUid = _auth.currentUser?.uid ?? '';
+              _accountDeletionStatus = AccountDeletionStatus.fromHouseFields(
+                mirror: {'status': result['status']},
+                scheduledAt: scheduledAt,
+                requesterUid: _auth.currentUser?.uid,
+              );
             });
           }
           SLNotice.showSuccess(
@@ -588,12 +591,23 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
           // AppEntry automatically handles routing to LoginScreen via auth state.
         } catch (e) {
           if (!mounted) return;
+          if (e is AppErrorInfo) {
+            SLNotice.showError(context, e.message);
+            await _loadPendingAccountDeletionState();
+            return;
+          }
           if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
             SLNotice.showInfo(context, context.tr('home_chathgitrc_22cb40'));
             _openDeleteAccountRequestPage();
             return;
           }
-          SLNotice.showError(context, context.tr('home_chathhontt_de09e4'));
+          SLNotice.showError(
+            context,
+            AppErrorMapper.resolve(
+              e,
+              fallbackMessage: context.tr('home_chathhontt_de09e4'),
+            ).message,
+          );
         }
       }
     }

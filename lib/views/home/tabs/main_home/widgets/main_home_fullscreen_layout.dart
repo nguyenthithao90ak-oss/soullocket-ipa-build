@@ -33,6 +33,11 @@ class _FullscreenHomeBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final uiState = UiPrefs.notifier.value;
+    final effectProfile = UiPrefs.resolveEffectProfile(
+      state: uiState,
+      isWeb: kIsWeb,
+    );
     final viewSize = MediaQuery.sizeOf(context);
     final topPad = MediaQuery.paddingOf(context).top;
     final bottomPad = MediaQuery.paddingOf(context).bottom;
@@ -55,234 +60,285 @@ class _FullscreenHomeBody extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: false,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          const Positioned.fill(child: _FullscreenPhotoVignette()),
-          const Positioned.fill(
-            child: IgnorePointer(child: _FullscreenFallingHeartsOverlay()),
-          ),
-          Positioned.fill(
-            child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: compactWidth ? 12 : 20,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        SizedBox(height: topPad + 62),
-                        _FullscreenLoveLetterhead(
-                          houseName: houseName,
-                          showHouseName: showHouseName,
-                          isSingle: isSingle,
-                          maxWidth: min(viewSize.width - 76.0, 310.0),
+      body: HomeCompanionScene(
+        enabled: uiState.homeCompanionEnabled,
+        soundEnabled: uiState.homeCompanionSoundEnabled,
+        audioSuppressed: MusicService().isPlayingNotifier,
+        animate: effectProfile.animationEnabled && !state._deferHeavyHomeMotion,
+        isActive: state.widget.isActiveListenable,
+        isScrolling: state._isScrollingNotifier,
+        isSwiping: state.widget.isSwipingListenable,
+        captureMode: UiPrefs.captureModeNotifier,
+        safeInsets: EdgeInsets.fromLTRB(
+          HomeCompanionPainter.horizontalClearance,
+          max(topPad + 60, HomeCompanionPainter.topClearance),
+          HomeCompanionPainter.horizontalClearance,
+          bottomPad + 92,
+        ),
+        foreground: _buildForeground(topPad),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            const Positioned.fill(child: _FullscreenPhotoVignette()),
+            const Positioned.fill(
+              child: IgnorePointer(child: _FullscreenFallingHeartsOverlay()),
+            ),
+            Positioned.fill(
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: max(
+                          compactWidth ? 12.0 : 20.0,
+                          uiState.homeCompanionEnabled
+                              ? HomeCompanionPainter.horizontalClearance + 1
+                              : 0.0,
                         ),
-                        SizedBox(height: compactHeight ? 6 : 12),
-                        Expanded(
-                          child: Center(
-                            child: Semantics(
-                              button: true,
-                              label: context.tr('Chỉnh ngày bắt đầu'),
-                              child: GestureDetector(
-                                onTap: state._showEditStartDateDialog,
-                                onLongPressStart:
-                                    state._handleInteractionLongPressStart,
-                                onLongPressMoveUpdate:
-                                    state._handleInteractionLongPressMoveUpdate,
-                                onLongPressEnd:
-                                    state._handleInteractionLongPressEnd,
-                                onLongPressCancel:
-                                    state._handleInteractionLongPressCancel,
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: SizedBox(
-                                    width: heartWidth,
-                                    height: heartHeight,
-                                    child: Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        Positioned.fill(
-                                          child: CustomPaint(
-                                            painter: const _NeonHeartPainter(),
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: EdgeInsets.only(
-                                            top: heartHeight * 0.08,
-                                          ),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Semantics(
-                                                button: true,
-                                                label: context.tr(
-                                                  'Chỉnh tiêu đề đếm ngày',
-                                                ),
-                                                child: GestureDetector(
-                                                  onTap: () => state
-                                                      ._showEditCountdownLabelDialog(
-                                                        editTopLabel: true,
-                                                        currentLabel:
-                                                            circleTopLabel,
-                                                      ),
-                                                  child: SizedBox(
-                                                    width: heartWidth * 0.70,
-                                                    child: Text(
-                                                      topLabel,
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      maxLines: 2,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      style:
-                                                          GoogleFonts.dancingScript(
-                                                            fontSize:
-                                                                compactWidth
-                                                                ? 27
-                                                                : 31,
-                                                            height: 1.05,
-                                                            fontWeight:
-                                                                FontWeight.w700,
-                                                            color: Colors.white,
-                                                            shadows: const [
-                                                              Shadow(
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          SizedBox(
+                            height: uiState.homeCompanionEnabled
+                                ? max(
+                                    topPad + 62,
+                                    HomeCompanionPainter.topClearance + 2,
+                                  )
+                                : topPad + 62,
+                          ),
+                          _FullscreenLoveLetterhead(
+                            houseName: houseName,
+                            showHouseName: showHouseName,
+                            isSingle: isSingle,
+                            maxWidth: min(viewSize.width - 76.0, 310.0),
+                          ),
+                          SizedBox(height: compactHeight ? 6 : 12),
+                          Expanded(
+                            child: Center(
+                              child: Semantics(
+                                button: true,
+                                label: context.tr('Chỉnh ngày bắt đầu'),
+                                child: GestureDetector(
+                                  onTap: state._showEditStartDateDialog,
+                                  onLongPressStart:
+                                      state._handleInteractionLongPressStart,
+                                  onLongPressMoveUpdate: state
+                                      ._handleInteractionLongPressMoveUpdate,
+                                  onLongPressEnd:
+                                      state._handleInteractionLongPressEnd,
+                                  onLongPressCancel:
+                                      state._handleInteractionLongPressCancel,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: HomeCompanionAnchor(
+                                      id: 'home-fullscreen-heart',
+                                      shape: HomeCompanionSurfaceShape.outline,
+                                      pathBuilder: _NeonHeartPainter.outlineFor,
+                                      child: SizedBox(
+                                        width: heartWidth,
+                                        height: heartHeight,
+                                        child: Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Positioned.fill(
+                                              child: CustomPaint(
+                                                painter:
+                                                    const _NeonHeartPainter(),
+                                              ),
+                                            ),
+                                            Padding(
+                                              padding: EdgeInsets.only(
+                                                top: heartHeight * 0.08,
+                                              ),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Semantics(
+                                                    button: true,
+                                                    label: context.tr(
+                                                      'Chỉnh tiêu đề đếm ngày',
+                                                    ),
+                                                    child: GestureDetector(
+                                                      onTap: () => state
+                                                          ._showEditCountdownLabelDialog(
+                                                            editTopLabel: true,
+                                                            currentLabel:
+                                                                circleTopLabel,
+                                                          ),
+                                                      child: SizedBox(
+                                                        width:
+                                                            heartWidth * 0.70,
+                                                        child: Text(
+                                                          topLabel,
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          maxLines: 2,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          style:
+                                                              GoogleFonts.dancingScript(
+                                                                fontSize:
+                                                                    compactWidth
+                                                                    ? 27
+                                                                    : 31,
+                                                                height: 1.05,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w700,
                                                                 color: Colors
-                                                                    .black54,
-                                                                blurRadius: 10,
-                                                                offset: Offset(
-                                                                  0,
-                                                                  2,
+                                                                    .white,
+                                                                shadows: const [
+                                                                  Shadow(
+                                                                    color: Colors
+                                                                        .black54,
+                                                                    blurRadius:
+                                                                        10,
+                                                                    offset:
+                                                                        Offset(
+                                                                          0,
+                                                                          2,
+                                                                        ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 6),
+                                                  SizedBox(
+                                                    width: heartWidth * 0.58,
+                                                    height: heartHeight * 0.34,
+                                                    child: FittedBox(
+                                                      fit: BoxFit.scaleDown,
+                                                      child: ShaderMask(
+                                                        shaderCallback: (bounds) =>
+                                                            const LinearGradient(
+                                                              colors: [
+                                                                Colors.white,
+                                                                Color(
+                                                                  0xFFFFD7E1,
                                                                 ),
+                                                                Colors.white,
+                                                              ],
+                                                              begin: Alignment
+                                                                  .topLeft,
+                                                              end: Alignment
+                                                                  .bottomRight,
+                                                            ).createShader(
+                                                              bounds,
+                                                            ),
+                                                        child: Text(
+                                                          circleValue,
+                                                          style:
+                                                              SLTheme.quicksand(
+                                                                fontSize: 106,
+                                                                height: 0.92,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w900,
+                                                                color: Colors
+                                                                    .white,
+                                                                shadows: const [
+                                                                  Shadow(
+                                                                    color: Colors
+                                                                        .black38,
+                                                                    blurRadius:
+                                                                        14,
+                                                                    offset:
+                                                                        Offset(
+                                                                          0,
+                                                                          5,
+                                                                        ),
+                                                                  ),
+                                                                ],
                                                               ),
-                                                            ],
-                                                          ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 6),
-                                              SizedBox(
-                                                width: heartWidth * 0.58,
-                                                height: heartHeight * 0.34,
-                                                child: FittedBox(
-                                                  fit: BoxFit.scaleDown,
-                                                  child: ShaderMask(
-                                                    shaderCallback: (bounds) =>
-                                                        const LinearGradient(
-                                                          colors: [
-                                                            Colors.white,
-                                                            Color(0xFFFFD7E1),
-                                                            Colors.white,
-                                                          ],
-                                                          begin:
-                                                              Alignment.topLeft,
-                                                          end: Alignment
-                                                              .bottomRight,
-                                                        ).createShader(bounds),
-                                                    child: Text(
-                                                      circleValue,
-                                                      style: SLTheme.quicksand(
-                                                        fontSize: 106,
-                                                        height: 0.92,
-                                                        fontWeight:
-                                                            FontWeight.w900,
-                                                        color: Colors.white,
-                                                        shadows: const [
-                                                          Shadow(
-                                                            color:
-                                                                Colors.black38,
-                                                            blurRadius: 14,
-                                                            offset: Offset(
-                                                              0,
-                                                              5,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 7),
-                                              Semantics(
-                                                button: true,
-                                                label: context.tr(
-                                                  'Chỉnh nhãn đếm ngày',
-                                                ),
-                                                child: GestureDetector(
-                                                  onTap: () => state
-                                                      ._showEditCountdownLabelDialog(
-                                                        editTopLabel: false,
-                                                        currentLabel:
-                                                            circleBottomLabel,
-                                                      ),
-                                                  child: Container(
-                                                    constraints: BoxConstraints(
-                                                      maxWidth:
-                                                          heartWidth * 0.62,
-                                                    ),
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 14,
-                                                          vertical: 7,
                                                         ),
-                                                    decoration: BoxDecoration(
-                                                      color: SLColors.paper
-                                                          .withValues(
-                                                            alpha: 0.94,
-                                                          ),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            999,
-                                                          ),
-                                                      border: Border.all(
-                                                        color: SLColors.thread
-                                                            .withValues(
-                                                              alpha: 0.32,
-                                                            ),
                                                       ),
-                                                      boxShadow: [
-                                                        BoxShadow(
-                                                          color: Colors.black
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 7),
+                                                  Semantics(
+                                                    button: true,
+                                                    label: context.tr(
+                                                      'Chỉnh nhãn đếm ngày',
+                                                    ),
+                                                    child: GestureDetector(
+                                                      onTap: () => state
+                                                          ._showEditCountdownLabelDialog(
+                                                            editTopLabel: false,
+                                                            currentLabel:
+                                                                circleBottomLabel,
+                                                          ),
+                                                      child: Container(
+                                                        constraints:
+                                                            BoxConstraints(
+                                                              maxWidth:
+                                                                  heartWidth *
+                                                                  0.62,
+                                                            ),
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              horizontal: 14,
+                                                              vertical: 7,
+                                                            ),
+                                                        decoration: BoxDecoration(
+                                                          color: SLColors.paper
                                                               .withValues(
-                                                                alpha: 0.14,
+                                                                alpha: 0.94,
                                                               ),
-                                                          blurRadius: 12,
-                                                          offset: const Offset(
-                                                            0,
-                                                            5,
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                999,
+                                                              ),
+                                                          border: Border.all(
+                                                            color: SLColors
+                                                                .thread
+                                                                .withValues(
+                                                                  alpha: 0.32,
+                                                                ),
                                                           ),
+                                                          boxShadow: [
+                                                            BoxShadow(
+                                                              color: Colors
+                                                                  .black
+                                                                  .withValues(
+                                                                    alpha: 0.14,
+                                                                  ),
+                                                              blurRadius: 12,
+                                                              offset:
+                                                                  const Offset(
+                                                                    0,
+                                                                    5,
+                                                                  ),
+                                                            ),
+                                                          ],
                                                         ),
-                                                      ],
-                                                    ),
-                                                    child: Row(
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      children: [
-                                                        const Icon(
-                                                          Icons
-                                                              .favorite_rounded,
-                                                          size: 12,
-                                                          color:
-                                                              SLColors.thread,
-                                                        ),
-                                                        const SizedBox(
-                                                          width: 7,
-                                                        ),
-                                                        Flexible(
-                                                          child: Text(
-                                                            bottomLabel,
-                                                            maxLines: 1,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                            style:
-                                                                SLTheme.quicksand(
+                                                        child: Row(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: [
+                                                            const Icon(
+                                                              Icons
+                                                                  .favorite_rounded,
+                                                              size: 12,
+                                                              color: SLColors
+                                                                  .thread,
+                                                            ),
+                                                            const SizedBox(
+                                                              width: 7,
+                                                            ),
+                                                            Flexible(
+                                                              child: Text(
+                                                                bottomLabel,
+                                                                maxLines: 1,
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
+                                                                style: SLTheme.quicksand(
                                                                   fontSize: 13,
                                                                   fontWeight:
                                                                       FontWeight
@@ -292,128 +348,146 @@ class _FullscreenHomeBody extends StatelessWidget {
                                                                   color: SLColors
                                                                       .thread,
                                                                 ),
-                                                          ),
+                                                              ),
+                                                            ),
+                                                          ],
                                                         ),
-                                                      ],
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
+                                                ],
                                               ),
-                                            ],
-                                          ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        SizedBox(height: compactHeight ? 2 : 8),
-                        _FullscreenCoupleRibbon(
-                          state: state,
-                          isSingle: isSingle,
-                          nameU1: nameU1,
-                          nameU2: nameU2,
-                          avtUser1: avtUser1,
-                          avtUser2: avtUser2,
-                          avatarSize: avatarSize,
-                        ),
-                        SizedBox(height: compactHeight ? 6 : 12),
-                        Padding(
-                          padding: EdgeInsets.only(
-                            bottom: bottomPad + (compactHeight ? 12 : 22),
+                          SizedBox(height: compactHeight ? 2 : 8),
+                          _FullscreenCoupleRibbon(
+                            state: state,
+                            isSingle: isSingle,
+                            nameU1: nameU1,
+                            nameU2: nameU2,
+                            avtUser1: avtUser1,
+                            avtUser2: avtUser2,
+                            avatarSize: avatarSize,
                           ),
-                          child: Transform.rotate(
-                            angle: 0.012,
-                            child: SizedBox(
-                              width: min(viewSize.width - 44.0, 340.0),
-                              child: _HomeScrapbookCard(
-                                accentColor: SLColors.thread,
-                                color: SLColors.paper.withValues(alpha: 0.94),
-                                radius: 18,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 18,
-                                  vertical: 11,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(
-                                      Icons.auto_stories_rounded,
-                                      size: 16,
-                                      color: SLColors.thread,
-                                    ),
-                                    const SizedBox(width: 9),
-                                    Flexible(
-                                      child: Text(
-                                        quote,
-                                        textAlign: TextAlign.center,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: GoogleFonts.dancingScript(
-                                          fontSize: 18,
-                                          height: 1.05,
-                                          fontWeight: FontWeight.w700,
-                                          color: SLColors.textPrimary,
+                          SizedBox(height: compactHeight ? 6 : 12),
+                          Padding(
+                            padding: EdgeInsets.only(
+                              // Chừa chỗ để mép thẻ dưới cùng đi vào vùng an toàn
+                              // khi người dùng tự cuộn, không điều khiển cuộn hộ.
+                              bottom:
+                                  bottomPad +
+                                  (uiState.homeCompanionEnabled
+                                      ? 100
+                                      : compactHeight
+                                      ? 12
+                                      : 22),
+                            ),
+                            child: Transform.rotate(
+                              angle: 0.012,
+                              child: SizedBox(
+                                width: min(viewSize.width - 44.0, 340.0),
+                                child: _HomeScrapbookCard(
+                                  companionId: 'home-fullscreen-quote',
+                                  accentColor: SLColors.thread,
+                                  color: SLColors.paper.withValues(alpha: 0.94),
+                                  radius: 18,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 18,
+                                    vertical: 11,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.auto_stories_rounded,
+                                        size: 16,
+                                        color: SLColors.thread,
+                                      ),
+                                      const SizedBox(width: 9),
+                                      Flexible(
+                                        child: Text(
+                                          quote,
+                                          textAlign: TextAlign.center,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: GoogleFonts.dancingScript(
+                                            fontSize: 18,
+                                            height: 1.05,
+                                            fontWeight: FontWeight.w700,
+                                            color: SLColors.textPrimary,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Positioned(
-            top: topPad + 4,
-            left: 14,
-            child: Transform.rotate(
-              angle: -0.07,
-              child: Container(
-                width: 50,
-                height: 50,
-                padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  color: SLColors.paper,
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(color: SLColors.thread, width: 1.6),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.18),
-                      blurRadius: 14,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: HomeStickerAsset(
-                  'assets/icons/cute_3d/avatar_puppy_heart.png',
-                  motion: SoulLocketStickerMotion.breathe,
-                  errorBuilder: (context, error, stackTrace) => const Icon(
-                    Icons.pets_rounded,
-                    color: SLColors.thread,
-                    size: 24,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildForeground(double topPad) {
+    return Stack(
+      children: [
+        Positioned(
+          top: topPad + 4,
+          left: 14,
+          child: Transform.rotate(
+            angle: -0.07,
+            child: Container(
+              width: 50,
+              height: 50,
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: SLColors.paper,
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: SLColors.thread, width: 1.6),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.18),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
                   ),
+                ],
+              ),
+              child: HomeStickerAsset(
+                'assets/icons/cute_3d/avatar_puppy_heart.png',
+                motion: SoulLocketStickerMotion.breathe,
+                errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.pets_rounded,
+                  color: SLColors.thread,
+                  size: 24,
                 ),
               ),
             ),
           ),
-          _MainHomeHeroHeader(
-            state: state,
-            isSingle: isSingle,
-            onOpenSettings: onOpenSettings,
-            firstGuideSettingsKey: state.widget.firstGuideSettingsKey,
-          ),
-        ],
-      ),
+        ),
+        _MainHomeHeroHeader(
+          state: state,
+          isSingle: isSingle,
+          onOpenSettings: onOpenSettings,
+          firstGuideSettingsKey: state.widget.firstGuideSettingsKey,
+        ),
+      ],
     );
   }
 }
@@ -483,6 +557,7 @@ class _FullscreenLoveLetterhead extends StatelessWidget {
         child: SizedBox(
           width: max(190.0, maxWidth),
           child: _HomeScrapbookCard(
+            companionId: 'home-fullscreen-letterhead',
             accentColor: isSingle ? SLColors.secondary : SLColors.thread,
             color: SLColors.paper.withValues(alpha: 0.95),
             adornment: _HomeCardAdornment.waxSeal,
@@ -568,84 +643,91 @@ class _FullscreenCoupleRibbon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: avatarSize + 39,
-      child: Stack(
-        alignment: Alignment.topCenter,
-        children: [
-          Positioned(
-            left: avatarSize * 0.74,
-            right: avatarSize * 0.74,
-            top: avatarSize * 0.34,
-            height: 42,
-            child: IgnorePointer(
-              child: CustomPaint(
-                painter: _FullscreenCoupleThreadPainter(isSingle: isSingle),
+    return HomeCompanionAnchor(
+      id: 'home-fullscreen-couple',
+      shape: HomeCompanionSurfaceShape.outline,
+      border: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(36)),
+      ),
+      child: SizedBox(
+        height: avatarSize + 39,
+        child: Stack(
+          alignment: Alignment.topCenter,
+          children: [
+            Positioned(
+              left: avatarSize * 0.74,
+              right: avatarSize * 0.74,
+              top: avatarSize * 0.34,
+              height: 42,
+              child: IgnorePointer(
+                child: CustomPaint(
+                  painter: _FullscreenCoupleThreadPainter(isSingle: isSingle),
+                ),
               ),
             ),
-          ),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: _FullscreenAvatarItem(
-                    state: state,
-                    name: nameU1,
-                    avatarUrl: avtUser1,
-                    isUser1: true,
-                    size: avatarSize,
-                  ),
-                ),
-              ),
-              SizedBox(width: avatarSize * 0.60),
-              Expanded(
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: _FullscreenAvatarItem(
-                    state: state,
-                    name: isSingle ? '' : nameU2,
-                    avatarUrl: isSingle ? '' : avtUser2,
-                    isUser1: false,
-                    size: avatarSize,
-                    isSinglePlaceholder: isSingle,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Positioned(
-            top: avatarSize * 0.29,
-            child: IgnorePointer(
-              child: Container(
-                width: 35,
-                height: 35,
-                decoration: BoxDecoration(
-                  color: SLColors.paper.withValues(alpha: 0.96),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: SLColors.thread.withValues(alpha: 0.45),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.16),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: _FullscreenAvatarItem(
+                      state: state,
+                      name: nameU1,
+                      avatarUrl: avtUser1,
+                      isUser1: true,
+                      size: avatarSize,
                     ),
-                  ],
+                  ),
                 ),
-                child: Icon(
-                  isSingle
-                      ? Icons.auto_awesome_rounded
-                      : Icons.favorite_rounded,
-                  size: 16,
-                  color: isSingle ? SLColors.secondary : SLColors.thread,
+                SizedBox(width: avatarSize * 0.60),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: _FullscreenAvatarItem(
+                      state: state,
+                      name: isSingle ? '' : nameU2,
+                      avatarUrl: isSingle ? '' : avtUser2,
+                      isUser1: false,
+                      size: avatarSize,
+                      isSinglePlaceholder: isSingle,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Positioned(
+              top: avatarSize * 0.29,
+              child: IgnorePointer(
+                child: Container(
+                  width: 35,
+                  height: 35,
+                  decoration: BoxDecoration(
+                    color: SLColors.paper.withValues(alpha: 0.96),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: SLColors.thread.withValues(alpha: 0.45),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.16),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    isSingle
+                        ? Icons.auto_awesome_rounded
+                        : Icons.favorite_rounded,
+                    size: 16,
+                    color: isSingle ? SLColors.secondary : SLColors.thread,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -702,45 +784,53 @@ class _FullscreenCoupleThreadPainter extends CustomPainter {
 class _NeonHeartPainter extends CustomPainter {
   const _NeonHeartPainter();
 
+  /// Chung một đường viền cho nét vẽ và lộ trình, kể cả khi FittedBox co nhỏ.
+  static Path outlineFor(Rect bounds) {
+    final width = bounds.width;
+    final height = bounds.height;
+    return (Path()
+          ..moveTo(width * 0.50, height * 0.92)
+          ..cubicTo(
+            width * 0.12,
+            height * 0.69,
+            width * 0.05,
+            height * 0.44,
+            width * 0.13,
+            height * 0.27,
+          )
+          ..cubicTo(
+            width * 0.22,
+            height * 0.08,
+            width * 0.41,
+            height * 0.11,
+            width * 0.50,
+            height * 0.29,
+          )
+          ..cubicTo(
+            width * 0.59,
+            height * 0.11,
+            width * 0.78,
+            height * 0.08,
+            width * 0.87,
+            height * 0.27,
+          )
+          ..cubicTo(
+            width * 0.95,
+            height * 0.44,
+            width * 0.88,
+            height * 0.69,
+            width * 0.50,
+            height * 0.92,
+          )
+          ..close())
+        .shift(bounds.topLeft);
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
+    final path = outlineFor(Offset.zero & size);
     final width = size.width;
     final height = size.height;
-    final path = Path()
-      ..moveTo(width * 0.50, height * 0.92)
-      ..cubicTo(
-        width * 0.12,
-        height * 0.69,
-        width * 0.05,
-        height * 0.44,
-        width * 0.13,
-        height * 0.27,
-      )
-      ..cubicTo(
-        width * 0.22,
-        height * 0.08,
-        width * 0.41,
-        height * 0.11,
-        width * 0.50,
-        height * 0.29,
-      )
-      ..cubicTo(
-        width * 0.59,
-        height * 0.11,
-        width * 0.78,
-        height * 0.08,
-        width * 0.87,
-        height * 0.27,
-      )
-      ..cubicTo(
-        width * 0.95,
-        height * 0.44,
-        width * 0.88,
-        height * 0.69,
-        width * 0.50,
-        height * 0.92,
-      )
-      ..close();
 
     canvas.drawPath(
       path,

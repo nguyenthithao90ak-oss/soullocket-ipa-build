@@ -24,6 +24,7 @@ import 'package:soullocket_app/utils/services/ad_unit_config.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/notification_service.dart';
 import '../consent_service.dart';
+import 'app_open_ad_presentation.dart';
 
 /// ============================================================
 ///  AdMobService — GRA (Phase Production)
@@ -107,8 +108,6 @@ class AdMobService {
       'il_daily_rewarded_ad_date_v1'; // Ngày hiện tại (yyyy-MM-dd)
   static const int _autoInterstitialMinMinutes = 35;
   static const int _autoInterstitialMaxMinutes = 70;
-  static const int _autoInterstitialRetryMinutes = 5;
-  static const int _autoMandatoryRewardedChancePercent = 15;
   static const int _appOpenMaxPerDay = 8;
   static const List<String> _debugTestDeviceIds = <String>[
     'D9B28AB8E1553E4F327420FC9896415C',
@@ -116,7 +115,8 @@ class AdMobService {
   ];
   late final HouseService _houseService = HouseService();
   final Random _random = Random();
-  static bool _isRewardEndpointDisabled = false;
+  // Một endpoint chưa deploy không được khóa các API thưởng khác cả phiên.
+  static final Map<String, DateTime> _rewardEndpointRetryAfter = {};
 
   static String? _androidRewardedMainId;
   static String? _androidRewardedCheckinId;
@@ -133,6 +133,7 @@ class AdMobService {
   static String? _iosAppOpenId;
 
   static String get rewardedMainId {
+    if (kDebugMode) return AdUnitConfig.rewardedMainId;
     if (Platform.isIOS) {
       return _iosRewardedMainId ?? AdUnitConfig.rewardedMainId;
     }
@@ -140,6 +141,7 @@ class AdMobService {
   }
 
   static String get rewardedCheckinId {
+    if (kDebugMode) return AdUnitConfig.rewardedCheckinId;
     if (Platform.isIOS) {
       return _iosRewardedCheckinId ?? AdUnitConfig.rewardedCheckinId;
     }
@@ -147,6 +149,7 @@ class AdMobService {
   }
 
   static String get rewardedSoulGameId {
+    if (kDebugMode) return AdUnitConfig.rewardedSoulGameId;
     if (Platform.isIOS) {
       return _iosRewardedSoulGameId ?? AdUnitConfig.rewardedSoulGameId;
     }
@@ -154,6 +157,7 @@ class AdMobService {
   }
 
   static String get bannerId {
+    if (kDebugMode) return AdUnitConfig.bannerId;
     if (Platform.isIOS) {
       return _iosBannerId ?? AdUnitConfig.bannerId;
     }
@@ -161,6 +165,7 @@ class AdMobService {
   }
 
   static String get interstitialId {
+    if (kDebugMode) return AdUnitConfig.interstitialId;
     if (Platform.isIOS) {
       return _iosInterstitialId ?? AdUnitConfig.interstitialId;
     }
@@ -168,6 +173,7 @@ class AdMobService {
   }
 
   static String get appOpenId {
+    if (kDebugMode) return AdUnitConfig.appOpenId;
     if (Platform.isIOS) {
       return _iosAppOpenId ?? AdUnitConfig.appOpenId;
     }
@@ -180,22 +186,37 @@ class AdMobService {
   RewardedAd? _soulGameRewardedAd;
   bool _isSoulGameRewardedAdLoading = false;
   AppOpenAd? _appOpenAd;
+  DateTime? _appOpenLoadedAt;
   bool _isAppOpenLoading = false;
   bool _isShowingAppOpenAd = false;
   int _lastFullscreenAdShownMs = 0;
   static const int _fullscreenAdCooldownMs = 7 * 60 * 1000; // 7 minutes
   Completer<void>? _initializeCompleter;
+  int? _initializeEpoch;
   Completer<bool>? _appOpenLoadCompleter;
   bool _sdkInitialized = false;
+  bool _requestConfigurationReady = false;
+  bool _isShowingFullscreenAd = false;
+  bool _nativeFullscreenVisible = false;
   bool _umpAllowsAds = false;
+  bool _privacyOptionsOpen = false;
   int _privacyEpoch = 0;
   final Set<BannerAd> _banners = {};
   final ValueNotifier<int> adRevision = ValueNotifier(0);
   bool get _canUseAds =>
       _sdkInitialized &&
+      _requestConfigurationReady &&
       _umpAllowsAds &&
+      !_privacyOptionsOpen &&
       ConsentService.optionalCollectionAllowed.value;
   bool isBannerUsable(BannerAd ad) => _canUseAds && _banners.contains(ad);
+  bool get canRequestAds => _canUseAds;
+
+  void disposeBanner(BannerAd? banner) {
+    if (banner != null && _banners.remove(banner)) {
+      unawaited(banner.dispose());
+    }
+  }
 
   void _onPrivacyChanged() {
     if (ConsentService.optionalCollectionAllowed.value) {
@@ -207,6 +228,11 @@ class AdMobService {
 
   void _discardAds() {
     _privacyEpoch++;
+    _requestConfigurationReady = false;
+    _isRewardedAdLoading = false;
+    _isSoulGameRewardedAdLoading = false;
+    _isAppOpenLoading = false;
+    _isInterstitialLoading = false;
     _umpAllowsAds = false;
     _autoInterstitialTimer?.cancel();
     _autoInterstitialTimer = null;
@@ -226,25 +252,38 @@ class AdMobService {
   }
 
   Future<void> showPrivacyOptions() async {
-    if (kIsWeb || !ConsentService.optionalCollectionAllowed.value) return;
+    if (kIsWeb ||
+        _privacyOptionsOpen ||
+        _initializeCompleter != null ||
+        !ConsentService.optionalCollectionAllowed.value) {
+      return;
+    }
+    _privacyOptionsOpen = true;
     _discardAds();
     final epoch = _privacyEpoch;
-    final completed = Completer<void>();
-    ConsentForm.showPrivacyOptionsForm((error) {
-      if (error != null) {
-        if (!completed.isCompleted) {
-          completed.completeError(StateError('Ad privacy form unavailable'));
+    var allowed = false;
+    try {
+      final completed = Completer<void>();
+      ConsentForm.showPrivacyOptionsForm((error) {
+        if (error != null) {
+          if (!completed.isCompleted) {
+            completed.completeError(StateError('Ad privacy form unavailable'));
+          }
+          return;
         }
-        return;
-      }
-      if (!completed.isCompleted) completed.complete();
-    });
-    await completed.future.timeout(const Duration(seconds: 30));
-    // Chỉ UMP quyết định có được tải quảng cáo sau khi người dùng sửa lựa chọn.
-    final allowed = await ConsentInformation.instance.canRequestAds();
+        if (!completed.isCompleted) completed.complete();
+      });
+      // Người dùng có thể đọc biểu mẫu lâu; chỉ mở lại ads sau khi đóng form.
+      await completed.future;
+      allowed = await ConsentInformation.instance.canRequestAds();
+    } finally {
+      _privacyOptionsOpen = false;
+    }
     if (epoch == _privacyEpoch &&
         ConsentService.optionalCollectionAllowed.value) {
       _umpAllowsAds = allowed;
+      if (allowed) await initialize();
+      adRevision.value++;
     }
   }
 
@@ -264,14 +303,25 @@ class AdMobService {
   }
 
   Future<void> initialize() async {
-    if (kIsWeb || !ConsentService.optionalCollectionAllowed.value) return;
+    if (kIsWeb ||
+        _privacyOptionsOpen ||
+        !ConsentService.optionalCollectionAllowed.value) {
+      return;
+    }
     if (_canUseAds) return;
     if (_initializeCompleter != null) {
-      return _initializeCompleter!.future;
+      final waitingEpoch = _initializeEpoch;
+      await _initializeCompleter!.future;
+      if (waitingEpoch != _privacyEpoch &&
+          ConsentService.optionalCollectionAllowed.value) {
+        await initialize();
+      }
+      return;
     }
     final completer = Completer<void>();
     final epoch = _privacyEpoch;
     _initializeCompleter = completer;
+    _initializeEpoch = epoch;
     if (kIsWeb) {
       completer.complete();
       return;
@@ -301,6 +351,7 @@ class AdMobService {
     var consentUpdateFailed = false;
     try {
       final consentCompleter = Completer<void>();
+      var consentFormStarted = false;
       ConsentInformation.instance.requestConsentInfoUpdate(
         params,
         () async {
@@ -308,11 +359,13 @@ class AdMobService {
             final available = await ConsentInformation.instance
                 .isConsentFormAvailable();
             if (!ConsentService.optionalCollectionAllowed.value ||
-                epoch != _privacyEpoch) {
+                epoch != _privacyEpoch ||
+                consentCompleter.isCompleted) {
               if (!consentCompleter.isCompleted) consentCompleter.complete();
               return;
             }
             if (available) {
+              consentFormStarted = true;
               ConsentForm.loadAndShowConsentFormIfRequired((loadAndShowError) {
                 if (loadAndShowError != null) {
                   debugPrint('Consent Form Error: $loadAndShowError');
@@ -343,7 +396,14 @@ class AdMobService {
           }
         },
       );
-      await consentCompleter.future.timeout(const Duration(seconds: 30));
+      await consentCompleter.future.timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          if (consentFormStarted) return consentCompleter.future;
+          consentUpdateFailed = true;
+          if (!consentCompleter.isCompleted) consentCompleter.complete();
+        },
+      );
     } catch (e) {
       consentUpdateFailed = true;
       final errorInfo = AppErrorMapper.resolve(
@@ -445,16 +505,24 @@ class AdMobService {
           epoch != _privacyEpoch) {
         return;
       }
+      await _applyAgeGateToAdSettings();
+      if (!ConsentService.optionalCollectionAllowed.value ||
+          epoch != _privacyEpoch) {
+        return;
+      }
       if (!_sdkInitialized) await MobileAds.instance.initialize();
       debugPrint('AdMobService: MobileAds SDK initialized.');
       _sdkInitialized = true;
-      // Áp dụng age gate từ Texas Age Signals API:
-      // nếu user là minor, giới hạn quảng cáo child-directed + nội dung G
-      await _applyAgeGateToAdSettings();
+      if (!ConsentService.optionalCollectionAllowed.value ||
+          epoch != _privacyEpoch) {
+        return;
+      }
+      _requestConfigurationReady = true;
+      adRevision.value++;
       // Trì hoãn tải quảng cáo nền 3s sau khi SDK ready
       // để không tranh CPU với UI rendering khi app khởi động
       Future<void>.delayed(const Duration(seconds: 3), () {
-        if (!_canUseAds) return;
+        if (!_canUseAds || epoch != _privacyEpoch) return;
         _loadRewardedAd();
         _loadSoulGameRewardedAd();
         unawaited(loadInterstitialAd());
@@ -470,38 +538,37 @@ class AdMobService {
         completer.complete();
       }
       _initializeCompleter = null;
+      _initializeEpoch = null;
     }
   }
 
-  /// Áp dụng age gate từ Texas Age Signals API cho AdMob.
-  /// Nếu user là minor (dưới 18 theo Texas SB 2420), set child-directed
-  /// treatment và giới hạn maxAdContentRating = G.
+  /// Giới hạn nội dung trước initialize, không tự coi tuổi chưa rõ là người lớn.
   Future<void> _applyAgeGateToAdSettings() async {
-    try {
-      final ageGate = TexasAgeGateService();
-      final classification = await ageGate.resolveAgeSignal();
-      if (classification == AgeClassification.minor) {
-        debugPrint(
-          'AdMobService: minor detected, applying child-directed ad settings.',
-        );
-        await MobileAds.instance.updateRequestConfiguration(
-          RequestConfiguration(
-            tagForChildDirectedTreatment: TagForChildDirectedTreatment.yes,
-            maxAdContentRating: MaxAdContentRating.g,
-          ),
-        );
-      } else if (classification == AgeClassification.adult) {
-        debugPrint('AdMobService: adult confirmed, no ad restriction needed.');
-      }
-    } catch (e) {
-      debugPrint('AdMobService: failed to apply age gate: $e');
-    }
+    final classification = await TexasAgeGateService().resolveAgeSignal();
+    await MobileAds.instance.updateRequestConfiguration(
+      requestConfigurationForAge(classification),
+    );
   }
+
+  @visibleForTesting
+  static RequestConfiguration requestConfigurationForAge(
+    AgeClassification classification,
+  ) => RequestConfiguration(
+    testDeviceIds: kDebugMode ? _debugTestDeviceIds : null,
+    ageRestrictedTreatment: switch (classification) {
+      AgeClassification.child => AgeRestrictedTreatment.child,
+      AgeClassification.minor => AgeRestrictedTreatment.teen,
+      _ => AgeRestrictedTreatment.unspecified,
+    },
+    maxAdContentRating: classification == AgeClassification.adult
+        ? MaxAdContentRating.pg
+        : MaxAdContentRating.g,
+  );
 
   void _loadRewardedAd({int retryCount = 0}) {
     if (kIsWeb) return;
     if (!_canUseAds) return;
-    if (_isRewardedAdLoading) return;
+    if (_isRewardedAdLoading || _rewardedAd != null) return;
     _isRewardedAdLoading = true;
     final epoch = _privacyEpoch;
 
@@ -512,7 +579,7 @@ class AdMobService {
         onAdLoaded: (ad) {
           if (!_canUseAds || epoch != _privacyEpoch) {
             ad.dispose();
-            _isRewardedAdLoading = false;
+            if (epoch == _privacyEpoch) _isRewardedAdLoading = false;
             return;
           }
           debugPrint('AdMobService: rewarded main loaded.');
@@ -520,6 +587,7 @@ class AdMobService {
           _isRewardedAdLoading = false;
         },
         onAdFailedToLoad: (error) {
+          if (epoch != _privacyEpoch) return;
           final errorInfo = AppErrorMapper.resolve(
             error,
             fallbackMessage: 'Quảng cáo thưởng chính chưa tải được.',
@@ -532,7 +600,9 @@ class AdMobService {
           // Retry 2 lần, mỗi lần cách 10s
           if (retryCount < 2) {
             Future.delayed(const Duration(seconds: 10), () {
-              _loadRewardedAd(retryCount: retryCount + 1);
+              if (epoch == _privacyEpoch) {
+                _loadRewardedAd(retryCount: retryCount + 1);
+              }
             });
           }
         },
@@ -543,7 +613,7 @@ class AdMobService {
   void _loadSoulGameRewardedAd() {
     if (kIsWeb) return;
     if (!_canUseAds) return;
-    if (_isSoulGameRewardedAdLoading) return;
+    if (_isSoulGameRewardedAdLoading || _soulGameRewardedAd != null) return;
     _isSoulGameRewardedAdLoading = true;
     final epoch = _privacyEpoch;
 
@@ -554,7 +624,7 @@ class AdMobService {
         onAdLoaded: (ad) {
           if (!_canUseAds || epoch != _privacyEpoch) {
             ad.dispose();
-            _isSoulGameRewardedAdLoading = false;
+            if (epoch == _privacyEpoch) _isSoulGameRewardedAdLoading = false;
             return;
           }
           debugPrint('AdMobService: rewarded soul game loaded.');
@@ -562,6 +632,7 @@ class AdMobService {
           _isSoulGameRewardedAdLoading = false;
         },
         onAdFailedToLoad: (error) {
+          if (epoch != _privacyEpoch) return;
           final errorInfo = AppErrorMapper.resolve(
             error,
             fallbackMessage: 'Quảng cáo thưởng Soul Game chưa tải được.',
@@ -587,7 +658,14 @@ class AdMobService {
   Future<bool> loadAppOpenAd() async {
     if (kIsWeb) return false;
     if (!_canUseAds) return false;
-    if (_appOpenAd != null) return true;
+    if (_appOpenAd != null &&
+        _appOpenLoadedAt != null &&
+        DateTime.now().difference(_appOpenLoadedAt!) <
+            const Duration(hours: 4)) {
+      return true;
+    }
+    _appOpenAd?.dispose();
+    _appOpenAd = null;
     if (_isAppOpenLoading) {
       return _appOpenLoadCompleter?.future ?? false;
     }
@@ -601,19 +679,24 @@ class AdMobService {
       request: const AdRequest(),
       adLoadCallback: AppOpenAdLoadCallback(
         onAdLoaded: (ad) {
-          if (!_canUseAds || epoch != _privacyEpoch) {
+          if (!_canUseAds || epoch != _privacyEpoch || completer.isCompleted) {
             ad.dispose();
-            _isAppOpenLoading = false;
+            if (identical(_appOpenLoadCompleter, completer)) {
+              _isAppOpenLoading = false;
+            }
             if (!completer.isCompleted) completer.complete(false);
             return;
           }
           _appOpenAd = ad;
+          _appOpenLoadedAt = DateTime.now();
           _isAppOpenLoading = false;
-          if (!completer.isCompleted) {
-            completer.complete(true);
-          }
+          if (!completer.isCompleted) completer.complete(true);
         },
         onAdFailedToLoad: (error) {
+          if (epoch != _privacyEpoch || completer.isCompleted) {
+            if (!completer.isCompleted) completer.complete(false);
+            return;
+          }
           final errorInfo = AppErrorMapper.resolve(
             error,
             fallbackMessage: 'Quảng cáo App Open chưa tải được.',
@@ -629,16 +712,43 @@ class AdMobService {
         },
       ),
     );
-    final loaded = await completer.future;
+    final loaded = await completer.future.timeout(
+      const Duration(seconds: 12),
+      onTimeout: () {
+        if (!completer.isCompleted) completer.complete(false);
+        if (identical(_appOpenLoadCompleter, completer)) {
+          _isAppOpenLoading = false;
+        }
+        return false;
+      },
+    );
     if (identical(_appOpenLoadCompleter, completer)) {
       _appOpenLoadCompleter = null;
     }
     return loaded;
   }
 
-  Future<bool> showAppOpenAdIfEligible() async {
+  Future<bool> _withFullscreenLock(Future<bool> Function() show) async {
+    if (_isShowingFullscreenAd || _nativeFullscreenVisible) return false;
+    _isShowingFullscreenAd = true;
+    try {
+      return await show();
+    } catch (error) {
+      debugPrint(
+        'Fullscreen ad failed: ${AppErrorMapper.resolve(error).message}',
+      );
+      return false;
+    } finally {
+      _isShowingFullscreenAd = false;
+      if (!_nativeFullscreenVisible) AppLifecyclePresenceGuard.settle();
+    }
+  }
+
+  Future<bool> showAppOpenAdIfEligible() =>
+      _withFullscreenLock(_showAppOpenAdIfEligible);
+
+  Future<bool> _showAppOpenAdIfEligible() async {
     if (kIsWeb) return false;
-    if (kDebugMode) return false;
     if (AdSuppressionGuard.instance.isSuppressed) {
       debugPrint('AdMobService: App Open ad suppressed by AdSuppressionGuard.');
       return false;
@@ -654,56 +764,44 @@ class AdMobService {
     if (await isProUser()) return false;
     if (!await _canShowAppOpenToday()) return false;
 
-    if (_appOpenAd == null) {
+    {
       final loaded = await loadAppOpenAd();
       if (!loaded || _appOpenAd == null) {
         return false;
       }
     }
 
-    final completer = Completer<bool>();
     if (!_canUseAds || _appOpenAd == null) return false;
+    final ad = _appOpenAd!;
     _isShowingAppOpenAd = true;
     AppLifecyclePresenceGuard.arm();
-    _appOpenAd!.fullScreenContentCallback = FullScreenContentCallback(
-      onAdShowedFullScreenContent: (ad) async {
+    return presentAppOpenAd(
+      ad: ad,
+      onShown: () {
+        _nativeFullscreenVisible = true;
         _lastFullscreenAdShownMs = DateTime.now().millisecondsSinceEpoch;
-        await _incrementAppOpenShownCount();
-        _sendAdImpressionPing('app_open', appOpenId);
-        if (!completer.isCompleted) completer.complete(true);
+        unawaited(_sendAdImpressionPing('app_open', ad.adUnitId));
       },
-      onAdDismissedFullScreenContent: (ad) {
-        ad.dispose();
-        _appOpenAd = null;
+      recordShown: _incrementAppOpenShownCount,
+      onClosed: () {
+        _nativeFullscreenVisible = false;
+        if (identical(_appOpenAd, ad)) {
+          _appOpenAd = null;
+          _appOpenLoadedAt = null;
+        }
         _isShowingAppOpenAd = false;
         AppLifecyclePresenceGuard.settle();
-        unawaited(loadAppOpenAd());
-      },
-      onAdFailedToShowFullScreenContent: (ad, error) {
-        ad.dispose();
-        _appOpenAd = null;
-        _isShowingAppOpenAd = false;
-        AppLifecyclePresenceGuard.settle();
-        if (!completer.isCompleted) completer.complete(false);
-        unawaited(loadAppOpenAd());
+        unawaited(
+          loadAppOpenAd().catchError((Object error) {
+            debugPrint(
+              'AdMobService: App Open preload failed: '
+              '${AppErrorMapper.resolve(error).message}',
+            );
+            return false;
+          }),
+        );
       },
     );
-
-    try {
-      await _appOpenAd!.show();
-    } catch (e) {
-      // FIXME: Không thể hiển thị App Open ad - không ảnh hưởng trải nghiệm chính
-      debugPrint('AdMobService: App Open show failed: $e');
-      _appOpenAd?.dispose();
-      _appOpenAd = null;
-      _isShowingAppOpenAd = false;
-      AppLifecyclePresenceGuard.settle();
-      if (!completer.isCompleted) {
-        completer.complete(false);
-      }
-      unawaited(loadAppOpenAd());
-    }
-    return completer.future;
   }
 
   Future<bool> _canShowAppOpenToday() async {
@@ -841,12 +939,21 @@ class AdMobService {
   Future<bool> showRewardedAd({
     bool ignoreCooldown = false,
     Duration loadTimeout = const Duration(seconds: 5),
+    String? verifiedPurpose,
+  }) => _withFullscreenLock(
+    () => _showRewardedAd(
+      ignoreCooldown: ignoreCooldown,
+      loadTimeout: loadTimeout,
+      verifiedPurpose: verifiedPurpose,
+    ),
+  );
+
+  Future<bool> _showRewardedAd({
+    required bool ignoreCooldown,
+    required Duration loadTimeout,
+    String? verifiedPurpose,
   }) async {
     if (kIsWeb) return false;
-    if (kDebugMode) {
-      debugPrint('AdMobService: auto-granted reward in debug mode.');
-      return true;
-    }
     if (await isProUser()) {
       debugPrint('AdMobService: rewarded skipped because user is Pro.');
       return false;
@@ -881,18 +988,62 @@ class AdMobService {
       }
     }
 
+    String? rewardNonce;
+    final showEpoch = _privacyEpoch;
+    final rewardUid = FirebaseAuth.instance.currentUser?.uid;
+    if (verifiedPurpose != null) {
+      if (rewardUid == null) return false;
+      final prepared =
+          await _postAuthenticatedJson(AppConfig.adRewardStatusUrl, {
+            'action': 'prepare',
+            'purpose': verifiedPurpose,
+            'adUnit': rewardedMainId.split('/').last,
+          }, requireAppCheck: true);
+      if (prepared?['ok'] != true) return false;
+      rewardNonce = List.generate(
+        32,
+        (_) => Random.secure().nextInt(256),
+      ).map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+      if (!_canUseAds ||
+          _rewardedAd == null ||
+          FirebaseAuth.instance.currentUser?.uid != rewardUid) {
+        return false;
+      }
+      await _rewardedAd!.setServerSideOptions(
+        ServerSideVerificationOptions(
+          userId: rewardUid,
+          customData: jsonEncode({
+            'v': 1,
+            'nonce': rewardNonce,
+            'purpose': verifiedPurpose,
+          }),
+        ),
+      );
+      _lastVerifiedRewardNonce = rewardNonce;
+      _lastVerifiedRewardUid = rewardUid;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('ad_pending_nonce_$rewardUid', rewardNonce);
+      await prefs.setString('ad_pending_purpose_$rewardUid', verifiedPurpose);
+    } else {
+      if (_rewardedAd == null) return false;
+      await _rewardedAd!.setServerSideOptions(
+        ServerSideVerificationOptions(userId: '', customData: ''),
+      );
+    }
     final completer = Completer<bool>();
     var didEarnReward = false;
-    AppLifecyclePresenceGuard.arm();
     if (!_canUseAds || _rewardedAd == null) return false;
+    AppLifecyclePresenceGuard.arm();
     _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
+        _nativeFullscreenVisible = true;
         debugPrint('AdMobService: rewarded showed.');
         _lastRewardedShownMs = DateTime.now().millisecondsSinceEpoch;
         _lastFullscreenAdShownMs = _lastRewardedShownMs;
         _sendAdImpressionPing('rewarded', rewardedMainId);
       },
       onAdDismissedFullScreenContent: (ad) async {
+        _nativeFullscreenVisible = false;
         debugPrint('AdMobService: rewarded dismissed (earned=$didEarnReward).');
         ad.dispose();
         _rewardedAd = null;
@@ -903,6 +1054,7 @@ class AdMobService {
         if (!completer.isCompleted) completer.complete(didEarnReward);
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
+        _nativeFullscreenVisible = false;
         final errorInfo = AppErrorMapper.resolve(
           error,
           fallbackMessage: 'Không thể hiển thị quảng cáo thưởng.',
@@ -919,14 +1071,18 @@ class AdMobService {
     );
 
     try {
-      _rewardedAd!.setImmersiveMode(true);
-      _rewardedAd!.show(
+      await _rewardedAd!.setImmersiveMode(true);
+      if (!_canUseAds ||
+          showEpoch != _privacyEpoch ||
+          _rewardedAd == null ||
+          (verifiedPurpose != null &&
+              FirebaseAuth.instance.currentUser?.uid != rewardUid)) {
+        return false;
+      }
+      await _rewardedAd!.show(
         onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
           debugPrint('AdMobService: rewarded earned.');
           didEarnReward = true;
-          if (!completer.isCompleted) {
-            completer.complete(true);
-          }
         },
       );
     } catch (error) {
@@ -935,6 +1091,7 @@ class AdMobService {
         fallbackMessage: 'Không thể mở quảng cáo thưởng.',
       );
       debugPrint('AdMobService: rewarded show exception: ${errorInfo.message}');
+      _nativeFullscreenVisible = false;
       _rewardedAd?.dispose();
       _rewardedAd = null;
       _loadRewardedAd();
@@ -945,18 +1102,19 @@ class AdMobService {
     return completer.future.timeout(
       const Duration(seconds: 60),
       onTimeout: () {
+        // Ad dài vẫn đang mở: tiếp tục chờ đóng, không báo thất bại giữa chừng.
+        if (_nativeFullscreenVisible) return completer.future;
         AppLifecyclePresenceGuard.settle();
         return false;
       },
     );
   }
 
-  Future<bool> showSoulGameRewardedAd() async {
+  Future<bool> showSoulGameRewardedAd() =>
+      _withFullscreenLock(_showSoulGameRewardedAd);
+
+  Future<bool> _showSoulGameRewardedAd() async {
     if (kIsWeb) return false;
-    if (kDebugMode) {
-      debugPrint('AdMobService: auto-granted soul game reward in debug mode.');
-      return true;
-    }
     if (await isProUser()) return false;
 
     final nowMs = DateTime.now().millisecondsSinceEpoch;
@@ -979,17 +1137,23 @@ class AdMobService {
       }
     }
 
+    final showEpoch = _privacyEpoch;
     final completer = Completer<bool>();
     var didEarnReward = false;
     AppLifecyclePresenceGuard.arm();
-    if (!_canUseAds || _soulGameRewardedAd == null) return false;
+    if (!_canUseAds || _soulGameRewardedAd == null) {
+      AppLifecyclePresenceGuard.settle();
+      return false;
+    }
     _soulGameRewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
+        _nativeFullscreenVisible = true;
         _lastSoulGameRewardedShownMs = DateTime.now().millisecondsSinceEpoch;
-        _lastFullscreenAdShownMs = _lastRewardedShownMs;
+        _lastFullscreenAdShownMs = _lastSoulGameRewardedShownMs;
         _sendAdImpressionPing('rewarded', rewardedSoulGameId);
       },
       onAdDismissedFullScreenContent: (ad) async {
+        _nativeFullscreenVisible = false;
         ad.dispose();
         _soulGameRewardedAd = null;
         _loadSoulGameRewardedAd();
@@ -999,6 +1163,7 @@ class AdMobService {
         if (!completer.isCompleted) completer.complete(didEarnReward);
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
+        _nativeFullscreenVisible = false;
         ad.dispose();
         _soulGameRewardedAd = null;
         _loadSoulGameRewardedAd();
@@ -1008,18 +1173,21 @@ class AdMobService {
     );
 
     try {
-      _soulGameRewardedAd!.setImmersiveMode(true);
-      _soulGameRewardedAd!.show(
+      await _soulGameRewardedAd!.setImmersiveMode(true);
+      if (!_canUseAds ||
+          showEpoch != _privacyEpoch ||
+          _soulGameRewardedAd == null) {
+        return false;
+      }
+      await _soulGameRewardedAd!.show(
         onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
           didEarnReward = true;
-          if (!completer.isCompleted) {
-            completer.complete(true);
-          }
         },
       );
     } catch (e) {
       // FIXME: Soul Game rewarded show failed
       debugPrint('AdMobService: Soul Game rewarded show failed: $e');
+      _nativeFullscreenVisible = false;
       _soulGameRewardedAd?.dispose();
       _soulGameRewardedAd = null;
       _loadSoulGameRewardedAd();
@@ -1030,6 +1198,7 @@ class AdMobService {
     return completer.future.timeout(
       const Duration(seconds: 60),
       onTimeout: () {
+        if (_nativeFullscreenVisible) return completer.future;
         AppLifecyclePresenceGuard.settle();
         return false;
       },
@@ -1039,7 +1208,6 @@ class AdMobService {
   // ─── BANNER AD ───────────────────────────────────────────────
   Future<BannerAd?> createBannerAd({required Function(Ad) onAdLoaded}) async {
     if (kIsWeb) return null;
-    if (kDebugMode) return null;
     await initialize();
     if (!_canUseAds) {
       debugPrint(
@@ -1059,17 +1227,22 @@ class AdMobService {
       request: const AdRequest(),
       listener: BannerAdListener(
         onAdLoaded: (ad) {
-          if (!_canUseAds || epoch != _privacyEpoch) {
-            ad.dispose();
-            _banners.remove(banner);
+          if (!_canUseAds ||
+              epoch != _privacyEpoch ||
+              !_banners.contains(banner)) {
+            disposeBanner(banner);
             if (!completer.isCompleted) completer.complete(null);
             return;
           }
           onAdLoaded(ad);
-          _sendAdImpressionPing('banner', bannerId);
           if (!completer.isCompleted) {
             completer.complete(banner);
           }
+        },
+        onAdImpression: (ad) {
+          // Tải xong chưa có nghĩa đã hiển thị; bỏ callback cũ sau rút consent.
+          if (epoch != _privacyEpoch || !isBannerUsable(banner)) return;
+          unawaited(_sendAdImpressionPing('banner', ad.adUnitId));
         },
         onAdFailedToLoad: (ad, error) {
           final errorInfo = AppErrorMapper.resolve(
@@ -1079,7 +1252,7 @@ class AdMobService {
           debugPrint(
             'AdMobService: banner failed to load: ${errorInfo.message}',
           );
-          ad.dispose();
+          disposeBanner(banner);
           if (!completer.isCompleted) {
             completer.complete(null);
           }
@@ -1087,13 +1260,20 @@ class AdMobService {
       ),
     );
     _banners.add(banner);
-    await banner.load();
+    try {
+      await banner.load();
+    } catch (error) {
+      disposeBanner(banner);
+      debugPrint(
+        'Banner load failed: ${AppErrorMapper.resolve(error).message}',
+      );
+      return null;
+    }
     return completer.future.timeout(
       const Duration(seconds: 12),
       onTimeout: () {
         debugPrint('AdMobService: banner load timed out.');
-        banner.dispose();
-        _banners.remove(banner);
+        disposeBanner(banner);
         return null;
       },
     );
@@ -1101,9 +1281,9 @@ class AdMobService {
 
   // ─── INTERSTITIAL AD ─────────────────────────────────────────
   InterstitialAd? _interstitialAd;
+  bool _isInterstitialLoading = false;
   Timer? _autoInterstitialTimer;
   bool _autoInterstitialSchedulerEnabled = false;
-  bool _isShowingAutoInterstitial = false;
   bool _isAutoInterstitialSuppressed = false;
 
   void suppressAutoInterstitial() {
@@ -1124,36 +1304,47 @@ class AdMobService {
   Future<void> loadInterstitialAd() async {
     if (kIsWeb) return;
     if (!_canUseAds) return;
-    if (_interstitialAd != null) return;
+    if (_interstitialAd != null || _isInterstitialLoading) return;
+    _isInterstitialLoading = true;
     final epoch = _privacyEpoch;
-    await InterstitialAd.load(
-      adUnitId: interstitialId,
-      request: const AdRequest(),
-      adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (ad) {
-          if (!_canUseAds || epoch != _privacyEpoch) {
-            ad.dispose();
-            return;
-          }
-          _interstitialAd = ad;
-        },
-        onAdFailedToLoad: (error) {
-          final errorInfo = AppErrorMapper.resolve(
-            error,
-            fallbackMessage: 'Interstitial quảng cáo chưa tải được.',
-          );
-          debugPrint(
-            'AdMobService: interstitial failed to load: ${errorInfo.message}',
-          );
-          _interstitialAd = null;
-        },
-      ),
-    );
+    try {
+      await InterstitialAd.load(
+        adUnitId: interstitialId,
+        request: const AdRequest(),
+        adLoadCallback: InterstitialAdLoadCallback(
+          onAdLoaded: (ad) {
+            if (!_canUseAds || epoch != _privacyEpoch) {
+              ad.dispose();
+              return;
+            }
+            _isInterstitialLoading = false;
+            _interstitialAd = ad;
+          },
+          onAdFailedToLoad: (error) {
+            if (epoch != _privacyEpoch) return;
+            _isInterstitialLoading = false;
+            final errorInfo = AppErrorMapper.resolve(
+              error,
+              fallbackMessage: 'Interstitial quảng cáo chưa tải được.',
+            );
+            debugPrint(
+              'AdMobService: interstitial failed to load: ${errorInfo.message}',
+            );
+            _interstitialAd = null;
+          },
+        ),
+      );
+    } catch (error) {
+      _isInterstitialLoading = false;
+      debugPrint('Interstitial load failed: $error');
+    }
   }
 
-  Future<bool> showInterstitialAd() async {
+  Future<bool> showInterstitialAd() => _withFullscreenLock(_showInterstitialAd);
+
+  Future<bool> _showInterstitialAd() async {
+    if (hasRecentFullscreenAd()) return false;
     if (kIsWeb) return false;
-    if (kDebugMode) return false;
     if (await isProUser()) return false;
     if (AdSuppressionGuard.instance.isSuppressed) {
       debugPrint(
@@ -1192,10 +1383,12 @@ class AdMobService {
     AppLifecyclePresenceGuard.arm();
     _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
+        _nativeFullscreenVisible = true;
         _lastFullscreenAdShownMs = DateTime.now().millisecondsSinceEpoch;
         _sendAdImpressionPing('interstitial', interstitialId);
       },
       onAdDismissedFullScreenContent: (ad) {
+        _nativeFullscreenVisible = false;
         ad.dispose();
         _interstitialAd = null;
         loadInterstitialAd(); // Nạp sẵn cái tiếp theo
@@ -1203,6 +1396,7 @@ class AdMobService {
         if (!completer.isCompleted) completer.complete(true);
       },
       onAdFailedToShowFullScreenContent: (ad, _) {
+        _nativeFullscreenVisible = false;
         ad.dispose();
         _interstitialAd = null;
         AppLifecyclePresenceGuard.settle();
@@ -1210,10 +1404,20 @@ class AdMobService {
       },
     );
     if (!_canUseAds) return false;
-    await _interstitialAd!.show();
+    try {
+      await _interstitialAd!.show();
+    } catch (error) {
+      _interstitialAd?.dispose();
+      _interstitialAd = null;
+      _nativeFullscreenVisible = false;
+      AppLifecyclePresenceGuard.settle();
+      debugPrint('Interstitial show failed: $error');
+      return false;
+    }
     return completer.future.timeout(
       const Duration(seconds: 12),
       onTimeout: () {
+        if (_nativeFullscreenVisible) return completer.future;
         debugPrint('AdMobService: interstitial show timed out.');
         AppLifecyclePresenceGuard.settle();
         return false;
@@ -1288,80 +1492,13 @@ class AdMobService {
   }
 
   Future<void> _handleAutoInterstitialDue() async {
-    if (kIsWeb ||
-        !_autoInterstitialSchedulerEnabled ||
-        _isShowingAutoInterstitial ||
-        _isAutoInterstitialSuppressed ||
-        AdSuppressionGuard.instance.isSuppressed ||
-        FirebaseAuth.instance.currentUser == null) {
-      return;
-    }
-    if (await isProUser()) {
-      await pauseAutoInterstitialScheduler();
-      return;
-    }
-
-    _isShowingAutoInterstitial = true;
-    try {
-      final randomValue = _random.nextInt(100);
-      final isMandatory = randomValue < _autoMandatoryRewardedChancePercent;
-
-      if (isMandatory) {
-        if (_rewardedAd == null) {
-          _loadRewardedAd();
-        }
-
-        if (_rewardedAd != null) {
-          final earnedReward = await showRewardedAd();
-          if (earnedReward) {
-            // Xem hết quảng cáo bắt buộc -> Đặt lại thời gian bình thường (30-60p)
-            await _setNextAutoInterstitialAt(_generateNextAutoInterstitialAt());
-            // Cộng 50 điểm thưởng cho người dùng
-            unawaited(claimRewardedAdPoints());
-          } else {
-            // Thoát ngang quảng cáo bắt buộc -> Đặt thời gian hiện lại là 20 phút
-            await _setNextAutoInterstitialAt(
-              DateTime.now().add(const Duration(minutes: 20)),
-            );
-          }
-        } else {
-          // Lỗi tải quảng cáo -> Thử lại sau 2 phút
-          await _setNextAutoInterstitialAt(
-            DateTime.now().add(
-              const Duration(minutes: _autoInterstitialRetryMinutes),
-            ),
-          );
-        }
-      } else {
-        await loadInterstitialAd();
-        if (_interstitialAd == null) {
-          await _setNextAutoInterstitialAt(
-            DateTime.now().add(
-              const Duration(minutes: _autoInterstitialRetryMinutes),
-            ),
-          );
-          return;
-        }
-
-        final shown = await showInterstitialAd();
-        if (shown) {
-          await _setNextAutoInterstitialAt(_generateNextAutoInterstitialAt());
-          // Cộng 50 điểm thưởng cho người dùng
-          unawaited(claimRewardedAdPoints());
-        } else {
-          // Lỗi hiển thị quảng cáo -> Thử lại sau 5 phút
-          await _setNextAutoInterstitialAt(
-            DateTime.now().add(
-              const Duration(minutes: _autoInterstitialRetryMinutes),
-            ),
-          );
-        }
-      }
-    } finally {
-      _isShowingAutoInterstitial = false;
-      if (_autoInterstitialSchedulerEnabled) {
-        await _scheduleAutoInterstitialTimer();
-      }
+    // Timer chỉ nạp sẵn; quảng cáo toàn màn hình chỉ mở ở điểm chuyển màn phù hợp.
+    // Rewarded chỉ được mở sau thao tác chủ động của người dùng, không từ timer.
+    if (!_autoInterstitialSchedulerEnabled || !_canUseAds) return;
+    await loadInterstitialAd();
+    await _setNextAutoInterstitialAt(_generateNextAutoInterstitialAt());
+    if (_autoInterstitialSchedulerEnabled && _canUseAds) {
+      await _scheduleAutoInterstitialTimer();
     }
   }
 
@@ -1459,9 +1596,12 @@ class AdMobService {
     if (endpoint.trim().isEmpty) {
       return {'ok': false, 'error': 'endpoint_not_configured'};
     }
-    if (_isRewardEndpointDisabled) {
+    final endpointKey = endpoint.trim();
+    final retryAfter = _rewardEndpointRetryAfter[endpointKey];
+    if (retryAfter != null && DateTime.now().isBefore(retryAfter)) {
       return {'ok': false, 'error': 'endpoint_not_found'};
     }
+    _rewardEndpointRetryAfter.remove(endpointKey);
 
     Future<String> readBearerToken({required bool forceRefresh}) async {
       final rawToken =
@@ -1476,18 +1616,22 @@ class AdMobService {
       final appCheckHeaders = requireAppCheck
           ? AppCheckHttpHeaders.withRequiredToken
           : AppCheckHttpHeaders.withOptionalToken;
+      // SDK tự làm mới token hết hạn. Không ép attestation lại mỗi lần poll.
+      // Timeout gồm cả lấy App Check, không chỉ phần HTTP phía sau.
       return appCheckHeaders({
-        'Content-Type': 'application/json; charset=utf-8',
-        'Authorization': 'Bearer $idToken',
-      }, forceRefresh: true).then(
-        (headers) => http
-            .post(
-              Uri.parse(endpoint.trim()),
-              headers: headers,
-              body: jsonEncode(body),
-            )
-            .timeout(const Duration(seconds: 20)),
-      );
+            'Content-Type': 'application/json; charset=utf-8',
+            'Authorization': 'Bearer $idToken',
+          }, forceRefresh: false)
+          .timeout(const Duration(seconds: 10))
+          .then(
+            (headers) => http
+                .post(
+                  Uri.parse(endpoint.trim()),
+                  headers: headers,
+                  body: jsonEncode(body),
+                )
+                .timeout(const Duration(seconds: 20)),
+          );
     }
 
     String idToken;
@@ -1611,7 +1755,9 @@ class AdMobService {
         'Reward server rejected request: ${response.statusCode} $error',
       );
       if (response.statusCode == 404) {
-        _isRewardEndpointDisabled = true;
+        _rewardEndpointRetryAfter[endpointKey] = DateTime.now().add(
+          const Duration(minutes: 1),
+        );
       }
       if (_isRevenueSecurityError(error)) {
         await RevenueSecurityTelemetryService.instance.logEvent(
@@ -1625,7 +1771,7 @@ class AdMobService {
       }
       return {
         'ok': false,
-        if (decodedMap != null) ...decodedMap,
+        ...?decodedMap,
         'statusCode': response.statusCode,
         'error': error,
       };
@@ -1692,27 +1838,74 @@ class AdMobService {
     return buffer.toString();
   }
 
-  Future<RewardClaimResult> claimRewardedAdPoints() async {
-    // Kiểm tra xem đã đạt giới hạn hàng ngày chưa
-    final canWatch = await canWatchRewardedAdToday();
-    if (!canWatch) {
-      debugPrint(
-        'AdMobService: Đã đạt giới hạn $dailyRewardedAdLimit quảng cáo/ngày.',
-      );
-      return const RewardClaimResult(
-        ok: false,
-        error: 'local_daily_limit_estimate',
-      );
-    }
+  String? _lastVerifiedRewardNonce;
+  String? _lastVerifiedRewardUid;
 
-    final response = await _claimRewardFromServer(source: 'rewarded_ad');
-    final result = RewardClaimResult.fromResponse(response);
-    if (result.ok) {
-      // Chỉ tăng counter nếu claim thành công
-      await _incrementDailyRewardedAdCount();
-      return result;
+  Future<RewardClaimResult> claimRewardedAdPoints() async {
+    final receipt = await _waitForVerifiedReward('points');
+    return RewardClaimResult.fromResponse(receipt);
+  }
+
+  Future<Map<String, dynamic>?> _waitForVerifiedReward(String purpose) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return {'ok': false, 'error': 'unauthenticated'};
+    final prefs = await SharedPreferences.getInstance();
+    final savedPurpose = prefs.getString('ad_pending_purpose_$uid');
+    final nonce = _lastVerifiedRewardUid == uid && savedPurpose == purpose
+        ? _lastVerifiedRewardNonce
+        : null;
+    final pending =
+        nonce ??
+        (savedPurpose == purpose
+            ? prefs.getString('ad_pending_nonce_$uid')
+            : null);
+    if (pending == null) return {'ok': false, 'error': 'missing_proof'};
+    Map<String, dynamic>? response;
+    for (var attempt = 0; attempt < 8; attempt++) {
+      if (FirebaseAuth.instance.currentUser?.uid != uid) return null;
+      response = await _postAuthenticatedJson(AppConfig.adRewardStatusUrl, {
+        'action': 'status',
+        'nonce': pending,
+      }, requireAppCheck: true);
+      // Kết quả cũ chỉ thuộc tài khoản đã bắt đầu xem quảng cáo.
+      if (FirebaseAuth.instance.currentUser?.uid != uid) return null;
+      if (response?['ok'] == true) {
+        if (response?['purpose'] != purpose) {
+          return {'ok': false, 'error': 'invalid_proof'};
+        }
+        if (prefs.getString('ad_pending_nonce_$uid') == pending) {
+          await prefs.remove('ad_pending_nonce_$uid');
+          await prefs.remove('ad_pending_purpose_$uid');
+          if (purpose == 'points') await _incrementDailyRewardedAdCount();
+        }
+        return FirebaseAuth.instance.currentUser?.uid == uid ? response : null;
+      }
+      if (response?['error'] != 'reward_pending') return response;
+      await Future<void>.delayed(const Duration(seconds: 2));
     }
-    return result;
+    return response;
+  }
+
+  Future<int?> unlockCountdownStyleWithAd(
+    String style, {
+    bool quick = false,
+  }) async {
+    final purpose = '${quick ? 'countdown_day' : 'countdown'}:$style';
+    if (!await showRewardedAd(verifiedPurpose: purpose)) return null;
+    final receipt = await _waitForVerifiedReward(purpose);
+    if (receipt?['ok'] != true) return null;
+    return (receipt?['expiresAt'] as num?)?.toInt();
+  }
+
+  Future<Set<String>> verifiedCountdownStyles() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return {};
+    final response = await _postAuthenticatedJson(AppConfig.adRewardStatusUrl, {
+      'action': 'styles',
+    }, requireAppCheck: true);
+    if (FirebaseAuth.instance.currentUser?.uid != uid) return {};
+    if (response?['ok'] != true) return {};
+    return (response?['styles'] as List? ?? []).whereType<String>().toSet();
   }
 
   Future<bool> claimDailyCheckinPoints() async {

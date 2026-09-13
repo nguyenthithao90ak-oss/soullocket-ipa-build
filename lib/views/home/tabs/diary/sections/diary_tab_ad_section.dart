@@ -8,14 +8,14 @@ extension DiaryTabAdSection on _DiaryTabState {
     if (!mounted) return;
 
     if (await adMob.isProUser()) {
-      _bottomBannerAd?.dispose();
+      AdMobService().disposeBanner(_bottomBannerAd);
       _bottomBannerAd = null;
       if (!mounted) return;
       setState(() => _isBottomBannerReady = false);
       return;
     }
 
-    _bottomBannerAd?.dispose();
+    AdMobService().disposeBanner(_bottomBannerAd);
     _bottomBannerAd = null;
     if (!mounted) return;
     final banner = await adMob.createBannerAd(
@@ -25,38 +25,32 @@ extension DiaryTabAdSection on _DiaryTabState {
       },
     );
     if (!mounted) {
-      banner?.dispose();
+      AdMobService().disposeBanner(banner);
       return;
     }
     _bottomBannerAd = banner;
   }
 
   Widget _buildBottomAdBanner(BannerAd bannerAd) {
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: () {
-        AdMobService().showInterstitialAd();
-      },
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-        child: Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: SLColors.bgElevated.withValues(alpha: 0.72),
-              borderRadius: SLRadius.lgAll,
-              border: Border.all(
-                color: SLColors.bgElevated.withValues(alpha: 0.45),
-              ),
-              boxShadow: SLShadow.subtle,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: SLColors.bgElevated.withValues(alpha: 0.72),
+            borderRadius: SLRadius.lgAll,
+            border: Border.all(
+              color: SLColors.bgElevated.withValues(alpha: 0.45),
             ),
-            child: ClipRRect(
-              borderRadius: SLRadius.mdAll,
-              child: SizedBox(
-                width: bannerAd.size.width.toDouble(),
-                height: bannerAd.size.height.toDouble(),
-                child: ConsentAdView(ad: bannerAd),
-              ),
+            boxShadow: SLShadow.subtle,
+          ),
+          child: ClipRRect(
+            borderRadius: SLRadius.mdAll,
+            child: SizedBox(
+              width: bannerAd.size.width.toDouble(),
+              height: bannerAd.size.height.toDouble(),
+              child: ConsentAdView(ad: bannerAd),
             ),
           ),
         ),
@@ -84,23 +78,9 @@ extension DiaryTabAdSection on _DiaryTabState {
   }
 
   Future<void> _showForcedDiaryAd() async {
-    final adMob = AdMobService();
-    if (await adMob.isProUser()) return;
-
-    final hasRecent = adMob.hasRecentFullscreenAd(
-      cooldown: const Duration(minutes: 15),
-    );
-    if (hasRecent) {
-      return;
-    }
-
-    debugPrint(
-      'DiaryTab: Showing forced interstitial ad after 15 minutes of activity.',
-    );
-    final shown = await adMob.showInterstitialAd();
-    if (shown) {
-      _activeSecondsInDiary = 0;
-    }
+    // Chỉ nạp sẵn, không chen ngang lúc người dùng đọc/viết nhật ký.
+    _activeSecondsInDiary = 0;
+    await AdMobService().loadInterstitialAd();
   }
 
   void _preloadMemoryShareRewardedAd() {

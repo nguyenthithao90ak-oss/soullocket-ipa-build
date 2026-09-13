@@ -104,7 +104,7 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog> {
                             key: const ValueKey('gender_male_card'),
                             label: _t('auth_gender_male'),
                             asset:
-                                'assets/images/soullocket_stickers/auth_gender_male_v1.png',
+                                'assets/images/soullocket_stickers/auth_gender_male_v1.webp',
                             selected: _selectedRole == 'user1',
                             imageSize: imageSize,
                             tint: style.dark
@@ -123,7 +123,7 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog> {
                             key: const ValueKey('gender_female_card'),
                             label: _t('auth_gender_female'),
                             asset:
-                                'assets/images/soullocket_stickers/auth_gender_female_v1.png',
+                                'assets/images/soullocket_stickers/auth_gender_female_v1.webp',
                             selected: _selectedRole == 'user2',
                             imageSize: imageSize,
                             tint: style.dark

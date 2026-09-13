@@ -921,12 +921,39 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
   }
 
   Widget _buildPendingAccountDeletionCard() {
-    if (_pendingAccountDeletionAtMs <= 0) return const SizedBox.shrink();
+    if (_accountDeletionStatusLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(12),
+        child: LinearProgressIndicator(),
+      );
+    }
+    final error = _accountDeletionStatusError;
+    if (error != null) {
+      return Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              error,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+            TextButton.icon(
+              onPressed: _loadPendingAccountDeletionState,
+              icon: const Icon(Icons.refresh),
+              label: Text(context.tr('account_deletion_refresh')),
+            ),
+          ],
+        ),
+      );
+    }
+    final deletion = _accountDeletionStatus;
+    if (deletion == null) return const SizedBox.shrink();
     final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
-    final isMine = _pendingAccountDeletionUid == currentUid;
-    final dateLabel = _formatPendingAccountDeletionDate(
-      _pendingAccountDeletionAtMs,
-    );
+    final isMine = deletion.requesterUid == currentUid;
+    final dateLabel = deletion.scheduledAtMs > 0
+        ? _formatPendingAccountDeletionDate(deletion.scheduledAtMs)
+        : '';
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 10),
@@ -956,9 +983,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  isMine
-                      ? context.tr('home_tikhonangc_66e7e3')
-                      : context.tr('home_nhangcyucu_460ec8'),
+                  context.tr('account_deletion_title'),
                   style: SLTheme.quicksand(
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
@@ -970,15 +995,9 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
           ),
           const SizedBox(height: 6),
           Text(
-            L10nService().format(
-              isMine
-                  ? 'settings_delete_scheduled_mine'
-                  : 'settings_delete_scheduled_partner',
-              {
-                'date': dateLabel,
-                'detail': context.tr('home_chtikhongi_3eca08'),
-              },
-            ),
+            L10nService().format(deletion.messageKey(isMine: isMine), {
+              'date': dateLabel,
+            }),
             style: SLTheme.quicksand(
               fontSize: 11.8,
               fontWeight: FontWeight.w700,
@@ -986,7 +1005,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
               color: const Color(0xFF6B2B2B),
             ),
           ),
-          if (isMine) ...[
+          if (isMine && deletion.canCancel) ...[
             const SizedBox(height: 10),
             Align(
               alignment: Alignment.centerRight,
@@ -1000,8 +1019,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                     await _authService.undoScheduledDeletion();
                     if (!mounted) return;
                     setState(() {
-                      _pendingAccountDeletionAtMs = 0;
-                      _pendingAccountDeletionUid = '';
+                      _accountDeletionStatus = null;
                     });
                     SLNotice.showSuccess(
                       context,
@@ -1016,6 +1034,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                         fallbackMessage: context.tr('home_chathhontc_cd8493'),
                       ).message,
                     );
+                    await _loadPendingAccountDeletionState();
                   }
                 },
                 icon: const Icon(Icons.undo_rounded, size: 16),
@@ -1026,6 +1045,11 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
               ),
             ),
           ],
+          TextButton.icon(
+            onPressed: _loadPendingAccountDeletionState,
+            icon: const Icon(Icons.refresh, size: 16),
+            label: Text(context.tr('account_deletion_refresh')),
+          ),
         ],
       ),
     );

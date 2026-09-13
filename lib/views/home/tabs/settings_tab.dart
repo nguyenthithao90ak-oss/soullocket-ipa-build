@@ -81,6 +81,7 @@ import '../../utilities/device_manager_screen.dart';
 import '../../utilities/user_support_chat_screen.dart';
 import 'package:soullocket_app/core/sl_countdown_shapes.dart';
 import '../../../utils/services/l10n_service.dart';
+import '../../../models/account_deletion_status.dart';
 import '../../../utils/services/auth_service.dart';
 import '../../../utils/services/device_manager_service.dart';
 import '../../../utils/services/security_flow_guard.dart';
@@ -454,8 +455,9 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
 
   Set<String> _unlockedCountdownStyles = const <String>{};
   BreakupRequestData? _breakupRequest;
-  int _pendingAccountDeletionAtMs = 0;
-  String _pendingAccountDeletionUid = '';
+  AccountDeletionStatus? _accountDeletionStatus;
+  String? _accountDeletionStatusError;
+  bool _accountDeletionStatusLoading = false;
   String? _draftThemeKey;
   String? _draftEffectKey;
   double? _draftAvatarSizePx;
@@ -558,63 +560,27 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
 
   BannerAd? _bottomBannerAd;
 
-  void _loadBottomBanner() async {
-    if (kIsWeb) return;
-    final adMob = AdMobService();
-    await adMob.initialize();
-    if (!mounted) return;
-
-    if (await adMob.isProUser()) {
-      _bottomBannerAd?.dispose();
-      _bottomBannerAd = null;
-      if (!mounted) return;
-      setState(() {});
-      return;
-    }
-
-    _bottomBannerAd?.dispose();
-    _bottomBannerAd = null;
-    if (!mounted) return;
-    final banner = await adMob.createBannerAd(
-      onAdLoaded: (_) {
-        if (!mounted) return;
-        setState(() {});
-      },
-    );
-    if (!mounted) {
-      banner?.dispose();
-      return;
-    }
-    _bottomBannerAd = banner;
-  }
-
   // ignore: unused_element
   Widget _buildBottomAdBanner(BannerAd bannerAd) {
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: () {
-        AdMobService().showInterstitialAd();
-      },
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-        child: Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: SLColors.bgElevated.withValues(alpha: 0.72),
-              borderRadius: SLRadius.lgAll,
-              border: Border.all(
-                color: SLColors.bgElevated.withValues(alpha: 0.45),
-              ),
-              boxShadow: SLShadow.subtle,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: SLColors.bgElevated.withValues(alpha: 0.72),
+            borderRadius: SLRadius.lgAll,
+            border: Border.all(
+              color: SLColors.bgElevated.withValues(alpha: 0.45),
             ),
-            child: ClipRRect(
-              borderRadius: SLRadius.mdAll,
-              child: SizedBox(
-                width: bannerAd.size.width.toDouble(),
-                height: bannerAd.size.height.toDouble(),
-                child: ConsentAdView(ad: bannerAd),
-              ),
+            boxShadow: SLShadow.subtle,
+          ),
+          child: ClipRRect(
+            borderRadius: SLRadius.mdAll,
+            child: SizedBox(
+              width: bannerAd.size.width.toDouble(),
+              height: bannerAd.size.height.toDouble(),
+              child: ConsentAdView(ad: bannerAd),
             ),
           ),
         ),
@@ -667,10 +633,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       unawaited(_initVipServices());
       unawaited(_loadSecurityWarningDismissState());
       unawaited(UiPrefs.ensureLoaded());
-      Future<void>.delayed(const Duration(seconds: 15), () {
-        if (!mounted) return;
-        _loadBottomBanner();
-      });
+      // Màn hiện tại không gắn banner; không tải native ad vô hình trong nền.
     });
   }
 
@@ -792,7 +755,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   @override
   void dispose() {
     UiPrefs.notifier.removeListener(_syncDraftsFromUiPrefs);
-    _bottomBannerAd?.dispose();
+    AdMobService().disposeBanner(_bottomBannerAd);
     // ✅ FIX: Cancel auto-save timer to ensure settings persist
     _autoSaveThemeTimer?.cancel();
     _uiPrefsDebounceTimer?.cancel();

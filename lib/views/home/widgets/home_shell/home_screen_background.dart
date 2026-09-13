@@ -256,9 +256,12 @@ class _StableShellBackgroundImageState
     final provider = _buildNetworkProvider(url);
     final startupFile = HomeStartupMediaCache.getFile(url);
     _networkProvider = provider;
-    _diskCachedProvider = startupFile != null ? FileImage(startupFile) : null;
+    _diskCachedProvider = startupFile != null
+        ? _buildFileProvider(startupFile)
+        : null;
 
     if (startupFile != null) {
+      if (mounted) setState(() {});
       return;
     }
 
@@ -282,7 +285,7 @@ class _StableShellBackgroundImageState
       final file = cachedFile?.file;
       if (file != null && await file.exists()) {
         setState(() {
-          _diskCachedProvider = FileImage(file);
+          _diskCachedProvider = _buildFileProvider(file);
         });
       }
     } catch (error) {
@@ -292,31 +295,21 @@ class _StableShellBackgroundImageState
     }
   }
 
-  ImageProvider<Object> _buildNetworkProvider(String url) {
-    final mediaQuery = MediaQuery.maybeOf(context);
-    final view = WidgetsBinding.instance.platformDispatcher.views.isNotEmpty
-        ? WidgetsBinding.instance.platformDispatcher.views.first
-        : null;
-    final devicePixelRatio =
-        mediaQuery?.devicePixelRatio ?? view?.devicePixelRatio ?? 1.0;
-    final logicalWidth =
-        mediaQuery?.size.width ??
-        ((view?.physicalSize.width ?? 0) / devicePixelRatio);
-    final logicalHeight =
-        mediaQuery?.size.height ??
-        ((view?.physicalSize.height ?? 0) / devicePixelRatio);
-    final qualityScale = devicePixelRatio >= 2.5 ? 0.75 : 0.85;
-    final cacheWidth = (logicalWidth * devicePixelRatio * qualityScale)
-        .round()
-        .clamp(600, 1280);
-    final cacheHeight = (logicalHeight * devicePixelRatio * qualityScale)
-        .round()
-        .clamp(960, 1920);
+  ImageProvider<Object> _buildFileProvider(File file) {
+    final size = HomeImagePolicy.backgroundSize(context: context);
+    return HomeImagePolicy.resized(
+      FileImage(file),
+      width: size.width,
+      height: size.height,
+    );
+  }
 
+  ImageProvider<Object> _buildNetworkProvider(String url) {
+    final size = HomeImagePolicy.backgroundSize(context: context);
     final provider = CachedNetworkImageProvider(
       url,
-      maxWidth: cacheWidth,
-      maxHeight: cacheHeight,
+      maxWidth: size.width,
+      maxHeight: size.height,
     );
     _homeShellBackgroundProviderCache[url] = provider;
     return provider;

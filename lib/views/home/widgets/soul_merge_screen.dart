@@ -984,11 +984,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
 
                             // Cùng hình đôi với lối vào Home và điểm chạm chính.
                             if (!isCompactHeader) ...[
-                              const SoulMergeMascot(
-                                size: 42,
-                                framed: true,
-                                animate: false,
-                              ),
+                              const SoulMergeMascot(size: 42, framed: true),
                               const SizedBox(width: 10),
                             ],
 

@@ -6,6 +6,7 @@ extension _MainHomeShortcutDockExt on _MainHomeTabState {
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
       child: _HomeScrapbookCard(
+        companionId: 'home-shortcuts',
         accentColor: SLColors.secondary,
         adornment: _HomeCardAdornment.paperClip,
         padding: EdgeInsets.zero,

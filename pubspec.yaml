@@ -189,11 +189,7 @@ flutter:
     - assets/games/rhythm-tiles/
     - assets/i18n/
     - assets/icon.png
-    - assets/icon_foreground.png
-    - assets/splash.png
-    - assets/splash_icon.png
-    - assets/splash_icon_rounded.png
-    - assets/splash_icon_android12.png
+    # PNG dùng sinh icon/splash native vẫn giữ trên đĩa, không đóng bản sao vào Flutter.
     - assets/images/avatar_male.jpg
     - assets/images/avatar_female.jpg
     - assets/images/female_avatar_sticker.json
@@ -202,9 +198,47 @@ flutter:
     - assets/images/soul_merge_sticker.json
     - assets/images/default_auth_bg.jpg
     - assets/images/default_home_bg.jpg
-    - assets/images/anhtomau_stickers/
-    - assets/images/soullocket_stickers/
-    - assets/images/diary_mood_stickers/
+    # UI/đường dẫn đã lưu vẫn dùng GIF; không đóng thêm các WebP cũ cùng tên.
+    - assets/images/anhtomau_stickers/sticker_1.gif
+    - assets/images/anhtomau_stickers/sticker_2.gif
+    - assets/images/anhtomau_stickers/sticker_3.gif
+    - assets/images/anhtomau_stickers/sticker_6.gif
+    - assets/images/anhtomau_stickers/sticker_7.gif
+    - assets/images/anhtomau_stickers/sticker_8.gif
+    - assets/images/anhtomau_stickers/sticker_9.gif
+    - assets/images/anhtomau_stickers/sticker_12.gif
+    - assets/images/anhtomau_stickers/sticker_13.gif
+    - assets/images/anhtomau_stickers/sticker_14.gif
+    - assets/images/anhtomau_stickers/sticker_15.gif
+    - assets/images/anhtomau_stickers/sticker_16.gif
+    - assets/images/anhtomau_stickers/sticker_17.gif
+    - assets/images/anhtomau_stickers/sticker_18.gif
+    - assets/images/anhtomau_stickers/sticker_20.gif
+    - assets/images/anhtomau_stickers/sticker_21.gif
+    - assets/images/anhtomau_stickers/sticker_22.gif
+    - assets/images/anhtomau_stickers/sticker_23.gif
+    - assets/images/anhtomau_stickers/sticker_24.gif
+    - assets/images/anhtomau_stickers/sticker_25.gif
+    - assets/images/anhtomau_stickers/sticker_27.gif
+    - assets/images/anhtomau_stickers/sticker_28.gif
+    - assets/images/anhtomau_stickers/sticker_30.gif
+    - assets/images/anhtomau_stickers/sticker_31.gif
+    - assets/images/anhtomau_stickers/sticker_32.gif
+    - assets/images/anhtomau_stickers/sticker_33.gif
+    - assets/images/anhtomau_stickers/sticker_34.gif
+    - assets/images/anhtomau_stickers/sticker_35.gif
+    # Khai báo từng WebP để không đóng lại PNG gốc và tài liệu tạo sticker.
+    - assets/images/soullocket_stickers/auth_gender_female_v1.webp
+    - assets/images/soullocket_stickers/auth_gender_male_v1.webp
+    - assets/images/soullocket_stickers/heart_atlas_v1.webp
+    - assets/images/soullocket_stickers/motion_couple_atlas_v1.webp
+    - assets/images/soullocket_stickers/novelty_atlas_v1.webp
+    - assets/images/transparent_stickers/soul_merge_comfort_atlas_v2_transparent.webp
+    - assets/images/soullocket_stickers/soul_merge_joy_atlas_v1.webp
+    - assets/images/transparent_stickers/soul_merge_love_atlas_v2_transparent.webp
+    - assets/images/soullocket_stickers/soul_merge_mascot_v2.webp
+    - assets/images/transparent_stickers/soul_merge_playful_atlas_v2_transparent.webp
+    - assets/images/transparent_stickers/diary_mood_atlas_v2_transparent.webp
     - assets/images/milestone_embedded/
 
     # Home screen bundled interaction stickers

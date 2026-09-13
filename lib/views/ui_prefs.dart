@@ -38,6 +38,8 @@ class UiPrefsState {
   final String brandMarkKey;
   final List<String> homeBlockOrder;
   final bool homeShowTimer;
+  final bool homeCompanionEnabled;
+  final bool homeCompanionSoundEnabled;
   final String homeLayoutKey;
   final bool showAvatarFrameIcon;
   final String friendlyChatPersona;
@@ -72,6 +74,8 @@ class UiPrefsState {
     required this.brandMarkKey,
     required this.homeBlockOrder,
     required this.homeShowTimer,
+    this.homeCompanionEnabled = true,
+    this.homeCompanionSoundEnabled = true,
     required this.homeLayoutKey,
     required this.showAvatarFrameIcon,
     required this.friendlyChatPersona,
@@ -107,6 +111,8 @@ class UiPrefsState {
     String? brandMarkKey,
     List<String>? homeBlockOrder,
     bool? homeShowTimer,
+    bool? homeCompanionEnabled,
+    bool? homeCompanionSoundEnabled,
     String? homeLayoutKey,
     bool? showAvatarFrameIcon,
     String? friendlyChatPersona,
@@ -144,6 +150,9 @@ class UiPrefsState {
       brandMarkKey: brandMarkKey ?? this.brandMarkKey,
       homeBlockOrder: homeBlockOrder ?? this.homeBlockOrder,
       homeShowTimer: homeShowTimer ?? this.homeShowTimer,
+      homeCompanionEnabled: homeCompanionEnabled ?? this.homeCompanionEnabled,
+      homeCompanionSoundEnabled:
+          homeCompanionSoundEnabled ?? this.homeCompanionSoundEnabled,
       homeLayoutKey: homeLayoutKey ?? this.homeLayoutKey,
       showAvatarFrameIcon: showAvatarFrameIcon ?? this.showAvatarFrameIcon,
       friendlyChatPersona: friendlyChatPersona ?? this.friendlyChatPersona,
@@ -183,6 +192,8 @@ class UiPrefsState {
     brandMarkKey: SoulLocketBrand.defaultStyleKey,
     homeBlockOrder: ['highlight', 'map', 'insight'],
     homeShowTimer: false,
+    homeCompanionEnabled: true,
+    homeCompanionSoundEnabled: true,
     homeLayoutKey: 'classic',
     showAvatarFrameIcon: true,
     friendlyChatPersona: "",
@@ -238,6 +249,8 @@ class UiPrefs {
   static const _kBrandMarkKey = 'il_brand_mark_key';
   static const _kHomeBlockOrderKey = 'il_home_block_order';
   static const _kHomeShowTimerKey = 'il_home_show_timer';
+  static const _kHomeCompanionEnabledKey = 'il_home_companion_enabled';
+  static const _kHomeCompanionSoundEnabledKey = 'il_home_companion_sound_enabled';
   static const _kShowAvatarFrameIconKey = 'il_show_avatar_frame_icon';
   static const _kFriendlyChatPersonaKey = 'il_friendly_chat_persona';
   static const _kHomeLayoutKey = 'il_home_layout_key';
@@ -477,6 +490,12 @@ class UiPrefs {
         homeShowTimer:
             prefs.getBool(_kHomeShowTimerKey) ??
             UiPrefsState.defaults.homeShowTimer,
+        homeCompanionEnabled:
+            prefs.getBool(_kHomeCompanionEnabledKey) ??
+            UiPrefsState.defaults.homeCompanionEnabled,
+        homeCompanionSoundEnabled:
+            prefs.getBool(_kHomeCompanionSoundEnabledKey) ??
+            UiPrefsState.defaults.homeCompanionSoundEnabled,
         showAvatarFrameIcon:
             prefs.getBool(_kShowAvatarFrameIconKey) ??
             UiPrefsState.defaults.showAvatarFrameIcon,
@@ -582,6 +601,14 @@ class UiPrefs {
     await prefs.setString(_kBrandMarkKey, normalized.brandMarkKey);
     await prefs.setStringList(_kHomeBlockOrderKey, normalized.homeBlockOrder);
     await prefs.setString(_kHomeLayoutKey, normalized.homeLayoutKey);
+    await prefs.setBool(
+      _kHomeCompanionEnabledKey,
+      normalized.homeCompanionEnabled,
+    );
+    await prefs.setBool(
+      _kHomeCompanionSoundEnabledKey,
+      normalized.homeCompanionSoundEnabled,
+    );
     await prefs.setString(_kUiVersionKey, normalized.uiVersion);
 
     try {
@@ -637,6 +664,8 @@ class UiPrefs {
       homeBlockOrder: state.homeBlockOrder,
       homeLayoutKey: _normalizeHomeLayoutKey(state.homeLayoutKey),
       homeShowTimer: state.homeShowTimer,
+      homeCompanionEnabled: state.homeCompanionEnabled,
+      homeCompanionSoundEnabled: state.homeCompanionSoundEnabled,
       showAvatarFrameIcon: state.showAvatarFrameIcon,
       friendlyChatPersona: state.friendlyChatPersona.trim(),
       uiVersion: _normalizeUiVersion(state.uiVersion),
@@ -648,6 +677,34 @@ class UiPrefs {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_kHomeShowTimerKey, enabled);
     notifier.value = notifier.value.copyWith(homeShowTimer: enabled);
+  }
+
+  /// Tùy chọn bé chăm sóc chỉ lưu trên thiết bị, không tạo bản sao lên cloud.
+  static Future<void> setHomeCompanionEnabled(bool enabled) async {
+    await ensureLoaded();
+    if (notifier.value.homeCompanionEnabled == enabled) return;
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
+    final saved = await prefs.setBool(_kHomeCompanionEnabledKey, enabled);
+    if (!saved) {
+      throw StateError('Could not persist the Home companion preference');
+    }
+    notifier.value = notifier.value.copyWith(homeCompanionEnabled: enabled);
+  }
+
+  /// Âm thanh của bé là lựa chọn riêng trên thiết bị, không đồng bộ lên cloud.
+  static Future<void> setHomeCompanionSoundEnabled(bool enabled) async {
+    await ensureLoaded();
+    if (notifier.value.homeCompanionSoundEnabled == enabled) return;
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
+    final saved = await prefs.setBool(_kHomeCompanionSoundEnabledKey, enabled);
+    if (!saved) {
+      throw StateError('Could not persist the Home companion sound preference');
+    }
+    notifier.value = notifier.value.copyWith(homeCompanionSoundEnabled: enabled);
   }
 
   static String _normalizeHomeLayoutKey(String value) {
