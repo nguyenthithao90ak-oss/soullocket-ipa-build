@@ -7,6 +7,7 @@ import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/pairing_service.dart';
+import 'package:soullocket_app/utils/services/sound_service.dart';
 import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_invite_qr_codec.dart';
 import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_qr_scanner_screen.dart';
 
@@ -25,6 +26,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
   bool _isLoading = false;
   bool _isRestoring = true;
   bool _isFinalizing = false;
+  bool _pairingSoundPlayed = false;
   String? _errorMsg;
   String _status = 'input';
 
@@ -153,6 +155,10 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
         return;
       }
       setState(() => _status = 'success');
+      if (!_pairingSoundPlayed) {
+        _pairingSoundPlayed = true;
+        unawaited(SoundService().playPaired());
+      }
       await Future<void>.delayed(const Duration(milliseconds: 1900));
       if (mounted) {
         Navigator.of(context).pop(true);

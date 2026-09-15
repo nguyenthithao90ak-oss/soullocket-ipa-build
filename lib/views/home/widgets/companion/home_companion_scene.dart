@@ -23,6 +23,8 @@ class HomeCompanionScene extends StatefulWidget {
     this.isSwiping,
     this.captureMode,
     this.soundEnabled = false,
+    this.pinToViewport = false,
+    this.followScroll = false,
     this.audioSuppressed,
     this.safeInsets = const EdgeInsets.fromLTRB(26, 84, 26, 92),
     this.motion,
@@ -36,6 +38,12 @@ class HomeCompanionScene extends StatefulWidget {
   final bool enabled;
   final bool animate;
   final bool soundEnabled;
+
+  /// Ghim bé tại góc an toàn của màn hình, không chạy theo layout/cuộn.
+  final bool pinToViewport;
+
+  /// Đường đi ở tọa độ nội dung; lớp vẽ dịch cùng ScrollPosition trong frame.
+  final bool followScroll;
   final ValueListenable<bool>? audioSuppressed;
   final ValueListenable<bool> isActive;
   final ValueListenable<bool>? isScrolling;
@@ -60,6 +68,8 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   late final Ticker _ticker;
   final _paintKey = GlobalKey();
   final _visible = ValueNotifier(false);
+  final _paintOffset = ValueNotifier(Offset.zero);
+  ScrollPosition? _scrollPosition;
   final Set<_HomeCompanionAnchorState> _anchors = {};
   Duration _lastTick = Duration.zero;
   bool _measureScheduled = false;
@@ -140,37 +150,87 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
       _routeCurrent &&
       _tickerAllowed &&
       widget.isActive.value &&
-      !(widget.captureMode?.value ?? false) &&
-      !(widget.isSwiping?.value ?? false) &&
-      !(widget.isScrolling?.value ?? false) &&
-      !_localScrolling;
+      !(widget.captureMode?.value ?? false);
+
+  // Cờ swipe của Home có thể bật ngay khi đặt tay, chưa phải chuyển tab.
+  // Chỉ dừng chuyển động/âm thanh, không tháo bé khỏi lớp vẽ đang hiển thị.
+  bool get _interactionPaused =>
+      (widget.isSwiping?.value ?? false) ||
+      (widget.isScrolling?.value ?? false) ||
+      _localScrolling ||
+      _downPointers.isNotEmpty;
+
+  bool get _followingScroll =>
+      widget.followScroll &&
+      (_scrollPosition?.isScrollingNotifier.value ?? _localScrolling);
+
+  void _observeScroll(ScrollPosition? position) {
+    if (!widget.followScroll ||
+        position == null ||
+        axisDirectionToAxis(position.axisDirection) != Axis.vertical ||
+        identical(position, _scrollPosition)) {
+      return;
+    }
+    _scrollPosition?.removeListener(_scrollChanged);
+    _scrollPosition?.isScrollingNotifier.removeListener(_scrollActivityChanged);
+    _scrollPosition = position;
+    position.addListener(_scrollChanged);
+    position.isScrollingNotifier.addListener(_scrollActivityChanged);
+    _scrollChanged();
+  }
+
+  void _scrollChanged() {
+    final position = _scrollPosition;
+    if (position == null || !position.hasPixels) return;
+    final sign = position.axisDirection == AxisDirection.up ? 1.0 : -1.0;
+    _paintOffset.value = Offset(0, position.pixels * sign);
+  }
+
+  void _scrollActivityChanged() {
+    if (!mounted) return;
+    _sync();
+  }
 
   void _externalStateChanged() {
     if (!mounted) return;
     if (!_canShow) _clearPointers();
     _sync();
     _scheduleMeasure();
+    _scheduleApproach();
   }
 
   void _sync() {
     final show = _canShow;
+    final becameHidden = _visible.value && !show;
     if (!show) _clearPointers();
     _visible.value = show;
     final run =
         show &&
         widget.animate &&
         !_reduced &&
-        _downPointers.isEmpty &&
+        (widget.pinToViewport || _followingScroll || !_interactionPaused) &&
         _motion.hasSurfaces;
     _audio.setEnabled(
-      run && widget.soundEnabled && !(widget.audioSuppressed?.value ?? false),
+      show &&
+          widget.animate &&
+          !_reduced &&
+          _motion.hasSurfaces &&
+          widget.soundEnabled &&
+          !(widget.audioSuppressed?.value ?? false),
     );
+    _audio.setPaused(_interactionPaused);
     if (run && !_ticker.isActive) {
       _lastTick = Duration.zero;
       _ticker.start();
     } else if (!run && _ticker.isActive) {
       _ticker.stop();
       _lastTick = Duration.zero;
+      // Giữ nguyên cả vị trí và độ cao cú nhảy khi người dùng chạm/giữ.
+      // settle() ở đây sẽ làm bé rơi về mặt ô, trông như biến mất/chớp hình.
+      if (!show || !_interactionPaused) _motion.settle();
+    } else if (becameHidden) {
+      // Home có thể bị che sau khi ngón tay đã dừng ticker. Vẫn phải
+      // hủy lời chào/ý định cũ đúng một lần khi thực sự rời màn hình.
       _motion.settle();
     }
   }
@@ -180,7 +240,17 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     final delta = elapsed - _lastTick;
     _lastTick = elapsed;
     if (_motion.hasSurfaces) _motion.advance(delta);
-    _audio.update(_motion.phase);
+    _audio.update(
+      _motion.phase,
+      greeting: _motion.greetingSerial,
+      greetingActive: _motion.affection > 0,
+    );
+  }
+
+  @override
+  void didChangeMetrics() {
+    // Viewport đổi khi xoay máy/resize cửa sổ, kể cả child không rebuild.
+    _scheduleMeasure();
   }
 
   @override
@@ -207,11 +277,25 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _measureScheduled = false;
       if (!mounted) return;
+      // Trong lúc kéo, giữ hình học hợp lệ gần nhất. Đo lại sau khi thả
+      // thay vì liên tục xóa/đổi đường đi theo các ô đang lướt khỏi màn hình.
+      if (widget.enabled &&
+          (!_canShow ||
+              (!widget.pinToViewport &&
+                  !widget.followScroll &&
+                  _interactionPaused))) {
+        return;
+      }
       final root = _paintKey.currentContext?.findRenderObject();
       if (root is! RenderBox || !root.hasSize || root.size.isEmpty) return;
-      final viewport = widget.safeInsets.deflateRect(Offset.zero & root.size);
+      var viewport = widget.safeInsets.deflateRect(Offset.zero & root.size);
       if (!widget.enabled) {
         _motion.setSurfaces(const [], viewport);
+        _sync();
+        return;
+      }
+      if (widget.pinToViewport) {
+        _motion.setPinnedPosition(viewport.bottomRight, viewport);
         _sync();
         return;
       }
@@ -221,11 +305,22 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
         final box = anchor._key.currentContext?.findRenderObject();
         if (box is! RenderBox || !box.attached || !box.hasSize) continue;
         final transform = box.getTransformTo(root);
+        final scroll = Scrollable.maybeOf(anchor.context)?.position;
+        _observeScroll(scroll);
+        final contentShift =
+            widget.followScroll && identical(scroll, _scrollPosition)
+            ? -_paintOffset.value
+            : Offset.zero;
         final localRect = anchor.widget.insets.deflateRect(
           Offset.zero & box.size,
         );
-        final rect = MatrixUtils.transformRect(transform, localRect);
-        if (!rect.isFinite || rect.isEmpty || !rect.overlaps(viewport)) {
+        final rect = MatrixUtils.transformRect(
+          transform,
+          localRect,
+        ).shift(contentShift);
+        if (!rect.isFinite ||
+            rect.isEmpty ||
+            (!widget.followScroll && !rect.overlaps(viewport))) {
           continue;
         }
         List<Offset>? outline;
@@ -239,7 +334,10 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
           final points = sampleHomeCompanionOutline(path);
           if (points == null) continue;
           outline = List.unmodifiable(
-            points.map((point) => MatrixUtils.transformPoint(transform, point)),
+            points.map(
+              (point) =>
+                  MatrixUtils.transformPoint(transform, point) + contentShift,
+            ),
           );
         }
         surfaces.add(
@@ -251,8 +349,23 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
             obstacleBounds: MatrixUtils.transformRect(
               box.getTransformTo(root),
               Offset.zero & box.size,
-            ),
+            ).shift(contentShift),
           ),
+        );
+      }
+      if (widget.followScroll && surfaces.isNotEmpty) {
+        // Bao phủ các ô đã mount, không cắt đường đi theo mép viewport mỗi
+        // lần cuộn. Thỏ ra khỏi khung cùng ô, không dịch chuyển tức thời sang ô khác.
+        final bottom = surfaces.fold<double>(
+          viewport.bottom,
+          (value, surface) =>
+              surface.bounds.bottom > value ? surface.bounds.bottom : value,
+        );
+        viewport = Rect.fromLTRB(
+          viewport.left,
+          viewport.top,
+          viewport.right,
+          bottom,
         );
       }
       _motion.setSurfaces(surfaces, viewport);
@@ -262,15 +375,25 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
 
   bool _onScroll(ScrollNotification notification) {
     if (notification.depth != 0) return false;
+    if (widget.followScroll &&
+        notification.metrics.axis == Axis.vertical &&
+        notification.context != null) {
+      _observeScroll(Scrollable.maybeOf(notification.context!)?.position);
+    }
     if (notification is ScrollStartNotification) {
       _localScrolling = true;
-      _dragged = true;
       _sync();
+    } else if (notification is ScrollUpdateNotification &&
+        (notification.scrollDelta ?? 0) != 0) {
+      // Scrollable có thể thắng gesture ở vùng trống trước khi ngón tay
+      // thật sự kéo. Chỉ loại lần chạm khi nội dung đã dịch chuyển.
+      _dragged = true;
     } else if (notification is ScrollEndNotification) {
       _localScrolling = false;
       _sync();
+      _scheduleApproach();
     }
-    _scheduleMeasure();
+    if (!widget.followScroll) _scheduleMeasure();
     return false;
   }
 
@@ -313,31 +436,49 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     _downPointers.remove(event.pointer);
     if (_downPointers.isEmpty) _clearPointers();
     _sync();
+    _scheduleMeasure();
     if (!shortTap || !_canShow || !widget.animate || _reduced) return;
     // Unlock ngay trong thao tác thật; không tự phát âm khi vừa mở Home.
     if (widget.soundEnabled) _audio.unlock();
     // Gộp nhiều lần chạm trong cùng frame, chỉ đón điểm mới nhất.
     _pendingApproach = event.position;
-    if (_approachScheduled) return;
+    _scheduleApproach();
+  }
+
+  void _scheduleApproach() {
+    if (_approachScheduled || _pendingApproach == null) return;
     _approachScheduled = true;
     // Đợi gesture gốc xử lý mở trang/bảng trước khi quyết định đuổi theo.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _approachScheduled = false;
       final target = _pendingApproach;
-      _pendingApproach = null;
       if (!mounted ||
           target == null ||
-          _downPointers.isNotEmpty ||
           !_canShow ||
           !(ModalRoute.isCurrentOf(context) ?? true)) {
+        _pendingApproach = null;
         return;
       }
+      // Parent có thể hạ cờ swipe ở frame sau PointerUp. Giữ lần chạm
+      // hợp lệ tới khi cờ hạ, không bỏ mất thao tác hoặc chạy lúc đang kéo.
+      if (_interactionPaused) return;
+      _pendingApproach = null;
+      if (!widget.animate || _reduced) return;
       final box = _paintKey.currentContext?.findRenderObject();
       if (box is RenderBox && box.hasSize) {
-        final local = box.globalToLocal(target);
-        if (widget.safeInsets
-            .deflateRect(Offset.zero & box.size)
-            .contains(local)) {
+        final screenLocal = box.globalToLocal(target);
+        final local =
+            screenLocal -
+            (widget.followScroll ? _paintOffset.value : Offset.zero);
+        // Khi ghim, chỉ vuốt ve trực tiếp bé mới chào. Chạm nút/cuộn ở
+        // nơi khác không khiến bé đuổi theo hoặc phát tiếng ngoài ý muốn.
+        if (widget.pinToViewport && !_motion.isPetting(local)) return;
+        final insidePaint = (Offset.zero & box.size).contains(screenLocal);
+        if (insidePaint &&
+            (widget.safeInsets
+                    .deflateRect(Offset.zero & box.size)
+                    .contains(screenLocal) ||
+                _motion.isPetting(local))) {
           _motion.approach(local);
         }
       }
@@ -361,6 +502,9 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     _listen(widget, false);
     WidgetsBinding.instance.removeObserver(this);
     _ticker.dispose();
+    _scrollPosition?.removeListener(_scrollChanged);
+    _scrollPosition?.isScrollingNotifier.removeListener(_scrollActivityChanged);
+    _paintOffset.dispose();
     _audio.setEnabled(false);
     if (widget.audio == null) _audio.dispose();
     _visible.dispose();
@@ -381,13 +525,16 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
         child: NotificationListener<ScrollNotification>(
           onNotification: _onScroll,
           child: Listener(
-            behavior: HitTestBehavior.translucent,
+            // Nhận cả chạm vào tai ở khoảng trống phía trên ô. Listener chỉ
+            // quan sát pointer; nút và gesture của widget con vẫn xử lý trước.
+            behavior: HitTestBehavior.opaque,
             onPointerDown: _onPointerDown,
             onPointerMove: _onPointerMove,
             onPointerUp: _onPointerUp,
             onPointerCancel: (_) {
               _clearPointers();
               _sync();
+              _scheduleMeasure();
             },
             child: Stack(
               key: _paintKey,
@@ -404,6 +551,9 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
                                   key: const ValueKey('home-companion-paint'),
                                   painter: HomeCompanionPainter(
                                     motion: _motion,
+                                    paintOffset: widget.followScroll
+                                        ? _paintOffset
+                                        : null,
                                     showEffects: widget.animate && !_reduced,
                                     darkMode:
                                         Theme.of(context).brightness ==

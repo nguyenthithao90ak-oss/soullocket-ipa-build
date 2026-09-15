@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 
 import 'home_companion_motion.dart';
 
-enum HomeCompanionSound { hop, sweep, success }
+enum HomeCompanionSound { greeting, hop, sweep, success }
 
 /// Đầu ra tách riêng để kiểm thử việc hủy âm thanh mà không mở thiết bị audio.
 abstract interface class HomeCompanionAudioOutput {
@@ -30,6 +30,7 @@ class HomeCompanionAudio {
   final HomeCompanionAudioOutput _output;
   final Duration Function() _clock;
   bool _enabled = false;
+  bool _paused = false;
   bool _unlocked = false;
   bool _busy = false;
   int _pendingStops = 0;
@@ -37,11 +38,24 @@ class HomeCompanionAudio {
   int _generation = 0;
   Duration? _lastSound;
   HomeCompanionPhase? _phase;
+  int _greeting = 0;
+  Duration? _pendingGreeting;
 
   void setEnabled(bool enabled) {
     if (_disposed || _enabled == enabled) return;
     _enabled = enabled;
     if (!enabled) stop();
+  }
+
+  /// Tạm ngừng tiếng khi giữ/kéo tay, nhưng vẫn nhận lần unlock im lặng
+  /// ngay trong PointerUp dù parent hạ cờ swipe chậm hơn một frame.
+  void setPaused(bool paused) {
+    if (_disposed || _paused == paused) return;
+    _paused = paused;
+    if (paused) {
+      _pendingGreeting = null;
+      if (_unlocked || _busy) stop();
+    }
   }
 
   /// Chỉ gọi trực tiếp từ một lần chạm/click hợp lệ của người dùng.
@@ -69,10 +83,38 @@ class HomeCompanionAudio {
     }
   }
 
-  void update(HomeCompanionPhase phase) {
-    if (_disposed || _phase == phase) return;
+  void update(
+    HomeCompanionPhase phase, {
+    int? greeting,
+    bool greetingActive = true,
+  }) {
+    if (_disposed) return;
+    final phaseChanged = _phase != phase;
     _phase = phase;
-    if (!_enabled || !_unlocked || _busy || _pendingStops > 0) return;
+    if (greeting != null && greeting != _greeting) {
+      _greeting = greeting;
+      _pendingGreeting = _enabled && !_paused && greetingActive
+          ? _clock()
+          : null;
+    }
+    if (!greetingActive) _pendingGreeting = null;
+    if (!_enabled || _paused) return;
+    final pending = _pendingGreeting;
+    if (pending != null) {
+      // Chỉ đợi unlock rất ngắn; không phát bù lời chào sau khi người dùng
+      // đã chuyển việc, bật lại âm thanh hoặc quay về Home.
+      if (_clock() - pending > const Duration(milliseconds: 500) ||
+          _coolingDown) {
+        _pendingGreeting = null;
+      } else if (_ready) {
+        _pendingGreeting = null;
+        _emit(HomeCompanionSound.greeting);
+        return;
+      } else {
+        return;
+      }
+    }
+    if (!phaseChanged || !_ready) return;
     final sound = switch (phase) {
       HomeCompanionPhase.hopping => HomeCompanionSound.hop,
       HomeCompanionPhase.sweeping => HomeCompanionSound.sweep,
@@ -80,10 +122,18 @@ class HomeCompanionAudio {
       _ => null,
     };
     if (sound == null) return;
-    final now = _clock();
-    final previous = _lastSound;
-    if (previous != null && now - previous < cooldown) return;
-    _lastSound = now;
+    _emit(sound);
+  }
+
+  bool get _ready =>
+      _enabled && !_paused && _unlocked && !_busy && _pendingStops == 0;
+
+  bool get _coolingDown =>
+      _lastSound != null && _clock() - _lastSound! < cooldown;
+
+  void _emit(HomeCompanionSound sound) {
+    if (_coolingDown) return;
+    _lastSound = _clock();
     _busy = true;
     unawaited(_play(sound, _generation));
   }
@@ -94,7 +144,7 @@ class HomeCompanionAudio {
   Future<void> _play(HomeCompanionSound sound, int generation) async {
     try {
       await _output.prepare(waveFor(sound));
-      if (!_isCurrent(generation)) return;
+      if (!_isCurrent(generation) || _paused) return;
       await _output.play(volume);
       if (!_isCurrent(generation) && !_disposed) await _stopPlayback();
     } catch (_) {
@@ -109,6 +159,7 @@ class HomeCompanionAudio {
     if (_disposed) return;
     _generation++;
     _phase = null;
+    _pendingGreeting = null;
     unawaited(_stopPlayback());
   }
 
@@ -144,6 +195,7 @@ class HomeCompanionAudio {
   static Uint8List waveFor(HomeCompanionSound sound) {
     const sampleRate = 22050;
     final duration = switch (sound) {
+      HomeCompanionSound.greeting => 0.28,
       HomeCompanionSound.hop => 0.12,
       HomeCompanionSound.sweep => 0.22,
       HomeCompanionSound.success => 0.30,
@@ -156,8 +208,23 @@ class HomeCompanionAudio {
     var filteredNoise = 0.0;
     for (var i = 0; i < count; i++) {
       final progress = i / (count - 1);
-      final envelope = math.pow(math.sin(math.pi * progress), 2).toDouble();
+      // Hai tiếng líu ríu có khoảng nghỉ và fade riêng, không cắt sóng
+      // đột ngột gây click; cao độ mềm hơn tiếng thành công.
+      final chirpProgress = ((progress % 0.5) / 0.42).clamp(0.0, 1.0);
+      final envelope = math
+          .pow(
+            math.sin(
+              math.pi *
+                  (sound == HomeCompanionSound.greeting
+                      ? chirpProgress
+                      : progress),
+            ),
+            2,
+          )
+          .toDouble();
       final frequency = switch (sound) {
+        HomeCompanionSound.greeting =>
+          (progress < 0.5 ? 560.0 : 700.0) + 130 * chirpProgress,
         HomeCompanionSound.hop => 480 + 320 * progress,
         HomeCompanionSound.sweep => 150.0,
         HomeCompanionSound.success => progress < 0.5 ? 660.0 : 880.0,

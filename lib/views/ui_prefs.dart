@@ -250,7 +250,8 @@ class UiPrefs {
   static const _kHomeBlockOrderKey = 'il_home_block_order';
   static const _kHomeShowTimerKey = 'il_home_show_timer';
   static const _kHomeCompanionEnabledKey = 'il_home_companion_enabled';
-  static const _kHomeCompanionSoundEnabledKey = 'il_home_companion_sound_enabled';
+  static const _kHomeCompanionSoundEnabledKey =
+      'il_home_companion_sound_enabled';
   static const _kShowAvatarFrameIconKey = 'il_show_avatar_frame_icon';
   static const _kFriendlyChatPersonaKey = 'il_friendly_chat_persona';
   static const _kHomeLayoutKey = 'il_home_layout_key';
@@ -679,6 +680,19 @@ class UiPrefs {
     notifier.value = notifier.value.copyWith(homeShowTimer: enabled);
   }
 
+  /// Đổi âm thao tác ngay trên thiết bị, không cần ghi dữ liệu ngôi nhà.
+  static Future<void> setTouchSound(bool enabled) async {
+    await ensureLoaded();
+    if (notifier.value.touchSound == enabled) return;
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
+    if (!await prefs.setBool(_kTouchSoundKey, enabled)) {
+      throw StateError('Could not persist the action sound preference');
+    }
+    notifier.value = notifier.value.copyWith(touchSound: enabled);
+  }
+
   /// Tùy chọn bé chăm sóc chỉ lưu trên thiết bị, không tạo bản sao lên cloud.
   static Future<void> setHomeCompanionEnabled(bool enabled) async {
     await ensureLoaded();
@@ -704,7 +718,9 @@ class UiPrefs {
     if (!saved) {
       throw StateError('Could not persist the Home companion sound preference');
     }
-    notifier.value = notifier.value.copyWith(homeCompanionSoundEnabled: enabled);
+    notifier.value = notifier.value.copyWith(
+      homeCompanionSoundEnabled: enabled,
+    );
   }
 
   static String _normalizeHomeLayoutKey(String value) {

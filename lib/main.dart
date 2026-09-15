@@ -10,6 +10,7 @@
 
 import 'dart:async';
 import 'package:soullocket_app/core/bootstrap/app_bootstrap.dart';
+import 'package:soullocket_app/core/bootstrap/deferred_bootstrap_tasks.dart';
 import 'package:soullocket_app/core/bootstrap/background_handlers.dart'
     as background_handlers;
 import 'package:soullocket_app/utils/soullocket_security_watermark.dart';
@@ -450,39 +451,60 @@ void _scheduleDeferredBootstrap() {
             );
             return true;
           };
-          await Future.wait([
-            initializeDeferredFirebaseAppCheck(),
-            _purgeDeprecatedSecretsDeferred(),
-            _warmUpOfflineCache(),
-            _warmUpLocalDatabase(),
-            _warmUpWidgetService(),
-            _warmUpGoogleFonts(),
-            StorageService.instance.purgeStaleCache(),
-          ]);
-          unawaited(_warmUpBackgroundServices());
-
-          // Delay heavy SDK initializations to ensure smooth first frames
-          unawaited(
-            Future.delayed(const Duration(seconds: 3), () {
-              unawaited(_initializeGoogleMobileAds());
-            }),
+          await runDeferredBootstrapTasks(
+            prepareCore: () async {
+              // Giữ nguyên thứ tự bảo mật/App Check và điều kiện trước SDK.
+              await Future.wait([
+                initializeDeferredFirebaseAppCheck(),
+                _purgeDeprecatedSecretsDeferred(),
+                _warmUpOfflineCache(),
+                _warmUpLocalDatabase(),
+                _warmUpWidgetService(),
+              ]);
+            },
+            warmFonts: _warmUpGoogleFonts,
+            maintainCache: _purgeStaleCacheDeferred,
+            startBackground: _warmUpBackgroundServices,
+            initializeAds: _initializeGoogleMobileAds,
+            onOptionalError: _reportDeferredBootstrapError,
           );
         } catch (error, stackTrace) {
-          debugPrint(
-            'Deferred bootstrap error: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('core_err_bg_task_failed')).message}',
-          );
-          unawaited(
-            ErrorLoggerService.instance.logError(
-              error,
-              stackTrace,
-              reason: 'deferred_bootstrap_error',
-              fatal: false,
-            ),
-          );
+          _reportDeferredBootstrapError(error, stackTrace);
         }
       }),
     );
   });
+}
+
+void _reportDeferredBootstrapError(Object error, StackTrace stackTrace) {
+  debugPrint(
+    'Deferred bootstrap error: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('core_err_bg_task_failed')).message}',
+  );
+  unawaited(
+    ErrorLoggerService.instance.logError(
+      error,
+      stackTrace,
+      reason: 'deferred_bootstrap_error',
+      fatal: false,
+    ),
+  );
+}
+
+final _cacheMaintenanceGate = CacheMaintenanceGate();
+
+Future<void> _purgeStaleCacheDeferred() async {
+  if (kIsWeb) return;
+  // Đã lùi 30 giây sau frame đầu; không dùng Priority.idle vì Home có
+  // animation liên tục có thể khiến tác vụ đó bị hoãn vô thời hạn.
+  final prefs = await OfflineCacheService.getPrefs();
+  const lastSweepKey = 'download_cache_last_sweep_v1';
+  await _cacheMaintenanceGate.runIfDue(
+    readLastRunMs: () async => prefs.getInt(lastSweepKey),
+    writeLastRunMs: (value) async {
+      await prefs.setInt(lastSweepKey, value);
+    },
+    task: () => StorageService.instance.purgeStaleCache(),
+  );
 }
 
 Future<void> _purgeDeprecatedSecretsDeferred() async {
@@ -502,7 +524,7 @@ Future<void> _warmUpGoogleFonts() async {
       GoogleFonts.dancingScript(),
       GoogleFonts.caveat(),
       GoogleFonts.nunito(),
-    ]);
+    ]).timeout(const Duration(seconds: 2));
   } catch (e) {
     debugPrint('GoogleFonts pre-warm info: $e');
   }

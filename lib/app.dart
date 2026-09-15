@@ -8,6 +8,7 @@ import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/core/app_router.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
+import 'package:soullocket_app/widgets/sound_effects_scope.dart';
 
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 
@@ -54,7 +55,9 @@ class MyApp extends StatelessWidget {
                     }
                     return false; // let the notification bubble up further if needed
                   },
-                  child: child ?? const SizedBox.shrink(),
+                  child: SoundEffectsScope(
+                    child: child ?? const SizedBox.shrink(),
+                  ),
                 ),
               ),
             );

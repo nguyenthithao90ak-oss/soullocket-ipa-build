@@ -220,9 +220,12 @@ class _StableAvatarNetworkImage extends StatelessWidget {
         if (startupFile != null &&
             startupFile.existsSync() &&
             startupFile.lengthSync() > 0) {
-          return Image.file(
-            startupFile,
-            cacheWidth: HomeImagePolicy.avatarPixels,
+          return Image(
+            image: HomeImagePolicy.resized(
+              FileImage(startupFile),
+              width: HomeImagePolicy.avatarPixels,
+              height: HomeImagePolicy.avatarPixels,
+            ),
             fit: fit,
             gaplessPlayback: true,
             errorBuilder: (_, __, ___) => buildFallback(fit),

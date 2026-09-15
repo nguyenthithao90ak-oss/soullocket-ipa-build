@@ -5,6 +5,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
   void _handleMessageScroll() {
     if (!_messagesScrollController.hasClients ||
         _isLoadingOlderMessages ||
+        _hasOlderMessageError ||
         !_hasMoreMessages) {
       return;
     }
@@ -52,7 +53,12 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
   }
 
   Future<void> _loadInitialMessages() async {
-    setState(() => _isInitialMessagesLoading = true);
+    if (!mounted || _initialMessageRequestInFlight) return;
+    _initialMessageRequestInFlight = true;
+    setState(() {
+      _isInitialMessagesLoading = true;
+      _hasInitialMessageError = false;
+    });
     try {
       final page = _isInternal
           ? await _chatService.fetchInternalMessagesPage(
@@ -67,12 +73,14 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
       if (!mounted) return;
       _replaceMessageState(page);
       _hasMoreMessages = page.length >= _ChatDetailScreenState._chatPageSize;
+      _liveMessageAnchorTs = _newestMessageTs;
+      _listenForNewMessages();
     } catch (_) {
       if (!mounted) return;
-      _replaceMessageState(const []);
+      _hasInitialMessageError = true;
       _hasMoreMessages = false;
     } finally {
-      _listenForNewMessages();
+      _initialMessageRequestInFlight = false;
       if (mounted) {
         setState(() => _isInitialMessagesLoading = false);
       }
@@ -80,25 +88,32 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
   }
 
   Future<void> _loadOlderMessages() async {
+    if (!mounted || _isLoadingOlderMessages) return;
     final cursor = _oldestMessageTs;
     if (cursor == null) {
       _hasMoreMessages = false;
       return;
     }
 
-    setState(() => _isLoadingOlderMessages = true);
+    final beforeId = _messages.last.id;
+    setState(() {
+      _isLoadingOlderMessages = true;
+      _hasOlderMessageError = false;
+    });
     try {
       final older = _isInternal
           ? await _chatService.fetchInternalMessagesPage(
               widget.myHouseId,
               limit: _ChatDetailScreenState._chatPageSize,
               beforeTs: cursor,
+              beforeId: beforeId,
             )
           : await _chatService.fetchMessagesPage(
               widget.myHouseId,
               widget.targetHouseId,
               limit: _ChatDetailScreenState._chatPageSize,
               beforeTs: cursor,
+              beforeId: beforeId,
             );
       if (!mounted) return;
       if (older.isEmpty) {
@@ -134,7 +149,10 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
       _notifyMessagesChanged();
     } catch (_) {
       if (mounted) {
-        setState(() => _isLoadingOlderMessages = false);
+        setState(() {
+          _isLoadingOlderMessages = false;
+          _hasOlderMessageError = true;
+        });
       }
     }
   }
@@ -142,7 +160,8 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
   void _replaceMessageState(List<ChatMessage> messages) {
     _messages
       ..clear()
-      ..addAll(messages);
+      ..addAll(messages)
+      ..sort(_compareMessageOrder);
     _messageIds
       ..clear()
       ..addAll(messages.map((message) => message.id));
@@ -158,20 +177,37 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
   }
 
   void _listenForNewMessages() {
-    _liveMessageSub?.cancel();
+    if (!mounted) return;
+    unawaited(_liveMessageSub?.cancel());
+    // Giữ mốc cũ khi thử lại; lấy mốc mới nhất có thể bỏ sót tin trong khoảng
+    // mất mạng. Seed rỗng chỉ mở truy vấn giới hạn, không dùng mốc 0.
+    _liveMessageAnchorTs ??= _oldestMessageTs;
+    var mayEnableSeedPagination = _messages.isEmpty;
+    setState(() => _hasLiveMessageError = false);
     final stream = _isInternal
         ? _chatService.streamNewInternalMessages(
             widget.myHouseId,
-            afterTs: _newestMessageTs,
+            afterTs: _liveMessageAnchorTs,
           )
         : _chatService.streamNewMessages(
             widget.myHouseId,
             widget.targetHouseId,
-            afterTs: _newestMessageTs,
+            afterTs: _liveMessageAnchorTs,
           );
     _liveMessageSub = stream.listen((message) {
       if (!mounted) return;
+      if (_hasLiveMessageError) {
+        setState(() => _hasLiveMessageError = false);
+      }
+      // Cache offline có thể trả trang đầu rỗng dù server còn lịch sử.
+      // Cho phép phân trang sau khi seed có dữ liệu, kể cả chưa đủ 25 tin.
+      if (mayEnableSeedPagination) {
+        mayEnableSeedPagination = false;
+        _hasMoreMessages = true;
+      }
       _upsertLiveMessage(message);
+    }, onError: (Object error, StackTrace stack) {
+      if (mounted) setState(() => _hasLiveMessageError = true);
     });
   }
 

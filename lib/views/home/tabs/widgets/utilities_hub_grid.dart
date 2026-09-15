@@ -88,19 +88,27 @@ class UtilitiesHubGrid extends StatelessWidget {
                   crossAxisSpacing: spacing,
                   childAspectRatio: itemWidth / tileHeight,
                 ),
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final app = apps[index];
-                  return RepaintBoundary(
-                    child: UtilitiesHubItem(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final app = apps[index];
+                    return RepaintBoundary(
                       key: ValueKey<String>(app.id),
-                      app: app,
-                      isEditMode: isEditMode,
-                      onTap: () => onAppTap(app.id),
-                      onReorder: onReorder,
-                      onEditModeChanged: onEditModeChanged,
-                    ),
-                  );
-                }, childCount: apps.length),
+                      child: UtilitiesHubItem(
+                        app: app,
+                        isEditMode: isEditMode,
+                        onTap: () => onAppTap(app.id),
+                        onReorder: onReorder,
+                        onEditModeChanged: onEditModeChanged,
+                      ),
+                    );
+                  },
+                  childCount: apps.length,
+                  findChildIndexCallback: (key) {
+                    if (key is! ValueKey<String>) return null;
+                    final index = apps.indexWhere((app) => app.id == key.value);
+                    return index < 0 ? null : index;
+                  },
+                ),
               ),
             ),
             if (showBottomBanner)

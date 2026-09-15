@@ -28,6 +28,21 @@ extension _StickerObjects on LivingStickerPainter {
     var showFace = face;
     var faceAt = const Offset(0, 0);
     switch (subject) {
+      case StickerSubject.pumpkin:
+      case StickerSubject.lantern:
+      case StickerSubject.stocking:
+      case StickerSubject.fireworks:
+      case StickerSubject.balloons:
+      case StickerSubject.fish:
+      case StickerSubject.rings:
+      case StickerSubject.bouquet:
+      case StickerSubject.chocolateBox:
+      case StickerSubject.redEnvelope:
+      case StickerSubject.mooncake:
+      case StickerSubject.trophy:
+        _celebration(c, subject, a);
+        showFace = false;
+        break;
       case StickerSubject.heart:
         _shape(c, _heart(), accent);
         // Viền ngoài cố định; tim nhỏ bên trong đập hai nhịp.

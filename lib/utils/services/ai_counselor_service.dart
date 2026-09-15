@@ -1,206 +1,279 @@
-import 'dart:convert';
+import 'dart:async';
+import 'dart:math';
+
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
-import 'package:soullocket_app/core/constants/app_config.dart';
-import 'package:soullocket_app/utils/app_error_mapper.dart';
-import 'app_check_http_headers.dart';
+enum AiTask {
+  friendlyChat('friendly_chat'),
+  appSupport('app_support'),
+  notificationCopy('notification_copy');
+
+  const AiTask(this.id);
+  final String id;
+}
+
+typedef AiCallableInvoker =
+    Future<dynamic> Function(String name, Map<String, Object?> payload);
+
+class AiTaskOutcome {
+  const AiTaskOutcome({
+    required this.requestId,
+    required this.status,
+    this.text,
+    this.errorMessage,
+    this.memorySaved = false,
+  });
+  final String requestId;
+  final String status;
+  final String? text;
+  final String? errorMessage;
+  final bool memorySaved;
+  bool get isPending => status == 'pending' || status == 'unknown';
+}
 
 class AiCounselorService {
   static final AiCounselorService _instance = AiCounselorService._internal();
-
   factory AiCounselorService() => _instance;
+  AiCounselorService._internal()
+    : _invoke = _invokeFirebase,
+      _currentUid = (() => FirebaseAuth.instance.currentUser?.uid),
+      _locale = (() => L10nService().localeCode),
+      _translate = ((key) => L10nService().translate(key));
 
-  AiCounselorService._internal();
+  @visibleForTesting
+  AiCounselorService.forTesting(
+    this._invoke,
+    this._currentUid,
+    this._locale,
+    this._translate,
+  );
+
+  final AiCallableInvoker _invoke;
+  final String? Function() _currentUid;
+  final String Function() _locale;
+  final String Function(String) _translate;
+
+  static Future<dynamic> _invokeFirebase(
+    String name,
+    Map<String, Object?> payload,
+  ) async {
+    final response = await CloudFunctionsHelper.callSecure<dynamic>(
+      name,
+      payload: payload,
+      timeout: Duration(seconds: name == 'generateAiTask' ? 40 : 15),
+      requireAppCheck: true,
+      throwOriginalException: true,
+    );
+    return response.data;
+  }
+
+  Future<dynamic> _call(String name, Map<String, Object?> payload) async {
+    final uid = _currentUid();
+    if (uid == null) {
+      throw FirebaseFunctionsException(
+        code: 'unauthenticated',
+        message: _translate('err_auth_recent_login_required'),
+      );
+    }
+    final result = await _invoke(name, payload);
+    // Không đưa kết quả của phiên cũ vào UI/cache của tài khoản vừa đăng nhập.
+    if (_currentUid() != uid) {
+      throw FirebaseFunctionsException(
+        code: 'unauthenticated',
+        message: _translate('err_auth_recent_login_required'),
+      );
+    }
+    return result;
+  }
 
   String? lastErrorMessage;
+  bool lastMemorySaved = true;
+
+  static String createRequestId() {
+    final random = Random.secure();
+    final suffix = List.generate(
+      16,
+      (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+    ).join();
+    return '${DateTime.now().millisecondsSinceEpoch}_$suffix';
+  }
+
+  String _errorText(String code) => _translate(switch (code) {
+    'unauthenticated' || 'permission-denied' => 'ai_task_auth_error',
+    'resource-exhausted' => 'ai_task_quota_error',
+    'invalid-argument' => 'ai_task_input_error',
+    'failed-precondition' => 'ai_task_busy_error',
+    _ => 'friendly_chat_connection_error',
+  });
+
+  AiTaskOutcome _parseReply(dynamic data, AiTask task, String requestId) {
+    if (data is! Map ||
+        data['requestId'] != requestId ||
+        data['taskId'] != task.id ||
+        data['text'] is! String ||
+        (data['text'] as String).trim().isEmpty) {
+      throw const FormatException('Invalid AI task response');
+    }
+    return AiTaskOutcome(
+      requestId: requestId,
+      status: 'completed',
+      text: (data['text'] as String).trim(),
+      memorySaved: data['memorySaved'] == true,
+    );
+  }
+
+  /// Chỉ đọc kết quả đã có. Hàm này không gọi model hoặc trừ lượt.
+  Future<AiTaskOutcome> getTaskResult(AiTask task, String requestId) async {
+    try {
+      final data = await _call('getAiTaskResult', {'requestId': requestId});
+      if (data is! Map) throw const FormatException('Invalid status');
+      switch (data['status']) {
+        case 'completed':
+          return _parseReply(data['result'], task, requestId);
+        case 'pending':
+        case 'unknown':
+          return AiTaskOutcome(
+            requestId: requestId,
+            status: data['status'] as String,
+            errorMessage: _translate('ai_task_pending_message'),
+          );
+        case 'cancelled':
+          return AiTaskOutcome(
+            requestId: requestId,
+            status: 'cancelled',
+            errorMessage: _translate('ai_task_cancelled_message'),
+          );
+        case 'failed':
+          return AiTaskOutcome(
+            requestId: requestId,
+            status: 'failed',
+            errorMessage: _errorText(data['code']?.toString() ?? 'unavailable'),
+          );
+        default:
+          throw const FormatException('Invalid status');
+      }
+    } on FirebaseFunctionsException catch (error) {
+      return AiTaskOutcome(
+        requestId: requestId,
+        status: error.code == 'invalid-argument' ? 'expired' : 'unknown',
+        errorMessage: error.code == 'invalid-argument'
+            ? _translate('ai_task_result_expired')
+            : _errorText(error.code),
+      );
+    } catch (_) {
+      return AiTaskOutcome(
+        requestId: requestId,
+        status: 'unknown',
+        errorMessage: _translate('ai_task_pending_message'),
+      );
+    }
+  }
+
+  Future<AiTaskOutcome> generateTaskOutcome(
+    AiTask task,
+    Map<String, Object?> input, {
+    String? requestId,
+  }) async {
+    final id = requestId ?? createRequestId();
+    final uid = _currentUid();
+    try {
+      final data = await _call('generateAiTask', {
+        'taskId': task.id,
+        'input': input,
+        'locale': _locale(),
+        'requestId': id,
+      });
+      return _parseReply(data, task, id);
+    } catch (error) {
+      final code = error is FirebaseFunctionsException
+          ? error.code
+          : 'unavailable';
+      final uncertain =
+          error is TimeoutException ||
+          error is FormatException ||
+          const [
+            'unavailable',
+            'deadline-exceeded',
+            'internal',
+            'unknown',
+            'failed-precondition',
+          ].contains(code);
+      // Timeout/mất ACK chỉ kiểm tra trạng thái. Không tự phát lại generate.
+      if (uncertain && uid != null && _currentUid() == uid) {
+        final recovered = await getTaskResult(task, id);
+        if (code != 'failed-precondition' || recovered.status != 'unknown') {
+          return recovered;
+        }
+      }
+      return AiTaskOutcome(
+        requestId: id,
+        status: 'failed',
+        errorMessage: _errorText(code),
+      );
+    }
+  }
 
   Future<List<AiChatHistoryMessage>> loadChatHistory({
     String memoryScope = 'friendly_chat',
   }) async {
     try {
-      final callable = FirebaseFunctions.instance.httpsCallable(
-        'getAiChatHistory',
-      );
-      final response = await callable.call(<String, dynamic>{
+      final data = await _call('getAiChatHistory', {
         'memoryScope': memoryScope,
       });
-      final data = response.data;
-      if (data is! Map || data['messages'] is! List) {
-        return const <AiChatHistoryMessage>[];
-      }
+      if (data is! Map || data['messages'] is! List) return const [];
       return (data['messages'] as List)
           .whereType<Map>()
           .map((item) {
             final text = item['text']?.toString().trim() ?? '';
             final role = item['role']?.toString().trim();
-            final createdAt =
-                int.tryParse(item['createdAt']?.toString() ?? '') ?? 0;
             if (text.isEmpty || (role != 'user' && role != 'assistant')) {
               return null;
             }
             return AiChatHistoryMessage(
               text: text,
               isUser: role == 'user',
-              createdAt: createdAt,
+              createdAt: int.tryParse(item['createdAt']?.toString() ?? '') ?? 0,
+              requestId: item['requestId'] is String
+                  ? item['requestId'] as String
+                  : null,
             );
           })
           .whereType<AiChatHistoryMessage>()
           .toList(growable: false);
-    } catch (error) {
-      debugPrint(
-        '[AiCounselor] getAiChatHistory failed: ${AppErrorMapper.resolve(error).message}',
-      );
-      return const <AiChatHistoryMessage>[];
+    } catch (_) {
+      debugPrint('[AiCounselor] history unavailable');
+      return const [];
     }
   }
 
-  Stream<String> streamTextGeneration(
-    String prompt,
-    String systemInstruction, {
-    String? memoryScope,
-    String? memoryText,
-    String? persona,
-  }) async* {
-    lastErrorMessage = null;
-    final user = FirebaseAuth.instance.currentUser;
-    final token = await user?.getIdToken();
-
-    bool hasYielded = false;
-
-    if (token != null) {
-      final projectId = FirebaseFunctions.instance.app.options.projectId;
-      final url =
-          'https://us-central1-$projectId.cloudfunctions.net/generateAiReplyStream';
-
-      final client = http.Client();
-      try {
-        final request = http.Request('POST', Uri.parse(url));
-        request.headers.addAll(
-          await AppCheckHttpHeaders.withRequiredToken({
-            'Authorization': 'Bearer $token',
-            'Content-Type': 'application/json',
-          }),
-        );
-        request.body = jsonEncode({
-          'data': {
-            'prompt': prompt,
-            'systemInstruction': systemInstruction,
-            'memoryScope': memoryScope,
-            'memoryText': memoryText,
-            'persona': persona,
-          },
-        });
-
-        final response = await client
-            .send(request)
-            .timeout(const Duration(seconds: 12));
-        if (response.statusCode == 401 ||
-            response.statusCode == 403 ||
-            response.statusCode == 429) {
-          lastErrorMessage = _mapFunctionsError(
-            FirebaseFunctionsException(
-              message: '',
-              code: response.statusCode == 429
-                  ? 'resource-exhausted'
-                  : 'unauthenticated',
-            ),
-          );
-          // Không chuyển provider khi server đã từ chối quyền/hạn mức.
-          return;
-        }
-        if (response.statusCode == 200) {
-          await for (var line
-              in response.stream
-                  .transform(utf8.decoder)
-                  .transform(const LineSplitter())) {
-            if (line.startsWith('data: ')) {
-              try {
-                final payload = jsonDecode(line.substring(6));
-                if (payload['chunk'] != null) {
-                  hasYielded = true;
-                  yield payload['chunk'] as String;
-                }
-                if (payload['text'] != null) {
-                  hasYielded = true;
-                  yield payload['text'] as String;
-                }
-              } catch (_) {}
-            }
-          }
-        }
-      } catch (e) {
-        debugPrint(
-          '[AiCounselor] streamTextGeneration stream attempt failed: $e',
-        );
-      } finally {
-        client.close();
-      }
-    }
-
-    if (hasYielded) {
-      return;
-    }
-
-    // Tự động chuyển tiếp sang callTextGeneration khi stream endpoint không khả dụng
-    final fallbackReply = await callTextGeneration(
-      prompt,
-      systemInstruction,
-      memoryScope: memoryScope,
-      memoryText: memoryText,
-    );
-
-    if (fallbackReply != null && fallbackReply.trim().isNotEmpty) {
-      final words = fallbackReply.trim().split(' ');
-      for (int i = 0; i < words.length; i++) {
-        final chunk = (i == 0 ? '' : ' ') + words[i];
-        yield chunk;
-        await Future.delayed(const Duration(milliseconds: 20));
-      }
-      return;
-    }
-
-    lastErrorMessage =
-        'Mình đang gặp lỗi kết nối nên chưa trả lời được. Bạn thử lại sau nhé!';
+  /// Chỉ gửi dữ liệu tác vụ. Prompt, model, quota và quyền đọc do server quyết định.
+  /// Không tự gọi lại hoặc chuyển Worker sau lỗi: lượt cũ có thể đã được tính phí.
+  Future<String?> generateTask(AiTask task, Map<String, Object?> input) async {
+    final outcome = await generateTaskOutcome(task, input);
+    lastErrorMessage = outcome.errorMessage;
+    lastMemorySaved = outcome.memorySaved;
+    return outcome.text;
   }
 
-  Future<String?> callTextGeneration(
-    String prompt,
-    String systemInstruction, {
-    String? memoryScope,
-    String? memoryText,
-  }) async {
-    lastErrorMessage = null;
-    String? openAiReply;
+  /// Adapter cho UI hiện tại. Gateway trả bản hoàn chỉnh đã kiểm tra nội dung;
+  /// chưa phải streaming token từ provider và không giả lập hiệu ứng từng từ.
+  Stream<String> streamTask(AiTask task, Map<String, Object?> input) async* {
+    final reply = await generateTask(task, input);
+    if (reply != null) yield reply;
+  }
+
+  Future<bool> clearChatHistory() async {
     try {
-      openAiReply = await _callOpenAiFunction(
-        prompt,
-        systemInstruction,
-        memoryScope: memoryScope,
-        memoryText: memoryText,
-      );
-    } on FirebaseFunctionsException {
-      // Lỗi xác thực/hạn mức đã được ánh xạ; không thử backend khác để vượt chặn.
-      return null;
+      await _call('clearAiChatHistory', const <String, Object?>{});
+      return true;
+    } catch (_) {
+      lastErrorMessage = _translate('friendly_chat_connection_error');
+      return false;
     }
-    if (openAiReply != null && openAiReply.isNotEmpty) {
-      return openAiReply;
-    }
-
-    final workerReply = await _callWorkerAi(
-      prompt,
-      systemInstruction,
-      endpoint: '/api/v1/ai/chat',
-      memoryContext: memoryText,
-    );
-    if (workerReply != null && workerReply.isNotEmpty) {
-      return workerReply;
-    }
-
-    // Mọi fallback đều qua backend có xác thực; client không giữ API key AI.
-    return null;
   }
 
   Future<bool> reportAiReply({
@@ -210,157 +283,16 @@ class AiCounselorService {
     String? houseId,
   }) async {
     try {
-      final callable = FirebaseFunctions.instance.httpsCallable(
-        'reportAiReply',
-      );
-      await callable.call(<String, dynamic>{
+      await _call('reportAiReply', {
         'assistantText': assistantText,
         'reason': reason,
         if (userText?.trim().isNotEmpty == true) 'userText': userText!.trim(),
         if (houseId?.trim().isNotEmpty == true) 'houseId': houseId!.trim(),
       });
       return true;
-    } catch (error) {
-      debugPrint(
-        '[AiCounselor] reportAiReply failed: ${AppErrorMapper.resolve(error).message}',
-      );
-      return false;
-    }
-  }
-
-  Future<String?> _callOpenAiFunction(
-    String prompt,
-    String systemInstruction, {
-    String? memoryScope,
-    String? memoryText,
-  }) async {
-    try {
-      final callable = FirebaseFunctions.instance.httpsCallable(
-        'generateAiReply',
-      );
-      final payload = <String, dynamic>{
-        'prompt': prompt,
-        'systemInstruction': systemInstruction,
-      };
-      if (memoryScope?.trim().isNotEmpty == true) {
-        payload['memoryScope'] = memoryScope!.trim();
-      }
-      if (memoryText?.trim().isNotEmpty == true) {
-        payload['memoryText'] = memoryText!.trim();
-      }
-      final response = await callable.call(payload);
-      final data = response.data;
-      if (data is! Map) {
-        return null;
-      }
-      final text = data['text']?.toString().trim();
-      if (text == null || text.isEmpty) {
-        return null;
-      }
-      return text;
-    } on FirebaseFunctionsException catch (error) {
-      lastErrorMessage = _mapFunctionsError(error);
-      if (const {
-        'unauthenticated',
-        'permission-denied',
-        'resource-exhausted',
-        'invalid-argument',
-      }.contains(error.code.trim().toLowerCase())) {
-        rethrow;
-      }
-      debugPrint(
-        '[AiCounselor] generateAiReply failed: ${AppErrorMapper.resolve(error).message}',
-      );
-      return null;
     } catch (_) {
-      lastErrorMessage =
-          'Mình đang gặp lỗi kết nối nên chưa trả lời được. Bạn thử lại sau một chút nhé, sorry.';
-      return null;
-    }
-  }
-
-  Future<String?> _callWorkerAi(
-    String prompt,
-    String systemInstruction, {
-    String endpoint = '/api/v1/ai/chat',
-    String? memoryContext,
-  }) async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      final idToken = await user?.getIdToken();
-      if (idToken == null || idToken.isEmpty) {
-        return null;
-      }
-
-      var headers = <String, String>{
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $idToken',
-      };
-      headers = await AppCheckHttpHeaders.withRequiredToken(headers);
-
-      final workerUrl = AppConfig.cloudflareWorkerUrl.isNotEmpty
-          ? AppConfig.cloudflareWorkerUrl
-          : 'https://soullocket-api.soullocket-api.workers.dev';
-
-      final response = await http
-          .post(
-            Uri.parse('$workerUrl$endpoint'),
-            headers: headers,
-            body: jsonEncode({
-              'prompt': prompt,
-              'systemInstruction': systemInstruction,
-              if (memoryContext?.trim().isNotEmpty == true)
-                'memoryContext': memoryContext!.trim(),
-            }),
-          )
-          .timeout(const Duration(seconds: 25));
-
-      if (response.statusCode != 200) {
-        debugPrint(
-          '[AiCounselor] Worker $endpoint failed: ${response.statusCode}',
-        );
-        return null;
-      }
-
-      final data = jsonDecode(response.body);
-      if (data is! Map) return null;
-      final text = data['text']?.toString().trim();
-      if (text == null || text.isEmpty) return null;
-      return text;
-    } catch (e) {
-      debugPrint('[AiCounselor] Worker $endpoint error: $e');
-      return null;
-    }
-  }
-
-  String _mapFunctionsError(FirebaseFunctionsException error) {
-    final message = error.message?.trim();
-    switch (error.code.trim().toLowerCase()) {
-      case 'not-found':
-        return 'Mình đang gặp lỗi hệ thống chat nên chưa trả lời được. Bạn thử lại sau một chút nhé, sorry.';
-      case 'failed-precondition':
-        return message?.isNotEmpty == true
-            ? message!
-            : 'Mình đang gặp lỗi cấu hình chat nên chưa trả lời được. Bạn thử lại sau một chút nhé, sorry.';
-      case 'unauthenticated':
-        return 'Bạn cần đăng nhập lại để dùng Chat thân thiện.';
-      case 'resource-exhausted':
-        return message?.isNotEmpty == true
-            ? message!
-            : 'Bạn đã dùng quá nhiều lượt AI trong giờ này.';
-      case 'unavailable':
-      case 'deadline-exceeded':
-        return message?.isNotEmpty == true
-            ? message!
-            : 'Mình đang gặp trục trặc hoặc phản hồi hơi chậm nên chưa trả lời được. Bạn thử lại sau một chút nhé, sorry.';
-      case 'invalid-argument':
-        return message?.isNotEmpty == true
-            ? message!
-            : 'Tin nhắn gửi tới AI chưa hợp lệ.';
-      default:
-        return message?.isNotEmpty == true
-            ? message!
-            : 'Mình đang gặp lỗi nên chưa trả lời được. Bạn thử lại sau một chút nhé, sorry.';
+      debugPrint('[AiCounselor] report failed');
+      return false;
     }
   }
 }
@@ -370,9 +302,10 @@ class AiChatHistoryMessage {
     required this.text,
     required this.isUser,
     required this.createdAt,
+    this.requestId,
   });
-
   final String text;
   final bool isUser;
   final int createdAt;
+  final String? requestId;
 }

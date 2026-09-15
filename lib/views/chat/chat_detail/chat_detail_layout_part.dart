@@ -47,8 +47,15 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
         child: CircularProgressIndicator(color: Color(0xFF0A7CFF)),
       );
     }
+    if (_hasInitialMessageError) {
+      return Center(
+        child: ChatMessageRetryNotice(
+          onRetry: () => unawaited(_loadInitialMessages()),
+        ),
+      );
+    }
 
-    return ValueListenableBuilder<List<ChatMessage>>(
+    final messagesList = ValueListenableBuilder<List<ChatMessage>>(
       valueListenable: _messagesNotifier,
       builder: (context, messages, child) {
         if (messages.isEmpty) {
@@ -111,7 +118,8 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
           );
         }
 
-        final itemCount = messages.length + (_isLoadingOlderMessages ? 1 : 0);
+        final itemCount = messages.length +
+            (_isLoadingOlderMessages || _hasOlderMessageError ? 1 : 0);
         // Pre-compute once outside itemBuilder to avoid O(n²) indexWhere calls
         final latestMeIndex = messages.indexWhere((m) => _isInternal
             ? m.senderId == _currentRole
@@ -122,6 +130,11 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
           reverse: true,
           itemCount: itemCount,
           itemBuilder: (context, index) {
+            if (_hasOlderMessageError && index == messages.length) {
+              return ChatMessageRetryNotice(
+                onRetry: () => unawaited(_loadOlderMessages()),
+              );
+            }
             if (_isLoadingOlderMessages && index == messages.length) {
               return const Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),
@@ -147,6 +160,13 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
           },
         );
       },
+    );
+    return Column(
+      children: [
+        if (_hasLiveMessageError)
+          ChatMessageRetryNotice(onRetry: _listenForNewMessages),
+        Expanded(child: messagesList),
+      ],
     );
   }
 

@@ -7,3 +7,6 @@ Future<VideoPlayerController?> createCachedVideoController(
 ) async {
   return null;
 }
+
+/// Trình duyệt tự quản lý cache HTTP, không tải thêm bản sao của video.
+Future<void> cacheVideoForReplay(String mediaUrl) async {}

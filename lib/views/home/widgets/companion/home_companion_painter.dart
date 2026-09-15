@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 import 'home_companion_motion.dart';
 
@@ -10,11 +11,13 @@ class HomeCompanionPainter extends CustomPainter {
     required this.motion,
     required this.darkMode,
     this.showEffects = true,
-  }) : super(repaint: motion);
+    this.paintOffset,
+  }) : super(repaint: Listenable.merge([motion, paintOffset]));
 
   final HomeCompanionMotion motion;
   final bool darkMode;
   final bool showEffects;
+  final ValueListenable<Offset>? paintOffset;
 
   /// Tăng đúng 20% so với nét vẽ gốc 0.52; dùng chung cho vùng an toàn của Home.
   static const double spriteScale = 0.624;
@@ -34,6 +37,8 @@ class HomeCompanionPainter extends CustomPainter {
 
     canvas.save();
     canvas.clipRect(Offset.zero & size);
+    final offset = paintOffset?.value ?? Offset.zero;
+    canvas.translate(offset.dx, offset.dy);
     if (showEffects) _paintDust(canvas);
 
     // Chế độ giảm chuyển động luôn giữ tư thế nghỉ, kể cả khi tắt giữa cú nhảy.
@@ -55,6 +60,8 @@ class HomeCompanionPainter extends CustomPainter {
     final scaleX = 1 + squash - liftRatio * 0.055;
     final scaleY = 1 - squash + liftRatio * 0.065;
     final seconds = showEffects ? motion.elapsedSeconds : 0.0;
+    final affection = showEffects ? motion.affection.clamp(0.0, 1.0) : 0.0;
+    final greeting = math.sin((1 - affection) * math.pi * 5) * affection;
     final sweep = sweeping ? math.sin(seconds * 10) : 0.0;
     final breathe = math.sin(seconds * 2.4);
     final bodyBob = moving
@@ -115,9 +122,13 @@ class HomeCompanionPainter extends CustomPainter {
     _paintScarfTail(canvas, moving: moving, step: step, breathe: breathe);
     _paintHead(
       canvas,
-      earSway: moving ? step * 0.11 + liftRatio * 0.08 : breathe * 0.035,
+      earSway:
+          (moving ? step * 0.11 + liftRatio * 0.08 : breathe * 0.035) +
+          greeting * 0.07,
       happy: celebrating,
       sweeping: sweeping,
+      affection: affection,
+      tilt: greeting * 0.035,
     );
     _paintScarfCollar(canvas);
     canvas.restore();
@@ -132,6 +143,8 @@ class HomeCompanionPainter extends CustomPainter {
         Offset(13, -29 + bodyBob),
         celebrating
             ? -2.45 + math.sin(motion.elapsedSeconds * 12) * 0.18
+            : affection > 0.05
+            ? -2.05 + greeting * 0.3
             : airborne
             ? -0.9 + step * 0.24
             : moving
@@ -142,6 +155,7 @@ class HomeCompanionPainter extends CustomPainter {
     canvas.restore();
 
     if (showEffects && motion.celebration > 0) _paintCleanGlints(canvas);
+    if (affection > 0) _paintAffectionHearts(canvas, affection, hopLift);
     canvas.restore();
   }
 
@@ -266,24 +280,44 @@ class HomeCompanionPainter extends CustomPainter {
     required double earSway,
     required bool happy,
     required bool sweeping,
+    required double affection,
+    required double tilt,
   }) {
+    canvas.save();
+    // Chỉ nghiêng đầu: chân và chổi vẫn neo đúng mặt khối.
+    canvas.translate(0, -38);
+    canvas.rotate(tilt);
+    canvas.translate(0, 38);
     _paintEar(canvas, const Offset(-10, -64), -0.16 - earSway, 28);
     _paintEar(canvas, const Offset(11, -64), 0.12 + earSway * 0.75, 30);
     _shape(
       canvas,
       Path()
-        ..moveTo(-21, -57)
-        ..cubicTo(-17, -68, 15, -70, 22, -57)
-        ..cubicTo(29, -47, 27, -35, 15, -32)
-        ..cubicTo(5, -28, -12, -29, -21, -35)
-        ..cubicTo(-29, -40, -28, -50, -21, -57)
+        ..moveTo(-22, -57)
+        ..cubicTo(-18, -69, 16, -70, 23, -57)
+        ..cubicTo(30, -48, 29, -36, 17, -31)
+        ..cubicTo(6, -27, -12, -27, -22, -34)
+        ..cubicTo(-30, -39, -29, -49, -22, -57)
         ..close(),
       _cream,
       shade: _creamShade,
     );
-    final cheekPaint = Paint()..color = _pink.withValues(alpha: 0.72);
-    canvas.drawOval(const Rect.fromLTWH(-21, -44, 10, 5.5), cheekPaint);
-    canvas.drawOval(const Rect.fromLTWH(14, -44, 10, 5.5), cheekPaint);
+    final cheekPaint = Paint()
+      ..color = _pink.withValues(alpha: 0.74 + affection * 0.16);
+    canvas.drawOval(const Rect.fromLTWH(-22, -44.5, 12, 7), cheekPaint);
+    canvas.drawOval(const Rect.fromLTWH(13, -44.5, 12, 7), cheekPaint);
+    for (final x in const [-18.5, 16.5]) {
+      _stroke(
+        canvas,
+        Path()
+          ..moveTo(x, -42.1)
+          ..lineTo(x - 0.6, -40.8)
+          ..moveTo(x + 2.5, -42.1)
+          ..lineTo(x + 1.9, -40.8),
+        color: _rose.withValues(alpha: 0.45),
+        width: 0.65,
+      );
+    }
 
     final blinkPhase = showEffects ? motion.elapsedSeconds % 5.4 : 0.0;
     final blink = blinkPhase > 4.97 && blinkPhase < 5.11;
@@ -305,13 +339,18 @@ class HomeCompanionPainter extends CustomPainter {
         );
       } else {
         canvas.drawOval(
-          Rect.fromCenter(center: Offset(eyeX, eyeY), width: 3.4, height: 4.9),
+          Rect.fromCenter(center: Offset(eyeX, eyeY), width: 4.8, height: 6.4),
           Paint()..color = _eye,
         );
         canvas.drawCircle(
-          Offset(eyeX - 0.55, eyeY - 1),
-          0.72,
+          Offset(eyeX - 0.65, eyeY - 1.3),
+          1.0,
           Paint()..color = Colors.white,
+        );
+        canvas.drawCircle(
+          Offset(eyeX + 0.75, eyeY + 1.3),
+          0.5,
+          Paint()..color = const Color(0xFFFFE3DC),
         );
       }
     }
@@ -336,6 +375,36 @@ class HomeCompanionPainter extends CustomPainter {
       width: 1.05,
       color: _eye,
     );
+    canvas.restore();
+  }
+
+  void _paintAffectionHearts(Canvas canvas, double affection, double hopLift) {
+    final progress = 1 - affection;
+    final opacity = math.sin(progress * math.pi).clamp(0.0, 1.0);
+    if (opacity < 0.02) return;
+    // Hai trái tim gọn bên má, không bay ra ngoài khoảng an toàn của thỏ.
+    for (var i = 0; i < 2; i++) {
+      final side = i == 0 ? -1.0 : 1.0;
+      final center =
+          motion.position +
+          Offset(side * 17, -45 - i * 8 - progress * 6 - hopLift);
+      final radius = (i == 0 ? 2.5 : 2.9) * (0.8 + opacity * 0.2);
+      canvas.save();
+      canvas.translate(center.dx, center.dy);
+      canvas.rotate(side * 0.18);
+      canvas.scale(radius);
+      canvas.drawPath(
+        Path()
+          ..moveTo(0, 0.85)
+          ..cubicTo(-0.35, 0.5, -1, 0.05, -1, -0.42)
+          ..cubicTo(-1, -1.12, -0.23, -1.3, 0, -0.65)
+          ..cubicTo(0.23, -1.3, 1, -1.12, 1, -0.42)
+          ..cubicTo(1, 0.05, 0.35, 0.5, 0, 0.85)
+          ..close(),
+        Paint()..color = _rose.withValues(alpha: opacity * 0.88),
+      );
+      canvas.restore();
+    }
   }
 
   void _paintEar(Canvas canvas, Offset base, double angle, double height) {
@@ -548,6 +617,7 @@ class HomeCompanionPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant HomeCompanionPainter oldDelegate) =>
       oldDelegate.motion != motion ||
+      oldDelegate.paintOffset != paintOffset ||
       oldDelegate.darkMode != darkMode ||
       oldDelegate.showEffects != showEffects;
 }

@@ -25,6 +25,7 @@ import 'package:soullocket_app/utils/services/presence_service.dart';
 import 'package:soullocket_app/utils/services/storage/storage_service.dart';
 import 'package:soullocket_app/utils/services/utilities/note_service.dart';
 import 'package:soullocket_app/utils/services/utility_service.dart';
+import 'package:soullocket_app/utils/services/sound_service.dart';
 
 final GetIt locator = GetIt.instance;
 
@@ -37,6 +38,10 @@ final GetIt locator = GetIt.instance;
 /// - Insight/Utility: love insight, utility chung, note.
 void setupLocator() {
   locator.registerLazySingleton(() => PrivacyCollectionService.instance);
+  locator.registerLazySingleton(
+    () => SoundService(),
+    dispose: (s) => s.dispose(),
+  );
   // ── House domain ────────────────────────────────────────────────────────
   locator.registerLazySingleton(() => HouseService());
   locator.registerLazySingleton(() => HouseSettingsService());

@@ -30,7 +30,8 @@ class HomeImagePolicy {
     final views = WidgetsBinding.instance.platformDispatcher.views;
     final view = views.isEmpty ? null : views.first;
     final ratio = media?.devicePixelRatio ?? view?.devicePixelRatio ?? 1.0;
-    final logicalSize = media?.size ?? (view?.physicalSize ?? Size.zero) / ratio;
+    final logicalSize =
+        media?.size ?? (view?.physicalSize ?? Size.zero) / ratio;
     return backgroundSizeFor(logicalSize, ratio);
   }
 
@@ -40,12 +41,14 @@ class HomeImagePolicy {
   ) {
     final scale = devicePixelRatio >= 2.5 ? 0.75 : 0.85;
     return (
-      width: (logicalSize.width * devicePixelRatio * scale)
-          .round()
-          .clamp(600, 1280),
-      height: (logicalSize.height * devicePixelRatio * scale)
-          .round()
-          .clamp(960, 1920),
+      width: (logicalSize.width * devicePixelRatio * scale).round().clamp(
+        600,
+        1280,
+      ),
+      height: (logicalSize.height * devicePixelRatio * scale).round().clamp(
+        960,
+        1920,
+      ),
     );
   }
 

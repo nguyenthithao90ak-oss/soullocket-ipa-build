@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+part 'milestone_sticker_catalog.dart';
+
 enum StickerSubject {
   couple,
   cat,
@@ -39,6 +41,18 @@ enum StickerSubject {
   tarot,
   checklist,
   telescope,
+  pumpkin,
+  lantern,
+  stocking,
+  fireworks,
+  balloons,
+  fish,
+  rings,
+  bouquet,
+  chocolateBox,
+  redEnvelope,
+  mooncake,
+  trophy,
 }
 
 enum StickerGesture {
@@ -529,6 +543,8 @@ abstract final class LivingStickerCatalog {
   };
 
   static LivingStickerScene? milestone(String id) {
+    final expanded = MilestoneStickerCatalog.scene(id);
+    if (expanded != null) return expanded;
     if (const {
       'days_30',
       'days_50',

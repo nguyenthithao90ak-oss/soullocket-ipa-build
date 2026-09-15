@@ -26,9 +26,14 @@ class L10nService extends ChangeNotifier {
   factory L10nService() => _instance;
   L10nService._internal();
 
+  @visibleForTesting
+  L10nService.forTesting();
+
   final _L10nLocaleState _state = _L10nLocaleState();
   final _L10nTranslationLookup _lookup = _L10nTranslationLookup();
   final _L10nFormatHelper _formatHelper = const _L10nFormatHelper();
+  int _localeRequest = 0;
+  Future<void>? _preferenceWrite;
 
   Locale get locale => _state.currentLocale;
   String get localeCode {
@@ -79,27 +84,54 @@ class L10nService extends ChangeNotifier {
   }
 
   Future<void> init({AssetBundle? bundle}) async {
+    final request = ++_localeRequest;
     if (bundle != null) {
-      _state.assetBundle = bundle;
+      _state.useAssetBundle(bundle);
+      _lookup.clearCache();
     }
     final prefs =
         OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     final langCode = _normalizeLangCode(prefs.getString('il_lang'));
-    await _ensureAssetTranslationsLoaded();
+    if (request != _localeRequest) return;
+    await _ensureAssetTranslationsLoaded(langCode);
+    if (request != _localeRequest) return;
     _lookup.clearCache();
     _state.currentLocale = _localeForLangCode(langCode);
     notifyListeners();
   }
 
   Future<void> setLocale(String langCode) async {
+    final request = ++_localeRequest;
+    final normalizedLangCode = _normalizeLangCode(langCode);
+    await _ensureAssetTranslationsLoaded(normalizedLangCode);
+    if (request != _localeRequest) return;
     final prefs =
         OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    await prefs.setString('il_lang', langCode);
-    final normalizedLangCode = _normalizeLangCode(langCode);
+    if (request != _localeRequest) return;
+    // Tuần tự hoá lưu lựa chọn, tránh tác vụ chậm ghi đè ngôn ngữ mới hơn.
+    final previousWrite = _preferenceWrite;
+    final write = () async {
+      if (previousWrite != null) {
+        try {
+          await previousWrite;
+        } catch (_) {
+          // Lần lưu trước lỗi không được khóa lựa chọn mới.
+        }
+      }
+      if (request != _localeRequest) return;
+      await prefs.setString('il_lang', langCode);
+    }();
+    _preferenceWrite = write;
+    try {
+      await write;
+    } finally {
+      if (identical(_preferenceWrite, write)) _preferenceWrite = null;
+    }
+    if (request != _localeRequest) return;
+    // Chỉ đổi giao diện khi gói dịch đã sẵn sàng (hoặc có fallback khi lỗi).
     _state.currentLocale = _localeForLangCode(normalizedLangCode);
-    await _ensureAssetTranslationsLoaded();
     _lookup.clearCache();
     notifyListeners();
   }
@@ -388,8 +420,8 @@ class L10nService extends ChangeNotifier {
         const Locale('en', 'US');
   }
 
-  Future<void> _ensureAssetTranslationsLoaded() async {
-    await const _L10nAssetLoader().ensureLoaded(_state);
+  Future<void> _ensureAssetTranslationsLoaded(String localeCode) async {
+    await const _L10nAssetLoader().ensureLoaded(_state, localeCode);
   }
 }
 

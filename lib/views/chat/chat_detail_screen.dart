@@ -13,6 +13,7 @@ import '../../utils/services/chat_service.dart';
 import '../../utils/services/image_picker_recovery_service.dart';
 import '../../utils/services/military_lock_service.dart';
 import '../../utils/services/social_service.dart';
+import '../../utils/services/sound_service.dart';
 import '../../utils/services/storage/storage_service.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
 import '../../utils/services/pending_upload_service.dart';
@@ -22,6 +23,7 @@ import '../../utils/app_error_mapper.dart';
 import '../../utils/app_cache_manager.dart';
 import '../relationship/video_call_screen.dart';
 import 'chat_message_preview.dart';
+import 'widgets/chat_message_retry_notice.dart';
 import 'watch_together_screen.dart';
 import '../../utils/services/purchase_service.dart';
 import 'package:image_picker/image_picker.dart';
@@ -106,6 +108,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   bool _isSendingMessage = false;
   bool _isUpdatingChatBackground = false;
   bool _isInitialMessagesLoading = true;
+  bool _initialMessageRequestInFlight = false;
+  bool _hasInitialMessageError = false;
+  bool _hasOlderMessageError = false;
+  bool _hasLiveMessageError = false;
   bool _isLoadingOlderMessages = false;
   bool _hasMoreMessages = true;
   bool _hasComposerText = false;
@@ -154,6 +160,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final Set<String> _messageIds = <String>{};
   int? _oldestMessageTs;
   int? _newestMessageTs;
+  int? _liveMessageAnchorTs;
   String get _roomId =>
       _chatService.roomIdFor(widget.myHouseId, widget.targetHouseId);
   bool get _isInternal => widget.isInternal;

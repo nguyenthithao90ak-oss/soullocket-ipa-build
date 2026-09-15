@@ -116,9 +116,9 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
     setState(() => _hasComposerText = nextValue);
   }
 
-  Future<void> _sendChatMessage(String text, {String type = 'text'}) {
+  Future<void> _sendChatMessage(String text, {String type = 'text'}) async {
     if (_isInternal) {
-      return _chatService.sendInternalMessage(
+      await _chatService.sendInternalMessage(
         widget.myHouseId,
         ChatMessage(
           id: '',
@@ -128,13 +128,18 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
           timestamp: DateTime.now(),
         ),
       );
+    } else {
+      await _chatService.sendMessage(
+        widget.myHouseId,
+        widget.targetHouseId,
+        text,
+        type: type,
+      );
     }
-    return _chatService.sendMessage(
-      widget.myHouseId,
-      widget.targetHouseId,
-      text,
-      type: type,
-    );
+    // Một âm chung cho text/sticker, chỉ sau khi ghi tin nhắn thành công.
+    if (mounted && (ModalRoute.of(context)?.isCurrent ?? true)) {
+      unawaited(SoundService().playSent());
+    }
   }
 
   Future<void> _sendQuickLike() async {

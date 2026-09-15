@@ -1244,10 +1244,9 @@ class LoveInsightService {
             nowTs: nowTs,
           )) {
         String message = data.suggestion;
-        final aiMessage = await AiCounselorService().callTextGeneration(
-          'Dữ liệu: Love Score ${data.loveScore}/100, Tỷ lệ tương tác ${data.interactionRate}, Trạng thái: ${data.level}. '
-              'Hãy viết 1 câu thông báo push ngắn gọn (dưới 15 từ), ấm áp, tinh tế để nhắc người dùng vào app hâm nóng tình cảm.',
-          'Bạn là trợ lý ảo tâm lý SoulLocket. Hãy dùng ngôn ngữ chân thành, trẻ trung, tiếng Việt.',
+        final aiMessage = await AiCounselorService().generateTask(
+          AiTask.notificationCopy,
+          const {'occasion': 'low_weekly_interaction'},
         );
         if (aiMessage != null && aiMessage.isNotEmpty) {
           message = aiMessage;

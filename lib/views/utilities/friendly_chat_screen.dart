@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'widgets/ai_task_status_banner.dart';
 import 'dart:ui';
 
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
@@ -11,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/sl_theme.dart';
 import '../../core/fast_backdrop_filter.dart';
 import '../../utils/services/ai_counselor_service.dart';
+import '../../utils/services/storage/ai_pending_request_store.dart';
 import '../ui_prefs.dart';
 import '../../widgets/r2_sticker_image.dart';
 import '../home/widgets/soul_merge_screen.dart';
@@ -22,7 +24,22 @@ class FriendlyChatScreen extends StatefulWidget {
     this.houseId,
     this.myName,
     this.embedded = false,
-  });
+  }) : _serviceOverride = null,
+       _uidOverride = null;
+
+  @visibleForTesting
+  const FriendlyChatScreen.forTesting({
+    super.key,
+    required AiCounselorService service,
+    required String? Function() currentUid,
+    this.houseId,
+    this.myName,
+    this.embedded = false,
+  }) : _serviceOverride = service,
+       _uidOverride = currentUid;
+
+  final AiCounselorService? _serviceOverride;
+  final String? Function()? _uidOverride;
 
   final String? houseId;
   final String? myName;
@@ -44,7 +61,12 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
 
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
-  final _aiService = AiCounselorService();
+  late final AiCounselorService _aiService;
+  String? get _currentUid => widget._uidOverride != null
+      ? widget._uidOverride!()
+      : firebase_auth.FirebaseAuth.instance.currentUser?.uid;
+  late final String? _sessionUid;
+  late final String _sessionCacheKey;
   final Set<int> _reportingIndexes = <int>{};
   final List<_FriendlyChatMessage> _messages = <_FriendlyChatMessage>[
     _FriendlyChatMessage(
@@ -54,15 +76,26 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
   ];
 
   bool _isSending = false;
+  bool _historyReady = false;
+  bool _historyLoadFailed = false;
+  bool _isInitializing = false;
+  AiPendingRequestStore? _pendingStore;
+  AiTaskOutcome? _pendingAiOutcome;
+  int _pendingAiMessageIndex = 0;
+  bool _isCheckingAiResult = false;
   bool _hasUserInteracted = false;
-  int _currentCountdownDuration = 15;
   String _persona = 'default';
 
   @override
   void initState() {
     super.initState();
-    _loadCachedHistory();
-    _loadRecentHistory();
+    _aiService = widget._serviceOverride ?? AiCounselorService();
+    _sessionUid = _currentUid;
+    final houseId = widget.houseId?.trim();
+    final scope = houseId == null || houseId.isEmpty ? 'global' : houseId;
+    _sessionCacheKey =
+        'friendly_chat_history_v1_${_sessionUid ?? 'guest'}_$scope';
+    _initializeHistory();
   }
 
   @override
@@ -72,11 +105,66 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
     super.dispose();
   }
 
-  String get _cacheKey {
-    final uid = firebase_auth.FirebaseAuth.instance.currentUser?.uid ?? 'guest';
-    final houseId = widget.houseId?.trim();
-    final scope = houseId == null || houseId.isEmpty ? 'global' : houseId;
-    return 'friendly_chat_history_v1_${uid}_$scope';
+  String get _cacheKey => _sessionCacheKey;
+  bool get _isCurrentSession => _currentUid == _sessionUid;
+
+  Future<void> _initializeHistory() async {
+    if (!mounted || !_isCurrentSession || _isInitializing) return;
+    _isInitializing = true;
+    setState(() {
+      _historyReady = false;
+      _historyLoadFailed = false;
+    });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (!mounted || !_isCurrentSession) return;
+      final store = _pendingStore = AiPendingRequestStore(prefs);
+      final pendingId = _sessionUid == null
+          ? null
+          : await store.read(_sessionUid);
+      if (!mounted || !_isCurrentSession) return;
+      // Cache trước, cloud sau: tránh cache chậm ghi đè lịch sử cloud vừa tải.
+      await _loadCachedHistory();
+      if (!mounted || !_isCurrentSession) return;
+      await _loadRecentHistory();
+      if (!mounted || !_isCurrentSession) return;
+      if (pendingId == null) {
+        _messages.removeWhere((message) => message.isTransient);
+        _pendingAiOutcome = null;
+      }
+      if (pendingId != null) {
+        var index = _messages.indexWhere(
+          (message) => !message.isUser && message.requestId == pendingId,
+        );
+        if (index < 0) {
+          index = _messages.length;
+          _messages.add(
+            _FriendlyChatMessage(
+              text: '',
+              isUser: false,
+              isTransient: true,
+              requestId: pendingId,
+              createdAt: DateTime.now().millisecondsSinceEpoch,
+            ),
+          );
+        }
+        setState(() {
+          _pendingAiOutcome = AiTaskOutcome(
+            requestId: pendingId,
+            status: 'pending',
+          );
+          _pendingAiMessageIndex = index;
+        });
+        // Không dựng lại input hay phát lại generate khi khôi phục màn hình.
+        await _checkPendingAiResult();
+      }
+      if (mounted && _isCurrentSession) setState(() => _historyReady = true);
+    } catch (_) {
+      if (!mounted || !_isCurrentSession) return;
+      setState(() => _historyLoadFailed = true);
+    } finally {
+      _isInitializing = false;
+    }
   }
 
   Future<void> _loadCachedHistory() async {
@@ -106,11 +194,17 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
               text: text,
               isUser: item['isUser'] == true,
               createdAt: createdAt,
+              requestId: item['requestId'] is String
+                  ? item['requestId'] as String
+                  : null,
             );
           })
           .whereType<_FriendlyChatMessage>()
           .toList(growable: false);
-      if (!mounted || history.isEmpty || _hasUserInteracted) {
+      if (!mounted ||
+          !_isCurrentSession ||
+          history.isEmpty ||
+          _hasUserInteracted) {
         return;
       }
       setState(() {
@@ -119,14 +213,13 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
           ..addAll(history.take(_localHistoryMaxMessages));
       });
       _scrollToBottom();
-    } catch (error) {
-      debugPrint(
-        '[SuppressedError] lib/views/utilities/friendly_chat_screen.dart: $error',
-      );
+    } catch (_) {
+      debugPrint('[FriendlyChat] Local history could not be loaded');
     }
   }
 
   Future<void> _saveCachedHistory() async {
+    if (!_isCurrentSession) return;
     try {
       final cutoff = DateTime.now()
           .subtract(_localHistoryTtl)
@@ -134,7 +227,9 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
       final source = _messages
           .where(
             (message) =>
-                message.createdAt > cutoff && message.text.trim().isNotEmpty,
+                !message.isTransient &&
+                message.createdAt > cutoff &&
+                message.text.trim().isNotEmpty,
           )
           .toList(growable: false);
       final start = source.length > _localHistoryMaxMessages
@@ -147,15 +242,15 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
               'text': message.text,
               'isUser': message.isUser,
               'createdAt': message.createdAt,
+              if (message.requestId != null) 'requestId': message.requestId,
             };
           })
           .toList(growable: false);
       final prefs = await SharedPreferences.getInstance();
+      if (!_isCurrentSession) return;
       await prefs.setString(_cacheKey, jsonEncode(payload));
-    } catch (error) {
-      debugPrint(
-        '[SuppressedError] lib/views/utilities/friendly_chat_screen.dart: $error',
-      );
+    } catch (_) {
+      debugPrint('[FriendlyChat] Local history could not be saved');
     }
   }
 
@@ -176,7 +271,9 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
         continue;
       }
       final minuteKey = message.createdAt ~/ Duration.millisecondsPerMinute;
-      final key = '${message.isUser}|$minuteKey|${message.text.trim()}';
+      final key = message.requestId == null
+          ? '${message.isUser}|$minuteKey|${message.text.trim()}'
+          : '${message.isUser}|${message.requestId}';
       if (seen.add(key)) {
         merged.add(message);
       }
@@ -196,7 +293,11 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
           const Duration(seconds: 10),
           onTimeout: () => const <AiChatHistoryMessage>[],
         );
-    if (!mounted || history.isEmpty || _isSending || _hasUserInteracted) {
+    if (!mounted ||
+        !_isCurrentSession ||
+        history.isEmpty ||
+        _isSending ||
+        _hasUserInteracted) {
       return;
     }
     final merged = _mergeHistory(
@@ -206,6 +307,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
               text: message.text,
               isUser: message.isUser,
               createdAt: message.createdAt,
+              requestId: message.requestId,
             ),
           )
           .toList(growable: false),
@@ -415,47 +517,51 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
 
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
-    if (text.isEmpty || _isSending) {
+    if (text.isEmpty ||
+        !_historyReady ||
+        _historyLoadFailed ||
+        _isSending ||
+        _isCheckingAiResult ||
+        _pendingAiOutcome != null ||
+        !_isCurrentSession) {
       return;
     }
 
+    setState(() => _isSending = true);
+    final requestId = AiCounselorService.createRequestId();
+    try {
+      if (_sessionUid == null || _pendingStore == null) {
+        throw StateError('Chat session unavailable');
+      }
+      // Phải ghi marker thành công trước request có thể tính phí.
+      await _pendingStore!.save(_sessionUid, requestId);
+    } catch (_) {
+      if (!mounted || !_isCurrentSession) return;
+      setState(() {
+        _isSending = false;
+        _historyLoadFailed = true;
+      });
+      return;
+    }
+    if (!mounted || !_isCurrentSession) return;
     _messageController.clear();
     final userMessage = _FriendlyChatMessage(
       text: text,
       isUser: true,
       createdAt: DateTime.now().millisecondsSinceEpoch,
+      requestId: requestId,
     );
-
-    // Ước tính thời gian dựa vào độ dài câu hỏi (cơ bản 8s + 1s mỗi 20 ký tự)
-    int estimatedSeconds = 8 + (text.length ~/ 20);
-    if (estimatedSeconds > 35) estimatedSeconds = 35;
 
     setState(() {
       _hasUserInteracted = true;
       _messages.add(userMessage);
       _isSending = true;
-      _currentCountdownDuration = estimatedSeconds;
     });
     _saveCachedHistory();
     _scrollToBottom();
 
-    final prompt = _buildPrompt(text);
-    final persona = UiPrefs.notifier.value.friendlyChatPersona;
-    final personaText = persona.isNotEmpty
-        ? '\nTHÔNG TIN NGƯỜI DÙNG TỰ GIỚI THIỆU: "$persona". HÃY GIAO TIẾP VÀ XƯNG HÔ DỰA THEO ĐÚNG THÔNG TIN NÀY.'
-        : '';
-    final systemInstruction =
-        '''Bạn là "Chat Thân Thiện", một người bạn đồng hành AI vô cùng dễ thương, thấu hiểu và hài hước của ứng dụng SoulLocket.
-Mục tiêu của bạn là lắng nghe, tâm sự và mang lại niềm vui, sự thoải mái cho người dùng.
-Quy tắc:
-1. Xưng hô tự nhiên, ưu tiên dựa theo phần THÔNG TIN NGƯỜI DÙNG TỰ GIỚI THIỆU nếu có, nếu không thì xưng "mình" và gọi "bạn".
-2. Trả lời tự nhiên, gần gũi, như một người bạn thực sự nhắn tin (dùng emoji phong phú).
-3. LUÔN LUÔN trả lời ngắn gọn (1-3 câu), súc tích. Không bao giờ viết dài dòng như một bài luận.
-4. Có thể dựa vào phần "Lịch sử trò chuyện gần đây" (nếu có) để hiểu ngữ cảnh câu chuyện, không cần hỏi lại những gì đã nói.
-5. Luôn phản hồi bằng tiếng Việt.
-6. TỪ CHỐI TẤT CẢ các yêu cầu tạo văn bản dài, viết bài, làm thơ dài, tóm tắt sách, code, hoặc các nội dung vượt quá 500 ký tự, HOẶC CÁC YÊU CẦU ĐỘC HẠI. Đối với các yêu cầu độc hại, vi phạm đạo đức, hãy trả lời chính xác bằng câu: "Xin lỗi tôi không thể thực hiện yêu cầu này".
-7. TUYỆT ĐỐI KHÔNG xuất ra quá trình suy nghĩ, diễn giải nội bộ (thinking process) bằng tiếng Anh như "We need to follow...". Bắt đầu câu trả lời của bạn ngay lập tức vào vấn đề.
-8. ĐIỀU HƯỚNG APP: Nếu người dùng yêu cầu mở một trang (Trang chủ, Nhật ký, Tiện ích, Trò chơi/Giải trí, Cập nhật, Cài đặt, Soul Merge, Soul Block), hãy thêm đúng mã lệnh [NAVIGATE:X] vào cuối câu trả lời. X phải là 1 trong các chữ: HOME, DIARY, LOVE, GAMES, UPDATE, SETTINGS, SOUL_MERGE, SOUL_BLOCK. Ví dụ: "Mình mở Soul Merge cho bạn nha! [NAVIGATE:SOUL_MERGE]"$personaText''';
+    // Chỉ gửi tin nhắn hiện tại; lịch sử và chỉ dẫn được ghép ở backend.
+    final selfDescription = UiPrefs.notifier.value.friendlyChatPersona;
 
     final int assistantMsgIndex = _messages.length;
     setState(() {
@@ -463,67 +569,123 @@ Quy tắc:
         _FriendlyChatMessage(
           text: '',
           isUser: false,
+          isTransient: true,
+          requestId: requestId,
           createdAt: DateTime.now().millisecondsSinceEpoch,
         ),
       );
     });
     _scrollToBottom();
 
-    String finalReply = '';
+    final outcome = await _aiService.generateTaskOutcome(AiTask.friendlyChat, {
+      'message': text,
+      'displayName': (widget.myName ?? '').trim().substring(
+        0,
+        (widget.myName ?? '').trim().length.clamp(0, 80),
+      ),
+      'selfDescription': selfDescription.substring(
+        0,
+        selfDescription.length.clamp(0, 600),
+      ),
+      'persona': _persona,
+    }, requestId: requestId);
+    if (!mounted || !_isCurrentSession) return;
+    await _applyAiOutcome(outcome, assistantMsgIndex);
+  }
 
-    try {
-      final stream = _aiService.streamTextGeneration(
-        prompt,
-        systemInstruction,
-        memoryScope: 'friendly_chat',
-        memoryText: text,
-        persona: _persona,
+  Future<void> _applyAiOutcome(
+    AiTaskOutcome outcome,
+    int assistantMsgIndex, {
+    bool restored = false,
+  }) async {
+    if (assistantMsgIndex >= _messages.length) return;
+    setState(() {
+      _isSending = false;
+      _isCheckingAiResult = false;
+      _pendingAiOutcome = outcome.text == null ? outcome : null;
+      _pendingAiMessageIndex = assistantMsgIndex;
+      _messages[assistantMsgIndex] = _messages[assistantMsgIndex].copyWith(
+        text: '',
+        isTransient: outcome.text == null,
       );
-
-      await for (final chunk in stream) {
-        if (!mounted) break;
-        finalReply += chunk;
-
-        String displayText = finalReply;
-
-        final RegExp thinkComplete = RegExp(
-          r'<think>.*?</think>',
-          dotAll: true,
-        );
-        displayText = displayText.replaceAll(thinkComplete, '');
-
-        final int openIndex = displayText.lastIndexOf('<think>');
-        if (openIndex != -1) {
-          final int closeIndex = displayText.indexOf('</think>', openIndex);
-          if (closeIndex == -1) {
-            displayText = displayText.substring(0, openIndex);
-          }
-        }
-
-        displayText = displayText.trimLeft();
-
-        if (displayText.contains('[NAVIGATE')) {
-          displayText = displayText.split('[NAVIGATE')[0].trim();
-        }
-
-        setState(() {
-          _messages[assistantMsgIndex] = _messages[assistantMsgIndex].copyWith(
-            text: displayText,
-          );
-        });
-        _scrollToBottom();
+    });
+    if (outcome.text == null) return;
+    setState(() => _isCheckingAiResult = true);
+    await _finishAiReply(
+      outcome.text!,
+      assistantMsgIndex,
+      allowNavigation: !restored,
+    );
+    try {
+      if (_sessionUid != null) {
+        await _pendingStore?.clear(_sessionUid, outcome.requestId);
       }
-    } catch (e) {
-      if (!mounted) return;
-      if (finalReply.isEmpty) {
-        finalReply =
-            _aiService.lastErrorMessage ??
-            'Mình đang gặp chút sự cố kết nối. Bạn đợi một lát rồi nói lại nhé!';
+    } catch (_) {
+      if (mounted && _isCurrentSession) {
+        setState(() => _historyLoadFailed = true);
       }
     }
+    if (!mounted || !_isCurrentSession) return;
+    setState(() => _isCheckingAiResult = false);
+    if (!outcome.memorySaved) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(L10nService().translate('ai_task_memory_unsaved')),
+        ),
+      );
+    }
+  }
 
-    if (!mounted) return;
+  Future<void> _checkPendingAiResult() async {
+    final pending = _pendingAiOutcome;
+    if (pending == null || _isCheckingAiResult || !_isCurrentSession) return;
+    final messageIndex = _pendingAiMessageIndex;
+    setState(() => _isCheckingAiResult = true);
+    final result = await _aiService.getTaskResult(
+      AiTask.friendlyChat,
+      pending.requestId,
+    );
+    if (!mounted ||
+        !_isCurrentSession ||
+        _pendingAiOutcome?.requestId != pending.requestId) {
+      return;
+    }
+    await _applyAiOutcome(result, messageIndex, restored: true);
+  }
 
+  Future<void> _dismissAiStatus() async {
+    final pending = _pendingAiOutcome;
+    if (pending == null || _isCheckingAiResult || !_isCurrentSession) return;
+    setState(() => _isCheckingAiResult = true);
+    try {
+      if (_sessionUid != null) {
+        await _pendingStore?.clear(_sessionUid, pending.requestId);
+      }
+    } catch (_) {
+      if (mounted && _isCurrentSession) {
+        setState(() {
+          _isCheckingAiResult = false;
+          _historyLoadFailed = true;
+        });
+      }
+      return;
+    }
+    if (!mounted || !_isCurrentSession) return;
+    setState(() {
+      if (_pendingAiMessageIndex < _messages.length &&
+          _messages[_pendingAiMessageIndex].isTransient) {
+        _messages.removeAt(_pendingAiMessageIndex);
+      }
+      _pendingAiOutcome = null;
+      _isCheckingAiResult = false;
+    });
+  }
+
+  Future<void> _finishAiReply(
+    String finalReply,
+    int assistantMsgIndex, {
+    bool allowNavigation = true,
+  }) async {
     final RegExp thinkCompleteFinal = RegExp(
       r'<think>.*?</think>',
       dotAll: true,
@@ -542,9 +704,7 @@ Quy tắc:
     finalReply = finalReply.trimLeft();
 
     if (finalReply.trim().isEmpty) {
-      finalReply =
-          _aiService.lastErrorMessage ??
-          L10nService().translate('friendly_chat_connection_error');
+      finalReply = L10nService().translate('friendly_chat_connection_error');
     }
 
     int? navTarget;
@@ -565,25 +725,12 @@ Quy tắc:
       }
     }
 
-    if (finalReply.contains('[ACTION:')) {
-      final actionRegex = RegExp(r'\[ACTION:([A-Z_]+)\]');
-      final actionMatch = actionRegex.firstMatch(finalReply);
-      if (actionMatch != null) {
-        final actionTarget = actionMatch.group(1);
-        finalReply = finalReply.replaceAll(actionRegex, '').trim();
-        if (actionTarget == 'THEME_DARK') {
-          UiPrefs.setThemeKey('theme-dark');
-        } else if (actionTarget == 'THEME_LIGHT') {
-          UiPrefs.setThemeKey('theme-light');
-        } else if (actionTarget == 'THEME_AUTO') {
-          UiPrefs.setThemeKey('theme-auto');
-        }
-      }
-    }
+    // Văn bản model không được thực thi như lệnh sửa cấu hình của người dùng.
+    finalReply = finalReply.replaceAll(RegExp(r'\[ACTION:[^\]]*\]'), '').trim();
 
-    if (navTarget != null) {
+    if (navTarget != null && allowNavigation) {
       Future.delayed(const Duration(milliseconds: 1500), () {
-        if (!mounted) return;
+        if (!mounted || !_isCurrentSession) return;
 
         if (navTarget == 101) {
           Navigator.of(context).pushReplacement(
@@ -596,6 +743,7 @@ Quy tắc:
         } else {
           Navigator.of(context).pop();
           Future.delayed(const Duration(milliseconds: 100), () {
+            if (!_isCurrentSession) return;
             SLTheme.globalTabRequest.value = navTarget;
           });
         }
@@ -606,46 +754,21 @@ Quy tắc:
       _isSending = false;
       _messages[assistantMsgIndex] = _messages[assistantMsgIndex].copyWith(
         text: finalReply.trim(),
+        isTransient: false,
       );
     });
-    _saveCachedHistory();
+    await _saveCachedHistory();
+    if (!mounted || !_isCurrentSession) return;
     _scrollToBottom();
   }
 
-  String _buildPrompt(String text) {
-    final name = widget.myName?.trim();
-
-    final historyContext = StringBuffer();
-    // Bỏ qua tin nhắn chào mừng đầu tiên (index 0) và tin nhắn người dùng vừa gửi (cuối cùng)
-    final recentMessages = _messages.length > 2
-        ? _messages.sublist(1, _messages.length - 1)
-        : <_FriendlyChatMessage>[];
-
-    final last12 = recentMessages.length > 12
-        ? recentMessages.sublist(recentMessages.length - 12)
-        : recentMessages;
-
-    if (last12.isNotEmpty) {
-      historyContext.writeln("--- Lịch sử trò chuyện gần đây ---");
-      for (final msg in last12) {
-        final role = msg.isUser
-            ? (name != null && name.isNotEmpty ? name : "Người dùng")
-            : "Chat Thân Thiện";
-        historyContext.writeln("$role: ${msg.text}");
-      }
-      historyContext.writeln("-----------------------------------");
-    }
-
-    return [
-      if (historyContext.isNotEmpty) historyContext.toString(),
-      if (name != null && name.isNotEmpty)
-        L10nService().format('util_chat_prompt_display_name', {'name': name}),
-      L10nService().format('util_chat_prompt_user_message', {'text': text}),
-      context.tr('util_hytrlitnhi_5313dd'),
-    ].join('\n');
-  }
-
   Future<void> _clearHistory() async {
+    if (!_historyReady ||
+        _isSending ||
+        _isCheckingAiResult ||
+        !_isCurrentSession) {
+      return;
+    }
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -683,9 +806,55 @@ Quy tắc:
       ),
     );
 
-    if (confirm != true) return;
+    if (confirm != true ||
+        !mounted ||
+        _isSending ||
+        _isCheckingAiResult ||
+        !_isCurrentSession) {
+      return;
+    }
 
     setState(() {
+      _isSending = true;
+      _hasUserInteracted = true;
+    });
+    String? pendingBeforeReset;
+    try {
+      if (_sessionUid != null) {
+        pendingBeforeReset = await _pendingStore?.read(_sessionUid);
+      }
+    } catch (_) {
+      if (mounted && _isCurrentSession) {
+        setState(() {
+          _isSending = false;
+          _historyLoadFailed = true;
+        });
+      }
+      return;
+    }
+    if (!mounted || !_isCurrentSession) return;
+    final cleared = await _aiService.clearChatHistory();
+    if (!mounted || !_isCurrentSession) return;
+    if (!cleared) {
+      setState(() => _isSending = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(L10nService().translate('ai_task_clear_error'))),
+      );
+      return;
+    }
+
+    try {
+      if (_sessionUid != null && pendingBeforeReset != null) {
+        await _pendingStore?.clear(_sessionUid, pendingBeforeReset);
+      }
+    } catch (_) {
+      if (mounted && _isCurrentSession) {
+        setState(() => _historyLoadFailed = true);
+      }
+    }
+    if (!mounted || !_isCurrentSession) return;
+    setState(() {
+      _pendingAiOutcome = null;
       _messages.clear();
       _messages.add(
         _FriendlyChatMessage(
@@ -695,8 +864,16 @@ Quy tắc:
       );
     });
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_cacheKey);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_cacheKey);
+    } catch (_) {
+      if (mounted && _isCurrentSession) {
+        setState(() => _historyLoadFailed = true);
+      }
+    } finally {
+      if (mounted && _isCurrentSession) setState(() => _isSending = false);
+    }
   }
 
   void _showPersonaConfigSheet() {
@@ -822,7 +999,10 @@ Quy tắc:
               }
               final messageIndex = index - 1;
               if (_isSending && messageIndex == _messages.length) {
-                return _TypingBubble(duration: _currentCountdownDuration);
+                return const _TypingBubble();
+              }
+              if (_messages[messageIndex].isTransient) {
+                return const SizedBox.shrink();
               }
               return _FriendlyChatBubble(
                 message: _messages[messageIndex],
@@ -833,6 +1013,27 @@ Quy tắc:
             },
           ),
         ),
+        if (!_historyReady && !_historyLoadFailed)
+          const LinearProgressIndicator(),
+        if (_historyLoadFailed)
+          AiTaskStatusBanner(
+            message: context.tr('ai_task_local_recovery_error'),
+            checkLabel: context.tr('ai_task_retry_recovery'),
+            dismissLabel: '',
+            busy: false,
+            onCheck: _initializeHistory,
+          ),
+        if (_pendingAiOutcome case final pending?)
+          AiTaskStatusBanner(
+            message:
+                pending.errorMessage ??
+                L10nService().translate('ai_task_pending_message'),
+            checkLabel: L10nService().translate('ai_task_check_result'),
+            dismissLabel: L10nService().translate('ai_task_dismiss_status'),
+            busy: _isCheckingAiResult,
+            onCheck: pending.isPending ? _checkPendingAiResult : null,
+            onDismiss: _dismissAiStatus,
+          ),
         _buildInputBar(),
       ],
     );
@@ -924,7 +1125,7 @@ Quy tắc:
           ),
           IconButton(
             tooltip: 'Làm mới cuộc trò chuyện',
-            onPressed: _clearHistory,
+            onPressed: _isSending ? null : _clearHistory,
             icon: const Icon(Icons.refresh_rounded, color: Color(0xFFD81B60)),
           ),
         ],
@@ -1028,7 +1229,14 @@ Quy tắc:
                   color: Colors.transparent,
                   child: InkWell(
                     borderRadius: BorderRadius.circular(16),
-                    onTap: _isSending ? null : _sendMessage,
+                    onTap:
+                        !_historyReady ||
+                            _historyLoadFailed ||
+                            _isSending ||
+                            _isCheckingAiResult ||
+                            _pendingAiOutcome != null
+                        ? null
+                        : _sendMessage,
                     child: Center(
                       child: Icon(
                         Icons.send_rounded,
@@ -1239,8 +1447,7 @@ class _AiDisclosureCard extends StatelessWidget {
 }
 
 class _TypingBubble extends StatefulWidget {
-  final int duration;
-  const _TypingBubble({required this.duration});
+  const _TypingBubble();
 
   @override
   State<_TypingBubble> createState() => _TypingBubbleState();
@@ -1249,31 +1456,18 @@ class _TypingBubble extends StatefulWidget {
 class _TypingBubbleState extends State<_TypingBubble>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  late int _countdown;
-  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    _countdown = widget.duration;
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat();
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) return;
-      if (_countdown > 0) {
-        setState(() => _countdown--);
-      } else {
-        timer.cancel();
-      }
-    });
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -1314,7 +1508,7 @@ class _TypingBubbleState extends State<_TypingBubble>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Chờ bot xíu... ${_countdown}s',
+                        L10nService().translate('ai_task_waiting_reply'),
                         style: SLTheme.quicksand(
                           fontWeight: FontWeight.w800,
                           color: const Color(0xFF7A8598),
@@ -1413,19 +1607,29 @@ class _FriendlyChatMessage {
     required this.isUser,
     this.createdAt = 0,
     this.reported = false,
+    this.isTransient = false,
+    this.requestId,
   });
 
   final String text;
   final bool isUser;
   final int createdAt;
   final bool reported;
+  final bool isTransient;
+  final String? requestId;
 
-  _FriendlyChatMessage copyWith({String? text, bool? reported}) {
+  _FriendlyChatMessage copyWith({
+    String? text,
+    bool? reported,
+    bool? isTransient,
+  }) {
     return _FriendlyChatMessage(
       text: text ?? this.text,
       isUser: isUser,
       createdAt: createdAt,
       reported: reported ?? this.reported,
+      isTransient: isTransient ?? this.isTransient,
+      requestId: requestId,
     );
   }
 }

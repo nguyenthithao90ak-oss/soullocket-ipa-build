@@ -78,9 +78,10 @@ class _ModernHomeBody extends StatelessWidget {
     }
 
     return HomeCompanionScene(
+      followScroll: true,
       enabled: uiState.homeCompanionEnabled,
       soundEnabled: uiState.homeCompanionSoundEnabled,
-      audioSuppressed: MusicService().isPlayingNotifier,
+      audioSuppressed: SoundService().companionSuppressed,
       animate: effectProfile.animationEnabled && !state._deferHeavyHomeMotion,
       isActive: state.widget.isActiveListenable,
       isScrolling: state._isScrollingNotifier,

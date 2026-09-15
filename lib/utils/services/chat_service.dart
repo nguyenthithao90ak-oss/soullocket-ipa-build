@@ -17,6 +17,8 @@ import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'activity_history_service.dart';
 import 'anti_spam_service.dart';
 import 'internal_chat_service.dart';
+import 'chat_message_query.dart';
+import '../seeded_live_stream.dart';
 import 'offline_cache_service.dart';
 import 'package:soullocket_app/utils/services/role_utils.dart';
 import 'storage/storage_service.dart';
@@ -943,51 +945,38 @@ class ChatService {
     String targetHouseId, {
     int limit = 40,
     int? beforeTs,
+    String? beforeId,
   }) async {
     final roomId = _getRoomId(myHouseId, targetHouseId);
     if (!await _ensureViewerRoomIndex(myHouseId, roomId)) {
-      return [];
+      throw FirebaseException(plugin: 'cloud_firestore', code: 'permission-denied');
     }
 
-    var query = FirebaseFirestore.instance
+    final messages = FirebaseFirestore.instance
         .collection('chats')
         .doc(roomId)
-        .collection('messages')
-        .orderBy('ts', descending: true)
-        .limit(limit);
+        .collection('messages');
+    final query = ChatMessageQuery.page(messages, limit: limit,
+        beforeTs: beforeTs, beforeId: beforeId);
 
-    if (beforeTs != null) {
-      query = query.where('ts', isLessThan: beforeTs);
-    }
-
-    try {
-      final snap = await query.get().timeout(const Duration(seconds: 10));
-      if (snap.docs.isEmpty) return [];
-
-      return snap.docs
-          .map((doc) {
-            try {
-              return ChatMessage.fromMap(doc.id, doc.data());
-            } catch (_) {
-              return null;
-            }
-          })
-          .whereType<ChatMessage>()
-          .toList();
-    } on TimeoutException {
-      return [];
-    }
+    final snap = await query.get().timeout(const Duration(seconds: 10));
+    return snap.docs
+        .map(ChatMessageQuery.readDocument)
+        .whereType<ChatMessage>()
+        .toList();
   }
 
   Future<List<ChatMessage>> fetchInternalMessagesPage(
     String houseId, {
     int limit = 40,
     int? beforeTs,
+    String? beforeId,
   }) async {
     return InternalChatService().fetchMessagesPage(
       houseId,
       limit: limit,
       beforeTs: beforeTs,
+      beforeId: beforeId,
     );
   }
 
@@ -997,18 +986,25 @@ class ChatService {
     int? afterTs,
   }) {
     final roomId = _getRoomId(myHouseId, targetHouseId);
-    final tsFilter = afterTs ?? 0;
-
     return Stream.fromFuture(
       _ensureViewerRoomIndex(myHouseId, roomId),
     ).asyncExpand((allowed) {
-      if (!allowed) return const Stream<ChatMessage>.empty();
-      return FirebaseFirestore.instance
+      if (!allowed) {
+        return Stream<ChatMessage>.error(FirebaseException(
+            plugin: 'cloud_firestore', code: 'permission-denied'));
+      }
+      final messages = FirebaseFirestore.instance
           .collection('chats')
           .doc(roomId)
-          .collection('messages')
-          .where('ts', isGreaterThan: tsFilter)
-          .orderBy('ts')
+          .collection('messages');
+      return seededLiveStream<ChatMessage>(
+        afterTs: afterTs,
+        seed: () => ChatMessageQuery.page(messages, limit: 25)
+            .snapshots().map((snapshot) => snapshot.docs
+                .map(ChatMessageQuery.readDocument)
+                .whereType<ChatMessage>().toList()),
+        timestampOf: (message) => message.timestamp.millisecondsSinceEpoch,
+        live: (cursor) => ChatMessageQuery.live(messages, cursor)
           .snapshots()
           .expand(
             (snapshot) => snapshot.docChanges
@@ -1017,18 +1013,10 @@ class ChatService {
                       change.type == DocumentChangeType.added ||
                       change.type == DocumentChangeType.modified,
                 )
-                .map((change) {
-                  try {
-                    return ChatMessage.fromMap(
-                      change.doc.id,
-                      change.doc.data()!,
-                    );
-                  } catch (_) {
-                    return null;
-                  }
-                })
+                .map((change) => ChatMessageQuery.readDocument(change.doc))
                 .whereType<ChatMessage>(),
-          );
+          ),
+      );
     });
   }
 
@@ -1038,7 +1026,7 @@ class ChatService {
   }) {
     return InternalChatService().streamNewMessages(
       houseId,
-      afterTs: afterTs ?? 0,
+      afterTs: afterTs,
     );
   }
 

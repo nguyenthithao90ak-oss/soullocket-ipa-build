@@ -23,6 +23,7 @@ import 'package:soullocket_app/utils/services/app_lifecycle_presence_guard.dart'
 import 'package:soullocket_app/utils/services/error_logger_service.dart';
 import 'package:soullocket_app/utils/services/private_media_url_service.dart';
 import 'package:soullocket_app/utils/services/activity_history_service.dart';
+import 'package:soullocket_app/utils/services/sound_service.dart';
 
 class VoiceScreen extends StatefulWidget {
   final String houseId;
@@ -100,6 +101,23 @@ class _VoiceScreenState extends State<VoiceScreen>
       PrivateMediaUrlService();
   final AudioPlayer _player = AudioPlayer();
   final AudioRecorder _recorder = AudioRecorder();
+  VoidCallback? _releaseRecordingQuiet;
+  VoidCallback? _releasePlaybackQuiet;
+  StreamSubscription<PlayerState>? _playbackStateSub;
+  StreamSubscription<void>? _playbackCompleteSub;
+  bool _startingPlayback = false;
+  bool _startingRecording = false;
+
+  void _releaseVoicePlaybackQuiet() {
+    _releasePlaybackQuiet?.call();
+    _releasePlaybackQuiet = null;
+  }
+
+  void _releaseVoiceRecordingQuiet() {
+    _releaseRecordingQuiet?.call();
+    _releaseRecordingQuiet = null;
+  }
+
   static const Duration _maxVoiceStorageDuration = Duration(minutes: 5);
   static const int _maxPickedVoiceBytes = 6 * 1024 * 1024;
   static const String _pendingUploadPrefsKey = 'voice_pending_upload_v1';
@@ -129,7 +147,13 @@ class _VoiceScreenState extends State<VoiceScreen>
     )..repeat(reverse: true);
     _voiceStream = _voiceRef.onValue;
     WidgetsBinding.instance.addObserver(this);
-    _player.onPlayerComplete.listen((_) {
+    _playbackStateSub = _player.onPlayerStateChanged.listen((state) {
+      if (!_startingPlayback && state != PlayerState.playing) {
+        _releaseVoicePlaybackQuiet();
+      }
+    });
+    _playbackCompleteSub = _player.onPlayerComplete.listen((_) {
+      _releaseVoicePlaybackQuiet();
       if (!mounted) return;
       setState(() {
         _playingKey = null;
@@ -142,6 +166,10 @@ class _VoiceScreenState extends State<VoiceScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _playbackStateSub?.cancel();
+    _playbackCompleteSub?.cancel();
+    _releaseVoicePlaybackQuiet();
+    _releaseVoiceRecordingQuiet();
     _recordTicker?.cancel();
     _recordLimitTimer?.cancel();
     _recorder.dispose();
@@ -284,11 +312,13 @@ class _VoiceScreenState extends State<VoiceScreen>
       return;
     }
 
+    if (_startingRecording) return;
     if (_isRecording) {
       await _stopRecordingAndUpload();
       return;
     }
 
+    _startingRecording = true;
     try {
       final hasPermission = await _recorder.hasPermission();
       if (!hasPermission) {
@@ -301,6 +331,9 @@ class _VoiceScreenState extends State<VoiceScreen>
         tmpDir.path,
         'voice_${DateTime.now().millisecondsSinceEpoch}.m4a',
       );
+      if (!mounted) return;
+      // Giữ yên trước khi mở micro để tiếng xác nhận không lọt vào bản ghi.
+      _releaseRecordingQuiet ??= SoundService().holdQuiet();
       await _recorder.start(
         const RecordConfig(
           encoder: AudioEncoder.aacLc,
@@ -315,7 +348,11 @@ class _VoiceScreenState extends State<VoiceScreen>
       _recordLimitTimer?.cancel();
       _recordStartedAt = DateTime.now();
 
-      if (!mounted) return;
+      if (!mounted) {
+        await _recorder.stop();
+        _releaseVoiceRecordingQuiet();
+        return;
+      }
       setState(() {
         _isRecording = true;
         _recordElapsed = Duration.zero;
@@ -334,6 +371,7 @@ class _VoiceScreenState extends State<VoiceScreen>
       final remainingMs = await _remainingVoiceCapacityMs();
       if (remainingMs <= 0) {
         await _recorder.stop();
+        _releaseVoiceRecordingQuiet();
         _recordTicker?.cancel();
         _recordStartedAt = null;
         if (mounted) {
@@ -351,6 +389,7 @@ class _VoiceScreenState extends State<VoiceScreen>
         await _stopRecordingAndUpload(reachedLimit: true);
       });
     } catch (e, stackTrace) {
+      if (!_isRecording) _releaseVoiceRecordingQuiet();
       debugPrint('[VoiceScreen] _toggleRecordAndUpload catch: $e');
       unawaited(
         ErrorLoggerService.instance.logError(
@@ -364,6 +403,8 @@ class _VoiceScreenState extends State<VoiceScreen>
         fallbackMessage: fallbackErrMsg,
       );
       _showMessage(errorInfo.message);
+    } finally {
+      _startingRecording = false;
     }
   }
 
@@ -402,6 +443,7 @@ class _VoiceScreenState extends State<VoiceScreen>
     String? recordPath;
     try {
       recordPath = await _recorder.stop();
+      _releaseVoiceRecordingQuiet();
       _recordStartedAt = null;
       if (recordPath == null || recordPath.isEmpty) {
         throw Exception(errNoFile);
@@ -725,10 +767,12 @@ class _VoiceScreenState extends State<VoiceScreen>
   }
 
   Future<void> _togglePlay(Map<String, dynamic> item) async {
+    if (_startingPlayback) return;
     final errNoUrl = context.tr('util_khngmclinh_37686c');
     final key = item['key']?.toString() ?? '';
     if (_playingKey == key) {
       await _player.stop();
+      _releaseVoicePlaybackQuiet();
       if (!mounted) return;
       setState(() {
         _playingKey = null;
@@ -741,8 +785,11 @@ class _VoiceScreenState extends State<VoiceScreen>
       _loadingKey = key;
     });
 
+    _startingPlayback = true;
+    _releasePlaybackQuiet ??= SoundService().holdQuiet();
     try {
       final url = await _resolveVoiceUrl(item);
+      if (!mounted) return;
       if (url.isEmpty) {
         _showMessage(errNoUrl);
         setState(() => _loadingKey = null);
@@ -757,8 +804,14 @@ class _VoiceScreenState extends State<VoiceScreen>
         _loadingKey = null;
       });
     } catch (_) {
+      _releaseVoicePlaybackQuiet();
       if (mounted) {
         setState(() => _loadingKey = null);
+      }
+    } finally {
+      _startingPlayback = false;
+      if (!mounted || _player.state != PlayerState.playing) {
+        _releaseVoicePlaybackQuiet();
       }
     }
   }

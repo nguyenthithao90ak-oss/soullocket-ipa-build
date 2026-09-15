@@ -1413,7 +1413,7 @@ class _HomeScreenState extends State<HomeScreen>
     required bool shouldAnimateEffects,
     required bool shouldAnimateFallingEffect,
   }) {
-    Widget bodyContent = ValueListenableBuilder<int>(
+    final bodyContent = ValueListenableBuilder<int>(
       valueListenable: _activeTabIndexNotifier,
       builder: (context, activeIndex, _) {
         final isMainHomeTab = activeIndex == 0;
@@ -1457,32 +1457,27 @@ class _HomeScreenState extends State<HomeScreen>
       },
     );
 
-    if (shouldAnimateEffects) {
-      bodyContent = ValueListenableBuilder<int>(
-        valueListenable: _activeTabIndexNotifier,
-        builder: (context, activeIndex, child) {
-          final resolvedChild = child ?? bodyContent;
-          final isMainHomeTab = activeIndex == 0;
-          if (!isMainHomeTab) {
-            return resolvedChild;
-          }
-          return ValueListenableBuilder<bool>(
-            valueListenable: _isUserTabSwipingNotifier,
-            builder: (context, isSwiping, childUnderTouch) {
-              final targetChild = childUnderTouch ?? resolvedChild;
-              if (isSwiping) {
-                return targetChild;
-              }
-              return TouchEffectOverlay(child: targetChild);
-            },
-            child: resolvedChild,
-          );
-        },
-        child: bodyContent,
-      );
-    }
-
-    return bodyContent;
+    return ValueListenableBuilder<int>(
+      valueListenable: _activeTabIndexNotifier,
+      builder: (context, activeIndex, child) {
+        final resolvedChild = child ?? const SizedBox.shrink();
+        final isMainHomeTab = activeIndex == 0;
+        return ValueListenableBuilder<bool>(
+          valueListenable: _isUserTabSwipingNotifier,
+          builder: (context, isSwiping, childUnderTouch) {
+            final targetChild = childUnderTouch ?? resolvedChild;
+            // Giữ nguyên lớp cha cả khi cấu hình hiệu ứng đổi giữa lúc kéo.
+            // Chỉ tắt hiệu ứng chạm, không dispose/dựng lại Home và bé thỏ.
+            return TouchEffectOverlay(
+              isEnabled: shouldAnimateEffects && isMainHomeTab && !isSwiping,
+              child: targetChild,
+            );
+          },
+          child: resolvedChild,
+        );
+      },
+      child: bodyContent,
+    );
   }
 
   Widget _getOrBuildForegroundContent() {

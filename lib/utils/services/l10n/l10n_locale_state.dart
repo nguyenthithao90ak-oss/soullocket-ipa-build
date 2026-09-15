@@ -5,6 +5,15 @@ class _L10nLocaleState {
   AssetBundle assetBundle = rootBundle;
   Map<String, Map<String, String>> assetMaps = {};
   Map<String, String> assetViValueToKey = const {};
-  bool assetsLoaded = false;
-  bool loadingAssets = false;
+  final Map<String, Future<void>> assetLoads = {};
+  int assetGeneration = 0;
+
+  void useAssetBundle(AssetBundle bundle) {
+    if (identical(assetBundle, bundle)) return;
+    assetBundle = bundle;
+    assetGeneration++;
+    assetMaps.clear();
+    assetLoads.clear();
+    assetViValueToKey = const {};
+  }
 }

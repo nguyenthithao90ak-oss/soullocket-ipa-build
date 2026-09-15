@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../../../../utils/app_error_mapper.dart';
@@ -5,6 +7,7 @@ import '../../../../../utils/services/activity_history_service.dart';
 import '../../../../../utils/services/diary_service.dart';
 import '../../../../../utils/services/l10n_service.dart';
 import '../../../../../utils/services/notification_service.dart';
+import '../../../../../utils/services/sound_service.dart';
 import '../../../../../widgets/soullocket_animated_sticker.dart';
 import 'diary_feed_controller.dart';
 
@@ -140,6 +143,8 @@ class DiaryComposerController {
           backgroundColor: const Color(0xFFF39C12),
         );
       } else {
+        // Chỉ báo âm thanh sau khi lưu xong, không báo cho bản chờ đồng bộ.
+        unawaited(SoundService().playSaved());
         showSnackBar(
           L10nService().translate(
             L10nService().translate('home_ngtmsmi_f60808'),

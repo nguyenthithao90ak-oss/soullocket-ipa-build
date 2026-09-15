@@ -10,6 +10,7 @@ import '../../utils/services/ad_suppression_guard.dart';
 import '../../utils/services/purchase_service.dart';
 import '../../core/constants/app_config.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:soullocket_app/utils/services/sound_service.dart';
 
 class VideoCallScreen extends StatefulWidget {
   final String houseId;
@@ -36,6 +37,7 @@ class VideoCallScreen extends StatefulWidget {
 }
 
 class _VideoCallScreenState extends State<VideoCallScreen> {
+  late final VoidCallback _releaseSoundQuiet;
   final WebRTCService _webrtcService = WebRTCService();
   final RTCVideoRenderer _localRenderer = RTCVideoRenderer();
   final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
@@ -60,6 +62,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   @override
   void initState() {
     super.initState();
+    _releaseSoundQuiet = SoundService().holdQuiet();
     AdSuppressionGuard.instance.suppressAds();
     _isSpeakerOn = widget.isVideo;
     _webrtcService.toggleSpeaker(_isSpeakerOn);
@@ -145,6 +148,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 
   @override
   void dispose() {
+    _releaseSoundQuiet();
     _elapsedTimer?.cancel();
     AdSuppressionGuard.instance.resumeAds();
     _roomStatusSub?.cancel();

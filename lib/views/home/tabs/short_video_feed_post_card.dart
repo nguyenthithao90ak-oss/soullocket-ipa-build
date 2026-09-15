@@ -33,6 +33,14 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
   bool _isVideoInitialized = false;
   bool _isPreparingVideo = false;
   int _videoLoadToken = 0;
+  Timer? _videoCacheTimer;
+  bool _needsReplayCache = false;
+
+  bool get _canPlayVideo =>
+      mounted &&
+      widget.isActive &&
+      (WidgetsBinding.instance.lifecycleState == null ||
+          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed);
 
   String get _mediaUrl => widget.post.videoUrl.isNotEmpty
       ? widget.post.videoUrl
@@ -69,6 +77,8 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
   }
 
   void _resetVideoState({bool disposeController = false}) {
+    _videoCacheTimer?.cancel();
+    _needsReplayCache = false;
     _videoLoadToken++;
     _isPreparingVideo = false;
     _isVideoInitialized = false;
@@ -87,21 +97,38 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
       return;
     }
     final loadToken = ++_videoLoadToken;
+    final mediaUrl = _mediaUrl;
     _isPreparingVideo = true;
 
     VideoPlayerController? cachedController;
     try {
-      cachedController = await createCachedVideoController(_mediaUrl);
+      cachedController = await createCachedVideoController(mediaUrl);
     } catch (e) {
       debugPrint('Failed to cache video: $e');
     }
 
-    final controller =
+    if (!mounted || loadToken != _videoLoadToken || !widget.isActive) {
+      await cachedController?.dispose();
+      if (loadToken == _videoLoadToken) _isPreparingVideo = false;
+      return;
+    }
+
+    var controller =
         cachedController ??
-        VideoPlayerController.networkUrl(Uri.parse(_mediaUrl));
+        VideoPlayerController.networkUrl(Uri.parse(mediaUrl));
 
     try {
-      await controller.initialize();
+      try {
+        await controller.initialize();
+      } catch (_) {
+        // Cache có thể bị hỏng: giữ fallback mạng như luồng chưa có cache.
+        if (cachedController == null) rethrow;
+        await controller.dispose();
+        if (!mounted || loadToken != _videoLoadToken) return;
+        cachedController = null;
+        controller = VideoPlayerController.networkUrl(Uri.parse(mediaUrl));
+        await controller.initialize();
+      }
       await controller.setLooping(true);
       if (!mounted || loadToken != _videoLoadToken) {
         await controller.dispose();
@@ -110,11 +137,13 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
       final previousController = _videoCtrl;
       _videoCtrl = controller;
       _isVideoInitialized = true;
+      _needsReplayCache = cachedController == null && !kIsWeb;
       if (previousController != null) {
         unawaited(previousController.dispose());
       }
-      if (widget.isActive) {
+      if (_canPlayVideo) {
         unawaited(controller.play());
+        _scheduleReplayCache();
       }
       setState(() {});
     } catch (_) {
@@ -124,6 +153,28 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
         _isPreparingVideo = false;
       }
     }
+  }
+
+  void _scheduleReplayCache() {
+    _videoCacheTimer?.cancel();
+    if (!_needsReplayCache || !_canPlayVideo) return;
+    final token = _videoLoadToken;
+    final mediaUrl = _mediaUrl;
+    _videoCacheTimer = Timer(const Duration(seconds: 5), () {
+      if (!_canPlayVideo || token != _videoLoadToken) return;
+      final value = _videoCtrl?.value;
+      if (value == null || !value.isPlaying || value.hasError) return;
+      // Đợi bộ phát có đủ buffer để cache nền không tranh mạng với lần xem đầu.
+      final fullyBuffered =
+          value.duration > Duration.zero &&
+          value.buffered.any((range) => range.end >= value.duration);
+      if (value.isBuffering || !fullyBuffered) {
+        _scheduleReplayCache();
+        return;
+      }
+      _needsReplayCache = false;
+      unawaited(cacheVideoForReplay(mediaUrl));
+    });
   }
 
   Future<void> _checkIfLiked() async {
@@ -146,9 +197,11 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    _videoCacheTimer?.cancel();
     if (!_isVideoInitialized || _videoCtrl == null) return;
     if (state == AppLifecycleState.resumed && widget.isActive) {
       unawaited(_videoCtrl!.play());
+      _scheduleReplayCache();
       return;
     }
     unawaited(_videoCtrl!.pause());
@@ -182,10 +235,12 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
     if (widget.isActive != oldWidget.isActive) {
       if (widget.isActive) {
         unawaited(_ensureVideoReady());
-        if (_videoCtrl != null) {
+        if (_videoCtrl != null && _canPlayVideo) {
           unawaited(_videoCtrl!.play());
+          _scheduleReplayCache();
         }
       } else {
+        _videoCacheTimer?.cancel();
         if (_videoCtrl != null) {
           unawaited(_videoCtrl!.pause());
           unawaited(_videoCtrl!.seekTo(Duration.zero));
@@ -196,6 +251,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
 
   @override
   void dispose() {
+    _videoCacheTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _videoLoadToken++;
     _likeCtrl.dispose();

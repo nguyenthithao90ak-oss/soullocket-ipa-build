@@ -3,7 +3,7 @@ import 'widgets/utilities_tab_body.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:intl/intl.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, listEquals;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/views/utilities/love_card_screen.dart';
@@ -80,14 +80,16 @@ class _UtilitiesTabState extends State<UtilitiesTab>
   final bool _isBottomBannerReady = false;
   List<UtilityApp> _pinnedApps = const <UtilityApp>[];
   List<UtilityApp> _recentApps = const <UtilityApp>[];
+  bool _layoutReady = false;
 
   @override
   void initState() {
     super.initState();
+    final prefs = OfflineCacheService.getPrefsSync();
+    if (prefs != null) _restoreLayout(prefs);
     unawaited(_init());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      unawaited(_fetchUtilityStats());
       Future<void>.delayed(const Duration(seconds: 3), () {
         if (!mounted) return;
         precacheUtilityStickerList(context);
@@ -102,59 +104,44 @@ class _UtilitiesTabState extends State<UtilitiesTab>
   // Không khai báo lại dispose() ở dưới nữa
 
   Future<void> _init() async {
-    final nextOrder = await _utilityService.getCustomOrder();
-    final pinnedApps = await _utilityService.getPinnedApps();
-    final recentApps = await _utilityService.getRecentApps();
-    if (!mounted) return;
-    final shouldUpdateOrder = !listEquals(_customOrder, nextOrder);
-    final shouldUpdatePinned = !_sameAppIds(_pinnedApps, pinnedApps);
-    final shouldUpdateRecent = !_sameAppIds(_recentApps, recentApps);
-    if (!shouldUpdateOrder && !shouldUpdatePinned && !shouldUpdateRecent) {
-      return;
+    try {
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
+      if (!mounted) return;
+      // Cache nóng đã được áp dụng trong initState, không dựng lại lưới lần nữa.
+      if (!_layoutReady) setState(() => _restoreLayout(prefs));
+      await _fetchUtilityStats();
+    } catch (error) {
+      debugPrint('[Utilities] Không đọc được bố cục: $error');
+    } finally {
+      if (mounted && !_layoutReady) {
+        setState(() => _layoutReady = true);
+      }
     }
-    setState(() {
-      if (shouldUpdateOrder) {
-        _customOrder = List<String>.from(nextOrder);
-      }
-      if (shouldUpdatePinned) {
-        _pinnedApps = pinnedApps;
-      }
-      if (shouldUpdateRecent) {
-        _recentApps = recentApps;
-      }
-    });
+  }
+
+  void _restoreLayout(SharedPreferences prefs) {
+    final snapshot = _utilityService.readLayout(prefs);
+    _customOrder = snapshot.order;
+    _pinnedApps = snapshot.pinnedApps;
+    _recentApps = snapshot.recentApps;
+    final account = UtilityService.cachedAccount(prefs, _auth.currentUser?.uid);
+    _houseId = account?.houseId;
+    _myName = account?.name ?? _myName;
+    final mode = account?.relationshipMode;
+    if (mode != null) {
+      _relationshipMode = mode;
+      _layoutReady = true;
+    }
   }
 
   Future<void> _saveOrder() async {
     await _utilityService.saveCustomOrder(_customOrder);
   }
 
-  List<String> _orderedIdsForApps(List<UtilityApp> apps) {
-    final visibleIds = apps.map((app) => app.id).toSet();
-    final ordered = <String>[];
-    for (final appId in _customOrder) {
-      if (visibleIds.remove(appId)) {
-        ordered.add(appId);
-      }
-    }
-    for (final app in apps) {
-      if (visibleIds.remove(app.id)) {
-        ordered.add(app.id);
-      }
-    }
-    return ordered;
-  }
-
   List<UtilityApp> _sortAppsByCurrentOrder(List<UtilityApp> apps) {
-    final appById = <String, UtilityApp>{for (final app in apps) app.id: app};
-    final orderedIds = _orderedIdsForApps(apps);
-    if (!listEquals(_customOrder, orderedIds)) {
-      _customOrder = List<String>.from(orderedIds);
-    }
-    return orderedIds
-        .map((id) => appById[id])
-        .whereType<UtilityApp>()
-        .toList(growable: false);
+    return UtilityService.sortApps(apps, _customOrder);
   }
 
   Future<void> _reloadCustomOrder() async {
@@ -204,7 +191,7 @@ class _UtilitiesTabState extends State<UtilitiesTab>
   Future<void> _resetOrderToDefault() async {
     if (!mounted) return;
     setState(() {
-      _customOrder.clear();
+      _customOrder = _utilityService.defaultOrder;
     });
     await _utilityService.clearCustomOrder();
     await _reloadCustomOrder();
@@ -264,21 +251,14 @@ class _UtilitiesTabState extends State<UtilitiesTab>
     if (user == null) return;
     try {
       _houseId = await _houseService.getCurrentHouseId();
+      if (!mounted || _auth.currentUser?.uid != user.uid) return;
       if (_houseId != null) {
         // Tải từ cache trước
         final cachedData = OfflineCacheService.loadCacheSync(
           'utilities_settings_$_houseId',
         );
-        if (cachedData != null) {
-          if (mounted) {
-            setState(() {
-              _myName = cachedData['nameU1'] ?? context.tr('home_bn_1fd75b');
-              _relationshipMode =
-                  HouseSettings.inferRelationshipModeFromSettingsMap(
-                    Map<dynamic, dynamic>.from(cachedData),
-                  );
-            });
-          }
+        if (!_layoutReady && cachedData is Map) {
+          _applySettings(cachedData);
         }
 
         final settingsSnap = await _dbRef
@@ -287,14 +267,12 @@ class _UtilitiesTabState extends State<UtilitiesTab>
             .timeout(const Duration(seconds: 3));
         if (settingsSnap.exists && settingsSnap.value is Map) {
           final map = Map<dynamic, dynamic>.from(settingsSnap.value as Map);
-          OfflineCacheService.saveCache('utilities_settings_$_houseId', map);
-          if (mounted) {
-            setState(() {
-              _myName = map['nameU1'] ?? context.tr('home_bn_1fd75b');
-              _relationshipMode =
-                  HouseSettings.inferRelationshipModeFromSettingsMap(map);
-            });
-          }
+          if (!mounted || _auth.currentUser?.uid != user.uid) return;
+          _applySettings(map);
+          await OfflineCacheService.saveCache(
+            'utilities_settings_$_houseId',
+            map,
+          );
         }
       }
     } catch (error) {
@@ -302,6 +280,18 @@ class _UtilitiesTabState extends State<UtilitiesTab>
         '[SuppressedError] lib/views/home/tabs/utilities_tab.dart: $error',
       );
     }
+  }
+
+  void _applySettings(Map<dynamic, dynamic> map) {
+    if (!mounted) return;
+    final mode = HouseSettings.inferRelationshipModeFromSettingsMap(map);
+    final name = map['nameU1']?.toString() ?? context.tr('home_bn_1fd75b');
+    if (_layoutReady && mode == _relationshipMode && name == _myName) return;
+    setState(() {
+      _relationshipMode = mode;
+      _myName = name;
+      _layoutReady = true;
+    });
   }
 
   @override
@@ -317,6 +307,9 @@ class _UtilitiesTabState extends State<UtilitiesTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    if (!_layoutReady) {
+      return const Center(child: CircularProgressIndicator());
+    }
     final visibleAppsAll = UtilityService.appsForMode(_relationshipMode);
     final commonApps = _sortAppsByCurrentOrder(
       visibleAppsAll.where((app) => !app.isTool).toList(growable: false),

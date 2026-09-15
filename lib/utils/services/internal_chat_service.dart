@@ -6,6 +6,8 @@ import 'package:firebase_database/firebase_database.dart'
 import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/models/chat_message.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import '../seeded_live_stream.dart';
+import 'chat_message_query.dart';
 
 /// InternalChatService — quản lý tin nhắn nội bộ (giữa 2 người trong 1 house)
 /// Firestore path: houses/{houseId}/chat_room_messages/{msgId}
@@ -74,10 +76,16 @@ class InternalChatService {
   }
 
   // ── STREAM tin nhắn mới realtime ─────────────────────────────────────
-  Stream<ChatMessage> streamNewMessages(String houseId, {int afterTs = 0}) {
-    return _messagesRef(houseId)
-        .where('ts', isGreaterThan: afterTs)
-        .orderBy('ts')
+  Stream<ChatMessage> streamNewMessages(String houseId, {int? afterTs}) {
+    final messages = _messagesRef(houseId);
+    return seededLiveStream<ChatMessage>(
+      afterTs: afterTs,
+      seed: () => ChatMessageQuery.page(messages, limit: 25).snapshots()
+          .map((snapshot) => snapshot.docs
+              .map(ChatMessageQuery.readDocument)
+              .whereType<ChatMessage>().toList()),
+      timestampOf: (message) => message.timestamp.millisecondsSinceEpoch,
+      live: (cursor) => ChatMessageQuery.live(messages, cursor)
         .snapshots()
         .expand(
           (snapshot) => snapshot.docChanges
@@ -86,15 +94,10 @@ class InternalChatService {
                     change.type == DocumentChangeType.added ||
                     change.type == DocumentChangeType.modified,
               )
-              .map((change) {
-                try {
-                  return ChatMessage.fromMap(change.doc.id, change.doc.data()!);
-                } catch (_) {
-                  return null;
-                }
-              })
+              .map((change) => ChatMessageQuery.readDocument(change.doc))
               .whereType<ChatMessage>(),
-        );
+        ),
+    );
   }
 
   // ── LẤY trang tin nhắn (phân trang) ──────────────────────────────────
@@ -102,24 +105,13 @@ class InternalChatService {
     String houseId, {
     int limit = 40,
     int? beforeTs,
+    String? beforeId,
   }) async {
-    Query<Map<String, dynamic>> query = _messagesRef(
-      houseId,
-    ).orderBy('ts', descending: true).limit(limit);
-
-    if (beforeTs != null) {
-      query = query.where('ts', isLessThan: beforeTs);
-    }
-
-    final snap = await query.get();
+    final query = ChatMessageQuery.page(_messagesRef(houseId), limit: limit,
+        beforeTs: beforeTs, beforeId: beforeId);
+    final snap = await query.get().timeout(const Duration(seconds: 10));
     return snap.docs
-        .map((doc) {
-          try {
-            return ChatMessage.fromMap(doc.id, doc.data());
-          } catch (_) {
-            return null;
-          }
-        })
+        .map(ChatMessageQuery.readDocument)
         .whereType<ChatMessage>()
         .toList();
   }

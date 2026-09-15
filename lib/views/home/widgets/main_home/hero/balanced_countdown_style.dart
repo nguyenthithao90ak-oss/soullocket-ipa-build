@@ -63,6 +63,18 @@ class BalancedCountdownSurface extends StatelessWidget {
   final bool transparent;
   final Widget? child;
 
+  /// Chung một viền cho nền thật và đường đi của bé, kể cả squircle co giãn.
+  static ShapeBorder shapeFor(
+    String shapeKey,
+    double size, {
+    BorderSide side = BorderSide.none,
+  }) => shapeKey == 'squircle'
+      ? ContinuousRectangleBorder(
+          side: side,
+          borderRadius: BorderRadius.circular(size * .38),
+        )
+      : SlCountdownShapes.getShapeBorderForKey(shapeKey, side: side);
+
   @override
   Widget build(BuildContext context) {
     final palette = BalancedCountdownPalette(
@@ -73,16 +85,12 @@ class BalancedCountdownSurface extends StatelessWidget {
       builder: (context, constraints) {
         final size = constraints.biggest.shortestSide;
         final inset = (size * .03).clamp(2.0, 9.0);
-        ShapeBorder shapeFor(BorderSide side) => shapeKey == 'squircle'
-            ? ContinuousRectangleBorder(
-                side: side,
-                borderRadius: BorderRadius.circular(size * .38),
-              )
-            : SlCountdownShapes.getShapeBorderForKey(shapeKey, side: side);
         return DecoratedBox(
           decoration: ShapeDecoration(
             shape: shapeFor(
-              BorderSide(
+              shapeKey,
+              size,
+              side: BorderSide(
                 color: transparent
                     ? Colors.white.withValues(alpha: .45)
                     : palette.border,
@@ -107,7 +115,9 @@ class BalancedCountdownSurface extends StatelessWidget {
               clipBehavior: Clip.antiAlias,
               decoration: ShapeDecoration(
                 shape: shapeFor(
-                  BorderSide(
+                  shapeKey,
+                  size,
+                  side: BorderSide(
                     color: palette.border.withValues(alpha: .45),
                     width: .8,
                   ),

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/utils/services/sound_service.dart';
 
 class AudioWaveformBubble extends StatefulWidget {
   final String audioUrl;
@@ -31,6 +32,14 @@ class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
   Duration _position = Duration.zero;
   Duration _duration = Duration.zero;
   bool _isLoading = false;
+  bool _startingPlayback = false;
+  VoidCallback? _releaseSoundQuiet;
+
+  void _releaseQuiet() {
+    _releaseSoundQuiet?.call();
+    _releaseSoundQuiet = null;
+  }
+
   double _playbackSpeed = 1.0;
 
   // Cố định mẫu sóng âm ngẫu nhiên đẹp mắt theo mã băm của URL
@@ -58,6 +67,7 @@ class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
     });
 
     _stateSub = _player.onPlayerStateChanged.listen((state) {
+      if (state != PlayerState.playing && !_startingPlayback) _releaseQuiet();
       if (mounted) {
         setState(() {
           _playerState = state;
@@ -74,6 +84,7 @@ class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
 
   @override
   void dispose() {
+    _releaseQuiet();
     _posSub?.cancel();
     _durSub?.cancel();
     _stateSub?.cancel();
@@ -96,14 +107,18 @@ class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
   }
 
   Future<void> _togglePlay() async {
+    if (_startingPlayback) return;
     if (_isPlaying) {
       await _player.pause();
+      _releaseQuiet();
     } else {
-      if (_playerState == PlayerState.paused) {
-        await _player.resume();
-      } else {
-        setState(() => _isLoading = true);
-        try {
+      _startingPlayback = true;
+      _releaseSoundQuiet ??= SoundService().holdQuiet();
+      try {
+        if (_playerState == PlayerState.paused) {
+          await _player.resume();
+        } else {
+          setState(() => _isLoading = true);
           final url = widget.audioUrl.trim();
           if (url.startsWith('http://') || url.startsWith('https://')) {
             await _player.play(UrlSource(url));
@@ -111,12 +126,14 @@ class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
             await _player.play(DeviceFileSource(url));
           }
           await _player.setPlaybackRate(_playbackSpeed);
-        } catch (e) {
-          debugPrint('[AudioWaveformBubble] Playback error: $e');
-          if (mounted) {
-            setState(() => _isLoading = false);
-          }
         }
+      } catch (e) {
+        _releaseQuiet();
+        debugPrint('[AudioWaveformBubble] Playback error: $e');
+        if (mounted) setState(() => _isLoading = false);
+      } finally {
+        _startingPlayback = false;
+        if (!mounted || _player.state != PlayerState.playing) _releaseQuiet();
       }
     }
   }
@@ -154,8 +171,9 @@ class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
   Widget build(BuildContext context) {
     final isMe = widget.isMe;
     final primaryColor = isMe ? Colors.white : SLColors.darkNavy;
-    final secondaryColor =
-        isMe ? Colors.white.withValues(alpha: 0.45) : const Color(0xFF94A3B8);
+    final secondaryColor = isMe
+        ? Colors.white.withValues(alpha: 0.45)
+        : const Color(0xFF94A3B8);
     final activeWaveColor = isMe ? Colors.white : const Color(0xFFD81B60);
     final inactiveWaveColor = isMe
         ? Colors.white.withValues(alpha: 0.3)
@@ -202,7 +220,9 @@ class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
                             _isPlaying
                                 ? Icons.pause_rounded
                                 : Icons.play_arrow_rounded,
-                            color: isMe ? Colors.white : const Color(0xFFD81B60),
+                            color: isMe
+                                ? Colors.white
+                                : const Color(0xFFD81B60),
                             size: 24,
                           ),
                   ),
@@ -218,13 +238,13 @@ class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
                     return GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTapDown: (details) {
-                        final fraction =
-                            (details.localPosition.dx / width).clamp(0.0, 1.0);
+                        final fraction = (details.localPosition.dx / width)
+                            .clamp(0.0, 1.0);
                         _seekToFraction(fraction);
                       },
                       onHorizontalDragUpdate: (details) {
-                        final fraction =
-                            (details.localPosition.dx / width).clamp(0.0, 1.0);
+                        final fraction = (details.localPosition.dx / width)
+                            .clamp(0.0, 1.0);
                         _seekToFraction(fraction);
                       },
                       child: Container(
@@ -233,29 +253,27 @@ class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.center,
-                          children: List.generate(
-                            _waveformSamples.length,
-                            (index) {
-                              final sampleFraction =
-                                  index / _waveformSamples.length;
-                              final isPlayed =
-                                  sampleFraction <= progressFraction;
-                              final barHeight =
-                                  (_waveformSamples[index] * 28).clamp(5.0, 28.0);
+                          children: List.generate(_waveformSamples.length, (
+                            index,
+                          ) {
+                            final sampleFraction =
+                                index / _waveformSamples.length;
+                            final isPlayed = sampleFraction <= progressFraction;
+                            final barHeight = (_waveformSamples[index] * 28)
+                                .clamp(5.0, 28.0);
 
-                              return AnimatedContainer(
-                                duration: const Duration(milliseconds: 100),
-                                width: 2.8,
-                                height: barHeight,
-                                decoration: BoxDecoration(
-                                  color: isPlayed
-                                      ? activeWaveColor
-                                      : inactiveWaveColor,
-                                  borderRadius: BorderRadius.circular(99),
-                                ),
-                              );
-                            },
-                          ),
+                            return AnimatedContainer(
+                              duration: const Duration(milliseconds: 100),
+                              width: 2.8,
+                              height: barHeight,
+                              decoration: BoxDecoration(
+                                color: isPlayed
+                                    ? activeWaveColor
+                                    : inactiveWaveColor,
+                                borderRadius: BorderRadius.circular(99),
+                              ),
+                            );
+                          }),
                         ),
                       ),
                     );
@@ -274,8 +292,8 @@ class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
                 _isPlaying || _position > Duration.zero
                     ? '${_formatDuration(_position)} / ${_formatDuration(_duration)}'
                     : (_duration > Duration.zero
-                        ? _formatDuration(_duration)
-                        : 'Voice note'),
+                          ? _formatDuration(_duration)
+                          : 'Voice note'),
                 style: SLTheme.quicksand(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -285,8 +303,10 @@ class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
               GestureDetector(
                 onTap: _toggleSpeed,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 1.5,
+                  ),
                   decoration: BoxDecoration(
                     color: isMe
                         ? Colors.white.withValues(alpha: 0.15)

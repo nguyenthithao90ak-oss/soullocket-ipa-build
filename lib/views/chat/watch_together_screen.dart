@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import '../../utils/app_cache_manager.dart';
 
 import 'package:firebase_database/firebase_database.dart';
@@ -16,6 +15,7 @@ import 'package:video_player/video_player.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../utils/services/webrtc_service.dart';
 import '../../utils/services/ad_suppression_guard.dart';
+import '../../utils/services/sound_service.dart';
 
 class WatchTogetherScreen extends StatefulWidget {
   final String myHouseId;
@@ -36,6 +36,7 @@ class WatchTogetherScreen extends StatefulWidget {
 }
 
 class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
+  late final VoidCallback _releaseSoundQuiet;
   final ChatService _chatService = ChatService();
   final TextEditingController _urlController = TextEditingController();
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
@@ -68,6 +69,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
   @override
   void initState() {
     super.initState();
+    _releaseSoundQuiet = SoundService().holdQuiet();
     AdSuppressionGuard.instance.suppressAds();
     _syncClientId =
         '${widget.myHouseId}_${DateTime.now().millisecondsSinceEpoch}';
@@ -124,6 +126,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
 
   @override
   void dispose() {
+    _releaseSoundQuiet();
     AdSuppressionGuard.instance.resumeAds();
     _localSyncDebounce?.cancel();
     _watchSubscription?.cancel();

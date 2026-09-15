@@ -9,6 +9,7 @@ import 'package:soullocket_app/views/home/widgets/companion/home_companion_scene
 import 'package:soullocket_app/views/home/widgets/companion/home_companion_motion.dart';
 import 'package:soullocket_app/views/home/widgets/companion/home_companion_painter.dart';
 import 'package:soullocket_app/utils/services/music_service.dart';
+import 'package:soullocket_app/utils/services/sound_service.dart';
 import 'package:soullocket_app/views/utilities/tarot/tarot_screen.dart';
 import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/map_tilt_card.dart';

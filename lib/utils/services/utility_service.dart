@@ -5,6 +5,31 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'l10n_service.dart';
 import 'offline_cache_service.dart';
+import '../../models/house_settings.dart';
+
+class UtilityLayoutSnapshot {
+  const UtilityLayoutSnapshot({
+    required this.order,
+    required this.pinnedApps,
+    required this.recentApps,
+  });
+
+  final List<String> order;
+  final List<UtilityApp> pinnedApps;
+  final List<UtilityApp> recentApps;
+}
+
+class UtilityAccountSnapshot {
+  const UtilityAccountSnapshot({
+    required this.houseId,
+    required this.relationshipMode,
+    required this.name,
+  });
+
+  final String houseId;
+  final String? relationshipMode;
+  final String? name;
+}
 
 class UtilityApp {
   final String title;
@@ -25,6 +50,75 @@ class UtilityApp {
 }
 
 class UtilityService {
+  /// Đọc cùng một snapshot trước frame đầu, tránh chèn shortcut sau khi vẽ lưới.
+  UtilityLayoutSnapshot readLayout(SharedPreferences prefs) {
+    List<UtilityApp> appsForIds(Iterable<String> ids) => ids
+        .map((id) => _visibleAppsById[id])
+        .whereType<UtilityApp>()
+        .toList(growable: false);
+    return UtilityLayoutSnapshot(
+      order: _completeOrder(prefs.getStringList(_customOrderPrefKey) ?? []),
+      pinnedApps: appsForIds(
+        _sanitizeAppIds(prefs.getStringList(_pinnedAppsPrefKey) ?? []),
+      ),
+      recentApps: appsForIds(
+        _sanitizeAppIds(
+          prefs.getStringList(_recentAppsPrefKey) ?? [],
+        ).take(_maxRecentApps),
+      ),
+    );
+  }
+
+  List<String> get defaultOrder => _completeOrder(const []);
+
+  /// Chỉ dùng cache của đúng phiên hiện tại; đây không phải kiểm tra quyền.
+  static UtilityAccountSnapshot? cachedAccount(
+    SharedPreferences prefs,
+    String? uid,
+  ) {
+    if (uid == null || prefs.getString('il_auth_uid') != uid) return null;
+    final houseId = prefs.getString('il_house_id')?.trim();
+    if (houseId == null || houseId.isEmpty) return null;
+    String? mode;
+    String? name;
+    for (final key in [
+      'home_settings_$houseId',
+      'utilities_settings_$houseId',
+    ]) {
+      final cached = OfflineCacheService.loadCacheSync(key);
+      if (cached is Map) {
+        mode ??= HouseSettings.inferRelationshipModeFromSettingsMap(cached);
+        final cachedName = cached['nameU1']?.toString().trim();
+        if (cachedName != null && cachedName.isNotEmpty) name ??= cachedName;
+      }
+    }
+    final storedMode = prefs.getString('il_rel_mode');
+    return UtilityAccountSnapshot(
+      houseId: houseId,
+      relationshipMode:
+          mode ??
+          (storedMode == 'single' || storedMode == 'couple'
+              ? storedMode
+              : null),
+      name: name,
+    );
+  }
+
+  /// Lọc thứ tự cho từng nhóm mà không sửa danh sách thứ tự chung.
+  static List<UtilityApp> sortApps(
+    List<UtilityApp> apps,
+    Iterable<String> order,
+  ) {
+    final remaining = {for (final app in apps) app.id: app};
+    final result = <UtilityApp>[];
+    for (final id in order) {
+      final app = remaining.remove(id);
+      if (app != null) result.add(app);
+    }
+    result.addAll(remaining.values);
+    return result;
+  }
+
   static const String _customOrderPrefKey = 'il_utility_order';
   static const String _pinnedAppsPrefKey = 'il_pinned_utility_ids';
   static const String _recentAppsPrefKey = 'il_recent_utility_ids';
@@ -40,11 +134,10 @@ class UtilityService {
     'cinema',
     'surprise_maker',
   };
-  static const Set<String> _debugOnlyIds = {
-    'friendly_chat',
-  };
-  static final Set<String> _allAppIds =
-      allApps.map((UtilityApp app) => app.id).toSet();
+  static const Set<String> _debugOnlyIds = {'friendly_chat'};
+  static final Set<String> _allAppIds = allApps
+      .map((UtilityApp app) => app.id)
+      .toSet();
   static final Map<String, UtilityApp> _visibleAppsById = {
     for (final UtilityApp app in allApps)
       if (isUtilityVisibleInCurrentBuild(app.id)) app.id: app,
@@ -277,7 +370,8 @@ class UtilityService {
   }
 
   Future<List<String>> getCustomOrder() async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     final stored = prefs.getStringList(_customOrderPrefKey) ?? const <String>[];
     final sanitized = _sanitizeAppIds(stored);
@@ -289,19 +383,22 @@ class UtilityService {
   }
 
   Future<void> saveCustomOrder(Iterable<String> appIds) async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     await prefs.setStringList(_customOrderPrefKey, _sanitizeAppIds(appIds));
   }
 
   Future<void> clearCustomOrder() async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     await prefs.remove(_customOrderPrefKey);
   }
 
   Future<List<String>> getPinnedAppIds() async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     final stored = prefs.getStringList(_pinnedAppsPrefKey) ?? const <String>[];
     final sanitized = _sanitizeAppIds(stored);
@@ -318,7 +415,8 @@ class UtilityService {
 
     if (!_allAppIds.contains(normalizedId)) return;
 
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     final current = _sanitizeAppIds(
       prefs.getStringList(_pinnedAppsPrefKey) ?? const <String>[],
@@ -344,7 +442,8 @@ class UtilityService {
   }
 
   Future<List<String>> getRecentAppIds() async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     final stored = prefs.getStringList(_recentAppsPrefKey) ?? const <String>[];
     final sanitized = _sanitizeAppIds(stored).take(_maxRecentApps).toList();
@@ -361,7 +460,8 @@ class UtilityService {
 
     if (!_allAppIds.contains(normalizedId)) return;
 
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     final current = await getRecentAppIds();
     current.removeWhere((id) => id == normalizedId);

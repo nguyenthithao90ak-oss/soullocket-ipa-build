@@ -7,11 +7,24 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 
+import 'download_bytes_memory_cache.dart';
+
 class StorageDownloadCacheHelper {
   const StorageDownloadCacheHelper();
 
-  static final Map<String, Uint8List> _memoryCache = {};
-  static const int _maxMemoryCacheSize = 40;
+  static final _memoryCache = DownloadBytesMemoryCache();
+
+  String _normalizeNamespace(String namespace) => namespace.trim().isEmpty
+      ? 'downloads'
+      : namespace.trim().replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
+
+  String _memoryCacheKey(String url, String namespace, String? cacheKey) {
+    final normalizedNamespace = _normalizeNamespace(namespace);
+    final normalizedKey = (cacheKey ?? '').trim();
+    // Giữ namespace riêng và dùng khóa đầy đủ để tránh va chạm hash trong RAM.
+    return '${normalizedNamespace.length}:$normalizedNamespace'
+        '${normalizedKey.length}:$normalizedKey$url';
+  }
 
   String stableCacheToken(String value) {
     var hash = 2166136261;
@@ -38,9 +51,7 @@ class StorageDownloadCacheHelper {
     String? cacheKey,
   }) async {
     final tempDir = await getTemporaryDirectory();
-    final normalizedNamespace = namespace.trim().isEmpty
-        ? 'downloads'
-        : namespace.trim().replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
+    final normalizedNamespace = _normalizeNamespace(namespace);
     final cacheDir = Directory(
       p.join(tempDir.path, 'soullocket_cache', normalizedNamespace),
     );
@@ -79,6 +90,9 @@ class StorageDownloadCacheHelper {
       return null;
     }
 
+    final memKey = _memoryCacheKey(normalizedUrl, namespace, cacheKey);
+    if (forceRefresh) _memoryCache.remove(memKey);
+
     final cacheFile = await resolveCachedDownloadFile(
       normalizedUrl,
       namespace: namespace,
@@ -95,6 +109,7 @@ class StorageDownloadCacheHelper {
           .timeout(const Duration(seconds: 10));
       if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
         await cacheFile.writeAsBytes(response.bodyBytes, flush: true);
+        _memoryCache.remove(memKey);
         return cacheFile;
       }
       debugPrint(
@@ -122,13 +137,13 @@ class StorageDownloadCacheHelper {
     final normalizedUrl = url.trim();
     if (normalizedUrl.isEmpty) return null;
 
-    final keySource = (cacheKey ?? '').trim().isNotEmpty
-        ? '${cacheKey!.trim()}|$normalizedUrl'
-        : normalizedUrl;
-    final memKey = stableCacheToken(keySource);
+    final memKey = _memoryCacheKey(normalizedUrl, namespace, cacheKey);
 
-    if (!forceRefresh && _memoryCache.containsKey(memKey)) {
-      return _memoryCache[memKey];
+    if (forceRefresh) {
+      _memoryCache.remove(memKey);
+    } else {
+      final cached = _memoryCache.get(memKey, ttl: ttl);
+      if (cached != null) return cached;
     }
 
     final file = await getCachedNetworkFile(
@@ -144,10 +159,20 @@ class StorageDownloadCacheHelper {
     try {
       final bytes = await file.readAsBytes();
       if (bytes.isNotEmpty) {
-        if (_memoryCache.length >= _maxMemoryCacheSize) {
-          _memoryCache.remove(_memoryCache.keys.first);
+        // Dùng tuổi thật của file: bản disk cũ vẫn đọc được khi offline,
+        // nhưng không được gia hạn TTL thành một bản RAM mới tinh.
+        try {
+          _memoryCache.put(
+            memKey,
+            bytes,
+            modifiedAt: await file.lastModified(),
+            ttl: ttl,
+          );
+        } catch (_) {
+          // File có thể vừa được dọn sau khi đọc: vẫn trả dữ liệu đã đọc được,
+          // chỉ bỏ qua cache RAM khi không xác định được tuổi của file.
+          _memoryCache.remove(memKey);
         }
-        _memoryCache[memKey] = bytes;
       }
       return bytes;
     } catch (e) {

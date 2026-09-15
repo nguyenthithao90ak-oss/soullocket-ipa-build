@@ -98,8 +98,8 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       _myName = (user.displayName?.trim().isNotEmpty ?? false)
           ? user.displayName!.trim()
           : (user.email?.trim().isNotEmpty ?? false)
-              ? user.email!.trim()
-              : msgAnonName;
+          ? user.email!.trim()
+          : msgAnonName;
 
       if (_houseId == null || _houseId!.trim().isEmpty) {
         if (!mounted) return;
@@ -151,27 +151,27 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     }
 
     final msgStatusErr = L10nService().translate('util_khngththeo_d103bb');
-    _statusSub = _db.ref('support_tickets/$_ticketId/status').onValue.listen(
-      (event) {
-        if (!mounted || !event.snapshot.exists) return;
-        final nextStatus = event.snapshot.value?.toString() ?? 'new';
-        if (nextStatus == 'resolved' || nextStatus == 'closed') {
-          _resetClosedTicketLocally();
-          return;
-        }
-        setState(() {
-          _ticketStatus = nextStatus;
-        });
-      },
-      onError: (Object error) {
-        debugPrint(
-          'Support ticket status listener failed: ${AppErrorMapper.resolve(
-            error,
-            fallbackMessage: msgStatusErr,
-          ).message}',
+    _statusSub = _db
+        .ref('support_tickets/$_ticketId/status')
+        .onValue
+        .listen(
+          (event) {
+            if (!mounted || !event.snapshot.exists) return;
+            final nextStatus = event.snapshot.value?.toString() ?? 'new';
+            if (nextStatus == 'resolved' || nextStatus == 'closed') {
+              _resetClosedTicketLocally();
+              return;
+            }
+            setState(() {
+              _ticketStatus = nextStatus;
+            });
+          },
+          onError: (Object error) {
+            debugPrint(
+              'Support ticket status listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: msgStatusErr).message}',
+            );
+          },
         );
-      },
-    );
 
     final msgMsgErr = L10nService().translate('util_khngthtini_9fd6cd');
     _messagesSub = FirebaseFirestore.instance
@@ -181,45 +181,43 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         .orderBy('ts')
         .snapshots()
         .listen(
-      (snapshot) {
-        if (snapshot.docs.isEmpty) {
-          if (_messages.isEmpty) {
-            _showGreeting();
-          }
-          return;
-        }
+          (snapshot) {
+            if (snapshot.docs.isEmpty) {
+              if (_messages.isEmpty) {
+                _showGreeting();
+              }
+              return;
+            }
 
-        final loaded = snapshot.docs.map((doc) {
-          final value = doc.data();
-          final text = value['text']?.toString() ?? '';
-          return _SupportMessage(
-            id: doc.id,
-            text: text,
-            isBot: value['is_bot'] == true,
-            isAdmin: value['is_admin'] == true,
-            isMenuCommand: value['is_menu_command'] == true ||
-                _isSupportMenuCommandText(text),
-            ts: (value['ts'] as num?)?.toInt() ?? 0,
-          );
-        }).toList();
+            final loaded = snapshot.docs.map((doc) {
+              final value = doc.data();
+              final text = value['text']?.toString() ?? '';
+              return _SupportMessage(
+                id: doc.id,
+                text: text,
+                isBot: value['is_bot'] == true,
+                isAdmin: value['is_admin'] == true,
+                isMenuCommand:
+                    value['is_menu_command'] == true ||
+                    _isSupportMenuCommandText(text),
+                ts: (value['ts'] as num?)?.toInt() ?? 0,
+              );
+            }).toList();
 
-        if (!mounted) return;
-        setState(() {
-          _messages
-            ..clear()
-            ..addAll(loaded);
-        });
-        _scrollToBottom();
-      },
-      onError: (Object error) {
-        debugPrint(
-          'Support ticket messages listener failed: ${AppErrorMapper.resolve(
-            error,
-            fallbackMessage: msgMsgErr,
-          ).message}',
+            if (!mounted) return;
+            setState(() {
+              _messages
+                ..clear()
+                ..addAll(loaded);
+            });
+            _scrollToBottom();
+          },
+          onError: (Object error) {
+            debugPrint(
+              'Support ticket messages listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: msgMsgErr).message}',
+            );
+          },
         );
-      },
-    );
   }
 
   SupportTopicDefinition? get _currentTopic =>
@@ -292,9 +290,10 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
 
     if (deviceModel.isNotEmpty || devicePlatform.isNotEmpty) {
       badges.add(
-        [deviceModel, devicePlatform]
-            .where((item) => item.isNotEmpty)
-            .join(' • '),
+        [
+          deviceModel,
+          devicePlatform,
+        ].where((item) => item.isNotEmpty).join(' • '),
       );
     }
 
@@ -311,7 +310,8 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       _messages.add(
         _SupportMessage(
           id: 'greeting',
-          text: '👋 Xin chào! Mình là Trợ lý AI SoulLocket ✨\n\n'
+          text:
+              '👋 Xin chào! Mình là Trợ lý AI SoulLocket ✨\n\n'
               'Mình luôn sẵn sàng trả lời trực tiếp mọi thắc mắc của bạn ngay lập tức! 💕\n'
               'Khi bạn nhắn từ 5 tin thắc mắc trở lên, hệ thống sẽ tự động gửi thông báo đến Admin người thật để kiểm tra bổ sung nha.\n\n'
               'Các chủ đề hỗ trợ nhanh:\n'
@@ -351,11 +351,9 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
 
     if (_ticketId == null) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(msgNoTicket),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(msgNoTicket)));
       return;
     }
 
@@ -374,12 +372,13 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
 
     final currentUser = FirebaseAuth.instance.currentUser;
     final wasAlreadyWaiting = _ticketStatus == 'waiting_for_admin';
-    final topic = supportTopicById(commandId ?? _selectedTopicId) ??
+    final topic =
+        supportTopicById(commandId ?? _selectedTopicId) ??
         supportTopicByText(text);
     final summary = isMenuCommand
         ? ((topic == null || topic.subtitle.trim().isEmpty)
-            ? _getCategoryName(commandId)
-            : topic.subtitle)
+              ? _getCategoryName(commandId)
+              : topic.subtitle)
         : buildSupportSummary(text, topic: topic);
 
     setState(() => _isSending = true);
@@ -411,21 +410,22 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
             .doc(_ticketId)
             .collection('messages')
             .add({
-          'text': text,
-          'is_bot': false,
-          'is_admin': false,
-          'is_menu_command': isMenuCommand,
-          'sender': _myName,
-          'house_id': _houseId,
-          'ticket_id': _ticketId,
-          'user_uid': currentUser?.uid,
-          'user_email': currentUser?.email?.trim(),
-          'topic_id': topic?.id,
-          'topic_label': topic?.title,
-          'summary': summary,
-          'context': _buildMessageContext(summary: summary, topic: topic),
-          'ts': DateTime.now().millisecondsSinceEpoch,
-        }).timeout(const Duration(seconds: 3));
+              'text': text,
+              'is_bot': false,
+              'is_admin': false,
+              'is_menu_command': isMenuCommand,
+              'sender': _myName,
+              'house_id': _houseId,
+              'ticket_id': _ticketId,
+              'user_uid': currentUser?.uid,
+              'user_email': currentUser?.email?.trim(),
+              'topic_id': topic?.id,
+              'topic_label': topic?.title,
+              'summary': summary,
+              'context': _buildMessageContext(summary: summary, topic: topic),
+              'ts': DateTime.now().millisecondsSinceEpoch,
+            })
+            .timeout(const Duration(seconds: 3));
       } catch (e) {
         debugPrint('Error adding support message to Firestore: $e');
       }
@@ -571,45 +571,17 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     bool wasAlreadyWaiting = false,
     bool justReached5 = false,
   }) async {
-    final categoryName = commandId != null ? _getCategoryName(commandId) : 'Hỗ trợ SoulLocket';
-    const systemInstruction = '''
-Bạn là Trợ lý AI SoulLocket - siêu cute, thân thiện, thông minh và vô cùng ngọt ngào của ứng dụng nhật ký cặp đôi SoulLocket.
-Nhiệm vụ của bạn là giải đáp TRỰC TIẾP và CHÍNH XÁC thắc mắc của người dùng.
-
-Dưới đây là một số thông tin kỹ thuật & tính năng chính của SoulLocket để bạn trả lời chính xác:
-1. Ghép đôi nhà & Mất kết nối:
-   - Cách ghép đôi: Vào Cài đặt -> Lấy Mã Nhà gồm 12 số -> Trên điện thoại người kia bấm Ghép Đôi và nhập 12 số này.
-   - Nếu báo "Offline sai lệch / Vừa mới thoát": Đây không phải lỗi mất kết nối, do đường truyền mạng chậm 1-2s. Chỉ cần thử tắt/bật lại 4G/Wifi hoặc chờ 1 lúc app sẽ tự cập nhật đồng bộ lại chữ 'Online'.
-2. Tài khoản & Đăng nhập:
-   - Quên mật khẩu: Chọn "Quên mật khẩu" ở màn hình Đăng nhập để nhận email khôi phục mật khẩu.
-   - Mỗi người dùng một tài khoản riêng, ghép nối với nhau qua Mã Nhà.
-3. VIP & Mua hàng:
-   - Gói VIP mở khóa lưu trữ ảnh/video không giới hạn, nhạc nền cặp đôi, khung ảnh, theme độc quyền.
-4. Ảnh, Video & Nhật ký:
-   - Nếu không tải được ảnh: Kiểm tra dung lượng file, kết nối 4G/Wifi hoặc thử thoát app vào lại.
-5. Chuyển điện thoại / Đồng bộ:
-   - Chỉ cần đăng nhập đúng tài khoản email cũ trên điện thoại mới, toàn bộ dữ liệu Nhà sẽ tự động tải về.
-6. Admin hỗ trợ:
-   - Nhắn từ 5 câu hỏi thắc mắc trở lên, hệ thống sẽ tự động gửi thông báo tới Admin để nhân viên vào kiểm tra & hỗ trợ trực tiếp.
-
-Quy tắc trả lời:
-- Luôn trả lời trực tiếp đúng trọng tâm câu hỏi.
-- Trình bày ngắn gọn, dễ hiểu, từng bước rõ ràng.
-- Giọng điệu siêu dễ thương, có các biểu cảm icon xinh xắn (✨, 💕, 🌸, 🤖, 💖, 📝).
-''';
-
-    final promptText = isMenuCommand
-        ? 'Người dùng vừa chọn chủ đề hỗ trợ: $categoryName. Hãy chào đón dễ thương và hướng dẫn trực tiếp các giải pháp thắc mắc liên quan đến $categoryName.'
-        : 'Người dùng vừa hỏi: "$userText". Hãy trả lời trực tiếp và hướng dẫn ngắn gọn chi tiết nhất.';
+    final categoryName = commandId != null
+        ? _getCategoryName(commandId)
+        : 'Hỗ trợ SoulLocket';
 
     String? aiReply;
     try {
-      aiReply = await AiCounselorService()
-          .callTextGeneration(
-            promptText,
-            systemInstruction,
-          )
-          .timeout(const Duration(seconds: 25));
+      aiReply = await AiCounselorService().generateTask(AiTask.appSupport, {
+        'message': userText,
+        'category': categoryName,
+        'isMenuCommand': isMenuCommand,
+      });
     } catch (e) {
       debugPrint('AiCounselorService error: $e');
     }
@@ -661,11 +633,12 @@ Quy tắc trả lời:
           .doc(_ticketId)
           .collection('messages')
           .add({
-        'text': text,
-        'is_bot': true,
-        'is_admin': false,
-        'ts': DateTime.now().millisecondsSinceEpoch,
-      }).timeout(const Duration(seconds: 3));
+            'text': text,
+            'is_bot': true,
+            'is_admin': false,
+            'ts': DateTime.now().millisecondsSinceEpoch,
+          })
+          .timeout(const Duration(seconds: 3));
     } catch (e) {
       debugPrint('Error saving bot reply: $e');
     }
@@ -736,13 +709,18 @@ Quy tắc trả lời:
       context.tr('util_cho_1b0c99'),
       'hello',
       'hi',
-      'alo'
+      'alo',
     ])) {
       return _buildGreetingReply();
     }
 
-    if (_containsAny(text,
-        [context.tr('util_cmn_90b4d0'), 'thank', 'thanks', 'ok', 'oke'])) {
+    if (_containsAny(text, [
+      context.tr('util_cmn_90b4d0'),
+      'thank',
+      'thanks',
+      'ok',
+      'oke',
+    ])) {
       return context.tr('util_khngcgunub_34bcf8');
     }
 
@@ -798,7 +776,7 @@ Quy tắc trả lời:
       context.tr('util_ghpi_f175c9'),
       context.tr('util_ktni_36931a'),
       context.tr('util_mnh_f293b9'),
-      context.tr('util_thamgianh_fb6185')
+      context.tr('util_thamgianh_fb6185'),
     ])) {
       return _buildConnectionReply();
     }
@@ -808,7 +786,7 @@ Quy tắc trả lời:
       context.tr('util_khaapp_9de691'),
       context.tr('util_sinhtrc_7f36ab'),
       context.tr('util_vntay_295887'),
-      'face id'
+      'face id',
     ])) {
       return _buildSecurityReply();
     }
@@ -817,7 +795,7 @@ Quy tắc trả lời:
       context.tr('util_xatikhon_232744'),
       context.tr('util_xadliu_d73744'),
       'chia tay',
-      context.tr('util_ngtikhon_78f19f')
+      context.tr('util_ngtikhon_78f19f'),
     ])) {
       return _buildDeleteReply();
     }
@@ -826,7 +804,7 @@ Quy tắc trả lời:
       context.tr('util_gp_a4c3bb'),
       context.tr('util_xut_5c3170'),
       context.tr('util_tnhnng_d3cb43'),
-      context.tr('util_thmchcnng_7fc17b')
+      context.tr('util_thmchcnng_7fc17b'),
     ])) {
       return _buildFeedbackReply();
     }
@@ -838,7 +816,7 @@ Quy tắc trả lời:
       context.tr('util_khc_291c9d'),
       context.tr('util_tuytvng_1383bd'),
       context.tr('util_mtmi_1eb61e'),
-      context.tr('util_plc_eced84')
+      context.tr('util_plc_eced84'),
     ])) {
       return _buildEmotionalReply();
     }
@@ -885,9 +863,8 @@ Quy tắc trả lời:
     return supportTopicCatalog.any((topic) => topic.id == normalized);
   }
 
-  int get _userMessageCount => _messages
-      .where((m) => !m.isBot && !m.isAdmin && !m.isMenuCommand)
-      .length;
+  int get _userMessageCount =>
+      _messages.where((m) => !m.isBot && !m.isAdmin && !m.isMenuCommand).length;
 
   bool get _isResolved =>
       _ticketStatus == 'resolved' || _ticketStatus == 'closed';
@@ -1031,8 +1008,7 @@ Quy tắc trả lời:
               itemBuilder: (_, index) => _buildBubble(_messages[index]),
             ),
           ),
-          if (_isSending)
-            _buildTypingIndicator(),
+          if (_isSending) _buildTypingIndicator(),
           _buildInputBar(),
         ],
       ),
@@ -1055,7 +1031,9 @@ Quy tắc trả lời:
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isEscalated ? const Color(0xFFFFB6C1) : const Color(0xFFD8B4FE),
+          color: isEscalated
+              ? const Color(0xFFFFB6C1)
+              : const Color(0xFFD8B4FE),
         ),
         boxShadow: [
           BoxShadow(
@@ -1071,18 +1049,24 @@ Quy tắc trả lời:
           Row(
             children: [
               Text(
-                isEscalated ? '💌 Đã kết nối với Admin!' : '💬 AI hỗ trợ trực tiếp',
+                isEscalated
+                    ? '💌 Đã kết nối với Admin!'
+                    : '💬 AI hỗ trợ trực tiếp',
                 style: SLTheme.quicksand(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w900,
-                  color: isEscalated ? const Color(0xFFD81B60) : const Color(0xFF6B21A8),
+                  color: isEscalated
+                      ? const Color(0xFFD81B60)
+                      : const Color(0xFF6B21A8),
                 ),
               ),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: isEscalated ? const Color(0xFFD81B60) : const Color(0xFF7C3AED),
+                  color: isEscalated
+                      ? const Color(0xFFD81B60)
+                      : const Color(0xFF7C3AED),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -1138,7 +1122,7 @@ Quy tắc trả lời:
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         itemCount: supportTopicCatalog.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (_, index) {
           final topic = supportTopicCatalog[index];
           final isSelected = _selectedTopicId == topic.id;
@@ -1146,7 +1130,8 @@ Quy tắc trả lời:
             onTap: () {
               if (_isSending) return;
               unawaited(
-                  _send(menuId: topic.id, displayMessage: topic.chipLabel));
+                _send(menuId: topic.id, displayMessage: topic.chipLabel),
+              );
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
@@ -1160,7 +1145,9 @@ Quy tắc trả lời:
                 color: isSelected ? null : const Color(0xFFFFF0F5),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isSelected ? Colors.transparent : const Color(0xFFFFB6C1),
+                  color: isSelected
+                      ? Colors.transparent
+                      : const Color(0xFFFFB6C1),
                   width: 1,
                 ),
                 boxShadow: isSelected
@@ -1169,7 +1156,7 @@ Quy tắc trả lời:
                           color: const Color(0xFFD81B60).withValues(alpha: 0.3),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
-                        )
+                        ),
                       ]
                     : null,
               ),
@@ -1186,7 +1173,9 @@ Quy tắc trả lời:
                     style: SLTheme.quicksand(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color: isSelected ? Colors.white : const Color(0xFFD81B60),
+                      color: isSelected
+                          ? Colors.white
+                          : const Color(0xFFD81B60),
                     ),
                   ),
                 ],
@@ -1226,7 +1215,8 @@ Quy tắc trả lời:
   Widget _buildSupportIntakeCard() {
     final topic = _currentTopic;
     final badges = _supportContextBadges();
-    final checklist = topic?.requiredFields ??
+    final checklist =
+        topic?.requiredFields ??
         [
           context.tr('util_chnngchtrc_f6b51b'),
           context.tr('util_ghirmnhnhh_326eae'),
@@ -1305,9 +1295,7 @@ Quy tắc trả lời:
               if (stacked) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    info,
-                  ],
+                  children: [info],
                 );
               }
               return Row(
@@ -1317,7 +1305,9 @@ Quy tắc trả lời:
             },
           ),
           const SizedBox(height: 12),
-          ...checklist.take(4).map(
+          ...checklist
+              .take(4)
+              .map(
                 (item) => Padding(
                   padding: const EdgeInsets.only(bottom: 6),
                   child: Row(
@@ -1421,8 +1411,9 @@ Quy tắc trả lời:
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: Row(
-        mainAxisAlignment:
-            isMine ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isMine
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMine) ...[
@@ -1439,10 +1430,11 @@ Quy tắc trả lời:
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: (message.isAdmin
-                            ? const Color(0xFF7C3AED)
-                            : const Color(0xFFD81B60))
-                        .withValues(alpha: 0.3),
+                    color:
+                        (message.isAdmin
+                                ? const Color(0xFF7C3AED)
+                                : const Color(0xFFD81B60))
+                            .withValues(alpha: 0.3),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -1458,8 +1450,9 @@ Quy tắc trả lời:
           ],
           Flexible(
             child: Column(
-              crossAxisAlignment:
-                  isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: isMine
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               children: [
                 if (!isMine)
                   Padding(
@@ -1486,8 +1479,10 @@ Quy tắc trả lời:
                   constraints: BoxConstraints(
                     maxWidth: MediaQuery.of(context).size.width * 0.76,
                   ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 15,
+                    vertical: 11,
+                  ),
                   decoration: BoxDecoration(
                     gradient: isMine
                         ? const LinearGradient(
@@ -1499,8 +1494,8 @@ Quy tắc trả lời:
                     color: isMine
                         ? null
                         : message.isAdmin
-                            ? const Color(0xFF1E1B4B)
-                            : Colors.white,
+                        ? const Color(0xFF1E1B4B)
+                        : Colors.white,
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(18),
                       topRight: const Radius.circular(18),
@@ -1509,7 +1504,10 @@ Quy tắc trả lời:
                     ),
                     border: isMine || message.isAdmin
                         ? null
-                        : Border.all(color: const Color(0xFFFFE0EB), width: 1.2),
+                        : Border.all(
+                            color: const Color(0xFFFFE0EB),
+                            width: 1.2,
+                          ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.05),
@@ -1639,11 +1637,13 @@ Quy tắc trả lời:
                 minLines: 1,
                 maxLines: 8,
                 maxLength: 1000,
-                buildCounter: (context,
-                        {required currentLength,
-                        required isFocused,
-                        maxLength}) =>
-                    null,
+                buildCounter:
+                    (
+                      context, {
+                      required currentLength,
+                      required isFocused,
+                      maxLength,
+                    }) => null,
                 textInputAction: TextInputAction.send,
                 onSubmitted: canSend ? (_) => _send() : null,
                 style: SLTheme.quicksand(
@@ -1655,8 +1655,8 @@ Quy tắc trả lời:
                   hintText: _ticketId == null
                       ? context.tr('util_ngnhpnhn_b4a68d')
                       : (selectedTopic != null
-                          ? 'Điền theo mẫu ${selectedTopic.title.toLowerCase()}...'
-                          : 'Đặt câu hỏi để AI giải đáp trực tiếp...'),
+                            ? 'Điền theo mẫu ${selectedTopic.title.toLowerCase()}...'
+                            : 'Đặt câu hỏi để AI giải đáp trực tiếp...'),
                   hintStyle: SLTheme.quicksand(
                     color: const Color(0xFFD81B60).withValues(alpha: 0.5),
                     fontWeight: FontWeight.w600,
@@ -1691,7 +1691,7 @@ Quy tắc trả lời:
                           color: const Color(0xFFD81B60).withValues(alpha: 0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
-                        )
+                        ),
                       ]
                     : null,
               ),
@@ -1752,19 +1752,19 @@ Quy tắc trả lời:
             ...[
               (
                 context.tr('util_qunmtkhu_a9a074'),
-                context.tr('util_citbomtimt_83d047')
+                context.tr('util_citbomtimt_83d047'),
               ),
               (
                 context.tr('util_appbli_92e3fa'),
-                context.tr('util_thtthonton_f1e6df')
+                context.tr('util_thtthonton_f1e6df'),
               ),
               (
                 context.tr('util_kimtraquyn_4de2fd'),
-                context.tr('util_mcittikhon_4429d3')
+                context.tr('util_mcittikhon_4429d3'),
               ),
               (
                 context.tr('util_xatikhon_348215'),
-                context.tr('util_citxatikho_9cdf64')
+                context.tr('util_citxatikho_9cdf64'),
               ),
             ].map(
               (item) => ListTile(

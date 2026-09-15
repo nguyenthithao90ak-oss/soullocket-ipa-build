@@ -74,6 +74,9 @@ class HomeCompanionMotion extends ChangeNotifier {
   double _idleDuration = 2;
   double _nextDustAt = 15;
   double _lastApproachAt = -1;
+  double _affectionUntil = -1;
+  bool _greetingOnArrival = false;
+  int _greetingSerial = 0;
   int _nextDustSeed = 0;
   final List<HomeCompanionDust> _dust = [];
   late final UnmodifiableListView<HomeCompanionDust> _dustView;
@@ -83,12 +86,24 @@ class HomeCompanionMotion extends ChangeNotifier {
   final Queue<_JourneyLeg> _journey = Queue();
   Offset? _pendingTouch;
   bool _settled = false;
+  Offset? _pinnedPosition;
 
   Offset get position => _position;
   bool get facingRight => _facingRight;
   HomeCompanionPhase get phase => _phase;
   double get elapsedSeconds => _elapsed;
   double get stride => _stride;
+
+  /// Lời chào nhỏ chỉ theo thời gian Home đang hoạt động, không timer nền.
+  double get affection => ((_affectionUntil - _elapsed) / 1.8).clamp(0.0, 1.0);
+
+  /// Mỗi lời chào là một sự kiện, không lặp âm thanh theo từng frame.
+  int get greetingSerial => _greetingSerial;
+
+  bool isPetting(Offset touch) =>
+      hasSurfaces &&
+      _finiteOffset(touch) &&
+      (touch - (_position - Offset(0, 28 + hopLift))).distance <= 34;
   double get hopProgress {
     if (_journey.isEmpty || _settled || !_isMoving) return 0;
     final leg = _journey.first;
@@ -112,13 +127,15 @@ class HomeCompanionMotion extends ChangeNotifier {
       _phase == HomeCompanionPhase.approaching ||
       _phase == HomeCompanionPhase.hopping;
   List<HomeCompanionDust> get dust => _dustView;
-  bool get hasSurfaces => _track != null;
+  bool get hasSurfaces => _pinnedPosition != null || _track != null;
   double get celebration => _phase == HomeCompanionPhase.celebrating
       ? (_phaseTime / 1.1).clamp(0.0, 1.0)
       : 0;
 
   /// Viewport là vùng tọa độ chân đã trừ kích thước bé và thanh điều hướng.
   void setSurfaces(List<HomeCompanionSurface> surfaces, Rect viewport) {
+    final wasPinned = _pinnedPosition != null;
+    _pinnedPosition = null;
     final valid = surfaces
         .where(
           (surface) =>
@@ -140,7 +157,11 @@ class HomeCompanionMotion extends ChangeNotifier {
                 ),
         )
         .toList();
-    if (_viewport == viewport && _sameSurfaces(valid, _surfaces)) return;
+    if (!wasPinned &&
+        _nearRect(_viewport, viewport) &&
+        _sameSurfaces(valid, _surfaces)) {
+      return;
+    }
     final previousId = _track?.surface.id;
     _viewport = viewport;
     _surfaces = List.unmodifiable(valid);
@@ -152,6 +173,8 @@ class HomeCompanionMotion extends ChangeNotifier {
     _dustTargets.clear();
     _cleaningSeed = null;
     _pendingTouch = null;
+    _greetingOnArrival = false;
+    _affectionUntil = -1;
     _finishedPatrol = false;
     _settled = false;
     _nextDustAt = _elapsed + 15;
@@ -181,12 +204,47 @@ class HomeCompanionMotion extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Neo vào viewport, không phụ thuộc các ô đang cuộn phía dưới.
+  /// Chỉ giữ cử động tại chỗ/lời chào, không tạo hành trình hay bụi trên ô.
+  void setPinnedPosition(Offset position, Rect viewport) {
+    if (!_validRect(viewport) || !_finiteOffset(position)) {
+      setSurfaces(const [], viewport);
+      return;
+    }
+    final pinned = Offset(
+      position.dx.clamp(viewport.left, viewport.right),
+      position.dy.clamp(viewport.top, viewport.bottom),
+    );
+    if (_pinnedPosition == pinned && _viewport == viewport) return;
+    _viewport = viewport;
+    _pinnedPosition = pinned;
+    _position = pinned;
+    _track = null;
+    _tracks = const [];
+    _surfaces = const [];
+    _journey.clear();
+    _dust.clear();
+    _dustTargets.clear();
+    _cleaningSeed = null;
+    _pendingTouch = null;
+    _greetingOnArrival = false;
+    _affectionUntil = -1;
+    _settled = false;
+    _setPhase(HomeCompanionPhase.idle);
+    notifyListeners();
+  }
+
   /// Bỏ qua phần thời gian app bị treo/ra nền, không chạy bù hàng giây.
   void advance(Duration delta) {
     if (!hasSurfaces || delta <= Duration.zero) return;
     final dt = math.min(delta.inMicroseconds / 1000000, 0.10);
     _elapsed += dt;
     _phaseTime += dt;
+    if (_pinnedPosition != null) {
+      // Thời gian vẫn chạy để bé thở/chớp mắt; chân không dịch chuyển.
+      notifyListeners();
+      return;
+    }
     if (_settled) {
       // Sau pause, đi tiếp đoạn nối đang dở để không nhảy xuyên khối.
       _settled = false;
@@ -211,23 +269,44 @@ class HomeCompanionMotion extends ChangeNotifier {
     notifyListeners();
   }
 
-  void approach(Offset touch) {
-    if (!hasSurfaces || !_finiteOffset(touch) || !_inside(_viewport, touch)) {
+  void approach(Offset touch) => _approach(touch, newTouch: true);
+
+  void _approach(Offset touch, {required bool newTouch}) {
+    if (!hasSurfaces || !_finiteOffset(touch)) {
+      return;
+    }
+    final petting = isPetting(touch);
+    if (!_inside(_viewport, touch) && !petting) {
       return;
     }
     if (_elapsed - _lastApproachAt < 0.30) return;
     _lastApproachAt = _elapsed;
+    if (newTouch) _greetingSerial++;
+    _affectionUntil = _elapsed + 1.8;
+    _greetingOnArrival = true;
     // Không đổi hướng giữa một bước nhảy: tiếp đất trước rồi đón điểm chạm mới.
     if (_phase == HomeCompanionPhase.hopping ||
         (_journey.isNotEmpty &&
             _journey.first.phase == HomeCompanionPhase.hopping)) {
       _pendingTouch = touch;
       _cleaningSeed = null;
+      notifyListeners();
       return;
     }
     _syncToCurrentLeg();
     _journey.clear();
     _cleaningSeed = null;
+    // Chạm gần bé là vuốt ve: bé đứng lại chào thay vì chạy khỏi ngón tay.
+    if (petting || _pinnedPosition != null) {
+      if ((touch.dx - _position.dx).abs() > 4) {
+        _facingRight = touch.dx > _position.dx;
+      }
+      _greetingOnArrival = false;
+      _rest();
+      _idleDuration = 1.8;
+      notifyListeners();
+      return;
+    }
     final sorted = [..._tracks]
       ..sort((a, b) => a.project(touch).$2.compareTo(b.project(touch).$2));
     for (final target in sorted) {
@@ -247,7 +326,7 @@ class HomeCompanionMotion extends ChangeNotifier {
   }
 
   void requestCleaning() {
-    if (!hasSurfaces) return;
+    if (!hasSurfaces || _pinnedPosition != null) return;
     if (_dust.isEmpty) _spawnDust();
     _nextDustAt = _elapsed + 45;
     if (_journey.isEmpty && _phase != HomeCompanionPhase.sweeping) {
@@ -260,6 +339,8 @@ class HomeCompanionMotion extends ChangeNotifier {
   /// nếu widget tiếp tục chạy sau pause, không dịch chuyển tức thời.
   void settle() {
     _pendingTouch = null;
+    _greetingOnArrival = false;
+    _affectionUntil = -1;
     _cleaningSeed = null;
     if (_journey.isNotEmpty &&
         _journey.first.phase == HomeCompanionPhase.hopping) {
@@ -498,7 +579,7 @@ class HomeCompanionMotion extends ChangeNotifier {
         _journey.clear();
         _setPhase(HomeCompanionPhase.idle);
         _lastApproachAt = -1;
-        approach(touch);
+        _approach(touch, newTouch: false);
       } else if (_journey.isNotEmpty) {
         _setPhase(_journey.first.phase);
       } else {
@@ -517,6 +598,11 @@ class HomeCompanionMotion extends ChangeNotifier {
   }
 
   void _arrived() {
+    if (_greetingOnArrival) {
+      _greetingOnArrival = false;
+      _affectionUntil = _elapsed + 1.8;
+      _greetingSerial++;
+    }
     final index = _dust.indexWhere((spot) => spot.seed == _cleaningSeed);
     if (index >= 0 && (_dust[index].position - _position).distance < 1) {
       _position = _dust[index].position;
@@ -874,12 +960,30 @@ bool _sameSurfaces(List<HomeCompanionSurface> a, List<HomeCompanionSurface> b) {
   if (a.length != b.length) return false;
   for (var i = 0; i < a.length; i++) {
     if (a[i].id != b[i].id ||
-        a[i].bounds != b[i].bounds ||
+        !_nearRect(a[i].bounds, b[i].bounds) ||
         a[i].shape != b[i].shape ||
-        a[i].obstacleBounds != b[i].obstacleBounds ||
-        !listEquals(a[i].outline, b[i].outline)) {
+        !_nearRect(a[i].obstacleBounds, b[i].obstacleBounds) ||
+        !_nearOutline(a[i].outline, b[i].outline)) {
       return false;
     }
+  }
+  return true;
+}
+
+// Đổi qua lại giữa tọa độ cuộn và nội dung có sai số số thực rất nhỏ.
+// Không được xóa hành trình/bụi chỉ vì sai số dưới một phần nghìn pixel.
+bool _nearRect(Rect? a, Rect? b) =>
+    identical(a, b) ||
+    (a != null &&
+        b != null &&
+        (a.topLeft - b.topLeft).distance < 0.001 &&
+        (a.bottomRight - b.bottomRight).distance < 0.001);
+
+bool _nearOutline(List<Offset>? a, List<Offset>? b) {
+  if (identical(a, b)) return true;
+  if (a == null || b == null || a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if ((a[i] - b[i]).distance >= 0.001) return false;
   }
   return true;
 }

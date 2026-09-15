@@ -6,8 +6,11 @@ class TouchEffectOverlay extends StatefulWidget {
   final Widget child;
   final bool isEnabled;
 
-  const TouchEffectOverlay(
-      {super.key, required this.child, this.isEnabled = true});
+  const TouchEffectOverlay({
+    super.key,
+    required this.child,
+    this.isEnabled = true,
+  });
 
   @override
   State<TouchEffectOverlay> createState() => _TouchEffectOverlayState();
@@ -30,6 +33,17 @@ class _TouchEffectOverlayState extends State<TouchEffectOverlay>
       vsync: this,
       duration: const Duration(milliseconds: 700),
     );
+  }
+
+  @override
+  void didUpdateWidget(covariant TouchEffectOverlay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isEnabled && !widget.isEnabled) {
+      // Dừng hạt cũ mà vẫn giữ nguyên màn con và trạng thái đang tương tác.
+      _controller.stop();
+      _particles.clear();
+      _lastTrailAt = null;
+    }
   }
 
   void _tickParticles() {
@@ -64,7 +78,8 @@ class _TouchEffectOverlayState extends State<TouchEffectOverlay>
 
   void _addParticles(Offset position, {int? countOverride}) {
     if (!mounted) return;
-    final int count = countOverride ??
+    final int count =
+        countOverride ??
         (kIsWeb ? 3 + _random.nextInt(3) : 4 + _random.nextInt(4));
 
     _ensureTickerRunning();
@@ -250,8 +265,9 @@ class _TouchEffectPainter extends CustomPainter {
       if (p.life <= 0) continue;
 
       paint.color = p.color.withValues(alpha: (p.life * 0.8).clamp(0.0, 1.0));
-      paint.maskFilter =
-          useGlow ? MaskFilter.blur(BlurStyle.normal, p.size * 0.28) : null;
+      paint.maskFilter = useGlow
+          ? MaskFilter.blur(BlurStyle.normal, p.size * 0.28)
+          : null;
 
       canvas.save();
       canvas.translate(p.x, p.y);
@@ -266,8 +282,10 @@ class _TouchEffectPainter extends CustomPainter {
         _drawHeart(canvas, paint, currentSize, useGlow);
       } else if (p.type == 2) {
         if (useGlow) {
-          paint.maskFilter =
-              MaskFilter.blur(BlurStyle.normal, currentSize * 0.4);
+          paint.maskFilter = MaskFilter.blur(
+            BlurStyle.normal,
+            currentSize * 0.4,
+          );
           canvas.drawCircle(Offset.zero, currentSize * 0.4, paint);
         }
         paint.maskFilter = null;

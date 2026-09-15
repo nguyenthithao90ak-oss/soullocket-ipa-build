@@ -57,7 +57,16 @@ class _MainHomeHeroCountdownSection extends StatelessWidget {
           HomeCompanionAnchor(
             id: 'home-countdown',
             shape: HomeCompanionSurfaceShape.outline,
-            border: SlCountdownShapes.getShapeBorderForKey(countdownShapeKey),
+            border:
+                !isMilestone &&
+                    (countdownStyleKey.isEmpty ||
+                        countdownStyleKey == 'default' ||
+                        countdownStyleKey == 'balanced')
+                ? BalancedCountdownSurface.shapeFor(
+                    countdownShapeKey,
+                    circleSize,
+                  )
+                : SlCountdownShapes.getShapeBorderForKey(countdownShapeKey),
             insets: const EdgeInsets.all(2),
             child: _MainHomeHeroCountdownCircle(
               state: state,
