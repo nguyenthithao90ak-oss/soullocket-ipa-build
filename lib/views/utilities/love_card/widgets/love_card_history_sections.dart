@@ -7,10 +7,12 @@ class _LoveCardHistoryView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<Map<dynamic, dynamic>>>(
-      stream: state._cardsStream,
-      initialData: const <Map<dynamic, dynamic>>[],
-      builder: (context, snapshot) {
+    return ValueListenableBuilder<AsyncSnapshot<List<Map<dynamic, dynamic>>>>(
+      valueListenable: state._cardsSnapshot,
+      builder: (context, snapshot, _) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
         final cards = snapshot.data ?? const <Map<dynamic, dynamic>>[];
 
         if (snapshot.hasError) {

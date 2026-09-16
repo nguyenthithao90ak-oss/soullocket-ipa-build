@@ -4,31 +4,52 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
 import 'home_companion_motion.dart';
+import 'home_companion_outfit.dart';
+import 'home_companion_play.dart';
 
-/// Bé thỏ và bụi chỉ là lớp trang trí, không tự nhận thao tác trên Home.
+export 'home_companion_outfit.dart';
+
+/// Cặp thỏ/gấu và bụi chỉ là lớp trang trí, không tự nhận thao tác trên Home.
 class HomeCompanionPainter extends CustomPainter {
   HomeCompanionPainter({
     required this.motion,
     required this.darkMode,
     this.showEffects = true,
     this.paintOffset,
-  }) : super(repaint: Listenable.merge([motion, paintOffset]));
+    this.character = HomeCompanionCharacter.bunny,
+    this.outfit,
+    this.play,
+  }) : super(repaint: Listenable.merge([motion, paintOffset, play]));
 
   final HomeCompanionMotion motion;
   final bool darkMode;
   final bool showEffects;
   final ValueListenable<Offset>? paintOffset;
+  final HomeCompanionCharacter character;
+  final HomeCompanionOutfit? outfit;
+  final HomeCompanionPlay? play;
+  bool get _facingRight => showEffects && (play?.active ?? false)
+      ? play!.facesRight(character)
+      : motion.facingRight;
+  HomeCompanionOutfit get _outfit =>
+      outfit ?? HomeCompanionOutfit.defaults(character);
+  bool get _isBear => character == HomeCompanionCharacter.bear;
 
   /// Tăng đúng 20% so với nét vẽ gốc 0.52; dùng chung cho vùng an toàn của Home.
   static const double spriteScale = 0.624;
-  static const double horizontalClearance = 22;
-  static const double topClearance = 84;
+  static const double bearSpriteScale = spriteScale * 1.15;
+  static const double horizontalClearance = 32;
+  static const double topClearance = 92;
   static const _outline = Color(0xFF956E69);
-  static const _cream = Color(0xFFFFFAEF);
-  static const _creamShade = Color(0xFFF3DDC8);
+  Color get _cream =>
+      _isBear ? const Color(0xFFD6A171) : const Color(0xFFFFFAEF);
+  Color get _creamShade =>
+      _isBear ? const Color(0xFFBD8159) : const Color(0xFFF3DDC8);
   static const _pink = Color(0xFFF2B4BE);
-  static const _rose = Color(0xFFCF718B);
-  static const _roseShade = Color(0xFFAC526F);
+  Color get _rose =>
+      _isBear ? const Color(0xFF6B9FAC) : const Color(0xFFCF718B);
+  Color get _roseShade =>
+      _isBear ? const Color(0xFF497482) : const Color(0xFFAC526F);
   static const _eye = Color(0xFF634B4B);
 
   @override
@@ -40,9 +61,15 @@ class HomeCompanionPainter extends CustomPainter {
     final offset = paintOffset?.value ?? Offset.zero;
     canvas.translate(offset.dx, offset.dy);
     if (showEffects) _paintDust(canvas);
+    final playPose = showEffects
+        ? play?.pose(character) ?? const CompanionPlayPose()
+        : const CompanionPlayPose();
+    canvas.translate(playPose.offset.dx, playPose.offset.dy);
 
     // Chế độ giảm chuyển động luôn giữ tư thế nghỉ, kể cả khi tắt giữa cú nhảy.
-    final phase = showEffects ? motion.phase : HomeCompanionPhase.idle;
+    final phase = showEffects && !(play?.active ?? false)
+        ? motion.phase
+        : HomeCompanionPhase.idle;
     final walking = phase == HomeCompanionPhase.walking;
     final approaching = phase == HomeCompanionPhase.approaching;
     final sweeping = phase == HomeCompanionPhase.sweeping;
@@ -52,20 +79,23 @@ class HomeCompanionPainter extends CustomPainter {
     final stride = motion.stride * math.pi * 2;
     final step = moving ? math.sin(stride) : 0.0;
     // Chân neo theo đường đi, còn thân bay lên: không kéo bóng/chổi khỏi mặt khối.
-    final hopLift = moving ? motion.hopLift.clamp(0.0, 16.0) : 0.0;
+    final hopLift =
+        (moving ? motion.hopLift.clamp(0.0, 16.0) : 0.0) + playPose.lift;
     final airborne = hopLift > 0.3;
     final liftRatio = (hopLift / 16).clamp(0.0, 1.0);
     final bounce = moving ? math.cos(stride * 2) : 0.0;
     final squash = moving && !airborne ? bounce * 0.025 : 0.0;
     final scaleX = 1 + squash - liftRatio * 0.055;
     final scaleY = 1 - squash + liftRatio * 0.065;
-    final seconds = showEffects ? motion.elapsedSeconds : 0.0;
+    final seconds = showEffects
+        ? motion.elapsedSeconds + (play?.time ?? 0)
+        : 0.0;
     final affection = showEffects ? motion.affection.clamp(0.0, 1.0) : 0.0;
     final greeting = math.sin((1 - affection) * math.pi * 5) * affection;
     final sweep = sweeping ? math.sin(seconds * 10) : 0.0;
     final breathe = math.sin(seconds * 2.4);
     final bodyBob = moving
-        ? -step.abs() * (approaching ? 4.0 : 2.8)
+        ? -(1 - math.cos(stride * 2)) * (approaching ? 2.0 : 1.4)
         : sweeping
         ? sweep.abs() * 0.65
         : breathe * 0.55;
@@ -84,10 +114,9 @@ class HomeCompanionPainter extends CustomPainter {
 
     canvas.save();
     canvas.translate(motion.position.dx, motion.position.dy - hopLift);
-    canvas.scale(
-      (motion.facingRight ? spriteScale : -spriteScale) * scaleX,
-      spriteScale * scaleY,
-    );
+    canvas.rotate(playPose.tilt + (moving ? step * 0.018 : 0));
+    final scale = _isBear ? bearSpriteScale : spriteScale;
+    canvas.scale((_facingRight ? scale : -scale) * scaleX, scale * scaleY);
 
     _paintTail(canvas, bodyBob, step);
     _paintFoot(canvas, -7, step * 5.5, hopping: airborne, front: false);
@@ -117,8 +146,14 @@ class HomeCompanionPainter extends CustomPainter {
     );
     canvas.drawOval(
       const Rect.fromLTWH(-7, -23, 18, 16),
-      Paint()..color = const Color(0xFFFFFDF7),
+      Paint()
+        ..color = _isBear ? const Color(0xFFF3D7B2) : const Color(0xFFFFFDF7),
     );
+    if (_outfit.clothes == CompanionClothes.overalls) {
+      _paintBearOveralls(canvas);
+    } else if (_outfit.clothes != CompanionClothes.classic) {
+      _paintCoat(canvas);
+    }
     _paintScarfTail(canvas, moving: moving, step: step, breathe: breathe);
     _paintHead(
       canvas,
@@ -128,12 +163,18 @@ class HomeCompanionPainter extends CustomPainter {
       happy: celebrating,
       sweeping: sweeping,
       affection: affection,
-      tilt: greeting * 0.035,
+      tilt: greeting * 0.035 + (moving ? -step * 0.028 : 0),
     );
     _paintScarfCollar(canvas);
     canvas.restore();
 
-    _paintFoot(canvas, 8, -step * 5.5, hopping: airborne, front: true);
+    _paintFoot(
+      canvas,
+      8 + playPose.kick * 9,
+      -step * 5.5,
+      hopping: airborne || playPose.kick > 0,
+      front: true,
+    );
 
     if (sweeping) {
       _paintBroom(canvas, sweep: sweep, bodyBob: bodyBob);
@@ -152,11 +193,56 @@ class HomeCompanionPainter extends CustomPainter {
             : 0.1 + breathe * 0.045,
       );
     }
+    if (!sweeping) _paintProp(canvas, bodyBob, seconds);
     canvas.restore();
 
     if (showEffects && motion.celebration > 0) _paintCleanGlints(canvas);
     if (affection > 0) _paintAffectionHearts(canvas, affection, hopLift);
+    if (showEffects) _paintPlayEffects(canvas, playPose, seconds);
     canvas.restore();
+  }
+
+  void _paintCoat(Canvas canvas) {
+    final night = _outfit.clothes == CompanionClothes.night;
+    final color = night
+        ? const Color(0xFFB5A1D7)
+        : (_isBear ? const Color(0xFF8BB4A1) : const Color(0xFFE8A8BC));
+    _shape(
+      canvas,
+      Path()
+        ..moveTo(-12, -31)
+        ..quadraticBezierTo(0, -24, 12, -31)
+        ..quadraticBezierTo(20, -17, 14, -6)
+        ..quadraticBezierTo(0, -1, -14, -6)
+        ..quadraticBezierTo(-18, -18, -12, -31)
+        ..close(),
+      color,
+      outline: color.withValues(
+        red: color.r * 0.75,
+        green: color.g * 0.75,
+        blue: color.b * 0.75,
+      ),
+    );
+    if (night) {
+      for (final point in const [
+        Offset(-7, -17),
+        Offset(7, -10),
+        Offset(8, -24),
+      ]) {
+        _star(canvas, point, 2, const Color(0xFFFFE2A6));
+      }
+    } else {
+      _stroke(
+        canvas,
+        Path()
+          ..moveTo(-7, -14)
+          ..lineTo(-5, -8)
+          ..lineTo(6, -8)
+          ..lineTo(8, -14),
+        color: Colors.white.withValues(alpha: 0.7),
+        width: 1.1,
+      );
+    }
   }
 
   void _paintDust(Canvas canvas) {
@@ -188,9 +274,50 @@ class HomeCompanionPainter extends CustomPainter {
   void _paintTail(Canvas canvas, double bodyBob, double step) {
     _shape(
       canvas,
-      Path()..addOval(Rect.fromLTWH(-24 - step * 0.3, -18 + bodyBob, 13, 13)),
+      Path()..addOval(
+        _isBear
+            ? Rect.fromLTWH(-21 - step * 0.3, -17 + bodyBob, 9, 9)
+            : Rect.fromLTWH(-24 - step * 0.3, -18 + bodyBob, 13, 13),
+      ),
       _cream,
       shade: _creamShade,
+    );
+  }
+
+  void _paintBearOveralls(Canvas canvas) {
+    // Yếm xanh denim và cúc mật ong giúp phân biệt ngay ở kích thước nhỏ.
+    _shape(
+      canvas,
+      Path()
+        ..moveTo(-13, -24)
+        ..lineTo(-8, -24)
+        ..lineTo(-6, -16)
+        ..lineTo(7, -16)
+        ..lineTo(10, -24)
+        ..lineTo(14, -23)
+        ..lineTo(14, -8)
+        ..quadraticBezierTo(0, -1, -13, -8)
+        ..close(),
+      const Color(0xFF7DAEB9),
+      outline: _roseShade,
+      lineWidth: 1.2,
+    );
+    for (final x in [-8.0, 10.0]) {
+      canvas.drawCircle(
+        Offset(x, -15),
+        1.45,
+        Paint()..color = const Color(0xFFFFE2A5),
+      );
+    }
+    _stroke(
+      canvas,
+      Path()
+        ..moveTo(-3, -12)
+        ..lineTo(-3, -8)
+        ..quadraticBezierTo(1, -5, 5, -8)
+        ..lineTo(5, -12),
+      color: const Color(0xFFCCE0E4),
+      width: 0.85,
     );
   }
 
@@ -261,7 +388,7 @@ class HomeCompanionPainter extends CustomPainter {
     _shape(
       canvas,
       Path()..addOval(const Rect.fromLTWH(6, -31, 7, 6)),
-      const Color(0xFFE99AAF),
+      _isBear ? const Color(0xFFB7D9DF) : const Color(0xFFE99AAF),
       outline: _roseShade,
       lineWidth: 1,
     );
@@ -270,7 +397,7 @@ class HomeCompanionPainter extends CustomPainter {
       Path()
         ..moveTo(-10, -32)
         ..quadraticBezierTo(-2, -29, 5, -31),
-      color: const Color(0xFFF6C9D3),
+      color: _isBear ? const Color(0xFFD8EEF1) : const Color(0xFFF6C9D3),
       width: 1.1,
     );
   }
@@ -288,8 +415,13 @@ class HomeCompanionPainter extends CustomPainter {
     canvas.translate(0, -38);
     canvas.rotate(tilt);
     canvas.translate(0, 38);
-    _paintEar(canvas, const Offset(-10, -64), -0.16 - earSway, 28);
-    _paintEar(canvas, const Offset(11, -64), 0.12 + earSway * 0.75, 30);
+    if (_isBear) {
+      _paintBearEar(canvas, Offset(-18, -63 + earSway * 3));
+      _paintBearEar(canvas, Offset(19, -63 - earSway * 3));
+    } else {
+      _paintEar(canvas, const Offset(-10, -64), -0.16 - earSway, 28);
+      _paintEar(canvas, const Offset(11, -64), 0.12 + earSway * 0.75, 30);
+    }
     _shape(
       canvas,
       Path()
@@ -302,6 +434,21 @@ class HomeCompanionPainter extends CustomPainter {
       _cream,
       shade: _creamShade,
     );
+    if (_isBear) {
+      canvas.drawOval(
+        const Rect.fromLTWH(-9, -47, 22, 15),
+        Paint()..color = const Color(0xFFF5DEBD),
+      );
+      _stroke(
+        canvas,
+        Path()
+          ..moveTo(-5, -64)
+          ..quadraticBezierTo(-1, -68, 1, -63)
+          ..quadraticBezierTo(4, -67, 6, -63),
+        width: 1.5,
+        color: const Color(0xFF9F6D4C),
+      );
+    }
     final cheekPaint = Paint()
       ..color = _pink.withValues(alpha: 0.74 + affection * 0.16);
     canvas.drawOval(const Rect.fromLTWH(-22, -44.5, 12, 7), cheekPaint);
@@ -319,7 +466,9 @@ class HomeCompanionPainter extends CustomPainter {
       );
     }
 
-    final blinkPhase = showEffects ? motion.elapsedSeconds % 5.4 : 0.0;
+    final blinkPhase = showEffects
+        ? (motion.elapsedSeconds + (_isBear ? 1.3 : 0)) % 5.4
+        : 0.0;
     final blink = blinkPhase > 4.97 && blinkPhase < 5.11;
     final eyeY = sweeping ? -48.0 : -49.0;
     for (final eyeX in const [-7.5, 10.5]) {
@@ -361,8 +510,8 @@ class HomeCompanionPainter extends CustomPainter {
         ..quadraticBezierTo(1.7, -45.2, 4, -43.6)
         ..quadraticBezierTo(2.8, -40.4, 1.7, -40.9)
         ..quadraticBezierTo(0.3, -41.4, -0.6, -43.6),
-      _rose,
-      outline: _rose,
+      _isBear ? _eye : _rose,
+      outline: _isBear ? _eye : _rose,
       lineWidth: 0.75,
     );
     _stroke(
@@ -375,7 +524,260 @@ class HomeCompanionPainter extends CustomPainter {
       width: 1.05,
       color: _eye,
     );
+    _paintGlasses(canvas);
+    _paintHat(canvas);
     canvas.restore();
+  }
+
+  void _paintGlasses(Canvas canvas) {
+    final glasses = _outfit.glasses;
+    if (glasses == CompanionGlasses.none) return;
+    final color = glasses == CompanionGlasses.star
+        ? const Color(0xFFD8A047)
+        : const Color(0xFF536A7B);
+    for (final x in [-8.0, 11.0]) {
+      if (glasses == CompanionGlasses.star) {
+        _star(canvas, Offset(x, -49), 7.3, color, outlineOnly: true);
+      } else {
+        final lens = Rect.fromCenter(
+          center: Offset(x, -49),
+          width: 15,
+          height: 12,
+        );
+        final path = Path()
+          ..addRRect(
+            RRect.fromRectAndRadius(
+              lens,
+              Radius.circular(glasses == CompanionGlasses.round ? 7 : 3),
+            ),
+          );
+        if (glasses == CompanionGlasses.sunglasses) {
+          canvas.drawPath(path, Paint()..color = color.withValues(alpha: 0.92));
+          _stroke(
+            canvas,
+            Path()
+              ..moveTo(x - 3, -52)
+              ..lineTo(x + 2, -48),
+            color: const Color(0xFFCBE5EB),
+            width: 1.2,
+          );
+        }
+        _stroke(canvas, path, color: color, width: 1.7);
+      }
+    }
+    _stroke(
+      canvas,
+      Path()
+        ..moveTo(-0.5, -49)
+        ..quadraticBezierTo(1.5, -51, 3.5, -49)
+        ..moveTo(-15.5, -49)
+        ..lineTo(-23, -51)
+        ..moveTo(18.5, -49)
+        ..lineTo(25, -51),
+      color: color,
+      width: 1.5,
+    );
+  }
+
+  void _paintHat(Canvas canvas) {
+    switch (_outfit.hat) {
+      case CompanionHat.none:
+        return;
+      case CompanionHat.bow:
+        _shape(
+          canvas,
+          Path()
+            ..moveTo(8, -63)
+            ..lineTo(-1, -70)
+            ..quadraticBezierTo(-6, -62, -1, -57)
+            ..close(),
+          _rose,
+        );
+        _shape(
+          canvas,
+          Path()
+            ..moveTo(8, -63)
+            ..lineTo(19, -70)
+            ..quadraticBezierTo(24, -62, 19, -57)
+            ..close(),
+          _rose,
+        );
+        canvas.drawCircle(
+          const Offset(8, -63),
+          3.4,
+          Paint()..color = const Color(0xFFFFD9DE),
+        );
+      case CompanionHat.cap:
+        _shape(
+          canvas,
+          Path()
+            ..moveTo(-18, -63)
+            ..quadraticBezierTo(-16, -80, 5, -76)
+            ..quadraticBezierTo(18, -74, 20, -62)
+            ..close(),
+          const Color(0xFF82AFC1),
+          outline: const Color(0xFF527F95),
+        );
+        _shape(
+          canvas,
+          Path()
+            ..moveTo(-3, -64)
+            ..quadraticBezierTo(14, -69, 29, -61)
+            ..quadraticBezierTo(15, -57, -3, -61)
+            ..close(),
+          const Color(0xFF648DA4),
+        );
+      case CompanionHat.crown:
+        _shape(
+          canvas,
+          Path()
+            ..moveTo(-14, -66)
+            ..lineTo(-17, -80)
+            ..lineTo(-7, -75)
+            ..lineTo(0, -85)
+            ..lineTo(7, -75)
+            ..lineTo(17, -80)
+            ..lineTo(14, -66)
+            ..close(),
+          const Color(0xFFFFD984),
+          outline: const Color(0xFFC8974D),
+        );
+        canvas.drawCircle(const Offset(0, -71), 2.4, Paint()..color = _rose);
+    }
+  }
+
+  void _paintProp(Canvas canvas, double bob, double seconds) {
+    final prop = _outfit.prop;
+    if (prop == CompanionProp.none) return;
+    canvas.save();
+    canvas.translate(24, -27 + bob);
+    canvas.rotate(math.sin(seconds * 2) * 0.04);
+    _stroke(
+      canvas,
+      Path()
+        ..moveTo(0, 8)
+        ..lineTo(0, -10),
+      color: _roseShade,
+      width: 3,
+    );
+    switch (prop) {
+      case CompanionProp.none:
+        break;
+      case CompanionProp.mirror:
+        _shape(
+          canvas,
+          Path()..addOval(const Rect.fromLTWH(-8, -25, 16, 21)),
+          const Color(0xFFD7F0F3),
+          outline: const Color(0xFFC89A57),
+          lineWidth: 2.4,
+        );
+        _stroke(
+          canvas,
+          Path()
+            ..moveTo(-4, -17)
+            ..lineTo(3, -22)
+            ..moveTo(-2, -10)
+            ..lineTo(5, -17),
+          color: Colors.white,
+          width: 1.7,
+        );
+      case CompanionProp.flower:
+        for (var i = 0; i < 5; i++) {
+          final angle = i * math.pi * 2 / 5;
+          canvas.drawCircle(
+            Offset(math.cos(angle) * 5, -17 + math.sin(angle) * 5),
+            4,
+            Paint()..color = const Color(0xFFF3B0C5),
+          );
+        }
+        canvas.drawCircle(
+          const Offset(0, -17),
+          3.5,
+          Paint()..color = const Color(0xFFFFD780),
+        );
+      case CompanionProp.wand:
+        _star(canvas, const Offset(0, -17), 9, const Color(0xFFFFD980));
+    }
+    _shape(canvas, Path()..addOval(const Rect.fromLTWH(-5, -1, 9, 7)), _cream);
+    canvas.restore();
+  }
+
+  void _paintPlayEffects(
+    Canvas canvas,
+    CompanionPlayPose pose,
+    double seconds,
+  ) {
+    final center = motion.position - Offset(0, 50 + pose.lift);
+    if (pose.impact > 0.01) {
+      final side = _facingRight ? 1.0 : -1.0;
+      canvas.save();
+      canvas.translate(center.dx + side * 20, center.dy + 15);
+      canvas.scale(side, 1);
+      canvas.drawPath(
+        Path()
+          ..moveTo(-2, -15)
+          ..lineTo(7, -15)
+          ..lineTo(1, -3)
+          ..lineTo(9, -3)
+          ..lineTo(-6, 13)
+          ..lineTo(-2, 1)
+          ..lineTo(-9, 1)
+          ..close(),
+        Paint()..color = const Color(0xFFFFC957).withValues(alpha: pose.impact),
+      );
+      canvas.restore();
+    }
+    if (pose.dizzy > 0.01) {
+      for (var i = 0; i < 3; i++) {
+        final angle = seconds * 5 + i * math.pi * 2 / 3;
+        _star(
+          canvas,
+          center + Offset(math.cos(angle) * 20, -8 + math.sin(angle) * 5),
+          3.2,
+          const Color(0xFFFFD985).withValues(alpha: pose.dizzy),
+        );
+      }
+    }
+  }
+
+  void _star(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    Color color, {
+    bool outlineOnly = false,
+  }) {
+    final path = Path();
+    for (var i = 0; i < 10; i++) {
+      final angle = -math.pi / 2 + i * math.pi / 5;
+      final r = radius * (i.isEven ? 1 : 0.46);
+      final p = center + Offset(math.cos(angle), math.sin(angle)) * r;
+      if (i == 0) {
+        path.moveTo(p.dx, p.dy);
+      } else {
+        path.lineTo(p.dx, p.dy);
+      }
+    }
+    path.close();
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color
+        ..style = outlineOnly ? PaintingStyle.stroke : PaintingStyle.fill
+        ..strokeWidth = 1.5
+        ..strokeJoin = StrokeJoin.round,
+    );
+  }
+
+  void _paintBearEar(Canvas canvas, Offset center) {
+    _shape(
+      canvas,
+      Path()..addOval(Rect.fromCircle(center: center, radius: 10)),
+      _cream,
+      shade: _creamShade,
+      lineWidth: 1.55,
+    );
+    canvas.drawCircle(center, 5.5, Paint()..color = const Color(0xFFEFC3A1));
   }
 
   void _paintAffectionHearts(Canvas canvas, double affection, double hopLift) {
@@ -617,6 +1019,9 @@ class HomeCompanionPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant HomeCompanionPainter oldDelegate) =>
       oldDelegate.motion != motion ||
+      oldDelegate.character != character ||
+      oldDelegate.outfit != outfit ||
+      oldDelegate.play != play ||
       oldDelegate.paintOffset != paintOffset ||
       oldDelegate.darkMode != darkMode ||
       oldDelegate.showEffects != showEffects;

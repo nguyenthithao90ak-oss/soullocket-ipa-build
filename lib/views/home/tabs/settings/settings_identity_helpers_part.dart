@@ -24,7 +24,7 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
           final List<dynamic> decoded = jsonDecode(playlistJson);
           _playlist = decoded
               .map((e) => MusicTrack.fromJson(e))
-              .where((t) => MusicService.isLocalAudioPath(t.url))
+              .where((t) => MusicService.isSupportedMusicUrl(t.url))
               .toList();
         } catch (error) {
           debugPrint(
@@ -34,11 +34,13 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
       }
       if (_playlist.isEmpty) {
         final localUrl = (prefs.getString('il_local_music_url') ?? '').trim();
-        if (MusicService.isLocalAudioPath(localUrl)) {
+        if (MusicService.isSupportedMusicUrl(localUrl)) {
           final type = (prefs.getString('il_local_music_type') ?? 'audio')
               .trim();
           final title = (prefs.getString('il_local_music_title') ?? '').trim();
           _playlist = [MusicTrack(url: localUrl, title: title, type: type)];
+        } else {
+          _playlist = [MusicService.defaultTrack];
         }
       }
       _notifAnniversary = prefs.getBool('il_notif_anniversary') ?? true;

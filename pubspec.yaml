@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 4.0.0+118
+version: 3.3.8+117
 
 environment:
   sdk: ^3.12.0
@@ -189,7 +189,6 @@ flutter:
     - assets/games/rhythm-tiles/
     - assets/i18n/
     - assets/icon.png
-    # PNG dùng sinh icon/splash native vẫn giữ trên đĩa, không đóng bản sao vào Flutter.
     - assets/images/avatar_male.jpg
     - assets/images/avatar_female.jpg
     - assets/images/female_avatar_sticker.json
@@ -198,7 +197,7 @@ flutter:
     - assets/images/soul_merge_sticker.json
     - assets/images/default_auth_bg.jpg
     - assets/images/default_home_bg.jpg
-    # UI/đường dẫn đã lưu vẫn dùng GIF; không đóng thêm các WebP cũ cùng tên.
+    # Giữ GIF cũ cho dữ liệu đã lưu, không đóng thêm WebP trùng tên.
     - assets/images/anhtomau_stickers/sticker_1.gif
     - assets/images/anhtomau_stickers/sticker_2.gif
     - assets/images/anhtomau_stickers/sticker_3.gif
@@ -227,60 +226,86 @@ flutter:
     - assets/images/anhtomau_stickers/sticker_33.gif
     - assets/images/anhtomau_stickers/sticker_34.gif
     - assets/images/anhtomau_stickers/sticker_35.gif
-    # Khai báo từng WebP để không đóng lại PNG gốc và tài liệu tạo sticker.
+    # Chỉ đóng ảnh runtime đã nén; PNG nguồn vẫn giữ trên đĩa.
     - assets/images/soullocket_stickers/auth_gender_female_v1.webp
     - assets/images/soullocket_stickers/auth_gender_male_v1.webp
     - assets/images/soullocket_stickers/heart_atlas_v1.webp
     - assets/images/soullocket_stickers/motion_couple_atlas_v1.webp
     - assets/images/soullocket_stickers/novelty_atlas_v1.webp
-    - assets/images/transparent_stickers/soul_merge_comfort_atlas_v2_transparent.webp
     - assets/images/soullocket_stickers/soul_merge_joy_atlas_v1.webp
-    - assets/images/transparent_stickers/soul_merge_love_atlas_v2_transparent.webp
     - assets/images/soullocket_stickers/soul_merge_mascot_v2.webp
-    - assets/images/transparent_stickers/soul_merge_playful_atlas_v2_transparent.webp
     - assets/images/transparent_stickers/diary_mood_atlas_v2_transparent.webp
-    - assets/images/milestone_embedded/
+    - assets/images/transparent_stickers/soul_merge_comfort_atlas_v2_transparent.webp
+    - assets/images/transparent_stickers/soul_merge_love_atlas_v2_transparent.webp
+    - assets/images/transparent_stickers/soul_merge_playful_atlas_v2_transparent.webp
 
-    # Home screen bundled interaction stickers
-    - assets/images/utility_stickers/
-    # Sticker Home tải local, các sticker khác vẫn tải từ R2.
-    - assets/images/interaction_stickers/custom/numbered/sticker_001.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_002.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_003.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_004.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_045.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_046.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_047.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_048.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_049.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_050.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_051.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_052.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_053.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_054.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_055.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_056.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_057.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_058.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_059.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_060.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_098.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_108.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_158.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_160.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_162.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_165.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_173.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_228.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_270.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_276.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_291.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_339.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_343.png
-    - assets/images/sticker_import/cutout/sheet_02/
-    - assets/images/sticker_import/cutout/sheet_03/
-    - assets/images/sticker_import/cutout/sheet_04/
-    - assets/icons/cute_3d/
+    - assets/runtime_lossless/
+    - assets/images/utility_stickers/age_zodiac.webp
+    - assets/images/utility_stickers/bucket.webp
+    - assets/images/utility_stickers/calculator.webp
+    - assets/images/utility_stickers/calendar.webp
+    - assets/images/utility_stickers/capsule.webp
+    - assets/images/utility_stickers/cinema.webp
+    - assets/images/utility_stickers/collage.webp
+    - assets/images/utility_stickers/creative_diary.webp
+    - assets/images/utility_stickers/diary_export.webp
+    - assets/images/utility_stickers/drawing.webp
+    - assets/images/utility_stickers/finance.webp
+    - assets/images/utility_stickers/friendly_chat.webp
+    - assets/images/utility_stickers/gift.webp
+    - assets/images/utility_stickers/giftcode.webp
+    - assets/images/utility_stickers/habit.webp
+    - assets/images/utility_stickers/health.webp
+    - assets/images/utility_stickers/history.webp
+    - assets/images/utility_stickers/love_card.webp
+    - assets/images/utility_stickers/note.webp
+    - assets/images/utility_stickers/photo.webp
+    - assets/images/utility_stickers/store.webp
+    - assets/images/utility_stickers/surprise.webp
+    - assets/images/utility_stickers/tarot.webp
+    - assets/images/utility_stickers/vault.webp
+    - assets/images/utility_stickers/voice.webp
+    - assets/images/utility_stickers/wheel.webp
+    - assets/images/utility_stickers/wish.webp
+    - assets/images/sticker_import/cutout/sheet_02/sticker_01.webp
+    - assets/images/sticker_import/cutout/sheet_02/sticker_02.webp
+    - assets/images/sticker_import/cutout/sheet_02/sticker_03.webp
+    - assets/images/sticker_import/cutout/sheet_02/sticker_04.webp
+    - assets/images/sticker_import/cutout/sheet_02/sticker_05.webp
+    - assets/images/sticker_import/cutout/sheet_02/sticker_06.webp
+    - assets/images/sticker_import/cutout/sheet_02/sticker_07.webp
+    - assets/images/sticker_import/cutout/sheet_02/sticker_08.webp
+    - assets/images/sticker_import/cutout/sheet_03/sticker_01.webp
+    - assets/images/sticker_import/cutout/sheet_03/sticker_02.webp
+    - assets/images/sticker_import/cutout/sheet_03/sticker_03.webp
+    - assets/images/sticker_import/cutout/sheet_03/sticker_04.webp
+    - assets/images/sticker_import/cutout/sheet_03/sticker_05.webp
+    - assets/images/sticker_import/cutout/sheet_03/sticker_06.webp
+    - assets/images/sticker_import/cutout/sheet_03/sticker_07.webp
+    - assets/images/sticker_import/cutout/sheet_03/sticker_08.webp
+    - assets/images/sticker_import/cutout/sheet_03/sticker_09.webp
+    - assets/images/sticker_import/cutout/sheet_03/sticker_10.webp
+    - assets/images/sticker_import/cutout/sheet_03/sticker_11.webp
+    - assets/images/sticker_import/cutout/sheet_03/sticker_12.webp
+    - assets/images/sticker_import/cutout/sheet_03/sticker_13.webp
+    - assets/images/sticker_import/cutout/sheet_03/sticker_14.webp
+    - assets/images/sticker_import/cutout/sheet_03/sticker_15.webp
+    - assets/images/sticker_import/cutout/sheet_03/sticker_16.webp
+    - assets/images/sticker_import/cutout/sheet_04/sticker_01.webp
+    - assets/images/sticker_import/cutout/sheet_04/sticker_02.webp
+    - assets/images/sticker_import/cutout/sheet_04/sticker_03.webp
+    - assets/images/sticker_import/cutout/sheet_04/sticker_04.webp
+    - assets/images/sticker_import/cutout/sheet_04/sticker_05.webp
+    - assets/images/sticker_import/cutout/sheet_04/sticker_06.webp
+    - assets/images/sticker_import/cutout/sheet_04/sticker_07.webp
+    - assets/images/sticker_import/cutout/sheet_04/sticker_08.webp
+    - assets/images/sticker_import/cutout/sheet_04/sticker_09.webp
+    - assets/images/sticker_import/cutout/sheet_04/sticker_10.webp
+    - assets/images/sticker_import/cutout/sheet_04/sticker_11.webp
+    - assets/images/sticker_import/cutout/sheet_04/sticker_12.webp
+    - assets/images/sticker_import/cutout/sheet_04/sticker_13.webp
+    - assets/images/sticker_import/cutout/sheet_04/sticker_14.webp
+    - assets/music/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

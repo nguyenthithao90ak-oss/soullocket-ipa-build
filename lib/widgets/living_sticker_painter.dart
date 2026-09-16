@@ -94,8 +94,10 @@ class LivingStickerPainter extends CustomPainter {
       _object(
         canvas,
         scene.prop!,
-        const Offset(101, 155),
-        0.43,
+        scene.subject == StickerSubject.calendar
+            ? const Offset(151, 160)
+            : const Offset(101, 155),
+        scene.subject == StickerSubject.calendar ? 0.34 : 0.43,
         t,
         scene.gesture,
       );

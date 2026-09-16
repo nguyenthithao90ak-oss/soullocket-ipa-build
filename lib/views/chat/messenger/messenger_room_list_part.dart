@@ -419,29 +419,40 @@ extension _MessengerRoomListPart on _MessengerScreenState {
             );
     }
 
+    final rowKeys = <String>[
+      'quick-avatars',
+      if (hasInternalPartner) 'internal-partner',
+      for (final id in filteredFriends) 'friend:$id',
+      for (final group in filteredGroups) 'group:${group.id}',
+    ];
+    final rowIndices = {for (var i = 0; i < rowKeys.length; i++) rowKeys[i]: i};
     return ListView.builder(
       physics: SLResponsive.scrollPhysicsForPlatform(),
       padding: const EdgeInsets.only(bottom: 18),
+      findChildIndexCallback: (key) =>
+          key is ValueKey<String> ? rowIndices[key.value] : null,
       itemCount:
           1 +
           (hasInternalPartner ? 1 : 0) +
           filteredFriends.length +
           filteredGroups.length,
       itemBuilder: (context, index) {
-        if (index == 0) return _buildQuickAvatarRow(filteredFriends);
+        Widget keyed(Widget child) =>
+            KeyedSubtree(key: ValueKey(rowKeys[index]), child: child);
+        if (index == 0) return keyed(_buildQuickAvatarRow(filteredFriends));
 
         int offset = 1;
         if (hasInternalPartner) {
-          if (index == offset) return _buildInternalConversationTile();
+          if (index == offset) return keyed(_buildInternalConversationTile());
           offset++;
         }
 
         if (index - offset < filteredFriends.length) {
-          return _buildConversationTile(filteredFriends[index - offset]);
+          return keyed(_buildConversationTile(filteredFriends[index - offset]));
         }
 
         offset += filteredFriends.length;
-        return _buildGroupTile(filteredGroups[index - offset]);
+        return keyed(_buildGroupTile(filteredGroups[index - offset]));
       },
     );
   }

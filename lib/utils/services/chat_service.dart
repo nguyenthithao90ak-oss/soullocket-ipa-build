@@ -1060,8 +1060,11 @@ class ChatService {
     var backgroundStoragePath = '';
     Map<String, dynamic>? lastMessage;
     var current = const ChatRoomMeta();
+    var receivedLastMessage = false;
+    var emittedInitialSnapshot = false;
 
     void emitIfChanged() {
+      if (!receivedLastMessage) return;
       final next = ChatRoomMeta(
         status: status,
         closedMessage: closedMessage,
@@ -1072,9 +1075,10 @@ class ChatService {
             ? null
             : Map<String, dynamic>.from(lastMessage!),
       );
-      if (current.sameAs(next) || controller.isClosed) {
+      if ((emittedInitialSnapshot && current.sameAs(next)) || controller.isClosed) {
         return;
       }
+      emittedInitialSnapshot = true;
       current = next;
       controller.add(next);
     }
@@ -1108,10 +1112,14 @@ class ChatService {
             .onValue
             .listen(
               (event) {
+                // Snapshot rỗng đã tải xong cũng phải phát một lần để UI
+                // phân biệt phòng chưa có tin với phòng vẫn đang tải.
+                receivedLastMessage = true;
                 lastMessage = _readLastMessageMap(event.snapshot.value);
                 emitIfChanged();
               },
               onError: (Object error) {
+                if (!controller.isClosed) controller.addError(error);
                 debugPrint(
                   'Chat room lastMessage listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể tải tin nhắn gần nhất.').message}',
                 );

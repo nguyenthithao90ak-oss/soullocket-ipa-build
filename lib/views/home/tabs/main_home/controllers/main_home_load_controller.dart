@@ -384,8 +384,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
     bool delayMotion = false,
     bool forceWarmMedia = false,
   }) {
-    _houseSettings = settings;
-    _houseSettings!['relationshipMode'] = cachedRelMode;
+    _houseSettings = Map<String, dynamic>.from(settings);
+    _houseSettings!['relationshipMode'] = settings['relationshipMode'] ?? cachedRelMode;
     if (mounted) {
       setState(() {
         _isLoading = false;

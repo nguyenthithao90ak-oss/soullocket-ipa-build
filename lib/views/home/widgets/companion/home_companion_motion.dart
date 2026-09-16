@@ -51,11 +51,19 @@ class HomeCompanionDust {
 /// Bộ chuyển động cục bộ: không timer nền, không lưu/gửi vị trí chạm.
 /// Widget chỉ gọi [advance] khi Home đang hiển thị và cho phép chuyển động.
 class HomeCompanionMotion extends ChangeNotifier {
-  HomeCompanionMotion({int? seed}) : _random = math.Random(seed) {
+  HomeCompanionMotion({
+    int? seed,
+    this.initialSpacing = 0,
+    this.createsDust = true,
+  }) : _random = math.Random(seed) {
     _dustView = UnmodifiableListView(_dust);
   }
 
   final math.Random _random;
+
+  /// Hai bé bắt đầu cùng bề mặt nhưng không chồng hình lên nhau.
+  final double initialSpacing;
+  final bool createsDust;
   List<HomeCompanionSurface> _surfaces = const [];
   List<_Track> _tracks = const [];
   Rect _viewport = Rect.zero;
@@ -189,7 +197,10 @@ class HomeCompanionMotion extends ChangeNotifier {
     final candidates = previous.isEmpty ? _tracks : previous.toList();
     if (previousId == null) {
       _track = candidates.first;
-      _distance = _track!.length * 0.30;
+      _distance = (_track!.length * 0.30 + initialSpacing).clamp(
+        0.0,
+        _track!.length,
+      );
     } else {
       _track = candidates.reduce(
         (a, b) => a.project(_position).$2 < b.project(_position).$2 ? a : b,
@@ -250,7 +261,7 @@ class HomeCompanionMotion extends ChangeNotifier {
       _settled = false;
       if (_journey.isNotEmpty) _setPhase(_journey.first.phase);
     }
-    if (_elapsed >= _nextDustAt && _dust.isEmpty) {
+    if (createsDust && _elapsed >= _nextDustAt && _dust.isEmpty) {
       _spawnDust();
       _nextDustAt = _elapsed + 45;
     }
@@ -270,6 +281,69 @@ class HomeCompanionMotion extends ChangeNotifier {
   }
 
   void approach(Offset touch) => _approach(touch, newTouch: true);
+
+  /// Tìm bạn bằng cùng đồ thị đường đi an toàn, không dịch chuyển tức thời
+  /// hoặc tính lại đường trong từng frame. Giữ khoảng trống giữa hai hình.
+  bool visitFriend(
+    HomeCompanionMotion friend, {
+    bool atDestination = false,
+    bool userInvited = false,
+  }) {
+    if (_track == null ||
+        !friend.hasSurfaces ||
+        _pinnedPosition != null ||
+        _settled ||
+        _phase == HomeCompanionPhase.hopping ||
+        (affection > 0 && !userInvited)) {
+      return false;
+    }
+    final destination = atDestination && friend._journey.isNotEmpty
+        ? friend._journey.last.points.last
+        : friend.position;
+    final separation = (destination - _position).distance;
+    if (separation >= 42 && separation <= 82) return false;
+    final sorted = [..._tracks]
+      ..sort(
+        (a, b) =>
+            a.project(destination).$2.compareTo(b.project(destination).$2),
+      );
+    _syncToCurrentLeg();
+    for (final target in sorted) {
+      final along = target.project(destination).$1;
+      final gap = math.min(56.0, target.length * 0.3);
+      final candidates =
+          [target.normalize(along - gap), target.normalize(along + gap)]
+            ..sort((a, b) {
+              // Không chọn điểm bị clamp trùng ngay chỗ bạn ở đầu mép thẻ.
+              final aGap = (target.at(a) - destination).distance;
+              final bGap = (target.at(b) - destination).distance;
+              if (aGap < gap * 0.7 && bGap >= gap * 0.7) return 1;
+              if (bGap < gap * 0.7 && aGap >= gap * 0.7) return -1;
+              return (target.at(a) - _position).distance.compareTo(
+                (target.at(b) - _position).distance,
+              );
+            });
+      if (_travelTo(target, candidates.first, HomeCompanionPhase.approaching)) {
+        _cleaningSeed = null;
+        _greetingOnArrival = true;
+        notifyListeners();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Chào bạn đang ở gần, chỉ đổi biểu cảm; không ngắt cú nhảy/đường dọn bụi
+  /// và không tăng serial âm thanh của thao tác chạm.
+  void greetFriend(HomeCompanionMotion friend) {
+    if (!hasSurfaces || !friend.hasSurfaces || _settled) return;
+    _affectionUntil = _elapsed + 1.8;
+    if (_phase == HomeCompanionPhase.idle &&
+        (friend.position.dx - _position.dx).abs() > 4) {
+      _facingRight = friend.position.dx > _position.dx;
+    }
+    notifyListeners();
+  }
 
   void _approach(Offset touch, {required bool newTouch}) {
     if (!hasSurfaces || !_finiteOffset(touch)) {

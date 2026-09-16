@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../utils/services/l10n_service.dart';
+import '../../../widgets/lossless_sticker_assets.dart';
 
 class RelationshipModeDialog extends StatefulWidget {
   final ValueChanged<String> onSelected;
 
-  const RelationshipModeDialog({
-    super.key,
-    required this.onSelected,
-  });
+  const RelationshipModeDialog({super.key, required this.onSelected});
 
   @override
   State<RelationshipModeDialog> createState() => _RelationshipModeDialogState();
@@ -53,10 +51,7 @@ class _RelationshipModeDialogState extends State<RelationshipModeDialog>
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 420,
-          maxHeight: maxDialogHeight,
-        ),
+        constraints: BoxConstraints(maxWidth: 420, maxHeight: maxDialogHeight),
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
@@ -64,10 +59,7 @@ class _RelationshipModeDialogState extends State<RelationshipModeDialog>
             gradient: const LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF1E2030),
-                Color(0xFF191B2B),
-              ],
+              colors: [Color(0xFF1E2030), Color(0xFF191B2B)],
             ),
             borderRadius: BorderRadius.circular(32),
             border: Border.all(
@@ -106,10 +98,12 @@ class _RelationshipModeDialogState extends State<RelationshipModeDialog>
                         Expanded(
                           child: _buildOptionCard(
                             type: 'couple',
-                            imageAsset: 'assets/icons/cute_3d/status_co_nguoi_yeu_3d.png',
+                            imageAsset:
+                                'assets/icons/cute_3d/status_co_nguoi_yeu_3d.png',
                             title: L10nService().translate('Có người yêu'),
                             description: L10nService().translate(
-                                'Kết nối và chia sẻ khoảnh khắc cùng nửa kia'),
+                              'Kết nối và chia sẻ khoảnh khắc cùng nửa kia',
+                            ),
                             borderColor: const Color(0xFFFF6BA7),
                             isCouple: true,
                           ),
@@ -118,10 +112,12 @@ class _RelationshipModeDialogState extends State<RelationshipModeDialog>
                         Expanded(
                           child: _buildOptionCard(
                             type: 'single',
-                            imageAsset: 'assets/icons/cute_3d/status_doc_than_3d.png',
+                            imageAsset:
+                                'assets/icons/cute_3d/status_doc_than_3d.png',
                             title: L10nService().translate('Độc thân'),
                             description: L10nService().translate(
-                                'Khám phá và lưu giữ kỷ niệm cho bản thân'),
+                              'Khám phá và lưu giữ kỷ niệm cho bản thân',
+                            ),
                             borderColor: const Color(0xFF4F46E5),
                             isCouple: false,
                           ),
@@ -200,11 +196,7 @@ class _RelationshipModeDialogState extends State<RelationshipModeDialog>
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(
-          Icons.favorite_rounded,
-          color: Color(0xFFFF6BA7),
-          size: 16,
-        ),
+        const Icon(Icons.favorite_rounded, color: Color(0xFFFF6BA7), size: 16),
         const SizedBox(width: 6),
         Flexible(
           child: Text(
@@ -218,11 +210,7 @@ class _RelationshipModeDialogState extends State<RelationshipModeDialog>
           ),
         ),
         const SizedBox(width: 6),
-        const Icon(
-          Icons.favorite_rounded,
-          color: Color(0xFFFF6BA7),
-          size: 16,
-        ),
+        const Icon(Icons.favorite_rounded, color: Color(0xFFFF6BA7), size: 16),
       ],
     );
   }
@@ -292,7 +280,7 @@ class _RelationshipModeDialogState extends State<RelationshipModeDialog>
                 height: 60,
                 child: Center(
                   child: Image.asset(
-                    imageAsset,
+                    LosslessStickerAssets.resolve(imageAsset),
                     fit: BoxFit.contain,
                   ),
                 ),
@@ -344,7 +332,9 @@ class _RelationshipModeDialogState extends State<RelationshipModeDialog>
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: const Color(0xFFFF6BA7).withValues(alpha: 0.4),
+                            color: const Color(
+                              0xFFFF6BA7,
+                            ).withValues(alpha: 0.4),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -352,7 +342,11 @@ class _RelationshipModeDialogState extends State<RelationshipModeDialog>
                       : null,
                 ),
                 child: isSelected
-                    ? const Icon(Icons.check_rounded, color: Colors.white, size: 18)
+                    ? const Icon(
+                        Icons.check_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      )
                     : null,
               )
             else
@@ -373,7 +367,9 @@ class _RelationshipModeDialogState extends State<RelationshipModeDialog>
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: const Color(0xFF4F46E5).withValues(alpha: 0.4),
+                            color: const Color(
+                              0xFF4F46E5,
+                            ).withValues(alpha: 0.4),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -405,9 +401,7 @@ class _RelationshipModeDialogState extends State<RelationshipModeDialog>
       decoration: BoxDecoration(
         color: const Color(0xFF24263B),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Row(
         children: [
@@ -431,8 +425,9 @@ class _RelationshipModeDialogState extends State<RelationshipModeDialog>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  L10nService()
-                      .translate('Thông tin của bạn được bảo mật tuyệt đối'),
+                  L10nService().translate(
+                    'Thông tin của bạn được bảo mật tuyệt đối',
+                  ),
                   style: SLTheme.quicksand(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -442,7 +437,8 @@ class _RelationshipModeDialogState extends State<RelationshipModeDialog>
                 const SizedBox(height: 2),
                 Text(
                   L10nService().translate(
-                      'Bạn có thể thay đổi trạng thái bất kỳ lúc nào trong cài đặt'),
+                    'Bạn có thể thay đổi trạng thái bất kỳ lúc nào trong cài đặt',
+                  ),
                   style: SLTheme.quicksand(
                     fontSize: 10,
                     fontWeight: FontWeight.w500,

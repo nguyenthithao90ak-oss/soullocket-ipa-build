@@ -8,6 +8,8 @@ import 'package:lottie/lottie.dart';
 import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
 import 'living_sticker.dart';
 import 'living_sticker_scene.dart';
+import 'stable_future_builder.dart';
+import 'lossless_sticker_assets.dart';
 
 class R2StickerImage extends StatelessWidget {
   final String assetPath;
@@ -78,7 +80,7 @@ class R2StickerImage extends StatelessWidget {
       );
       // Chỉ dùng cho bản gốc đã đóng gói, không đổi URL ảnh người dùng.
       return Image.asset(
-        path,
+        LosslessStickerAssets.resolve(path),
         fit: fit,
         width: width,
         height: height,
@@ -119,7 +121,7 @@ class R2StickerImage extends StatelessWidget {
 
     if (_bundledHomeStickers.contains(assetPath)) {
       return Image.asset(
-        assetPath,
+        LosslessStickerAssets.resolve(assetPath),
         fit: fit,
         width: width,
         height: height,
@@ -139,29 +141,21 @@ class R2StickerImage extends StatelessWidget {
           r2Url.toLowerCase().endsWith('.json') ||
           r2Url.toLowerCase().endsWith('.lottie');
 
-      // Nếu file đã được nạp và lưu trong RAM cache, trả về trực tiếp Image.file (hoặc Lottie.file) đồng bộ để không bị nháy
       final cachedFile = _resolvedStickerFiles[r2Url];
-
-      if (cachedFile != null && cachedFile.existsSync()) {
-        if (isLottieUrl) {
-          return Lottie.file(
-            cachedFile,
-            fit: fit,
-            width: width,
-            height: height,
-          );
-        }
-        return Image.file(cachedFile, fit: fit, width: width, height: height);
-      }
-
-      return FutureBuilder<File?>(
-        future: const StorageDownloadCacheHelper().getCachedNetworkFile(
+      // Giữ nguyên cây widget sau khi cache nóng, không dựng lại Image/Lottie.
+      return StableFutureBuilder<File?>(
+        requestKey: r2Url,
+        initialData: cachedFile != null && cachedFile.existsSync()
+            ? cachedFile
+            : null,
+        load: () => const StorageDownloadCacheHelper().getCachedNetworkFile(
           r2Url,
           namespace: 'stickers',
           ttl: const Duration(days: 30),
         ),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.connectionState == ConnectionState.waiting &&
+              !snapshot.hasData) {
             return Container(
               width: width,
               height: height,
@@ -207,6 +201,8 @@ class R2StickerImage extends StatelessWidget {
 
           return CachedNetworkImage(
             imageUrl: r2Url,
+            fadeInDuration: Duration.zero,
+            fadeOutDuration: Duration.zero,
             fit: fit,
             width: width,
             height: height,
@@ -263,7 +259,7 @@ class R2StickerImage extends StatelessWidget {
     }
 
     return Image.asset(
-      assetPath,
+      LosslessStickerAssets.resolve(assetPath),
       fit: fit,
       width: width,
       height: height,

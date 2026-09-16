@@ -14,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/services/activity_history_service.dart';
 import '../../utils/services/love_card_link_service.dart';
 import '../../utils/app_error_mapper.dart';
+import '../../utils/live_snapshot.dart';
 import '../../utils/services/pending_upload_service.dart';
 import '../../utils/services/storage/storage_service.dart';
 import 'love_card_public_viewer_screen.dart';
@@ -317,6 +318,8 @@ class LoveCardScreen extends StatefulWidget {
 }
 
 class _LoveCardScreenState extends State<LoveCardScreen> {
+  final _cardsSnapshot = LiveSnapshot<List<Map<dynamic, dynamic>>>();
+  bool _hasChosenTab = false;
   static const String _pendingUploadKeyPrefix = 'love_card_';
   final _svc = LoveCardService();
   final _auth = FirebaseAuth.instance;
@@ -343,12 +346,13 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
     super.initState();
     _senderNameCtrl.text = _defaultSenderName();
     _signatureCtrl.text = _defaultSignatureForTheme();
-    _checkUnreadCards();
+    _bindCards();
     unawaited(_promptPendingUploadRetryIfNeeded());
   }
 
   @override
   void dispose() {
+    _cardsSnapshot.dispose();
     _senderNameCtrl.dispose();
     _signatureCtrl.dispose();
     _contentCtrl.dispose();
@@ -412,29 +416,28 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
     await _sendCard();
   }
 
-  Future<void> _checkUnreadCards() async {
-    final snapshot = await FirebaseDatabase.instance
-        .ref('houses/${widget.houseId}/love_cards')
-        .get();
+  void _bindCards() {
+    _cardsSnapshot.bind(
+      _svc.listenToCards(widget.houseId),
+      onFirstData: (cards) {
+        if (!mounted || _hasChosenTab || _contentCtrl.text.isNotEmpty) return;
+        if (cards.any(
+          (card) =>
+              card['fromUid'] != widget.myUid && card['isOpened'] == false,
+        )) {
+          setState(() => _currentIndex = 1);
+        }
+      },
+    );
+  }
 
-    if (!snapshot.exists || !mounted) {
-      return;
-    }
-
-    final rawValue = snapshot.value;
-    if (rawValue is! Map) {
-      return;
-    }
-
-    final data = Map<dynamic, dynamic>.from(rawValue);
-    final hasUnread = data.values.any((card) {
-      if (card is! Map) return false;
-      final map = Map<dynamic, dynamic>.from(card);
-      return map['fromUid'] != widget.myUid && map['isOpened'] == false;
-    });
-
-    if (hasUnread) {
-      setState(() => _currentIndex = 1);
+  @override
+  void didUpdateWidget(covariant LoveCardScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.houseId != widget.houseId ||
+        oldWidget.myUid != widget.myUid) {
+      _hasChosenTab = false;
+      _bindCards();
     }
   }
 
@@ -536,6 +539,7 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
   }
 
   void _showCreateTab() {
+    _hasChosenTab = true;
     setState(() {
       _currentIndex = 0;
       _hideTopChrome = false;
@@ -543,6 +547,7 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
   }
 
   void _showHistoryTab() {
+    _hasChosenTab = true;
     setState(() {
       _currentIndex = 1;
       _hideTopChrome = false;

@@ -13,14 +13,22 @@ class MusicTrack {
   final String url;
   final String title;
   final String type;
+  final bool isDefault;
 
-  MusicTrack({required this.url, required this.title, required this.type});
+  MusicTrack({
+    required this.url,
+    required this.title,
+    required this.type,
+    this.isDefault = false,
+  });
 
   factory MusicTrack.fromJson(Map<String, dynamic> json) {
+    final url = json['url'] ?? '';
     return MusicTrack(
-      url: json['url'] ?? '',
+      url: url,
       title: json['title'] ?? '',
       type: json['type'] ?? 'audio',
+      isDefault: json['isDefault'] ?? (url.toString().startsWith('assets/')),
     );
   }
 
@@ -28,6 +36,7 @@ class MusicTrack {
         'url': url,
         'title': title,
         'type': type,
+        'isDefault': isDefault,
       };
 }
 
@@ -42,6 +51,15 @@ class MusicService {
 
   final ValueNotifier<bool> isPlayingNotifier = ValueNotifier<bool>(false);
   final ValueNotifier<bool> isVisibleNotifier = ValueNotifier<bool>(false);
+
+  static const String defaultMusicAsset = 'assets/music/cat_ca_chung_ta.mp3';
+  static const String defaultMusicTitle = 'Cất Cả Chúng Ta';
+  static final MusicTrack defaultTrack = MusicTrack(
+    url: defaultMusicAsset,
+    title: defaultMusicTitle,
+    type: 'audio',
+    isDefault: true,
+  );
 
   List<MusicTrack> _playlist = [];
   int _currentIndex = 0;
@@ -62,6 +80,12 @@ class MusicService {
         path.endsWith('.flac');
   }
 
+  static bool isAssetMusicPath(String path) {
+    final trimmed = path.trim().replaceAll('\\', '/');
+    return (trimmed.startsWith('assets/') || trimmed.startsWith('music/')) &&
+        _hasSupportedAudioExtension(trimmed.toLowerCase());
+  }
+
   static bool isLocalAudioPath(String path) {
     if (kIsWeb) return false;
     final trimmed = path.trim();
@@ -74,7 +98,7 @@ class MusicService {
   }
 
   static bool isSupportedMusicUrl(String url) {
-    return isLocalAudioPath(url);
+    return isAssetMusicPath(url) || isLocalAudioPath(url);
   }
 
   static String inferMediaType(String url) {
@@ -88,13 +112,15 @@ class MusicService {
   }
 
   void _onPlayerComplete() {
-    if (_playlist.isEmpty) return;
+    if (_playlist.isEmpty) {
+      _playlist = [defaultTrack];
+    }
     _currentIndex = (_currentIndex + 1) % _playlist.length;
     final nextTrack = _playlist[_currentIndex];
     if (isSupportedMusicUrl(nextTrack.url)) {
       play(nextTrack.url, type: nextTrack.type);
     } else {
-      stop();
+      stop(keepPlaylist: true);
       isVisibleNotifier.value = false;
     }
   }
@@ -156,9 +182,7 @@ class MusicService {
     final allowLocalAutoplay = prefs.getBool('il_music_autoplay') ?? false;
 
     if (_playlist.isEmpty) {
-      await stop();
-      isVisibleNotifier.value = false;
-      return;
+      _playlist = [defaultTrack];
     }
 
     isVisibleNotifier.value = true;
@@ -178,7 +202,7 @@ class MusicService {
         final List<dynamic> decoded = jsonDecode(playlistJson);
         final list = decoded
             .map((e) => MusicTrack.fromJson(e))
-            .where((t) => isLocalAudioPath(t.url))
+            .where((t) => isSupportedMusicUrl(t.url))
             .toList();
         if (list.isNotEmpty) return list;
       } catch (e) {
@@ -187,13 +211,13 @@ class MusicService {
     }
 
     final localUrl = (prefs.getString('il_local_music_url') ?? '').trim();
-    if (isLocalAudioPath(localUrl)) {
+    if (isSupportedMusicUrl(localUrl)) {
       final type = (prefs.getString('il_local_music_type') ?? 'audio').trim();
       final title = (prefs.getString('il_local_music_title') ?? '').trim();
       return [MusicTrack(url: localUrl, title: title, type: type)];
     }
 
-    return [];
+    return [defaultTrack];
   }
 
   Future<void> reloadPlaylist() async {
@@ -204,14 +228,23 @@ class MusicService {
     final normalizedUrl = url.trim();
     if (!isSupportedMusicUrl(normalizedUrl)) {
       debugPrint('Rejected background music URL: $normalizedUrl');
-      await stop();
+      await stop(keepPlaylist: true);
       isVisibleNotifier.value = false;
       return;
     }
 
     isVisibleNotifier.value = true;
     try {
-      await _audioPlayer.play(DeviceFileSource(normalizedUrl));
+      Source source;
+      if (isAssetMusicPath(normalizedUrl)) {
+        final cleanPath = normalizedUrl.startsWith('assets/')
+            ? normalizedUrl.substring(7)
+            : normalizedUrl;
+        source = AssetSource(cleanPath);
+      } else {
+        source = DeviceFileSource(normalizedUrl);
+      }
+      await _audioPlayer.play(source);
     } catch (e) {
       debugPrint('Error playing music: ${AppErrorMapper.resolve(
         e,
@@ -236,9 +269,27 @@ class MusicService {
       return;
     }
 
-    if (_playlist.isNotEmpty) {
-      final track = _playlist[_currentIndex];
-      await play(track.url, type: track.type);
+    if (_playlist.isEmpty) {
+      _playlist = [defaultTrack];
+    }
+    final track = _playlist[_currentIndex];
+    await play(track.url, type: track.type);
+  }
+
+  MusicTrack get currentTrack =>
+      _playlist.isNotEmpty && _currentIndex < _playlist.length
+          ? _playlist[_currentIndex]
+          : defaultTrack;
+
+  int get currentIndex => _currentIndex;
+
+  Future<void> selectTrack(int index) async {
+    if (index >= 0 && index < _playlist.length) {
+      _currentIndex = index;
+      final track = _playlist[index];
+      if (isPlayingNotifier.value) {
+        await play(track.url, type: track.type);
+      }
     }
   }
 
@@ -249,6 +300,6 @@ class MusicService {
   String? get currentUrl =>
       _playlist.isNotEmpty && _currentIndex < _playlist.length
           ? _playlist[_currentIndex].url
-          : null;
+          : defaultMusicAsset;
   List<MusicTrack> get playlist => _playlist;
 }

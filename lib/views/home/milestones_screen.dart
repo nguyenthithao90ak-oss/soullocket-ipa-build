@@ -5,18 +5,22 @@ import '../../core/sl_theme.dart';
 import '../../utils/services/l10n_service.dart';
 import '../utilities/calendar_screen.dart';
 import '../../core/sl_page_physics.dart';
+import '../../widgets/living_sticker_scene.dart';
+import 'milestone_sticker_gallery_screen.dart';
 
 class MilestoneEvent {
   final String title;
   final DateTime date;
   final String type; // 'anniversary' | 'birthday' | 'holiday' | 'calendar'
   final int diffDays; // Countdown days (negative for past events)
+  final String? stickerKey;
 
   MilestoneEvent({
     required this.title,
     required this.date,
     required this.type,
     required this.diffDays,
+    this.stickerKey,
   });
 }
 
@@ -122,6 +126,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
             }),
             date: milestoneDate,
             type: 'anniversary',
+            stickerKey: 'days_$m',
             diffDays: diff,
           ),
         );
@@ -144,6 +149,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
             title: title,
             date: milestoneDate,
             type: 'anniversary',
+            stickerKey: 'months_$m',
             diffDays: diff,
           ),
         );
@@ -164,6 +170,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
             }),
             date: annivDate,
             type: 'anniversary',
+            stickerKey: 'years_$y',
             diffDays: diff,
           ),
         );
@@ -180,7 +187,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
         widget.houseSettings['nameU2']?.toString() ??
         L10nService().translate('p4_default_partner');
 
-    void computeBirthdays(String dob, String name) {
+    void computeBirthdays(String dob, String name, String stickerKey) {
       if (dob.isEmpty) return;
       try {
         final bday = DateTime.parse(dob);
@@ -201,6 +208,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
               title: L10nService().format('milestone_birthday', {'name': name}),
               date: bdayDate,
               type: 'birthday',
+              stickerKey: stickerKey,
               diffDays: diff,
             ),
           );
@@ -212,8 +220,8 @@ class _MilestonesScreenState extends State<MilestonesScreen>
       }
     }
 
-    computeBirthdays(dobU1, nameU1);
-    computeBirthdays(dobU2, nameU2);
+    computeBirthdays(dobU1, nameU1, 'moment_birthday_u1');
+    computeBirthdays(dobU2, nameU2, 'moment_birthday_u2');
 
     // 3. Ngày lễ lớn đầy đủ (năm trước, năm nay, năm sau)
     final holidaysList = [
@@ -297,6 +305,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
             title: h['name'] as String,
             date: holidayDate,
             type: 'holiday',
+            stickerKey: MilestoneStickerCatalog.holidayKey(holidayDate),
             diffDays: diff,
           ),
         );
@@ -323,6 +332,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
           title: evTitle,
           date: eventDate,
           type: 'calendar',
+          stickerKey: MilestoneStickerCatalog.calendarKey(evTitle),
           diffDays: diff,
         ),
       );
@@ -504,15 +514,29 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                               onPressed: () => Navigator.pop(context),
                             ),
                             const SizedBox(width: 8),
-                            Text(
-                              L10nService().translate('milestone_title'),
-                              style: SLTheme.quicksand(
-                                fontSize: 21,
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xFF2D3748),
+                            Expanded(
+                              child: Text(
+                                L10nService().translate('milestone_title'),
+                                style: SLTheme.quicksand(
+                                  fontSize: 21,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF2D3748),
+                                ),
                               ),
                             ),
-                            const Spacer(),
+                            IconButton(
+                              tooltip: context.tr('sticker_library_title'),
+                              icon: const Icon(
+                                Icons.collections_bookmark_outlined,
+                                color: Color(0xFFAB5C86),
+                              ),
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) =>
+                                      const MilestoneStickerGalleryScreen(),
+                                ),
+                              ),
+                            ),
                             IconButton(
                               icon: Container(
                                 padding: const EdgeInsets.all(8),
@@ -554,7 +578,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                             vertical: 8,
                           ),
                           width: double.infinity,
-                          height: 100,
+                          constraints: const BoxConstraints(minHeight: 100),
                           child: Stack(
                             children: [
                               Positioned.fill(
@@ -828,101 +852,8 @@ class _MilestonesScreenState extends State<MilestonesScreen>
     );
   }
 
-  int? _extractMilestoneDays(String title) {
-    final match = RegExp(r'(\d{1,5})').firstMatch(title);
-    return match == null ? null : int.tryParse(match.group(1)!);
-  }
-
-  String _resolveMilestoneStickerKey(MilestoneEvent event) {
-    final title = event.title.toLowerCase();
-    final month = event.date.month;
-    final day = event.date.day;
-
-    if (event.type == 'birthday') {
-      return 'birthday_cupcake';
-    }
-
-    if (event.type == 'anniversary') {
-      final days = _extractMilestoneDays(title);
-      switch (days) {
-        case 30:
-          return 'days_30';
-        case 50:
-          return 'days_50';
-        case 100:
-          return 'days_100';
-        case 365:
-          return 'days_365';
-        case 500:
-          return 'days_500';
-        case 730:
-          return 'days_730';
-        case 1000:
-          return 'days_1000';
-      }
-
-      if (title.contains('month') || title.contains('tháng')) {
-        return 'first_date';
-      }
-      if (title.contains('year') || title.contains('năm')) {
-        return 'heart_lock';
-      }
-      return 'fireworks_couple';
-    }
-
-    if (event.type == 'holiday') {
-      if ((month == 3 && day == 8) || (month == 10 && day == 20)) {
-        return 'womens_day';
-      }
-      if (month == 2 && day == 14) {
-        return 'chocolate';
-      }
-      if ((month == 3 && day == 14) || (month == 4 && day == 14)) {
-        return 'chocolate';
-      }
-      if (month == 4 && day == 1) {
-        return 'april';
-      }
-      if (month == 10 && day == 31) {
-        return 'halloween';
-      }
-      if (month == 12 && day == 24) {
-        return 'christmas_tree';
-      }
-      if (month == 12 && day == 25) {
-        return 'christmas_stocking';
-      }
-      if ((month == 12 && day == 31) || (month == 1 && day == 1)) {
-        return 'fireworks_couple';
-      }
-      if (month == 6 && day == 1) {
-        return 'beach';
-      }
-      if (month == 6 && day == 28) {
-        return 'picnic';
-      }
-      return 'heart_lock';
-    }
-
-    if (event.type == 'calendar') {
-      if (title.contains('movie')) return 'movie_date';
-      if (title.contains('trip') ||
-          title.contains('travel') ||
-          title.contains('du lịch') ||
-          title.contains('chuyến đi')) {
-        return 'travel';
-      }
-      if (title.contains('cafe') ||
-          title.contains('coffee') ||
-          title.contains('date')) {
-        return 'coffee';
-      }
-      if (title.contains('picnic')) return 'picnic';
-      return 'april';
-    }
-
-    return 'heart_lock';
-  }
+  String _resolveMilestoneStickerKey(MilestoneEvent event) =>
+      event.stickerKey ?? MilestoneStickerCatalog.calendarKey(event.title);
 
   Widget _buildEventsList(
     List<MilestoneEvent> list, {
@@ -1185,12 +1116,14 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                           color: Color(0xFF94A3B8),
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          formattedDate,
-                          style: SLTheme.quicksand(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF78909C),
+                        Flexible(
+                          child: Text(
+                            formattedDate,
+                            style: SLTheme.quicksand(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF78909C),
+                            ),
                           ),
                         ),
                       ],

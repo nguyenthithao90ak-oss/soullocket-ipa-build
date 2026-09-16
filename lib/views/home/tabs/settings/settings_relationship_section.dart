@@ -326,9 +326,11 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
             child: Row(
               children: [
                 Image.asset(
-                  isSingle
-                      ? 'assets/icons/cute_3d/status_doc_than_3d.png'
-                      : 'assets/icons/cute_3d/status_co_nguoi_yeu_3d.png',
+                  LosslessStickerAssets.resolve(
+                    isSingle
+                        ? 'assets/icons/cute_3d/status_doc_than_3d.png'
+                        : 'assets/icons/cute_3d/status_co_nguoi_yeu_3d.png',
+                  ),
                   width: 48,
                   height: 48,
                   fit: BoxFit.contain,

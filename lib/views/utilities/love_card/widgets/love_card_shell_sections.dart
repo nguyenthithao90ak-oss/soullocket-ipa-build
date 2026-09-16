@@ -1,28 +1,5 @@
 part of '../../love_card_screen.dart';
 
-final Expando<({String houseId, Stream<List<Map<dynamic, dynamic>>> stream})>
-_loveCardCardsStreamCache =
-    Expando<({String houseId, Stream<List<Map<dynamic, dynamic>>> stream})>(
-      'love_card_cards_stream',
-    );
-
-extension _LoveCardSharedCardsStream on _LoveCardScreenState {
-  Stream<List<Map<dynamic, dynamic>>> get _cardsStream {
-    final normalizedHouseId = widget.houseId.trim();
-    final cached = _loveCardCardsStreamCache[this];
-    if (cached != null && cached.houseId == normalizedHouseId) {
-      return cached.stream;
-    }
-
-    final stream = _svc.listenToCards(normalizedHouseId).asBroadcastStream();
-    _loveCardCardsStreamCache[this] = (
-      houseId: normalizedHouseId,
-      stream: stream,
-    );
-    return stream;
-  }
-}
-
 class _LoveCardScreenBody extends StatelessWidget {
   final _LoveCardScreenState state;
 
@@ -343,23 +320,25 @@ class _LoveCardTabSwitcher extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: StreamBuilder<List<Map<dynamic, dynamic>>>(
-              stream: state._cardsStream,
-              initialData: const <Map<dynamic, dynamic>>[],
-              builder: (context, snapshot) {
-                final unread = snapshot.hasData
-                    ? state._unreadCount(snapshot.data!)
-                    : 0;
-                return _LoveCardTabButton(
-                  icon: Icons.auto_stories_rounded,
-                  label: context.tr('util_lchs_3061f5'),
-                  isActive: state._currentIndex == 1,
-                  accent: accent,
-                  unreadCount: unread,
-                  onTap: state._showHistoryTab,
-                );
-              },
-            ),
+            child:
+                ValueListenableBuilder<
+                  AsyncSnapshot<List<Map<dynamic, dynamic>>>
+                >(
+                  valueListenable: state._cardsSnapshot,
+                  builder: (context, snapshot, _) {
+                    final unread = snapshot.hasData
+                        ? state._unreadCount(snapshot.data!)
+                        : 0;
+                    return _LoveCardTabButton(
+                      icon: Icons.auto_stories_rounded,
+                      label: context.tr('util_lchs_3061f5'),
+                      isActive: state._currentIndex == 1,
+                      accent: accent,
+                      unreadCount: unread,
+                      onTap: state._showHistoryTab,
+                    );
+                  },
+                ),
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/soul_locket_brand.dart';
 import '../utils/services/offline_cache_service.dart';
 import '../utils/services/settings_sync_service.dart';
+import 'home/widgets/companion/home_companion_outfit.dart';
 
 @immutable
 class UiPrefsState {
@@ -217,6 +219,63 @@ class UiEffectProfile {
 }
 
 class UiPrefs {
+  static const _wardrobeKey = 'il_home_companion_wardrobe_v1';
+  static final companionOutfits =
+      ValueNotifier<Map<HomeCompanionCharacter, HomeCompanionOutfit>>({
+        for (final character in HomeCompanionCharacter.values)
+          character: HomeCompanionOutfit.defaults(character),
+      });
+  static Future<void>? _wardrobeWrite;
+
+  static void _restoreCompanionOutfits(SharedPreferences prefs) {
+    dynamic raw;
+    try {
+      final stored = prefs.get(_wardrobeKey);
+      if (stored is String) raw = jsonDecode(stored);
+    } catch (_) {
+      // Tủ đồ hỏng/phiên bản lạ chỉ trở về mặc định, không chặn Home.
+    }
+    companionOutfits.value = Map.unmodifiable({
+      for (final character in HomeCompanionCharacter.values)
+        character: HomeCompanionOutfit.fromJson(
+          raw is Map ? raw[character.name] : null,
+          character,
+        ),
+    });
+  }
+
+  /// Tuần tự hóa hai lần lưu để trang phục bé này không ghi đè bé kia.
+  static Future<void> setCompanionOutfit(
+    HomeCompanionCharacter character,
+    HomeCompanionOutfit outfit,
+  ) {
+    final previous = _wardrobeWrite;
+    final operation = () async {
+      if (previous != null) await previous;
+      await ensureLoaded();
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
+      final next = {...companionOutfits.value, character: outfit};
+      final saved = await prefs.setString(
+        _wardrobeKey,
+        jsonEncode({
+          for (final entry in next.entries)
+            entry.key.name: entry.value.toJson(),
+        }),
+      );
+      if (!saved) throw StateError('Could not persist companion outfit');
+      companionOutfits.value = Map.unmodifiable(next);
+    }();
+    late final Future<void> tail;
+    tail = operation.catchError((Object _) {}).whenComplete(() {
+      // Không giữ Future/Zone cũ sau khi hàng đợi đã rỗng.
+      if (identical(_wardrobeWrite, tail)) _wardrobeWrite = null;
+    });
+    _wardrobeWrite = tail;
+    return operation;
+  }
+
   static const double minCountdownSizePx = 160.0;
   static const double maxCountdownSizePx = 700.0;
 
@@ -386,6 +445,7 @@ class UiPrefs {
         OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     // Đọc theme đã lưu từ SharedPreferences, fallback về default nếu chưa có.
+    _restoreCompanionOutfits(prefs);
     final themeKey =
         (prefs.getString(_kThemeKey) ?? UiPrefsState.defaults.themeKey).trim();
     final effectKey =

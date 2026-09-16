@@ -9,8 +9,12 @@ import 'home_companion_motion.dart';
 import 'home_companion_audio.dart';
 import 'home_companion_outline.dart';
 import 'home_companion_painter.dart';
+import 'home_companion_play.dart';
+import 'home_companion_wardrobe.dart';
+import '../../../ui_prefs.dart';
 
-/// Lớp trang trí cục bộ: chỉ quan sát chạm, không tham gia gesture arena.
+/// Lớp trang trí cục bộ: quan sát chạm nền; chỉ nhận tap/giữ đúng trên bé.
+/// Gesture kéo vẫn nhường Scrollable, không phủ vùng bắt chạm toàn màn hình.
 class HomeCompanionScene extends StatefulWidget {
   const HomeCompanionScene({
     super.key,
@@ -26,7 +30,7 @@ class HomeCompanionScene extends StatefulWidget {
     this.pinToViewport = false,
     this.followScroll = false,
     this.audioSuppressed,
-    this.safeInsets = const EdgeInsets.fromLTRB(26, 84, 26, 92),
+    this.safeInsets = const EdgeInsets.fromLTRB(32, 92, 32, 92),
     this.motion,
     this.audio,
   });
@@ -64,6 +68,18 @@ class HomeCompanionScene extends StatefulWidget {
 class _HomeCompanionSceneState extends State<HomeCompanionScene>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late HomeCompanionMotion _motion;
+  // Dùng chung ticker/layout với thỏ; không có timer hoặc âm thanh nền thứ hai.
+  final _buddy = HomeCompanionMotion(initialSpacing: 60, createsDust: false);
+  double _nextMeetAt = 4;
+  double _nextHelloAt = 7;
+  double _nextPrankAt = 18;
+  bool _bearPranksNext = false;
+  final _play = HomeCompanionPlay();
+  HomeCompanionCharacter? _pendingPlay;
+  double _playDeadline = 0;
+  bool _wardrobeOpen = false;
+  bool _spriteHandledThisTap = false;
+  bool _spriteGestureRejected = false;
   late HomeCompanionAudio _audio;
   late final Ticker _ticker;
   final _paintKey = GlobalKey();
@@ -84,6 +100,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   Timer? _holdTimer;
   bool _dragged = false;
   Offset? _pendingApproach;
+  HomeCompanionCharacter? _pendingSprite;
   bool _approachScheduled = false;
   final Set<int> _downPointers = {};
 
@@ -146,6 +163,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
 
   bool get _canShow =>
       widget.enabled &&
+      !_wardrobeOpen &&
       _foreground &&
       _routeCurrent &&
       _tickerAllowed &&
@@ -203,6 +221,10 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     final show = _canShow;
     final becameHidden = _visible.value && !show;
     if (!show) _clearPointers();
+    if (!show || !widget.animate || _reduced) {
+      _play.cancel();
+      _pendingPlay = null;
+    }
     _visible.value = show;
     final run =
         show &&
@@ -227,11 +249,15 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
       _lastTick = Duration.zero;
       // Giữ nguyên cả vị trí và độ cao cú nhảy khi người dùng chạm/giữ.
       // settle() ở đây sẽ làm bé rơi về mặt ô, trông như biến mất/chớp hình.
-      if (!show || !_interactionPaused) _motion.settle();
+      if (!show || !_interactionPaused) {
+        _motion.settle();
+        _buddy.settle();
+      }
     } else if (becameHidden) {
       // Home có thể bị che sau khi ngón tay đã dừng ticker. Vẫn phải
       // hủy lời chào/ý định cũ đúng một lần khi thực sự rời màn hình.
       _motion.settle();
+      _buddy.settle();
     }
   }
 
@@ -239,12 +265,160 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     // Không đo layout hay rebuild Home theo từng frame của bé.
     final delta = elapsed - _lastTick;
     _lastTick = elapsed;
-    if (_motion.hasSurfaces) _motion.advance(delta);
+    final wasPlaying = _play.active;
+    _play.advance(delta);
+    if (!wasPlaying) {
+      if (_motion.hasSurfaces) _motion.advance(delta);
+      if (_buddy.hasSurfaces) _buddy.advance(delta);
+    }
+    if (_pendingPlay != null && !_play.active) {
+      if (_buddy.elapsedSeconds > _playDeadline ||
+          _play.start(_pendingPlay!, _motion, _buddy)) {
+        _pendingPlay = null;
+      }
+    }
+    if (!_play.active &&
+        !widget.pinToViewport &&
+        _buddy.elapsedSeconds >= _nextPrankAt) {
+      _nextPrankAt = _buddy.elapsedSeconds + 18;
+      if (_play.start(
+        _bearPranksNext
+            ? HomeCompanionCharacter.bear
+            : HomeCompanionCharacter.bunny,
+        _motion,
+        _buddy,
+      )) {
+        _bearPranksNext = !_bearPranksNext;
+      }
+    }
+    if (!_play.active &&
+        !widget.pinToViewport &&
+        _buddy.elapsedSeconds >= _nextMeetAt) {
+      // Xen kẽ tự khám phá và tìm bạn; không giành đường đi/việc dọn bụi của thỏ.
+      _nextMeetAt = _buddy.elapsedSeconds + 3.6;
+      _buddy.visitFriend(_motion);
+    }
+    final separation = _buddy.position - _motion.position;
+    if (!_play.active &&
+        !widget.pinToViewport &&
+        _buddy.elapsedSeconds >= _nextHelloAt &&
+        separation.distance >= 42 &&
+        separation.distance <= 90 &&
+        separation.dy.abs() < 14) {
+      _nextHelloAt = _buddy.elapsedSeconds + 16;
+      _motion.greetFriend(_buddy);
+      _buddy.greetFriend(_motion);
+    }
     _audio.update(
-      _motion.phase,
-      greeting: _motion.greetingSerial,
-      greetingActive: _motion.affection > 0,
+      _play.active ? HomeCompanionPhase.idle : _motion.phase,
+      greeting: _motion.greetingSerial + _buddy.greetingSerial,
+      // Chừa khoảng yên cho tiếng oa ở điểm va chạm, không phát chào trước
+      // rồi khiến cooldown nuốt mất âm thanh chính của trò đùa.
+      greetingActive:
+          !_play.active && (_motion.affection > 0 || _buddy.affection > 0),
+      playfulImpact: _play.impactSerial,
     );
+  }
+
+  HomeCompanionCharacter? _spriteAt(Offset global) {
+    if (!_canShow) return null;
+    final box = _paintKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return null;
+    final screen = box.globalToLocal(global);
+    if (!(Offset.zero & box.size).contains(screen)) return null;
+    final local =
+        screen - (widget.followScroll ? _paintOffset.value : Offset.zero);
+    HomeCompanionCharacter? found;
+    var nearest = double.infinity;
+    for (final character in HomeCompanionCharacter.values) {
+      final motion = character == HomeCompanionCharacter.bunny
+          ? _motion
+          : _buddy;
+      if (!motion.hasSurfaces) continue;
+      final pose = _play.pose(character);
+      final center =
+          motion.position +
+          pose.offset -
+          Offset(
+            0,
+            32 + (widget.animate && !_reduced ? motion.hopLift + pose.lift : 0),
+          );
+      final bounds = Rect.fromCenter(
+        center: center,
+        width: character == HomeCompanionCharacter.bear ? 54 : 48,
+        height: 70,
+      );
+      if (bounds.contains(local) && (center - local).distance < nearest) {
+        found = character;
+        nearest = (center - local).distance;
+      }
+    }
+    return found;
+  }
+
+  void _tapSprite(Offset global) {
+    final character = _spriteAt(global);
+    if (character == null || _spriteGestureRejected) return;
+    _spriteHandledThisTap = true;
+    if (!widget.animate || _reduced) return;
+    if (widget.soundEnabled) _audio.unlock();
+    _pendingSprite = character;
+    _pendingApproach = global;
+    _scheduleApproach();
+  }
+
+  void _playWith(HomeCompanionCharacter character) {
+    // Lần chạm mới thay thế lời mời đang đợi, không phát lại sau cooldown.
+    _pendingPlay = null;
+    final pet = character == HomeCompanionCharacter.bunny ? _motion : _buddy;
+    final friend = character == HomeCompanionCharacter.bunny ? _buddy : _motion;
+    if (!_play.active) {
+      pet.approach(pet.position - Offset(0, 28 + pet.hopLift));
+    }
+    if (widget.pinToViewport) {
+      return;
+    }
+    if (!_play.start(character, _motion, _buddy)) {
+      if (!_play.active) {
+        pet.visitFriend(friend, userInvited: true);
+        _pendingPlay = character;
+        _playDeadline = _buddy.elapsedSeconds + 8;
+      }
+    }
+  }
+
+  Future<void> _openWardrobe(Offset global) async {
+    final character = _spriteAt(global);
+    if (character == null ||
+        _wardrobeOpen ||
+        _spriteGestureRejected ||
+        _downPointers.length != 1 ||
+        _localScrolling) {
+      return;
+    }
+    _spriteHandledThisTap = true;
+    _wardrobeOpen = true;
+    _sync();
+    try {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => HomeCompanionWardrobe(
+          character: character,
+          initial:
+              UiPrefs.companionOutfits.value[character] ??
+              HomeCompanionOutfit.defaults(character),
+          onSave: (outfit) => UiPrefs.setCompanionOutfit(character, outfit),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        _wardrobeOpen = false;
+        _sync();
+        _scheduleMeasure();
+      }
+    }
   }
 
   @override
@@ -291,11 +465,16 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
       var viewport = widget.safeInsets.deflateRect(Offset.zero & root.size);
       if (!widget.enabled) {
         _motion.setSurfaces(const [], viewport);
+        _buddy.setSurfaces(const [], viewport);
         _sync();
         return;
       }
       if (widget.pinToViewport) {
         _motion.setPinnedPosition(viewport.bottomRight, viewport);
+        _buddy.setPinnedPosition(
+          viewport.bottomRight - const Offset(56, 0),
+          viewport,
+        );
         _sync();
         return;
       }
@@ -368,7 +547,16 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
           bottom,
         );
       }
+      final feet = _motion.position;
+      final buddyFeet = _buddy.position;
       _motion.setSurfaces(surfaces, viewport);
+      _buddy.setSurfaces(surfaces, viewport);
+      if (feet != _motion.position || buddyFeet != _buddy.position) {
+        // Khi resize/đổi layout làm neo chân đổi, không dùng cú nhảy tương
+        // đối của layout cũ. Cuộn giữ nguyên tọa độ nội dung nên không bị hủy.
+        _play.cancel();
+        _pendingPlay = null;
+      }
       _sync();
     });
   }
@@ -400,8 +588,10 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   void _onPointerDown(PointerDownEvent event) {
     if (!_canShow) return;
     _pendingApproach = null;
+    _spriteHandledThisTap = false;
     _downPointers.add(event.pointer);
     if (_downPointers.length == 1) {
+      _spriteGestureRejected = false;
       _pointer = event.pointer;
       _pointerOrigin = event.position;
       _pointerStart = event.timeStamp;
@@ -414,6 +604,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
       });
     } else {
       _dragged = true;
+      _spriteGestureRejected = true;
     }
     _sync();
   }
@@ -423,6 +614,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
         _pointerOrigin != null &&
         (event.position - _pointerOrigin!).distance > kTouchSlop) {
       _dragged = true;
+      _spriteGestureRejected = true;
     }
   }
 
@@ -437,7 +629,13 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     if (_downPointers.isEmpty) _clearPointers();
     _sync();
     _scheduleMeasure();
-    if (!shortTap || !_canShow || !widget.animate || _reduced) return;
+    if (!shortTap ||
+        _spriteHandledThisTap ||
+        !_canShow ||
+        !widget.animate ||
+        _reduced) {
+      return;
+    }
     // Unlock ngay trong thao tác thật; không tự phát âm khi vừa mở Home.
     if (widget.soundEnabled) _audio.unlock();
     // Gộp nhiều lần chạm trong cùng frame, chỉ đón điểm mới nhất.
@@ -462,8 +660,14 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
       // Parent có thể hạ cờ swipe ở frame sau PointerUp. Giữ lần chạm
       // hợp lệ tới khi cờ hạ, không bỏ mất thao tác hoặc chạy lúc đang kéo.
       if (_interactionPaused) return;
+      final sprite = _pendingSprite;
+      _pendingSprite = null;
       _pendingApproach = null;
       if (!widget.animate || _reduced) return;
+      if (sprite != null) {
+        _playWith(sprite);
+        return;
+      }
       final box = _paintKey.currentContext?.findRenderObject();
       if (box is RenderBox && box.hasSize) {
         final screenLocal = box.globalToLocal(target);
@@ -472,14 +676,33 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
             (widget.followScroll ? _paintOffset.value : Offset.zero);
         // Khi ghim, chỉ vuốt ve trực tiếp bé mới chào. Chạm nút/cuộn ở
         // nơi khác không khiến bé đuổi theo hoặc phát tiếng ngoài ý muốn.
-        if (widget.pinToViewport && !_motion.isPetting(local)) return;
+        if (widget.pinToViewport &&
+            !_motion.isPetting(local) &&
+            !_buddy.isPetting(local)) {
+          return;
+        }
         final insidePaint = (Offset.zero & box.size).contains(screenLocal);
         if (insidePaint &&
             (widget.safeInsets
                     .deflateRect(Offset.zero & box.size)
                     .contains(screenLocal) ||
-                _motion.isPetting(local))) {
-          _motion.approach(local);
+                _motion.isPetting(local) ||
+                _buddy.isPetting(local))) {
+          _pendingPlay = null;
+          final petBuddy =
+              _buddy.isPetting(local) &&
+              (!_motion.isPetting(local) ||
+                  (local - _buddy.position).distance <
+                      (local - _motion.position).distance);
+          if (petBuddy) {
+            _buddy.approach(local);
+            _motion.visitFriend(_buddy);
+          } else {
+            _motion.approach(local);
+            // Hai bé nhận cùng lời mời nhưng không chọn trùng điểm tiếp đất.
+            _buddy.visitFriend(_motion, atDestination: true);
+          }
+          _nextMeetAt = _buddy.elapsedSeconds + 5;
         }
       }
     });
@@ -487,6 +710,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
 
   void _clearPointers() {
     _pendingApproach = null;
+    _pendingSprite = null;
     _holdTimer?.cancel();
     _holdTimer = null;
     _downPointers.clear();
@@ -509,6 +733,8 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     if (widget.audio == null) _audio.dispose();
     _visible.dispose();
     if (widget.motion == null) _motion.dispose();
+    _buddy.dispose();
+    _play.dispose();
     super.dispose();
   }
 
@@ -547,23 +773,85 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
                         valueListenable: _visible,
                         builder: (context, visible, _) => visible
                             ? RepaintBoundary(
-                                child: CustomPaint(
-                                  key: const ValueKey('home-companion-paint'),
-                                  painter: HomeCompanionPainter(
-                                    motion: _motion,
-                                    paintOffset: widget.followScroll
-                                        ? _paintOffset
-                                        : null,
-                                    showEffects: widget.animate && !_reduced,
-                                    darkMode:
-                                        Theme.of(context).brightness ==
-                                        Brightness.dark,
-                                  ),
-                                ),
+                                child:
+                                    ValueListenableBuilder<
+                                      Map<
+                                        HomeCompanionCharacter,
+                                        HomeCompanionOutfit
+                                      >
+                                    >(
+                                      valueListenable: UiPrefs.companionOutfits,
+                                      builder: (context, outfits, _) => CustomPaint(
+                                        key: const ValueKey(
+                                          'home-companion-paint',
+                                        ),
+                                        painter: HomeCompanionPainter(
+                                          motion: _motion,
+                                          outfit:
+                                              outfits[HomeCompanionCharacter
+                                                  .bunny],
+                                          play: _play,
+                                          paintOffset: widget.followScroll
+                                              ? _paintOffset
+                                              : null,
+                                          showEffects:
+                                              widget.animate && !_reduced,
+                                          darkMode:
+                                              Theme.of(context).brightness ==
+                                              Brightness.dark,
+                                        ),
+                                        foregroundPainter: HomeCompanionPainter(
+                                          motion: _buddy,
+                                          character:
+                                              HomeCompanionCharacter.bear,
+                                          outfit:
+                                              outfits[HomeCompanionCharacter
+                                                  .bear],
+                                          play: _play,
+                                          paintOffset: widget.followScroll
+                                              ? _paintOffset
+                                              : null,
+                                          showEffects:
+                                              widget.animate && !_reduced,
+                                          darkMode:
+                                              Theme.of(context).brightness ==
+                                              Brightness.dark,
+                                        ),
+                                      ),
+                                    ),
                               )
                             : const SizedBox.shrink(),
                       ),
                     ),
+                  ),
+                ),
+                Positioned.fill(
+                  child: RawGestureDetector(
+                    // Translucent giữ Scrollable bên dưới trong hit-test path.
+                    // Chỉ nhận tap/giữ đúng hình bé; kéo vẫn nhường cuộn gốc.
+                    behavior: HitTestBehavior.translucent,
+                    gestures: {
+                      _CompanionTapRecognizer:
+                          GestureRecognizerFactoryWithHandlers<
+                            _CompanionTapRecognizer
+                          >(() => _CompanionTapRecognizer(), (recognizer) {
+                            recognizer.allowed = (position) =>
+                                _spriteAt(position) != null;
+                            recognizer.onTapUp = (details) =>
+                                _tapSprite(details.globalPosition);
+                          }),
+                      _CompanionHoldRecognizer:
+                          GestureRecognizerFactoryWithHandlers<
+                            _CompanionHoldRecognizer
+                          >(() => _CompanionHoldRecognizer(), (recognizer) {
+                            recognizer.allowed = (position) =>
+                                _spriteAt(position) != null;
+                            recognizer.onLongPressStart = (details) =>
+                                unawaited(
+                                  _openWardrobe(details.globalPosition),
+                                );
+                          }),
+                    },
                   ),
                 ),
                 if (widget.foreground != null) widget.foreground!,
@@ -574,6 +862,20 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
       ),
     );
   }
+}
+
+class _CompanionTapRecognizer extends TapGestureRecognizer {
+  bool Function(Offset)? allowed;
+  @override
+  bool isPointerAllowed(PointerDownEvent event) =>
+      (allowed?.call(event.position) ?? false) && super.isPointerAllowed(event);
+}
+
+class _CompanionHoldRecognizer extends LongPressGestureRecognizer {
+  bool Function(Offset)? allowed;
+  @override
+  bool isPointerAllowed(PointerDownEvent event) =>
+      (allowed?.call(event.position) ?? false) && super.isPointerAllowed(event);
 }
 
 class _HomeCompanionScope extends InheritedWidget {

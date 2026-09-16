@@ -25,6 +25,7 @@ import '../../core/sl_theme.dart';
 import '../home/tabs/settings/security/security_otp_dialogs.dart';
 import '../ui_prefs.dart';
 import '../../widgets/sl_toast.dart';
+import '../../widgets/stable_future_builder.dart';
 
 part 'secret_vault/secret_vault_reset_flow.dart';
 part 'secret_vault/secret_vault_pending_upload_flow.dart';
@@ -64,6 +65,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
   final SecretVaultResetService _vaultResetService = SecretVaultResetService();
   final VaultMediaUrlService _vaultMediaUrlService =
       VaultMediaUrlService.instance;
+  int _vaultMediaGeneration = 0;
   final DateFormat _resetTimeFormat = DateFormat('HH:mm • dd/MM/yyyy');
   StreamSubscription<DatabaseEvent>? _photosSub;
   StreamSubscription<bool>? _networkSub;
@@ -122,6 +124,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
   }
 
   void _clearVaultMediaCache() {
+    _vaultMediaGeneration++;
     _vaultMediaUrlService.clearCache();
     PaintingBinding.instance.imageCache
       ..clear()
@@ -153,8 +156,16 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     double? height,
     int? cacheWidth,
   }) {
-    return FutureBuilder<String>(
-      future: _resolveVaultPhotoUrl(photo),
+    return StableFutureBuilder<String>(
+      requestKey: (
+        FirebaseAuth.instance.currentUser?.uid,
+        widget.houseId,
+        _vaultMediaGeneration,
+        photo['id'],
+        photo['storagePath'],
+        photo['url'],
+      ),
+      load: () => _resolveVaultPhotoUrl(photo),
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return loading;

@@ -138,8 +138,25 @@ extension _MessengerSearchFilterPart on _MessengerScreenState {
     required List<String> filteredFriends,
     required List<GroupChatRoom> filteredGroups,
   }) {
-    if (_myHouseId == null && _isBootstrapping) {
+    if (_isBootstrapping) {
       return _buildMessengerLoadingState();
+    }
+    if (_bootstrapFailed) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              context.tr('messenger_initial_load_error'),
+              textAlign: TextAlign.center,
+            ),
+            TextButton(
+              onPressed: _bootstrapMessenger,
+              child: Text(context.tr('core_retry')),
+            ),
+          ],
+        ),
+      );
     }
 
     return _buildUnifiedMessengerBody(

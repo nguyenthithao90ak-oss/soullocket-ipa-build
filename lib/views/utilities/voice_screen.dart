@@ -1386,6 +1386,10 @@ class _VoiceScreenState extends State<VoiceScreen>
     return StreamBuilder(
       stream: _voiceStream,
       builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
         final hasData =
             snapshot.hasData && snapshot.data?.snapshot.value != null;
         if (snapshot.hasError) {

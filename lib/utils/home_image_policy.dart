@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
+import '../widgets/lossless_sticker_assets.dart';
 
 /// Dùng cùng ngân sách giải mã cho ảnh tải trước và ảnh hiển thị ở Home.
 class HomeImagePolicy {
@@ -10,7 +11,7 @@ class HomeImagePolicy {
   static const warmupTimeout = Duration(milliseconds: 1500);
 
   // Chỉ làm nóng tài nguyên đã đóng gói; sticker online tải khi thực sự cần.
-  static const bundledAssets = <String>[
+  static final bundledAssets = <String>[
     'assets/images/avatar_male.jpg',
     'assets/images/avatar_female.jpg',
     'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
@@ -23,7 +24,7 @@ class HomeImagePolicy {
     'assets/images/interaction_stickers/custom/numbered/sticker_173.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_108.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_158.png',
-  ];
+  ].map(LosslessStickerAssets.resolve).toList(growable: false);
 
   static ({int width, int height}) backgroundSize({BuildContext? context}) {
     final media = context == null ? null : MediaQuery.maybeOf(context);

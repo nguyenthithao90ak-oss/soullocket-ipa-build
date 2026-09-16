@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../utils/services/l10n_service.dart';
+import '../../../widgets/lossless_sticker_assets.dart';
 import '../../../utils/services/tarot_reading_service.dart';
 
 part 'models/tarot_models.dart';
@@ -14,140 +15,167 @@ part 'painters/tarot_painters.dart';
 
 final List<TarotCard> _allCards = [
   TarotCard(
-      name: 'The Fool',
-      symbol: '🪁',
-      uprightMeaning: L10nService().translate('util_mtkhiumiyb_69a121'),
-      reversedMeaning: L10nService().translate('util_svivnghocn_831dbf')),
+    name: 'The Fool',
+    symbol: '🪁',
+    uprightMeaning: L10nService().translate('util_mtkhiumiyb_69a121'),
+    reversedMeaning: L10nService().translate('util_svivnghocn_831dbf'),
+  ),
   TarotCard(
-      name: 'The Magician',
-      symbol: '✨',
-      uprightMeaning: L10nService().translate('util_bnckhnngbi_222433'),
-      reversedMeaning: L10nService().translate('util_nnglngangb_eb5169')),
+    name: 'The Magician',
+    symbol: '✨',
+    uprightMeaning: L10nService().translate('util_bnckhnngbi_222433'),
+    reversedMeaning: L10nService().translate('util_nnglngangb_eb5169'),
+  ),
   TarotCard(
-      name: 'The High Priestess',
-      symbol: '🔮',
-      uprightMeaning: L10nService().translate('util_trcgicrtmn_b7f63e'),
-      reversedMeaning: L10nService().translate('util_bnangbquat_917c34')),
+    name: 'The High Priestess',
+    symbol: '🔮',
+    uprightMeaning: L10nService().translate('util_trcgicrtmn_b7f63e'),
+    reversedMeaning: L10nService().translate('util_bnangbquat_917c34'),
+  ),
   TarotCard(
-      name: 'The Empress',
-      symbol: '🌷',
-      uprightMeaning: L10nService().translate('util_nnglngnuid_fe7eee'),
-      reversedMeaning: L10nService().translate('util_schmscangm_1aee7f')),
+    name: 'The Empress',
+    symbol: '🌷',
+    uprightMeaning: L10nService().translate('util_nnglngnuid_fe7eee'),
+    reversedMeaning: L10nService().translate('util_schmscangm_1aee7f'),
+  ),
   TarotCard(
-      name: 'The Emperor',
-      symbol: '🛡️',
-      uprightMeaning: L10nService().translate('util_srrngranhg_ff9c12'),
-      reversedMeaning: L10nService().translate('util_kimsotquta_562f9a')),
+    name: 'The Emperor',
+    symbol: '🛡️',
+    uprightMeaning: L10nService().translate('util_srrngranhg_ff9c12'),
+    reversedMeaning: L10nService().translate('util_kimsotquta_562f9a'),
+  ),
   TarotCard(
-      name: 'The Lovers',
-      symbol: '💞',
-      uprightMeaning: L10nService().translate('util_tnhcmlachn_c55c2e'),
-      reversedMeaning: L10nService().translate('util_mtcnbnghoc_8bd0c6')),
+    name: 'The Lovers',
+    symbol: '💞',
+    uprightMeaning: L10nService().translate('util_tnhcmlachn_c55c2e'),
+    reversedMeaning: L10nService().translate('util_mtcnbnghoc_8bd0c6'),
+  ),
   TarotCard(
-      name: 'The Chariot',
-      symbol: '🏹',
-      uprightMeaning: L10nService().translate('util_cmxcmuntin_80677b'),
-      reversedMeaning: L10nService().translate('util_bnangcyqun_df95ab')),
+    name: 'The Chariot',
+    symbol: '🏹',
+    uprightMeaning: L10nService().translate('util_cmxcmuntin_80677b'),
+    reversedMeaning: L10nService().translate('util_bnangcyqun_df95ab'),
+  ),
   TarotCard(
-      name: 'Strength',
-      symbol: '🦁',
-      uprightMeaning: L10nService().translate('util_sdummnhbit_22f465'),
-      reversedMeaning: L10nService().translate('util_btananglmb_fb948e')),
+    name: 'Strength',
+    symbol: '🦁',
+    uprightMeaning: L10nService().translate('util_sdummnhbit_22f465'),
+    reversedMeaning: L10nService().translate('util_btananglmb_fb948e'),
+  ),
   TarotCard(
-      name: 'The Hermit',
-      symbol: '🕯️',
-      uprightMeaning: L10nService().translate('util_bncnmtqung_fa6015'),
-      reversedMeaning: L10nService().translate('util_skhpliangd_9eaa01')),
+    name: 'The Hermit',
+    symbol: '🕯️',
+    uprightMeaning: L10nService().translate('util_bncnmtqung_fa6015'),
+    reversedMeaning: L10nService().translate('util_skhpliangd_9eaa01'),
+  ),
   TarotCard(
-      name: 'Wheel of Fortune',
-      symbol: '🎡',
-      uprightMeaning: L10nService().translate('util_mtbcngotcm_4d6d49'),
-      reversedMeaning: L10nService().translate('util_bnangchngl_04ea64')),
+    name: 'Wheel of Fortune',
+    symbol: '🎡',
+    uprightMeaning: L10nService().translate('util_mtbcngotcm_4d6d49'),
+    reversedMeaning: L10nService().translate('util_bnangchngl_04ea64'),
+  ),
   TarotCard(
-      name: 'Justice',
-      symbol: '⚖️',
-      uprightMeaning: L10nService().translate('util_mithihisth_9be6af'),
-      reversedMeaning: L10nService().translate('util_mtphaangnt_ea389e')),
+    name: 'Justice',
+    symbol: '⚖️',
+    uprightMeaning: L10nService().translate('util_mithihisth_9be6af'),
+    reversedMeaning: L10nService().translate('util_mtphaangnt_ea389e'),
+  ),
   TarotCard(
-      name: 'The Hanged Man',
-      symbol: '🪞',
-      uprightMeaning: L10nService().translate('util_cnigcnhnhi_f3f101'),
-      reversedMeaning: L10nService().translate('util_schnchangk_fa687f')),
+    name: 'The Hanged Man',
+    symbol: '🪞',
+    uprightMeaning: L10nService().translate('util_cnigcnhnhi_f3f101'),
+    reversedMeaning: L10nService().translate('util_schnchangk_fa687f'),
+  ),
   TarotCard(
-      name: 'Death',
-      symbol: '🦋',
-      uprightMeaning: L10nService().translate('util_mtlpcmxcca_f51277'),
-      reversedMeaning: L10nService().translate('util_bnangnumti_7d7304')),
+    name: 'Death',
+    symbol: '🦋',
+    uprightMeaning: L10nService().translate('util_mtlpcmxcca_f51277'),
+    reversedMeaning: L10nService().translate('util_bnangnumti_7d7304'),
+  ),
   TarotCard(
-      name: 'Temperance',
-      symbol: '🍷',
-      uprightMeaning: L10nService().translate('util_cnbngchaln_889b06'),
-      reversedMeaning: L10nService().translate('util_cmxcanglch_213be8')),
+    name: 'Temperance',
+    symbol: '🍷',
+    uprightMeaning: L10nService().translate('util_cnbngchaln_889b06'),
+    reversedMeaning: L10nService().translate('util_cmxcanglch_213be8'),
+  ),
   TarotCard(
-      name: 'The Devil',
-      symbol: '⛓️',
-      uprightMeaning: L10nService().translate('util_smnhdnhmch_b6b4b3'),
-      reversedMeaning: L10nService().translate('util_bnangcchig_3dfb60')),
+    name: 'The Devil',
+    symbol: '⛓️',
+    uprightMeaning: L10nService().translate('util_smnhdnhmch_b6b4b3'),
+    reversedMeaning: L10nService().translate('util_bnangcchig_3dfb60'),
+  ),
   TarotCard(
-      name: 'The Tower',
-      symbol: '⚡',
-      uprightMeaning: L10nService().translate('util_mtsthtmnhc_132ccc'),
-      reversedMeaning: L10nService().translate('util_bnangtrhon_c9bc90')),
+    name: 'The Tower',
+    symbol: '⚡',
+    uprightMeaning: L10nService().translate('util_mtsthtmnhc_132ccc'),
+    reversedMeaning: L10nService().translate('util_bnangtrhon_c9bc90'),
+  ),
   TarotCard(
-      name: 'The Star',
-      symbol: '⭐',
-      uprightMeaning: L10nService().translate('util_hyvngchaln_c66c59'),
-      reversedMeaning: L10nService().translate('util_bncntinliv_18533e')),
+    name: 'The Star',
+    symbol: '⭐',
+    uprightMeaning: L10nService().translate('util_hyvngchaln_c66c59'),
+    reversedMeaning: L10nService().translate('util_bncntinliv_18533e'),
+  ),
   TarotCard(
-      name: 'The Moon',
-      symbol: '🌙',
-      uprightMeaning: L10nService().translate('util_nismhvtrcg_5f74a0'),
-      reversedMeaning: L10nService().translate('util_sngmangdnt_488841')),
+    name: 'The Moon',
+    symbol: '🌙',
+    uprightMeaning: L10nService().translate('util_nismhvtrcg_5f74a0'),
+    reversedMeaning: L10nService().translate('util_sngmangdnt_488841'),
+  ),
   TarotCard(
-      name: 'The Sun',
-      symbol: '🌞',
-      uprightMeaning: L10nService().translate('util_ssngrmpvcm_2cea33'),
-      reversedMeaning: L10nService().translate('util_nimvuiangb_a50170')),
+    name: 'The Sun',
+    symbol: '🌞',
+    uprightMeaning: L10nService().translate('util_ssngrmpvcm_2cea33'),
+    reversedMeaning: L10nService().translate('util_nimvuiangb_a50170'),
+  ),
   TarotCard(
-      name: 'Judgement',
-      symbol: '🎺',
-      uprightMeaning: L10nService().translate('util_mtligithct_36f5b0'),
-      reversedMeaning: L10nService().translate('util_bnangchnch_327f10')),
+    name: 'Judgement',
+    symbol: '🎺',
+    uprightMeaning: L10nService().translate('util_mtligithct_36f5b0'),
+    reversedMeaning: L10nService().translate('util_bnangchnch_327f10'),
+  ),
   TarotCard(
-      name: 'The World',
-      symbol: '🌍',
-      uprightMeaning: L10nService().translate('util_mtvngcmxct_4bf877'),
-      reversedMeaning: L10nService().translate('util_ciugcndang_f50965')),
+    name: 'The World',
+    symbol: '🌍',
+    uprightMeaning: L10nService().translate('util_mtvngcmxct_4bf877'),
+    reversedMeaning: L10nService().translate('util_ciugcndang_f50965'),
+  ),
   TarotCard(
-      name: 'Ace of Cups',
-      symbol: '💗',
-      uprightMeaning: L10nService().translate('util_cmxcmiduvc_5d5c8d'),
-      reversedMeaning: L10nService().translate('util_cmxcbnnhoc_ef2f5b')),
+    name: 'Ace of Cups',
+    symbol: '💗',
+    uprightMeaning: L10nService().translate('util_cmxcmiduvc_5d5c8d'),
+    reversedMeaning: L10nService().translate('util_cmxcbnnhoc_ef2f5b'),
+  ),
   TarotCard(
-      name: 'Two of Cups',
-      symbol: '🥂',
-      uprightMeaning: L10nService().translate('util_sngiuvktni_afbc3d'),
-      reversedMeaning: L10nService().translate('util_lchnhpcmxc_c7d730')),
+    name: 'Two of Cups',
+    symbol: '🥂',
+    uprightMeaning: L10nService().translate('util_sngiuvktni_afbc3d'),
+    reversedMeaning: L10nService().translate('util_lchnhpcmxc_c7d730'),
+  ),
   TarotCard(
-      name: 'Three of Swords',
-      symbol: '💔',
-      uprightMeaning: L10nService().translate('util_niauchocvt_9875c5'),
-      reversedMeaning: L10nService().translate('util_giaionhiph_904415')),
+    name: 'Three of Swords',
+    symbol: '💔',
+    uprightMeaning: L10nService().translate('util_niauchocvt_9875c5'),
+    reversedMeaning: L10nService().translate('util_giaionhiph_904415'),
+  ),
   TarotCard(
-      name: 'Ten of Cups',
-      symbol: '🌈',
-      uprightMeaning: L10nService().translate('util_nnglngvinm_345e6a'),
-      reversedMeaning: L10nService().translate('util_bctranhpan_75390f')),
+    name: 'Ten of Cups',
+    symbol: '🌈',
+    uprightMeaning: L10nService().translate('util_nnglngvinm_345e6a'),
+    reversedMeaning: L10nService().translate('util_bctranhpan_75390f'),
+  ),
   TarotCard(
-      name: 'Queen of Cups',
-      symbol: '👑',
-      uprightMeaning: L10nService().translate('util_tritimrtnh_62a4d2'),
-      reversedMeaning: L10nService().translate('util_bnangmcmxc_76d380')),
+    name: 'Queen of Cups',
+    symbol: '👑',
+    uprightMeaning: L10nService().translate('util_tritimrtnh_62a4d2'),
+    reversedMeaning: L10nService().translate('util_bnangmcmxc_76d380'),
+  ),
   TarotCard(
-      name: 'Knight of Wands',
-      symbol: '🔥',
-      uprightMeaning: L10nService().translate('util_nnglngammc_24d8a1'),
-      reversedMeaning: L10nService().translate('util_sbcngcthlm_7a75e1')),
+    name: 'Knight of Wands',
+    symbol: '🔥',
+    uprightMeaning: L10nService().translate('util_nnglngammc_24d8a1'),
+    reversedMeaning: L10nService().translate('util_sbcngcthlm_7a75e1'),
+  ),
 ];
 
 class TarotScreen extends StatefulWidget {
@@ -185,12 +213,12 @@ class _TarotScreenState extends State<TarotScreen>
   late TarotSpreadTemplate _selectedSpread;
 
   TarotViewerProfile get _resolvedProfile => TarotViewerProfile.fromSettings(
-        viewerRole: _viewerRole,
-        relationshipMode: widget.relationshipMode,
-        localeCode: L10nService().locale.languageCode,
-        settings: _settingsMap,
-        fallbackName: widget.myName,
-      );
+    viewerRole: _viewerRole,
+    relationshipMode: widget.relationshipMode,
+    localeCode: L10nService().locale.languageCode,
+    settings: _settingsMap,
+    fallbackName: widget.myName,
+  );
 
   @override
   void initState() {
@@ -203,8 +231,9 @@ class _TarotScreenState extends State<TarotScreen>
     try {
       final prefs = await SharedPreferences.getInstance();
       final role = prefs.getString('il_role') ?? 'user1';
-      final settingsSnap =
-          await _dbRef.child('houses/${widget.houseId}/settings').get();
+      final settingsSnap = await _dbRef
+          .child('houses/${widget.houseId}/settings')
+          .get();
       final settingsMap = settingsSnap.exists && settingsSnap.value is Map
           ? Map<String, dynamic>.from(
               Map<dynamic, dynamic>.from(settingsSnap.value as Map),
@@ -262,10 +291,7 @@ class _TarotScreenState extends State<TarotScreen>
         _pickedCards = shuffled
             .take(_selectedSpread.slots.length)
             .map(
-              (card) => PickedCard(
-                card: card,
-                isReversed: random.nextBool(),
-              ),
+              (card) => PickedCard(card: card, isReversed: random.nextBool()),
             )
             .toList();
         _isPicking = false;
@@ -356,8 +382,9 @@ class _TarotScreenState extends State<TarotScreen>
           LayoutBuilder(
             builder: (context, constraints) {
               final compact = _isCompactWidth(constraints.maxWidth);
-              final horizontalPadding =
-                  _horizontalPaddingFor(constraints.maxWidth);
+              final horizontalPadding = _horizontalPaddingFor(
+                constraints.maxWidth,
+              );
               return SafeArea(
                 child: Column(
                   children: [
@@ -408,7 +435,8 @@ class _TarotScreenState extends State<TarotScreen>
                           foregroundColor: Colors.white,
                           minimumSize: Size(double.infinity, compact ? 50 : 58),
                           shape: RoundedRectangleBorder(
-                              borderRadius: SLRadius.xlAll),
+                            borderRadius: SLRadius.xlAll,
+                          ),
                           elevation: 0,
                         ),
                         child: Text(
@@ -451,7 +479,9 @@ class _TarotScreenState extends State<TarotScreen>
     return Opacity(
       opacity: opacity,
       child: Image.asset(
-        'assets/images/utility_stickers/tarot.png',
+        LosslessStickerAssets.resolve(
+          'assets/images/utility_stickers/tarot.png',
+        ),
         width: width,
         height: height,
         fit: fit,
@@ -512,10 +542,7 @@ class _TarotScreenState extends State<TarotScreen>
           child: _glowOrb(const Color(0xFF3AC8C8), 190),
         ),
         IgnorePointer(
-          child: CustomPaint(
-            size: Size.infinite,
-            painter: _TarotDustPainter(),
-          ),
+          child: CustomPaint(size: Size.infinite, painter: _TarotDustPainter()),
         ),
       ],
     );
@@ -682,8 +709,9 @@ class _TarotScreenState extends State<TarotScreen>
               physics: const BouncingScrollPhysics(),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children:
-                    List.generate(TarotReadingService.spreads.length, (index) {
+                children: List.generate(TarotReadingService.spreads.length, (
+                  index,
+                ) {
                   final spread = TarotReadingService.spreads[index];
                   final selected = _selectedSpread.id == spread.id;
                   return Padding(
@@ -706,7 +734,7 @@ class _TarotScreenState extends State<TarotScreen>
                                   ? const [Color(0xFF5D4BFF), Color(0xFFFF5D8F)]
                                   : const [
                                       Color(0x22FFFFFF),
-                                      Color(0x12FFFFFF)
+                                      Color(0x12FFFFFF),
                                     ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -745,8 +773,9 @@ class _TarotScreenState extends State<TarotScreen>
                               Text(
                                 L10nService().translate(spread.subtitleKey),
                                 maxLines: compact ? null : 3,
-                                overflow:
-                                    compact ? null : TextOverflow.ellipsis,
+                                overflow: compact
+                                    ? null
+                                    : TextOverflow.ellipsis,
                                 style: SLTheme.quicksand(
                                   color: Colors.white.withValues(alpha: 0.82),
                                   fontWeight: FontWeight.w600,
@@ -785,19 +814,21 @@ class _TarotScreenState extends State<TarotScreen>
         return Container(
           padding: EdgeInsets.all(compact ? 20 : 26),
           decoration: BoxDecoration(
-            borderRadius:
-                BorderRadius.circular(_panelRadiusFor(constraints.maxWidth)),
+            borderRadius: BorderRadius.circular(
+              _panelRadiusFor(constraints.maxWidth),
+            ),
             color: Colors.white.withValues(alpha: 0.05),
             border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
           ),
           child: Column(
             children: [
               _buildTarotSticker(
-                width: compact ? 82 : 120,
-                height: compact ? 82 : 120,
-              )
+                    width: compact ? 82 : 120,
+                    height: compact ? 82 : 120,
+                  )
                   .animate(
-                      onPlay: (controller) => controller.repeat(reverse: true))
+                    onPlay: (controller) => controller.repeat(reverse: true),
+                  )
                   .scale(
                     begin: const Offset(0.96, 0.96),
                     end: const Offset(1.04, 1.04),
@@ -847,15 +878,16 @@ class _TarotScreenState extends State<TarotScreen>
                 alignment: Alignment.center,
                 children: List.generate(3, (index) {
                   return Transform.translate(
-                    offset: Offset((index - 1) * (compact ? 16 : 18), 0),
-                    child: Transform.rotate(
-                      angle: (index - 1) * 0.18,
-                      child: _miniCardBack(compact: compact),
-                    ),
-                  )
+                        offset: Offset((index - 1) * (compact ? 16 : 18), 0),
+                        child: Transform.rotate(
+                          angle: (index - 1) * 0.18,
+                          child: _miniCardBack(compact: compact),
+                        ),
+                      )
                       .animate(
-                          onPlay: (controller) =>
-                              controller.repeat(reverse: true))
+                        onPlay: (controller) =>
+                            controller.repeat(reverse: true),
+                      )
                       .moveY(
                         begin: -10,
                         end: 10,
@@ -1000,84 +1032,91 @@ class _TarotScreenState extends State<TarotScreen>
   ) {
     final isPressed = _pressedCardIndex == index && !pickedCard.isFlipped;
     return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTapDown: (_) {
-        if (pickedCard.isFlipped) return;
-        setState(() => _pressedCardIndex = index);
-      },
-      onTapCancel: () {
-        if (_pressedCardIndex != index) return;
-        setState(() => _pressedCardIndex = null);
-      },
-      onTap: () => _flipCard(index),
-      child: AnimatedScale(
-        scale: isPressed ? 0.94 : 1,
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOutBack,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOutCubic,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: (pickedCard.isFlipped
-                        ? const Color(0xFFFF8CC6)
-                        : const Color(0xFF8B6DFF))
-                    .withValues(
-                        alpha: isPressed || pickedCard.isFlipped ? 0.24 : 0.08),
-                blurRadius: isPressed ? 30 : 18,
-                spreadRadius: isPressed ? 1.5 : 0,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 720),
-            switchInCurve: Curves.easeOutBack,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, animation) {
-              final rotate = Tween<double>(begin: pi, end: 0).animate(
-                CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeInOutCubicEmphasized,
-                ),
-              );
-              final lift = Tween<double>(begin: 0.985, end: 1).animate(
-                CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
-              );
-              return AnimatedBuilder(
-                animation: animation,
-                builder: (context, child) {
-                  final angle = rotate.value;
-                  final isFront = angle < pi / 2;
-                  return Transform.scale(
-                    scale: lift.value,
-                    child: Transform(
-                      alignment: Alignment.center,
-                      transform: Matrix4.identity()
-                        ..setEntry(3, 2, 0.0012)
-                        ..rotateY(angle),
-                      child: isFront
-                          ? child
-                          : Transform(
-                              alignment: Alignment.center,
-                              transform: Matrix4.identity()..rotateY(pi),
-                              child: _buildCardBack(slot),
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (_) {
+            if (pickedCard.isFlipped) return;
+            setState(() => _pressedCardIndex = index);
+          },
+          onTapCancel: () {
+            if (_pressedCardIndex != index) return;
+            setState(() => _pressedCardIndex = null);
+          },
+          onTap: () => _flipCard(index),
+          child: AnimatedScale(
+            scale: isPressed ? 0.94 : 1,
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutBack,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color:
+                        (pickedCard.isFlipped
+                                ? const Color(0xFFFF8CC6)
+                                : const Color(0xFF8B6DFF))
+                            .withValues(
+                              alpha: isPressed || pickedCard.isFlipped
+                                  ? 0.24
+                                  : 0.08,
                             ),
+                    blurRadius: isPressed ? 30 : 18,
+                    spreadRadius: isPressed ? 1.5 : 0,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 720),
+                switchInCurve: Curves.easeOutBack,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) {
+                  final rotate = Tween<double>(begin: pi, end: 0).animate(
+                    CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeInOutCubicEmphasized,
                     ),
                   );
+                  final lift = Tween<double>(begin: 0.985, end: 1).animate(
+                    CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutBack,
+                    ),
+                  );
+                  return AnimatedBuilder(
+                    animation: animation,
+                    builder: (context, child) {
+                      final angle = rotate.value;
+                      final isFront = angle < pi / 2;
+                      return Transform.scale(
+                        scale: lift.value,
+                        child: Transform(
+                          alignment: Alignment.center,
+                          transform: Matrix4.identity()
+                            ..setEntry(3, 2, 0.0012)
+                            ..rotateY(angle),
+                          child: isFront
+                              ? child
+                              : Transform(
+                                  alignment: Alignment.center,
+                                  transform: Matrix4.identity()..rotateY(pi),
+                                  child: _buildCardBack(slot),
+                                ),
+                        ),
+                      );
+                    },
+                    child: child,
+                  );
                 },
-                child: child,
-              );
-            },
-            child: pickedCard.isFlipped
-                ? _buildCardFront(pickedCard, slot, index)
-                : _buildCardBack(slot, key: ValueKey('back_$index')),
+                child: pickedCard.isFlipped
+                    ? _buildCardFront(pickedCard, slot, index)
+                    : _buildCardBack(slot, key: ValueKey('back_$index')),
+              ),
+            ),
           ),
-        ),
-      ),
-    )
+        )
         .animate()
         .fadeIn(duration: 320.ms)
         .slideY(begin: 0.08, end: 0, delay: (index * 70).ms);
@@ -1169,10 +1208,14 @@ class _TarotScreenState extends State<TarotScreen>
   }
 
   Widget _buildCardFront(
-      PickedCard pickedCard, TarotSpreadSlot slot, int index) {
+    PickedCard pickedCard,
+    TarotSpreadSlot slot,
+    int index,
+  ) {
     final reading = _personalizedReading?.cardFor(slot.id);
     final palette = _cardPalette(pickedCard.card.name);
-    final meaning = reading?.interpretation ??
+    final meaning =
+        reading?.interpretation ??
         (pickedCard.isReversed
             ? pickedCard.card.reversedMeaning
             : pickedCard.card.uprightMeaning);
@@ -1375,19 +1418,13 @@ class _TarotScreenState extends State<TarotScreen>
             child: stacked
                 ? Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      stackedPanel,
-                      details,
-                    ],
+                    children: [stackedPanel, details],
                   )
                 : IntrinsicHeight(
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        SizedBox(
-                          width: panelWidth,
-                          child: panel,
-                        ),
+                        SizedBox(width: panelWidth, child: panel),
                         Expanded(child: details),
                       ],
                     ),

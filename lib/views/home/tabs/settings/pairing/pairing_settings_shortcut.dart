@@ -1,11 +1,14 @@
 import 'dart:async';
 
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import 'pairing_connection_widgets.dart';
+import 'pairing_shortcut_state.dart';
+import '../../../../../utils/services/offline_cache_service.dart';
 
 /// Ô ghép nối chỉ đọc hai nhánh cần thiết; không suy trạng thái từ chế độ couple.
 class PairingSettingsShortcut extends StatefulWidget {
@@ -28,11 +31,12 @@ class PairingSettingsShortcut extends StatefulWidget {
 class _PairingSettingsShortcutState extends State<PairingSettingsShortcut> {
   StreamSubscription<DatabaseEvent>? _settingsSub;
   StreamSubscription<DatabaseEvent>? _membersSub;
-  Map _settings = const {};
-  bool _membersPaired = false;
+  PairingShortcutState _snapshot = PairingShortcutState();
+  Timer? _loadTimer;
   int _generation = 0;
 
-  bool get _paired => _settings['isPaired'] == true || _membersPaired;
+  bool get _paired => _snapshot.paired;
+  Map get _settings => _snapshot.settings;
 
   @override
   void initState() {
@@ -50,11 +54,28 @@ class _PairingSettingsShortcutState extends State<PairingSettingsShortcut> {
     final generation = ++_generation;
     unawaited(_settingsSub?.cancel());
     unawaited(_membersSub?.cancel());
-    _settings = const {};
-    _membersPaired = false;
+    _loadTimer?.cancel();
+    _snapshot = PairingShortcutState();
     final houseId = widget.houseId?.trim() ?? '';
-    if (houseId.isEmpty) return;
+    if (houseId.isEmpty) {
+      _snapshot.applySettings(const {});
+      _snapshot.applyMembers(const {});
+      return;
+    }
+    final prefs = OfflineCacheService.getPrefsSync();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null &&
+        prefs?.getString('il_auth_uid') == uid &&
+        prefs?.getString('il_house_id') == houseId) {
+      final cache = OfflineCacheService.loadCacheSync('home_settings_$houseId');
+      _snapshot = PairingShortcutState(
+        cachedSettings: cache is Map ? cache : null,
+      );
+    }
     bool current() => mounted && generation == _generation;
+    _loadTimer = Timer(const Duration(seconds: 8), () {
+      if (current() && !_snapshot.ready) setState(_snapshot.markFailed);
+    });
     _settingsSub = FirebaseDatabase.instance
         .ref('houses/$houseId/settings')
         .onValue
@@ -62,13 +83,15 @@ class _PairingSettingsShortcutState extends State<PairingSettingsShortcut> {
           (event) {
             if (!current()) return;
             setState(
-              () => _settings = event.snapshot.value is Map
-                  ? event.snapshot.value as Map
-                  : const {},
+              () => _snapshot.applySettings(
+                event.snapshot.value is Map
+                    ? event.snapshot.value as Map
+                    : const {},
+              ),
             );
           },
           onError: (Object error) {
-            if (current()) setState(() => _settings = const {});
+            if (current()) setState(_snapshot.markFailed);
           },
         );
     _membersSub = FirebaseDatabase.instance
@@ -79,17 +102,18 @@ class _PairingSettingsShortcutState extends State<PairingSettingsShortcut> {
             if (!current()) return;
             final members = event.snapshot.value;
             setState(
-              () => _membersPaired = members is Map && members.length >= 2,
+              () => _snapshot.applyMembers(members is Map ? members : const {}),
             );
           },
           onError: (Object error) {
-            if (current()) setState(() => _membersPaired = false);
+            if (current()) setState(_snapshot.markFailed);
           },
         );
   }
 
   @override
   void dispose() {
+    _loadTimer?.cancel();
     _generation++;
     unawaited(_settingsSub?.cancel());
     unawaited(_membersSub?.cancel());
@@ -102,7 +126,11 @@ class _PairingSettingsShortcutState extends State<PairingSettingsShortcut> {
     final status = context.tr('pairing_ui_connected_status');
     return Semantics(
       button: true,
-      label: _paired ? '$title. $status' : title,
+      label: !_snapshot.ready
+          ? '$title. ${context.tr('settings_loading_data')}'
+          : _paired
+          ? '$title. $status'
+          : title,
       excludeSemantics: true,
       onTap: widget.onTap,
       child: Material(
@@ -128,7 +156,21 @@ class _PairingSettingsShortcutState extends State<PairingSettingsShortcut> {
               children: [
                 SizedBox(
                   height: 42,
-                  child: _paired
+                  child: !_snapshot.ready
+                      ? Center(
+                          child: _snapshot.failed
+                              ? const Icon(
+                                  Icons.cloud_off_rounded,
+                                  color: SLColors.primary,
+                                )
+                              : const SizedBox.square(
+                                  dimension: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                        )
+                      : _paired
                       ? FittedBox(
                           fit: BoxFit.scaleDown,
                           child: SizedBox(

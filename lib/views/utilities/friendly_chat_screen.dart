@@ -77,6 +77,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
 
   bool _isSending = false;
   bool _historyReady = false;
+  bool _historyVisible = false;
   bool _historyLoadFailed = false;
   bool _isInitializing = false;
   AiPendingRequestStore? _pendingStore;
@@ -158,7 +159,14 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
         // Không dựng lại input hay phát lại generate khi khôi phục màn hình.
         await _checkPendingAiResult();
       }
-      if (mounted && _isCurrentSession) setState(() => _historyReady = true);
+      if (mounted && _isCurrentSession) {
+        final firstReveal = !_historyVisible;
+        setState(() {
+          _historyReady = true;
+          _historyVisible = true;
+        });
+        if (firstReveal) _scrollToBottom(animate: false);
+      }
     } catch (_) {
       if (!mounted || !_isCurrentSession) return;
       setState(() => _historyLoadFailed = true);
@@ -211,8 +219,9 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
         _messages
           ..clear()
           ..addAll(history.take(_localHistoryMaxMessages));
+        _historyVisible = true;
       });
-      _scrollToBottom();
+      _scrollToBottom(animate: false);
     } catch (_) {
       debugPrint('[FriendlyChat] Local history could not be loaded');
     }
@@ -312,13 +321,19 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
           )
           .toList(growable: false),
     );
+    final shouldFollow =
+        !_historyVisible ||
+        !_scrollController.hasClients ||
+        _scrollController.position.extentAfter < 80;
     setState(() {
       _messages
         ..clear()
         ..addAll(merged);
+      _historyVisible = true;
     });
     _saveCachedHistory();
-    _scrollToBottom();
+    // Đồng bộ nền không kéo người dùng khỏi tin nhắn đang đọc.
+    if (shouldFollow) _scrollToBottom(animate: false);
   }
 
   String? _previousUserTextFor(int index) {
@@ -971,9 +986,13 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
     );
   }
 
-  void _scrollToBottom() {
+  void _scrollToBottom({bool animate = true}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) {
+        return;
+      }
+      if (!animate) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
         return;
       }
       _scrollController.animateTo(
@@ -989,32 +1008,38 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
     final content = Column(
       children: [
         Expanded(
-          child: ListView.builder(
-            controller: _scrollController,
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-            itemCount: _messages.length + 1 + (_isSending ? 1 : 0),
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return const _AiDisclosureCard();
-              }
-              final messageIndex = index - 1;
-              if (_isSending && messageIndex == _messages.length) {
-                return const _TypingBubble();
-              }
-              if (_messages[messageIndex].isTransient) {
-                return const SizedBox.shrink();
-              }
-              return _FriendlyChatBubble(
-                message: _messages[messageIndex],
-                isReporting: _reportingIndexes.contains(messageIndex),
-                onLongPress: () => _showMessageActions(messageIndex),
-                onReport: () => _reportMessage(messageIndex),
-              );
-            },
-          ),
+          child: !_historyVisible && !_historyLoadFailed
+              ? const Center(child: CircularProgressIndicator())
+              : ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                  itemCount: _messages.length + 1 + (_isSending ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return const _AiDisclosureCard();
+                    }
+                    final messageIndex = index - 1;
+                    if (_isSending && messageIndex == _messages.length) {
+                      return const _TypingBubble();
+                    }
+                    if (_messages[messageIndex].isTransient) {
+                      return const SizedBox.shrink();
+                    }
+                    return _FriendlyChatBubble(
+                      message: _messages[messageIndex],
+                      isReporting: _reportingIndexes.contains(messageIndex),
+                      onLongPress: () => _showMessageActions(messageIndex),
+                      onReport: () => _reportMessage(messageIndex),
+                    );
+                  },
+                ),
         ),
-        if (!_historyReady && !_historyLoadFailed)
-          const LinearProgressIndicator(),
+        SizedBox(
+          height: 4,
+          child: !_historyReady && !_historyLoadFailed
+              ? const LinearProgressIndicator()
+              : null,
+        ),
         if (_historyLoadFailed)
           AiTaskStatusBanner(
             message: context.tr('ai_task_local_recovery_error'),

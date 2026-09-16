@@ -30,7 +30,7 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
     _showWeather = prefs.getBool('il_show_weather') ?? _showWeather;
     _houseSettings = Map<String, dynamic>.from(cachedSettings);
     _houseSettings!['relationshipMode'] =
-        prefs.getString('il_rel_mode') ?? 'couple';
+        cachedSettings['relationshipMode'] ?? prefs.getString('il_rel_mode') ?? 'couple';
     _selectedHomeToolId = _normalizeHomeToolId(
       prefs.getString(_homeToolSelectionPrefKey(cachedHouseId)),
     );

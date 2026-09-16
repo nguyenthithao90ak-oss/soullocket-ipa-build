@@ -1052,9 +1052,16 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                   .clamp(176.0, 228.0)
                   .toDouble();
 
-              return FutureBuilder<Map<String, String>>(
-                future: _loadSoulEventPreviewData(),
+              return StableFutureBuilder<Map<String, String>>(
+                requestKey: (_auth.currentUser?.uid, _houseId,
+                  Localizations.localeOf(context).toLanguageTag(),
+                  DateTime.now().year, DateTime.now().month, DateTime.now().day),
+                load: _loadSoulEventPreviewDataInternal,
                 builder: (context, snapshot) {
+                  if (!snapshot.hasData && snapshot.connectionState == ConnectionState.waiting) {
+                    return SizedBox(height: widgetHeight,
+                      child: const Center(child: CircularProgressIndicator()));
+                  }
                   final data = snapshot.data ?? _emptySoulEventPreviewData();
 
                   final colorHex = data['color']!;
@@ -1453,17 +1460,6 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
         );
       },
     );
-  }
-
-  static Future<Map<String, String>>? _cachedSoulEventPreviewFuture;
-
-  Future<Map<String, String>> _loadSoulEventPreviewData() async {
-    if (_cachedSoulEventPreviewFuture != null) {
-      return _cachedSoulEventPreviewFuture!;
-    }
-
-    _cachedSoulEventPreviewFuture = _loadSoulEventPreviewDataInternal();
-    return _cachedSoulEventPreviewFuture!;
   }
 
   Future<Map<String, String>> _loadSoulEventPreviewDataInternal() async {

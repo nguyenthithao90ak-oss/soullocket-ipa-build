@@ -75,6 +75,15 @@ class _MessengerScreenState extends State<MessengerScreen>
   Map<dynamic, dynamic>? _internalPartnerPresence;
   ChatRoomMeta _internalPartnerRoomMeta = const ChatRoomMeta();
   bool _isBootstrapping = true;
+  bool _bootstrapFailed = false;
+  final Set<String> _pendingInitialSources = {
+    'profile',
+    'friends',
+    'groups',
+    'internal',
+  };
+  Timer? _bootstrapTimer;
+  int _bootstrapGeneration = 0;
   static const Duration _friendRealtimeReleaseDelay = Duration(seconds: 5);
   static const Duration _realtimeUiDebounce = Duration(milliseconds: 140);
   static const int _friendRealtimeWarmupCount = 3;
@@ -107,27 +116,72 @@ class _MessengerScreenState extends State<MessengerScreen>
         setState(() => _searchQuery = nextQuery);
       });
     });
-    unawaited(_loadMyRole());
-    _loadMyHouseId();
+    unawaited(_bootstrapMessenger());
+  }
+
+  Future<void> _bootstrapMessenger() async {
+    final generation = ++_bootstrapGeneration;
+    _bootstrapTimer?.cancel();
+    _friendsRealtimeDebounce?.cancel();
+    _internalRoomMetaDebounce?.cancel();
+    _internalPartnerPresenceDebounce?.cancel();
+    unawaited(_friendsSub?.cancel());
+    unawaited(_groupRoomsSub?.cancel());
+    unawaited(_internalRoomMetaSub?.cancel());
+    unawaited(_internalPartnerPresenceSub?.cancel());
+    setState(() {
+      _isBootstrapping = true;
+      _bootstrapFailed = false;
+      _pendingInitialSources
+        ..clear()
+        ..addAll({'profile', 'friends', 'groups', 'internal'});
+    });
+    _bootstrapTimer = Timer(const Duration(seconds: 12), () {
+      if (generation == _bootstrapGeneration) _failMessengerBootstrap();
+    });
+    try {
+      await _loadMyRole(generation);
+      if (!mounted || generation != _bootstrapGeneration) return;
+      await _loadMyHouseId(generation);
+    } catch (_) {
+      if (generation == _bootstrapGeneration) _failMessengerBootstrap();
+    }
+  }
+
+  void _finishMessengerSource(String source) {
+    if (!mounted || !_pendingInitialSources.remove(source)) return;
+    if (_pendingInitialSources.isEmpty) {
+      _bootstrapTimer?.cancel();
+      setState(() {
+        _isBootstrapping = false;
+        _bootstrapFailed = false;
+      });
+    }
+  }
+
+  void _failMessengerBootstrap() {
+    if (!mounted || !_isBootstrapping) return;
+    setState(() {
+      _isBootstrapping = false;
+      _bootstrapFailed = true;
+    });
   }
 
   String get _partnerRole => _myRole == 'user2' ? 'user1' : 'user2';
 
-  Future<void> _loadMyRole() async {
+  Future<void> _loadMyRole(int generation) async {
     final prefs = await OfflineCacheService.getPrefs();
     final role = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
-    if (!mounted) return;
+    if (!mounted || generation != _bootstrapGeneration) return;
     setState(() {
       _myRole = role;
     });
-    if (_myHouseId != null) {
-      _listenToInternalPartnerRealtime();
-    }
   }
 
-  Future<void> _loadMyHouseId() async {
+  Future<void> _loadMyHouseId(int generation) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
+      _bootstrapTimer?.cancel();
       if (mounted) {
         setState(() => _isBootstrapping = false);
       }
@@ -136,14 +190,17 @@ class _MessengerScreenState extends State<MessengerScreen>
 
     // Try quickHouseId cache first
     String? houseId = await AuthHouseContextService.quickHouseId();
+    if (!mounted || generation != _bootstrapGeneration) return;
 
     if (houseId == null || houseId.isEmpty) {
       // Check both houseId and legacy house_id keys
       final primarySnap = await _dbRef.child('users/$uid/houseId').get();
+      if (!mounted || generation != _bootstrapGeneration) return;
       houseId = primarySnap.value?.toString().trim();
 
       if (houseId == null || houseId.isEmpty) {
         final legacySnap = await _dbRef.child('users/$uid/house_id').get();
+        if (!mounted || generation != _bootstrapGeneration) return;
         houseId = legacySnap.value?.toString().trim();
         if (houseId != null && houseId.isNotEmpty) {
           await _dbRef.child('users/$uid').update({'houseId': houseId});
@@ -156,6 +213,7 @@ class _MessengerScreenState extends State<MessengerScreen>
     }
 
     if (houseId == null || houseId.isEmpty) {
+      _bootstrapTimer?.cancel();
       if (mounted) {
         setState(() => _isBootstrapping = false);
       }
@@ -165,25 +223,30 @@ class _MessengerScreenState extends State<MessengerScreen>
     if (mounted) {
       setState(() {
         _myHouseId = houseId;
-        _isBootstrapping = false;
       });
     }
-    unawaited(_loadMyHouseInfo(houseId));
+    unawaited(
+      _loadMyHouseInfo(houseId, generation).catchError((Object _) {
+        if (generation == _bootstrapGeneration) _failMessengerBootstrap();
+      }),
+    );
     _listenToGroupsRealtime(houseId);
     _listenToInternalPartnerRealtime();
     _listenToFriends();
   }
 
-  Future<void> _loadMyHouseInfo(String houseId) async {
+  Future<void> _loadMyHouseInfo(String houseId, int generation) async {
     final info = await _fetchHouseInfo(houseId);
-    if (!mounted) return;
+    if (!mounted || generation != _bootstrapGeneration) return;
     setState(() {
       _myHouseInfo = info;
     });
+    _finishMessengerSource('profile');
   }
 
   void _listenToFriends() {
     if (_myHouseId == null) return;
+    final generation = _bootstrapGeneration;
 
     _friendsSub?.cancel();
     _friendsSub = _dbRef
@@ -191,9 +254,10 @@ class _MessengerScreenState extends State<MessengerScreen>
         .onValue
         .listen(
           (event) {
+            if (!mounted || generation != _bootstrapGeneration) return;
             _friendsRealtimeDebounce?.cancel();
             _friendsRealtimeDebounce = Timer(_realtimeUiDebounce, () {
-              if (!mounted) return;
+              if (!mounted || generation != _bootstrapGeneration) return;
 
               final data = event.snapshot.value as Map<dynamic, dynamic>? ?? {};
               final ids = <String>[];
@@ -202,6 +266,22 @@ class _MessengerScreenState extends State<MessengerScreen>
                 final friendId = key.toString();
                 ids.add(friendId);
               });
+
+              if (_pendingInitialSources.contains('friends')) {
+                unawaited(
+                  _loadHousesInfo(ids)
+                      .then((_) {
+                        if (generation == _bootstrapGeneration) {
+                          _finishMessengerSource('friends');
+                        }
+                      })
+                      .catchError((Object _) {
+                        if (generation == _bootstrapGeneration) {
+                          _failMessengerBootstrap();
+                        }
+                      }),
+                );
+              }
 
               if (_sameStringList(_friends, ids)) {
                 return;
@@ -222,10 +302,14 @@ class _MessengerScreenState extends State<MessengerScreen>
               }
               _pruneRemovedFriendRealtime(ids);
               _warmupFriendRealtime(ids);
-              _loadHousesInfo(ids);
+              if (!_pendingInitialSources.contains('friends')) {
+                unawaited(_loadHousesInfo(ids).catchError((Object _) {}));
+              }
             });
           },
           onError: (Object error) {
+            if (!mounted || generation != _bootstrapGeneration) return;
+            _failMessengerBootstrap();
             debugPrint(
               'Messenger friends listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể tải danh sách bạn bè.').message}',
             );
@@ -234,6 +318,7 @@ class _MessengerScreenState extends State<MessengerScreen>
   }
 
   Future<void> _loadHousesInfo(List<String> houseIds) async {
+    final generation = _bootstrapGeneration;
     final missing = houseIds
         .where((id) => !_housesInfo.containsKey(id))
         .toList();
@@ -246,7 +331,7 @@ class _MessengerScreenState extends State<MessengerScreen>
     );
     final loaded = Map<String, Map<dynamic, dynamic>>.fromEntries(entries);
 
-    if (!mounted) return;
+    if (!mounted || generation != _bootstrapGeneration) return;
     var didChange = false;
     loaded.forEach((id, info) {
       final nextValue = info.isNotEmpty
@@ -272,6 +357,7 @@ class _MessengerScreenState extends State<MessengerScreen>
   }
 
   void _listenToInternalPartnerRealtime() {
+    final generation = _bootstrapGeneration;
     final houseId = _myHouseId;
     if (houseId == null || houseId.isEmpty) {
       return;
@@ -285,6 +371,7 @@ class _MessengerScreenState extends State<MessengerScreen>
         .onValue
         .listen(
           (event) {
+            if (!mounted || generation != _bootstrapGeneration) return;
             final rawPresence = event.snapshot.value;
             final presence = rawPresence is Map
                 ? Map<dynamic, dynamic>.from(rawPresence)
@@ -312,6 +399,12 @@ class _MessengerScreenState extends State<MessengerScreen>
         .streamInternalRoomMeta(houseId)
         .listen(
           (meta) {
+            if (!mounted || generation != _bootstrapGeneration) return;
+            if (_pendingInitialSources.contains('internal')) {
+              _internalPartnerRoomMeta = meta;
+              _finishMessengerSource('internal');
+              return;
+            }
             if (_internalPartnerRoomMeta.sameAs(meta)) {
               return;
             }
@@ -325,6 +418,8 @@ class _MessengerScreenState extends State<MessengerScreen>
             });
           },
           onError: (Object error) {
+            if (!mounted || generation != _bootstrapGeneration) return;
+            _failMessengerBootstrap();
             debugPrint(
               'Messenger internal room meta listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể tải tin nhắn gần nhất.').message}',
             );
@@ -822,24 +917,41 @@ class _MessengerScreenState extends State<MessengerScreen>
   }
 
   void _listenToGroupsRealtime(String houseId) {
+    final generation = _bootstrapGeneration;
     _groupRoomsSub?.cancel();
-    _groupRoomsSub = _groupChatService.streamGroupsForHouse(houseId).listen((
-      groups,
-    ) {
-      final relatedHouseIds = groups
-          .expand((group) => group.memberHouseIds)
-          .where((id) => id != houseId)
-          .toSet()
-          .toList();
-      if (relatedHouseIds.isNotEmpty) {
-        unawaited(_loadHousesInfo(relatedHouseIds));
-      }
-      if (!mounted) return;
-      setState(() {
-        _groupRooms.clear();
-        _groupRooms.addAll(groups);
-      });
-    }, onError: (_) {});
+    _groupRoomsSub = _groupChatService
+        .streamGroupsForHouse(houseId)
+        .listen(
+          (groups) {
+            if (!mounted || generation != _bootstrapGeneration) return;
+            final relatedHouseIds = groups
+                .expand((group) => group.memberHouseIds)
+                .where((id) => id != houseId)
+                .toSet()
+                .toList();
+            unawaited(
+              _loadHousesInfo(relatedHouseIds)
+                  .then((_) {
+                    if (generation == _bootstrapGeneration) {
+                      _finishMessengerSource('groups');
+                    }
+                  })
+                  .catchError((Object _) {
+                    if (generation == _bootstrapGeneration) {
+                      _failMessengerBootstrap();
+                    }
+                  }),
+            );
+            if (!mounted) return;
+            setState(() {
+              _groupRooms.clear();
+              _groupRooms.addAll(groups);
+            });
+          },
+          onError: (_) {
+            if (generation == _bootstrapGeneration) _failMessengerBootstrap();
+          },
+        );
   }
 
   List<GroupChatRoom> get _sortedGroupRooms {
@@ -948,6 +1060,8 @@ class _MessengerScreenState extends State<MessengerScreen>
 
   @override
   void dispose() {
+    _bootstrapGeneration++;
+    _bootstrapTimer?.cancel();
     AdMobService().resumeAutoInterstitial();
     _searchDebounce?.cancel();
     _friendsRealtimeDebounce?.cancel();

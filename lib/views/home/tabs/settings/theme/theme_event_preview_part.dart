@@ -320,6 +320,11 @@ class _ThemeEventPreviewSectionState extends State<_ThemeEventPreviewSection> {
     return StreamBuilder<List<UpcomingEvent>>(
       stream: _upcomingEventsStream,
       builder: (context, snapshot) {
+        if (!snapshot.hasData && snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox(height: 48, child: Center(
+            child: SizedBox.square(dimension: 20,
+              child: CircularProgressIndicator(strokeWidth: 2))));
+        }
         final events = snapshot.data ?? const <UpcomingEvent>[];
         if (events.isEmpty) {
           return Text(

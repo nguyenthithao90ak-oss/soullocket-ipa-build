@@ -370,7 +370,7 @@ extension _StickerObjects on LivingStickerPainter {
         break;
       case StickerSubject.calendar:
         _rounded(c, const Rect.fromLTWH(-50, -48, 100, 106), cream, radius: 13);
-        _rounded(c, const Rect.fromLTWH(-50, -48, 100, 28), rose, radius: 10);
+        _rounded(c, const Rect.fromLTWH(-50, -48, 100, 28), accent, radius: 10);
         for (final x in [-27.0, 27.0]) {
           _line(c, [Offset(x, -57), Offset(x, -37)], width: 6);
         }
@@ -378,8 +378,10 @@ extension _StickerObjects on LivingStickerPainter {
           c,
           detail ?? '♥',
           const Offset(0, 10),
-          detail != null && detail.length > 3 ? 26 : 34,
-          rose,
+          detail != null && detail.length > 3
+              ? math.min(26, 1450 / (detail.length * 11 - 3))
+              : 34,
+          accent,
         );
         _shape(
           c,
@@ -879,7 +881,7 @@ extension _StickerObjects on LivingStickerPainter {
         showFace = false;
         break;
     }
-    if (showFace)
+    if (showFace) {
       _face(
         c,
         faceAt,
@@ -888,6 +890,7 @@ extension _StickerObjects on LivingStickerPainter {
         t,
         scale: subject == StickerSubject.game ? 0.65 : 0.9,
       );
+    }
     c.restore();
   }
 

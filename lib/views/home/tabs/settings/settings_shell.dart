@@ -354,9 +354,28 @@ extension _SettingsTabShell on _SettingsTabState {
                           ),
                           children: [
                             _buildSettingsSyncBanner(),
-                            ..._buildNewSettingsList(isDark),
-                            const SizedBox(height: 26),
-                            _buildSettingsFooter(),
+                            SettingsInitialContent(
+                              ready: _settingsIdentityReady,
+                              failed: _settingsIdentityLoadFailed,
+                              loadingLabel: context.tr('settings_loading_data'),
+                              errorLabel: context.tr('settings_initial_load_error'),
+                              retryLabel: context.tr('core_retry'),
+                              onRetry: () {
+                                setState(() {
+                                  _settingsIdentityLoadFailed = false;
+                                  _isBootstrappingSettings = true;
+                                });
+                                unawaited(_fetchSettingsData());
+                              },
+                              builder: (_) => Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  ..._buildNewSettingsList(isDark),
+                                  const SizedBox(height: 26),
+                                  _buildSettingsFooter(),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -679,16 +698,11 @@ extension _SettingsTabShell on _SettingsTabState {
                 color: SLColors.paperBlush,
                 border: Border.all(color: SLColors.thread, width: 1.6),
               ),
-              child: CircleAvatar(
+              child: SettingsAccountAvatar(
+                key: ValueKey('${_auth.currentUser?.uid}:$_houseId:$_activeRoleKey'),
                 backgroundColor: SLColors.primarySoft,
-                backgroundImage: avatarProvider,
-                child: avatarProvider == null
-                    ? const Icon(
-                        Icons.favorite_rounded,
-                        color: SLColors.primary,
-                        size: 27,
-                      )
-                    : null,
+                foregroundColor: SLColors.primary,
+                image: avatarProvider,
               ),
             ),
             const SizedBox(width: 14),

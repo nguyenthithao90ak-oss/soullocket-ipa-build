@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 
 import 'home_companion_motion.dart';
 
-enum HomeCompanionSound { greeting, hop, sweep, success }
+enum HomeCompanionSound { greeting, hop, sweep, success, whoa }
 
 /// Đầu ra tách riêng để kiểm thử việc hủy âm thanh mà không mở thiết bị audio.
 abstract interface class HomeCompanionAudioOutput {
@@ -39,6 +39,7 @@ class HomeCompanionAudio {
   Duration? _lastSound;
   HomeCompanionPhase? _phase;
   int _greeting = 0;
+  int _playfulImpact = 0;
   Duration? _pendingGreeting;
 
   void setEnabled(bool enabled) {
@@ -87,10 +88,20 @@ class HomeCompanionAudio {
     HomeCompanionPhase phase, {
     int? greeting,
     bool greetingActive = true,
+    int playfulImpact = 0,
   }) {
     if (_disposed) return;
     final phaseChanged = _phase != phase;
     _phase = phase;
+    if (playfulImpact != _playfulImpact) {
+      _playfulImpact = playfulImpact;
+      // Va chạm chỉ phát một tiếng oa ngắn; dùng chung cổng mute/cooldown.
+      if (_ready && !_coolingDown) {
+        _pendingGreeting = null;
+        _emit(HomeCompanionSound.whoa);
+        return;
+      }
+    }
     if (greeting != null && greeting != _greeting) {
       _greeting = greeting;
       _pendingGreeting = _enabled && !_paused && greetingActive
@@ -199,6 +210,7 @@ class HomeCompanionAudio {
       HomeCompanionSound.hop => 0.12,
       HomeCompanionSound.sweep => 0.22,
       HomeCompanionSound.success => 0.30,
+      HomeCompanionSound.whoa => 0.30,
     };
     final count = (sampleRate * duration).round();
     final bytes = _waveHeader(count, sampleRate);
@@ -228,11 +240,17 @@ class HomeCompanionAudio {
         HomeCompanionSound.hop => 480 + 320 * progress,
         HomeCompanionSound.sweep => 150.0,
         HomeCompanionSound.success => progress < 0.5 ? 660.0 : 880.0,
+        HomeCompanionSound.whoa =>
+          370 + 180 * math.sin(math.pi * progress) - 170 * progress,
       };
       phase += 2 * math.pi * frequency / sampleRate;
       filteredNoise =
           filteredNoise * 0.86 + (random.nextDouble() * 2 - 1) * 0.14;
-      final signal = sound == HomeCompanionSound.sweep
+      final signal = sound == HomeCompanionSound.whoa
+          ? math.sin(phase) * 0.48 +
+                math.sin(phase * 2) * (0.10 + progress * 0.13) +
+                math.sin(phase * 3) * (0.24 - progress * 0.14)
+          : sound == HomeCompanionSound.sweep
           ? filteredNoise * 1.4
           : math.sin(phase) * 0.8 + math.sin(phase * 2) * 0.12;
       final sample = (signal * envelope * 0.24 * 32767).round();

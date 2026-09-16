@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 
 import 'home_interaction_stickers.dart';
 import 'soullocket_animated_sticker.dart';
+import 'lossless_sticker_assets.dart';
 
 /// Phân loại theo cấu hình app, không suy đoán lịch sử gửi của người dùng.
 abstract final class StickerCollection {
@@ -40,7 +41,14 @@ abstract final class StickerCollection {
     final manifest = await AssetManifest.loadFromAssetBundle(
       bundle ?? rootBundle,
     );
-    final paths = manifest.listAssets().where(isArchiveAsset).toList()..sort();
+    final paths =
+        manifest
+            .listAssets()
+            .map(LosslessStickerAssets.originalPath)
+            .where(isArchiveAsset)
+            .toSet()
+            .toList()
+          ..sort();
     return [
       ...archivedOriginals,
       for (final path in paths)

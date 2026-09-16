@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import '../../../widgets/lossless_sticker_assets.dart';
 import 'package:flutter/foundation.dart';
 import '../../../core/fast_backdrop_filter.dart';
 import 'package:flutter/services.dart';
@@ -28,6 +29,10 @@ import '../../ui_prefs.dart';
 import '../../../core/sl_theme.dart';
 import 'settings/theme/theme_preview_builder.dart';
 import 'settings/widget/widget_studio_components.dart';
+import 'settings/settings_initial_identity.dart';
+import 'settings/settings_initial_content.dart';
+import '../../../widgets/stable_future_builder.dart';
+import '../../../utils/services/offline_cache_service.dart';
 
 import 'dart:io';
 import '../../../utils/services/notification_service.dart';
@@ -380,6 +385,8 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _isCoupleConnected = false;
   bool _isLoading = false;
   bool _isBootstrappingSettings = true;
+  bool _settingsIdentityReady = false;
+  bool _settingsIdentityLoadFailed = false;
   bool _isCheckingBackupStatus = false;
   bool _isManualBackupSyncing = false;
   bool _isRestoringSettingsBackup = false;
@@ -591,11 +598,31 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    _restoreSettingsInitialIdentity();
     WidgetsBinding.instance.addObserver(this);
     _startEmailVerifyTimer();
     // ⚡ _activeRoleKey has already been initialized synchronously
     UiPrefs.notifier.addListener(_syncDraftsFromUiPrefs);
     _scheduleSettingsBootstrap();
+  }
+
+  void _restoreSettingsInitialIdentity() {
+    final prefs = OfflineCacheService.getPrefsSync();
+    if (prefs == null) return;
+    final identity = SettingsInitialIdentity.restore(
+      prefs: prefs,
+      uid: _auth.currentUser?.uid,
+      readCache: OfflineCacheService.loadCacheSync,
+    );
+    if (identity == null) return;
+    _houseId = identity.houseId;
+    _relationshipMode = identity.relationshipMode;
+    _activeRoleKey = identity.role;
+    if (identity.name1.isNotEmpty) _nameU1 = identity.name1;
+    if (identity.name2.isNotEmpty) _nameU2 = identity.name2;
+    _avatarUrl1 = identity.avatar1;
+    _avatarUrl2 = identity.avatar2;
+    _settingsIdentityReady = true;
   }
 
   void _syncDraftsFromUiPrefs() {

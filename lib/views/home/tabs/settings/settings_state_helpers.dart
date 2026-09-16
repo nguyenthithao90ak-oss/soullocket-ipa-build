@@ -643,9 +643,13 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
     }
   }
 
-  void _markSettingsBootstrapComplete() {
+  void _markSettingsBootstrapComplete({bool failed = false}) {
     if (!mounted || !_isBootstrappingSettings) return;
-    setState(() => _isBootstrappingSettings = false);
+    setState(() {
+      _isBootstrappingSettings = false;
+      _settingsIdentityLoadFailed = failed;
+      if (!failed) _settingsIdentityReady = true;
+    });
   }
 
   String _normalizeSettingsRoleKey(String? role) {
@@ -683,15 +687,31 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
     final femaleRoleName = context.tr('role_female');
 
     try {
-      _houseId = await _houseService.getCurrentHouseId();
+      final resolvedHouseId = await _houseService.getCurrentHouseId()
+          .timeout(const Duration(seconds: 10));
+      if (!mounted || _auth.currentUser?.uid != user.uid) return;
+      if (_houseId != resolvedHouseId) {
+        // Cache cũ không được tiếp tục hiển thị khi ngôi nhà đã đổi.
+        setState(() {
+          _settingsIdentityReady = false;
+          _avatarUrl1 = '';
+          _avatarUrl2 = '';
+          _nameU1 = maleRoleName;
+          _nameU2 = femaleRoleName;
+          _relationshipMode = 'single';
+          _isCoupleConnected = false;
+        });
+      }
+      _houseId = resolvedHouseId;
       final results = await Future.wait([
         _authService.syncRelationshipModeForCurrentUser(
           user: user,
           houseId: _houseId,
         ),
         _loadPendingAccountDeletionState(),
-      ]);
+      ]).timeout(const Duration(seconds: 10));
       final syncedRelationshipMode = results[0] as String?;
+      if (!mounted || _auth.currentUser?.uid != user.uid) return;
       _bindBreakupRequestWatcher();
 
       if (_houseId != null) {
@@ -712,7 +732,8 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
             try {
               final memberSnap = await _dbRef
                   .child('houses/$_houseId/members/${user.uid}')
-                  .get();
+                  .get()
+                  .timeout(const Duration(seconds: 3));
               if (memberSnap.exists && memberSnap.value is Map) {
                 final memberData = Map<String, dynamic>.from(
                   memberSnap.value as Map,
@@ -752,7 +773,7 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
                       loveDaysUnitMsg)
                   .toString()
                   .trim();
-          if (mounted) {
+          if (mounted && _auth.currentUser?.uid == user.uid) {
             setState(() {
               _houseIdChanged = data['houseIdChanged'] == true;
               _houseName = data['houseName'] ?? loveHouseDefaultName;
@@ -926,7 +947,7 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
           _isLoading = false;
         });
       }
-      _markSettingsBootstrapComplete();
+      _markSettingsBootstrapComplete(failed: true);
     }
     if (_houseId != null && mounted) {
       unawaited(_promptPendingThemeBackgroundRetryIfNeeded());

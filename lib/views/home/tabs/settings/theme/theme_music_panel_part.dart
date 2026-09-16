@@ -121,27 +121,22 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
     final prefs = await SharedPreferences.getInstance();
 
     _playlist.removeAt(index);
+
+    if (MusicService.isLocalAudioPath(track.url) && !track.isDefault) {
+      await _storageService.deleteLocalFile(track.url);
+    }
+
+    if (_playlist.isEmpty) {
+      _playlist = [MusicService.defaultTrack];
+    }
+
     await prefs.setString(
       'il_local_music_playlist',
       jsonEncode(_playlist.map((e) => e.toJson()).toList()),
     );
 
-    if (MusicService.isLocalAudioPath(track.url)) {
-      await _storageService.deleteLocalFile(track.url);
-    }
-
     await _saveMusicSettingsToFirebase();
     await MusicService().reloadPlaylist();
-
-    if (_playlist.isEmpty) {
-      await prefs.setBool('il_music_autoplay', false);
-      final ui = UiPrefs.notifier.value;
-      await UiPrefs.saveState(ui.copyWith(musicAutoplay: false));
-      setState(() {
-        _musicAutoplay = false;
-      });
-      await MusicService().stop();
-    }
 
     if (!mounted) return;
     setState(() {});
@@ -178,17 +173,207 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
     });
   }
 
+  Widget _buildActiveTrackCard() {
+    final currentTrack = _playlist.isNotEmpty
+        ? _playlist.first
+        : MusicService.defaultTrack;
+    final isDefault = currentTrack.isDefault ||
+        currentTrack.url == MusicService.defaultMusicAsset ||
+        currentTrack.url.contains('cat_ca_chung_ta');
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 8, bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFFFFF0F5),
+            Color(0xFFFFE8F0),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: SLRadius.mdAll,
+        border: Border.all(
+          color: const Color(0xFFF48FB1),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFE91E63).withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          ValueListenableBuilder<bool>(
+            valueListenable: MusicService().isPlayingNotifier,
+            builder: (context, isPlaying, _) {
+              return Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: isPlaying
+                        ? [const Color(0xFFE91E63), const Color(0xFFFF80AB)]
+                        : [Colors.grey.shade400, Colors.grey.shade300],
+                  ),
+                  boxShadow: isPlaying
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFFE91E63)
+                                .withValues(alpha: 0.35),
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Icon(
+                  isPlaying
+                      ? Icons.music_note_rounded
+                      : Icons.music_off_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        currentTrack.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: SLTextStyles.quicksand(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF6A1B4D),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    if (isDefault)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE91E63).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          'Mặc định',
+                          style: SLTextStyles.quicksand(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFFE91E63),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                ValueListenableBuilder<bool>(
+                  valueListenable: MusicService().isPlayingNotifier,
+                  builder: (context, isPlaying, _) {
+                    return Text(
+                      isPlaying
+                          ? '🎶 Đang phát · Chạm để dừng'
+                          : '⏸️ Tạm dừng · Chạm để nghe thử',
+                      style: SLTextStyles.quicksand(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: isPlaying
+                            ? const Color(0xFFD81B60)
+                            : Colors.grey.shade600,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          ValueListenableBuilder<bool>(
+            valueListenable: MusicService().isPlayingNotifier,
+            builder: (context, isPlaying, _) {
+              return IconButton(
+                iconSize: 38,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: Icon(
+                  isPlaying
+                      ? Icons.pause_circle_filled_rounded
+                      : Icons.play_circle_fill_rounded,
+                  color: const Color(0xFFE91E63),
+                ),
+                tooltip: isPlaying ? 'Tạm dừng' : 'Nghe thử',
+                onPressed: () async {
+                  if (_playlist.isEmpty) {
+                    _playlist = [MusicService.defaultTrack];
+                  }
+                  await MusicService().toggle();
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _switchToDefaultTrack() async {
+    setState(() => _isLoading = true);
+    try {
+      _playlist = [MusicService.defaultTrack];
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'il_local_music_playlist',
+        jsonEncode(_playlist.map((e) => e.toJson()).toList()),
+      );
+      await _saveMusicSettingsToFirebase();
+      await MusicService().reloadPlaylist();
+      if (_musicAutoplay) {
+        await MusicService().play(
+          MusicService.defaultTrack.url,
+          type: MusicService.defaultTrack.type,
+        );
+      }
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _showToast('Đã chọn nhạc nền mặc định: Cất Cả Chúng Ta', success: true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
+
   Widget _buildMusicPanel({bool hideBackButton = false}) {
+    final bool hasCustomTracks = _playlist.any(
+      (t) => !t.isDefault && !t.url.contains('cat_ca_chung_ta'),
+    );
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: _ThemeSectionCard(
         icon: Icons.music_note_rounded,
         title: context.tr('theme_music_panel'),
-        description: _playlist.isEmpty
-            ? context.tr('theme_music_no_music')
-            : context
+        description: hasCustomTracks
+            ? context
                   .tr('p7_music_playlist_count')
-                  .replaceAll('{count}', '${_playlist.length}'),
+                  .replaceAll('{count}', '${_playlist.length}')
+            : 'Cất Cả Chúng Ta · Nhạc nền mặc định',
         themeColor: const Color(0xFFFF8F00),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,13 +384,6 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
               label: context.tr('theme_music_autoplay_label'),
               switchValue: _musicAutoplay,
               onSwitchChanged: (v) async {
-                if (_playlist.isEmpty && v) {
-                  _showToast(
-                    context.tr('p7_music_autoplay_requires_file'),
-                    success: false,
-                  );
-                  return;
-                }
                 setState(() => _musicAutoplay = v);
                 SoundService().playClick();
 
@@ -216,7 +394,10 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                 await prefs.setBool('il_music_autoplay', v);
                 if (!v) {
                   await MusicService().stop(keepPlaylist: true);
-                } else if (_playlist.isNotEmpty) {
+                } else {
+                  if (_playlist.isEmpty) {
+                    _playlist = [MusicService.defaultTrack];
+                  }
                   await MusicService().play(
                     _playlist.first.url,
                     type: _playlist.first.type,
@@ -231,7 +412,15 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                 );
               },
             ),
-            const SizedBox(height: 8),
+            _buildActiveTrackCard(),
+            if (hasCustomTracks) ...[
+              _buildGradientBtn(
+                label: '🎵 Đặt lại bài hát Cất Cả Chúng Ta',
+                gradient: const [Color(0xFFEC407A), Color(0xFFF48FB1)],
+                onTap: _switchToDefaultTrack,
+              ),
+              SLSpacing.h8,
+            ],
             if (_playlist.isNotEmpty)
               Container(
                 width: double.infinity,
@@ -261,17 +450,19 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                                 ),
                               ),
                             ),
-                            IconButton(
-                              tooltip: context.tr('p7_music_remove_track'),
-                              icon: const Icon(
-                                Icons.delete_outline_rounded,
-                                color: Colors.redAccent,
-                                size: 20,
+                            if (!_playlist[i].isDefault &&
+                                !_playlist[i].url.contains('cat_ca_chung_ta'))
+                              IconButton(
+                                tooltip: context.tr('p7_music_remove_track'),
+                                icon: const Icon(
+                                  Icons.delete_outline_rounded,
+                                  color: Colors.redAccent,
+                                  size: 20,
+                                ),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                onPressed: () => _removeTrack(i),
                               ),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                              onPressed: () => _removeTrack(i),
-                            ),
                           ],
                         ),
                       ),
