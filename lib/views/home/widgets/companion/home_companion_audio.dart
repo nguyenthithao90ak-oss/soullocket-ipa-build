@@ -5,6 +5,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 
 import 'home_companion_motion.dart';
+import 'home_companion_outfit.dart';
 
 enum HomeCompanionSound { greeting, hop, sweep, success, whoa }
 
@@ -41,6 +42,8 @@ class HomeCompanionAudio {
   int _greeting = 0;
   int _playfulImpact = 0;
   Duration? _pendingGreeting;
+  HomeCompanionCharacter voice = HomeCompanionCharacter.bunny;
+  HomeCompanionCharacter _pendingGreetingVoice = HomeCompanionCharacter.bunny;
 
   void setEnabled(bool enabled) {
     if (_disposed || _enabled == enabled) return;
@@ -104,6 +107,7 @@ class HomeCompanionAudio {
     }
     if (greeting != null && greeting != _greeting) {
       _greeting = greeting;
+      _pendingGreetingVoice = voice;
       _pendingGreeting = _enabled && !_paused && greetingActive
           ? _clock()
           : null;
@@ -119,7 +123,7 @@ class HomeCompanionAudio {
         _pendingGreeting = null;
       } else if (_ready) {
         _pendingGreeting = null;
-        _emit(HomeCompanionSound.greeting);
+        _emit(HomeCompanionSound.greeting, speaker: _pendingGreetingVoice);
         return;
       } else {
         return;
@@ -142,19 +146,23 @@ class HomeCompanionAudio {
   bool get _coolingDown =>
       _lastSound != null && _clock() - _lastSound! < cooldown;
 
-  void _emit(HomeCompanionSound sound) {
+  void _emit(HomeCompanionSound sound, {HomeCompanionCharacter? speaker}) {
     if (_coolingDown) return;
     _lastSound = _clock();
     _busy = true;
-    unawaited(_play(sound, _generation));
+    unawaited(_play(sound, _generation, speaker ?? voice));
   }
 
   bool _isCurrent(int generation) =>
       !_disposed && _enabled && generation == _generation;
 
-  Future<void> _play(HomeCompanionSound sound, int generation) async {
+  Future<void> _play(
+    HomeCompanionSound sound,
+    int generation,
+    HomeCompanionCharacter speaker,
+  ) async {
     try {
-      await _output.prepare(waveFor(sound));
+      await _output.prepare(waveFor(sound, character: speaker));
       if (!_isCurrent(generation) || _paused) return;
       await _output.play(volume);
       if (!_isCurrent(generation) && !_disposed) await _stopPlayback();
@@ -203,7 +211,10 @@ class HomeCompanionAudio {
 
   /// WAV PCM mono nhỏ, âm lượng thấp; không cần asset, mạng hay package mới.
   @visibleForTesting
-  static Uint8List waveFor(HomeCompanionSound sound) {
+  static Uint8List waveFor(
+    HomeCompanionSound sound, {
+    HomeCompanionCharacter character = HomeCompanionCharacter.bunny,
+  }) {
     const sampleRate = 22050;
     final duration = switch (sound) {
       HomeCompanionSound.greeting => 0.28,
@@ -243,7 +254,15 @@ class HomeCompanionAudio {
         HomeCompanionSound.whoa =>
           370 + 180 * math.sin(math.pi * progress) - 170 * progress,
       };
-      phase += 2 * math.pi * frequency / sampleRate;
+      // Chất giọng riêng, dùng chung giới hạn âm lượng và cổng mute/unlock.
+      final pitch = switch (character) {
+        HomeCompanionCharacter.bunny => 1.0,
+        HomeCompanionCharacter.bear => 0.68,
+        HomeCompanionCharacter.kuromi =>
+          1.18 + 0.045 * math.sin(progress * math.pi * 12),
+        HomeCompanionCharacter.melody => 1.38 - 0.12 * progress,
+      };
+      phase += 2 * math.pi * frequency * pitch / sampleRate;
       filteredNoise =
           filteredNoise * 0.86 + (random.nextDouble() * 2 - 1) * 0.14;
       final signal = sound == HomeCompanionSound.whoa

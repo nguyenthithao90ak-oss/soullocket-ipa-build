@@ -61,14 +61,14 @@ extension BackgroundEditorExt on _CountdownModeEditorScreenState {
             DropdownButtonFormField<String>(
               initialValue: _fontKey,
               isExpanded: true,
-              dropdownColor: const Color(0xFF162136),
-              iconEnabledColor: Colors.white70,
+              dropdownColor: AppearancePanelStyle.paper,
+              iconEnabledColor: AppearancePanelStyle.rose,
               decoration: _fieldDecoration(
                 label: context.tr('home_phngch_9b3aa7'),
-                dark: true,
+                dark: false,
               ),
               style: SLTheme.quicksand(
-                color: Colors.white,
+                color: AppearancePanelStyle.ink,
                 fontWeight: FontWeight.w800,
               ),
               items: SLTheme.cleanFontOptions
@@ -79,7 +79,7 @@ extension BackgroundEditorExt on _CountdownModeEditorScreenState {
                         font.label,
                         overflow: TextOverflow.ellipsis,
                         style: SLTheme.quicksand(
-                          color: Colors.white,
+                          color: AppearancePanelStyle.ink,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -139,37 +139,10 @@ extension BackgroundEditorExt on _CountdownModeEditorScreenState {
                       inactiveColor: const Color(0xFFF2C3D7),
                       value: _sizePx.clamp(200.0, UiPrefs.maxCountdownSizePx),
                       onChanged: (value) {
-                        setStateSlider(() {
+                        _safeSetState(() {
                           _sizePx = value;
                         });
                       },
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: ElevatedButton.icon(
-                        onPressed: () => Navigator.of(
-                          context,
-                        ).pop(_buildResult(_CountdownModeSettingsAction.save)),
-                        icon: const Icon(
-                          Icons.check_circle_outline_rounded,
-                          size: 18,
-                        ),
-                        label: Text(
-                          context.tr('p7_save_countdown_size'),
-                          style: SLTheme.quicksand(fontWeight: FontWeight.w800),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
                     ),
                   ],
                 );

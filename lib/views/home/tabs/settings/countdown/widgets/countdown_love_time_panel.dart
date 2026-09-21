@@ -8,20 +8,20 @@ extension CountdownLoveTimePanelExt on _CountdownModeIndependentScreenState {
       initialData: 0,
       builder: (context, snapshot) {
         final detail = _loveTimeDetail(_anchorDate);
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        return Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
           children: [
             _buildLoveTimeCell(
               value: detail['h']!,
               label: context.tr('home_gi_770f40'),
             ),
-            const SizedBox(width: 8),
             _buildLoveTimeCell(
               value: detail['m']!,
               label: context.tr('home_pht_06b001'),
               alternate: true,
             ),
-            const SizedBox(width: 8),
             _buildLoveTimeCell(
               value: detail['s']!,
               label: context.tr('home_giy_392758'),
@@ -53,73 +53,7 @@ extension CountdownLoveTimePanelExt on _CountdownModeIndependentScreenState {
     required String value,
     required String label,
     bool alternate = false,
-  }) {
-    return Container(
-      width: 74,
-      height: 72,
-      decoration: BoxDecoration(
-        color: _transparentMode
-            ? Colors.white.withValues(alpha: 0.80)
-            : Colors.white.withValues(alpha: 0.95),
-        gradient: _transparentMode
-            ? null
-            : LinearGradient(
-                colors: alternate
-                    ? [
-                        const Color(0xFFFFFAFC).withValues(alpha: 0.70),
-                        const Color(0xFFFFECF6).withValues(alpha: 0.70),
-                      ]
-                    : [
-                        Colors.white.withValues(alpha: 0.70),
-                        const Color(0xFFEEF5FF).withValues(alpha: 0.70),
-                      ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.40),
-          width: 1,
-        ),
-        boxShadow: _transparentMode
-            ? const []
-            : [
-                BoxShadow(
-                  color:
-                      (alternate
-                              ? const Color(0xFFD81B60)
-                              : const Color(0xFF2563EB))
-                          .withValues(alpha: 0.10),
-                  blurRadius: 15,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            value,
-            style: SLTheme.quicksand(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF1F2937),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: SLTheme.quicksand(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              color: const Color(0xFF6B7280),
-              letterSpacing: 0.8,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  }) => PrivateSpaceTimeCell(value: value, label: label);
 
   Future<bool> _handleOpenedSpaceBack() async {
     if (_openedSpaceHouseId == null) {
@@ -130,107 +64,7 @@ extension CountdownLoveTimePanelExt on _CountdownModeIndependentScreenState {
     return false;
   }
 
-  Future<void> _openSettingsSheet() async {
-    final currentSpaceId = (_openedSpaceHouseId ?? _selfSpaceHouseId).trim();
-    final sharedSpace = _sharedSpaceFor(currentSpaceId);
-    final deleteRequest = _deleteRequestFor(currentSpaceId);
-    final result = await Navigator.of(context)
-        .push<_CountdownModeSettingsResult>(
-          MaterialPageRoute(
-            fullscreenDialog: true,
-            builder: (_) => _CountdownModeEditorScreen(
-              currentHouseId: widget.currentHouseId,
-              isVipActive: widget.isVipActive,
-              spaceTitle: _spaceTitle(currentSpaceId),
-              isAccepted: _acceptedSpaceHouseIds.contains(currentSpaceId),
-              showDeleteSection:
-                  currentSpaceId != _selfSpaceHouseId && sharedSpace != null,
-              canRequestDelete:
-                  currentSpaceId != _selfSpaceHouseId &&
-                  sharedSpace != null &&
-                  deleteRequest == null,
-              canAcceptDelete:
-                  deleteRequest != null &&
-                  !deleteRequest.isRequestedBy(_selfSpaceHouseId),
-              deleteStatusTitle: _deleteStatusTitle(currentSpaceId),
-              deleteStatusDescription: _deleteStatusDescription(currentSpaceId),
-              singleMode: _singleMode,
-              anchorDate: _anchorDate,
-              themeKey: _themeKey,
-              styleKey: _countdownStyleKey,
-              frameKey: _avatarFrameKey,
-              fontKey: _fontKey,
-              transparentMode: _transparentMode,
-              sizePx: _countdownSizePx,
-              topLabel: _topLabelText,
-              bottomLabel: _bottomLabelText,
-              nameU1: _nameU1,
-              nameU2: _nameU2,
-              avatarUrl1: _avatarUrl1,
-              avatarUrl2: _avatarUrl2,
-              customBackgroundUrl: _customBackgroundUrl,
-              centerIconType: _centerIconType,
-            ),
-          ),
-        );
-
-    if (result == null || !mounted) {
-      return;
-    }
-
-    if (result.action == _CountdownModeSettingsAction.requestDeleteSpace) {
-      await _setSystemUiVisible(true);
-      await _requestDeleteCurrentSpace(currentSpaceId);
-      return;
-    }
-
-    if (result.action == _CountdownModeSettingsAction.acceptDeleteSpace) {
-      await _setSystemUiVisible(true);
-      await _acceptDeleteCurrentSpace(currentSpaceId);
-      return;
-    }
-
-    if (result.action == _CountdownModeSettingsAction.save) {
-      _safeSetState(() {
-        _singleMode = result.singleMode;
-        _anchorDate = result.anchorDate;
-        _themeKey = result.themeKey;
-        _countdownStyleKey = result.styleKey;
-        _avatarFrameKey = result.frameKey;
-        _fontKey = result.fontKey;
-        _transparentMode = result.transparentMode;
-        _countdownSizePx = result.sizePx;
-        _topLabelText = result.topLabel;
-        _bottomLabelText = result.bottomLabel;
-        _nameU1 = result.nameU1;
-        _nameU2 = result.nameU2;
-        _avatarUrl1 = result.avatarUrl1;
-        _avatarUrl2 = result.avatarUrl2;
-        _customBackgroundUrl = result.customBackgroundUrl;
-        _centerIconType = result.centerIconType;
-        _spaceChromeVisible = true;
-      });
-      await _saveLocalSettings();
-      if (mounted) _showMessage(context.tr('home_lukhnggian_5e7d0a'));
-      return;
-    }
-
-    if (result.action == _CountdownModeSettingsAction.backToSpaces) {
-      _safeSetState(() {
-        _openedSpaceHouseId = null;
-        _spaceChromeVisible = true;
-        _applySnapshot(_spaceSnapshotFor(_selfSpaceHouseId));
-      });
-      await _setSystemUiVisible(true);
-      return;
-    }
-
-    await _setSystemUiVisible(true);
-    if (!mounted) {
-      return;
-    }
-    Navigator.of(context).pop();
-  }
+  Future<void> _openSettingsSheet() => _openSettingsSheetImpl();
 
   // ignore: unused_element
   Future<void> _openSettingsSheetLegacy() async {

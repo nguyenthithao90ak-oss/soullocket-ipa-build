@@ -34,7 +34,7 @@ class _CountdownModeThemeData {
       case 'theme-dark':
       case 'theme-mystic-dark':
         return const _CountdownModeThemeData(
-          background: [Color(0xFF20182C), Color(0xFF352345), Color(0xFF4A325F)],
+          background: [Color(0xFF292329), Color(0xFF342B33), Color(0xFF3C3039)],
           overlay: [Color(0x33000000), Color(0x25000000), Color(0x55000000)],
           orbA: Color(0xFFFF7DB5),
           orbB: Color(0xFFA48BFF),
@@ -65,7 +65,7 @@ class _CountdownModeThemeData {
       case 'off':
       case 'theme-default':
         return const _CountdownModeThemeData(
-          background: [Color(0xFFF8FAFD), Color(0xFFF2F5FB), Color(0xFFE8EEF6)],
+          background: [Color(0xFFFAF6F4), Color(0xFFF8F0F1), Color(0xFFF1E5E9)],
           overlay: [Color(0x08FFFFFF), Color(0x00FFFFFF), Color(0x18000000)],
           orbA: Color(0xFFD7E5FF),
           orbB: Color(0xFFFFD6E4),
@@ -74,7 +74,7 @@ class _CountdownModeThemeData {
         );
       case 'theme-pink-glow':
         return const _CountdownModeThemeData(
-          background: [Color(0xFFFFF3F7), Color(0xFFFFE2EC), Color(0xFFFCE8FF)],
+          background: [Color(0xFFFAF6F4), Color(0xFFF8EFF1), Color(0xFFF3E6EB)],
           overlay: [Color(0x08FFFFFF), Color(0x00FFFFFF), Color(0x18000000)],
           orbA: Color(0xFFFFA5C2),
           orbB: Color(0xFFEAB8FF),
@@ -124,9 +124,12 @@ class _CountdownModeStyleData {
   final List<Shadow> numberShadows;
 
   factory _CountdownModeStyleData.resolve(
-      String styleKey, bool transparentMode) {
+    String styleKey,
+    bool transparentMode,
+  ) {
     // Chỉ áp dụng transparent mode cho style cơ bản (giống home)
-    final isBasicStyle = styleKey == 'default' ||
+    final isBasicStyle =
+        styleKey == 'default' ||
         styleKey == 'glass' ||
         styleKey == 'plain' ||
         styleKey.isEmpty ||
@@ -151,23 +154,21 @@ class _CountdownModeStyleData {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        outerBorder:
-            Border.all(color: Colors.white.withValues(alpha: 0.34), width: 2.2),
-        innerBorder:
-            Border.all(color: Colors.white.withValues(alpha: 0.10), width: 1),
+        outerBorder: Border.all(
+          color: Colors.white.withValues(alpha: 0.34),
+          width: 2.2,
+        ),
+        innerBorder: Border.all(
+          color: Colors.white.withValues(alpha: 0.10),
+          width: 1,
+        ),
         shadows: const [],
         numberGradient: const [Colors.white, Color(0xFFFFD5E8)],
         topColor: Colors.white,
         bottomColor: Colors.white.withValues(alpha: 0.92),
-        labelShadows: const [
-          Shadow(color: Colors.black, blurRadius: 10),
-        ],
+        labelShadows: const [Shadow(color: Colors.black, blurRadius: 10)],
         numberShadows: const [
-          Shadow(
-            color: Colors.black,
-            blurRadius: 18,
-            offset: Offset(0, 6),
-          ),
+          Shadow(color: Colors.black, blurRadius: 18, offset: Offset(0, 6)),
         ],
       );
     }
@@ -184,7 +185,8 @@ class _CountdownModeStyleData {
             colors: [Color(0xFFFBF8FA), Color(0xFFFBF8FA)],
           ),
           outerBorder: const Border.fromBorderSide(
-              BorderSide(color: Color(0xFFE9DDE6), width: 2.2)),
+            BorderSide(color: Color(0xFFE9DDE6), width: 2.2),
+          ),
           innerBorder: Border.all(color: Colors.transparent, width: 0),
           shadows: [
             BoxShadow(
@@ -245,7 +247,9 @@ class _CountdownModeStyleData {
             end: Alignment.bottomRight,
           ),
           outerBorder: Border.all(
-              color: Colors.white.withValues(alpha: 0.95), width: 4.5),
+            color: Colors.white.withValues(alpha: 0.95),
+            width: 4.5,
+          ),
           shadows: const [
             BoxShadow(
               color: Color(0xEAFFFFFF),
@@ -276,7 +280,9 @@ class _CountdownModeStyleData {
             end: Alignment.bottomRight,
           ),
           innerBorder: Border.all(
-              color: Colors.white.withValues(alpha: 0.55), width: 1.5),
+            color: Colors.white.withValues(alpha: 0.55),
+            width: 1.5,
+          ),
           numberGradient: const [
             Color(0xFFFFFFFF),
             Color(0xFFFF5B9A),
@@ -315,8 +321,10 @@ class _CountdownModeStyleData {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.82), width: 3),
+          outerBorder: Border.all(
+            color: Colors.white.withValues(alpha: 0.82),
+            width: 3,
+          ),
           shadows: [
             BoxShadow(
               color: const Color(0xFF8EC5FC).withValues(alpha: 0.34),
@@ -332,7 +340,9 @@ class _CountdownModeStyleData {
             ],
           ),
           innerBorder: Border.all(
-              color: Colors.white.withValues(alpha: 0.42), width: 1.2),
+            color: Colors.white.withValues(alpha: 0.42),
+            width: 1.2,
+          ),
           numberGradient: const [Color(0xFF27B4FF), Color(0xFFD81B60)],
           topColor: const Color(0xFF2378A8),
           bottomColor: const Color(0xFF51606D),
@@ -355,8 +365,10 @@ class _CountdownModeStyleData {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.82), width: 5),
+          outerBorder: Border.all(
+            color: Colors.white.withValues(alpha: 0.82),
+            width: 5,
+          ),
           shadows: [
             BoxShadow(
               color: const Color(0xFFFF5E92).withValues(alpha: 0.46),
@@ -397,8 +409,10 @@ class _CountdownModeStyleData {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.9), width: 4),
+          outerBorder: Border.all(
+            color: Colors.white.withValues(alpha: 0.9),
+            width: 4,
+          ),
           shadows: [
             BoxShadow(
               color: const Color(0xFFFF77C8).withValues(alpha: 0.24),
@@ -418,8 +432,10 @@ class _CountdownModeStyleData {
               Colors.white.withValues(alpha: 0.20),
             ],
           ),
-          innerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.58), width: 1),
+          innerBorder: Border.all(
+            color: Colors.white.withValues(alpha: 0.58),
+            width: 1,
+          ),
           numberGradient: const [Color(0xFFFF3D9A), Color(0xFF36C9FF)],
           topColor: const Color(0xFFE6378D),
           bottomColor: const Color(0xFF4C6178),
@@ -447,8 +463,10 @@ class _CountdownModeStyleData {
               Color(0xFFFF005D),
             ],
           ),
-          outerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.88), width: 4),
+          outerBorder: Border.all(
+            color: Colors.white.withValues(alpha: 0.88),
+            width: 4,
+          ),
           shadows: [
             BoxShadow(
               color: const Color(0xFFFF00A8).withValues(alpha: 0.45),
@@ -471,7 +489,9 @@ class _CountdownModeStyleData {
             ],
           ),
           innerBorder: Border.all(
-              color: Colors.white.withValues(alpha: 0.38), width: 1.4),
+            color: Colors.white.withValues(alpha: 0.38),
+            width: 1.4,
+          ),
           numberGradient: const [
             Colors.white,
             Color(0xFFFFF176),
@@ -507,21 +527,24 @@ class _CountdownModeStyleData {
             colors: isLava
                 ? const [Color(0xFF1A0502), Color(0xFF4A1103)]
                 : isAurora
-                    ? const [Color(0xFF001B2E), Color(0xFF021A10)]
-                    : const [Color(0xFF120024), Color(0xFF05000F)],
+                ? const [Color(0xFF001B2E), Color(0xFF021A10)]
+                : const [Color(0xFF120024), Color(0xFF05000F)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.22), width: 3),
+          outerBorder: Border.all(
+            color: Colors.white.withValues(alpha: 0.22),
+            width: 3,
+          ),
           shadows: [
             BoxShadow(
-              color: (isLava
-                      ? const Color(0xFFFF5A00)
-                      : isAurora
+              color:
+                  (isLava
+                          ? const Color(0xFFFF5A00)
+                          : isAurora
                           ? const Color(0xFF00FFC8)
                           : const Color(0xFF8A2BFF))
-                  .withValues(alpha: 0.42),
+                      .withValues(alpha: 0.42),
               blurRadius: 54,
               spreadRadius: 6,
               offset: const Offset(0, 16),
@@ -534,24 +557,19 @@ class _CountdownModeStyleData {
               Colors.black.withValues(alpha: 0.12),
             ],
           ),
-          innerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.18), width: 1),
+          innerBorder: Border.all(
+            color: Colors.white.withValues(alpha: 0.18),
+            width: 1,
+          ),
           numberGradient: isLava
               ? const [Color(0xFFFFF176), Color(0xFFFF5A00), Color(0xFFFF1744)]
               : isAurora
-                  ? const [
-                      Color(0xFFE6FFF9),
-                      Color(0xFF00FFC8),
-                      Color(0xFF7C4DFF),
-                    ]
-                  : const [
-                      Color(0xFFFFFFFF),
-                      Color(0xFF00E5FF),
-                      Color(0xFFFF4EBB),
-                    ],
+              ? const [Color(0xFFE6FFF9), Color(0xFF00FFC8), Color(0xFF7C4DFF)]
+              : const [Color(0xFFFFFFFF), Color(0xFF00E5FF), Color(0xFFFF4EBB)],
           topColor: Colors.white,
-          bottomColor:
-              isLava ? const Color(0xFFFFD180) : const Color(0xFFBDEBFF),
+          bottomColor: isLava
+              ? const Color(0xFFFFD180)
+              : const Color(0xFFBDEBFF),
           labelShadows: [
             Shadow(color: Colors.black.withValues(alpha: 0.48), blurRadius: 10),
           ],
@@ -573,8 +591,10 @@ class _CountdownModeStyleData {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.92), width: 4),
+          outerBorder: Border.all(
+            color: Colors.white.withValues(alpha: 0.92),
+            width: 4,
+          ),
           shadows: [
             BoxShadow(
               color: const Color(0xFF9BE7FF).withValues(alpha: 0.28),
@@ -590,8 +610,10 @@ class _CountdownModeStyleData {
               Colors.white.withValues(alpha: 0.18),
             ],
           ),
-          innerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.52), width: 1),
+          innerBorder: Border.all(
+            color: Colors.white.withValues(alpha: 0.52),
+            width: 1,
+          ),
           numberGradient: const [Color(0xFF7B61FF), Color(0xFFFF65B7)],
           topColor: const Color(0xFF7B61FF),
           bottomColor: const Color(0xFF5C6470),
@@ -615,7 +637,9 @@ class _CountdownModeStyleData {
             end: Alignment.bottomRight,
           ),
           outerBorder: Border.all(
-              color: Colors.white.withValues(alpha: 0.9), width: 3.5),
+            color: Colors.white.withValues(alpha: 0.9),
+            width: 3.5,
+          ),
           shadows: [
             BoxShadow(
               color: const Color(0xFFFF69B4).withValues(alpha: 0.3),
@@ -632,7 +656,9 @@ class _CountdownModeStyleData {
             ],
           ),
           innerBorder: Border.all(
-              color: Colors.white.withValues(alpha: 0.6), width: 1.2),
+            color: Colors.white.withValues(alpha: 0.6),
+            width: 1.2,
+          ),
           numberGradient: const [Color(0xFFE91E63), Color(0xFFFF8DA1)],
           topColor: const Color(0xFFAD1457),
           bottomColor: const Color(0xFFF48FB1),
@@ -656,7 +682,9 @@ class _CountdownModeStyleData {
             end: Alignment.bottomRight,
           ),
           outerBorder: Border.all(
-              color: Colors.white.withValues(alpha: 0.2), width: 2.5),
+            color: Colors.white.withValues(alpha: 0.2),
+            width: 2.5,
+          ),
           shadows: [
             BoxShadow(
               color: const Color(0xFF38BDF8).withValues(alpha: 0.35),
@@ -672,12 +700,14 @@ class _CountdownModeStyleData {
               Colors.black.withValues(alpha: 0.05),
             ],
           ),
-          innerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1),
+          innerBorder: Border.all(
+            color: Colors.white.withValues(alpha: 0.15),
+            width: 1,
+          ),
           numberGradient: const [
             Color(0xFFE0F2FE),
             Color(0xFF38BDF8),
-            Color(0xFF818CF8)
+            Color(0xFF818CF8),
           ],
           topColor: Colors.white,
           bottomColor: const Color(0xFFBAE6FD),
@@ -700,8 +730,10 @@ class _CountdownModeStyleData {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.3), width: 3),
+          outerBorder: Border.all(
+            color: Colors.white.withValues(alpha: 0.3),
+            width: 3,
+          ),
           shadows: [
             BoxShadow(
               color: const Color(0xFF0083B0).withValues(alpha: 0.4),
@@ -717,8 +749,10 @@ class _CountdownModeStyleData {
               Colors.white.withValues(alpha: 0.05),
             ],
           ),
-          innerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1),
+          innerBorder: Border.all(
+            color: Colors.white.withValues(alpha: 0.25),
+            width: 1,
+          ),
           numberGradient: const [Colors.white, Color(0xFFE0F7FA)],
           topColor: Colors.white,
           bottomColor: const Color(0xFFB2EBF2),
@@ -742,7 +776,9 @@ class _CountdownModeStyleData {
             end: Alignment.bottomRight,
           ),
           outerBorder: Border.all(
-              color: Colors.white.withValues(alpha: 0.4), width: 3.5),
+            color: Colors.white.withValues(alpha: 0.4),
+            width: 3.5,
+          ),
           shadows: [
             BoxShadow(
               color: const Color(0xFFFF7E5F).withValues(alpha: 0.45),
@@ -759,14 +795,17 @@ class _CountdownModeStyleData {
             ],
           ),
           innerBorder: Border.all(
-              color: Colors.white.withValues(alpha: 0.35), width: 1.5),
+            color: Colors.white.withValues(alpha: 0.35),
+            width: 1.5,
+          ),
           numberGradient: const [Color(0xFFFFF3E0), Color(0xFFFFCC80)],
           topColor: Colors.white,
           bottomColor: const Color(0xFFFFE0B2),
           labelShadows: [
             Shadow(
-                color: const Color(0xFFD84315).withValues(alpha: 0.5),
-                blurRadius: 10),
+              color: const Color(0xFFD84315).withValues(alpha: 0.5),
+              blurRadius: 10,
+            ),
           ],
           numberShadows: [
             Shadow(
@@ -785,7 +824,9 @@ class _CountdownModeStyleData {
             end: Alignment.bottomRight,
           ),
           outerBorder: Border.all(
-              color: const Color(0xFFFF003C).withValues(alpha: 0.6), width: 4),
+            color: const Color(0xFFFF003C).withValues(alpha: 0.6),
+            width: 4,
+          ),
           shadows: [
             BoxShadow(
               color: const Color(0xFFFF003C).withValues(alpha: 0.55),
@@ -802,8 +843,9 @@ class _CountdownModeStyleData {
             ],
           ),
           innerBorder: Border.all(
-              color: const Color(0xFFFF003C).withValues(alpha: 0.4),
-              width: 1.5),
+            color: const Color(0xFFFF003C).withValues(alpha: 0.4),
+            width: 1.5,
+          ),
           numberGradient: const [Color(0xFFFF8AA5), Color(0xFFFF003C)],
           topColor: Colors.white,
           bottomColor: const Color(0xFFFFB3C6),
@@ -828,7 +870,9 @@ class _CountdownModeStyleData {
             end: Alignment.bottomRight,
           ),
           outerBorder: Border.all(
-              color: Colors.white.withValues(alpha: 0.95), width: 4.5),
+            color: Colors.white.withValues(alpha: 0.95),
+            width: 4.5,
+          ),
           shadows: const [
             BoxShadow(
               color: Color(0xEAFFFFFF),
@@ -859,7 +903,9 @@ class _CountdownModeStyleData {
             end: Alignment.bottomRight,
           ),
           innerBorder: Border.all(
-              color: Colors.white.withValues(alpha: 0.55), width: 1.5),
+            color: Colors.white.withValues(alpha: 0.55),
+            width: 1.5,
+          ),
           numberGradient: const [
             Color(0xFFFFFFFF),
             Color(0xFFFF5B9A),
@@ -869,8 +915,9 @@ class _CountdownModeStyleData {
           bottomColor: Colors.white.withValues(alpha: 0.94),
           labelShadows: [
             Shadow(
-                color: const Color(0xFF9D315F).withValues(alpha: 0.52),
-                blurRadius: 12),
+              color: const Color(0xFF9D315F).withValues(alpha: 0.52),
+              blurRadius: 12,
+            ),
             Shadow(color: Colors.white.withValues(alpha: 0.70), blurRadius: 4),
           ],
           numberShadows: [

@@ -33,7 +33,6 @@ part 'soul_merge/particle_explosion_part.dart';
 part 'soul_merge/tap_hearts_overlay_part.dart';
 part 'soul_merge/floating_message_part.dart';
 part 'soul_merge/persistent_floating_photo_part.dart';
-part 'soul_merge/soul_merge_painters_part.dart';
 
 Stream<dynamic>? _sharedOverlayStream;
 

@@ -543,158 +543,30 @@ class _CountdownQuickCustomizeSheetContentState
     required String selectedValue,
     required Future<void> Function(_CountdownQuickOption option) onSelect,
   }) {
-    final selectedOption = options.firstWhere(
+    final selected = options.firstWhere(
       (o) => o.value == selectedValue,
       orElse: () => options.first,
     );
-    final accent = selectedOption.accent;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: accent.withValues(alpha: 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-        border: Border.all(color: accent.withValues(alpha: 0.18), width: 1.5),
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon, color: const Color(0xFF9F7A72), size: 22),
+      title: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF493D40),
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [accent.withValues(alpha: 0.8), accent],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: accent.withValues(alpha: 0.35),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Icon(icon, color: Colors.white, size: 22),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: SLTheme.quicksand(
-                        fontSize: 15.5,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF2D1B24),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      description,
-                      style: SLTheme.quicksand(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF7A6472),
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () {
-                HapticFeedback.selectionClick();
-                _showOptionsDialog(title, options, selectedValue, onSelect);
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: accent.withValues(alpha: 0.15)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(selectedOption.icon, color: accent, size: 20),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'Đang dùng: ',
-                              style: SLTheme.quicksand(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF7A6472),
-                              ),
-                            ),
-                            TextSpan(
-                              text: selectedOption.label,
-                              style: SLTheme.quicksand(
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.w900,
-                                color: accent,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: accent.withValues(alpha: 0.15),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.swap_vert_rounded,
-                        color: accent,
-                        size: 16,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+      subtitle: Text(
+        selected.label,
+        style: const TextStyle(fontSize: 12, color: Color(0xFF89766E)),
       ),
+      trailing: const Icon(
+        Icons.chevron_right_rounded,
+        color: Color(0xFF9F7A72),
+      ),
+      onTap: () => _showOptionsDialog(title, options, selectedValue, onSelect),
     );
   }
 
@@ -769,152 +641,26 @@ class _CountdownQuickCustomizeSheetContentState
       '#FFEB3B', // Vàng
       '#FF9800', // Cam
     ];
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFFF0DDE4).withValues(alpha: 0.5),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFD81B60).withValues(alpha: 0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return CountdownStudioSection(
+      title: context.tr('studio_text_color'),
+      child: Wrap(
+        spacing: 2,
+        runSpacing: 4,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFF416C), Color(0xFFFF4B2B)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFF4B2B).withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.format_color_text_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Màu chữ vòng đếm',
-                      style: SLTheme.quicksand(
-                        fontSize: 14.8,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF4A3640),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Thay đổi màu sắc nhãn và số ngày yêu.',
-                      style: SLTheme.quicksand(
-                        fontSize: 12.1,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF8E6F7E),
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: colors.map((hex) {
-                final isSelected = selectedColorHex == hex;
-                final isDefault = hex.isEmpty;
-                final isMulti = hex == '#MULTI';
-                final color = isDefault || isMulti
-                    ? Colors.transparent
-                    : Color(int.parse(hex.replaceFirst('#', '0xFF')));
-
-                return GestureDetector(
-                  onTap: () async {
-                    HapticFeedback.selectionClick();
-                    await onSelect(hex);
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 12),
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: color,
-                      shape: BoxShape.circle,
-                      gradient: isMulti
-                          ? const SweepGradient(
-                              colors: [
-                                Color(0xFF00C6FF),
-                                Color(0xFF9D50BB),
-                                Color(0xFFF44336),
-                                Color(0xFF00C6FF),
-                              ],
-                            )
-                          : null,
-                      border: Border.all(
-                        color: isSelected
-                            ? const Color(0xFFD81B60)
-                            : const Color(0xFFF0DDE4),
-                        width: isSelected ? 3.0 : 1.5,
-                      ),
-                    ),
-                    child: isDefault
-                        ? Icon(
-                            Icons.format_color_reset_rounded,
-                            size: 20,
-                            color: isSelected
-                                ? const Color(0xFFD81B60)
-                                : const Color(0xFF8E6F7E),
-                          )
-                        : (isMulti
-                              ? (isSelected
-                                    ? const Icon(
-                                        Icons.check_rounded,
-                                        size: 20,
-                                        color: Colors.white,
-                                      )
-                                    : null)
-                              : (isSelected
-                                    ? Icon(
-                                        Icons.check_rounded,
-                                        size: 20,
-                                        color: color.computeLuminance() > 0.5
-                                            ? Colors.black
-                                            : Colors.white,
-                                      )
-                                    : null)),
-                  ),
-                );
-              }).toList(),
+          for (final hex in colors)
+            CountdownStudioColorSwatch(
+              hex: hex,
+              label: hex.isEmpty
+                  ? context.tr('home_tngphimu_c549ba')
+                  : hex == '#MULTI'
+                  ? context.tr('studio_multicolor')
+                  : hex,
+              selected: selectedColorHex == hex,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                unawaited(onSelect(hex));
+              },
             ),
-          ),
         ],
       ),
     );
@@ -933,394 +679,254 @@ class _CountdownQuickCustomizeSheetContentState
   }) {
     final displayValue = tempValue ?? currentValue;
     final hasChanges =
-        tempValue != null && (tempValue - currentValue).abs() > 0.01;
+        tempValue != null && (tempValue - currentValue).abs() > .01;
     final hasBg = customBgUrl != null && customBgUrl.trim().isNotEmpty;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFFF0DDE4).withValues(alpha: 0.5),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFD81B60).withValues(alpha: 0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CountdownStudioSection(
+          title: title,
+          trailing: TextButton(
+            onPressed: hasChanges ? onSave : null,
+            child: Text(context.tr('home_lu_49fac1')),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF00C9FF), Color(0xFF92FE9D)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF00C9FF).withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Icon(icon, color: Colors.white, size: 20),
+              Slider(
+                min: 200,
+                max: UiPrefs.maxCountdownSizePx,
+                activeColor: const Color(0xFFA64E6A),
+                inactiveColor: const Color(0xFFE9DCD5),
+                value: displayValue.clamp(200, UiPrefs.maxCountdownSizePx),
+                label: displayValue.round().toString(),
+                onChanged: onChanged,
+                onChangeEnd: onChangedEnd,
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: SLTheme.quicksand(
-                        fontSize: 14.8,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF4A3640),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      description,
-                      style: SLTheme.quicksand(
-                        fontSize: 12.1,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF8E6F7E),
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(
-                Icons.zoom_out_rounded,
-                color: Color(0xFF8E6F7E),
-                size: 20,
-              ),
-              Expanded(
-                child: SliderTheme(
-                  data: SliderThemeData(
-                    activeTrackColor: const Color(0xFFD81B60),
-                    inactiveTrackColor: const Color(0xFFFDE8F0),
-                    thumbColor: const Color(0xFFD81B60),
-                    overlayColor: const Color(
-                      0xFFD81B60,
-                    ).withValues(alpha: 0.12),
-                    trackHeight: 4.0,
-                    thumbShape: const RoundSliderThumbShape(
-                      enabledThumbRadius: 8.0,
-                    ),
-                    overlayShape: const RoundSliderOverlayShape(
-                      overlayRadius: 16.0,
-                    ),
-                  ),
-                  child: Slider(
-                    min: 200.0,
-                    max: UiPrefs.maxCountdownSizePx,
-                    value: displayValue.clamp(
-                      200.0,
-                      UiPrefs.maxCountdownSizePx,
-                    ),
-                    onChanged: onChanged,
-                    onChangeEnd: onChangedEnd,
-                  ),
-                ),
-              ),
-              const Icon(
-                Icons.zoom_in_rounded,
-                color: Color(0xFFD81B60),
-                size: 20,
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
               Text(
-                'Kích thước: ${displayValue.toInt()} px',
-                style: SLTheme.quicksand(
-                  fontSize: 12.6,
-                  fontWeight: FontWeight.w800,
-                  color: hasChanges
-                      ? const Color(0xFFD81B60)
-                      : const Color(0xFF8E6F7E),
-                ),
-              ),
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: hasChanges ? onSave : null,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: hasChanges
-                          ? const Color(0xFFFFF2F7)
-                          : const Color(0xFFF5F5F5),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: hasChanges
-                            ? const Color(0xFFF4D7E2)
-                            : const Color(0xFFE0E0E0),
-                      ),
-                      boxShadow: hasChanges
-                          ? [
-                              BoxShadow(
-                                color: const Color(
-                                  0xFFD81B60,
-                                ).withValues(alpha: 0.08),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: Text(
-                      'Lưu',
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        color: hasChanges
-                            ? const Color(0xFFD81B60)
-                            : const Color(0xFFBDBDBD),
-                      ),
-                    ),
-                  ),
-                ),
+                context
+                    .tr('p7_countdown_size_label')
+                    .replaceAll('{size}', displayValue.round().toString()),
+                style: const TextStyle(fontSize: 12, color: Color(0xFF89766E)),
               ),
             ],
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 10),
-            child: Divider(color: Color(0xFFF0DDE4), height: 1),
+        ),
+        ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          shape: const Border(),
+          collapsedShape: const Border(),
+          title: Text(
+            context.tr('home_nhnn_a07223'),
+            style: const TextStyle(fontSize: 14, color: Color(0xFF493D40)),
           ),
-          Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF9733EE).withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.image_outlined,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Ảnh nền trang chủ',
-                      style: SLTheme.quicksand(
-                        fontSize: 14.8,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF4A3640),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Tải lên hoặc xóa ảnh nền trang chủ.',
-                      style: SLTheme.quicksand(
-                        fontSize: 12.1,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF8E6F7E),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (_isUploadingBg) ...[
+          children: [
             Row(
               children: [
-                const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Color(0xFFD81B60),
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF9733EE).withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.image_outlined,
+                    color: Colors.white,
+                    size: 20,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    _bgUploadProgress != null
-                        ? 'Đang tải lên: ${(_bgUploadProgress! * 100).toInt()}%'
-                        : 'Đang chuẩn bị tải lên...',
-                    style: SLTheme.quicksand(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF8E6F7E),
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Ảnh nền trang chủ',
+                        style: SLTheme.quicksand(
+                          fontSize: 14.8,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF4A3640),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Tải lên hoặc xóa ảnh nền trang chủ.',
+                        style: SLTheme.quicksand(
+                          fontSize: 12.1,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF8E6F7E),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ] else ...[
-            Row(
-              children: [
-                if (hasBg) ...[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: CachedNetworkImage(
-                      imageUrl: customBgUrl.trim(),
-                      width: 44,
-                      height: 44,
-                      fit: BoxFit.cover,
-                      memCacheWidth: 400,
-                      placeholder: (context, url) => Container(
-                        color: const Color(0xFFFDE8F0),
-                        child: const Icon(
-                          Icons.image_outlined,
-                          size: 16,
-                          color: Color(0xFFD81B60),
-                        ),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        color: const Color(0xFFFDE8F0),
-                        child: const Icon(
-                          Icons.broken_image_outlined,
-                          size: 16,
-                          color: Color(0xFFD81B60),
-                        ),
+            const SizedBox(height: 12),
+            if (_isUploadingBg) ...[
+              Row(
+                children: [
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFFD81B60),
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
-                ],
-                Expanded(
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFF0DDE4)),
-                      foregroundColor: const Color(0xFF4A3640),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    onPressed: _pickBgImage,
-                    icon: const Icon(
-                      Icons.upload_rounded,
-                      size: 16,
-                      color: Color(0xFFD81B60),
-                    ),
-                    label: Text(
-                      hasBg ? 'Thay đổi ảnh' : 'Tải ảnh lên',
+                  Expanded(
+                    child: Text(
+                      _bgUploadProgress != null
+                          ? 'Đang tải lên: ${(_bgUploadProgress! * 100).toInt()}%'
+                          : 'Đang chuẩn bị tải lên...',
                       style: SLTheme.quicksand(
                         fontSize: 13,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF8E6F7E),
                       ),
-                    ),
-                  ),
-                ),
-                if (hasBg) ...[
-                  const SizedBox(width: 10),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF2F7),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFF4D7E2)),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(
-                        Icons.delete_outline_rounded,
-                        color: Color(0xFFD81B60),
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: Text(
-                              'Xóa ảnh nền?',
-                              style: SLTheme.quicksand(
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            content: Text(
-                              'Bạn có chắc chắn muốn xóa ảnh nền trang chủ không?',
-                              style: SLTheme.quicksand(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                child: Text(
-                                  'Hủy',
-                                  style: SLTheme.quicksand(
-                                    fontWeight: FontWeight.w800,
-                                    color: const Color(0xFF8E6F7E),
-                                  ),
-                                ),
-                                onPressed: () => Navigator.pop(ctx),
-                              ),
-                              TextButton(
-                                child: Text(
-                                  'Xóa',
-                                  style: SLTheme.quicksand(
-                                    fontWeight: FontWeight.w900,
-                                    color: const Color(0xFFD81B60),
-                                  ),
-                                ),
-                                onPressed: () {
-                                  Navigator.pop(ctx);
-                                  _clearBgImage();
-                                },
-                              ),
-                            ],
-                          ),
-                        );
-                      },
                     ),
                   ),
                 ],
-              ],
-            ),
+              ),
+            ] else ...[
+              Row(
+                children: [
+                  if (hasBg) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: CachedNetworkImage(
+                        imageUrl: customBgUrl.trim(),
+                        width: 44,
+                        height: 44,
+                        fit: BoxFit.cover,
+                        memCacheWidth: 400,
+                        placeholder: (context, url) => Container(
+                          color: const Color(0xFFFDE8F0),
+                          child: const Icon(
+                            Icons.image_outlined,
+                            size: 16,
+                            color: Color(0xFFD81B60),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          color: const Color(0xFFFDE8F0),
+                          child: const Icon(
+                            Icons.broken_image_outlined,
+                            size: 16,
+                            color: Color(0xFFD81B60),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFFF0DDE4)),
+                        foregroundColor: const Color(0xFF4A3640),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      onPressed: _pickBgImage,
+                      icon: const Icon(
+                        Icons.upload_rounded,
+                        size: 16,
+                        color: Color(0xFFD81B60),
+                      ),
+                      label: Text(
+                        hasBg ? 'Thay đổi ảnh' : 'Tải ảnh lên',
+                        style: SLTheme.quicksand(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (hasBg) ...[
+                    const SizedBox(width: 10),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF2F7),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: const Color(0xFFF4D7E2)),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.delete_outline_rounded,
+                          color: Color(0xFFD81B60),
+                          size: 20,
+                        ),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: Text(
+                                'Xóa ảnh nền?',
+                                style: SLTheme.quicksand(
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              content: Text(
+                                'Bạn có chắc chắn muốn xóa ảnh nền trang chủ không?',
+                                style: SLTheme.quicksand(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                  child: Text(
+                                    'Hủy',
+                                    style: SLTheme.quicksand(
+                                      fontWeight: FontWeight.w800,
+                                      color: const Color(0xFF8E6F7E),
+                                    ),
+                                  ),
+                                  onPressed: () => Navigator.pop(ctx),
+                                ),
+                                TextButton(
+                                  child: Text(
+                                    'Xóa',
+                                    style: SLTheme.quicksand(
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFFD81B60),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pop(ctx);
+                                    _clearBgImage();
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
           ],
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -1576,90 +1182,16 @@ class _CountdownQuickCustomizeSheetContentState
   Widget buildTimerSection({
     required bool showTimer,
     required ValueChanged<bool> onToggle,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFFF0DDE4).withValues(alpha: 0.5),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFD81B60).withValues(alpha: 0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFDC830), Color(0xFFF37335)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFF37335).withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.timer_outlined,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Bộ đếm giờ chi tiết',
-                    style: SLTheme.quicksand(
-                      fontSize: 14.8,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF4A3640),
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Hiện giờ/phút/giây bên dưới số ngày.',
-                    style: SLTheme.quicksand(
-                      fontSize: 12.1,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF8E6F7E),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          Switch(
-            value: showTimer,
-            activeThumbColor: const Color(0xFFD81B60),
-            activeTrackColor: const Color(0xFFFDE8F0),
-            inactiveThumbColor: const Color(0xFFB0B0B0),
-            inactiveTrackColor: const Color(0xFFF0DDE4),
-            onChanged: onToggle,
-          ),
-        ],
-      ),
-    );
-  }
+  }) => SwitchListTile.adaptive(
+    contentPadding: EdgeInsets.zero,
+    title: Text(
+      context.tr('show_timer_home'),
+      style: const TextStyle(fontSize: 14, color: Color(0xFF493D40)),
+    ),
+    value: showTimer,
+    activeTrackColor: const Color(0xFFA64E6A),
+    onChanged: onToggle,
+  );
 
   Widget buildBackgroundSection({required String? customBgUrl}) {
     final hasBg = customBgUrl != null && customBgUrl.trim().isNotEmpty;
@@ -2068,13 +1600,6 @@ class _CountdownQuickCustomizeSheetContentState
             orElse: () => widget.styleOptions.first,
           );
 
-          final currentStyleIsLocked =
-              !widget.isVip &&
-              _MainHomeTabState._kCountdownQuickPremiumStyleKeys.contains(
-                uiState.countdownStyleKey,
-              ) &&
-              !_unlockedStyles.contains(uiState.countdownStyleKey);
-
           return SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
               18,
@@ -2086,170 +1611,64 @@ class _CountdownQuickCustomizeSheetContentState
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: Container(
-                    width: 44,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 14),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 46,
-                      height: 46,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFFF8FB1), Color(0xFFD81B60)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Icon(
-                        Icons.tune_rounded,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Tùy chỉnh vòng đếm',
+                            context.tr('home_tychnhvngm_09a3bd'),
                             style: SLTheme.quicksand(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFF33262D),
+                              fontSize: 23,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF493D40),
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 6),
                           Text(
-                            'Ấn giữ vòng đếm ngày để mở bảng này và đổi nhanh giao diện ngay trên trang chủ.',
-                            style: SLTheme.quicksand(
-                              fontSize: 12.4,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF806575),
-                              height: 1.35,
+                            context.tr('studio_hint'),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              height: 1.4,
+                              color: Color(0xFF89766E),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(14),
-                        onTap: () => Navigator.of(widget.sheetContext).pop(),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: const Color(0xFFF0DDE4)),
-                          ),
-                          child: const Icon(
-                            Icons.close_rounded,
-                            color: Color(0xFFD81B60),
-                            size: 20,
-                          ),
-                        ),
+                    IconButton(
+                      tooltip: context.tr('close'),
+                      onPressed: () => Navigator.of(widget.sheetContext).pop(),
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: Color(0xFF89766E),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFFF2F7), Color(0xFFFFFBFD)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                const SizedBox(height: 8),
+                const AppHelpButton(articleId: 'personalize'),
+                CountdownStudioPreview(
+                  styleKey: selectedStyle.value,
+                  number: widget.homeState._calculateDays(),
+                  label: selectedStyle.label,
+                  caption: context.tr('p7_countdown_preview_title'),
+                  chooseLabel: context.tr('home_gdvangdem'),
+                  colorHex: uiState.countdownTextColor,
+                  sizeValue: _tempCountdownSize ?? uiState.countdownSizePx,
+                  onChoose: () => _showOptionsDialog(
+                    context.tr('home_gdvangdem'),
+                    widget.styleOptions,
+                    uiState.countdownStyleKey,
+                    (option) => widget.homeState._saveCountdownQuickUiPrefs(
+                      countdownStyleKey: option.value,
+                      prevalidatedUnlockedStyles: _unlockedStyles,
+                      isVip: widget.isVip,
                     ),
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: const Color(0xFFF4D7E2)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Đang dùng',
-                        style: SLTheme.quicksand(
-                          fontSize: 12.2,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFFD81B60),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
-                        children: [
-                          if (selectedStyle.isVipOnly && !widget.isVip)
-                            buildLockedVipButton(option: selectedStyle)
-                          else if (currentStyleIsLocked)
-                            buildLockedAdButton(
-                              option: selectedStyle,
-                              onUnlocked: (opt) async {
-                                await widget.homeState
-                                    ._saveCountdownQuickUiPrefs(
-                                      countdownStyleKey: opt.value,
-                                      prevalidatedUnlockedStyles:
-                                          _unlockedStyles,
-                                      isVip: widget.isVip,
-                                    );
-                              },
-                            )
-                          else
-                            buildOptionChip(
-                              option: selectedStyle,
-                              selected: true,
-                              onTap: () =>
-                                  widget.homeState._saveCountdownQuickUiPrefs(
-                                    countdownStyleKey: selectedStyle.value,
-                                    prevalidatedUnlockedStyles: _unlockedStyles,
-                                    isVip: widget.isVip,
-                                  ),
-                            ),
-                        ],
-                      ),
-                    ],
                   ),
                 ),
-                const SizedBox(height: 14),
-                buildHomeLayoutSection(
-                  selectedLayout: uiState.homeLayoutKey,
-                  onSelect: (layoutKey) async {
-                    HapticFeedback.selectionClick();
-                    await UiPrefs.setHomeLayoutKey(layoutKey);
-                  },
-                ),
-                const SizedBox(height: 12),
-                buildCollapsedSection(
-                  title: L10nService().translate('home_gdvangdem'),
-                  description: 'Đổi phong cách hiển thị vòng đếm ngày.',
-                  icon: Icons.change_circle_rounded,
-                  options: widget.styleOptions,
-                  selectedValue: uiState.countdownStyleKey,
-                  onSelect: (option) =>
-                      widget.homeState._saveCountdownQuickUiPrefs(
-                        countdownStyleKey: option.value,
-                        prevalidatedUnlockedStyles: _unlockedStyles,
-                        isVip: widget.isVip,
-                      ),
-                ),
-                const SizedBox(height: 12),
                 buildTextColorSection(
                   selectedColorHex: uiState.countdownTextColor,
                   onSelect: (hex) =>
@@ -2261,7 +1680,7 @@ class _CountdownQuickCustomizeSheetContentState
                 ),
                 const SizedBox(height: 12),
                 buildSizeSection(
-                  title: L10nService().translate('home_kthuocvongdem'),
+                  title: context.tr('home_kthuocvongdem'),
                   description: 'Kéo để điều chỉnh độ lớn của vòng đếm ngày.',
                   icon: Icons.photo_size_select_large_rounded,
                   currentValue: uiState.countdownSizePx,
@@ -2289,7 +1708,7 @@ class _CountdownQuickCustomizeSheetContentState
                       if (mounted) {
                         setState(() => _tempCountdownSize = null);
                         widget.homeState._showLatestSnackBar(
-                          'Đã lưu kích thước!',
+                          context.tr('legacy_saved_success'),
                         );
                       }
                     }
@@ -2304,189 +1723,227 @@ class _CountdownQuickCustomizeSheetContentState
                   },
                 ),
                 const SizedBox(height: 12),
-                // --- Kiểu khung avatar ---
-                buildCollapsedSection(
-                  title: L10nService().translate('home_kieukhungavatar'),
-                  description: 'Đổi kiểu viền avatar hiển thị trên trang chủ.',
-                  icon: Icons.account_circle_rounded,
-                  options: [
-                    _CountdownQuickOption(
-                      label: L10nService().translate('home_khong_avatar_frame'),
-                      value: 'off',
-                      icon: Icons.block_rounded,
-                      accent: const Color(0xFFBDBDBD),
+                ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  shape: const Border(),
+                  collapsedShape: const Border(),
+                  title: Text(
+                    context.tr('advanced'),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF493D40),
                     ),
-                    _CountdownQuickOption(
-                      label: L10nService().translate('home_tron_avatar_frame'),
-                      value: 'circle',
-                      icon: Icons.circle_rounded,
-                      accent: const Color(0xFF2563EB),
+                  ),
+                  children: [
+                    buildHomeLayoutSection(
+                      selectedLayout: uiState.homeLayoutKey,
+                      onSelect: (layoutKey) =>
+                          UiPrefs.setHomeLayoutKey(layoutKey),
                     ),
-                    _CountdownQuickOption(
-                      label: L10nService().translate('home_bogoc_avatar_frame'),
-                      value: 'rounded',
-                      icon: Icons.rounded_corner_rounded,
-                      accent: const Color(0xFFEC4899),
+                    // --- Kiểu khung avatar ---
+                    buildCollapsedSection(
+                      title: L10nService().translate('home_kieukhungavatar'),
+                      description:
+                          'Đổi kiểu viền avatar hiển thị trên trang chủ.',
+                      icon: Icons.account_circle_rounded,
+                      options: [
+                        for (final key in KeepsakePalette.newStyleKeys)
+                          _CountdownQuickOption(
+                            label: context.tr('keepsake_' + key),
+                            value: key,
+                            icon: Icons.account_circle_outlined,
+                            accent: KeepsakePalette.of(key).accent,
+                          ),
+                        _CountdownQuickOption(
+                          label: L10nService().translate(
+                            'home_khong_avatar_frame',
+                          ),
+                          value: 'off',
+                          icon: Icons.block_rounded,
+                          accent: const Color(0xFFBDBDBD),
+                        ),
+                        _CountdownQuickOption(
+                          label: L10nService().translate(
+                            'home_tron_avatar_frame',
+                          ),
+                          value: 'circle',
+                          icon: Icons.circle_rounded,
+                          accent: const Color(0xFF2563EB),
+                        ),
+                        _CountdownQuickOption(
+                          label: L10nService().translate(
+                            'home_bogoc_avatar_frame',
+                          ),
+                          value: 'rounded',
+                          icon: Icons.rounded_corner_rounded,
+                          accent: const Color(0xFFEC4899),
+                        ),
+                        _CountdownQuickOption(
+                          label: L10nService().translate(
+                            'home_squircle_avatar_frame',
+                          ),
+                          value: 'squircle',
+                          icon: Icons.crop_square_rounded,
+                          accent: const Color(0xFF8B5CF6),
+                        ),
+                        _CountdownQuickOption(
+                          label: L10nService().translate(
+                            'home_ngoctrai_avatar_frame',
+                          ),
+                          value: 'pearl',
+                          icon: Icons.blur_circular_rounded,
+                          accent: const Color(0xFFD4A520),
+                        ),
+                        _CountdownQuickOption(
+                          label: L10nService().translate(
+                            'home_thuytinh_avatar_frame',
+                          ),
+                          value: 'glass',
+                          icon: Icons.water_drop_rounded,
+                          accent: const Color(0xFF06B6D4),
+                        ),
+                      ],
+                      selectedValue: uiState.avatarFrameKey.isEmpty
+                          ? 'off'
+                          : uiState.avatarFrameKey,
+                      onSelect: (option) =>
+                          widget.homeState._saveCountdownQuickUiPrefs(
+                            avatarFrameKey: option.value,
+                            isVip: widget.isVip,
+                          ),
                     ),
-                    _CountdownQuickOption(
-                      label: L10nService().translate(
-                        'home_squircle_avatar_frame',
-                      ),
-                      value: 'squircle',
-                      icon: Icons.crop_square_rounded,
-                      accent: const Color(0xFF8B5CF6),
+                    const SizedBox(height: 12),
+                    buildAvatarIconToggleSection(
+                      showIcon: uiState.showAvatarFrameIcon,
+                      onToggle: (val) async {
+                        HapticFeedback.selectionClick();
+                        await UiPrefs.setShowAvatarFrameIcon(val);
+                      },
                     ),
-                    _CountdownQuickOption(
-                      label: L10nService().translate(
-                        'home_ngoctrai_avatar_frame',
-                      ),
-                      value: 'pearl',
-                      icon: Icons.blur_circular_rounded,
-                      accent: const Color(0xFFD4A520),
+                    const SizedBox(height: 12),
+                    // --- Chất lượng đồ họa ---
+                    buildCollapsedSection(
+                      title: L10nService().translate('home_chatluongdohoa'),
+                      description:
+                          'Tùy chỉnh chất lượng đồ họa và hiệu ứng hiển thị.',
+                      icon: Icons.high_quality_rounded,
+                      options: [
+                        _CountdownQuickOption(
+                          label: L10nService().translate('home_tudong_quality'),
+                          value: 'auto',
+                          icon: Icons.brightness_auto_rounded,
+                          accent: const Color(0xFF2563EB),
+                        ),
+                        _CountdownQuickOption(
+                          label: L10nService().translate(
+                            'home_thapmuot_quality',
+                          ),
+                          value: 'low',
+                          icon: Icons.battery_saver_rounded,
+                          accent: const Color(0xFFFF5E7E),
+                        ),
+                        _CountdownQuickOption(
+                          label: L10nService().translate(
+                            'home_trungbinh_quality',
+                          ),
+                          value: 'balanced',
+                          icon: Icons.balance_rounded,
+                          accent: const Color(0xFFD97706),
+                        ),
+                        _CountdownQuickOption(
+                          label: L10nService().translate('home_caodep_quality'),
+                          value: 'high',
+                          icon: Icons.bolt_rounded,
+                          accent: const Color(0xFF059669),
+                        ),
+                      ],
+                      selectedValue: uiState.graphicsQualityKey.isEmpty
+                          ? 'auto'
+                          : uiState.graphicsQualityKey,
+                      onSelect: (option) async {
+                        HapticFeedback.selectionClick();
+                        await UiPrefs.saveState(
+                          uiState.copyWith(graphicsQualityKey: option.value),
+                        );
+                      },
                     ),
-                    _CountdownQuickOption(
-                      label: L10nService().translate(
-                        'home_thuytinh_avatar_frame',
-                      ),
-                      value: 'glass',
-                      icon: Icons.water_drop_rounded,
-                      accent: const Color(0xFF06B6D4),
+                    const SizedBox(height: 12),
+                    // --- Ngôn ngữ ---
+                    buildCollapsedSection(
+                      title: L10nService().translate('home_ngonngu'),
+                      description: 'Đổi ngôn ngữ hiển thị của ứng dụng.',
+                      icon: Icons.language_rounded,
+                      options: [
+                        const _CountdownQuickOption(
+                          label: 'Tiếng Việt',
+                          value: 'vi',
+                          icon: Icons.flag_rounded,
+                          accent: Color(0xFFD81B60),
+                        ),
+                        const _CountdownQuickOption(
+                          label: 'English',
+                          value: 'en',
+                          icon: Icons.flag_rounded,
+                          accent: Color(0xFF2563EB),
+                        ),
+                        const _CountdownQuickOption(
+                          label: '中文 (简体)',
+                          value: 'zh',
+                          icon: Icons.flag_rounded,
+                          accent: Color(0xFFDC2626),
+                        ),
+                        const _CountdownQuickOption(
+                          label: '中文 (繁體)',
+                          value: 'zh-TW',
+                          icon: Icons.flag_rounded,
+                          accent: Color(0xFF7C3AED),
+                        ),
+                        const _CountdownQuickOption(
+                          label: '日本語',
+                          value: 'ja',
+                          icon: Icons.flag_rounded,
+                          accent: Color(0xFFEA580C),
+                        ),
+                        const _CountdownQuickOption(
+                          label: '한국어',
+                          value: 'ko',
+                          icon: Icons.flag_rounded,
+                          accent: Color(0xFF0891B2),
+                        ),
+                        const _CountdownQuickOption(
+                          label: 'ภาษาไทย',
+                          value: 'th',
+                          icon: Icons.flag_rounded,
+                          accent: Color(0xFF059669),
+                        ),
+                        const _CountdownQuickOption(
+                          label: 'Bahasa Indonesia',
+                          value: 'id',
+                          icon: Icons.flag_rounded,
+                          accent: Color(0xFFD97706),
+                        ),
+                        const _CountdownQuickOption(
+                          label: 'Español',
+                          value: 'es',
+                          icon: Icons.flag_rounded,
+                          accent: Color(0xFFB91C1C),
+                        ),
+                        const _CountdownQuickOption(
+                          label: 'Français',
+                          value: 'fr',
+                          icon: Icons.flag_rounded,
+                          accent: Color(0xFF1D4ED8),
+                        ),
+                      ],
+                      selectedValue: L10nService().localeCode,
+                      onSelect: (option) async {
+                        HapticFeedback.selectionClick();
+                        await Future.delayed(const Duration(milliseconds: 300));
+                        await L10nService().setLocale(option.value);
+                      },
                     ),
                   ],
-                  selectedValue: uiState.avatarFrameKey.isEmpty
-                      ? 'off'
-                      : uiState.avatarFrameKey,
-                  onSelect: (option) =>
-                      widget.homeState._saveCountdownQuickUiPrefs(
-                        avatarFrameKey: option.value,
-                        isVip: widget.isVip,
-                      ),
-                ),
-                const SizedBox(height: 12),
-                buildAvatarIconToggleSection(
-                  showIcon: uiState.showAvatarFrameIcon,
-                  onToggle: (val) async {
-                    HapticFeedback.selectionClick();
-                    await UiPrefs.setShowAvatarFrameIcon(val);
-                  },
-                ),
-                const SizedBox(height: 12),
-                // --- Chất lượng đồ họa ---
-                buildCollapsedSection(
-                  title: L10nService().translate('home_chatluongdohoa'),
-                  description:
-                      'Tùy chỉnh chất lượng đồ họa và hiệu ứng hiển thị.',
-                  icon: Icons.high_quality_rounded,
-                  options: [
-                    _CountdownQuickOption(
-                      label: L10nService().translate('home_tudong_quality'),
-                      value: 'auto',
-                      icon: Icons.brightness_auto_rounded,
-                      accent: const Color(0xFF2563EB),
-                    ),
-                    _CountdownQuickOption(
-                      label: L10nService().translate('home_thapmuot_quality'),
-                      value: 'low',
-                      icon: Icons.battery_saver_rounded,
-                      accent: const Color(0xFFFF5E7E),
-                    ),
-                    _CountdownQuickOption(
-                      label: L10nService().translate('home_trungbinh_quality'),
-                      value: 'balanced',
-                      icon: Icons.balance_rounded,
-                      accent: const Color(0xFFD97706),
-                    ),
-                    _CountdownQuickOption(
-                      label: L10nService().translate('home_caodep_quality'),
-                      value: 'high',
-                      icon: Icons.bolt_rounded,
-                      accent: const Color(0xFF059669),
-                    ),
-                  ],
-                  selectedValue: uiState.graphicsQualityKey.isEmpty
-                      ? 'auto'
-                      : uiState.graphicsQualityKey,
-                  onSelect: (option) async {
-                    HapticFeedback.selectionClick();
-                    await UiPrefs.saveState(
-                      uiState.copyWith(graphicsQualityKey: option.value),
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
-                // --- Ngôn ngữ ---
-                buildCollapsedSection(
-                  title: L10nService().translate('home_ngonngu'),
-                  description: 'Đổi ngôn ngữ hiển thị của ứng dụng.',
-                  icon: Icons.language_rounded,
-                  options: [
-                    const _CountdownQuickOption(
-                      label: 'Tiếng Việt',
-                      value: 'vi',
-                      icon: Icons.flag_rounded,
-                      accent: Color(0xFFD81B60),
-                    ),
-                    const _CountdownQuickOption(
-                      label: 'English',
-                      value: 'en',
-                      icon: Icons.flag_rounded,
-                      accent: Color(0xFF2563EB),
-                    ),
-                    const _CountdownQuickOption(
-                      label: '中文 (简体)',
-                      value: 'zh',
-                      icon: Icons.flag_rounded,
-                      accent: Color(0xFFDC2626),
-                    ),
-                    const _CountdownQuickOption(
-                      label: '中文 (繁體)',
-                      value: 'zh-TW',
-                      icon: Icons.flag_rounded,
-                      accent: Color(0xFF7C3AED),
-                    ),
-                    const _CountdownQuickOption(
-                      label: '日本語',
-                      value: 'ja',
-                      icon: Icons.flag_rounded,
-                      accent: Color(0xFFEA580C),
-                    ),
-                    const _CountdownQuickOption(
-                      label: '한국어',
-                      value: 'ko',
-                      icon: Icons.flag_rounded,
-                      accent: Color(0xFF0891B2),
-                    ),
-                    const _CountdownQuickOption(
-                      label: 'ภาษาไทย',
-                      value: 'th',
-                      icon: Icons.flag_rounded,
-                      accent: Color(0xFF059669),
-                    ),
-                    const _CountdownQuickOption(
-                      label: 'Bahasa Indonesia',
-                      value: 'id',
-                      icon: Icons.flag_rounded,
-                      accent: Color(0xFFD97706),
-                    ),
-                    const _CountdownQuickOption(
-                      label: 'Español',
-                      value: 'es',
-                      icon: Icons.flag_rounded,
-                      accent: Color(0xFFB91C1C),
-                    ),
-                    const _CountdownQuickOption(
-                      label: 'Français',
-                      value: 'fr',
-                      icon: Icons.flag_rounded,
-                      accent: Color(0xFF1D4ED8),
-                    ),
-                  ],
-                  selectedValue: L10nService().localeCode,
-                  onSelect: (option) async {
-                    HapticFeedback.selectionClick();
-                    await Future.delayed(const Duration(milliseconds: 300));
-                    await L10nService().setLocale(option.value);
-                  },
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
@@ -2503,7 +1960,7 @@ class _CountdownQuickCustomizeSheetContentState
                       ),
                     ),
                     child: Text(
-                      'Xong',
+                      context.tr('core_done'),
                       style: SLTheme.quicksand(
                         fontSize: 15,
                         fontWeight: FontWeight.w900,

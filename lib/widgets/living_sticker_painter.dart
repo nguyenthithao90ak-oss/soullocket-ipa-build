@@ -7,6 +7,7 @@ import 'living_sticker_scene.dart';
 part 'living_sticker_characters.dart';
 part 'living_sticker_objects.dart';
 part 'living_sticker_celebrations.dart';
+part 'living_sticker_couple_holidays.dart';
 
 /// Hệ tọa độ cố định: chỉ các khớp và chi tiết được phép chuyển động.
 class LivingStickerPainter extends CustomPainter {

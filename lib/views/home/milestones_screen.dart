@@ -6,6 +6,7 @@ import '../../utils/services/l10n_service.dart';
 import '../utilities/calendar_screen.dart';
 import '../../core/sl_page_physics.dart';
 import '../../widgets/living_sticker_scene.dart';
+import '../../utils/services/holiday_service.dart';
 import 'milestone_sticker_gallery_screen.dart';
 
 class MilestoneEvent {
@@ -223,89 +224,22 @@ class _MilestonesScreenState extends State<MilestonesScreen>
     computeBirthdays(dobU1, nameU1, 'moment_birthday_u1');
     computeBirthdays(dobU2, nameU2, 'moment_birthday_u2');
 
-    // 3. Ngày lễ lớn đầy đủ (năm trước, năm nay, năm sau)
-    final holidaysList = [
-      {
-        'month': 1,
-        'day': 1,
-        'name': L10nService().translate('holiday_new_year'),
-      },
-      {
-        'month': 2,
-        'day': 14,
-        'name': L10nService().translate('holiday_valentine'),
-      },
-      {
-        'month': 3,
-        'day': 8,
-        'name': L10nService().translate('holiday_womens_day'),
-      },
-      {
-        'month': 3,
-        'day': 14,
-        'name': L10nService().translate('holiday_white_valentine'),
-      },
-      {
-        'month': 4,
-        'day': 1,
-        'name': L10nService().translate('holiday_april_fools'),
-      },
-      {
-        'month': 4,
-        'day': 14,
-        'name': L10nService().translate('holiday_black_valentine'),
-      },
-      {
-        'month': 6,
-        'day': 1,
-        'name': L10nService().translate('holiday_childrens_day'),
-      },
-      {
-        'month': 6,
-        'day': 28,
-        'name': L10nService().translate('holiday_vietnamese_family_day'),
-      },
-      {
-        'month': 10,
-        'day': 20,
-        'name': L10nService().translate('holiday_vietnamese_womens_day'),
-      },
-      {
-        'month': 10,
-        'day': 31,
-        'name': L10nService().translate('holiday_halloween'),
-      },
-      {
-        'month': 12,
-        'day': 24,
-        'name': L10nService().translate('holiday_christmas_eve'),
-      },
-      {
-        'month': 12,
-        'day': 25,
-        'name': L10nService().translate('holiday_christmas'),
-      },
-      {
-        'month': 12,
-        'day': 31,
-        'name': L10nService().translate('holiday_new_years_eve'),
-      },
-    ];
-    for (final h in holidaysList) {
+    // 3. Ngày lễ lớn đầy đủ (lọc theo quốc gia / ngôn ngữ của người dùng)
+    final applicableHolidays = HolidayService.getApplicableHolidays();
+    for (final h in applicableHolidays) {
       for (int yearOffset = -1; yearOffset <= 1; yearOffset++) {
         final targetYear = todayMidnight.year + yearOffset;
-        final holidayDate = DateTime(
-          targetYear,
-          h['month'] as int,
-          h['day'] as int,
-        );
+        final holidayDate = h.dateInYear(targetYear);
+        if (holidayDate == null) continue;
         final diff = holidayDate.difference(todayMidnight).inDays;
+        final displayName = HolidayService.getLocalizedName(h);
         allEvents.add(
           MilestoneEvent(
-            title: h['name'] as String,
+            title: displayName,
             date: holidayDate,
             type: 'holiday',
-            stickerKey: MilestoneStickerCatalog.holidayKey(holidayDate),
+            stickerKey:
+                h.stickerKey ?? MilestoneStickerCatalog.holidayKey(holidayDate),
             diffDays: diff,
           ),
         );

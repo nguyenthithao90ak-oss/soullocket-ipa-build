@@ -85,19 +85,13 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
         'il_local_music_playlist',
         jsonEncode(_playlist.map((e) => e.toJson()).toList()),
       );
-      await prefs.setBool('il_music_autoplay', false);
-
-      final ui = UiPrefs.notifier.value;
-      await UiPrefs.saveState(ui.copyWith(musicAutoplay: false));
-
       await _saveMusicSettingsToFirebase();
       await MusicService().reloadPlaylist();
-      await MusicService().stop(keepPlaylist: true);
 
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _musicAutoplay = false;
+        _musicAutoplay = UiPrefs.notifier.value.musicAutoplay;
       });
       _showToast(
         _isVipActive && anyCloudSynced
@@ -177,7 +171,8 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
     final currentTrack = _playlist.isNotEmpty
         ? _playlist.first
         : MusicService.defaultTrack;
-    final isDefault = currentTrack.isDefault ||
+    final isDefault =
+        currentTrack.isDefault ||
         currentTrack.url == MusicService.defaultMusicAsset ||
         currentTrack.url.contains('cat_ca_chung_ta');
 
@@ -187,18 +182,12 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [
-            Color(0xFFFFF0F5),
-            Color(0xFFFFE8F0),
-          ],
+          colors: [Color(0xFFFFF0F5), Color(0xFFFFE8F0)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: SLRadius.mdAll,
-        border: Border.all(
-          color: const Color(0xFFF48FB1),
-          width: 1.2,
-        ),
+        border: Border.all(color: const Color(0xFFF48FB1), width: 1.2),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFFE91E63).withValues(alpha: 0.08),
@@ -225,8 +214,9 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                   boxShadow: isPlaying
                       ? [
                           BoxShadow(
-                            color: const Color(0xFFE91E63)
-                                .withValues(alpha: 0.35),
+                            color: const Color(
+                              0xFFE91E63,
+                            ).withValues(alpha: 0.35),
                             blurRadius: 10,
                             spreadRadius: 1,
                           ),
@@ -270,11 +260,13 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE91E63).withValues(alpha: 0.12),
+                          color: const Color(
+                            0xFFE91E63,
+                          ).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          'Mặc định',
+                          context.tr('theme_music_default_tag'),
                           style: SLTextStyles.quicksand(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
@@ -290,8 +282,8 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                   builder: (context, isPlaying, _) {
                     return Text(
                       isPlaying
-                          ? '🎶 Đang phát · Chạm để dừng'
-                          : '⏸️ Tạm dừng · Chạm để nghe thử',
+                          ? context.tr('theme_music_status_playing')
+                          : context.tr('theme_music_status_paused'),
                       style: SLTextStyles.quicksand(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -318,7 +310,9 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                       : Icons.play_circle_fill_rounded,
                   color: const Color(0xFFE91E63),
                 ),
-                tooltip: isPlaying ? 'Tạm dừng' : 'Nghe thử',
+                tooltip: isPlaying
+                    ? context.tr('theme_music_action_pause')
+                    : context.tr('theme_music_action_preview'),
                 onPressed: () async {
                   if (_playlist.isEmpty) {
                     _playlist = [MusicService.defaultTrack];
@@ -352,7 +346,10 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
       }
       if (!mounted) return;
       setState(() => _isLoading = false);
-      _showToast('Đã chọn nhạc nền mặc định: Cất Cả Chúng Ta', success: true);
+      _showToast(
+        context.tr('theme_music_selected_default_toast'),
+        success: true,
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -366,15 +363,15 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: _ThemeSectionCard(
+      child: AppearanceSectionCard(
         icon: Icons.music_note_rounded,
-        title: context.tr('theme_music_panel'),
+        title: context.tr('appearance_music_title'),
         description: hasCustomTracks
             ? context
                   .tr('p7_music_playlist_count')
                   .replaceAll('{count}', '${_playlist.length}')
-            : 'Cất Cả Chúng Ta · Nhạc nền mặc định',
-        themeColor: const Color(0xFFFF8F00),
+            : context.tr('theme_music_default_desc'),
+
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -387,22 +384,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                 setState(() => _musicAutoplay = v);
                 SoundService().playClick();
 
-                final ui = UiPrefs.notifier.value;
-                await UiPrefs.saveState(ui.copyWith(musicAutoplay: v));
-
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.setBool('il_music_autoplay', v);
-                if (!v) {
-                  await MusicService().stop(keepPlaylist: true);
-                } else {
-                  if (_playlist.isEmpty) {
-                    _playlist = [MusicService.defaultTrack];
-                  }
-                  await MusicService().play(
-                    _playlist.first.url,
-                    type: _playlist.first.type,
-                  );
-                }
+                await MusicService().setAutoplay(v);
                 if (!mounted) return;
                 _showToast(
                   v
@@ -415,7 +397,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
             _buildActiveTrackCard(),
             if (hasCustomTracks) ...[
               _buildGradientBtn(
-                label: '🎵 Đặt lại bài hát Cất Cả Chúng Ta',
+                label: context.tr('theme_music_reset_default_btn'),
                 gradient: const [Color(0xFFEC407A), Color(0xFFF48FB1)],
                 onTap: _switchToDefaultTrack,
               ),

@@ -1,3 +1,4 @@
+import 'diary/widgets/diary_memory_video_player.dart';
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'dart:async';
 
@@ -7,7 +8,6 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:video_player/video_player.dart';
 
 import 'package:intl/intl.dart';
 
@@ -744,7 +744,7 @@ class _DiaryTabState extends State<DiaryTab>
   }
 
   BannerAd? _bottomBannerAd;
-  bool _isBottomBannerReady = false;
+  final bool _isBottomBannerReady = false;
 
   @override
   void dispose() {
@@ -1135,6 +1135,7 @@ class _DiaryTabState extends State<DiaryTab>
                               },
                               itemBuilder: (context, index) {
                                 return _MemoryViewerPage(
+                                  isActive: index == currentIndex,
                                   item: allPhotos[index],
                                   dragOffsetNotifier: dragOffsetNotifier,
                                   dragScaleNotifier: dragScaleNotifier,
@@ -1782,6 +1783,7 @@ class _MemoryZoomDraggableWrapperState
 
 class _MemoryViewerPage extends StatefulWidget {
   final Map<String, dynamic> item;
+  final bool isActive;
   final ValueNotifier<Offset> dragOffsetNotifier;
   final ValueNotifier<double> dragScaleNotifier;
   final ValueNotifier<bool> isZoomedInNotifier;
@@ -1791,6 +1793,7 @@ class _MemoryViewerPage extends StatefulWidget {
 
   const _MemoryViewerPage({
     required this.item,
+    this.isActive = true,
     required this.dragOffsetNotifier,
     required this.dragScaleNotifier,
     required this.isZoomedInNotifier,
@@ -1884,7 +1887,8 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
                     clipBehavior: Clip.none,
                     interactionEndFrictionCoefficient: 0.00008,
                     child: _isVideo
-                        ? _MemoryVideoWidget(
+                        ? DiaryMemoryVideoPlayer(
+                            isActive: widget.isActive,
                             url: url,
                             houseId:
                                 widget.item['houseId']?.toString() ??
@@ -1920,247 +1924,6 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
           );
         },
       ),
-    );
-  }
-}
-
-class _MemoryVideoWidget extends StatefulWidget {
-  final String url;
-  final String? houseId;
-  final String? memoryId;
-
-  const _MemoryVideoWidget({required this.url, this.houseId, this.memoryId});
-
-  @override
-  State<_MemoryVideoWidget> createState() => _MemoryVideoWidgetState();
-}
-
-class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
-  VideoPlayerController? _controller;
-  bool _initialized = false;
-  bool _hasError = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _initVideo();
-  }
-
-  Future<void> _initVideo() async {
-    try {
-      String playUrl = widget.url.trim();
-      if (playUrl.isEmpty &&
-          widget.houseId != null &&
-          widget.houseId!.isNotEmpty &&
-          widget.memoryId != null &&
-          widget.memoryId!.isNotEmpty) {
-        try {
-          final res = await PrivateMediaUrlService().resolve(
-            houseId: widget.houseId!,
-            mediaId: widget.memoryId!,
-            kind: 'memory_image',
-          );
-          playUrl = res.url;
-        } catch (error) {
-          debugPrint(
-            '[SuppressedError] lib/views/home/tabs/diary_tab.dart: $error',
-          );
-        }
-      }
-
-      if (playUrl.isEmpty) {
-        if (mounted) setState(() => _hasError = true);
-        return;
-      }
-
-      playUrl = CloudflareR2Service.resolveVideoUrl(playUrl);
-
-      final uri = Uri.parse(playUrl);
-      final controller = VideoPlayerController.networkUrl(uri);
-      _controller = controller;
-      await controller.initialize();
-      if (mounted) {
-        setState(() => _initialized = true);
-        controller.setLooping(true);
-        controller.play();
-      }
-    } catch (e) {
-      debugPrint('[MemoryVideo] Play error: $e');
-      if (widget.houseId != null &&
-          widget.houseId!.isNotEmpty &&
-          widget.memoryId != null &&
-          widget.memoryId!.isNotEmpty) {
-        try {
-          final res = await PrivateMediaUrlService().resolve(
-            houseId: widget.houseId!,
-            mediaId: widget.memoryId!,
-            kind: 'memory_image',
-          );
-          final freshPlayUrl = CloudflareR2Service.resolveVideoUrl(res.url);
-          final freshUri = Uri.parse(freshPlayUrl);
-          final controller = VideoPlayerController.networkUrl(freshUri);
-          _controller = controller;
-          await controller.initialize();
-          if (mounted) {
-            setState(() => _initialized = true);
-            controller.setLooping(true);
-            controller.play();
-            return;
-          }
-        } catch (error) {
-          debugPrint(
-            '[SuppressedError] lib/views/home/tabs/diary_tab.dart: $error',
-          );
-        }
-      }
-      if (mounted) setState(() => _hasError = true);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_hasError) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              color: Colors.white,
-              size: 48,
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Không thể phát video',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton.icon(
-              onPressed: () {
-                setState(() {
-                  _hasError = false;
-                  _initialized = false;
-                });
-                _initVideo();
-              },
-              icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: const Text('Thử lại'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final controller = _controller;
-    if (!_initialized || controller == null) {
-      return const Center(
-        child: CircularProgressIndicator(color: Colors.white),
-      );
-    }
-
-    return ValueListenableBuilder<VideoPlayerValue>(
-      valueListenable: controller,
-      builder: (context, value, child) {
-        if (value.hasError) {
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.error_outline_rounded,
-                  color: Colors.white,
-                  size: 48,
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Không thể phát video',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      _hasError = false;
-                      _initialized = false;
-                    });
-                    _initVideo();
-                  },
-                  icon: const Icon(Icons.refresh_rounded, size: 18),
-                  label: const Text('Thử lại'),
-                ),
-              ],
-            ),
-          );
-        }
-
-        final isPlaying = value.isPlaying;
-        final isBuffering = value.isBuffering;
-        final size = value.size;
-        final hasValidSize = size.width > 0 && size.height > 0;
-
-        return GestureDetector(
-          onTap: () {
-            if (controller.value.isPlaying) {
-              controller.pause();
-            } else {
-              controller.play();
-            }
-          },
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox.expand(
-                child: hasValidSize
-                    ? Center(
-                        child: FittedBox(
-                          fit: BoxFit.contain,
-                          child: SizedBox(
-                            width: size.width,
-                            height: size.height,
-                            child: VideoPlayer(controller),
-                          ),
-                        ),
-                      )
-                    : Center(
-                        child: AspectRatio(
-                          aspectRatio: value.aspectRatio > 0
-                              ? value.aspectRatio
-                              : 16 / 9,
-                          child: VideoPlayer(controller),
-                        ),
-                      ),
-              ),
-              if (isBuffering)
-                const CircularProgressIndicator(color: Colors.white)
-              else if (!isPlaying)
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: const BoxDecoration(
-                    color: Colors.black54,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.play_arrow_rounded,
-                    color: Colors.white,
-                    size: 44,
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
     );
   }
 }

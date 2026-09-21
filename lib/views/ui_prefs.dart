@@ -183,7 +183,7 @@ class UiPrefsState {
     customBackgroundUrl: '',
     touchSound: true,
     confettiFx: false,
-    musicAutoplay: true,
+    musicAutoplay: false,
     vaultTimeoutMins: 15,
     vaultHomeEnabled: true,
     vaultHomeStyle: 'soft',
@@ -681,6 +681,15 @@ class UiPrefs {
 
   static Future<void> resetToDefaults() async {
     await saveState(UiPrefsState.defaults);
+  }
+
+  /// Lựa chọn phát nhạc của thiết bị: chỉ thay khi người dùng bật/tắt.
+  static Future<void> setMusicAutoplay(bool enabled) async {
+    await ensureLoaded();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
+    await prefs.setBool(_kMusicAutoplayKey, enabled);
+    notifier.value = notifier.value.copyWith(musicAutoplay: enabled);
   }
 
   static String _normalizeVaultHomeStyle(String value) {

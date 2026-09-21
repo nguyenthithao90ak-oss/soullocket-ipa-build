@@ -353,156 +353,20 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
   //   }
 
   Widget _buildCountdownStyleStrip(String selectedKey, bool hasAdPass) {
-    final items = [
-      (
-        context.tr('countdown_default'),
-        'default',
-        const [Color(0xFFFFF0F7), Color(0xFFFFDDEF), Color(0xFFFFC8DE)],
-        false,
-      ),
-      (
-        context.tr('countdown_glass'),
-        'glass',
-        const [Color(0xFFF5FAFF), Color(0xFFE6F7FF)],
-        false,
-      ),
-      (
-        context.tr('countdown_glow'),
-        'glow',
-        const [Color(0xFFFFF5FA), Color(0xFFFFD9E8)],
-        false,
-      ),
-      (
-        context.tr('countdown_candy'),
-        'candy',
-        const [Color(0xFFFFE3F3), Color(0xFFE0F7FF), Color(0xFFFFF4C8)],
-        false,
-      ),
-      (
-        context.tr('countdown_floating_hearts'),
-        'floating_hearts',
-        const [Color(0xFFFFF5F8), Color(0xFFFFF0F5)],
-        true,
-      ),
-      (
-        context.tr('countdown_galaxy'),
-        'galaxy',
-        const [Color(0xFF120024), Color(0xFF05000F)],
-        true,
-      ),
-      (
-        context.tr('countdown_aurora'),
-        'aurora',
-        const [Color(0xFF001B2E), Color(0xFF021A10)],
-        true,
-      ),
-      (
-        context.tr('countdown_crystal'),
-        'crystal',
-        const [Color(0xFFE8F4FF), Color(0xFFF6EAFF), Color(0xFFFFF8E7)],
-        true,
-      ),
-      (
-        context.tr('countdown_fireworks'),
-        'fireworks',
-        const [Color(0xFF140026), Color(0xFF06000F)],
-        true,
-      ),
-      (
-        context.tr('countdown_lava'),
-        'lava',
-        const [Color(0xFF1A0502), Color(0xFF4A1103)],
-        true,
-      ),
-    ];
-
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: items.map((item) {
-        final key = item.$2;
-        final isPremium = item.$4;
-        final locked = isPremium && !_isVipActive && !hasAdPass;
-        final selected = selectedKey == key && !locked;
-        return Semantics(
-          button: true,
-          selected: selected,
-          label: item.$1,
-          excludeSemantics: true,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(999),
-            onTap: () {
-              unawaited(_handleCountdownStyleChange(key));
-            },
-            child: AnimatedScale(
-              scale: selected ? 1.08 : 1.0,
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutBack,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOut,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  gradient: locked
-                      ? LinearGradient(
-                          colors: item.$3
-                              .map((c) => c.withValues(alpha: 0.50))
-                              .toList(),
-                        )
-                      : LinearGradient(colors: item.$3),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color: selected
-                        ? const Color(0xFFD81B60)
-                        : Colors.white.withValues(alpha: 0.7),
-                    width: selected ? 2.2 : 1,
-                  ),
-                  boxShadow: selected
-                      ? [
-                          BoxShadow(
-                            color: const Color(
-                              0xFFD81B60,
-                            ).withValues(alpha: 0.28),
-                            blurRadius: 20,
-                            spreadRadius: 1,
-                            offset: const Offset(0, 6),
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      item.$1,
-                      style: SLTheme.quicksand(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w900,
-                        color: locked
-                            ? const Color(0xFF9E9E9E)
-                            : selected
-                            ? const Color(0xFFD81B60)
-                            : const Color(0xFF5C4B58),
-                      ),
-                    ),
-                    if (locked) ...[
-                      const SizedBox(width: 4),
-                      const Icon(
-                        Icons.play_circle_fill_rounded,
-                        size: 14,
-                        color: Color(0xFFD81B60),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
+    final items = _buildThemePanelConfig().countdownStyles;
+    return KeepsakeChoiceGrid(
+      children: [
+        for (final item in items)
+          KeepsakeChoiceCard(
+            label: item.$1,
+            selected: selectedKey == item.$2,
+            lockLabel: item.$3 && !_isVipActive && !hasAdPass
+                ? context.tr('theme_countdown_label_ad')
+                : null,
+            preview: CountdownStylePreview(styleKey: item.$2),
+            onTap: () => unawaited(_handleCountdownStyleChange(item.$2)),
           ),
-        );
-      }).toList(),
+      ],
     );
   }
 
@@ -809,169 +673,36 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
     );
   }
 
-  // --- Avatar frame visual strip ---
-  BorderRadius _avatarFramePreviewRadius(String frameKey) {
-    switch (frameKey) {
-      case 'off':
-        return BorderRadius.circular(6);
-      case 'circle':
-        return BorderRadius.circular(999);
-      case 'rounded':
-        return BorderRadius.circular(18);
-      case 'squircle':
-        return BorderRadius.circular(22);
-      case 'pearl':
-        return BorderRadius.circular(12);
-      case 'glass':
-        return BorderRadius.circular(14);
-      case 'vip':
-        return BorderRadius.circular(999);
-      default:
-        return BorderRadius.circular(999);
-    }
-  }
-
   Widget _buildAvatarFrameStrip(String selectedKey) {
-    final items = <(String, String, IconData, Color)>[
-      (
-        context.tr('p7_frame_none'),
-        'off',
-        Icons.block_rounded,
-        const Color(0xFFBDBDBD),
-      ),
-      (
-        context.tr('p7_frame_circle'),
-        'circle',
-        Icons.circle_rounded,
-        const Color(0xFF2563EB),
-      ),
-      (
-        context.tr('p7_frame_rounded'),
-        'rounded',
-        Icons.rounded_corner_rounded,
-        const Color(0xFFEC4899),
-      ),
-      (
-        'Squircle',
-        'squircle',
-        Icons.crop_square_rounded,
-        const Color(0xFF8B5CF6),
-      ),
-      (
-        context.tr('p7_frame_pearl'),
-        'pearl',
-        Icons.blur_circular_rounded,
-        const Color(0xFFD4A520),
-      ),
-      (
-        context.tr('p7_frame_glass'),
-        'glass',
-        Icons.water_drop_rounded,
-        const Color(0xFF06B6D4),
-      ),
-      if (AppConfig.isPurchaseEnabled)
-        (
-          _isVipActive ? 'VIP ✨' : 'VIP 🔒',
-          'vip',
-          Icons.workspace_premium_rounded,
-          const Color(0xFFFF9800),
-        ),
-    ];
-
-    return Wrap(
-      spacing: 10,
-      runSpacing: 12,
-      children: items.map((item) {
-        final key = item.$2;
-        final locked = key == 'vip' && !_isVipActive;
-        final selected = selectedKey == key;
-        final color = item.$4;
-        final previewRadius = _avatarFramePreviewRadius(key);
-
-        return Semantics(
-          button: true,
-          selected: selected,
-          label: item.$1,
-          excludeSemantics: true,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(18),
-            onTap: () => _handleAvatarFrameSelection(key),
-            child: AnimatedScale(
-              scale: selected ? 1.08 : 1.0,
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutBack,
-              child: SizedBox(
-                width: 58,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      curve: Curves.easeOut,
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: selected
-                            ? color.withValues(alpha: 0.14)
-                            : Colors.white.withValues(alpha: 0.92),
-                        borderRadius: previewRadius,
-                        border: Border.all(
-                          color: selected ? color : const Color(0xFFDDD0D6),
-                          width: selected ? 2.2 : 1.2,
-                        ),
-                        boxShadow: selected
-                            ? [
-                                BoxShadow(
-                                  color: color.withValues(alpha: 0.30),
-                                  blurRadius: 14,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ]
-                            : [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                      ),
-                      child: Center(
-                        child: SlAvatarFrame(
-                          frameKey: key,
-                          size: 36,
-                          accentColor: selected
-                              ? color
-                              : (locked
-                                    ? const Color(0xFFE2E8F0)
-                                    : const Color(0xFF94A3B8)),
-                          child: Container(
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFF1F5F9),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      item.$1,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: SLTheme.quicksand(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        color: selected ? color : const Color(0xFF6B7280),
-                      ),
-                    ),
-                  ],
+    final items = _buildThemePanelConfig().avatarFrames;
+    return KeepsakeChoiceGrid(
+      children: [
+        for (final item in items)
+          KeepsakeChoiceCard(
+            label: item.$1,
+            selected: selectedKey == item.$2,
+            lockLabel: item.$2 == 'vip' && !_isVipActive
+                ? context.tr('frame_vip')
+                : null,
+            preview: SlAvatarFrame(
+              frameKey: item.$2,
+              size: 76,
+              animate: false,
+              accentColor: KeepsakePalette.of(item.$2).accent,
+              child: ColoredBox(
+                color: KeepsakePalette.of(item.$2).paper,
+                child: Icon(
+                  Icons.person_rounded,
+                  size: 38,
+                  color: KeepsakePalette.of(
+                    item.$2,
+                  ).accent.withValues(alpha: .55),
                 ),
               ),
             ),
+            onTap: () => _handleAvatarFrameSelection(item.$2),
           ),
-        );
-      }).toList(),
+      ],
     );
   }
 }

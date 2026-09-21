@@ -1024,6 +1024,7 @@ class AdMobService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('ad_pending_nonce_$rewardUid', rewardNonce);
       await prefs.setString('ad_pending_purpose_$rewardUid', verifiedPurpose);
+      await prefs.setInt('ad_pending_started_$rewardUid', DateTime.now().millisecondsSinceEpoch);
     } else {
       if (_rewardedAd == null) return false;
       await _rewardedAd!.setServerSideOptions(
@@ -1051,6 +1052,14 @@ class AdMobService {
         AppLifecyclePresenceGuard.settle();
         // Delay to ensure that if onUserEarnedReward is scheduled slightly after dismissal, it has time to register.
         await Future<void>.delayed(const Duration(milliseconds: 150));
+        if (!didEarnReward && verifiedPurpose == 'companion_points' && rewardUid != null) {
+          final prefs = await SharedPreferences.getInstance();
+          if (prefs.getString('ad_pending_nonce_$rewardUid') == rewardNonce) {
+            await prefs.remove('ad_pending_nonce_$rewardUid');
+            await prefs.remove('ad_pending_purpose_$rewardUid');
+            await prefs.remove('ad_pending_started_$rewardUid');
+          }
+        }
         if (!completer.isCompleted) completer.complete(didEarnReward);
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
@@ -1846,6 +1855,39 @@ class AdMobService {
     return RewardClaimResult.fromResponse(receipt);
   }
 
+  /// Khôi phục biên nhận trước khi đề nghị quảng cáo mới; không cộng XP.
+  Future<RewardClaimResult> companionAdReward({bool showIfNone = false}) async {
+    const purpose = 'companion_points';
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return const RewardClaimResult(ok: false, error: 'unauthenticated');
+    final prefs = await SharedPreferences.getInstance();
+    if (FirebaseAuth.instance.currentUser?.uid != uid) {
+      return const RewardClaimResult(ok: false, error: 'unauthenticated');
+    }
+    final pendingPurpose = prefs.getString('ad_pending_purpose_$uid');
+    if (pendingPurpose != null && prefs.getString('ad_pending_nonce_$uid') != null) {
+      final receipt = await _waitForVerifiedReward(pendingPurpose);
+      final started = prefs.getInt('ad_pending_started_$uid');
+      if (receipt?['error'] == 'reward_pending' && started != null &&
+          DateTime.now().millisecondsSinceEpoch - started > const Duration(hours: 24).inMilliseconds) {
+        await prefs.remove('ad_pending_nonce_$uid');
+        await prefs.remove('ad_pending_purpose_$uid');
+        await prefs.remove('ad_pending_started_$uid');
+      }
+      return RewardClaimResult.fromResponse(receipt);
+    }
+    if (!showIfNone) return const RewardClaimResult(ok: false, error: 'missing_proof');
+    final watched = await showRewardedAd(verifiedPurpose: purpose);
+    if (FirebaseAuth.instance.currentUser?.uid != uid) {
+      return const RewardClaimResult(ok: false, error: 'unauthenticated');
+    }
+    if (!watched) {
+      // Chưa được thưởng: giữ biên nhận để kiểm tra SSV trễ, không mất thưởng.
+      return const RewardClaimResult(ok: false, error: 'ad_not_completed');
+    }
+    return RewardClaimResult.fromResponse(await _waitForVerifiedReward(purpose));
+  }
+
   Future<Map<String, dynamic>?> _waitForVerifiedReward(String purpose) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return {'ok': false, 'error': 'unauthenticated'};
@@ -1876,7 +1918,8 @@ class AdMobService {
         if (prefs.getString('ad_pending_nonce_$uid') == pending) {
           await prefs.remove('ad_pending_nonce_$uid');
           await prefs.remove('ad_pending_purpose_$uid');
-          if (purpose == 'points') await _incrementDailyRewardedAdCount();
+          await prefs.remove('ad_pending_started_$uid');
+          if (purpose == 'points' || purpose == 'companion_points') await _incrementDailyRewardedAdCount();
         }
         return FirebaseAuth.instance.currentUser?.uid == uid ? response : null;
       }

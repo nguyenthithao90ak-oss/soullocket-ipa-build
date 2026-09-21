@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/app_help_center.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -135,6 +136,18 @@ class _UpdateTabState extends State<UpdateTab>
           SLRoute(builder: (_) => const SettingsTab()),
         ),
         onDocument: _openDocument,
+        onGuide: () => Navigator.push(
+          context,
+          SLRoute(
+            builder: (_) => AppHelpCenterScreen(
+              isStillValid: () => mounted,
+              onSupport: () => Navigator.push(
+                context,
+                SLRoute(builder: (_) => const UserSupportChatScreen()),
+              ),
+            ),
+          ),
+        ),
         onSupport: () => Navigator.push(
           context,
           SLRoute(builder: (_) => const UserSupportChatScreen()),
@@ -150,7 +163,7 @@ class _UpdateTabState extends State<UpdateTab>
         onDeleteRequest: () {
           final uri = AppConfig.legalDocumentUri(
             'delete-account.html',
-            languageCode: L10nService().locale.languageCode,
+            languageCode: L10nService().localeCode,
           );
           _openExternal(uri, fallback: uri.toString());
         },

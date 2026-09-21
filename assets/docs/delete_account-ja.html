@@ -1,0 +1,137 @@
+<!DOCTYPE html><html lang="ja" dir="ltr"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="サインイン アカウントの削除と共有ハウス データの削除は別のアクションです。リクエストを送信しても、データがすでに削除されているわけではありません。">
+<meta name="soullocket-document-version" content="2026-09-09">
+<title>SoulLocket アカウントとデータを削除する</title>
+<style>
+:root{color-scheme:light;--ink:#30292d;--muted:#6d6067;--accent:#a13e5c;--line:#eadde2;--paper:#fff;--bg:#faf6f7}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 system-ui,-apple-system,"Segoe UI",sans-serif;overflow-wrap:anywhere}
+.page{max-width:880px;margin:auto;padding:28px 24px 56px}
+header,section,footer{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;margin:0 0 18px}
+.brand{font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:750;color:var(--accent)}
+h1{font-size:clamp(26px,5vw,36px);line-height:1.25;margin:12px 0 16px;letter-spacing:-.025em}
+h2{font-size:21px;line-height:1.4;margin:0 0 14px}h3{font-size:17px;margin:22px 0 10px}
+p{margin:0 0 14px}p:last-child,ul:last-child,ol:last-child{margin-bottom:0}
+.meta,.small{font-size:14px;color:var(--muted)}ul,ol{padding-left:24px;margin:10px 0 16px}li{margin:7px 0}
+a{color:var(--accent);text-underline-offset:3px}a:hover{text-decoration-thickness:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #7943ab;outline-offset:4px}
+nav{display:flex;flex-wrap:wrap;gap:10px 20px;margin:20px 0 0}nav a{font-size:14px}
+.note,.warning{padding:16px 18px;border-radius:10px;margin:16px 0;border-left:4px solid var(--accent);background:#fcf0f4}
+.warning{border-color:#a7641a;background:#fff6e8}.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}
+th{background:#faf5f7}button,.button{display:inline-block;padding:12px 18px;background:var(--accent);color:white;border:0;border-radius:10px;font:inherit;font-weight:650;cursor:pointer;text-decoration:none}
+button:disabled{opacity:.6;cursor:wait}label{display:block;font-weight:650;margin:16px 0 6px}
+input:not([type=checkbox]),textarea{width:100%;padding:12px;font:inherit;color:inherit;background:white;border:1px solid #a99aa2;border-radius:8px}
+textarea{resize:vertical;min-height:110px}.checkbox{display:flex;gap:12px;align-items:flex-start;margin:20px 0}
+.checkbox input{flex-shrink:0;width:20px;height:20px;margin-top:5px}.checkbox label{font-weight:400;margin:0}
+.status{display:none;padding:16px;margin-top:16px;border-radius:10px}.status.success{display:block;background:#eaf7ef;color:#245635}.status.error{display:block;background:#fff0f0;color:#96323c}
+.skip{position:absolute;top:-100px;left:16px;background:white;padding:12px;z-index:10}.skip:focus{top:10px}
+@media(max-width:560px){.page{padding:16px 12px 32px}header,section,footer{padding:20px 18px;border-radius:14px}th,td{padding:10px 8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{body{background:white}.page{max-width:none;padding:0}header,section,footer{border:0;padding:12px 0}nav,.skip,form{display:none}h2,h3{break-after:avoid}}
+</style>
+</head>
+<body>
+<a class="skip" href="#noi-dung-chinh">メインコンテンツにスキップ</a>
+<main class="page" id="noi-dung-chinh">
+<header><div class="brand">SoulLocket · ドキュメントとサポート</div><h1>SoulLocket アカウントとデータを削除する</h1><p>サインイン アカウントの削除と共有ハウス データの削除は別のアクションです。リクエストを送信しても、データがすでに削除されているわけではありません。</p><p class="meta">コンテンツが更新されました: <time datetime="2026-09-09">2026 年 9 月 9 日</time> · 文書バージョン 2026-09-09</p><nav aria-label="文書言語"><a href="delete-account.html" lang="vi" hreflang="vi">Tiếng Việt</a><a href="delete-account-en.html" lang="en" hreflang="en">English</a><a href="delete-account-de.html" lang="de" hreflang="de">Deutsch</a><a href="delete-account-fr.html" lang="fr" hreflang="fr">Français</a><a href="delete-account-es.html" lang="es" hreflang="es">Español</a><a href="delete-account-it.html" lang="it" hreflang="it">Italiano</a><a href="delete-account-pt.html" lang="pt" hreflang="pt">Português</a><a href="delete-account-ru.html" lang="ru" hreflang="ru">Русский</a><span lang="ja" aria-current="page">日本語</span><a href="delete-account-ko.html" lang="ko" hreflang="ko">한국어</a><a href="delete-account-zh.html" lang="zh" hreflang="zh">简体中文</a></nav><p class="small">文書バージョン 2026-09-09 の翻訳。文言が不明瞭な場合、または言語間で異なる場合は、サポートにお問い合わせください。</p><nav aria-label="内容"><a href="#flow">1. 正しいスコープを選択する</a>
+<a href="#timeline">2. 現在のフローでの待機期間</a>
+<a href="#scope">3. 扱うデータと現在の制限事項</a>
+<a href="#steps">4. アプリ内のアクション</a>
+<a href="#public-form">5. アプリ外から削除依頼をする</a></nav></header>
+
+<section id="flow"><h2>1. 正しいスコープを選択する</h2><ul><li><strong>アカウントの削除:</strong> 現在のサインイン アカウントの閉鎖と関連データの処理を要求します。パートナーのハウス全体が自動的に削除されるわけではありません。</li><li><strong>解散・ハウスデータ削除：</strong> 共有スペースのクリーンアップを要求し、両方のユーザーのデータに影響を与える可能性があります。それ自体はサインイン アカウントを削除しません。</li><li><strong>個別のコンテンツの削除:</strong> コンテンツの一部だけを削除したい場合は、関連する日記、写真、投稿、またはユーティリティの削除アクションを使用します。</li></ul><div class="warning">確認する前に、必要なものをすべてエクスポート/保存してください。アンインストールまたはサインアウトしても、削除リクエストは置き換えられません。アカウントを削除しても、支払いストアのサブスクリプションは自動的にキャンセルされません。</div></section>
+<section id="timeline"><h2>2. 現在のフローでの待機期間</h2><p>正確な時刻がサーバーから返され、アプリに表示されます。以下のピリオドは、現在の処理コードを説明するものであり、すべてのコピーが正確な分に削除されることを保証するものではありません。</p><div class="table-wrap"><table><thead><tr><th>リクエスト</th><th>スケジュール設定</th></tr></thead><tbody>
+<tr><td>有効な識別ハウスなしでのアカウント削除</td><td>ご依頼から3日後を予定しております。</td></tr>
+<tr><td>ハウスによるアカウント削除</td><td>現在の流れでは、下院に議員がまだ2人いない場合でも30日間の待機が設定されている。他の資格のあるメンバーが確認した場合、時間はその確認から 3 日にリセットされます。</td></tr>
+<tr><td>シングルモードでの家の削除</td><td>3日後の予定です。</td></tr>
+<tr><td>別れ・カップル 家の削除</td><td>他のメンバーの確認または 30 日間の待機期限を待ちます。スケジュール済みステータスに移行した後、削除までにさらに 1 日かかります。</td></tr>
+<tr><td>アプリ外からのリクエスト</td><td>即時削除ではなく、検証と処理のためにサポート リクエストを作成します。 7 日以内に自動的に完了するという保証はありません。サポートは、検証後に適切な進行状況/タイミングを伝える必要があります。</td></tr></tbody></table></div>
+<p>シェアハウスの場合、要求者は同じアカウントにサインインしている別のデバイスに切り替えて自己確認することはできません。インターフェイスがまだ許可している場合は、期限前かつ処理が開始される前にリクエストをキャンセル/取り消すことができます。完全に削除した後の回復は保証されません。</p></section>
+<section id="scope"><h2>3. 扱うデータと現在の制限事項</h2><p>現在のアカウント削除フローは、アカウント プロファイル、メンバーシップ リンク、プレゼンス/デバイス トークン、および一部の UID にリンクされたサポート リクエスト/レポートをクリーンアップしてから、認証アカウントを削除します。ハウス削除フローは、実装された範囲内でハウス、パブリック プロフィール、メッセージ ブランチ、通知、友達、GPS、招待状、およびハウスにリンクされたデータをクリーンアップします。</p>
+<p><strong>アカウントを削除すると、すべての古いコンテンツが同時に削除されるとは考えないでください。</strong> シェアハウスのコンテンツ、Cloudflare R2 メディア、一部の Firestore データ、またはその他の記録には、追加のレビューと処理が必要になる場合があります。現在のメカニズムは、これらすべてのストアを完全にクリーンアップすることを約束するには十分ではありません。削除したい残りの個人データをサポート リクエストで指定してください。</p>
+<p>他人が保持しているダウンロードしたコピー、スクリーンショット、デバイスのエクスポートはリモートで呼び出すことができません。法的義務、不正行為の処理、または紛争のために保持されるデータは制限されなければなりません。何が、なぜ、どのくらいの期間保持されるのかを尋ねることもできます。すべてのコミュニティ コンテンツが自動的に匿名になるという約束はありません。</p></section>
+<section id="steps"><h2>4. アプリ内のアクション</h2><ol><li>正しいアカウントにサインインして開きます <strong>設定</strong> そして見つけてください <strong>アカウントとデータの削除</strong> または <strong>データの分割/削除</strong>.</li><li>影響を受ける範囲と確認手順を読んでください。アカウントの削除には電子メール/ワンタイムコードの検証が含まれます。コードは公式アプリにのみ入力し、サポートへのメッセージには入力しないでください。</li><li>成功メッセージと予定時間を確認します。アカウント削除リクエストを作成した後、アプリによってサインアウトされる場合があります。</li><li>期限前に取り消すには、サインインし直し、保留中のリクエストのキャンセル アクションを探します。アクセスできない場合は、すぐにサポートに連絡してください。</li></ol><p>前のリクエストのステータスを知らないで別のリクエストを作成しないでください。ネットワーク エラーは、サーバーが受信に失敗したことを証明するものではありません。</p></section>
+<section id="public-form"><h2>5. アプリ外から削除依頼をする</h2><p>このフォームは、アプリを再インストールしたり、アプリにサインインしたりせずに使用できます。サポートは、それを受け取った後、行動する前に、あなたがアカウントを所有していることを確認する必要があります。電子メール/ハウス ID を知っていても、他人のデータを削除することは許可されません。</p><p class="small">送信された情報、IP アドレス、ブラウザ情報は、次の手順に従って、受信、検証、および悪用防止のために処理されます。 <a href="privacy-ja.html">プライバシーポリシー</a>。パスワード、PIN、ワンタイム コード、または機密の身分証明書をメモに入力しないでください。</p>
+<form id="deleteForm" method="post">
+<label for="email">アカウントのメールアドレス</label><input id="email" name="email" type="email" autocomplete="email" maxlength="320" required="" placeholder="you@example.com">
+<label for="displayName">表示名 (オプション)</label><input id="displayName" name="displayName" type="text" autocomplete="nickname" maxlength="80">
+<label for="houseId">ハウス ID (ペアリング招待コードではなく、わかっている場合)</label><input id="houseId" name="houseId" type="text" maxlength="120" autocomplete="off">
+<label for="reason">削除するデータ・メモ（任意）</label><textarea id="reason" name="reason" maxlength="500" aria-describedby="form-help"></textarea>
+<p class="small" id="form-help">例: アカウントを削除し、残っている個人的な写真や日記のエントリを確認します。他人のアカウントの削除を要求しないでください。</p>
+<div class="checkbox"><input id="confirmPermanentDeletion" name="confirmPermanentDeletion" type="checkbox" required=""><label for="confirmPermanentDeletion">確認後、アカウントおよび関連する個人データの削除をリクエストします。範囲と待機期間を読み、完全に削除されたデータは復元できないことを理解しました。</label></div>
+<button id="submitButton" type="submit" disabled="">削除リクエストを送信する</button>
+</form><noscript><p>JavaScriptが無効になっています。まだかもしれません <a href="mailto:hotroviethoangdev.lo.ve@gmail.com?subject=SoulLocket%20-%20Account%20deletion%20request">サポートメールで削除リクエストをする</a>.</p></noscript>
+<div id="statusBox" class="status" role="status" aria-live="polite" tabindex="-1"></div>
+<p class="small">送信に失敗した場合はメールでご連絡ください <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a> 可能な場合はアカウントの電子メールから送信してください。進行状況を尋ねるためにリクエスト ID を保持します。 「記録された」は「削除された」という意味ではありません。</p></section>
+<footer><h2>ソウルロケットのドキュメント</h2><nav aria-label="関連資料"><a href="about-ja.html">について</a><a href="huong_dan-ja.html">ユーザーガイド</a><a href="huong_dan_cai_dat_lan_dau-ja.html">最初のセットアップ</a><a href="privacy-ja.html">プライバシー</a><a href="terms-ja.html">利用規約</a><a href="cookie-policy-ja.html">Cookie</a><a href="delete-account-ja.html">アカウントを削除する</a><a href="support-ja.html">サポート</a></nav><p class="small">プライバシーとサポート: <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p></footer>
+</main>
+<script>
+'use strict';
+const endpoint = 'https://us-central1-soullockket.cloudfunctions.net/requestDeleteAccountPublic';
+const form = document.getElementById('deleteForm');
+const statusBox = document.getElementById('statusBox');
+const submitButton = document.getElementById('submitButton');
+let submitting = false;
+function setStatus(kind, message) {
+  statusBox.className = 'status ' + kind;
+  statusBox.textContent = message;
+  statusBox.focus();
+}
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (submitting || !form.reportValidity()) return;
+  const payload = {
+    email: document.getElementById('email').value.trim(),
+    displayName: document.getElementById('displayName').value.trim(),
+    houseId: document.getElementById('houseId').value.trim(),
+    reason: document.getElementById('reason').value.trim(),
+    confirmPermanentDeletion: document.getElementById('confirmPermanentDeletion').checked,
+    source: 'public_delete_page',
+  };
+  if (!payload.email || !payload.confirmPermanentDeletion) return;
+  submitting = true;
+  submitButton.disabled = true;
+  submitButton.textContent = "送信中…";
+  statusBox.className = 'status';
+  statusBox.textContent = '';
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      credentials: 'omit', referrerPolicy: 'no-referrer',
+      body: JSON.stringify(payload), signal: controller.signal,
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || result.ok !== true) {
+      if (result.error === 'invalid_email') throw new Error("メールアドレスが無効です。");
+      if (result.error === 'confirmation_required') throw new Error("送信する前に削除リクエストを確認してください。");
+      if (response.status === 429 || result.error === 'rate_limited') throw new Error("リクエストにはレート制限があります。以前のリクエストを確認するか、約 12 時間後に再試行してください。電子メールでサポートに問い合わせることもできます。");
+      throw new Error("受信が確認できませんでした。問題が解決しない場合は、電子メールでサポートにお問い合わせください。");
+    }
+    form.reset();
+    const id = typeof result.requestId === 'string' ? result.requestId.slice(0, 120) : '';
+    setStatus('success', "リクエストが記録されました" + (id ? "。リクエストID: " + id : '') + "。サポートは処理前に所有権を確認します。これはアカウントが削除されたことを確認するものではありません。");
+  } catch (error) {
+    const message = error.name === 'AbortError' || error instanceof TypeError
+      ? "接続が切断されたため受信が確認できませんでした。サーバーがリクエストを受信した可能性があります。繰り返し送信する前に、電子メールでサポートに問い合わせてください。"
+      : error.message || "リクエストを送信できません。サポートメールでお送りいただくことも可能です。";
+    setStatus('error', message);
+  } finally {
+    clearTimeout(timeout);
+    submitting = false;
+    submitButton.disabled = false;
+    submitButton.textContent = "削除リクエストを送信する";
+  }
+});
+// Chỉ cho gửi sau khi đã gắn bộ xử lý POST, tránh lộ dữ liệu qua URL khi JS bị chặn.
+submitButton.disabled = false;
+</script>
+
+
+</body></html>

@@ -99,14 +99,17 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     final prefs = await OfflineCacheService.getPrefs();
     final pendingKey = 'il_first_setup_guide_pending_v2_$houseId';
     if (prefs.getString(pendingKey) != '1') return;
-    await prefs.remove(pendingKey);
 
     final settings = await _houseSettingsService.fetchSettings(houseId);
     final isSingle =
         settings?.isSingle ?? (prefs.getString('il_rel_mode') == 'single');
 
     if (!mounted) return;
-    await _showFirstSetupGuideDialog(houseId: houseId, isSingle: isSingle);
+    final outcome = await _showFirstSetupGuideDialog(
+      houseId: houseId,
+      isSingle: isSingle,
+    );
+    if (outcome != null) await prefs.remove(pendingKey);
   }
 
   Future<void> _replayFirstSetupGuideFromSettings() async {
@@ -119,23 +122,42 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
         settings?.isSingle ?? (prefs.getString('il_rel_mode') == 'single');
 
     if (!mounted) return;
-    await _showFirstSetupGuideDialog(houseId: houseId, isSingle: isSingle);
+    if (_currentIndex != 0) _switchToTab(0);
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    await _showFirstSetupGuideDialog(
+      houseId: houseId,
+      isSingle: isSingle,
+      replay: true,
+    );
   }
 
-  Future<void> _showFirstSetupGuideDialog({
+  Future<SetupGuideOutcome?> _showFirstSetupGuideDialog({
     required String houseId,
     required bool isSingle,
+    bool replay = false,
   }) async {
-    if (!mounted) return;
+    if (!mounted) return null;
     if (_navCollapsed) {
       _navCollapsed = false;
       await Future<void>.delayed(const Duration(milliseconds: 220));
     }
 
-    if (!mounted) return;
-
-    await FirstSetupSpotlightGuide.show(
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (uid.isEmpty) return null;
+    final prefs = await OfflineCacheService.getPrefs();
+    if (!mounted || FirebaseAuth.instance.currentUser?.uid != uid) return null;
+    return FirstSetupSpotlightGuide.show(
       context,
+      progress: SetupGuideProgress(
+        prefs,
+        SetupGuideProgress.scopedKey(uid, houseId, 'home'),
+      ),
+      replay: replay,
+      isStillValid: () =>
+          mounted &&
+          FirebaseAuth.instance.currentUser?.uid == uid &&
+          prefs.getString('il_house_id') == houseId,
       steps: [
         FirstSetupSpotlightStep(
           targetKey: _firstGuideHomeHeroKey,
@@ -465,6 +487,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
       context,
       SLRoute(
         builder: (_) => SettingsTab(
+          showGuideOnOpen: true,
           onReplayFirstSetupGuide: _replayFirstSetupGuideFromSettings,
         ),
       ),

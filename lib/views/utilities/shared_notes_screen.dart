@@ -284,20 +284,6 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     FocusScope.of(context).unfocus();
   }
 
-  void _togglePinned(String key, bool currentPinned) {
-    _dbRef
-        .child('houses/${widget.houseId}/note/$key')
-        .update({'pinned': !currentPinned})
-        .then((_) => _touchMetadata());
-  }
-
-  void _toggleDone(String key, bool currentDone) {
-    _dbRef
-        .child('houses/${widget.houseId}/note/$key')
-        .update({'done': !currentDone})
-        .then((_) => _touchMetadata());
-  }
-
   void _deleteNote(String key) {
     showDialog(
       context: context,
@@ -834,7 +820,6 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
       return (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0);
     });
 
-    final int doneCount = items.where((item) => item['done'] == true).length;
     final visibleItems = items.where((item) {
       switch (_noteFilter) {
         case 'pinned':
@@ -1113,27 +1098,6 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required Color color,
-    required Color backgroundColor,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(left: 10),
-        padding: const EdgeInsets.all(9),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
-        ),
-        child: Icon(icon, color: color, size: 18),
       ),
     );
   }

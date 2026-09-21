@@ -1,0 +1,60 @@
+<!DOCTYPE html><html lang="ja" dir="ltr"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="サービスに必要なストレージを、測定、広告、プライバシーの選択から区別します。このドキュメントでは、デバイス、Web、埋め込みコンテンツ上の SoulLocket について説明します。">
+<meta name="soullocket-document-version" content="2026-09-09">
+<title>Cookie とローカル ストレージ ポリシー</title>
+<style>
+:root{color-scheme:light;--ink:#30292d;--muted:#6d6067;--accent:#a13e5c;--line:#eadde2;--paper:#fff;--bg:#faf6f7}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 system-ui,-apple-system,"Segoe UI",sans-serif;overflow-wrap:anywhere}
+.page{max-width:880px;margin:auto;padding:28px 24px 56px}
+header,section,footer{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;margin:0 0 18px}
+.brand{font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:750;color:var(--accent)}
+h1{font-size:clamp(26px,5vw,36px);line-height:1.25;margin:12px 0 16px;letter-spacing:-.025em}
+h2{font-size:21px;line-height:1.4;margin:0 0 14px}h3{font-size:17px;margin:22px 0 10px}
+p{margin:0 0 14px}p:last-child,ul:last-child,ol:last-child{margin-bottom:0}
+.meta,.small{font-size:14px;color:var(--muted)}ul,ol{padding-left:24px;margin:10px 0 16px}li{margin:7px 0}
+a{color:var(--accent);text-underline-offset:3px}a:hover{text-decoration-thickness:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #7943ab;outline-offset:4px}
+nav{display:flex;flex-wrap:wrap;gap:10px 20px;margin:20px 0 0}nav a{font-size:14px}
+.note,.warning{padding:16px 18px;border-radius:10px;margin:16px 0;border-left:4px solid var(--accent);background:#fcf0f4}
+.warning{border-color:#a7641a;background:#fff6e8}.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}
+th{background:#faf5f7}button,.button{display:inline-block;padding:12px 18px;background:var(--accent);color:white;border:0;border-radius:10px;font:inherit;font-weight:650;cursor:pointer;text-decoration:none}
+button:disabled{opacity:.6;cursor:wait}label{display:block;font-weight:650;margin:16px 0 6px}
+input:not([type=checkbox]),textarea{width:100%;padding:12px;font:inherit;color:inherit;background:white;border:1px solid #a99aa2;border-radius:8px}
+textarea{resize:vertical;min-height:110px}.checkbox{display:flex;gap:12px;align-items:flex-start;margin:20px 0}
+.checkbox input{flex-shrink:0;width:20px;height:20px;margin-top:5px}.checkbox label{font-weight:400;margin:0}
+.status{display:none;padding:16px;margin-top:16px;border-radius:10px}.status.success{display:block;background:#eaf7ef;color:#245635}.status.error{display:block;background:#fff0f0;color:#96323c}
+.skip{position:absolute;top:-100px;left:16px;background:white;padding:12px;z-index:10}.skip:focus{top:10px}
+@media(max-width:560px){.page{padding:16px 12px 32px}header,section,footer{padding:20px 18px;border-radius:14px}th,td{padding:10px 8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{body{background:white}.page{max-width:none;padding:0}header,section,footer{border:0;padding:12px 0}nav,.skip,form{display:none}h2,h3{break-after:avoid}}
+</style>
+</head>
+<body>
+<a class="skip" href="#noi-dung-chinh">メインコンテンツにスキップ</a>
+<main class="page" id="noi-dung-chinh">
+<header><div class="brand">SoulLocket · ドキュメントとサポート</div><h1>Cookie とローカル ストレージ ポリシー</h1><p>サービスに必要なストレージを、測定、広告、プライバシーの選択から区別します。このドキュメントでは、デバイス、Web、埋め込みコンテンツ上の SoulLocket について説明します。</p><p class="meta">コンテンツが更新されました: <time datetime="2026-09-09">2026 年 9 月 9 日</time> · 文書バージョン 2026-09-09</p><nav aria-label="文書言語"><a href="cookie-policy.html" lang="vi" hreflang="vi">Tiếng Việt</a><a href="cookie-policy-en.html" lang="en" hreflang="en">English</a><a href="cookie-policy-de.html" lang="de" hreflang="de">Deutsch</a><a href="cookie-policy-fr.html" lang="fr" hreflang="fr">Français</a><a href="cookie-policy-es.html" lang="es" hreflang="es">Español</a><a href="cookie-policy-it.html" lang="it" hreflang="it">Italiano</a><a href="cookie-policy-pt.html" lang="pt" hreflang="pt">Português</a><a href="cookie-policy-ru.html" lang="ru" hreflang="ru">Русский</a><span lang="ja" aria-current="page">日本語</span><a href="cookie-policy-ko.html" lang="ko" hreflang="ko">한국어</a><a href="cookie-policy-zh.html" lang="zh" hreflang="zh">简体中文</a></nav><p class="small">文書バージョン 2026-09-09 の翻訳。文言が不明瞭な場合、または言語間で異なる場合は、サポートにお問い合わせください。</p><nav aria-label="内容"><a href="#khai-niem">1. 使用されている技術</a>
+<a href="#phan-loai">2. 保存されるデータのカテゴリー</a>
+<a href="#lua-chon">3. 現在の「必須」と「すべて」の意味</a>
+<a href="#ben-thu-ba">4. 関連プロバイダー</a>
+<a href="#quan-ly">5. 選択肢の管理と撤回</a>
+<a href="#luu-tru">6. データの保持と消去の影響</a>
+<a href="#cap-nhat">7. 最新情報と連絡先</a></nav></header>
+
+<section id="khai-niem"><h2>1. 使用されている技術</h2><p>Web では、Cookie、localStorage、sessionStorage、および IndexedDB が使用される場合があります。このアプリは、SharedPreferences、安全な認証ストレージ、ローカル データベース、画像/ファイル キャッシュを使用します。これらはすべて同じ種類の Cookie ではありませんが、すべてデバイスにデータを保存する可能性があります。</p><p>これらのポリシー ページには、広告や分析コードが埋め込まれていません。アカウント削除フォームは、送信した場合にのみデータを送信します。メイン アプリと他のコンテンツ ページは別個の処理動作を持ちます。</p></section>
+<section id="phan-loai"><h2>2. 保存されるデータのカテゴリー</h2><div class="table-wrap"><table><thead><tr><th>カテゴリ</th><th>目的と例</th></tr></thead><tbody><tr><td>認証と安全性</td><td>サインイン セッション、トークン、デバイスのステータス、法的選択は、アクセスの維持と保護に役立ちます。</td></tr><tr><td>あなたの設定</td><td>言語、外観、タブ、ロックまたは表示構成。これらの選択は、「必須」を選択した場合でも保存される場合があります。</td></tr><tr><td>データとキャッシュ</td><td>下書き、同期キュー、ダウンロードされたイメージ/ファイル、ローカル データベースにはプライベート コンテンツが含まれる場合があります。自動的に匿名になるわけではありません。</td></tr><tr><td>診断・測定</td><td>Firebase Analytics と Crashlytics は、それらの統合に従ってイベント、デバイス情報、エラー、技術識別子を処理する場合があります。</td></tr><tr><td>広告と取引</td><td>広告の同意ステータス、広告識別子、インタラクション、購入または報酬の検証トークン。すべての広告活動を必須ストレージとして分類する必要はありません。</td></tr></tbody></table></div></section>
+<section id="lua-chon"><h2>3. 「必須」と「すべて」の意味</h2><p>新しい統合では、「Essential」は Analytics/Crashlytics の収集を無効にし、アプリによる広告の初期化と読み込みをブロックします。 「すべて」では、これらのオプションの SDK が許可されます。広告は引き続き Google UMP によって許可され、オペレーティング システムの権限に従う必要があります。アプリはデバイス上の選択、時間、ドキュメントのバージョンを記録します。バージョンのない従来の選択では、再度確認する必要があります。</p><p>取り消しにより、新しいリクエストがブロックされ、アプリに読み込まれた広告が削除されます。すでに送信されたデータや、すでに進行中の接続を呼び出すことはできません。ネイティブ SDK はクラッシュ レポートをローカルに保存する場合があります。アプリは、収集を有効にする前に、未送信レポートの削除を要求します。古いアプリのバージョンには、これらのコントロールが含まれていない可能性があります。</p><div class="warning">「Essential」では、サインイン、同期、トランザクション、システムの安全性、またはすべてのサードパーティ接続がオフになるわけではありません。これは、機密データのアクセス許可、オペレーティング システムのアクセス許可、または個別の広告の同意に代わるものではありません。</div></section>
+<section id="ben-thu-ba"><h2>4. 関連プロバイダー</h2><p>Firebase/Google サインイン、サインインに使用される Facebook、Google モバイル広告/AdMob、支払いプラットフォーム、マップ サービス、Cloudflare インフラストラクチャは、それらの機能にトークン、キャッシュ、または技術的状態を使用する場合があります。埋め込みコンテンツ、フォント、外部ファイルは、ロード時にプロバイダーに接続する場合があります。</p><p>データのカテゴリー、目的、共有範囲については、 <a href="privacy-ja.html">プライバシーポリシー</a>。プロバイダーのポリシーは、統合に対する SoulLocket の責任に代わるものではありません。</p></section>
+<section id="quan-ly"><h2>5. 選択肢の管理と撤回</h2><ul><li>「設定」→「プライバシー」の選択を開いて、「必須」と「すべて」を切り替えます。アプリデータをクリアせずにオプションの SDK グループの権限を取り消すには、「必須」を選択します。広告プライバシーの選択により、該当する場合は Google UMP の選択肢が開きます。</li><li>オペレーティング システムの設定で、位置情報、カメラ、マイク、通知、状態、広告/追跡の権限を管理します。利用可能なコントロールはデバイスによって異なります。</li><li>ブラウザのプライバシー設定を使用して、Web サイトのデータを検査/削除します。重要なデータをブロックすると、サインイン セッションが終了したり、機能が中断されたりする可能性があります。</li><li>インターフェースに必要なアクションが欠けている場合は、プライバシー権についてサポートにお問い合わせください。アプリデータの消去を同意を撤回する唯一の方法として扱ってはなりません。</li></ul></section>
+<section id="luu-tru"><h2>6. データの保持と消去の影響</h2><p>セッション データはセッションの終了時に期限切れになる場合があります。アプリ/ウェブサイトのデータをクリアするまで、環境設定とローカル データベースが残る場合があります。キャッシュには独自の有効期間があり、再度ダウンロードされる可能性があります。サインアウトしても、すべてのキャッシュ、ダウンロード、またはデバイスのバックアップが削除されることは保証されません。</p><p><strong>ストレージをクリアする前に、未保存のデータをエクスポートまたは同期してください。</strong> アプリをアンインストールしたり、Cookie を削除したり、権限を無効にしても、アカウント、サーバー データ、サブスクリプションは削除されません。を参照してください。 <a href="delete-account-ja.html">アカウントとデータの削除ガイド</a>.</p></section>
+<section id="cap-nhat"><h2>7. 最新情報と連絡先</h2><p>ストレージ メカニズム、SDK、または選択肢が変更された場合、このドキュメントは対応する更新が必要です。質問を送信する <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a>、プラットフォームとアプリのバージョンを含む。パスワード、PIN、またはワンタイム コードは送信しないでください。</p></section>
+<footer><h2>ソウルロケットのドキュメント</h2><nav aria-label="関連資料"><a href="about-ja.html">について</a><a href="huong_dan-ja.html">ユーザーガイド</a><a href="huong_dan_cai_dat_lan_dau-ja.html">最初のセットアップ</a><a href="privacy-ja.html">プライバシー</a><a href="terms-ja.html">利用規約</a><a href="cookie-policy-ja.html">Cookie</a><a href="delete-account-ja.html">アカウントを削除する</a><a href="support-ja.html">サポート</a></nav><p class="small">プライバシーとサポート: <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p></footer>
+</main>
+
+
+</body></html>

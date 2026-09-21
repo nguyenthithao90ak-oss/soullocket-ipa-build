@@ -2023,7 +2023,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                                   ),
                                 ),
                                 child: Text(
-                                  '💡 Nếu bạn muốn nhanh, có thể gỡ app và tải lại nhé — chúng tôi sẽ khắc phục lỗi này sớm!',
+                                  context.tr('guide_safe_recovery'),
                                   textAlign: TextAlign.center,
                                   style: SLTheme.quicksand(
                                     fontSize: 12,

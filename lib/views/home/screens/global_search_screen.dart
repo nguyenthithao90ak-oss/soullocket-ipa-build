@@ -1,6 +1,9 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/app_help_center.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -10,6 +13,7 @@ import '../../../utils/services/global_search_service.dart';
 import '../../utilities/history_screen.dart';
 
 class GlobalSearchScreen extends StatefulWidget {
+  final GlobalSearchService? searchService;
   final String houseId;
   final String relationshipMode;
   final Set<String>? allowedUtilityIds;
@@ -20,6 +24,7 @@ class GlobalSearchScreen extends StatefulWidget {
     required this.houseId,
     required this.relationshipMode,
     this.allowedUtilityIds,
+    this.searchService,
     this.onResultSelected,
   });
 
@@ -32,7 +37,11 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
   static const int _recentSearchLimit = 5;
 
   final TextEditingController _controller = TextEditingController();
-  final GlobalSearchService _searchService = GlobalSearchService();
+  GlobalSearchService get _searchService =>
+      widget.searchService ?? _defaultSearchService;
+  final GlobalSearchService _defaultSearchService = GlobalSearchService();
+  int _searchRevision = 0;
+  bool _searchFailed = false;
 
   List<GlobalSearchResult> _results = const <GlobalSearchResult>[];
   List<_RecentSearchEntry> _recentSearches = const <_RecentSearchEntry>[];
@@ -46,6 +55,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
 
   @override
   void dispose() {
+    _searchRevision++;
     _controller.dispose();
     super.dispose();
   }
@@ -92,34 +102,47 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
     );
   }
 
+  @override
+  void didUpdateWidget(GlobalSearchScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.houseId != widget.houseId ||
+        oldWidget.relationshipMode != widget.relationshipMode ||
+        !setEquals(oldWidget.allowedUtilityIds, widget.allowedUtilityIds) ||
+        oldWidget.searchService != widget.searchService) {
+      _runSearch(_controller.text);
+    }
+  }
+
   Future<void> _runSearch(String value) async {
+    final revision = ++_searchRevision;
     final query = value.trim();
-    if (query.isEmpty) {
-      if (!mounted) return;
+    if (!mounted) return;
+    setState(() {
+      _isSearching = query.isNotEmpty;
+      _searchFailed = false;
+      _results = const [];
+    });
+    if (query.isEmpty) return;
+    try {
+      final next = await _searchService.search(
+        query: query,
+        houseId: widget.houseId,
+        relationshipMode: widget.relationshipMode,
+        allowedUtilityIds: widget.allowedUtilityIds,
+      );
+      // Không cho kết quả của từ khóa cũ ghi đè từ khóa vừa gõ/xóa.
+      if (!mounted || revision != _searchRevision) return;
       setState(() {
-        _results = const <GlobalSearchResult>[];
+        _results = next;
         _isSearching = false;
       });
-      return;
+    } catch (_) {
+      if (!mounted || revision != _searchRevision) return;
+      setState(() {
+        _searchFailed = true;
+        _isSearching = false;
+      });
     }
-
-    if (!mounted) return;
-    setState(() {
-      _isSearching = true;
-    });
-
-    final nextResults = await _searchService.search(
-      query: query,
-      houseId: widget.houseId,
-      relationshipMode: widget.relationshipMode,
-      allowedUtilityIds: widget.allowedUtilityIds,
-    );
-
-    if (!mounted) return;
-    setState(() {
-      _results = nextResults;
-      _isSearching = false;
-    });
   }
 
   Future<void> _clearRecentSearches() async {
@@ -131,10 +154,6 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
     });
   }
 
-  Future<void> _selectRecentSearch(_RecentSearchEntry entry) async {
-    await _handleResultTap(entry.toResult(), saveToRecent: false);
-  }
-
   Future<void> _handleResultTap(
     GlobalSearchResult result, {
     bool saveToRecent = true,
@@ -143,6 +162,8 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
       await _saveRecentSearch(result);
     }
 
+    if (!mounted) return;
+    FocusScope.of(context).unfocus();
     if (widget.onResultSelected != null) {
       await widget.onResultSelected!(result);
       return;
@@ -150,303 +171,345 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
 
     if (!mounted) return;
     if (result.actionId == 'history') {
-      await slPush(
-        context,
-        HistoryScreen(houseId: widget.houseId),
-      );
+      await slPush(context, HistoryScreen(houseId: widget.houseId));
     }
   }
 
-  Widget _buildIdleSearchContent() {
-    final defaultResults = _searchService.defaultSuggestions(
-      relationshipMode: widget.relationshipMode,
-      allowedUtilityIds: widget.allowedUtilityIds,
-    );
+  static const _ink = Color(0xFF302D33);
+  static const _muted = Color(0xFF756E78);
+  static const _accent = Color(0xFFAC4E6C);
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+  List<GlobalSearchResult> get _visibleRecentResults => [
+    for (final entry in _recentSearches)
+      ?_searchService.resolveAction(
+        entry.actionId,
+        relationshipMode: widget.relationshipMode,
+        allowedUtilityIds: widget.allowedUtilityIds,
+      ),
+  ];
+
+  Widget _section(String title, {Widget? trailing}) => Padding(
+    padding: const EdgeInsets.only(top: 20, bottom: 8),
+    child: Row(
       children: [
-        if (defaultResults.isNotEmpty) ...[
-          _buildSearchSectionHeader(context.tr('home_gicnthit_96156a')),
-          const SizedBox(height: 8),
-          ...defaultResults.map(
-            (result) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _buildSearchTile(
-                result: result,
-                onTap: () => _handleResultTap(result),
-                trailingIcon: Icons.arrow_forward_rounded,
-              ),
+        Expanded(
+          child: Text(
+            title,
+            style: SLTheme.quicksand(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: _muted,
             ),
           ),
-          const SizedBox(height: 8),
-        ],
-        if (_recentSearches.isNotEmpty) ...[
-          Row(
-            children: [
-              _buildSearchSectionHeader(context.tr('home_tmkimgny_6201df')),
-              const Spacer(),
-              TextButton(
-                onPressed: _clearRecentSearches,
-                child: Text(
-                  context.tr('home_xa_4ed187'),
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF7A8598),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          ..._recentSearches.map(
-            (entry) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _buildSearchTile(
-                result: entry.toResult(),
-                onTap: () => _selectRecentSearch(entry),
-                showRecentBadge: true,
-                trailingIcon: Icons.north_west_rounded,
-              ),
-            ),
-          ),
-        ] else if (defaultResults.isEmpty)
-          Center(
+        ),
+        ?trailing,
+      ],
+    ),
+  );
+
+  Widget _resultRow(GlobalSearchResult result, {bool recent = false}) {
+    final tint = result.colors.isEmpty ? _accent : result.colors.first;
+    return Column(
+      children: [
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => _handleResultTap(result, saveToRecent: !recent),
             child: Padding(
-              padding: const EdgeInsets.only(top: 120),
-              child: Text(
-                context.tr('home_nhptkhatmt_9d989f'),
-                style: SLTheme.quicksand(
-                  color: const Color(0xFF7A8598),
-                  fontWeight: FontWeight.w700,
-                ),
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: tint.withValues(alpha: .09),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(result.icon, color: tint, size: 22),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          result.title,
+                          style: SLTheme.quicksand(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: _ink,
+                          ),
+                        ),
+                        if (result.subtitle.isNotEmpty) ...[
+                          const SizedBox(height: 5),
+                          Text(
+                            result.subtitle,
+                            style: SLTheme.quicksand(
+                              fontSize: 12,
+                              height: 1.5,
+                              fontWeight: FontWeight.w500,
+                              color: _muted,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Icon(
+                    recent
+                        ? Icons.history_rounded
+                        : Icons.chevron_right_rounded,
+                    size: 19,
+                    color: const Color(0xFF9D949B),
+                  ),
+                ],
               ),
             ),
           ),
+        ),
+        const Divider(
+          height: 1,
+          thickness: .7,
+          indent: 62,
+          color: Color(0xFFEAE5E7),
+        ),
       ],
     );
   }
 
-  Widget _buildSearchSectionHeader(String title) {
-    return Text(
-      title,
-      style: SLTheme.quicksand(
-        fontSize: 15,
-        fontWeight: FontWeight.w900,
-        color: const Color(0xFF243042),
-      ),
-    );
-  }
-
-  Widget _buildResultsList() {
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-      itemCount: _results.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (context, index) {
-        final result = _results[index];
-        return _buildSearchTile(
-          result: result,
-          onTap: () => _handleResultTap(result),
-        );
-      },
-    );
-  }
-
-  Widget _buildSearchTile({
-    required GlobalSearchResult result,
-    required Future<void> Function() onTap,
-    bool showRecentBadge = false,
-    IconData? trailingIcon,
-  }) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      result.colors.first.withValues(alpha: 0.18),
-                      result.colors.last.withValues(alpha: 0.24),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  result.icon,
-                  color: result.colors.first,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      result.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF243042),
-                      ),
-                    ),
-                    if (result.subtitle.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        result.subtitle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: SLTheme.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF7A8598),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (showRecentBadge) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F4F8),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.history_rounded,
-                            size: 12,
-                            color: Color(0xFF7A8598),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            context.tr('home_gny_a3ae09'),
-                            style: SLTheme.quicksand(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF7A8598),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: result.colors.last.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      result.type,
-                      style: SLTheme.quicksand(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
-                        color: result.colors.first,
-                      ),
-                    ),
-                  ),
-                  if (trailingIcon != null) ...[
-                    const SizedBox(height: 8),
-                    Icon(
-                      trailingIcon,
-                      size: 18,
-                      color: const Color(0xFFB4BDCB),
-                    ),
-                  ],
-                ],
-              ),
-            ],
+  Widget _emptyState({required bool error}) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 8),
+    child: Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: Color(0xFFF4E8ED),
+          ),
+          child: Icon(
+            error ? Icons.refresh_rounded : Icons.search_off_rounded,
+            color: _accent,
+            size: 32,
           ),
         ),
-      ),
-    );
+        const SizedBox(height: 20),
+        Text(
+          context.tr(error ? 'error' : 'home_chacktquph_868a34'),
+          textAlign: TextAlign.center,
+          style: SLTheme.quicksand(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: _ink,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (!error)
+          Text(
+            context.tr('search_refine_hint'),
+            textAlign: TextAlign.center,
+            style: SLTheme.quicksand(fontSize: 13, height: 1.5, color: _muted),
+          ),
+        const SizedBox(height: 14),
+        TextButton.icon(
+          onPressed: error ? () => _runSearch(_controller.text) : _clearQuery,
+          icon: Icon(
+            error ? Icons.refresh_rounded : Icons.close_rounded,
+            size: 18,
+          ),
+          label: Text(
+            context.tr(error ? 'home_thli_4dffdf' : 'home_xa_4ed187'),
+          ),
+          style: TextButton.styleFrom(foregroundColor: _accent),
+        ),
+      ],
+    ),
+  );
+
+  void _clearQuery() {
+    _controller.clear();
+    _runSearch('');
   }
 
   @override
   Widget build(BuildContext context) {
+    final idle = _controller.text.trim().isEmpty;
+    final recent = _visibleRecentResults;
+    final suggestions = _searchService.defaultSuggestions(
+      relationshipMode: widget.relationshipMode,
+      allowedUtilityIds: widget.allowedUtilityIds,
+    );
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FC),
+      backgroundColor: const Color(0xFFFFFDFC),
       appBar: AppBar(
-        title: Text(
-          context.tr('home_tmkim_8929ef'),
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.w800,
-            color: const Color(0xFF243042),
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-            child: TextField(
-              controller: _controller,
-              onChanged: _runSearch,
-              autofocus: true,
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                hintText: context.tr('home_tmtinchhoc_b42fd7'),
-                prefixIcon: const Icon(Icons.search_rounded),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
+        actions: [
+          IconButton(
+            tooltip: context.tr('auth_help_center_guide'),
+            icon: const Icon(Icons.help_outline_rounded),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const AppHelpCenterScreen(),
               ),
             ),
           ),
-          Expanded(
-            child: _isSearching
-                ? const Center(child: CircularProgressIndicator())
-                : _results.isEmpty
-                    ? _controller.text.trim().isEmpty
-                        ? _buildIdleSearchContent()
-                        : Center(
-                            child: Text(
-                              context.tr('home_chacktquph_868a34'),
-                              style: SLTheme.quicksand(
-                                color: const Color(0xFF7A8598),
-                                fontWeight: FontWeight.w700,
+        ],
+        backgroundColor: const Color(0xFFFFFDFC),
+        foregroundColor: _ink,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          context.tr('home_tmkim_8929ef'),
+          style: SLTheme.quicksand(
+            fontSize: 23,
+            fontWeight: FontWeight.w900,
+            color: _ink,
+          ),
+        ),
+      ),
+      body: SafeArea(
+        top: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
+                  child: TextField(
+                    controller: _controller,
+                    onChanged: _runSearch,
+                    onSubmitted: _runSearch,
+                    autofocus: false,
+                    textInputAction: TextInputAction.search,
+                    style: SLTheme.quicksand(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: _ink,
+                    ),
+                    cursorColor: _accent,
+                    decoration: InputDecoration(
+                      hintText: context.tr('search_hint_short'),
+                      hintStyle: SLTheme.quicksand(fontSize: 14, color: _muted),
+                      prefixIcon: const Icon(
+                        Icons.search_rounded,
+                        color: _muted,
+                        size: 23,
+                      ),
+                      suffixIcon: idle
+                          ? null
+                          : IconButton(
+                              tooltip: context.tr('home_xa_4ed187'),
+                              onPressed: _clearQuery,
+                              icon: const Icon(
+                                Icons.close_rounded,
+                                color: _muted,
+                                size: 20,
                               ),
                             ),
-                          )
-                    : _buildResultsList(),
+                      filled: true,
+                      fillColor: const Color(0xFFF4F0F1),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(
+                          color: Color(0xFFCAA3B2),
+                          width: 1.3,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 17,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 3,
+                  child: _isSearching
+                      ? const LinearProgressIndicator(
+                          color: _accent,
+                          backgroundColor: Color(0xFFF4F0F1),
+                        )
+                      : null,
+                ),
+                Expanded(
+                  child: ListView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+                    children: [
+                      if (idle) ...[
+                        Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: Text(
+                            context.tr('search_intro'),
+                            style: SLTheme.quicksand(
+                              fontSize: 13,
+                              height: 1.5,
+                              color: _muted,
+                            ),
+                          ),
+                        ),
+                        if (recent.isNotEmpty) ...[
+                          _section(
+                            context.tr('home_tmkimgny_6201df'),
+                            trailing: TextButton(
+                              onPressed: _clearRecentSearches,
+                              style: TextButton.styleFrom(
+                                foregroundColor: _accent,
+                              ),
+                              child: Text(context.tr('home_xa_4ed187')),
+                            ),
+                          ),
+                          for (final result in recent)
+                            _resultRow(result, recent: true),
+                        ],
+                        if (suggestions.isNotEmpty) ...[
+                          _section(context.tr('search_suggestions_title')),
+                          for (final result in suggestions) _resultRow(result),
+                        ],
+                        if (suggestions.isEmpty && recent.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 40),
+                            child: Text(
+                              context.tr('home_nhptkhatmt_9d989f'),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                      ] else if (_searchFailed)
+                        _emptyState(error: true)
+                      else if (!_isSearching && _results.isEmpty)
+                        _emptyState(error: false)
+                      else if (_results.isNotEmpty) ...[
+                        _section(
+                          context.tr('comm_ktqutmthy_216f37'),
+                          trailing: Text(
+                            _results.length.toString(),
+                            style: const TextStyle(color: _muted, fontSize: 12),
+                          ),
+                        ),
+                        for (final result in _results) _resultRow(result),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -497,7 +560,8 @@ class _RecentSearchEntry {
       if (map is! Map<String, dynamic>) {
         return null;
       }
-      final colors = (map['colorValues'] as List?)
+      final colors =
+          (map['colorValues'] as List?)
               ?.map((value) => value is int ? value : int.tryParse('$value'))
               .whereType<int>()
               .toList(growable: false) ??
@@ -514,7 +578,7 @@ class _RecentSearchEntry {
         iconCodePoint: map['iconCodePoint'] is int
             ? map['iconCodePoint'] as int
             : int.tryParse('${map['iconCodePoint']}') ??
-                Icons.search_rounded.codePoint,
+                  Icons.search_rounded.codePoint,
         iconFontFamily: map['iconFontFamily']?.toString(),
         iconFontPackage: map['iconFontPackage']?.toString(),
         colorValues: colors,

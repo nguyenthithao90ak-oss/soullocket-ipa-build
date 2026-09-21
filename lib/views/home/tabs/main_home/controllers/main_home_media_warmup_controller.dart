@@ -30,7 +30,9 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
     _showWeather = prefs.getBool('il_show_weather') ?? _showWeather;
     _houseSettings = Map<String, dynamic>.from(cachedSettings);
     _houseSettings!['relationshipMode'] =
-        cachedSettings['relationshipMode'] ?? prefs.getString('il_rel_mode') ?? 'couple';
+        cachedSettings['relationshipMode'] ??
+        prefs.getString('il_rel_mode') ??
+        'couple';
     _selectedHomeToolId = _normalizeHomeToolId(
       prefs.getString(_homeToolSelectionPrefKey(cachedHouseId)),
     );
@@ -110,7 +112,7 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
     if (!mounted || token != _homeMediaWarmupToken || !_deferHeavyHomeMotion) {
       return;
     }
-    setState(() => _deferHeavyHomeMotion = false);
+    _safeSetState(() => _deferHeavyHomeMotion = false);
   }
 
   void _warmHomeMedia({bool delayMotion = false, bool force = false}) {
@@ -126,7 +128,7 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
       if (mounted) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
-          setState(() {});
+          _safeSetState(() {});
         });
       }
     }

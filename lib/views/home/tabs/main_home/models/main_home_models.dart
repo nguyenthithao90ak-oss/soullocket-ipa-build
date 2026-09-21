@@ -220,12 +220,8 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
   ),
 ];
 
-String _defaultStickerReferenceForInteractionType(String type) =>
-    HomeInteractionStickers.defaultFor(type);
-
 const Duration _kInteractionSuggestionRefreshInterval = Duration(minutes: 1);
-const int _kReactionThrowBurstLimit = 30;
-const Duration _kReactionThrowWindow = Duration(seconds: 15);
+
 const Duration _kReactionFlightMaxReplayAge = Duration(seconds: 45);
 const Duration _kReactionFlightListenGrace = Duration(seconds: 5);
 const int _kMaxVisibleReactionFlights = 24;

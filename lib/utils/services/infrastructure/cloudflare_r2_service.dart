@@ -1,4 +1,8 @@
 import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import '../storage/storage_upload_queue.dart';
+import '../storage/storage_upload_result.dart';
+import 'r2_media_transport.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
@@ -144,165 +148,113 @@ class CloudflareR2Service {
     }
   }
 
-  /// Upload File lên R2 và trả về public link
+  static final _videoQueue = StorageUploadQueue();
+  static int _uploadSequence = 0;
+
+  /// Giữ API cũ cho caller native, nhưng dùng chung đường truyền với Web.
   Future<String?> uploadFile(
     File file, {
     required String folderPath,
     String? storagePathOverride,
   }) async {
     try {
-      String fileName = path.basename(file.path);
-      final isVideo = R2UploadPolicy.mimeTypeForPath(
-        file.path,
-      ).startsWith('video/');
+      final result = await uploadMedia(
+        XFile(file.path),
+        folderPath: folderPath,
+        storagePathOverride: storagePathOverride,
+      );
+      return result.downloadUrl;
+    } catch (error) {
+      debugPrint('[CloudflareR2] Upload failed: ${error.runtimeType}');
+      return null;
+    }
+  }
 
-      File finalFile = file;
-
-      if (isVideo) {
-        if (!AppConfig.isVideoUploadEnabled) {
-          debugPrint(
-            '[CloudflareR2] TẠM THỜI TẮT UPLOAD VIDEO ĐỂ SỬA CHỮA / BẢO TRÌ (AppConfig.isVideoUploadEnabled = false). '
-            'Để bật lại tính năng này, đổi isVideoUploadEnabled = true trong lib/core/constants/app_config.dart',
-          );
-          return null;
-        }
-        final isVip = await PurchaseService().isVip();
-        if (!isVip) {
-          debugPrint(
-            '[CloudflareR2] Non-VIP user: Compressing video to 720p...',
-          );
+  Future<StorageUploadResult> uploadMedia(
+    XFile file, {
+    required String folderPath,
+    String? storagePathOverride,
+    String? contentType,
+    Future<void> Function(int bytes)? beforeUpload,
+    ValueChanged<double>? onProgress,
+  }) async {
+    var prepared = file;
+    var mime = contentType ?? R2UploadPolicy.mimeTypeForPath(file.name);
+    String? compressedPath;
+    final isVideo = mime.startsWith('video/');
+    if (isVideo && !AppConfig.isVideoUploadEnabled) {
+      throw StateError('Video uploads disabled');
+    }
+    // Mỗi tác vụ giữ quyền nén tới khi gửi xong và dọn đúng tệp của nó.
+    Future<StorageUploadResult> send() async {
+      final client = http.Client();
+      try {
+        if (isVideo &&
+            !kIsWeb &&
+            file.path.isNotEmpty &&
+            !await PurchaseService().isVip()) {
+          if (VideoCompress.isCompressing) {
+            throw StateError('Video compressor is busy');
+          }
+          MediaInfo? info;
           try {
-            final mediaInfo = await VideoCompress.compressVideo(
+            info = await VideoCompress.compressVideo(
               file.path,
               quality: VideoQuality.Res1280x720Quality,
               deleteOrigin: false,
-            );
-            if (mediaInfo != null && mediaInfo.file != null) {
-              finalFile = mediaInfo.file!;
-              fileName = path.basename(finalFile.path);
-              debugPrint('[CloudflareR2] Video compressed successfully.');
+            ).timeout(const Duration(minutes: 5));
+          } catch (_) {
+            try {
+              await VideoCompress.cancelCompression();
+            } finally {
+              // Plugin 3.1.4 không reset cờ này khi native ném lỗi.
+              // Chỉ reset tác vụ đã được hàng đợi này khởi chạy.
+              // ignore: invalid_use_of_protected_member
+              VideoCompress.setProcessingStatus(false);
             }
-          } catch (compressError) {
-            debugPrint(
-              '[CloudflareR2] Video compress failed: $compressError, falling back to original',
-            );
+            rethrow;
           }
-        } else {
-          debugPrint('[CloudflareR2] VIP user: Uploading original video...');
+          if (info?.file == null) throw StateError('Video compression failed');
+          prepared = XFile(info!.file!.path);
+          if (prepared.path != file.path) compressedPath = prepared.path;
+          mime = R2UploadPolicy.mimeTypeForPath(prepared.name);
+        }
+        final user = FirebaseAuth.instance.currentUser;
+        final token = await user?.getIdToken();
+        if (token == null || token.isEmpty) {
+          throw StateError('Authentication required');
+        }
+        final extension = R2UploadPolicy.extensionForMimeType(mime);
+        final originalPath =
+            storagePathOverride ??
+            '$folderPath/${DateTime.now().microsecondsSinceEpoch}_${_uploadSequence++}$extension';
+        // Chỉ đổi đuôi khi bytes thực sự đã chuyển định dạng.
+        final targetPath = path.withoutExtension(originalPath) + extension;
+        return await const R2MediaTransport().upload(
+          file: prepared,
+          contentType: mime,
+          storagePath: targetPath.replaceAll('\\', '/'),
+          workerUri: Uri.parse(
+            '${AppConfig.cloudflareWorkerUrl}/api/getSignedUploadUrl',
+          ),
+          idToken: token,
+          client: client,
+          beforeUpload: beforeUpload,
+          onProgress: onProgress,
+        );
+      } finally {
+        client.close();
+        if (compressedPath != null) {
+          try {
+            await File(compressedPath!).delete();
+          } catch (_) {
+            /* Tệp tạm có thể đã được hệ điều hành dọn. */
+          }
         }
       }
-
-      // VideoCompress có thể đổi MOV sang MP4; ký MIME của file thực sự được gửi.
-      final contentType = R2UploadPolicy.mimeTypeForPath(finalFile.path);
-      final fileSize = await finalFile.length();
-      debugPrint(
-        '[CloudflareR2] Upload file: $fileName, size: ${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB, type: $contentType',
-      );
-
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        debugPrint('[CloudflareR2] Upload failed: user not authenticated');
-        return null;
-      }
-      final idToken = await user.getIdToken();
-      if (idToken == null || idToken.isEmpty) return null;
-
-      final url = R2UploadPolicy.requireHttps(
-        '${AppConfig.cloudflareWorkerUrl}/api/getSignedUploadUrl',
-      );
-      final response = await _sendBytes(
-        'POST',
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        },
-        bytes: utf8.encode(
-          jsonEncode({
-            'fileName': fileName,
-            'contentType': contentType,
-            'folderPath': folderPath,
-            'fileSize': fileSize,
-            'exactPath': storagePathOverride,
-          }),
-        ),
-        timeout: const Duration(seconds: 30),
-      );
-
-      if (response.statusCode != 200) {
-        debugPrint(
-          '[CloudflareR2] Worker returned error (${response.statusCode})',
-        );
-        return null;
-      }
-
-      final resData = jsonDecode(response.body)['result'] as Map;
-      final uploadUri = R2UploadPolicy.requireHttps(
-        resData['uploadUrl'] as String,
-      );
-      final publicUrl = resData['publicUrl'] as String;
-      final headers = R2UploadPolicy.uploadHeaders(
-        workerUri: url,
-        uploadUri: uploadUri,
-        idToken: idToken,
-        contentType: contentType,
-        providedHeaders: resData['headers'],
-      );
-
-      // Video lớn: dùng streamed request để không load hết vào RAM
-      if (isVideo && fileSize > 5 * 1024 * 1024) {
-        debugPrint(
-          '[CloudflareR2] Using streamed upload for video ($fileName)...',
-        );
-        final streamedRequest = http.StreamedRequest('PUT', uploadUri)
-          ..followRedirects = false;
-        streamedRequest.headers.addAll(headers);
-        streamedRequest.contentLength = fileSize;
-
-        // Stream file trực tiếp không qua readAsBytes
-        finalFile.openRead().listen(
-          streamedRequest.sink.add,
-          onDone: () => streamedRequest.sink.close(),
-          onError: (e) => streamedRequest.sink.addError(e),
-          cancelOnError: true,
-        );
-
-        final streamedResponse = await streamedRequest.send().timeout(
-          const Duration(minutes: 5),
-        );
-        final statusCode = streamedResponse.statusCode;
-
-        if (statusCode == 200 || statusCode == 201) {
-          await streamedResponse.stream.drain<void>();
-          debugPrint('[CloudflareR2] ✅ Video uploaded successfully');
-          return publicUrl;
-        } else {
-          await streamedResponse.stream.drain<void>();
-          debugPrint('[CloudflareR2] Video PUT failed ($statusCode)');
-          return null;
-        }
-      }
-
-      // Ảnh hoặc file nhỏ: dùng readAsBytes như cũ
-      final bytes = await finalFile.readAsBytes();
-      final putResponse = await _sendBytes(
-        'PUT',
-        uploadUri,
-        headers: headers,
-        bytes: bytes,
-      );
-
-      if (putResponse.statusCode == 200 || putResponse.statusCode == 201) {
-        debugPrint('[CloudflareR2] ✅ File uploaded successfully');
-        return publicUrl;
-      } else {
-        debugPrint('[CloudflareR2] PUT failed: ${putResponse.statusCode}');
-        return null;
-      }
-    } catch (e) {
-      debugPrint('[CloudflareR2] ❌ Lỗi khi upload: ${e.runtimeType}');
-      return null;
     }
+
+    return isVideo && !kIsWeb ? _videoQueue.run(send) : send();
   }
 
   /// Kiểm tra URL có phải của R2 hay không

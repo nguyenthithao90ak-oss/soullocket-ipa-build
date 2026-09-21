@@ -46,6 +46,7 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
 
     if (countdownStyleKey != null) {
       const allowedCountdownStyleKeys = <String>{
+        ...KeepsakePalette.newStyleKeys,
         'default',
         'floating_hearts',
         'rose_wave',
@@ -222,6 +223,17 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
     if (!mounted) return;
 
     final styleOptions = <_CountdownQuickOption>[
+      for (final key in KeepsakePalette.newStyleKeys)
+        _CountdownQuickOption(
+          label: context.tr('keepsake_' + key),
+          value: key,
+          icon: key == 'botanical'
+              ? Icons.local_florist_rounded
+              : key == 'moon_pearl'
+              ? Icons.nights_stay_rounded
+              : Icons.favorite_rounded,
+          accent: KeepsakePalette.of(key).accent,
+        ),
       _CountdownQuickOption(
         label: context.tr('countdown_default'),
         value: 'default',
@@ -328,7 +340,7 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFFF8F5F6),
+      backgroundColor: const Color(0xFFFFFAF4),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),

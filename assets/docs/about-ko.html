@@ -1,0 +1,56 @@
+<!DOCTYPE html><html lang="ko" dir="ltr"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="개인 또는 두 사람이 추억을 저장하고, 개인적인 반성을 쓰고, 연락을 주고받을 수 있는 공간입니다.">
+<meta name="soullocket-document-version" content="2026-09-09">
+<title>소울로켓 소개</title>
+<style>
+:root{color-scheme:light;--ink:#30292d;--muted:#6d6067;--accent:#a13e5c;--line:#eadde2;--paper:#fff;--bg:#faf6f7}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 system-ui,-apple-system,"Segoe UI",sans-serif;overflow-wrap:anywhere}
+.page{max-width:880px;margin:auto;padding:28px 24px 56px}
+header,section,footer{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;margin:0 0 18px}
+.brand{font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:750;color:var(--accent)}
+h1{font-size:clamp(26px,5vw,36px);line-height:1.25;margin:12px 0 16px;letter-spacing:-.025em}
+h2{font-size:21px;line-height:1.4;margin:0 0 14px}h3{font-size:17px;margin:22px 0 10px}
+p{margin:0 0 14px}p:last-child,ul:last-child,ol:last-child{margin-bottom:0}
+.meta,.small{font-size:14px;color:var(--muted)}ul,ol{padding-left:24px;margin:10px 0 16px}li{margin:7px 0}
+a{color:var(--accent);text-underline-offset:3px}a:hover{text-decoration-thickness:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #7943ab;outline-offset:4px}
+nav{display:flex;flex-wrap:wrap;gap:10px 20px;margin:20px 0 0}nav a{font-size:14px}
+.note,.warning{padding:16px 18px;border-radius:10px;margin:16px 0;border-left:4px solid var(--accent);background:#fcf0f4}
+.warning{border-color:#a7641a;background:#fff6e8}.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}
+th{background:#faf5f7}button,.button{display:inline-block;padding:12px 18px;background:var(--accent);color:white;border:0;border-radius:10px;font:inherit;font-weight:650;cursor:pointer;text-decoration:none}
+button:disabled{opacity:.6;cursor:wait}label{display:block;font-weight:650;margin:16px 0 6px}
+input:not([type=checkbox]),textarea{width:100%;padding:12px;font:inherit;color:inherit;background:white;border:1px solid #a99aa2;border-radius:8px}
+textarea{resize:vertical;min-height:110px}.checkbox{display:flex;gap:12px;align-items:flex-start;margin:20px 0}
+.checkbox input{flex-shrink:0;width:20px;height:20px;margin-top:5px}.checkbox label{font-weight:400;margin:0}
+.status{display:none;padding:16px;margin-top:16px;border-radius:10px}.status.success{display:block;background:#eaf7ef;color:#245635}.status.error{display:block;background:#fff0f0;color:#96323c}
+.skip{position:absolute;top:-100px;left:16px;background:white;padding:12px;z-index:10}.skip:focus{top:10px}
+@media(max-width:560px){.page{padding:16px 12px 32px}header,section,footer{padding:20px 18px;border-radius:14px}th,td{padding:10px 8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{body{background:white}.page{max-width:none;padding:0}header,section,footer{border:0;padding:12px 0}nav,.skip,form{display:none}h2,h3{break-after:avoid}}
+</style>
+</head>
+<body>
+<a class="skip" href="#noi-dung-chinh">주요 콘텐츠로 건너뛰기</a>
+<main class="page" id="noi-dung-chinh">
+<header><div class="brand">SoulLocket · 문서 및 지원</div><h1>소울로켓 소개</h1><p>개인 또는 두 사람이 추억을 저장하고, 개인적인 반성을 쓰고, 연락을 주고받을 수 있는 공간입니다.</p><p class="meta">업데이트된 콘텐츠: <time datetime="2026-09-09">2026년 9월 9일</time> · 문서 버전 2026-09-09</p><nav aria-label="문서 언어"><a href="about.html" lang="vi" hreflang="vi">Tiếng Việt</a><a href="about-en.html" lang="en" hreflang="en">English</a><a href="about-de.html" lang="de" hreflang="de">Deutsch</a><a href="about-fr.html" lang="fr" hreflang="fr">Français</a><a href="about-es.html" lang="es" hreflang="es">Español</a><a href="about-it.html" lang="it" hreflang="it">Italiano</a><a href="about-pt.html" lang="pt" hreflang="pt">Português</a><a href="about-ru.html" lang="ru" hreflang="ru">Русский</a><a href="about-ja.html" lang="ja" hreflang="ja">日本語</a><span lang="ko" aria-current="page">한국어</span><a href="about-zh.html" lang="zh" hreflang="zh">简体中文</a></nav><p class="small">문서 버전 2026-09-09 번역. 표현이 명확하지 않거나 언어마다 다른 경우 지원팀에 문의하세요.</p><nav aria-label="목차"><a href="#tong-quan">1. 계정 및 공유 공간</a>
+<a href="#tinh-nang">2. 기능 그룹</a>
+<a href="#du-lieu">3. 데이터 및 인프라</a>
+<a href="#gioi-han">4. 알아야 할 한계</a>
+<a href="#ban-quyen">5. 저작권 및 지원</a></nav></header>
+
+<section id="tong-quan"><h2>1. 계정 및 공유 공간</h2><p>귀하의 계정은 로그인 및 액세스 관리에 사용됩니다. A House는 프로필, 일기, 추억, 공유 콘텐츠를 담은 공간입니다. 앱을 직접 사용할 수 있습니다. 연결하다, 열다 <strong>설정 → 파트너와 연결</strong> 초대장을 생성, 입력 또는 스캔합니다.</p><p>페어링되면 화면에 아바타, 이름 및 연결 날짜가 모두 표시됩니다. 이 화면 외부의 바로가기는 아바타와 페어링 상태를 모두 표시합니다. 커플 모드를 선택해도 두 계정을 페어링하는 것은 대체되지 않습니다.</p></section>
+<section id="tinh-nang"><h2>2. 기능 그룹</h2><ul><li>홈: 아바타, 일일 카운터, 현재 상태 및 바로가기.</li><li>일기/추억: 개인적인 생각, 저장된 사진 및 동기화된 콘텐츠.</li><li>채팅/커뮤니티: 각 기능 범위 내의 콘텐츠, 상호 작용 및 공유.</li><li>앱 버전에서 유틸리티, 게임 및 창의적인 콘텐츠를 사용할 수 있습니다.</li><li>설정, 보안, 지원 및 개인 정보 보호 선택.</li></ul><p>가용성은 플랫폼, 버전, 장치 권한 및 구성에 따라 다릅니다. 소스 코드의 기능 파일이 모든 릴리스에서 기능이 활성화되거나 작동한다는 의미는 아닙니다.</p></section>
+<section id="du-lieu"><h2>3. 데이터 및 인프라</h2><p>SoulLocket은 관련 파일 및 서비스 흐름을 위해 Cloudflare R2/Workers와 함께 인증, 데이터베이스 및 알림을 위해 Firebase를 사용합니다. 서버 데이터 외에도 장치에는 초안, 캐시 및 다운로드가 포함될 수 있습니다.</p><p>귀하의 하우스 파트너는 기능에 따라 공유 콘텐츠에 액세스할 수 있습니다. PIN 잠금 자체는 공유 콘텐츠를 본인에게만 표시하지 않습니다. 페어링하기 전에 이전 House 경고를 읽고 보관해야 하는 모든 항목을 백업하세요.</p><p>참조 <a href="privacy-ko.html">개인 정보 보호 정책</a> 서비스 제공자, 데이터 및 귀하의 권리를 위해.</p></section>
+<section id="gioi-han"><h2>4. 알아야 할 한계</h2><p>SoulLocket은 절대적인 보안, 중단 없는 작동 또는 모든 데이터의 복구를 보장하지 않습니다. 이는 응급 서비스나 전문적인 조언을 대체하지 않습니다. AI 콘텐츠, 지도, 현재 상태는 부정확하거나 지연될 수 있습니다.</p><p>SoulLocket을 사용하여 사람들을 비밀리에 추적하거나, 다른 사람을 강압하거나, 사용할 자격이 없는 데이터를 공유하지 마십시오.</p></section>
+<section id="ban-quyen"><h2>5. 저작권 및 지원</h2><p>브랜딩, 소프트웨어 및 문서는 해당 소유자의 자산입니다. 사용자 콘텐츠 및 제3자 자산은 자체 권리/라이센스를 보유합니다. 앱의 모든 콘텐츠가 SoulLocket의 독점 자산이라고 가정하지 마세요.</p><p>계정, 저작권 또는 개인 정보 보호 문제는 다음 연락처로 문의하세요. <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a> 또는 인앱 지원 영역. 비밀번호, PIN 또는 일회용 코드를 보내지 마십시오.</p></section>
+<footer><h2>SoulLocket 문서</h2><nav aria-label="관련 문서"><a href="about-ko.html">소개</a><a href="huong_dan-ko.html">사용자 가이드</a><a href="huong_dan_cai_dat_lan_dau-ko.html">첫 번째 설정</a><a href="privacy-ko.html">개인 정보 보호</a><a href="terms-ko.html">이용약관</a><a href="cookie-policy-ko.html">쿠키</a><a href="delete-account-ko.html">계정 삭제</a><a href="support-ko.html">지원</a></nav><p class="small">개인정보 보호 및 지원: <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p></footer>
+</main>
+
+
+</body></html>

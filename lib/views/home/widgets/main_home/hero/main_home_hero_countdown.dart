@@ -675,7 +675,7 @@ class _MainHomeHeroCountdownCircleState
   @override
   Widget build(BuildContext context) {
     final transparentMode = UiPrefs.notifier.value.transparentMode;
-    final countdownVisual = _CountdownVisualSpec.resolve(
+    final countdownVisual = CountdownVisualSpec.resolve(
       widget.countdownStyleKey,
       transparentMode,
       dark: Theme.of(context).brightness == Brightness.dark,
@@ -916,16 +916,6 @@ class _MainHomeHeroCountdownCircleState
                                                   circleSize: widget.circleSize,
                                                   enableMotion: enableMotion,
                                                 ),
-                                              ),
-                                            if (widget.countdownStyleKey ==
-                                                'floating_hearts')
-                                              RepaintBoundary(
-                                                child:
-                                                    FloatingHeartsRingOverlay(
-                                                      size: widget.circleSize,
-                                                      enableMotion:
-                                                          enableMotion,
-                                                    ),
                                               ),
                                             if (!transparentMode &&
                                                 !isBalancedStyle)

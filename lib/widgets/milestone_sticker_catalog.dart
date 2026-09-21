@@ -3,6 +3,78 @@ part of 'living_sticker_scene.dart';
 /// Mã theo ý nghĩa, độc lập ngôn ngữ và vị trí trong danh sách.
 abstract final class MilestoneStickerCatalog {
   static const holidays = <String, LivingStickerScene>{
+    'kr_rose_day': LivingStickerScene(
+      StickerSubject.roseStem,
+      StickerGesture.love,
+      prop: StickerSubject.letter,
+    ),
+    'kr_kiss_day': LivingStickerScene(
+      StickerSubject.couple,
+      StickerGesture.kiss,
+      prop: StickerSubject.roseStem,
+    ),
+    'kr_silver_day': LivingStickerScene(
+      StickerSubject.silverRings,
+      StickerGesture.shy,
+      prop: StickerSubject.star,
+    ),
+    'kr_wine_day': LivingStickerScene(
+      StickerSubject.wineGlasses,
+      StickerGesture.love,
+      prop: StickerSubject.heart,
+    ),
+    'kr_pepero_day': LivingStickerScene(
+      StickerSubject.biscuitSticks,
+      StickerGesture.play,
+      prop: StickerSubject.gift,
+    ),
+    'kr_hug_day': LivingStickerScene(
+      StickerSubject.couple,
+      StickerGesture.hug,
+      prop: StickerSubject.cloud,
+    ),
+    'jp_tanabata': LivingStickerScene(
+      StickerSubject.wishBamboo,
+      StickerGesture.celebrate,
+      prop: StickerSubject.star,
+    ),
+    'jp_good_couples_day': LivingStickerScene(
+      StickerSubject.couple,
+      StickerGesture.love,
+      prop: StickerSubject.silverRings,
+    ),
+    'cn_520_love_day': LivingStickerScene(
+      StickerSubject.calendar,
+      StickerGesture.love,
+      detail: '520',
+      prop: StickerSubject.heart,
+    ),
+    'cn_qixi': LivingStickerScene(
+      StickerSubject.couple,
+      StickerGesture.kiss,
+      prop: StickerSubject.lantern,
+    ),
+    'th_loy_krathong': LivingStickerScene(
+      StickerSubject.lotusCandle,
+      StickerGesture.heal,
+      prop: StickerSubject.moon,
+    ),
+    'es_sant_jordi': LivingStickerScene(
+      StickerSubject.book,
+      StickerGesture.love,
+      prop: StickerSubject.roseStem,
+    ),
+    'br_namorados': LivingStickerScene(
+      StickerSubject.gift,
+      StickerGesture.love,
+      prop: StickerSubject.bouquet,
+      accent: Color(0xFFB9DCC8),
+    ),
+    'ru_family_love_day': LivingStickerScene(
+      StickerSubject.chamomile,
+      StickerGesture.love,
+      prop: StickerSubject.rings,
+    ),
     'new_year': LivingStickerScene(
       StickerSubject.fireworks,
       StickerGesture.celebrate,
@@ -246,10 +318,6 @@ abstract final class MilestoneStickerCatalog {
     '2-14': 'valentine',
     '3-8': 'international_women',
     '3-14': 'white_valentine',
-    '4-1': 'april_fools',
-    '4-14': 'black_valentine',
-    '6-1': 'children',
-    '6-28': 'family',
     '10-20': 'vietnamese_women',
     '10-31': 'halloween',
     '12-24': 'christmas_eve',

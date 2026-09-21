@@ -40,16 +40,16 @@ class GlobalSearchService {
 
   static const Map<String, String> _defaultUtilitySubtitleKeys =
       <String, String>{
-    'note': 'search_utility_subtitle_note',
-    'friendly_chat': 'search_utility_subtitle_friendly_chat',
-    'history': 'search_utility_subtitle_history',
-    'calendar': 'search_utility_subtitle_calendar',
-    'vault': 'search_utility_subtitle_vault',
-    'bucket': 'search_utility_subtitle_bucket',
-    'habit': 'search_utility_subtitle_habit',
-    'voice': 'search_utility_subtitle_voice',
-    'calculator': 'search_utility_subtitle_calculator',
-  };
+        'note': 'search_utility_subtitle_note',
+        'friendly_chat': 'search_utility_subtitle_friendly_chat',
+        'history': 'search_utility_subtitle_history',
+        'calendar': 'search_utility_subtitle_calendar',
+        'vault': 'search_utility_subtitle_vault',
+        'bucket': 'search_utility_subtitle_bucket',
+        'habit': 'search_utility_subtitle_habit',
+        'voice': 'search_utility_subtitle_voice',
+        'calculator': 'search_utility_subtitle_calculator',
+      };
 
   static const Map<String, List<String>> _utilityAliases = {
     'giftcode': ['mã quà tặng', 'code'],
@@ -89,14 +89,41 @@ class GlobalSearchService {
     }
 
     final results = <GlobalSearchResult>[
-      ..._searchUtilities(
-        normalizedQuery,
-        relationshipMode,
-        allowedUtilityIds,
-      ),
+      ..._searchUtilities(normalizedQuery, relationshipMode, allowedUtilityIds),
     ]..sort((a, b) => b.score.compareTo(a.score));
 
     return results.take(20).toList(growable: false);
+  }
+
+  /// Dựng lại lịch sử theo ngôn ngữ và phạm vi hiện tại, bỏ tiện ích đã bị ẩn.
+  GlobalSearchResult? resolveAction(
+    String actionId, {
+    String? relationshipMode,
+    Set<String>? allowedUtilityIds,
+  }) {
+    if (!actionId.startsWith('utility:')) return null;
+    final id = actionId.substring('utility:'.length);
+    if (allowedUtilityIds != null && !allowedUtilityIds.contains(id)) {
+      return null;
+    }
+    for (final app in UtilityService.appsForMode(relationshipMode)) {
+      if (app.id != id) continue;
+      final subtitleKey = _defaultUtilitySubtitleKeys[id];
+      return GlobalSearchResult(
+        id: 'utility_$id',
+        title: app.localizedTitle,
+        subtitle: L10nService().translate(
+          subtitleKey ??
+              (app.isTool ? 'search_default_tool' : 'search_default_app'),
+        ),
+        type: L10nService().translate('search_badge_utility'),
+        actionId: actionId,
+        icon: app.icon,
+        colors: app.colors,
+        score: 0,
+      );
+    }
+    return null;
   }
 
   List<GlobalSearchResult> defaultSuggestions({
@@ -120,8 +147,8 @@ class GlobalSearchService {
           final localizedSubtitle = subtitleKey != null
               ? L10nService().translate(subtitleKey)
               : (app.isTool
-                  ? L10nService().translate('search_default_tool')
-                  : L10nService().translate('search_default_app'));
+                    ? L10nService().translate('search_default_tool')
+                    : L10nService().translate('search_default_app'));
 
           return GlobalSearchResult(
             id: 'default_utility_${app.id}',

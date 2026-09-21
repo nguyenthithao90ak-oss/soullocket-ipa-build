@@ -8,6 +8,7 @@ extension HeaderEditorExt on _CountdownModeEditorScreenState {
   ) {
     return [
       Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Tooltip(
             message: context.tr('p7_back'),
@@ -51,9 +52,8 @@ extension HeaderEditorExt on _CountdownModeEditorScreenState {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  context.tr('home_citkhnggia_09f866'),
-                  style: SLTheme.textStyleForKey(
-                    'dancingScript',
+                  context.tr('appearance_page_title'),
+                  style: SLTheme.quicksand(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
                     color: themeData.foreground,
@@ -61,7 +61,7 @@ extension HeaderEditorExt on _CountdownModeEditorScreenState {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  context.tr('home_bccytngtmc_c1f7aa'),
+                  widget.spaceTitle,
                   style: SLTheme.quicksand(
                     fontSize: 12.2,
                     fontWeight: FontWeight.w700,

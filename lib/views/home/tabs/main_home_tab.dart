@@ -2,20 +2,13 @@
 import 'package:lottie/lottie.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
-import 'package:soullocket_app/widgets/home_interaction_stickers.dart';
-import 'package:soullocket_app/widgets/soul_merge_mascot.dart';
-import 'package:soullocket_app/views/home/widgets/home_sticker_motion.dart';
-import 'package:soullocket_app/views/home/widgets/companion/home_companion_scene.dart';
-import 'package:soullocket_app/views/home/widgets/companion/home_companion_motion.dart';
-import 'package:soullocket_app/views/home/widgets/companion/home_companion_painter.dart';
-import 'package:soullocket_app/utils/services/music_service.dart';
-import 'package:soullocket_app/utils/services/sound_service.dart';
 import 'package:soullocket_app/views/utilities/tarot/tarot_screen.dart';
 import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/map_tilt_card.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/hero/heartbeat_thread_painter.dart';
-import 'package:soullocket_app/views/home/widgets/main_home/hero/balanced_countdown_style.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/getting_started_guide.dart';
+import 'package:soullocket_app/widgets/app_help_center.dart';
 import 'package:soullocket_app/widgets/sl_bouncing_button.dart';
 import 'package:soullocket_app/views/home/widgets/anniversary_sparkle_painter.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/hero/snow_globe_photo_layer.dart';
@@ -31,7 +24,7 @@ import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/foundation.dart'
-    show kDebugMode, kIsWeb, listEquals, ValueListenable;
+    show kDebugMode, kIsWeb, ValueListenable, listEquals;
 import 'package:http/http.dart' as http;
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart' show XFile;
@@ -54,10 +47,10 @@ import 'dart:math';
 import 'package:soullocket_app/utils/services/offline_cache_service.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
 import 'package:soullocket_app/utils/services/home_startup_media_cache.dart';
-import 'package:soullocket_app/utils/home_image_policy.dart';
 import 'package:soullocket_app/utils/services/love_insight_service.dart';
 import 'package:soullocket_app/utils/services/location_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/utils/services/holiday_service.dart';
 import 'package:soullocket_app/utils/services/military_lock_service.dart';
 import 'package:soullocket_app/utils/services/presence_service.dart';
 import 'package:soullocket_app/utils/services/utility_service.dart';
@@ -72,7 +65,7 @@ import 'package:soullocket_app/utils/sl_notice.dart';
 import 'package:soullocket_app/models/house_settings.dart';
 import 'package:soullocket_app/models/utilities/shared_note.dart';
 import 'package:soullocket_app/views/home/tabs/settings_tab.dart'
-    show SettingsTab, FloatingHeartsRingOverlay;
+    show SettingsTab;
 import 'package:soullocket_app/views/ui_prefs.dart';
 import 'package:soullocket_app/views/home/tabs/settings/theme/theme_preview_builder.dart';
 // import 'package:soullocket_app/views/utilities/age_zodiac_screen.dart';
@@ -107,6 +100,9 @@ import 'package:soullocket_app/utils/services/daily_quest_service.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/widgets/legacy_web_ui.dart';
+import 'package:soullocket_app/widgets/keepsake_frame.dart';
+import '../widgets/main_home/hero/main_home_countdown_visual_spec.dart';
+import '../widgets/main_home/hero/countdown_studio_widgets.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
 import 'package:soullocket_app/utils/services/admob_service.dart';
 import 'package:soullocket_app/utils/app_cache_manager.dart';
@@ -121,6 +117,16 @@ import '../../../core/fast_backdrop_filter.dart';
 import 'package:soullocket_app/core/sl_countdown_shapes.dart';
 import 'package:soullocket_app/core/sl_route.dart';
 import 'package:soullocket_app/views/home/tabs/main_home/widgets/main_home_header_button.dart';
+import 'package:soullocket_app/utils/home_image_policy.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/hero/balanced_countdown_style.dart';
+import 'package:soullocket_app/views/home/widgets/companion/home_companion_motion.dart';
+import 'package:soullocket_app/views/home/widgets/companion/home_companion_scene.dart';
+import 'package:soullocket_app/views/home/widgets/companion/home_companion_journey_card.dart';
+import 'package:soullocket_app/widgets/home_interaction_stickers.dart';
+import 'package:soullocket_app/views/home/widgets/home_sticker_motion.dart';
+import 'package:soullocket_app/widgets/soul_merge_mascot.dart';
+import 'package:soullocket_app/utils/services/sound_service.dart';
+import 'package:soullocket_app/views/home/widgets/companion/home_companion_painter.dart';
 
 part 'main_home/widgets/main_home_dialogs.dart';
 part 'main_home/widgets/main_home_soul_merge_sticker.dart';
@@ -155,10 +161,10 @@ part 'main_home/controllers/main_home_reaction_controller.dart';
 part 'main_home/sections/main_home_body_section.dart';
 part 'main_home/widgets/main_home_state_views.dart';
 part '../widgets/main_home/hero/main_home_animated_wave_background.dart';
-part '../widgets/main_home/hero/main_home_countdown_visual_spec.dart';
-part '../widgets/main_home/hero/main_home_countdown_sticker_overlay.dart';
+
 part '../widgets/main_home/hero/main_home_hero_badges.dart';
 part '../widgets/main_home/hero/main_home_hero_countdown.dart';
+part '../widgets/main_home/hero/main_home_countdown_sticker_overlay.dart';
 part '../widgets/main_home/hero/main_home_hero_counters.dart';
 part '../widgets/main_home/hero/main_home_hero_header.dart';
 part 'main_home/models/main_home_models.dart';
@@ -166,6 +172,7 @@ part 'main_home/models/main_home_models.dart';
 class MainHomeTab extends StatefulWidget {
   final ValueNotifier<bool> isActiveListenable;
   final VoidCallback? onOpenSettings;
+  final VoidCallback? onOpenDiary;
   final GlobalKey? firstGuideHeroKey;
   final GlobalKey? firstGuideSettingsKey;
   final ValueListenable<bool>? isSwipingListenable;
@@ -174,6 +181,7 @@ class MainHomeTab extends StatefulWidget {
     super.key,
     required this.isActiveListenable,
     this.onOpenSettings,
+    this.onOpenDiary,
     this.firstGuideHeroKey,
     this.firstGuideSettingsKey,
     this.isSwipingListenable,
@@ -199,14 +207,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
 
   static const Duration _kCountdownQuickUnlockWindow = Duration(hours: 24);
   static const Set<String> _kCountdownQuickPremiumStyleKeys = {
-    'floating_hearts',
-    'galaxy',
-    'aurora',
-    'crystal',
-    'fireworks',
-    'lava',
-    'cherry_blossom',
-    'meteor_shower',
     'deep_ocean',
     'golden_sunset',
     'neon_pulse',
@@ -270,13 +270,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     if (!mounted) return;
     _showMissYouScreen(payload);
     if (removalPath != null) {
-      unawaited(
-        _dbRef.child(removalPath).remove().catchError((error) {
-          debugPrint(
-            '[MainHome] Cannot acknowledge partner interaction: $error',
-          );
-        }),
-      );
+      unawaited(_dbRef.child(removalPath).remove().catchError((_) {}));
     }
   }
 
@@ -582,25 +576,13 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   Future<void> _loadCustomStickers() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final restored =
-          prefs.getBool(HomeInteractionStickers.restoredPreference) ?? false;
       for (final preset in _kPartnerInteractionPresets) {
-        final prefsKey = 'custom_sticker_${preset.type}';
-        final customPath = prefs.getString(prefsKey)?.trim();
-        final resolved = HomeInteractionStickers.resolve(
-          preset.type,
-          customPath,
-          restored: restored,
-        );
-        preset.assetPath = resolved;
-        if (customPath != null && customPath != resolved) {
-          await prefs.setString(prefsKey, resolved);
+        final customPath = prefs.getString('custom_sticker_${preset.type}');
+        if (customPath != null && customPath.isNotEmpty) {
+          preset.assetPath = customPath;
         }
       }
-      await prefs.setBool(HomeInteractionStickers.restoredPreference, true);
-    } catch (error) {
-      debugPrint('[MainHome] Cannot migrate interaction presets: $error');
-    }
+    } catch (_) {}
   }
 
   _PartnerInteractionPreset get _displayInteractionPreset {
@@ -634,9 +616,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
           GoogleFonts.comfortaa(fontWeight: FontWeight.w900),
           selectedUiFont,
         ]);
-      } catch (error) {
-        debugPrint('[MainHome] Font warm-up failed: $error');
-      }
+      } catch (_) {}
     }());
     // Pre-cache sticker assets deferred and chunked to avoid startup stutter
     Timer(const Duration(seconds: 4), () async {
@@ -998,7 +978,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       },
       onError: (_) {
         _activeFetchFuture = null;
-        if (mounted) setState(() => _isLoading = false);
       },
     );
   }
@@ -1074,9 +1053,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       if (updates.isNotEmpty) {
         await _dbRef.update(updates);
       }
-    } catch (error) {
-      debugPrint('[MainHome] Cannot prune stale sync data: $error');
-    }
+    } catch (_) {}
   }
 
   static final _accentRegexMap = {
@@ -1307,10 +1284,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     return _MainHomeStateView(
       isLoading: _isLoading,
       hasVisibleContent: _houseSettings != null,
-      onRetry: () {
-        setState(() => _isLoading = true);
-        unawaited(_fetchHouseData(preserveVisibleState: true));
-      },
+      onRetry: () => unawaited(_fetchHouseData()),
       child: ValueListenableBuilder<UiPrefsState>(
         valueListenable: UiPrefs.notifier,
         builder: (context, uiState, _) => Stack(
@@ -1331,6 +1305,34 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildGettingStartedChecklist({required bool isSingle}) {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final houseId = _houseId ?? '';
+    return GettingStartedChecklist(
+      uid: uid,
+      houseId: houseId,
+      isSingle: isSingle,
+      isStillValid: () =>
+          mounted &&
+          FirebaseAuth.instance.currentUser?.uid == uid &&
+          _houseId == houseId,
+      onOpenFeature: (topic) {
+        switch (topic) {
+          case GettingStartedTopic.account:
+            widget.onOpenSettings?.call();
+          case GettingStartedTopic.memory:
+            widget.onOpenDiary?.call();
+          case GettingStartedTopic.pairing:
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const PairingDashboardScreen(),
+              ),
+            );
+        }
+      },
     );
   }
 

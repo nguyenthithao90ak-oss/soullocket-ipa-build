@@ -29,13 +29,32 @@ extension _CountdownModeIndependentScreenStatePart
       if (key.isEmpty || value.isEmpty) continue;
       names[key] = value;
     }
-    final selfSnapshot = _snapshotFromPrefs(prefs, scope: _selfSpaceHouseId);
+    final pending = <String, _CountdownSpaceSnapshot>{};
+    final pendingPrefix = 'il_countdown_pending_v1_${_selfSpaceHouseId}_';
+    for (final key in prefs.getKeys().where(
+      (key) => key.startsWith(pendingPrefix),
+    )) {
+      try {
+        final scope = key.substring(pendingPrefix.length);
+        final raw = jsonDecode(prefs.getString(key) ?? '{}');
+        if (scope.isNotEmpty && raw is Map<String, dynamic>) {
+          pending[scope] = _snapshotFromSerializedMap(raw, scope: scope);
+        }
+      } catch (error) {
+        debugPrint('[CountdownSpace] Invalid saved draft: $error');
+      }
+    }
+    final selfSnapshot =
+        pending[_selfSpaceHouseId] ??
+        _snapshotFromPrefs(prefs, scope: _selfSpaceHouseId);
 
     if (!mounted) {
       return;
     }
     _safeSetState(() {
       _spaceDisplayNames = names;
+      _unsyncedSpaceSnapshots.addAll(pending);
+      _spaceSnapshots.addAll(pending);
       _spaceSnapshots[_selfSpaceHouseId] = selfSnapshot;
       if (_openedSpaceHouseId == null ||
           _openedSpaceHouseId == _selfSpaceHouseId) {
@@ -75,13 +94,40 @@ extension _CountdownModeIndependentScreenStatePart
     _countdownDeleteRequestsSub?.cancel();
     _countdownRequestsSub = _countdownSpaceService
         .watchRequestsForHouse(_selfSpaceHouseId)
-        .listen(_handleCountdownRequestsChanged);
+        .listen(
+          (value) {
+            _clearSpaceStreamError('requests');
+            _handleCountdownRequestsChanged(value);
+          },
+          onError: (Object error) => _recordSpaceStreamError('requests', error),
+        );
     _countdownSpacesSub = _countdownSpaceService
         .watchSpacesForHouse(_selfSpaceHouseId)
-        .listen(_handleCountdownSpacesChanged);
+        .listen((value) {
+          _clearSpaceStreamError('spaces');
+          _handleCountdownSpacesChanged(value);
+        }, onError: (Object error) => _recordSpaceStreamError('spaces', error));
     _countdownDeleteRequestsSub = _countdownSpaceService
         .watchDeleteRequestsForHouse(_selfSpaceHouseId)
-        .listen(_handleCountdownDeleteRequestsChanged);
+        .listen(
+          (value) {
+            _clearSpaceStreamError('deletes');
+            _handleCountdownDeleteRequestsChanged(value);
+          },
+          onError: (Object error) => _recordSpaceStreamError('deletes', error),
+        );
+  }
+
+  void _recordSpaceStreamError(String stream, Object error) {
+    if (!mounted) return;
+    _safeSetState(() => _spaceStreamErrors.add(stream));
+    debugPrint('[CountdownSpace] $stream: $error');
+  }
+
+  void _clearSpaceStreamError(String stream) {
+    if (mounted && _spaceStreamErrors.contains(stream)) {
+      _safeSetState(() => _spaceStreamErrors.remove(stream));
+    }
   }
 
   void _handleCountdownRequestsChanged(
@@ -122,7 +168,7 @@ extension _CountdownModeIndependentScreenStatePart
         if (_optimisticPendingSpaceHouseIds.contains(otherHouseId) &&
             localSnapshot != null) {
           nextSnapshots[otherHouseId] = localSnapshot;
-          pendingSnapshotsToSync[request] = localSnapshot;
+
           continue;
         }
         nextSnapshots[otherHouseId] = _snapshotFromSerializedMap(
@@ -172,16 +218,6 @@ extension _CountdownModeIndependentScreenStatePart
       }
       _rebuildVisibleSpaces();
     });
-
-    for (final entry in pendingSnapshotsToSync.entries) {
-      unawaited(
-        _countdownSpaceService.updatePendingRequestSnapshot(
-          requestId: entry.key.requestId,
-          fromHouseId: _selfSpaceHouseId,
-          snapshot: _snapshotToSerializedMap(entry.value),
-        ),
-      );
-    }
   }
 
   void _handleCountdownSpacesChanged(List<CountdownSpaceInfo> spaces) {
@@ -225,7 +261,9 @@ extension _CountdownModeIndependentScreenStatePart
           if (_isIncomingSnapshotNewer(openedSpaceId, nextSnapshot)) {
             _applySnapshot(nextSnapshot);
           }
-        } else if (!nextSharedSpaces.containsKey(openedSpaceId)) {
+        } else if (!nextSharedSpaces.containsKey(openedSpaceId) &&
+            !_hasPendingSpaceRequest(openedSpaceId) &&
+            !_optimisticPendingSpaceHouseIds.contains(openedSpaceId)) {
           didCloseRemovedSpace = true;
           _openedSpaceHouseId = null;
           _spaceChromeVisible = true;
@@ -374,164 +412,142 @@ extension _CountdownModeIndependentScreenStatePart
     });
   }
 
-  Future<void> _saveLocalSettings() async {
-    final prefs = await SharedPreferences.getInstance();
+  Future<bool> _saveLocalSettings() {
     final scope = _scopeKey;
     final snapshot = _sanitizeSnapshot(_captureCurrentSnapshot());
+    _unsyncedSpaceSnapshots[scope] = snapshot;
+    final result = _spaceSaveQueue.then(
+      (_) => _persistSpaceSnapshot(scope, snapshot),
+    );
+    _spaceSaveQueue = result.then<void>((_) {});
+    return result;
+  }
 
-    await Future.wait([
-      prefs.setBool(_prefKey('single_mode', scope: scope), _singleMode),
-      prefs.setString(_prefKey('theme_key', scope: scope), _themeKey),
-      prefs.setString(_prefKey('style_key', scope: scope), snapshot.styleKey),
-      prefs.setString(_prefKey('font_key', scope: scope), _fontKey),
-      prefs.setString(
-        _prefKey('avatar_frame_key', scope: scope),
-        _avatarFrameKey,
-      ),
-      prefs.setBool(
-        _prefKey('transparent_mode', scope: scope),
-        _transparentMode,
-      ),
-      prefs.setDouble(_prefKey('size_px', scope: scope), _countdownSizePx),
-      prefs.setString(_prefKey('bg_url', scope: scope), _customBackgroundUrl),
-      prefs.setString(
-        _prefKey('center_icon_type', scope: scope),
-        _centerIconType,
-      ),
-      prefs.setString(_prefKey('top_label', scope: scope), _topLabelText),
-      prefs.setString(_prefKey('bottom_label', scope: scope), _bottomLabelText),
-      prefs.setString(_prefKey('name_u1', scope: scope), _nameU1),
-      prefs.setString(_prefKey('name_u2', scope: scope), _nameU2),
-      prefs.setString(_prefKey('avatar_1', scope: scope), _avatarUrl1),
-      prefs.setString(_prefKey('avatar_2', scope: scope), _avatarUrl2),
-      prefs.setString(
-        _prefKey('anchor_date', scope: scope),
-        _anchorDate == null ? '' : DateInputUtils.formatIsoDate(_anchorDate!),
-      ),
-      prefs.setString(_prefKey('falling_effect_type', scope: scope), 'off'),
-      prefs.setInt(
-        _prefKey('updated_at_ms', scope: scope),
-        snapshot.updatedAtMs,
-      ),
-    ]);
-
-    if (mounted) {
-      _safeSetState(() {
-        _spaceSnapshots[scope] = snapshot;
-      });
-    }
-    if (scope == _selfSpaceHouseId || _selfSpaceHouseId == 'local_self') {
-      await UiPrefs.ensureLoaded();
-      final currentUi = UiPrefs.notifier.value;
-      final nextUi = currentUi.copyWith(
-        themeKey: _themeKey,
-        countdownStyleKey: snapshot.styleKey,
-        fontKey: _fontKey,
-        avatarFrameKey: _avatarFrameKey,
-        transparentMode: _transparentMode,
-        countdownSizePx: _countdownSizePx,
-        customBackgroundUrl: _customBackgroundUrl,
-        countdownTopLabel: _topLabelText,
-        countdownBottomLabel: _bottomLabelText,
-      );
-      await UiPrefs.saveState(nextUi);
-
-      if (_selfSpaceHouseId != 'local_self') {
-        final houseId = _selfSpaceHouseId;
-        final updates = <String, dynamic>{
-          'houses/$houseId/settings/relationshipMode': _singleMode
-              ? 'single'
-              : 'couple',
-          'houses/$houseId/settings/theme': _themeKey,
-          'houses/$houseId/settings/countdownStyle': snapshot.styleKey,
-          'houses/$houseId/settings/font': _fontKey,
-          'houses/$houseId/settings/avatarFrame': _avatarFrameKey,
-          'houses/$houseId/settings/transparentMode': _transparentMode,
-          'houses/$houseId/settings/countdownSizePx': _countdownSizePx,
-          'houses/$houseId/settings/customBackgroundUrl': _customBackgroundUrl,
-          'houses/$houseId/settings/customHomeBackground': _customBackgroundUrl,
-          'houses/$houseId/settings/countdownTopLabel': _topLabelText,
-          'houses/$houseId/settings/countdownBottomLabel': _bottomLabelText,
-          'houses/$houseId/settings/greetingQuote': _topLabelText,
-          'houses/$houseId/settings/dayUnit': _bottomLabelText,
-          'houses/$houseId/settings/nameU1': _nameU1,
-          'houses/$houseId/settings/nameU2': _nameU2,
-          'houses/$houseId/settings/avtUser1': _avatarUrl1,
-          'houses/$houseId/settings/avtUser2': _avatarUrl2,
-          'houses/$houseId/settings/startDate': _anchorDate == null
-              ? ''
-              : DateInputUtils.formatIsoDate(_anchorDate!),
-          'houses/$houseId/settings/updatedAt': ServerValue.timestamp,
-          'houses/$houseId/updatedAt': ServerValue.timestamp,
-        };
-        try {
-          await _countdownSpaceDbRef.update(updates);
-        } catch (e, stackTrace) {
-          debugPrint('[Countdown] Failed to update house settings: $e');
-          ErrorLoggerService.instance.logError(
-            e,
-            stackTrace,
-            reason: 'Lỗi cập nhật cài đặt Không gian riêng lên Firebase',
-            fatal: false,
+  Future<bool> _persistSpaceSnapshot(
+    String scope,
+    _CountdownSpaceSnapshot snapshot,
+  ) async {
+    if (mounted) _safeSetState(() => _savingSpace = true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      // Giữ bản nháp qua lần mở app tiếp theo nếu mạng bị gián đoạn.
+      final journalKey = 'il_countdown_pending_v1_${_selfSpaceHouseId}_$scope';
+      if (!await prefs.setString(
+        journalKey,
+        jsonEncode(_snapshotToSerializedMap(snapshot)),
+      )) {
+        throw StateError('countdown-draft-save');
+      }
+      final data = <String, Object>{
+        'single_mode': snapshot.singleMode,
+        'theme_key': snapshot.themeKey,
+        'style_key': snapshot.styleKey,
+        'font_key': snapshot.fontKey,
+        'avatar_frame_key': snapshot.frameKey,
+        'transparent_mode': snapshot.transparentMode,
+        'size_px': snapshot.sizePx,
+        'bg_url': snapshot.customBackgroundUrl,
+        'center_icon_type': snapshot.centerIconType,
+        'top_label': snapshot.topLabel,
+        'bottom_label': snapshot.bottomLabel,
+        'name_u1': snapshot.nameU1,
+        'name_u2': snapshot.nameU2,
+        'avatar_1': snapshot.avatarUrl1,
+        'avatar_2': snapshot.avatarUrl2,
+        'updated_at_ms': snapshot.updatedAtMs,
+        'anchor_date': snapshot.anchorDate == null
+            ? ''
+            : DateInputUtils.formatIsoDate(snapshot.anchorDate!),
+      };
+      for (final entry in data.entries) {
+        final key = _prefKey(entry.key, scope: scope);
+        final value = entry.value;
+        final bool saved;
+        if (value is bool) {
+          saved = await prefs.setBool(key, value);
+        } else if (value is int) {
+          saved = await prefs.setInt(key, value);
+        } else if (value is double) {
+          saved = await prefs.setDouble(key, value);
+        } else {
+          saved = await prefs.setString(key, value.toString());
+        }
+        if (!saved) throw StateError('countdown-local-save');
+      }
+      if (scope != _selfSpaceHouseId && _selfSpaceHouseId != 'local_self') {
+        final shared = _sharedSpaceFor(scope);
+        final pending = _pendingRequestFor(scope);
+        if (shared != null) {
+          await _countdownSpaceService.updateSpaceSnapshot(
+            spaceId: shared.spaceId,
+            snapshot: _snapshotToSerializedMap(snapshot),
           );
-          if (mounted) {
-            _showMessage(
-              AppErrorMapper.resolve(
-                e,
-                fallbackMessage: context.tr('p7_countdown_sync_failed'),
-              ).message,
-            );
-          }
+        } else if (pending != null) {
+          await _countdownSpaceService.updatePendingRequestSnapshot(
+            requestId: pending.requestId,
+            fromHouseId: _selfSpaceHouseId,
+            snapshot: _snapshotToSerializedMap(snapshot),
+          );
+        } else {
+          throw StateError('countdown-space-unavailable');
         }
       }
-      return;
+      if (identical(_unsyncedSpaceSnapshots[scope], snapshot)) {
+        await prefs.remove(journalKey);
+        _unsyncedSpaceSnapshots.remove(scope);
+        _spaceSnapshots[scope] = snapshot;
+      }
+      return true;
+    } catch (error) {
+      debugPrint('[CountdownSpace] Save failed: $error');
+      if (mounted) _showMessage(context.tr('p7_countdown_sync_failed'));
+      return false;
+    } finally {
+      if (mounted) _safeSetState(() => _savingSpace = false);
     }
+  }
 
-    final serializedSnapshot = _snapshotToSerializedMap(snapshot);
-    if (_isSharedSpace(scope)) {
-      final sharedSpace = _sharedSpaceFor(scope);
-      if (sharedSpace == null) return;
-      unawaited(
-        _countdownSpaceService
-            .updateSpaceSnapshot(
-              spaceId: sharedSpace.spaceId,
-              snapshot: serializedSnapshot,
-            )
-            .catchError((Object e) {
-              debugPrint('Failed to update space snapshot: $e');
-            }),
+  Future<void> _cancelSpaceInvitation(CountdownSpaceRequestInfo request) async {
+    if (_isHandlingSpaceRequest(request.requestId)) return;
+    _safeSetState(() => _spaceRequestActionIds.add(request.requestId));
+    try {
+      final result = await _countdownSpaceService.cancelRequest(
+        request.requestId,
       );
-      return;
+      if (!mounted) return;
+      if (!result.success) {
+        _showMessage(context.tr('pairing_ui_cancel_error'));
+        return;
+      }
+      _safeSetState(() {
+        final other = request.otherHouseIdFor(_selfSpaceHouseId);
+        _pendingSpaceRequests.remove(other);
+        _optimisticPendingSpaceHouseIds.remove(other);
+        _rebuildVisibleSpaces();
+      });
+    } finally {
+      if (mounted) {
+        _safeSetState(() => _spaceRequestActionIds.remove(request.requestId));
+      }
     }
-
-    final pendingRequest = _pendingRequestFor(scope);
-    if (pendingRequest == null) {
-      return;
-    }
-    unawaited(
-      _countdownSpaceService
-          .updatePendingRequestSnapshot(
-            requestId: pendingRequest.requestId,
-            fromHouseId: _selfSpaceHouseId,
-            snapshot: serializedSnapshot,
-          )
-          .catchError((Object e) {
-            debugPrint('Failed to update pending request snapshot: $e');
-          }),
-    );
   }
 
   Future<void> _openSpace(String houseId) async {
     final trimmed = houseId.trim();
     if (trimmed.isEmpty) return;
     final cachedSnapshot =
-        _spaceSnapshots[trimmed] ?? _spaceSnapshotFor(trimmed);
+        _unsyncedSpaceSnapshots[trimmed] ??
+        _spaceSnapshots[trimmed] ??
+        _spaceSnapshotFor(trimmed);
     _safeSetState(() {
+      _reactionFlightsNotifier.value = [];
       _openedSpaceHouseId = trimmed;
+      _didPromptPendingSpaceAvatarRetry = false;
       _spaceChromeVisible = true;
       _applySnapshot(cachedSnapshot);
     });
     await _setSystemUiVisible(true);
+    if (mounted) unawaited(_promptPendingSpaceAvatarRetryIfNeeded());
   }
 
   Future<void> _closeOpenedSpace() async {
@@ -539,6 +555,7 @@ extension _CountdownModeIndependentScreenStatePart
       return;
     }
     _safeSetState(() {
+      _reactionFlightsNotifier.value = [];
       _openedSpaceHouseId = null;
       _spaceChromeVisible = true;
       _applySnapshot(_spaceSnapshotFor(_selfSpaceHouseId));
@@ -794,7 +811,7 @@ extension _CountdownModeIndependentScreenStatePart
   }
 
   String get _pendingSpaceAvatarUploadKey =>
-      '${_CountdownModeIndependentScreenState._pendingSpaceAvatarUploadKeyPrefix}${_selfSpaceHouseId.trim()}';
+      '${_CountdownModeIndependentScreenState._pendingSpaceAvatarUploadKeyPrefix}${_selfSpaceHouseId.trim()}_$_scopeKey';
 
   Future<void> _promptPendingSpaceAvatarRetryIfNeeded() async {
     if (_didPromptPendingSpaceAvatarRetry || !mounted) {
@@ -857,6 +874,8 @@ extension _CountdownModeIndependentScreenStatePart
     required bool isLeft,
     XFile? presetFile,
   }) async {
+    final scope = _scopeKey;
+    final pendingKey = _pendingSpaceAvatarUploadKey;
     final houseId = _uploadHouseId;
     if (houseId == null) {
       _showMessage(context.tr('home_khngtmthym_b7eeff'));
@@ -868,7 +887,7 @@ extension _CountdownModeIndependentScreenStatePart
     }
     final avatarChangeFailedTemplate = context.tr('p7_avatar_change_failed');
     XFile? file = presetFile ?? await _storageService.pickImage();
-    if (file == null || !mounted) {
+    if (file == null || !mounted || scope != _scopeKey) {
       return;
     }
 
@@ -880,13 +899,13 @@ extension _CountdownModeIndependentScreenStatePart
       if (presetFile == null) {
         file = await _cropCountdownModeAvatarFile(file);
       }
-      if (file == null) {
+      if (file == null || !mounted || scope != _scopeKey) {
         return;
       }
-      await PendingUploadService.instance.save(
-        _pendingSpaceAvatarUploadKey,
-        <String, dynamic>{'role': role, 'filePath': file.path},
-      );
+      await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
+        'role': role,
+        'filePath': file.path,
+      });
       final url = await _storageService.uploadImage(
         houseId,
         'avatars',
@@ -895,7 +914,7 @@ extension _CountdownModeIndependentScreenStatePart
         minWidth: 720,
         minHeight: 720,
       );
-      if (!mounted || url == null || url.trim().isEmpty) {
+      if (!mounted || scope != _scopeKey || url == null || url.trim().isEmpty) {
         if (mounted) {
           _showMessage(context.tr('home_khngticava_73ea14'));
         }
@@ -910,7 +929,7 @@ extension _CountdownModeIndependentScreenStatePart
         }
       });
       await _saveLocalSettings();
-      await PendingUploadService.instance.clear(_pendingSpaceAvatarUploadKey);
+      await PendingUploadService.instance.clear(pendingKey);
     } catch (e) {
       _showMessage(
         avatarChangeFailedTemplate.replaceAll(
@@ -986,7 +1005,7 @@ extension _CountdownModeIndependentScreenStatePart
 
   Future<bool> _countdownSpaceHouseExists(String houseId) async {
     final normalized = _normalizeResolvedSpaceHouseId(houseId);
-    if (normalized.isEmpty) {
+    if (!RegExp(r'^[A-Z0-9_-]{4,40}$').hasMatch(normalized)) {
       return false;
     }
 
@@ -1138,7 +1157,7 @@ extension _CountdownModeIndependentScreenStatePart
 
       final requestResult = await _countdownSpaceService.sendRequest(
         fromHouseId: _selfSpaceHouseId,
-        fromHouseName: _nameU1,
+        fromHouseName: _spaceSnapshotFor(_selfSpaceHouseId).nameU1,
         toHouseId: resolvedTargetHouseId,
         initialSnapshot: _snapshotToSerializedMap(
           _spaceSnapshots[_selfSpaceHouseId] ?? _captureCurrentSnapshot(),
@@ -1147,11 +1166,11 @@ extension _CountdownModeIndependentScreenStatePart
 
       if (!requestResult.success) {
         if (showFeedback) {
-          _showMessage(requestResult.message);
+          _showMessage(fallbackMessage);
         }
         return _CountdownSpaceAddResult(
           success: false,
-          message: requestResult.message,
+          message: fallbackMessage,
         );
       }
 
@@ -1414,26 +1433,29 @@ extension _CountdownModeIndependentScreenStatePart
       labelText: label,
       hintText: hint,
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.06),
+      fillColor: AppearancePanelStyle.paper,
       labelStyle: SLTheme.quicksand(
-        color: Colors.white70,
+        color: AppearancePanelStyle.muted,
         fontWeight: FontWeight.w800,
       ),
       hintStyle: SLTheme.quicksand(
-        color: Colors.white38,
+        color: AppearancePanelStyle.muted,
         fontWeight: FontWeight.w700,
       ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+        borderSide: const BorderSide(color: AppearancePanelStyle.line),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+        borderSide: const BorderSide(color: AppearancePanelStyle.line),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFF4BA7FF), width: 1.5),
+        borderSide: const BorderSide(
+          color: AppearancePanelStyle.rose,
+          width: 1.5,
+        ),
       ),
     );
   }

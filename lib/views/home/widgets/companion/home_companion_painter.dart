@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'home_companion_motion.dart';
 import 'home_companion_outfit.dart';
 import 'home_companion_play.dart';
+import 'home_companion_metrics.dart';
 
 export 'home_companion_outfit.dart';
 
@@ -19,7 +20,10 @@ class HomeCompanionPainter extends CustomPainter {
     this.character = HomeCompanionCharacter.bunny,
     this.outfit,
     this.play,
-  }) : super(repaint: Listenable.merge([motion, paintOffset, play]));
+    this.socialPlay,
+  }) : super(
+         repaint: Listenable.merge([motion, paintOffset, play, socialPlay]),
+       );
 
   final HomeCompanionMotion motion;
   final bool darkMode;
@@ -28,23 +32,40 @@ class HomeCompanionPainter extends CustomPainter {
   final HomeCompanionCharacter character;
   final HomeCompanionOutfit? outfit;
   final HomeCompanionPlay? play;
-  bool get _facingRight => showEffects && (play?.active ?? false)
-      ? play!.facesRight(character)
+  final HomeCompanionPlay? socialPlay;
+  HomeCompanionPlay? get _activePlay =>
+      (socialPlay?.active ?? false) && socialPlay!.contains(character)
+      ? socialPlay
+      : play;
+  bool get _facingRight => showEffects && (_activePlay?.active ?? false)
+      ? _activePlay!.facesRight(character)
       : motion.facingRight;
   HomeCompanionOutfit get _outfit =>
       outfit ?? HomeCompanionOutfit.defaults(character);
   bool get _isBear => character == HomeCompanionCharacter.bear;
+  bool get _isKuromi => character == HomeCompanionCharacter.kuromi;
+  bool get _isMelody => character == HomeCompanionCharacter.melody;
+  bool get _hasHood => _isKuromi || _isMelody;
+  Color get _hood =>
+      _isKuromi ? const Color(0xFF9D7BCD) : const Color(0xFFED91B6);
+  Color get _hoodEdge => const Color(0xFF49404E);
 
-  /// Tăng đúng 20% so với nét vẽ gốc 0.52; dùng chung cho vùng an toàn của Home.
-  static const double spriteScale = 0.624;
-  static const double bearSpriteScale = spriteScale * 1.15;
+  /// Kuromi là chuẩn; từng bộ nét vẽ có tỷ lệ riêng để cùng chiều cao thực.
+  static const double spriteScale = HomeCompanionMetrics.kuromiScale;
+  static const double bearSpriteScale = HomeCompanionMetrics.bearScale;
   static const double horizontalClearance = 32;
-  static const double topClearance = 92;
+  static const double topClearance = 104;
   static const _outline = Color(0xFF956E69);
-  Color get _cream =>
-      _isBear ? const Color(0xFFD6A171) : const Color(0xFFFFFAEF);
-  Color get _creamShade =>
-      _isBear ? const Color(0xFFBD8159) : const Color(0xFFF3DDC8);
+  Color get _cream => _hasHood
+      ? const Color(0xFFFFFEFC)
+      : _isBear
+      ? const Color(0xFFD6A171)
+      : const Color(0xFFFFFAEF);
+  Color get _creamShade => _hasHood
+      ? const Color(0xFFF4F0F5)
+      : _isBear
+      ? const Color(0xFFBD8159)
+      : const Color(0xFFF3DDC8);
   static const _pink = Color(0xFFF2B4BE);
   Color get _rose =>
       _isBear ? const Color(0xFF6B9FAC) : const Color(0xFFCF718B);
@@ -62,12 +83,13 @@ class HomeCompanionPainter extends CustomPainter {
     canvas.translate(offset.dx, offset.dy);
     if (showEffects) _paintDust(canvas);
     final playPose = showEffects
-        ? play?.pose(character) ?? const CompanionPlayPose()
+        ? _activePlay?.pose(character) ?? const CompanionPlayPose()
         : const CompanionPlayPose();
     canvas.translate(playPose.offset.dx, playPose.offset.dy);
 
-    // Chế độ giảm chuyển động luôn giữ tư thế nghỉ, kể cả khi tắt giữa cú nhảy.
-    final phase = showEffects && !(play?.active ?? false)
+    // Giảm chuyển động giữ tư thế nghỉ; cú vượt đang dở giữ độ cao để
+    // không rơi xuyên đầu bạn bên dưới. Ticker ngừng nên độ cao không đổi.
+    final phase = showEffects && !(_activePlay?.active ?? false)
         ? motion.phase
         : HomeCompanionPhase.idle;
     final walking = phase == HomeCompanionPhase.walking;
@@ -80,7 +102,12 @@ class HomeCompanionPainter extends CustomPainter {
     final step = moving ? math.sin(stride) : 0.0;
     // Chân neo theo đường đi, còn thân bay lên: không kéo bóng/chổi khỏi mặt khối.
     final hopLift =
-        (moving ? motion.hopLift.clamp(0.0, 16.0) : 0.0) + playPose.lift;
+        (motion.isPassing
+            ? motion.hopLift
+            : moving
+            ? motion.hopLift.clamp(0.0, 16.0)
+            : 0.0) +
+        playPose.lift;
     final airborne = hopLift > 0.3;
     final liftRatio = (hopLift / 16).clamp(0.0, 1.0);
     final bounce = moving ? math.cos(stride * 2) : 0.0;
@@ -88,7 +115,7 @@ class HomeCompanionPainter extends CustomPainter {
     final scaleX = 1 + squash - liftRatio * 0.055;
     final scaleY = 1 - squash + liftRatio * 0.065;
     final seconds = showEffects
-        ? motion.elapsedSeconds + (play?.time ?? 0)
+        ? motion.elapsedSeconds + (_activePlay?.time ?? 0)
         : 0.0;
     final affection = showEffects ? motion.affection.clamp(0.0, 1.0) : 0.0;
     final greeting = math.sin((1 - affection) * math.pi * 5) * affection;
@@ -115,7 +142,7 @@ class HomeCompanionPainter extends CustomPainter {
     canvas.save();
     canvas.translate(motion.position.dx, motion.position.dy - hopLift);
     canvas.rotate(playPose.tilt + (moving ? step * 0.018 : 0));
-    final scale = _isBear ? bearSpriteScale : spriteScale;
+    final scale = HomeCompanionMetrics.scale(character);
     canvas.scale((_facingRight ? scale : -scale) * scaleX, scale * scaleY);
 
     _paintTail(canvas, bodyBob, step);
@@ -144,11 +171,13 @@ class HomeCompanionPainter extends CustomPainter {
       _cream,
       shade: _creamShade,
     );
-    canvas.drawOval(
-      const Rect.fromLTWH(-7, -23, 18, 16),
-      Paint()
-        ..color = _isBear ? const Color(0xFFF3D7B2) : const Color(0xFFFFFDF7),
-    );
+    if (!_hasHood) {
+      canvas.drawOval(
+        const Rect.fromLTWH(-7, -23, 18, 16),
+        Paint()
+          ..color = _isBear ? const Color(0xFFF3D7B2) : const Color(0xFFFFFDF7),
+      );
+    }
     if (_outfit.clothes == CompanionClothes.overalls) {
       _paintBearOveralls(canvas);
     } else if (_outfit.clothes != CompanionClothes.classic) {
@@ -204,7 +233,13 @@ class HomeCompanionPainter extends CustomPainter {
 
   void _paintCoat(Canvas canvas) {
     final night = _outfit.clothes == CompanionClothes.night;
-    final color = night
+    final rain = _outfit.clothes == CompanionClothes.raincoat;
+    final sailor = _outfit.clothes == CompanionClothes.sailor;
+    final color = rain
+        ? const Color(0xFFF4CD6B)
+        : sailor
+        ? const Color(0xFFF6F5F0)
+        : night
         ? const Color(0xFFB5A1D7)
         : (_isBear ? const Color(0xFF8BB4A1) : const Color(0xFFE8A8BC));
     _shape(
@@ -223,7 +258,65 @@ class HomeCompanionPainter extends CustomPainter {
         blue: color.b * 0.75,
       ),
     );
-    if (night) {
+    if (rain) {
+      _stroke(
+        canvas,
+        Path()
+          ..moveTo(0, -29)
+          ..lineTo(0, -5),
+        color: const Color(0xFFB88B40),
+        width: 1,
+      );
+      for (final y in [-23.0, -17.0, -11.0]) {
+        canvas.drawCircle(
+          Offset(3, y),
+          1.3,
+          Paint()..color = const Color(0xFFFFFAE8),
+        );
+      }
+      _stroke(
+        canvas,
+        Path()
+          ..moveTo(-12, -13)
+          ..lineTo(-5, -13)
+          ..lineTo(-5, -8)
+          ..lineTo(-12, -8)
+          ..close(),
+        color: const Color(0xFFB88B40),
+        width: 1,
+      );
+    } else if (sailor) {
+      _shape(
+        canvas,
+        Path()
+          ..moveTo(-13, -29)
+          ..lineTo(0, -17)
+          ..lineTo(13, -29)
+          ..lineTo(9, -22)
+          ..lineTo(0, -11)
+          ..lineTo(-9, -22)
+          ..close(),
+        const Color(0xFF628BB0),
+      );
+      _shape(
+        canvas,
+        Path()
+          ..moveTo(-3, -17)
+          ..lineTo(3, -17)
+          ..lineTo(1, -5)
+          ..lineTo(-2, -8)
+          ..close(),
+        const Color(0xFFE597AA),
+      );
+      _stroke(
+        canvas,
+        Path()
+          ..moveTo(-13, -7)
+          ..lineTo(13, -7),
+        color: const Color(0xFF628BB0),
+        width: 1.5,
+      );
+    } else if (night) {
       for (final point in const [
         Offset(-7, -17),
         Offset(7, -10),
@@ -272,6 +365,27 @@ class HomeCompanionPainter extends CustomPainter {
   }
 
   void _paintTail(Canvas canvas, double bodyBob, double step) {
+    if (_isKuromi) {
+      _stroke(
+        canvas,
+        Path()
+          ..moveTo(-13, -12 + bodyBob)
+          ..quadraticBezierTo(-29, -3, -25 - step, -24),
+        color: _hood,
+        width: 2.8,
+      );
+      _shape(
+        canvas,
+        Path()
+          ..moveTo(-25 - step, -29)
+          ..lineTo(-31 - step, -21)
+          ..lineTo(-21 - step, -22)
+          ..close(),
+        _hood,
+        outline: _hoodEdge,
+      );
+      return;
+    }
     _shape(
       canvas,
       Path()..addOval(
@@ -331,8 +445,8 @@ class HomeCompanionPainter extends CustomPainter {
     final lift = hopping ? 4.0 : math.max(0.0, -step) * 0.47;
     final rect = Rect.fromCenter(
       center: Offset(x + step, -2.7 - lift),
-      width: 13,
-      height: 6.8,
+      width: _hasHood ? 15 : 13,
+      height: _hasHood ? 9 : 6.8,
     );
     _shape(
       canvas,
@@ -356,6 +470,7 @@ class HomeCompanionPainter extends CustomPainter {
     required double step,
     required double breathe,
   }) {
+    if (_hasHood) return;
     final flutter = moving ? step * 3 : breathe;
     _shape(
       canvas,
@@ -373,6 +488,50 @@ class HomeCompanionPainter extends CustomPainter {
   }
 
   void _paintScarfCollar(Canvas canvas) {
+    if (_hasHood) {
+      _shape(
+        canvas,
+        _isKuromi
+            ? (Path()
+                ..moveTo(-16, -34)
+                ..quadraticBezierTo(-22, -27, -28, -28)
+                ..quadraticBezierTo(-18, -20, -9, -26)
+                ..lineTo(-15, -18)
+                ..quadraticBezierTo(0, -21, 2, -28)
+                ..quadraticBezierTo(12, -19, 20, -23)
+                ..lineTo(28, -28)
+                ..quadraticBezierTo(20, -27, 15, -34)
+                ..close())
+            : (Path()
+                ..moveTo(-17, -33)
+                ..lineTo(-21, -26)
+                ..quadraticBezierTo(-13, -20, -7, -24)
+                ..lineTo(-4, -31)
+                ..lineTo(5, -31)
+                ..lineTo(9, -23)
+                ..quadraticBezierTo(16, -23, 20, -27)
+                ..lineTo(16, -33)
+                ..close()),
+        _hood,
+        outline: _hoodEdge,
+      );
+      if (_isKuromi) {
+        for (final point in const [
+          Offset(-28, -28),
+          Offset(28, -28),
+          Offset(-15, -18),
+        ]) {
+          _shape(
+            canvas,
+            Path()..addOval(Rect.fromCircle(center: point, radius: 3.1)),
+            const Color(0xFFF1A3C6),
+            outline: _hoodEdge,
+            lineWidth: 1.3,
+          );
+        }
+      }
+      return;
+    }
     _shape(
       canvas,
       Path()
@@ -415,6 +574,23 @@ class HomeCompanionPainter extends CustomPainter {
     canvas.translate(0, -38);
     canvas.rotate(tilt);
     canvas.translate(0, 38);
+    if (_hasHood) {
+      _paintHoodHead(
+        canvas,
+        earSway: earSway,
+        happy: happy,
+        affection: affection,
+      );
+      canvas.save();
+      // Mắt hai bé mới rộng hơn và thấp hơn; kính vẫn phải ôm đúng mặt.
+      canvas.translate(-1.8, 2.3);
+      canvas.scale(1.22, 1);
+      _paintGlasses(canvas);
+      canvas.restore();
+      _paintHat(canvas);
+      canvas.restore();
+      return;
+    }
     if (_isBear) {
       _paintBearEar(canvas, Offset(-18, -63 + earSway * 3));
       _paintBearEar(canvas, Offset(19, -63 - earSway * 3));
@@ -529,6 +705,247 @@ class HomeCompanionPainter extends CustomPainter {
     canvas.restore();
   }
 
+  /// Mũ và tai thuộc nhận diện nhân vật, không mất khi thay áo/phụ kiện.
+  void _paintHoodHead(
+    Canvas canvas, {
+    required double earSway,
+    required bool happy,
+    required double affection,
+  }) {
+    if (_isKuromi) {
+      // Tai mũ hề xòe ngang, không dùng đôi tai thỏ nhọn dựng sát nhau.
+      for (final side in [-1.0, 1.0]) {
+        canvas.save();
+        canvas.scale(side, 1);
+        canvas.translate(20, -72);
+        canvas.rotate(earSway * 0.45);
+        _shape(
+          canvas,
+          Path()
+            ..moveTo(-7, -2)
+            ..lineTo(-6, -12)
+            ..lineTo(19, -29)
+            ..lineTo(16, 1)
+            ..lineTo(7, 5)
+            ..close(),
+          _hood,
+          outline: _hoodEdge,
+          lineWidth: 2.1,
+        );
+        _shape(
+          canvas,
+          Path()..addOval(const Rect.fromLTWH(15, -33, 8, 8)),
+          _hood,
+          outline: _hoodEdge,
+          lineWidth: 2,
+        );
+        canvas.restore();
+      }
+    }
+    final sway = earSway * 12;
+    _shape(
+      canvas,
+      _isMelody
+          ? (Path()
+              ..moveTo(-31, -58)
+              ..quadraticBezierTo(-31, -70, -24, -76)
+              ..cubicTo(-20 + sway, -95, -16 + sway, -106, -8 + sway, -106)
+              ..cubicTo(2 + sway, -107, 2, -94, 1, -90)
+              ..cubicTo(8, -102, 25, -103, 30, -93)
+              ..quadraticBezierTo(35, -85, 28, -72)
+              ..cubicTo(41, -53, 40, -42, 28, -34)
+              ..cubicTo(14, -24, -27, -26, -33, -41)
+              ..quadraticBezierTo(-37, -48, -31, -58)
+              ..close())
+          : (Path()
+              ..moveTo(-31, -58)
+              ..cubicTo(-29, -87, 25, -88, 32, -61)
+              ..cubicTo(43, -35, 22, -27, 1, -28)
+              ..cubicTo(-23, -27, -41, -36, -31, -58)
+              ..close()),
+      _hood,
+      outline: _hoodEdge,
+      lineWidth: 2.2,
+    );
+    if (_isMelody) {
+      // Nếp tai gập liền mũ, không lộ đường ráp khi nghiêng hoặc nhảy.
+      _stroke(
+        canvas,
+        Path()
+          ..moveTo(1, -90)
+          ..cubicTo(-12, -75, 4 + sway * 0.2, -67, 18, -84),
+        color: _hoodEdge,
+        width: 1.8,
+      );
+    }
+    // Viền mũ ôm mặt; phần đỉnh chừa chỗ cho đầu lâu/hoa đặc trưng.
+    _shape(
+      canvas,
+      _isKuromi
+          ? (Path()
+              ..moveTo(-28, -46)
+              ..quadraticBezierTo(-26, -54, -17, -56)
+              ..lineTo(0, -50)
+              ..lineTo(17, -56)
+              ..quadraticBezierTo(28, -54, 29, -43)
+              ..cubicTo(31, -25, -29, -25, -28, -46)
+              ..close())
+          : (Path()..addOval(const Rect.fromLTWH(-28, -57, 56, 28))),
+      _cream,
+      outline: _hoodEdge,
+      lineWidth: 1.8,
+    );
+    if (_isKuromi) {
+      const skull = Color(0xFFF2A3C7);
+      canvas.drawOval(
+        const Rect.fromLTWH(-10, -73, 20, 16),
+        Paint()..color = skull,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          const Rect.fromLTWH(-5, -61, 10, 7),
+          const Radius.circular(0.6),
+        ),
+        Paint()..color = skull,
+      );
+      for (final x in [-4.4, 4.4]) {
+        canvas.drawOval(
+          Rect.fromCenter(center: Offset(x, -64), width: 3.8, height: 5),
+          Paint()..color = _hoodEdge,
+        );
+      }
+      _stroke(
+        canvas,
+        Path()
+          ..moveTo(-1.8, -58)
+          ..lineTo(-1.8, -54)
+          ..moveTo(1.8, -58)
+          ..lineTo(1.8, -54),
+        color: _hood,
+        width: 0.8,
+      );
+    } else {
+      var flower = Path();
+      for (var i = 0; i < 5; i++) {
+        final angle = i * math.pi * 2 / 5;
+        final petal = Path()
+          ..addOval(
+            Rect.fromCircle(
+              center: Offset(
+                -25 + math.cos(angle) * 4.7,
+                -73 + math.sin(angle) * 4.7,
+              ),
+              radius: 4.1,
+            ),
+          );
+        flower = i == 0
+            ? petal
+            : Path.combine(PathOperation.union, flower, petal);
+      }
+      _shape(canvas, flower, _cream, outline: _hoodEdge, lineWidth: 1.4);
+      _shape(
+        canvas,
+        Path()..addOval(const Rect.fromLTWH(-28, -76, 6, 6)),
+        const Color(0xFFF5D769),
+        outline: _hoodEdge,
+        lineWidth: 1,
+      );
+    }
+    final blink =
+        showEffects &&
+        (motion.elapsedSeconds + (_isKuromi ? 2.2 : 3.7)) % 5.4 > 5.2;
+    const ink = Color(0xFF302B34);
+    for (final x in [-15.0, 15.0]) {
+      if (blink || happy) {
+        _stroke(
+          canvas,
+          Path()
+            ..moveTo(x - 3.2, -44)
+            ..quadraticBezierTo(x, -47, x + 3.2, -44),
+          color: ink,
+          width: 1.6,
+        );
+      } else {
+        if (_isKuromi) {
+          final side = x.sign;
+          canvas.save();
+          canvas.translate(x, -44);
+          canvas.scale(side, 1);
+          canvas.drawPath(
+            Path()
+              ..moveTo(-4, -2)
+              ..lineTo(4, -6)
+              ..quadraticBezierTo(5, 5, 0, 5)
+              ..quadraticBezierTo(-5, 5, -4, -2)
+              ..close(),
+            Paint()..color = ink,
+          );
+          canvas.restore();
+        } else {
+          canvas.drawOval(
+            Rect.fromCenter(center: Offset(x, -46), width: 5.7, height: 8.5),
+            Paint()..color = ink,
+          );
+        }
+      }
+      if (_isKuromi) {
+        final side = x < 0 ? -1.0 : 1.0;
+        _stroke(
+          canvas,
+          Path()
+            ..moveTo(x + side * 3, -48)
+            ..lineTo(x + side * 6, -51)
+            ..moveTo(x + side * 1.5, -47)
+            ..lineTo(x + side * 5, -49.5),
+          color: ink,
+          width: 1.2,
+        );
+      }
+    }
+    for (final x in [-22.0, 22.0]) {
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset(x, -38), width: 6, height: 3),
+        Paint()
+          ..color = const Color(
+            0xFFF4B6C7,
+          ).withValues(alpha: 0.15 + affection * 0.5),
+      );
+    }
+    _shape(
+      canvas,
+      Path()..addOval(
+        _isKuromi
+            ? const Rect.fromLTWH(-2.8, -40, 5.6, 4.8)
+            : const Rect.fromLTWH(-2.8, -42, 5.6, 3.7),
+      ),
+      _isKuromi ? const Color(0xFFF0A1C4) : const Color(0xFFF2D763),
+      outline: ink,
+      lineWidth: 1.1,
+    );
+    if (_isKuromi) {
+      _shape(
+        canvas,
+        Path()
+          ..moveTo(-3.8, -33.5)
+          ..quadraticBezierTo(0, -31.5, 4.5, -35)
+          ..quadraticBezierTo(2, -28, -3.8, -33.5)
+          ..close(),
+        const Color(0xFFF0A1C4),
+        outline: ink,
+        lineWidth: 0.9,
+      );
+    } else {
+      _stroke(
+        canvas,
+        Path()
+          ..moveTo(0, -35.5)
+          ..lineTo(0, -34),
+        color: ink,
+        width: 1,
+      );
+    }
+  }
+
   void _paintGlasses(Canvas canvas) {
     final glasses = _outfit.glasses;
     if (glasses == CompanionGlasses.none) return;
@@ -536,8 +953,36 @@ class HomeCompanionPainter extends CustomPainter {
         ? const Color(0xFFD8A047)
         : const Color(0xFF536A7B);
     for (final x in [-8.0, 11.0]) {
+      if (glasses == CompanionGlasses.monocle && x < 0) continue;
       if (glasses == CompanionGlasses.star) {
         _star(canvas, Offset(x, -49), 7.3, color, outlineOnly: true);
+      } else if (glasses == CompanionGlasses.heart) {
+        _stroke(
+          canvas,
+          Path()
+            ..moveTo(x, -43)
+            ..cubicTo(x - 15, -52, x - 4, -59, x, -53)
+            ..cubicTo(x + 4, -59, x + 15, -52, x, -43),
+          color: _rose,
+          width: 1.8,
+        );
+      } else if (glasses == CompanionGlasses.monocle) {
+        canvas.drawCircle(
+          Offset(x, -49),
+          7,
+          Paint()
+            ..color = const Color(0xFFC89A57)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.8,
+        );
+        _stroke(
+          canvas,
+          Path()
+            ..moveTo(x + 6, -45)
+            ..quadraticBezierTo(25, -32, 21, -25),
+          color: const Color(0xFFC89A57),
+          width: 1,
+        );
       } else {
         final lens = Rect.fromCenter(
           center: Offset(x, -49),
@@ -565,6 +1010,7 @@ class HomeCompanionPainter extends CustomPainter {
         _stroke(canvas, path, color: color, width: 1.7);
       }
     }
+    if (glasses == CompanionGlasses.monocle) return;
     _stroke(
       canvas,
       Path()
@@ -643,6 +1089,67 @@ class HomeCompanionPainter extends CustomPainter {
           outline: const Color(0xFFC8974D),
         );
         canvas.drawCircle(const Offset(0, -71), 2.4, Paint()..color = _rose);
+      case CompanionHat.beret:
+        _shape(
+          canvas,
+          Path()
+            ..moveTo(-19, -65)
+            ..cubicTo(-30, -77, 4, -87, 20, -74)
+            ..quadraticBezierTo(29, -63, -19, -65)
+            ..close(),
+          const Color(0xFFBCA5D6),
+        );
+        _stroke(
+          canvas,
+          Path()
+            ..moveTo(0, -78)
+            ..lineTo(2, -83),
+          color: const Color(0xFF78618F),
+          width: 3,
+        );
+        _stroke(
+          canvas,
+          Path()
+            ..moveTo(-17, -65)
+            ..quadraticBezierTo(0, -62, 17, -66),
+          color: const Color(0xFF78618F),
+          width: 2,
+        );
+      case CompanionHat.beanie:
+        _shape(
+          canvas,
+          Path()
+            ..moveTo(-19, -64)
+            ..quadraticBezierTo(-21, -79, 0, -79)
+            ..quadraticBezierTo(22, -78, 20, -64)
+            ..close(),
+          const Color(0xFF97C7B2),
+        );
+        _shape(
+          canvas,
+          Path()..addRRect(
+            RRect.fromRectAndRadius(
+              const Rect.fromLTWH(-20, -69, 41, 7),
+              const Radius.circular(3),
+            ),
+          ),
+          const Color(0xFFC6E3D4),
+        );
+        canvas.drawCircle(
+          const Offset(0, -81),
+          4,
+          Paint()..color = const Color(0xFFC6E3D4),
+        );
+        for (final x in [-10.0, 0.0, 10.0]) {
+          _stroke(
+            canvas,
+            Path()
+              ..moveTo(x, -76)
+              ..lineTo(x, -71),
+            color: const Color(0xFF629D85),
+            width: 1,
+          );
+        }
     }
   }
 
@@ -697,6 +1204,59 @@ class HomeCompanionPainter extends CustomPainter {
         );
       case CompanionProp.wand:
         _star(canvas, const Offset(0, -17), 9, const Color(0xFFFFD980));
+      case CompanionProp.balloon:
+        _stroke(
+          canvas,
+          Path()
+            ..moveTo(0, 6)
+            ..quadraticBezierTo(-4, -7, 0, -14),
+          color: const Color(0xFF987A91),
+          width: 1,
+        );
+        _shape(
+          canvas,
+          Path()..addOval(const Rect.fromLTWH(-8, -35, 16, 21)),
+          const Color(0xFFEEA4C6),
+        );
+        _shape(
+          canvas,
+          Path()
+            ..moveTo(0, -14)
+            ..lineTo(-2, -11)
+            ..lineTo(2, -11)
+            ..close(),
+          const Color(0xFFEEA4C6),
+        );
+        _stroke(
+          canvas,
+          Path()
+            ..moveTo(-4, -29)
+            ..quadraticBezierTo(-6, -25, -4, -23),
+          color: Colors.white,
+          width: 1.5,
+        );
+      case CompanionProp.book:
+        _shape(
+          canvas,
+          Path()..addRRect(
+            RRect.fromRectAndRadius(
+              const Rect.fromLTWH(-10, -20, 18, 23),
+              const Radius.circular(2),
+            ),
+          ),
+          const Color(0xFF9DBDD3),
+        );
+        _stroke(
+          canvas,
+          Path()
+            ..moveTo(-7, -19)
+            ..lineTo(-7, 2)
+            ..moveTo(-4, -3)
+            ..lineTo(5, -3),
+          color: const Color(0xFFFFF7E8),
+          width: 1.4,
+        );
+        _star(canvas, const Offset(0, -11), 3.5, const Color(0xFFFFDC91));
     }
     _shape(canvas, Path()..addOval(const Rect.fromLTWH(-5, -1, 9, 7)), _cream);
     canvas.restore();
@@ -984,7 +1544,7 @@ class HomeCompanionPainter extends CustomPainter {
     Path path,
     Color color, {
     Color? shade,
-    Color outline = _outline,
+    Color? outline,
     double lineWidth = 1.65,
   }) {
     final paint = Paint()..color = color;
@@ -999,16 +1559,11 @@ class HomeCompanionPainter extends CustomPainter {
     _stroke(canvas, path, color: outline, width: lineWidth);
   }
 
-  void _stroke(
-    Canvas canvas,
-    Path path, {
-    Color color = _outline,
-    double width = 1.65,
-  }) {
+  void _stroke(Canvas canvas, Path path, {Color? color, double width = 1.65}) {
     canvas.drawPath(
       path,
       Paint()
-        ..color = color
+        ..color = color ?? (_hasHood ? _hoodEdge : _outline)
         ..style = PaintingStyle.stroke
         ..strokeWidth = width
         ..strokeCap = StrokeCap.round
@@ -1022,6 +1577,7 @@ class HomeCompanionPainter extends CustomPainter {
       oldDelegate.character != character ||
       oldDelegate.outfit != outfit ||
       oldDelegate.play != play ||
+      oldDelegate.socialPlay != socialPlay ||
       oldDelegate.paintOffset != paintOffset ||
       oldDelegate.darkMode != darkMode ||
       oldDelegate.showEffects != showEffects;

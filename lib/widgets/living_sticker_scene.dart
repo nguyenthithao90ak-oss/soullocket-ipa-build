@@ -53,6 +53,13 @@ enum StickerSubject {
   redEnvelope,
   mooncake,
   trophy,
+  roseStem,
+  silverRings,
+  wineGlasses,
+  biscuitSticks,
+  wishBamboo,
+  lotusCandle,
+  chamomile,
 }
 
 enum StickerGesture {

@@ -42,7 +42,7 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
     try {
       final assetPath = localizedDocumentAssetPath(
         widget.assetPath,
-        languageCode: L10nService().locale.languageCode,
+        languageCode: L10nService().localeCode,
       );
       final raw = await rootBundle.loadString(assetPath);
       final prepared = prepareDocumentHtml(

@@ -26,6 +26,22 @@ class CompanionPlayPose {
 /// Màn đùa hoạt hình ngắn. Chỉ dịch hình vẽ, không làm mất đường đi/cuộn đã đo.
 /// Không cộng dồn yêu cầu, không chạy bù lúc app ra nền.
 class HomeCompanionPlay extends ChangeNotifier {
+  HomeCompanionPlay({
+    this.firstCharacter = HomeCompanionCharacter.bunny,
+    this.secondCharacter = HomeCompanionCharacter.bear,
+  }) : assert(firstCharacter != secondCharacter);
+
+  HomeCompanionCharacter firstCharacter;
+  HomeCompanionCharacter secondCharacter;
+  HomeCompanionCharacter get speaker => _initiator;
+  bool contains(HomeCompanionCharacter character) =>
+      character == firstCharacter || character == secondCharacter;
+  void selectPair(HomeCompanionCharacter first, HomeCompanionCharacter second) {
+    if (_active || first == second) return;
+    firstCharacter = first;
+    secondCharacter = second;
+  }
+
   double _time = 0;
   double _clock = 0;
   double _nextAllowedAt = 0;
@@ -38,9 +54,7 @@ class HomeCompanionPlay extends ChangeNotifier {
   int get impactSerial => _impactSerial;
   double get time => _time;
   bool facesRight(HomeCompanionCharacter character) =>
-      character == HomeCompanionCharacter.bunny
-      ? _between.dx >= 0
-      : _between.dx < 0;
+      character == firstCharacter ? _between.dx >= 0 : _between.dx < 0;
 
   bool start(
     HomeCompanionCharacter initiator,
@@ -48,7 +62,8 @@ class HomeCompanionPlay extends ChangeNotifier {
     HomeCompanionMotion bear,
   ) {
     final between = bear.position - bunny.position;
-    if (_active ||
+    if ((initiator != firstCharacter && initiator != secondCharacter) ||
+        _active ||
         _clock < _nextAllowedAt ||
         !bunny.hasSurfaces ||
         !bear.hasSurfaces ||
@@ -57,6 +72,8 @@ class HomeCompanionPlay extends ChangeNotifier {
         between.dy.abs() > 24 ||
         bunny.hopLift > 1 ||
         bear.hopLift > 1 ||
+        bunny.isPassing ||
+        bear.isPassing ||
         bunny.phase == HomeCompanionPhase.sweeping ||
         bear.phase == HomeCompanionPhase.sweeping) {
       return false;
@@ -86,11 +103,12 @@ class HomeCompanionPlay extends ChangeNotifier {
   }
 
   CompanionPlayPose pose(HomeCompanionCharacter character) {
-    if (!_active) return const CompanionPlayPose();
+    if (!_active ||
+        (character != firstCharacter && character != secondCharacter)) {
+      return const CompanionPlayPose();
+    }
     final attacking = character == _initiator;
-    final direction = character == HomeCompanionCharacter.bunny
-        ? _between
-        : -_between;
+    final direction = character == firstCharacter ? _between : -_between;
     final sign = direction.dx >= 0 ? 1.0 : -1.0;
     final approach = _time < 0.22
         ? 0.0
@@ -99,7 +117,12 @@ class HomeCompanionPlay extends ChangeNotifier {
         : _time < 1.3
         ? 1 - _ease((_time - 0.82) / 0.48)
         : 0.0;
-    final travel = direction * (attacking ? 0.43 : 0.12) * approach;
+    // Chạm nhẹ bằng tay/chân, không cho đầu và thân lồng vào nhau.
+    final maxTravel = math.max(0.0, direction.dx.abs() - 52);
+    final travel = Offset(
+      sign * maxTravel * (attacking ? 0.78 : 0.22) * approach,
+      0,
+    );
     final flight = _time >= 0.22 && _time < 1.3
         ? math.sin(math.pi * ((_time - 0.22) / 1.08))
         : 0.0;

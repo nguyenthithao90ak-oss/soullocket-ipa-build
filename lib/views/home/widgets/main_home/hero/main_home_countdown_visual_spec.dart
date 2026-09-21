@@ -1,6 +1,8 @@
-part of '../../../tabs/main_home_tab.dart';
+import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/keepsake_frame.dart';
+import 'balanced_countdown_style.dart';
 
-class _CountdownVisualSpec {
+class CountdownVisualSpec {
   final Color? outerColor;
   final Gradient? outerGradient;
   final Border? outerBorder;
@@ -14,7 +16,7 @@ class _CountdownVisualSpec {
   final List<Shadow> labelShadows;
   final List<Shadow> numberShadows;
 
-  const _CountdownVisualSpec({
+  const CountdownVisualSpec({
     required this.outerColor,
     required this.outerGradient,
     required this.outerBorder,
@@ -29,7 +31,7 @@ class _CountdownVisualSpec {
     required this.numberShadows,
   });
 
-  factory _CountdownVisualSpec.resolve(
+  factory CountdownVisualSpec.resolve(
     String styleKey,
     bool transparentMode, {
     bool dark = false,
@@ -39,7 +41,7 @@ class _CountdownVisualSpec {
         dark: dark,
         transparent: transparentMode,
       );
-      return _CountdownVisualSpec(
+      return CountdownVisualSpec(
         outerColor: null,
         outerGradient: palette.outerGradient,
         outerBorder: Border.all(color: palette.border, width: 1.4),
@@ -64,7 +66,7 @@ class _CountdownVisualSpec {
         styleKey == 'plain' ||
         styleKey.isEmpty;
     if (transparentMode && isBasicStyle) {
-      return _CountdownVisualSpec(
+      return CountdownVisualSpec(
         outerColor: Colors.white.withValues(alpha: 0.30),
         outerGradient: null,
         outerBorder: Border.all(
@@ -85,9 +87,40 @@ class _CountdownVisualSpec {
       );
     }
 
+    if (KeepsakePalette.refreshedRingKeys.contains(styleKey)) {
+      final p = KeepsakePalette.of(styleKey);
+      return CountdownVisualSpec(
+        outerColor: null,
+        outerGradient: p.rim,
+        outerBorder: Border.all(
+          color: Colors.white.withValues(alpha: .85),
+          width: 2,
+        ),
+        shadows: [
+          BoxShadow(
+            color: p.accent.withValues(alpha: .14),
+            blurRadius: 26,
+            spreadRadius: -6,
+            offset: const Offset(0, 12),
+          ),
+        ],
+        innerColor: null,
+        innerGradient: p.fill,
+        innerBorder: Border.all(color: p.accent.withValues(alpha: .12)),
+        numberGradient: [
+          p.accent,
+          Color.lerp(p.accent, const Color(0xFF493D40), .2)!,
+        ],
+        topLabelColor: const Color(0xFF67565B),
+        bottomLabelColor: const Color(0xFF67565B),
+        labelShadows: const [],
+        numberShadows: const [],
+      );
+    }
+
     switch (styleKey) {
       case 'plain':
-        return _CountdownVisualSpec(
+        return CountdownVisualSpec(
           outerColor: Colors.white,
           outerGradient: null,
           outerBorder: Border.all(color: const Color(0xFFE9DDE6), width: 2.2),
@@ -108,7 +141,7 @@ class _CountdownVisualSpec {
           numberShadows: const [],
         );
       case 'floating_hearts':
-        return _CountdownVisualSpec(
+        return CountdownVisualSpec(
           outerColor: null,
           outerGradient: const SweepGradient(
             colors: [
@@ -169,7 +202,7 @@ class _CountdownVisualSpec {
           ],
         );
       case 'rose_wave':
-        return _CountdownVisualSpec(
+        return CountdownVisualSpec(
           outerColor: null,
           outerGradient: const LinearGradient(
             colors: [Color(0xFFFFFCFE), Color(0xFFFFEAF4), Color(0xFFFFCFE1)],
@@ -202,7 +235,7 @@ class _CountdownVisualSpec {
           numberShadows: const [],
         );
       case 'glass':
-        return _CountdownVisualSpec(
+        return CountdownVisualSpec(
           outerColor: Colors.white.withValues(alpha: 0.58),
           outerGradient: LinearGradient(
             colors: [
@@ -244,7 +277,7 @@ class _CountdownVisualSpec {
           ],
         );
       case 'glow':
-        return _CountdownVisualSpec(
+        return CountdownVisualSpec(
           outerColor: null,
           outerGradient: const LinearGradient(
             colors: [Color(0xFFFFF5FA), Color(0xFFFFD9E8)],
@@ -288,7 +321,7 @@ class _CountdownVisualSpec {
           ],
         );
       case 'candy':
-        return _CountdownVisualSpec(
+        return CountdownVisualSpec(
           outerColor: null,
           outerGradient: const LinearGradient(
             colors: [Color(0xFFFFE3F3), Color(0xFFE0F7FF), Color(0xFFFFF4C8)],
@@ -332,7 +365,7 @@ class _CountdownVisualSpec {
           ],
         );
       case 'hyper':
-        return _CountdownVisualSpec(
+        return CountdownVisualSpec(
           outerColor: null,
           outerGradient: const SweepGradient(
             colors: [
@@ -396,7 +429,7 @@ class _CountdownVisualSpec {
       case 'lava':
         final isLava = styleKey == 'lava';
         final isAurora = styleKey == 'aurora';
-        return _CountdownVisualSpec(
+        return CountdownVisualSpec(
           outerColor: const Color(0xFF0B0618),
           outerGradient: LinearGradient(
             colors: isLava
@@ -454,7 +487,7 @@ class _CountdownVisualSpec {
           ],
         );
       case 'crystal':
-        return _CountdownVisualSpec(
+        return CountdownVisualSpec(
           outerColor: null,
           outerGradient: const LinearGradient(
             colors: [Color(0xFFE8F4FF), Color(0xFFF6EAFF), Color(0xFFFFF8E7)],
@@ -494,7 +527,7 @@ class _CountdownVisualSpec {
           ],
         );
       case 'fireworks':
-        return _CountdownVisualSpec(
+        return CountdownVisualSpec(
           outerColor: null,
           outerGradient: const SweepGradient(
             colors: [
@@ -543,7 +576,7 @@ class _CountdownVisualSpec {
           ],
         );
       case 'cherry_blossom':
-        return _CountdownVisualSpec(
+        return CountdownVisualSpec(
           outerColor: null,
           outerGradient: const LinearGradient(
             colors: [Color(0xFFFFFAF4), Color(0xFFFFD8E5), Color(0xFFF8BBD0)],
@@ -585,7 +618,7 @@ class _CountdownVisualSpec {
           ],
         );
       case 'meteor_shower':
-        return _CountdownVisualSpec(
+        return CountdownVisualSpec(
           outerColor: null,
           outerGradient: const LinearGradient(
             colors: [Color(0xFF080C2B), Color(0xFF312E81), Color(0xFF6D28D9)],
@@ -627,7 +660,7 @@ class _CountdownVisualSpec {
           ],
         );
       case 'deep_ocean':
-        return _CountdownVisualSpec(
+        return CountdownVisualSpec(
           outerColor: null,
           outerGradient: const LinearGradient(
             colors: [Color(0xFF001F3F), Color(0xFF006994), Color(0xFF00B4D8)],
@@ -669,7 +702,7 @@ class _CountdownVisualSpec {
           ],
         );
       case 'golden_sunset':
-        return _CountdownVisualSpec(
+        return CountdownVisualSpec(
           outerColor: null,
           outerGradient: const LinearGradient(
             colors: [Color(0xFFFFD166), Color(0xFFFF8C61), Color(0xFFC94B86)],
@@ -713,7 +746,7 @@ class _CountdownVisualSpec {
           ],
         );
       case 'neon_pulse':
-        return _CountdownVisualSpec(
+        return CountdownVisualSpec(
           outerColor: const Color(0xFF05010D),
           outerGradient: const SweepGradient(
             colors: [
@@ -761,7 +794,7 @@ class _CountdownVisualSpec {
           ],
         );
       default:
-        return _CountdownVisualSpec(
+        return CountdownVisualSpec(
           outerColor: null,
           outerGradient: const LinearGradient(
             colors: [Color(0xFFFFFDF8), Color(0xFFFFF1EB), Color(0xFFFFE5D8)],
@@ -801,5 +834,55 @@ class _CountdownVisualSpec {
           ],
         );
     }
+  }
+}
+
+/// Dùng cùng visual spec với vòng Home, không giả lập màu bằng ảnh mẫu.
+class CountdownStylePreview extends StatelessWidget {
+  const CountdownStylePreview({super.key, required this.styleKey});
+  final String styleKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final visual = CountdownVisualSpec.resolve(styleKey, false);
+    return SizedBox.square(
+      dimension: 88,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: visual.outerColor,
+          gradient: visual.outerGradient,
+          border: visual.outerBorder,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: visual.innerColor,
+              gradient: visual.innerGradient,
+              border: visual.innerBorder,
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Icon(
+                  Icons.favorite_rounded,
+                  size: 24,
+                  color: visual.numberGradient.first,
+                ),
+                if (styleKey != 'default' && styleKey != 'balanced')
+                  Positioned.fill(
+                    child: KeepsakeOrnaments(
+                      styleKey: styleKey,
+                      animate: false,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

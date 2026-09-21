@@ -71,6 +71,8 @@ import '../../widgets/first_setup_spotlight_guide.dart';
 import '../../core/fast_backdrop_filter.dart';
 import '../../core/sl_page_physics.dart';
 import '../../utils/app_cache_manager.dart';
+import 'widgets/home_shell/soul_navigation_style.dart';
+import 'widgets/home_shell/navigation_restore_handle.dart';
 
 part 'widgets/home_shell/home_screen_sync_flows.dart';
 part 'widgets/home_shell/home_screen_notice_flows.dart';
@@ -441,11 +443,11 @@ class _HomeScreenState extends State<HomeScreen>
   ];
 
   static const _navItems = [
-    _NavItem(labelKey: 'nav_home', activeColor: SLColors.brandPink),
-    _NavItem(labelKey: 'nav_diary', activeColor: Color(0xFFFF4D79)),
-    _NavItem(labelKey: 'nav_apps', activeColor: Color(0xFFB388FF)),
-    _NavItem(labelKey: 'nav_fun', activeColor: Color(0xFFFFAB00)),
-    _NavItem(labelKey: 'nav_update', activeColor: Color(0xFFFF4081)),
+    _NavItem(labelKey: 'nav_home', activeColor: Color(0xFFE75480)),
+    _NavItem(labelKey: 'nav_diary', activeColor: Color(0xFFCF7993)),
+    _NavItem(labelKey: 'nav_apps', activeColor: Color(0xFF9D7AE8)),
+    _NavItem(labelKey: 'nav_fun', activeColor: Color(0xFFE4A44D)),
+    _NavItem(labelKey: 'nav_update', activeColor: Color(0xFF5CADA5)),
   ];
 
   @override
@@ -468,8 +470,11 @@ class _HomeScreenState extends State<HomeScreen>
     _pageController = PageController(initialPage: _currentIndex);
     _tabBuilders = [
       (isActiveNotifier) => MainHomeTab(
+        firstGuideHeroKey: _firstGuideHomeHeroKey,
+        firstGuideSettingsKey: _firstGuideSettingsKey,
         isActiveListenable: isActiveNotifier,
         onOpenSettings: _openSettings,
+        onOpenDiary: () => _switchToTab(1),
         isSwipingListenable: _isUserTabSwipingNotifier,
       ),
       (isActiveNotifier) => DiaryTab(
@@ -1608,8 +1613,7 @@ class _HomeScreenState extends State<HomeScreen>
             bottomNavigationBar: ValueListenableBuilder<UiPrefsState>(
               valueListenable: UiPrefs.notifier,
               builder: (context, uiState, _) {
-                final resolvedThemeKey = _resolveThemeKey(uiState.themeKey);
-                return _buildBottomNav(isDark: _isDarkTheme(resolvedThemeKey));
+                return _buildBottomNav();
               },
             ),
           ),

@@ -48,6 +48,26 @@ class HomeCompanionDust {
   final int seed;
 }
 
+class _CompanionPass {
+  _CompanionPass(this.start, this.end);
+  final Offset start;
+  final Offset end;
+  double time = 0;
+  double get lift => liftAt(time);
+  // Nâng đủ cao rồi mới vượt ngang; đáp sau khi đã ra khỏi thân bạn.
+  double liftAt(double t) =>
+      78 *
+      (t < 0.4
+          ? _ease(t / 0.4)
+          : t <= 1.4
+          ? 1
+          : 1 - _ease((t - 1.4) / 0.4));
+  Offset at(double t) =>
+      Offset.lerp(start, end, _ease(((t - 0.4) / 1).clamp(0.0, 1.0)))!;
+  static double _ease(double t) =>
+      t.clamp(0.0, 1.0) * t.clamp(0.0, 1.0) * (3 - 2 * t.clamp(0.0, 1.0));
+}
+
 /// Bộ chuyển động cục bộ: không timer nền, không lưu/gửi vị trí chạm.
 /// Widget chỉ gọi [advance] khi Home đang hiển thị và cho phép chuyển động.
 class HomeCompanionMotion extends ChangeNotifier {
@@ -96,6 +116,101 @@ class HomeCompanionMotion extends ChangeNotifier {
   bool _settled = false;
   Offset? _pinnedPosition;
 
+  /// Scene cung cấp kiểm tra chiếm chỗ trước khi thay đổi vị trí thật.
+  bool Function(Offset feet, double lift)? canMoveTo;
+  bool movementBlocked = false;
+  double _blockedFor = 0;
+  _CompanionPass? _pass;
+  bool get isPassing => _pass != null;
+  Offset? get passLanding => _pass?.end;
+
+  /// Chỉ vượt trên đoạn mép phẳng, có chỗ đáp thật; không cắt qua khối.
+  Offset? passingDestination(HomeCompanionMotion friend) {
+    if (_track == null ||
+        _pinnedPosition != null ||
+        isPassing ||
+        hopLift > 1 ||
+        friend.hopLift > 1 ||
+        (_position.dy - friend.position.dy).abs() > 2 ||
+        _track!.surface.shape != HomeCompanionSurfaceShape.ledge) {
+      return null;
+    }
+    final direction = (friend.position.dx - _position.dx).sign;
+    if (direction == 0) return null;
+    final end = Offset(friend.position.dx + direction * 54, _position.dy);
+    if ((end - _position).distance > 120 || _track!.project(end).$2 > 0.5) {
+      return null;
+    }
+    final path = _track!.pathBetween(
+      _track!.project(_position).$1,
+      _track!.project(end).$1,
+    );
+    if (path.any((point) => (point.dy - _position.dy).abs() > 0.5)) return null;
+    return end;
+  }
+
+  bool beginPassing(Offset end) {
+    if (_pass != null ||
+        _track == null ||
+        !_finiteOffset(end) ||
+        _track!.project(end).$2 > 0.5) {
+      return false;
+    }
+    _syncToCurrentLeg();
+    _journey.clear();
+    _blockedFor = 0;
+    _pass = _CompanionPass(_position, end);
+    _facingRight = end.dx > _position.dx;
+    _setPhase(HomeCompanionPhase.hopping);
+    return true;
+  }
+
+  /// Nhường/chạy trốn vẫn dùng đồ thị sẵn có, không đẩy bé dịch tức thời.
+  bool fleeFrom(HomeCompanionMotion friend) {
+    if (_track == null ||
+        isPassing ||
+        hopLift > 1 ||
+        !(canMoveTo?.call(_position, 0) ?? true)) {
+      return false;
+    }
+    _syncToCurrentLeg();
+    final away = _position.dx >= friend.position.dx ? 1.0 : -1.0;
+    final candidates = [
+      _track!.normalize(_distance + away * 110),
+      _track!.normalize(_distance - away * 110),
+    ];
+    candidates.sort(
+      (a, b) => (_track!.at(b) - friend.position).distance.compareTo(
+        (_track!.at(a) - friend.position).distance,
+      ),
+    );
+    final end = candidates.first;
+    if ((_track!.at(end) - friend.position).distance <=
+        (_position - friend.position).distance + 8) {
+      // Mép chật: cho lần tuần tra kế tiếp tìm ô khác, không kẹt ở ô đầu.
+      _journey.clear();
+      _finishedPatrol = true;
+      _rest();
+      return false;
+    }
+    _finishedPatrol = true;
+    return _travelTo(_track!, end, HomeCompanionPhase.approaching);
+  }
+
+  /// Bạn phía trước mở đường ra ô khác khi cả hàng không đủ cao để nhảy.
+  void makeRoom() {
+    if (_track == null ||
+        isPassing ||
+        hopLift > 1 ||
+        _pinnedPosition != null ||
+        !(canMoveTo?.call(_position, 0) ?? true)) {
+      return;
+    }
+    _syncToCurrentLeg();
+    _finishedPatrol = true;
+    _wander();
+  }
+
   Offset get position => _position;
   bool get facingRight => _facingRight;
   HomeCompanionPhase get phase => _phase;
@@ -123,11 +238,32 @@ class HomeCompanionMotion extends ChangeNotifier {
   /// Chỉ nâng hình vẽ, chân tiếp xúc vẫn đi theo đường an toàn đã tìm.
   /// Nhún theo từng chặng ngắn, tiếp đất êm ở đầu/cuối hành trình.
   double get hopLift {
+    if (_pass != null) return _pass!.lift;
     if (!_isMoving || _settled) return 0;
-    final wave = math.sin(math.pi * hopProgress);
+    if (_journey.isEmpty) return 0;
+    return _liftAt(
+      _journey.first,
+      _journey.first.travelled,
+      _position,
+      _blockedFor,
+    );
+  }
+
+  double _liftAt(
+    _JourneyLeg leg,
+    double travelled,
+    Offset feet,
+    double blockedFor,
+  ) {
+    if (leg.length <= 0) return 0;
+    final hops = math.max(1, (leg.length / 64).round());
+    final progress =
+        (travelled / leg.length * hops).clamp(0.0, hops.toDouble()) % 1;
+    final wave = math.sin(math.pi * progress);
     final amplitude = _phase == HomeCompanionPhase.hopping ? 14.0 : 4.0;
-    final topClearance = math.max(0.0, _position.dy - _viewport.top);
-    return math.min(amplitude * wave * wave, topClearance);
+    final topClearance = math.max(0.0, feet.dy - _viewport.top);
+    return math.min(amplitude * wave * wave, topClearance) *
+        (1 - blockedFor * 6).clamp(0.0, 1.0);
   }
 
   bool get _isMoving =>
@@ -177,6 +313,7 @@ class HomeCompanionMotion extends ChangeNotifier {
         ? valid.expand((surface) => _makeTracks(surface, viewport)).toList()
         : const [];
     _journey.clear();
+    _pass = null;
     _dust.clear();
     _dustTargets.clear();
     _cleaningSeed = null;
@@ -227,6 +364,7 @@ class HomeCompanionMotion extends ChangeNotifier {
       position.dy.clamp(viewport.top, viewport.bottom),
     );
     if (_pinnedPosition == pinned && _viewport == viewport) return;
+    _pass = null;
     _viewport = viewport;
     _pinnedPosition = pinned;
     _position = pinned;
@@ -251,6 +389,29 @@ class HomeCompanionMotion extends ChangeNotifier {
     final dt = math.min(delta.inMicroseconds / 1000000, 0.10);
     _elapsed += dt;
     _phaseTime += dt;
+    movementBlocked = false;
+    if (_pass case final pass?) {
+      if (_phase != HomeCompanionPhase.hopping) {
+        _setPhase(HomeCompanionPhase.hopping);
+      }
+      final nextTime = math.min(pass.time + dt, 1.8);
+      final next = pass.at(nextTime);
+      final lift = pass.liftAt(nextTime);
+      if (canMoveTo?.call(next, lift) ?? true) {
+        pass.time = nextTime;
+        _position = next;
+        _stride = (_stride + dt * 2) % 1;
+        if (nextTime >= 1.8) {
+          _distance = _track!.project(_position).$1;
+          _pass = null;
+          _rest();
+        }
+      } else {
+        movementBlocked = true;
+      }
+      notifyListeners();
+      return;
+    }
     if (_pinnedPosition != null) {
       // Thời gian vẫn chạy để bé thở/chớp mắt; chân không dịch chuyển.
       notifyListeners();
@@ -289,7 +450,8 @@ class HomeCompanionMotion extends ChangeNotifier {
     bool atDestination = false,
     bool userInvited = false,
   }) {
-    if (_track == null ||
+    if (isPassing ||
+        _track == null ||
         !friend.hasSurfaces ||
         _pinnedPosition != null ||
         _settled ||
@@ -346,6 +508,7 @@ class HomeCompanionMotion extends ChangeNotifier {
   }
 
   void _approach(Offset touch, {required bool newTouch}) {
+    if (isPassing) return;
     if (!hasSurfaces || !_finiteOffset(touch)) {
       return;
     }
@@ -620,6 +783,26 @@ class HomeCompanionMotion extends ChangeNotifier {
       final travel = math.min(remaining, distance);
       if (distance > 0.001) {
         final next = _position + offset / distance * travel;
+        // Kiểm tra trước khi ghi vị trí, không đẩy ngược sau va chạm.
+        final resumedBlock = math.max(0.0, _blockedFor - dt);
+        final nextLift = _liftAt(
+          leg,
+          leg.travelled + travel,
+          next,
+          resumedBlock,
+        );
+        if (!(canMoveTo?.call(next, nextLift) ?? true)) {
+          movementBlocked = true;
+          final lowerLift = _liftAt(
+            leg,
+            leg.travelled,
+            _position,
+            _blockedFor + dt,
+          );
+          if (canMoveTo?.call(_position, lowerLift) ?? true) _blockedFor += dt;
+          break;
+        }
+        _blockedFor = resumedBlock;
         if ((next.dx - _position.dx).abs() > 0.01) {
           _facingRight = next.dx > _position.dx;
         }

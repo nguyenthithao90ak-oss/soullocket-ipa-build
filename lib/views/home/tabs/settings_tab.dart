@@ -1,9 +1,13 @@
+import 'settings/countdown/widgets/private_space_widgets.dart';
+import 'settings/theme/appearance_panel_widgets.dart';
 // ignore_for_file: unused_field, unused_import
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/getting_started_guide.dart';
+import 'package:soullocket_app/widgets/app_help_center.dart';
 import '../../../widgets/lossless_sticker_assets.dart';
 import 'package:flutter/foundation.dart';
 import '../../../core/fast_backdrop_filter.dart';
@@ -111,6 +115,8 @@ import 'settings/settings_links_manager_screen.dart';
 import 'settings/security/security_otp_dialogs.dart';
 import '../../../widgets/first_setup_spotlight_guide.dart';
 import '../../../widgets/legacy_web_ui.dart';
+import '../../../widgets/keepsake_frame.dart';
+import '../widgets/main_home/hero/main_home_countdown_visual_spec.dart';
 import '../../../widgets/pin_pad_setup_modal.dart';
 import '../../../utils/services/widget_service.dart';
 import '../../../models/house_settings.dart';
@@ -410,7 +416,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _showHousePin = false;
   bool _showPasswordEditor = false;
   bool _isLinkingGoogle = false;
-  bool _musicAutoplay = true;
+  bool _musicAutoplay = false;
   bool _notifAnniversary = true;
   bool _notifPost = true;
   bool _notifChat = true;
@@ -674,8 +680,9 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     await _openCountdownMode();
   }
 
-  Future<void> _maybeShowSettingsGuideOnOpen() async {
-    if (!widget.showGuideOnOpen || _didShowGuideOnOpen || !mounted) {
+  Future<void> _maybeShowSettingsGuideOnOpen({bool replay = false}) async {
+    if ((!replay && (!widget.showGuideOnOpen || _didShowGuideOnOpen)) ||
+        !mounted) {
       return;
     }
     final houseId = (_houseId ?? '').trim();
@@ -683,17 +690,25 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       return;
     }
     final prefs = await SharedPreferences.getInstance();
-    final guidePrefsKey = 'il_settings_setup_guide_seen_$houseId';
-    if (prefs.getString(guidePrefsKey) == '1') {
-      return;
-    }
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (uid.isEmpty) return;
+    final progress = SetupGuideProgress(
+      prefs,
+      SetupGuideProgress.scopedKey(uid, houseId, 'settings'),
+    );
+    if (!replay && !progress.shouldOffer) return;
     _didShowGuideOnOpen = true;
-    await prefs.setString(guidePrefsKey, '1');
     await Future<void>.delayed(const Duration(milliseconds: 280));
     if (!mounted) return;
 
     await FirstSetupSpotlightGuide.show(
       context,
+      progress: progress,
+      replay: replay,
+      isStillValid: () =>
+          mounted &&
+          _houseId == houseId &&
+          FirebaseAuth.instance.currentUser?.uid == uid,
       steps: [
         FirstSetupSpotlightStep(
           targetKey: _accountGuideKey,

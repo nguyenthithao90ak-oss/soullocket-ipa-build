@@ -1,0 +1,137 @@
+<!DOCTYPE html><html lang="ko" dir="ltr"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="로그인 계정을 삭제하는 것과 공유된 House 데이터를 삭제하는 것은 다른 작업입니다. 요청을 제출한다고 해서 데이터가 이미 삭제된 것은 아닙니다.">
+<meta name="soullocket-document-version" content="2026-09-09">
+<title>SoulLocket 계정 및 데이터 삭제</title>
+<style>
+:root{color-scheme:light;--ink:#30292d;--muted:#6d6067;--accent:#a13e5c;--line:#eadde2;--paper:#fff;--bg:#faf6f7}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 system-ui,-apple-system,"Segoe UI",sans-serif;overflow-wrap:anywhere}
+.page{max-width:880px;margin:auto;padding:28px 24px 56px}
+header,section,footer{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;margin:0 0 18px}
+.brand{font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:750;color:var(--accent)}
+h1{font-size:clamp(26px,5vw,36px);line-height:1.25;margin:12px 0 16px;letter-spacing:-.025em}
+h2{font-size:21px;line-height:1.4;margin:0 0 14px}h3{font-size:17px;margin:22px 0 10px}
+p{margin:0 0 14px}p:last-child,ul:last-child,ol:last-child{margin-bottom:0}
+.meta,.small{font-size:14px;color:var(--muted)}ul,ol{padding-left:24px;margin:10px 0 16px}li{margin:7px 0}
+a{color:var(--accent);text-underline-offset:3px}a:hover{text-decoration-thickness:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #7943ab;outline-offset:4px}
+nav{display:flex;flex-wrap:wrap;gap:10px 20px;margin:20px 0 0}nav a{font-size:14px}
+.note,.warning{padding:16px 18px;border-radius:10px;margin:16px 0;border-left:4px solid var(--accent);background:#fcf0f4}
+.warning{border-color:#a7641a;background:#fff6e8}.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}
+th{background:#faf5f7}button,.button{display:inline-block;padding:12px 18px;background:var(--accent);color:white;border:0;border-radius:10px;font:inherit;font-weight:650;cursor:pointer;text-decoration:none}
+button:disabled{opacity:.6;cursor:wait}label{display:block;font-weight:650;margin:16px 0 6px}
+input:not([type=checkbox]),textarea{width:100%;padding:12px;font:inherit;color:inherit;background:white;border:1px solid #a99aa2;border-radius:8px}
+textarea{resize:vertical;min-height:110px}.checkbox{display:flex;gap:12px;align-items:flex-start;margin:20px 0}
+.checkbox input{flex-shrink:0;width:20px;height:20px;margin-top:5px}.checkbox label{font-weight:400;margin:0}
+.status{display:none;padding:16px;margin-top:16px;border-radius:10px}.status.success{display:block;background:#eaf7ef;color:#245635}.status.error{display:block;background:#fff0f0;color:#96323c}
+.skip{position:absolute;top:-100px;left:16px;background:white;padding:12px;z-index:10}.skip:focus{top:10px}
+@media(max-width:560px){.page{padding:16px 12px 32px}header,section,footer{padding:20px 18px;border-radius:14px}th,td{padding:10px 8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{body{background:white}.page{max-width:none;padding:0}header,section,footer{border:0;padding:12px 0}nav,.skip,form{display:none}h2,h3{break-after:avoid}}
+</style>
+</head>
+<body>
+<a class="skip" href="#noi-dung-chinh">주요 콘텐츠로 건너뛰기</a>
+<main class="page" id="noi-dung-chinh">
+<header><div class="brand">SoulLocket · 문서 및 지원</div><h1>SoulLocket 계정 및 데이터 삭제</h1><p>로그인 계정을 삭제하는 것과 공유된 House 데이터를 삭제하는 것은 다른 작업입니다. 요청을 제출한다고 해서 데이터가 이미 삭제된 것은 아닙니다.</p><p class="meta">업데이트된 콘텐츠: <time datetime="2026-09-09">2026년 9월 9일</time> · 문서 버전 2026-09-09</p><nav aria-label="문서 언어"><a href="delete-account.html" lang="vi" hreflang="vi">Tiếng Việt</a><a href="delete-account-en.html" lang="en" hreflang="en">English</a><a href="delete-account-de.html" lang="de" hreflang="de">Deutsch</a><a href="delete-account-fr.html" lang="fr" hreflang="fr">Français</a><a href="delete-account-es.html" lang="es" hreflang="es">Español</a><a href="delete-account-it.html" lang="it" hreflang="it">Italiano</a><a href="delete-account-pt.html" lang="pt" hreflang="pt">Português</a><a href="delete-account-ru.html" lang="ru" hreflang="ru">Русский</a><a href="delete-account-ja.html" lang="ja" hreflang="ja">日本語</a><span lang="ko" aria-current="page">한국어</span><a href="delete-account-zh.html" lang="zh" hreflang="zh">简体中文</a></nav><p class="small">문서 버전 2026-09-09 번역. 표현이 명확하지 않거나 언어마다 다른 경우 지원팀에 문의하세요.</p><nav aria-label="목차"><a href="#flow">1. 올바른 범위를 선택하세요</a>
+<a href="#timeline">2. 현재 흐름의 대기 기간</a>
+<a href="#scope">3. 처리되는 데이터 및 현재 제한 사항</a>
+<a href="#steps">4. 앱에서의 작업</a>
+<a href="#public-form">5. 앱 외부에서 삭제 요청</a></nav></header>
+
+<section id="flow"><h2>1. 올바른 범위를 선택하세요</h2><ul><li><strong>계정 삭제:</strong> 현재 로그인 계정 폐쇄 및 관련 데이터 처리를 요청합니다. 파트너의 전체 하우스가 자동으로 삭제되지는 않습니다.</li><li><strong>이별/집 데이터 삭제:</strong> 공유 공간의 정리를 요청하며 두 사람의 데이터에 영향을 미칠 수 있습니다. 로그인 계정 자체는 삭제되지 않습니다.</li><li><strong>개별 콘텐츠 삭제:</strong> 콘텐츠의 일부만 제거하려면 관련 일기, 사진, 게시물 또는 유틸리티 삭제 작업을 사용하세요.</li></ul><div class="warning">확인하기 전에 필요한 모든 것을 내보내거나 저장하세요. 제거하거나 로그아웃해도 삭제 요청이 대체되지는 않습니다. 계정을 삭제해도 결제 상점을 통한 구독이 자동으로 취소되지 않습니다.</div></section>
+<section id="timeline"><h2>2. 현재 흐름의 대기 기간</h2><p>정확한 시간은 서버에서 반환되어 앱에 표시됩니다. 아래 기간은 현재 처리 코드를 설명하는 것이지 모든 복사본이 정확한 순간에 삭제된다는 보장은 없습니다.</p><div class="table-wrap"><table><thead><tr><th>요청</th><th>스케줄링</th></tr></thead><tbody>
+<tr><td>유효한 식별 하우스가 없는 계정 삭제</td><td>요청 후 3일 동안 예정됩니다.</td></tr>
+<tr><td>하우스 계정 삭제</td><td>현재 흐름에서는 하원에 아직 두 명의 구성원이 없더라도 30일 대기 시간을 설정합니다. 다른 적격 회원이 확인하면 시간은 확인 후 3일로 재설정됩니다.</td></tr>
+<tr><td>단일 모드에서 집 삭제</td><td>3일 후 예정입니다.</td></tr>
+<tr><td>이별/부부집삭제</td><td>다른 회원의 확인 또는 30일 대기 기한을 기다립니다. 예약상태로 이동 후 삭제까지 하루가 추가됩니다.</td></tr>
+<tr><td>앱 외부에서 요청</td><td>즉시 삭제가 아닌 확인 및 처리를 위한 지원 요청을 생성합니다. 7일 이내 자동완성 약속은 없습니다. 지원팀은 확인 후 적절한 진행 상황/시기에 대해 소통해야 합니다.</td></tr></tbody></table></div>
+<p>공유 하우스의 경우 요청자는 동일한 계정에 로그인된 다른 기기로 전환하여 자체 확인할 수 없습니다. 마감일 전과 처리가 시작되기 전에 인터페이스에서 허용하는 경우 요청을 취소/철회할 수 있습니다. 영구 삭제 후에는 복구가 보장되지 않습니다.</p></section>
+<section id="scope"><h2>3. 처리되는 데이터 및 현재 제한 사항</h2><p>현재 계정 삭제 흐름에서는 계정 프로필, 멤버십 링크, 현재 상태/장치 토큰 및 일부 UID 연결 지원 요청/보고서를 정리한 다음 인증 계정을 삭제합니다. 하우스 삭제 흐름은 구현된 범위 내에서 하우스, 공개 프로필, 메시지 분기, 알림, 친구, GPS, 초대 및 하우스 연결 데이터를 정리합니다.</p>
+<p><strong>계정을 삭제하면 모든 오래된 콘텐츠가 동시에 제거된다고 가정하지 마십시오.</strong> 공유 하우스 콘텐츠, Cloudflare R2 미디어, 일부 Firestore 데이터 또는 기타 기록에는 추가 검토 및 처리가 필요할 수 있습니다. 현재 메커니즘은 이러한 모든 저장소를 완전히 정리하기에는 충분하지 않습니다. 지원 요청 시 삭제하고 싶은 나머지 개인 데이터를 지정하세요.</p>
+<p>다른 사람이 보유한 다운로드 사본, 스크린샷, 장치 내보내기는 원격으로 불러올 수 없습니다. 법적 의무, 사기 처리 또는 분쟁을 위해 보관되는 데이터는 제한되어야 합니다. 무엇을, 왜, 얼마나 오랫동안 보관하는지 물어볼 수 있습니다. 모든 커뮤니티 콘텐츠가 자동으로 익명화된다는 보장은 없습니다.</p></section>
+<section id="steps"><h2>4. 앱에서의 작업</h2><ol><li>올바른 계정으로 로그인하고 엽니다. <strong>설정</strong> 그리고 찾아 <strong>계정 및 데이터 삭제</strong> 또는 <strong>데이터 분리/삭제</strong>.</li><li>영향을 받는 범위와 확인 단계를 읽어보세요. 계정 삭제에는 이메일/일회성 코드 확인이 포함됩니다. 지원 메시지가 아닌 공식 앱에서만 코드를 입력하세요.</li><li>성공 메시지와 예약 시간을 확인하세요. 계정 삭제 요청을 생성한 후 앱에서 로그아웃될 수 있습니다.</li><li>마감일 전에 취소하려면 다시 로그인하여 보류 중인 요청의 취소 작업을 찾으세요. 액세스할 수 없는 경우 즉시 지원팀에 문의하세요.</li></ol><p>이전 요청의 상태를 알지 못한 채 다른 요청을 생성하지 마세요. 네트워크 오류는 서버가 이를 수신하지 못했다는 것을 증명하지 않습니다.</p></section>
+<section id="public-form"><h2>5. 앱 외부에서 삭제 요청</h2><p>앱을 다시 설치하거나 로그인하지 않고도 이 양식을 사용할 수 있습니다. 지원팀은 이를 받은 후 조치를 취하기 전에 귀하가 계정을 소유하고 있는지 확인해야 합니다. 이메일/집 ID를 알고 있다고 해서 다른 사람의 데이터를 삭제할 수 있는 권한은 없습니다.</p><p class="small">제출된 정보, IP 주소 및 브라우저 정보는 수신, 확인 및 남용 방지를 위해 처리됩니다. <a href="privacy-ko.html">개인 정보 보호 정책</a>. 메모에 비밀번호, PIN, 일회성 코드 또는 민감한 신원 문서를 입력하지 마십시오.</p>
+<form id="deleteForm" method="post">
+<label for="email">계정 이메일</label><input id="email" name="email" type="email" autocomplete="email" maxlength="320" required="" placeholder="you@example.com">
+<label for="displayName">표시 이름(선택사항)</label><input id="displayName" name="displayName" type="text" autocomplete="nickname" maxlength="80">
+<label for="houseId">주택 ID(알고 있는 경우 페어링 초대 코드가 아님)</label><input id="houseId" name="houseId" type="text" maxlength="120" autocomplete="off">
+<label for="reason">삭제할 데이터/메모(선택)</label><textarea id="reason" name="reason" maxlength="500" aria-describedby="form-help"></textarea>
+<p class="small" id="form-help">예: 내 계정을 삭제하고 남은 개인 사진이나 일기 항목을 검토합니다. 다른 사람의 계정 삭제를 요청하지 마세요.</p>
+<div class="checkbox"><input id="confirmPermanentDeletion" name="confirmPermanentDeletion" type="checkbox" required=""><label for="confirmPermanentDeletion">본인은 확인 후 내 계정 및 관련 개인정보의 삭제를 요청합니다. 나는 범위와 대기 기간을 읽었으며 영구적으로 삭제된 데이터는 복구할 수 없다는 것을 이해했습니다.</label></div>
+<button id="submitButton" type="submit" disabled="">삭제 요청 제출</button>
+</form><noscript><p>자바스크립트가 비활성화되었습니다. 당신은 아직도 <a href="mailto:hotroviethoangdev.lo.ve@gmail.com?subject=SoulLocket%20-%20Account%20deletion%20request">지원 이메일로 삭제 요청</a>.</p></noscript>
+<div id="statusBox" class="status" role="status" aria-live="polite" tabindex="-1"></div>
+<p class="small">제출 실패시 이메일로 접수 <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a> 가능하다면 귀하의 계정 이메일에서. 진행 상황을 문의하려면 요청 ID를 보관하세요. '녹음'은 '삭제'를 의미하지 않습니다.</p></section>
+<footer><h2>SoulLocket 문서</h2><nav aria-label="관련 문서"><a href="about-ko.html">소개</a><a href="huong_dan-ko.html">사용자 가이드</a><a href="huong_dan_cai_dat_lan_dau-ko.html">첫 번째 설정</a><a href="privacy-ko.html">개인 정보 보호</a><a href="terms-ko.html">이용약관</a><a href="cookie-policy-ko.html">쿠키</a><a href="delete-account-ko.html">계정 삭제</a><a href="support-ko.html">지원</a></nav><p class="small">개인정보 보호 및 지원: <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p></footer>
+</main>
+<script>
+'use strict';
+const endpoint = 'https://us-central1-soullockket.cloudfunctions.net/requestDeleteAccountPublic';
+const form = document.getElementById('deleteForm');
+const statusBox = document.getElementById('statusBox');
+const submitButton = document.getElementById('submitButton');
+let submitting = false;
+function setStatus(kind, message) {
+  statusBox.className = 'status ' + kind;
+  statusBox.textContent = message;
+  statusBox.focus();
+}
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (submitting || !form.reportValidity()) return;
+  const payload = {
+    email: document.getElementById('email').value.trim(),
+    displayName: document.getElementById('displayName').value.trim(),
+    houseId: document.getElementById('houseId').value.trim(),
+    reason: document.getElementById('reason').value.trim(),
+    confirmPermanentDeletion: document.getElementById('confirmPermanentDeletion').checked,
+    source: 'public_delete_page',
+  };
+  if (!payload.email || !payload.confirmPermanentDeletion) return;
+  submitting = true;
+  submitButton.disabled = true;
+  submitButton.textContent = "보내는 중…";
+  statusBox.className = 'status';
+  statusBox.textContent = '';
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      credentials: 'omit', referrerPolicy: 'no-referrer',
+      body: JSON.stringify(payload), signal: controller.signal,
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || result.ok !== true) {
+      if (result.error === 'invalid_email') throw new Error("이메일 주소가 잘못되었습니다.");
+      if (result.error === 'confirmation_required') throw new Error("제출하기 전에 삭제 요청을 확인하세요.");
+      if (response.status === 429 || result.error === 'rate_limited') throw new Error("요청에는 속도가 제한되어 있습니다. 이전 요청을 확인하거나 약 12시간 후에 다시 시도하세요. 이메일로 지원팀에 문의할 수도 있습니다.");
+      throw new Error("영수증을 확인할 수 없습니다. 문제가 계속되면 이메일로 지원팀에 문의하세요.");
+    }
+    form.reset();
+    const id = typeof result.requestId === 'string' ? result.requestId.slice(0, 120) : '';
+    setStatus('success', "요청이 기록되었습니다." + (id ? ". 요청 ID: " + id : '') + ". 지원팀에서는 처리 전에 소유권을 확인합니다. 이는 귀하의 계정이 삭제되었음을 확인하는 것이 아닙니다.");
+  } catch (error) {
+    const message = error.name === 'AbortError' || error instanceof TypeError
+      ? "연결이 중단되어 영수증을 확인할 수 없습니다. 서버가 귀하의 요청을 받았을 수도 있습니다. 반복적으로 제출하기 전에 이메일로 지원팀에 문의하세요."
+      : error.message || "요청을 제출할 수 없습니다. 지원 이메일로 보내실 수 있습니다.";
+    setStatus('error', message);
+  } finally {
+    clearTimeout(timeout);
+    submitting = false;
+    submitButton.disabled = false;
+    submitButton.textContent = "삭제 요청 제출";
+  }
+});
+// Chỉ cho gửi sau khi đã gắn bộ xử lý POST, tránh lộ dữ liệu qua URL khi JS bị chặn.
+submitButton.disabled = false;
+</script>
+
+
+</body></html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html><html lang="pt" dir="ltr"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Excluir sua conta de login e excluir dados compartilhados da casa são ações diferentes. Enviar uma solicitação não significa que os dados já foram excluídos.">
+<meta name="soullocket-document-version" content="2026-09-09">
+<title>Exclua sua conta e dados do SoulLocket</title>
+<style>
+:root{color-scheme:light;--ink:#30292d;--muted:#6d6067;--accent:#a13e5c;--line:#eadde2;--paper:#fff;--bg:#faf6f7}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 system-ui,-apple-system,"Segoe UI",sans-serif;overflow-wrap:anywhere}
+.page{max-width:880px;margin:auto;padding:28px 24px 56px}
+header,section,footer{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;margin:0 0 18px}
+.brand{font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:750;color:var(--accent)}
+h1{font-size:clamp(26px,5vw,36px);line-height:1.25;margin:12px 0 16px;letter-spacing:-.025em}
+h2{font-size:21px;line-height:1.4;margin:0 0 14px}h3{font-size:17px;margin:22px 0 10px}
+p{margin:0 0 14px}p:last-child,ul:last-child,ol:last-child{margin-bottom:0}
+.meta,.small{font-size:14px;color:var(--muted)}ul,ol{padding-left:24px;margin:10px 0 16px}li{margin:7px 0}
+a{color:var(--accent);text-underline-offset:3px}a:hover{text-decoration-thickness:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #7943ab;outline-offset:4px}
+nav{display:flex;flex-wrap:wrap;gap:10px 20px;margin:20px 0 0}nav a{font-size:14px}
+.note,.warning{padding:16px 18px;border-radius:10px;margin:16px 0;border-left:4px solid var(--accent);background:#fcf0f4}
+.warning{border-color:#a7641a;background:#fff6e8}.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}
+th{background:#faf5f7}button,.button{display:inline-block;padding:12px 18px;background:var(--accent);color:white;border:0;border-radius:10px;font:inherit;font-weight:650;cursor:pointer;text-decoration:none}
+button:disabled{opacity:.6;cursor:wait}label{display:block;font-weight:650;margin:16px 0 6px}
+input:not([type=checkbox]),textarea{width:100%;padding:12px;font:inherit;color:inherit;background:white;border:1px solid #a99aa2;border-radius:8px}
+textarea{resize:vertical;min-height:110px}.checkbox{display:flex;gap:12px;align-items:flex-start;margin:20px 0}
+.checkbox input{flex-shrink:0;width:20px;height:20px;margin-top:5px}.checkbox label{font-weight:400;margin:0}
+.status{display:none;padding:16px;margin-top:16px;border-radius:10px}.status.success{display:block;background:#eaf7ef;color:#245635}.status.error{display:block;background:#fff0f0;color:#96323c}
+.skip{position:absolute;top:-100px;left:16px;background:white;padding:12px;z-index:10}.skip:focus{top:10px}
+@media(max-width:560px){.page{padding:16px 12px 32px}header,section,footer{padding:20px 18px;border-radius:14px}th,td{padding:10px 8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{body{background:white}.page{max-width:none;padding:0}header,section,footer{border:0;padding:12px 0}nav,.skip,form{display:none}h2,h3{break-after:avoid}}
+</style>
+</head>
+<body>
+<a class="skip" href="#noi-dung-chinh">Pular para o conteúdo principal</a>
+<main class="page" id="noi-dung-chinh">
+<header><div class="brand">SoulLocket · Documentos e suporte</div><h1>Exclua sua conta e dados do SoulLocket</h1><p>Excluir sua conta de login e excluir dados compartilhados da casa são ações diferentes. Enviar uma solicitação não significa que os dados já foram excluídos.</p><p class="meta">Conteúdo atualizado: <time datetime="2026-09-09">9 de setembro de 2026</time> · Versão do documento 2026-09-09</p><nav aria-label="Idioma do documento"><a href="delete-account.html" lang="vi" hreflang="vi">Tiếng Việt</a><a href="delete-account-en.html" lang="en" hreflang="en">English</a><a href="delete-account-de.html" lang="de" hreflang="de">Deutsch</a><a href="delete-account-fr.html" lang="fr" hreflang="fr">Français</a><a href="delete-account-es.html" lang="es" hreflang="es">Español</a><a href="delete-account-it.html" lang="it" hreflang="it">Italiano</a><span lang="pt" aria-current="page">Português</span><a href="delete-account-ru.html" lang="ru" hreflang="ru">Русский</a><a href="delete-account-ja.html" lang="ja" hreflang="ja">日本語</a><a href="delete-account-ko.html" lang="ko" hreflang="ko">한국어</a><a href="delete-account-zh.html" lang="zh" hreflang="zh">简体中文</a></nav><p class="small">Tradução da versão do documento 2026-09-09. Entre em contato com o suporte se algum texto não estiver claro ou diferir entre os idiomas.</p><nav aria-label="Conteúdo"><a href="#flow">1. Escolha o escopo correto</a>
+<a href="#timeline">2. Períodos de espera no fluxo atual</a>
+<a href="#scope">3. Dados tratados e limitações atuais</a>
+<a href="#steps">4. Ações no aplicativo</a>
+<a href="#public-form">5. Solicite exclusão fora do aplicativo</a></nav></header>
+
+<section id="flow"><h2>1. Escolha o escopo correto</h2><ul><li><strong>Exclusão de conta:</strong> solicita o encerramento da sua conta de login atual e o tratamento dos dados relacionados. Isso não exclui automaticamente toda a casa do seu parceiro.</li><li><strong>Exclusão de dados de separação/casa:</strong> solicita a limpeza do espaço compartilhado e pode afetar os dados de ambas as pessoas. Ele próprio não exclui contas de login.</li><li><strong>Exclusão de conteúdo individual:</strong> use a ação de exclusão de diário, foto, postagem ou utilitário relevante se desejar remover apenas parte do seu conteúdo.</li></ul><div class="warning">Exporte/salve tudo o que precisar antes de confirmar. Desinstalar ou sair não substitui uma solicitação de exclusão. A exclusão da conta também não cancela automaticamente as assinaturas de uma loja de pagamento.</div></section>
+<section id="timeline"><h2>2. Períodos de espera no fluxo atual</h2><p>A hora exata é retornada pelo servidor e mostrada no aplicativo. Os períodos abaixo descrevem o código de processamento atual, não garantindo que cada cópia seja excluída em um minuto preciso.</p><div class="table-wrap"><table><thead><tr><th>Solicitação</th><th>Agendamento</th></tr></thead><tbody>
+<tr><td>Exclusão de conta sem uma casa identificada válida</td><td>Agendado para 3 dias após a solicitação.</td></tr>
+<tr><td>Exclusão de conta com uma casa</td><td>O fluxo atual prevê uma espera de 30 dias, mesmo que a Câmara ainda não tenha dois membros. Se o outro membro elegível confirmar, o tempo será redefinido para 3 dias após essa confirmação.</td></tr>
+<tr><td>Exclusão de casa no modo único</td><td>Agendado após 3 dias.</td></tr>
+<tr><td>Separação/casal Exclusão de casa</td><td>Aguarda a confirmação do outro membro ou o prazo de espera de 30 dias. Depois de passar para o status agendado, há um dia adicional antes da exclusão.</td></tr>
+<tr><td>Solicitar fora do aplicativo</td><td>Cria uma solicitação de suporte para verificação e tratamento, não para exclusão imediata. Não há promessa de conclusão automática em 7 dias. O suporte precisa comunicar o progresso/prazo apropriado após a verificação.</td></tr></tbody></table></div>
+<p>Para uma casa compartilhada, o solicitante não pode se autoconfirmar mudando para outro dispositivo conectado à mesma conta. Antes do prazo e antes do início do processamento, você poderá cancelar/retirar uma solicitação se a interface ainda permitir. Não há recuperação garantida após a exclusão permanente.</p></section>
+<section id="scope"><h2>3. Dados tratados e limitações atuais</h2><p>O fluxo de exclusão de conta atual limpa o perfil da conta, os links de associação, os tokens de presença/dispositivo e algumas solicitações/relatórios de suporte vinculados a UID e, em seguida, exclui a conta de autenticação. O fluxo de exclusão de Casas limpa a Casa, perfil público, ramos de mensagens, notificações, amigos, GPS, convites e dados vinculados à Casa dentro do seu escopo implementado.</p>
+<p><strong>Não presuma que a exclusão da conta remove simultaneamente todos os conteúdos antigos.</strong> O conteúdo da Shared House, a mídia Cloudflare R2, alguns dados do Firestore ou outros registros podem precisar de revisão e tratamento adicionais. O mecanismo atual não é suficiente para prometer a limpeza completa de todas essas lojas. Especifique quaisquer dados pessoais restantes que você deseja excluir em sua solicitação de suporte.</p>
+<p>Cópias baixadas mantidas por terceiros, capturas de tela e exportações de dispositivos não podem ser recuperadas remotamente. Os dados retidos para obrigações legais, tratamento de fraudes ou litígios devem ser limitados; você pode perguntar o que é retido, por que e por quanto tempo. Não há promessa de que todo o conteúdo da comunidade se torne automaticamente anônimo.</p></section>
+<section id="steps"><h2>4. Ações no aplicativo</h2><ol><li>Faça login na conta correta, abra <strong>Configurações</strong> e encontrar <strong>Exclusão de conta e dados</strong> ou <strong>Separação/exclusão de dados</strong>.</li><li>Leia o escopo afetado e as etapas de confirmação. A exclusão da conta inclui verificação de e-mail/código único; insira os códigos apenas no aplicativo oficial, não nas mensagens de suporte.</li><li>Verifique a mensagem de sucesso e o horário agendado. O aplicativo pode desconectar você após criar uma solicitação de exclusão de conta.</li><li>Para sacar antes do prazo, faça login novamente e procure a ação de cancelamento da solicitação pendente; entre em contato com o suporte imediatamente se não conseguir acessá-lo.</li></ol><p>Não crie outra solicitação sem saber o status da solicitação anterior. Um erro de rede não prova que o servidor não conseguiu recebê-lo.</p></section>
+<section id="public-form"><h2>5. Solicite exclusão fora do aplicativo</h2><p>Você pode usar este formulário sem reinstalar ou fazer login no aplicativo. Após recebê-lo, o suporte deverá verificar se você é o proprietário da conta antes de agir; saber um e-mail/ID da casa não autoriza a exclusão de dados de outra pessoa.</p><p class="small">As informações enviadas, o endereço IP e as informações do navegador são processadas para recebimento, verificação e antiabuso, conforme descrito no <a href="privacy-pt.html">Política de Privacidade</a>. Não insira senhas, PINs, códigos únicos ou documentos de identidade confidenciais nas notas.</p>
+<form id="deleteForm" method="post">
+<label for="email">E-mail da conta</label><input id="email" name="email" type="email" autocomplete="email" maxlength="320" required="" placeholder="you@example.com">
+<label for="displayName">Nome de exibição (opcional)</label><input id="displayName" name="displayName" type="text" autocomplete="nickname" maxlength="80">
+<label for="houseId">ID da casa (se conhecido, não é um código de convite de pareamento)</label><input id="houseId" name="houseId" type="text" maxlength="120" autocomplete="off">
+<label for="reason">Dados a serem excluídos/notas (opcional)</label><textarea id="reason" name="reason" maxlength="500" aria-describedby="form-help"></textarea>
+<p class="small" id="form-help">Por exemplo: exclua minha conta e revise as fotos pessoais restantes ou entradas do diário. Não solicite a exclusão da conta de outra pessoa.</p>
+<div class="checkbox"><input id="confirmPermanentDeletion" name="confirmPermanentDeletion" type="checkbox" required=""><label for="confirmPermanentDeletion">Solicito a exclusão da minha conta e dos dados pessoais relacionados após verificação. Li o escopo e os períodos de espera e entendo que os dados excluídos permanentemente não podem ser recuperados.</label></div>
+<button id="submitButton" type="submit" disabled="">Enviar solicitação de exclusão</button>
+</form><noscript><p>JavaScript está desativado. Você ainda pode <a href="mailto:hotroviethoangdev.lo.ve@gmail.com?subject=SoulLocket%20-%20Account%20deletion%20request">solicitar exclusão por e-mail de suporte</a>.</p></noscript>
+<div id="statusBox" class="status" role="status" aria-live="polite" tabindex="-1"></div>
+<p class="small">Se o envio falhar, envie um e-mail <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a> do e-mail da sua conta, quando possível. Guarde o ID da solicitação para perguntar sobre o andamento; “gravado” não significa “excluído”.</p></section>
+<footer><h2>Documentos SoulLocket</h2><nav aria-label="Documentos relacionados"><a href="about-pt.html">Sobre</a><a href="huong_dan-pt.html">Guia do usuário</a><a href="huong_dan_cai_dat_lan_dau-pt.html">Primeira configuração</a><a href="privacy-pt.html">Privacidade</a><a href="terms-pt.html">Termos de utilização</a><a href="cookie-policy-pt.html">Cookies</a><a href="delete-account-pt.html">Excluir conta</a><a href="support-pt.html">Suporte</a></nav><p class="small">Privacidade e suporte: <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p></footer>
+</main>
+<script>
+'use strict';
+const endpoint = 'https://us-central1-soullockket.cloudfunctions.net/requestDeleteAccountPublic';
+const form = document.getElementById('deleteForm');
+const statusBox = document.getElementById('statusBox');
+const submitButton = document.getElementById('submitButton');
+let submitting = false;
+function setStatus(kind, message) {
+  statusBox.className = 'status ' + kind;
+  statusBox.textContent = message;
+  statusBox.focus();
+}
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (submitting || !form.reportValidity()) return;
+  const payload = {
+    email: document.getElementById('email').value.trim(),
+    displayName: document.getElementById('displayName').value.trim(),
+    houseId: document.getElementById('houseId').value.trim(),
+    reason: document.getElementById('reason').value.trim(),
+    confirmPermanentDeletion: document.getElementById('confirmPermanentDeletion').checked,
+    source: 'public_delete_page',
+  };
+  if (!payload.email || !payload.confirmPermanentDeletion) return;
+  submitting = true;
+  submitButton.disabled = true;
+  submitButton.textContent = "Enviando…";
+  statusBox.className = 'status';
+  statusBox.textContent = '';
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      credentials: 'omit', referrerPolicy: 'no-referrer',
+      body: JSON.stringify(payload), signal: controller.signal,
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || result.ok !== true) {
+      if (result.error === 'invalid_email') throw new Error("Endereço de e-mail inválido.");
+      if (result.error === 'confirmation_required') throw new Error("Confirme a solicitação de exclusão antes de enviar.");
+      if (response.status === 429 || result.error === 'rate_limited') throw new Error("As solicitações têm taxa limitada. Verifique sua solicitação anterior ou tente novamente após cerca de 12 horas; você também pode entrar em contato com o suporte por e-mail.");
+      throw new Error("O recebimento não pôde ser confirmado. Entre em contato com o suporte por e-mail se o problema persistir.");
+    }
+    form.reset();
+    const id = typeof result.requestId === 'string' ? result.requestId.slice(0, 120) : '';
+    setStatus('success', "Solicitação registrada" + (id ? ". ID da solicitação: " + id : '') + ". O suporte verificará a propriedade antes do processamento. Esta não é uma confirmação de que sua conta foi excluída.");
+  } catch (error) {
+    const message = error.name === 'AbortError' || error instanceof TypeError
+      ? "O recebimento não pôde ser confirmado porque a conexão foi interrompida. O servidor pode ter recebido sua solicitação; entre em contato com o suporte por e-mail antes de enviar repetidamente."
+      : error.message || "Não foi possível enviar a solicitação. Você pode enviá-lo por e-mail de suporte.";
+    setStatus('error', message);
+  } finally {
+    clearTimeout(timeout);
+    submitting = false;
+    submitButton.disabled = false;
+    submitButton.textContent = "Enviar solicitação de exclusão";
+  }
+});
+// Chỉ cho gửi sau khi đã gắn bộ xử lý POST, tránh lộ dữ liệu qua URL khi JS bị chặn.
+submitButton.disabled = false;
+</script>
+
+
+</body></html>

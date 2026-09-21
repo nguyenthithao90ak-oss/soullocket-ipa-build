@@ -63,9 +63,11 @@ Future<XFile?> _cropCountdownModeBackgroundFile(XFile file) async {
   }
 }
 
-class _CountdownModeEditorScreen extends StatefulWidget {
-  const _CountdownModeEditorScreen({
+class CountdownSpaceEditorScreen extends StatefulWidget {
+  const CountdownSpaceEditorScreen({
+    super.key,
     required this.currentHouseId,
+    this.spaceScope,
     required this.isVipActive,
     required this.spaceTitle,
     required this.isAccepted,
@@ -93,6 +95,7 @@ class _CountdownModeEditorScreen extends StatefulWidget {
   });
 
   final String? currentHouseId;
+  final String? spaceScope;
   final bool isVipActive;
   final String spaceTitle;
   final bool isAccepted;
@@ -119,12 +122,12 @@ class _CountdownModeEditorScreen extends StatefulWidget {
   final String centerIconType;
 
   @override
-  State<_CountdownModeEditorScreen> createState() =>
+  State<CountdownSpaceEditorScreen> createState() =>
       _CountdownModeEditorScreenState();
 }
 
 class _CountdownModeEditorScreenState
-    extends State<_CountdownModeEditorScreen> {
+    extends State<CountdownSpaceEditorScreen> {
   static const String _pendingAvatarUploadKeyPrefix =
       'countdown_editor_avatar_';
   static const String _pendingBackgroundUploadKeyPrefix =
@@ -138,7 +141,7 @@ class _CountdownModeEditorScreenState
     setState(fn);
   }
 
-  final StorageService _storageService = StorageService();
+  late final StorageService _storageService = StorageService();
   final Set<String> _temporaryUploadedUrls = <String>{};
   late final TextEditingController _topCtrl;
   late final TextEditingController _bottomCtrl;
@@ -165,11 +168,14 @@ class _CountdownModeEditorScreenState
   Set<String> _unlockedStyles = {};
 
   Future<void> _loadUnlockedStyles() async {
-    final loaded = await AdMobService().verifiedCountdownStyles();
-    if (mounted)
+    final loaded = widget.isVipActive
+        ? _CountdownModeIndependentScreenState._premiumCountdownStyleKeys
+        : await AdMobService().verifiedCountdownStyles();
+    if (mounted) {
       setState(() {
         _unlockedStyles = loaded;
       });
+    }
   }
 
   Future<void> _copyFromMainCountdown() async {
@@ -211,6 +217,17 @@ class _CountdownModeEditorScreenState
         _themeKey = settings.theme.trim().isNotEmpty
             ? settings.theme.trim()
             : 'theme-default';
+        _frameKey =
+            _avatarFrameOptions.any(
+              (item) => item.value == settings.avatarFrame,
+            )
+            ? settings.avatarFrame
+            : 'off';
+        _fontKey = SLTheme.normalizeFontKey(settings.font);
+        _sizePx = settings.countdownSizePx
+            .clamp(200.0, UiPrefs.maxCountdownSizePx)
+            .toDouble();
+        _customBackgroundUrl = settings.customBackgroundUrl;
         _transparentMode = settings.transparentMode;
       });
       _showMessage(copiedMessage);
@@ -335,7 +352,7 @@ class _CountdownModeEditorScreenState
     if (houseId == null) {
       return null;
     }
-    return '$_pendingAvatarUploadKeyPrefix$houseId';
+    return '$_pendingAvatarUploadKeyPrefix${houseId}_${widget.spaceScope ?? houseId}';
   }
 
   String? get _pendingBackgroundUploadKey {
@@ -343,7 +360,7 @@ class _CountdownModeEditorScreenState
     if (houseId == null) {
       return null;
     }
-    return '$_pendingBackgroundUploadKeyPrefix$houseId';
+    return '$_pendingBackgroundUploadKeyPrefix${houseId}_${widget.spaceScope ?? houseId}';
   }
 
   Future<void> _promptPendingUploadRetryIfNeeded() async {
@@ -722,79 +739,42 @@ class _CountdownModeEditorScreenState
 
   @override
   Widget build(BuildContext context) {
-    final themeData = _CountdownModeThemeData.resolve(
-      _resolveThemeKey(_themeKey),
-    );
-
+    final themeData = _CountdownModeThemeData.resolve('theme-pink-glow');
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: themeData.background,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+      backgroundColor: AppearancePanelStyle.canvas,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: _buildEditorAvatars(context, themeData),
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ..._buildEditorHeader(context, themeData),
+                  ..._buildEditorPreview(context, themeData),
+                  ..._buildEditorLabels(context, themeData),
+                  ..._buildEditorDate(context, themeData),
+                  ..._buildEditorStyles(context, themeData),
+                  ..._buildEditorBackground(context, themeData),
+                  ..._buildEditorDelete(context, themeData),
+                ],
               ),
             ),
           ),
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: themeData.overlay,
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            top: -36,
-            right: -18,
-            child: _CountdownModeGlowOrb(color: themeData.orbA, size: 236),
-          ),
-          Positioned(
-            left: -20,
-            bottom: 44,
-            child: _CountdownModeGlowOrb(color: themeData.orbB, size: 196),
-          ),
-          SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return Align(
-                  alignment: Alignment.topCenter,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: constraints.maxWidth > 680
-                          ? 620
-                          : double.infinity,
-                    ),
-                    child: SingleChildScrollView(
-                      physics: const ClampingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ..._buildEditorHeader(context, themeData),
-                          ..._buildEditorPreview(context, themeData),
-                          ..._buildEditorLabels(context, themeData),
-                          ..._buildEditorDate(context, themeData),
-                          ..._buildEditorStyles(context, themeData),
-                          ..._buildEditorBackground(context, themeData),
-                          ..._buildEditorDelete(context, themeData),
-                          ..._buildEditorAvatars(context, themeData),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -130,7 +130,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
 
     Future<void> handlePinWidget() async {
       if (kIsWeb) {
-        _showToast(context.tr('home_tinchnykhn_b04ead'));
+        await showAppHelpArticle(context, 'widget');
         return;
       }
       try {
@@ -144,13 +144,14 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
             await _persistAndSyncWidgetAppearance();
           }
           if (!mounted) return;
-          _showToast(context.tr('ios_widget_pin_guide'), success: true);
+          await showAppHelpArticle(context, 'widget');
           return;
         }
         final supported = await HomeWidget.isRequestPinWidgetSupported();
         if (!mounted) return;
         if (supported != true) {
           _showToast(context.tr('widget_err_not_supported'));
+          await showAppHelpArticle(context, 'widget');
           return;
         }
         if (_widgetPanelTabKey == 'soulevent') {
@@ -210,6 +211,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const AppHelpButton(articleId: 'widget'),
           WidgetStudioPreviewStage(
             title: context.tr('home_xemtrcwidg_189f43'),
             themeName: config.smartThemeLabel,

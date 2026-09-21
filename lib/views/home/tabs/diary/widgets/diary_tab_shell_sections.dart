@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/getting_started_guide.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:lottie/lottie.dart';
 
 import '../../../../../core/sl_theme.dart';
+import 'diary_album_style.dart';
 
 class DiaryAccessLockedView extends StatelessWidget {
   final VoidCallback onUnlock;
@@ -73,7 +75,7 @@ class DiaryHeaderSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(10, 10, 10, 6),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 2),
       child: Row(
         children: [
           Expanded(
@@ -81,6 +83,12 @@ class DiaryHeaderSection extends StatelessWidget {
               currentTab: currentTab,
               onTabChanged: onTabChanged,
             ),
+          ),
+          IconButton(
+            tooltip: context.tr('starter_memory_title'),
+            onPressed: () =>
+                showGettingStartedArticle(context, GettingStartedTopic.memory),
+            icon: const Icon(Icons.help_outline_rounded),
           ),
         ],
       ),
@@ -105,16 +113,8 @@ class DiaryTabSectionSwitcher extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(5),
         decoration: BoxDecoration(
-          color: const Color(0xFFF5F1E8).withValues(alpha: 0.92),
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF5A6680).withValues(alpha: 0.08),
-              blurRadius: 18,
-              offset: const Offset(0, 7),
-            ),
-          ],
-          border: Border.all(color: const Color(0xFFE7DECF), width: 1.2),
+          color: const Color(0xFFEEE8E3),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
           children: [
@@ -123,7 +123,6 @@ class DiaryTabSectionSwitcher extends StatelessWidget {
                 label: context.tr('home_knim_262759'),
                 icon: Icons.photo_library_rounded,
                 active: currentTab == 'memory',
-                activeColors: const [Color(0xFFF0B56C), Color(0xFFE88B7B)],
                 onTap: () {
                   if (currentTab != 'memory') onTabChanged('memory');
                 },
@@ -134,7 +133,6 @@ class DiaryTabSectionSwitcher extends StatelessWidget {
                 label: context.tr('home_tms_f029b6'),
                 icon: Icons.auto_stories_rounded,
                 active: currentTab == 'diary',
-                activeColors: const [Color(0xFF4FAF9E), Color(0xFF7184DD)],
                 onTap: () {
                   if (currentTab != 'diary') onTabChanged('diary');
                 },
@@ -151,69 +149,57 @@ class _DiarySegmentBtn extends StatelessWidget {
   final String label;
   final IconData icon;
   final bool active;
-  final List<Color> activeColors;
   final VoidCallback onTap;
 
   const _DiarySegmentBtn({
     required this.label,
     required this.icon,
     required this.active,
-    required this.activeColors,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-        decoration: BoxDecoration(
-          gradient: active
-              ? LinearGradient(
-                  colors: activeColors,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : null,
-          color: active ? null : Colors.transparent,
-          borderRadius: BorderRadius.circular(17),
-          boxShadow: active
-              ? [
-                  BoxShadow(
-                    color: activeColors.last.withValues(alpha: 0.25),
-                    blurRadius: 13,
-                    offset: const Offset(0, 5),
+    return Semantics(
+      selected: active,
+      child: Material(
+        color: active ? DiaryAlbumStyle.paper : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    icon,
+                    size: 18,
+                    color: active
+                        ? DiaryAlbumStyle.rose
+                        : DiaryAlbumStyle.muted,
                   ),
-                ]
-              : null,
-        ),
-        alignment: Alignment.center,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 17,
-              color: active ? Colors.white : const Color(0xFF7A8190),
-            ),
-            const SizedBox(width: 7),
-            Flexible(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: SLTheme.quicksand(
-                  fontWeight: active ? FontWeight.w900 : FontWeight.w700,
-                  fontSize: 13.5,
-                  color: active ? Colors.white : const Color(0xFF6D7585),
-                ),
+                  const SizedBox(width: 7),
+                  Flexible(
+                    child: Text(
+                      label,
+                      textAlign: TextAlign.center,
+                      style: SLTheme.quicksand(
+                        fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+                        fontSize: 13,
+                        color: active
+                            ? DiaryAlbumStyle.ink
+                            : DiaryAlbumStyle.muted,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -367,6 +353,7 @@ class DiaryPostsEmptyStateCard extends StatelessWidget {
               fontSize: 12,
             ),
           ),
+          const GettingStartedHelpButton(topic: GettingStartedTopic.memory),
         ],
       ),
     );
@@ -403,6 +390,7 @@ class DiaryMemoryEmptyStateCard extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
+          const GettingStartedHelpButton(topic: GettingStartedTopic.memory),
         ],
       ),
     );

@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -10,7 +9,7 @@ import 'package:lottie/lottie.dart';
 
 part 'widgets/love_insights/insight_header_cards.dart';
 part 'widgets/love_insights/insight_stats_grid.dart';
-part 'widgets/love_insights/insight_interaction_card.dart';
+
 part 'widgets/love_insights/insight_offline_contribution_cards.dart';
 part 'widgets/love_insights/insight_mood_habit_cards.dart';
 part 'widgets/love_insights/insight_timeline_section.dart';
@@ -62,8 +61,9 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
     if (cachedData != null) {
       if (mounted) {
         setState(() {
-          _insight =
-              LoveInsightData.fromMap(Map<String, dynamic>.from(cachedData));
+          _insight = LoveInsightData.fromMap(
+            Map<String, dynamic>.from(cachedData),
+          );
           _isLoading = false;
         });
       }
@@ -159,9 +159,7 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
           ],
         ),
       ),
-      body: SafeArea(
-        child: _buildContent(),
-      ),
+      body: SafeArea(child: _buildContent()),
     );
   }
 
@@ -204,9 +202,7 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
                     horizontal: 20,
                     vertical: 12,
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: SLRadius.lgAll,
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
                 ),
                 child: Text(
                   L10nService().translate('insight_reload'),
@@ -255,18 +251,6 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
     );
   }
 
-  Widget _buildBackdropOrb({
-    required double size,
-    required List<Color> colors,
-    int delayItem = 0,
-  }) {
-    return _FloatingOrb(
-      size: size,
-      colors: colors,
-      delayMilliseconds: delayItem,
-    );
-  }
-
   BoxDecoration _softCardDecoration() {
     return BoxDecoration(
       color: Colors.white,
@@ -280,13 +264,6 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
         ),
       ],
     );
-  }
-
-  Color _scoreColor(int score) {
-    if (score >= 85) return const Color(0xFFFF4F87);
-    if (score >= 70) return const Color(0xFFFF6B9D);
-    if (score >= 55) return const Color(0xFF9B7AE8);
-    return const Color(0xFFFF85A2);
   }
 
   String _levelLabel(int score) {
@@ -309,21 +286,15 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
     final nextLevel = score >= 90
         ? 100
         : score >= 75
-            ? 90
-            : score >= 60
-                ? 75
-                : score >= 45
-                    ? 60
-                    : 45;
+        ? 90
+        : score >= 60
+        ? 75
+        : score >= 45
+        ? 60
+        : 45;
     final base = nextLevel - 15;
     final progress = ((score - base) / 15) * 100;
     return progress.clamp(5, 100).toDouble();
-  }
-
-  String _offlineText(double value) {
-    if (value <= 0) return L10nService().translate('insight_0_days');
-    if (value < 1) return L10nService().translate('insight_less_than_1_day');
-    return '${value.floor()} ${L10nService().translate('insight_days')}';
   }
 
   String _favoriteActivityLabel(LoveInsightData insight) {
@@ -361,77 +332,6 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
       return L10nService().translate('insight_advice_couple_mid');
     }
     return L10nService().translate('insight_advice_couple_low');
-  }
-}
-
-class _FloatingOrb extends StatefulWidget {
-  final double size;
-  final List<Color> colors;
-  final int delayMilliseconds;
-
-  const _FloatingOrb({
-    required this.size,
-    required this.colors,
-    this.delayMilliseconds = 0,
-  });
-
-  @override
-  State<_FloatingOrb> createState() => _FloatingOrbState();
-}
-
-class _FloatingOrbState extends State<_FloatingOrb>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 3500));
-    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
-
-    if (widget.delayMilliseconds > 0) {
-      Future.delayed(Duration(milliseconds: widget.delayMilliseconds), () {
-        if (mounted) _controller.repeat(reverse: true);
-      });
-    } else {
-      _controller.repeat(reverse: true);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(0, -16.0 * _animation.value),
-          child: child,
-        );
-      },
-      child: IgnorePointer(
-        child: Container(
-          width: widget.size,
-          height: widget.size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [
-                widget.colors.first.withValues(alpha: 0.5),
-                widget.colors.last.withValues(alpha: 0.0),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
 

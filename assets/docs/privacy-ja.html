@@ -1,0 +1,103 @@
+<!DOCTYPE html><html lang="ja" dir="ltr"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="SoulLocket がアカウント データ、共有スペース、プライベート コンテンツ、統合サービスをどのように処理するか。機密コンテンツをペアリングまたはアップロードする前に、共有と削除のセクションをお読みください。">
+<meta name="soullocket-document-version" content="2026-09-09">
+<title>SoulLocket プライバシー ポリシー</title>
+<style>
+:root{color-scheme:light;--ink:#30292d;--muted:#6d6067;--accent:#a13e5c;--line:#eadde2;--paper:#fff;--bg:#faf6f7}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 system-ui,-apple-system,"Segoe UI",sans-serif;overflow-wrap:anywhere}
+.page{max-width:880px;margin:auto;padding:28px 24px 56px}
+header,section,footer{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;margin:0 0 18px}
+.brand{font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:750;color:var(--accent)}
+h1{font-size:clamp(26px,5vw,36px);line-height:1.25;margin:12px 0 16px;letter-spacing:-.025em}
+h2{font-size:21px;line-height:1.4;margin:0 0 14px}h3{font-size:17px;margin:22px 0 10px}
+p{margin:0 0 14px}p:last-child,ul:last-child,ol:last-child{margin-bottom:0}
+.meta,.small{font-size:14px;color:var(--muted)}ul,ol{padding-left:24px;margin:10px 0 16px}li{margin:7px 0}
+a{color:var(--accent);text-underline-offset:3px}a:hover{text-decoration-thickness:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #7943ab;outline-offset:4px}
+nav{display:flex;flex-wrap:wrap;gap:10px 20px;margin:20px 0 0}nav a{font-size:14px}
+.note,.warning{padding:16px 18px;border-radius:10px;margin:16px 0;border-left:4px solid var(--accent);background:#fcf0f4}
+.warning{border-color:#a7641a;background:#fff6e8}.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}
+th{background:#faf5f7}button,.button{display:inline-block;padding:12px 18px;background:var(--accent);color:white;border:0;border-radius:10px;font:inherit;font-weight:650;cursor:pointer;text-decoration:none}
+button:disabled{opacity:.6;cursor:wait}label{display:block;font-weight:650;margin:16px 0 6px}
+input:not([type=checkbox]),textarea{width:100%;padding:12px;font:inherit;color:inherit;background:white;border:1px solid #a99aa2;border-radius:8px}
+textarea{resize:vertical;min-height:110px}.checkbox{display:flex;gap:12px;align-items:flex-start;margin:20px 0}
+.checkbox input{flex-shrink:0;width:20px;height:20px;margin-top:5px}.checkbox label{font-weight:400;margin:0}
+.status{display:none;padding:16px;margin-top:16px;border-radius:10px}.status.success{display:block;background:#eaf7ef;color:#245635}.status.error{display:block;background:#fff0f0;color:#96323c}
+.skip{position:absolute;top:-100px;left:16px;background:white;padding:12px;z-index:10}.skip:focus{top:10px}
+@media(max-width:560px){.page{padding:16px 12px 32px}header,section,footer{padding:20px 18px;border-radius:14px}th,td{padding:10px 8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{body{background:white}.page{max-width:none;padding:0}header,section,footer{border:0;padding:12px 0}nav,.skip,form{display:none}h2,h3{break-after:avoid}}
+</style>
+</head>
+<body>
+<a class="skip" href="#noi-dung-chinh">メインコンテンツにスキップ</a>
+<main class="page" id="noi-dung-chinh">
+<header><div class="brand">SoulLocket · ドキュメントとサポート</div><h1>SoulLocket プライバシー ポリシー</h1><p>SoulLocket がアカウント データ、共有スペース、プライベート コンテンツ、統合サービスをどのように処理するか。機密コンテンツをペアリングまたはアップロードする前に、共有と削除のセクションをお読みください。</p><p class="meta">コンテンツが更新されました: <time datetime="2026-09-09">2026 年 9 月 9 日</time> · 文書バージョン 2026-09-09</p><nav aria-label="文書言語"><a href="privacy.html" lang="vi" hreflang="vi">Tiếng Việt</a><a href="privacy-en.html" lang="en" hreflang="en">English</a><a href="privacy-de.html" lang="de" hreflang="de">Deutsch</a><a href="privacy-fr.html" lang="fr" hreflang="fr">Français</a><a href="privacy-es.html" lang="es" hreflang="es">Español</a><a href="privacy-it.html" lang="it" hreflang="it">Italiano</a><a href="privacy-pt.html" lang="pt" hreflang="pt">Português</a><a href="privacy-ru.html" lang="ru" hreflang="ru">Русский</a><span lang="ja" aria-current="page">日本語</span><a href="privacy-ko.html" lang="ko" hreflang="ko">한국어</a><a href="privacy-zh.html" lang="zh" hreflang="zh">简体中文</a></nav><p class="small">文書バージョン 2026-09-09 の翻訳。文言が不明瞭な場合、または言語間で異なる場合は、サポートにお問い合わせください。</p><nav aria-label="内容"><a href="#pham-vi">1. スコープと演算子</a>
+<a href="#thu-thap">2. データと目的</a>
+<a href="#chia-se">3. データを受信または閲覧できる人</a>
+<a href="#co-so">4. 根拠、選択および処理場所</a>
+<a href="#luu-giu">5. データの保存・削除・残存について</a>
+<a href="#bao-mat">6. セキュリティと制限事項</a>
+<a href="#quyen">7. お客様の権利と要求</a>
+<a href="#tre-em">8. 子供と個人の安全</a>
+<a href="#cap-nhat">9. アップデートと関連ドキュメント</a></nav></header>
+
+<section id="pham-vi"><h2>1. スコープと演算子</h2>
+<p>このポリシーは、SoulLocket アプリ、プロジェクト Web サイト、および関連するサポート チャネルに適用されます。 「私たち」とは、SoulLocket 運営チームを意味します。データリクエストの連絡先: <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a>.</p>
+<p>機能はプラットフォーム、リリース、構成によって異なる場合があります。アプリの実行中に、サインイン、安全性、診断、または SDK の技術データが生成される場合があります。すべてのデータ収集がアップロード ボタンを押すまで待機するわけではありません。</p></section>
+<section id="thu-thap"><h2>2. データと目的</h2>
+<h3>アカウントとアクセスの保護</h3><p>電子メール、アカウント ID (UID)、プロファイル名と写真、サインイン方法、認証セッション、デバイス情報、通知トークンは、サインイン、アカウント回復、通知、アクセス管理に使用されます。 Google や Facebook などのサードパーティのサインインは、提供され、お客様がそれを使用することを選択した場合にのみ適用されます。</p>
+<p>システムは、IP アドレス、ブラウザ/オペレーティング システム情報、アプリのデバイス識別子、デバイスの認証ステータス、および不正行為防止信号を処理する場合があります。アプリのデバイス保護信号設定では、重要なサーバー ネットワーク、認証、またはセキュリティ ログは削除されません。</p>
+<h3>個人スペースと共有スペース（家）</h3><p>名前、アバター、メンバーの役割、ペアリングの日付、記念日、プレゼンス、設定は、表示、同期、アクセス制御のために保存されます。 「カップル」インターフェイス モードを選択しても、それ自体では 2 つのアカウントがペアになることは確立されません。</p>
+<h3>コンテンツと添付ファイル</h3><p>日記、個人的な感想、写真、ビデオ、メッセージ、反応、コミュニティへの投稿、メモ、カレンダー、手紙、音声録音、ユーティリティ コンテンツは、機能の必要に応じて保存、表示、配信、同期するために処理されます。プライベート Vault のコンテンツには機密情報が含まれる場合があります。 PIN ロックはエンドツーエンドの暗号化を意味するものではありません。</p>
+<p>写真/ファイルは次の場所に保存できます。 <strong>クラウドフレア R2</strong>、フローとアップロード時間に応じて、Firebase インフラストラクチャまたはローカル ストレージ。アプリはアクセス URL、ファイル参照、キャッシュを使用してコンテンツを再度読み込みます。</p>
+<h3>場所、健康状態、活動</h3><p>位置情報の共有を有効にして関連する権限を付与すると、アプリは座標、位置履歴、地図の場所、チェックイン、またはハウス パートナーとの位置情報の共有を処理します。バックグラウンドでの位置情報の許可を使用すると、アプリがフォアグラウンドにない間も更新を続行できます。この機能での共有を停止したり、オペレーティング システムの設定で許可を取り消したりすることができます。保存された履歴は自動的に削除されません。</p>
+<p>健康/サイクル ユーティリティまたは睡眠追跡は、ユーザーが入力した情報、画面/アクティビティ信号、デバイスの健康プラットフォームから許可された睡眠データを処理する場合があります。睡眠ステータスまたは睡眠履歴はハウスに同期される場合があります。この情報は参考用であり、医学的な結論ではありません。</p>
+<h3>カメラ、マイク、生体認証</h3><p>カメラ/マイクは、写真、コードのスキャン、録音、または利用可能な通信機能に使用されます。生体認証はオペレーティング システムによって実行されます。SoulLocket は、オペレーティング システムの指紋や顔のテンプレートではなく、認証結果を受け取ります。</p>
+<h3>支払い、広告、測定</h3><p>製品情報、トランザクション ID、検証トークン、VIP 資格、ポイント履歴は、特典の付与/回復と不正行為の防止に使用されます。機密性の高い支払いの詳細は、関連する支払いプラットフォームによって処理されます。カードの詳細をサポートに送信しないでください。</p>
+<p>Google モバイル広告/AdMob は、広告識別子、IP アドレス、デバイス情報、インプレッションおよびインタラクションを処理する場合があります。 Firebase Analytics はイベント/ナビゲーションを記録する場合があります。 Crashlytics は、エラー、技術的トレース、および診断用に添付された識別子を処理します。新しい統合では、「Essential」は Analytics/Crashlytics の収集を無効にし、アプリを介した広告の読み込みをブロックします。 「すべて」は、Google UMP またはオペレーティング システムの権限を置き換えるものではありません。これを「設定」→「プライバシーの選択」で変更します。古いアプリのバージョンには、これらのコントロールが含まれていない可能性があります。を参照してください。 <a href="cookie-policy-ja.html">クッキーポリシー</a>.</p>
+<h3>人工知能 (AI)</h3><p>AI を使用する場合、リクエスト、会話コンテキスト、および含めることを選択したデータは、SoulLocket サーバー/ワーカーを経由して、構成された AI サービスに渡される場合があります。このコードは、中間サーバーを介して Google Gemini と OpenAI 互換 API ルートを統合します。 「OpenAI 互換」とは、すべてのリクエストが OpenAI によって直接処理されることを意味するものではありません。</p>
+<p>パスワード、ワンタイム コード、カード詳細、または他人の個人データを AI に送信しないでください。回答レポートには、質問、回答、サポート検討の理由が含まれる場合があります。すべての AI コンテンツがデバイス上でのみ処理されると想定しないでください。</p>
+<h3>サポートと削除リクエスト</h3><p>アカウントの電子メール、提供されている場合は名前/ハウス ID、リクエストの詳細、IP アドレス、ブラウザ情報は、アカウントの所有権を確認し、重複したリクエストを防止し、サポートを提供するために記録される場合があります。電子メールや公開フォームを通じてパスワード、PIN、またはワンタイム コードを提供する必要はありません。</p></section>
+<section id="chia-se"><h2>3. データを受信または閲覧できる人</h2>
+<ul><li><strong>あなたのハウスパートナー:</strong> 各機能で許可されている共有データを表示できます。ペアリングにより、共有スペースへのアクセスが許可されます。単にアバターを追加するだけではありません。</li>
+<li><strong>あなたが共有するコンテンツの閲覧者:</strong> コミュニティの投稿、公開プロフィール、メモリー リンク、またはカードは、機能の共有範囲内で表示できます。共有リンクを保持している人は誰でも、それを転送したり、コピーを保存したりできます。招待コードやプライベートリンクを公開しないでください。</li>
+<li><strong>インフラストラクチャプロバイダー:</strong> Google/Firebase (認証、データベース、通知、ストレージ、測定/診断)、Cloudflare (R2、ワーカー、コンテンツ配信)、および使用するサインイン、広告、支払いサービス。</li>
+<li><strong>マップと外部コンテンツ:</strong> Google マップ/マップ タイル、OpenStreetMap/Nominatim、および OSRM は、IP アドレスを受信し、検索/ルーティングに必要なクエリまたは座標を実行できます。外部ファイル、フォント、プレーヤー、または埋め込みページは、ロード時にプロバイダーに直接接続する場合があります。</li>
+<li><strong>AI サービス:</strong> セクション 2 で説明されているように、AI リクエストに必要なデータを受信します。実際のプロバイダー、処理領域、保持条件はサービス構成によって異なります。機密情報を送信する前に、プライバシー担当者に問い合わせることができます。</li>
+<li><strong>権限のある担当者/管轄当局:</strong> サポート、違反への対応、システム保護、または適用法に基づく有効な要求に必要な場合。</li></ul>
+<p>SoulLocket は個人データを販売しません。サービスプロバイダーがサービスを運営するための処理は、開示された目的を超えてデータを自由に使用することを許可するものではありません。</p>
+<div class="warning"><strong>ペアリングする前に:</strong> コードを入力した人はコード作成者の家に移動します。古いハウスのデータは自動的にマージされず、メンバーが残っていない古いハウスはクリーンアップされる場合があります。確認する前に、必要なものをすべてエクスポート/保存してください。を参照してください。 <a href="huong_dan-ja.html#tai-khoan">招待状とQRガイド</a>.</div></section>
+<section id="co-so"><h2>4. 根拠、選択および処理場所</h2>
+<p>データは、お客様が要求したサービスを提供し、共有の選択を実行し、安全を保護し、適用される法的義務を果たすために処理されます。同意またはオペレーティング システムの許可を必要とする処理の前に、関連する通知と選択を行う必要があります。このポリシーを読んでも、個別の同意がすべて置き換えられるわけではありません。</p>
+<p>Google、Cloudflare、および統合サービスは、ベトナム国外でデータを処理または保存する場合があります。すべてのデータがベトナムに保存されていると想定しないでください。リクエストに含まれる受信者、処理場所、データについては、当社にお問い合わせください。</p></section>
+<section id="luu-giu"><h2>5. データの保存・削除・残存について</h2>
+<p>アカウント、プロファイル、コンテンツは、機能またはリクエストの処理によって削除されるまで、使用中にサービスを提供するために保持されます。データの種類ごとに単一の自動削除期限はありません。</p>
+<ul><li>Friendly Chat の会話メモリは、約 1 時間のウィンドウを中心に設計されています。 <strong>3日間</strong>。これは、AI プロバイダーが保持するすべての AI レポート、ログ、またはデータの保持制限ではありません。クリーンアップ ジョブは、データの有効期限が切れた後に実行される場合があります。</li>
+<li>メディアはゴミ箱フォルダーまたは別のクリーンアップ キューを通過する場合があります。サインアウト、アプリのアンインストール、または権限の取り消しを行っても、サーバー データは削除されません。</li>
+<li><strong>アカウントの削除</strong> そして <strong>解散・ハウスデータ削除</strong> は異なるプロセスです。そのタイムラインと範囲については、 <a href="delete-account-ja.html">アカウントとデータの削除ページ</a>.</li>
+<li>共有コンテンツ、他の人が保存したコピー、デバイスのエクスポート、キャッシュは、アカウントと同時に消えることはありません。現在の自動削除では、すべての R2 メディアとすべての下院関連記録の削除が保証されません。サポートに連絡するときに、削除したい残りの個人データを指定します。</li>
+<li>法的義務、不正行為の処理、または紛争のために保持されるデータは、必要な目的と期間に限定されなければなりません。ケースに該当するデータの種類、理由、期間についてはサポートにお問い合わせください。このポリシーは無期限の保存を許可するものではありません。</li></ul></section>
+<section id="bao-mat"><h2>6. セキュリティと制限事項</h2>
+<p>SoulLocket は、認証、データベース アクセス制御、サーバー アクセス チェック、デバイス管理、および機能固有のロックを使用します。完全に安全なシステムはありません。この文書は、すべての日記、チャット、または写真に対するエンドツーエンドの暗号化を約束するものではありません。</p>
+<p>サインイン セッション、PIN、ワンタイム コード、またはログイン QR コードを共有しないでください。アプリ ロックは、デバイス上でインターフェイスを開くことを保護します。それ自体は、下院パートナーの権限を変更したり、共有コピーを取り消したりするものではありません。</p></section>
+<section id="quyen"><h2>7. お客様の権利と要求</h2>
+<p>適用される法律に応じて、データ、修正、コピー/エクスポート、削除、処理に対する制限または異議申し立て、同意の撤回、および苦情処理に関する情報とデータへのアクセスを要求することができます。一部のアクションはアプリで使用できます。サポートに他のリクエストを送信するか、 <a href="delete-account-ja.html#public-form">アカウント削除フォーム</a>.</p>
+<p>電子メール/UID と要求されたスコープを記載します。データを提供または削除する前に、あなたの権限を確認する必要があります。パスワードやワンタイムコードは必要ありません。同意を撤回すると、関連機能の動作が停止する場合がありますが、有効な基準に基づいて実行された以前の処理は無効になりません。</p>
+<p>オペレーティング システムのカメラ、マイク、位置情報、通知、および健康状態の許可を取り消すことができます。サポートで問題を解決できない場合は、適用法に基づいて管轄当局に問い合わせることができます。</p></section>
+<section id="tre-em"><h2>8. 子供と個人の安全</h2>
+<p>SoulLocket は、特に幼児向けのサービスとして設計されたものではありません。ユーザーは、該当する年齢、能力、親/保護者の同意要件を満たしている必要があります。禁止されているコンテンツを説明する「18 歳以上」というラベルからサービスの年齢制限を推測しないでください。</p>
+<p>子供のデータの不適切な処理を発見した親/保護者は、プライバシー担当者に連絡して審査と措置を要求することができます。アプリを秘密の追跡に使用したり、誰かに位置情報を共有するように圧力をかけたりしないでください。</p></section>
+<section id="cap-nhat"><h2>9. アップデートと関連ドキュメント</h2><p>上部の更新日はドキュメントのバージョンを示します。処理の目的または範囲を変更するには、法律で義務付けられている場合には通知と新たな同意が必要です。沈黙または継続的な使用を、あらゆる新しい目的への同意として扱ってはなりません。</p>
+<p>これを読んでください <a href="terms-ja.html">利用規約</a>, <a href="cookie-policy-ja.html">クッキーポリシー</a> そして <a href="delete-account-ja.html">アカウント削除ガイド</a>.</p></section>
+<footer><h2>ソウルロケットのドキュメント</h2><nav aria-label="関連資料"><a href="about-ja.html">について</a><a href="huong_dan-ja.html">ユーザーガイド</a><a href="huong_dan_cai_dat_lan_dau-ja.html">最初のセットアップ</a><a href="privacy-ja.html">プライバシー</a><a href="terms-ja.html">利用規約</a><a href="cookie-policy-ja.html">Cookie</a><a href="delete-account-ja.html">アカウントを削除する</a><a href="support-ja.html">サポート</a></nav><p class="small">プライバシーとサポート: <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p></footer>
+</main>
+
+
+</body></html>

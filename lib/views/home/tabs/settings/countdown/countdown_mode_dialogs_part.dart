@@ -7,10 +7,8 @@ class _CountdownSpaceRenameDialog extends StatefulWidget {
   });
 
   final String initialName;
-  final InputDecoration Function({
-    required String label,
-    String? hint,
-  }) decorationBuilder;
+  final InputDecoration Function({required String label, String? hint})
+  decorationBuilder;
 
   @override
   State<_CountdownSpaceRenameDialog> createState() =>
@@ -46,11 +44,13 @@ class _CountdownSpaceRenameDialogState
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      backgroundColor: AppearancePanelStyle.paper,
+      scrollable: true,
       title: Text(
         context.tr('home_ttnkhnggia_9d2bdf'),
         style: SLTheme.quicksand(
           fontWeight: FontWeight.w900,
-          color: Colors.white,
+          color: AppearancePanelStyle.ink,
         ),
       ),
       content: TextField(
@@ -59,7 +59,7 @@ class _CountdownSpaceRenameDialogState
         maxLength: 28,
         textInputAction: TextInputAction.done,
         style: SLTheme.quicksand(
-          color: Colors.white,
+          color: AppearancePanelStyle.ink,
           fontWeight: FontWeight.w800,
         ),
         decoration: widget.decorationBuilder(
@@ -90,10 +90,8 @@ class _CountdownSpaceAddDialog extends StatefulWidget {
     required this.onSubmitCode,
   });
 
-  final InputDecoration Function({
-    required String label,
-    String? hint,
-  }) decorationBuilder;
+  final InputDecoration Function({required String label, String? hint})
+  decorationBuilder;
   final String Function(String rawCode) normalizeCode;
   final String? Function(String code) validateLocalCode;
   final Future<_CountdownSpaceAddResult> Function(String code) onSubmitCode;
@@ -162,22 +160,26 @@ class _CountdownSpaceAddDialogState extends State<_CountdownSpaceAddDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      backgroundColor: AppearancePanelStyle.paper,
+      scrollable: true,
       title: Text(
         context.tr('home_ghpnikhngg_860e28'),
         style: SLTheme.quicksand(
           fontWeight: FontWeight.w900,
-          color: Colors.white,
+          color: AppearancePanelStyle.ink,
         ),
       ),
       content: TextField(
         controller: _controller,
         autofocus: true,
+        enabled: !_isSubmitting,
+        maxLength: 512,
         textInputAction: TextInputAction.done,
         textCapitalization: TextCapitalization.none,
         autocorrect: false,
         enableSuggestions: false,
         style: SLTheme.quicksand(
-          color: Colors.white,
+          color: AppearancePanelStyle.ink,
           fontWeight: FontWeight.w800,
         ),
         decoration: widget
@@ -188,6 +190,8 @@ class _CountdownSpaceAddDialogState extends State<_CountdownSpaceAddDialog> {
             .copyWith(
               helperText: context.tr('home_vdnhabc123_4640df'),
               errorText: _errorText.isEmpty ? null : _errorText,
+              errorMaxLines: 5,
+              helperMaxLines: 3,
             ),
         onChanged: (_) {
           if (_errorText.isEmpty || !mounted) {

@@ -117,7 +117,17 @@ class _DiaryTabShell extends StatelessWidget {
                           ignoring: state._currentTab != 'memory',
                           child: state._deferMemoryLoad
                               ? const _DiaryTabLoadingSection()
-                              : memorySection,
+                              : ColoredBox(
+                                  color: const Color(0xFFF8F5F1),
+                                  child: Center(
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 760,
+                                      ),
+                                      child: memorySection,
+                                    ),
+                                  ),
+                                ),
                         ),
                       ),
                     ),

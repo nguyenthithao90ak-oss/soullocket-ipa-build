@@ -150,6 +150,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
       ],
       avatarFrames: [
         (context.tr('home_ttkhngckhu_37eb33'), 'off'),
+        for (final key in KeepsakePalette.newStyleKeys)
+          (context.tr('keepsake_' + key), key),
         (context.tr('frame_circle'), 'circle'),
         (context.tr('frame_rounded'), 'rounded'),
         (context.tr('p7_frame_squircle'), 'squircle'),
@@ -165,6 +167,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
       ],
       countdownStyles: [
         (context.tr('countdown_default'), 'default', false),
+        for (final key in KeepsakePalette.newStyleKeys)
+          (context.tr('keepsake_' + key), key, false),
         (context.tr('countdown_floating_hearts'), 'floating_hearts', true),
         (context.tr('countdown_glass'), 'glass', false),
         (context.tr('countdown_glow'), 'glow', false),
@@ -286,60 +290,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
   }
 
   Widget _buildThemeHeader(BuildContext context, {bool showBack = true}) {
-    const borderColor = Color(0xFFFF77A8);
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: SLColors.paper.withValues(alpha: 0.96),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: SLColors.border, width: 1.1),
-        boxShadow: SLShadow.paper,
-      ),
-      child: Row(
-        children: [
-          if (showBack) ...[
-            Semantics(
-              button: true,
-              label: context.tr('p7_back'),
-              child: Tooltip(
-                message: context.tr('p7_back'),
-                excludeFromSemantics: true,
-                child: InkWell(
-                  onTap: () => Navigator.pop(context),
-                  borderRadius: BorderRadius.circular(14),
-                  child: Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: SLColors.primarySoft,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: SLColors.border),
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      size: 15,
-                      color: SLColors.primaryActive,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-          ],
-          Expanded(
-            child: Text(
-              context.tr('theme_ui'),
-              style: SLTheme.textStyleForKey(
-                'dancingScript',
-                fontSize: 23,
-                fontWeight: FontWeight.w700,
-                color: SLColors.ink,
-              ),
-            ),
-          ),
-        ],
-      ),
+    return AppearancePanelHeader(
+      onBack: showBack ? () => Navigator.pop(context) : null,
     );
   }
 
@@ -369,11 +321,11 @@ extension _SettingsTabThemeSection on _SettingsTabState {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 1. Hình nền & Hiệu ứng
-              _ThemeSectionCard(
+              AppearanceSectionCard(
                 icon: Icons.palette_rounded,
                 title: context.tr('theme_bg_effect_title'),
                 description: context.tr('theme_bg_effect_desc'),
-                themeColor: const Color(0xFFE91E63), // Màu hồng Pink
+
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -567,11 +519,11 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                 ),
               ),
               // 2. Khung & Kích thước
-              _ThemeSectionCard(
+              AppearanceSectionCard(
                 icon: Icons.aspect_ratio_rounded,
-                title: context.tr('theme_frame_size'),
+                title: context.tr('appearance_frame_title'),
                 description: context.tr('theme_frame_size_desc'),
-                themeColor: const Color(0xFFFF9800), // Màu cam Orange
+
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -597,20 +549,6 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                     _buildAvatarFrameStrip(selection.avatarFrameKey),
                     const SizedBox(height: 12),
                     _buildLabel(context.tr('theme_countdown_style')),
-                    _buildThemeDropdownField(
-                      value: selection.countdownStyleKey,
-                      options: config.countdownStyles.map((s) {
-                        final locked =
-                            s.$3 &&
-                            !_isVipActive &&
-                            !selection.hasCountdownAdPass;
-                        final label = locked
-                            ? '${s.$1} ${context.tr('theme_countdown_label_ad')}'
-                            : s.$1;
-                        return (label, s.$2);
-                      }).toList(),
-                      onChanged: (value) => _handleCountdownStyleChange(value),
-                    ),
                     const SizedBox(height: 10),
                     _buildCountdownStyleStrip(
                       selection.countdownStyleKey,
@@ -630,12 +568,11 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                 ),
               ),
               // 3. Font chữ & Ngôn ngữ
-              _ThemeSectionCard(
+              AppearanceSectionCard(
                 icon: Icons.font_download_rounded,
-                title:
-                    '${context.tr('font_label')} & ${context.tr('lang_label')}',
+                title: context.tr('appearance_font_title'),
                 description: context.tr('theme_font_lang_desc'),
-                themeColor: const Color(0xFF1E88E5), // Xanh lam Blue
+
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -690,11 +627,11 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                 ),
               ),
               // 4. Thêm kỷ niệm
-              _ThemeSectionCard(
+              AppearanceSectionCard(
                 icon: Icons.calendar_month_rounded,
                 title: context.tr('theme_add_new_memory'),
                 description: context.tr('theme_memory_desc'),
-                themeColor: const Color(0xFFE53935), // Đỏ Red
+
                 child: Column(
                   children: [
                     Padding(
@@ -855,11 +792,11 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                 ),
               ),
               // 5. Hiệu năng & Quyền hạn — ít dùng nhất, để cuối
-              _ThemeSectionCard(
+              AppearanceSectionCard(
                 icon: Icons.settings_suggest_rounded,
                 title: context.tr('theme_perf_title'),
                 description: context.tr('theme_perf_desc'),
-                themeColor: const Color(0xFF43A047), // Xanh lá Green
+
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -987,106 +924,6 @@ extension _SettingsTabThemeSection on _SettingsTabState {
 
   Widget _buildAIPanel({bool hideBackButton = false}) {
     return const SizedBox.shrink();
-  }
-}
-
-class _ThemeSectionCard extends StatefulWidget {
-  final IconData icon;
-  final String title;
-  final String description;
-  final Widget child;
-  final Color themeColor;
-
-  const _ThemeSectionCard({
-    required this.icon,
-    required this.title,
-    required this.description,
-    required this.child,
-    required this.themeColor,
-  });
-
-  @override
-  State<_ThemeSectionCard> createState() => _ThemeSectionCardState();
-}
-
-class _ThemeSectionCardState extends State<_ThemeSectionCard>
-    with SingleTickerProviderStateMixin {
-  bool _isExpanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: SLColors.paper.withValues(alpha: 0.98),
-        borderRadius: BorderRadius.circular(23),
-        border: Border.all(
-          color: widget.themeColor.withValues(alpha: 0.22),
-          width: 1.1,
-        ),
-        boxShadow: SLShadow.subtle,
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Material(
-          type: MaterialType.transparency,
-          child: Theme(
-            data: Theme.of(context).copyWith(
-              dividerColor: Colors.transparent,
-              splashColor: Colors.transparent,
-              highlightColor: Colors.transparent,
-            ),
-            child: ExpansionTile(
-              onExpansionChanged: (expanded) {
-                setState(() {
-                  _isExpanded = expanded;
-                });
-              },
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: widget.themeColor.withValues(alpha: 0.11),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: widget.themeColor.withValues(alpha: 0.22),
-                  ),
-                ),
-                child: Icon(widget.icon, color: widget.themeColor, size: 18),
-              ),
-              title: Text(
-                widget.title,
-                style: SLTheme.quicksand(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
-                  color: SLColors.ink,
-                ),
-              ),
-              subtitle: Text(
-                widget.description,
-                style: SLTheme.quicksand(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                  color: SLColors.textSecond,
-                ),
-              ),
-              trailing: Icon(
-                _isExpanded
-                    ? Icons.keyboard_arrow_up_rounded
-                    : Icons.keyboard_arrow_down_rounded,
-                color: widget.themeColor,
-                size: 24,
-              ),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: widget.child,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
 

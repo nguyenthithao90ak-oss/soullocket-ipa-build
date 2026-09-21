@@ -35,6 +35,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const AppHelpButton(articleId: 'security'),
           if (!isSingleMode) ...[
             _buildSectionBlock(
               colorTint: const Color(0xFFE57373),
@@ -614,6 +615,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const AppHelpButton(articleId: 'security'),
           Container(
             padding: SLSpacing.all16,
             decoration: BoxDecoration(

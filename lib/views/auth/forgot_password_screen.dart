@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/app_help_center.dart';
 import 'package:flutter/services.dart';
 import 'login/auth_visual_style.dart';
 import 'login/auth_recovery_layout.dart';
@@ -867,7 +868,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           duration: MediaQuery.disableAnimationsOf(context)
               ? Duration.zero
               : const Duration(milliseconds: 200),
-          child: KeyedSubtree(key: ValueKey(step), child: buildStepBody()),
+          child: Column(
+            key: ValueKey(step),
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const AppHelpButton(articleId: 'recovery'),
+              const AppHelpButton(articleId: 'security'),
+              buildStepBody(),
+            ],
+          ),
         ),
       ),
     );

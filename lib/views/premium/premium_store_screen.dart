@@ -1634,7 +1634,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                 onTap: () => _openExternalUrl(
                   AppConfig.legalDocumentUri(
                     'terms.html',
-                    languageCode: L10nService().locale.languageCode,
+                    languageCode: L10nService().localeCode,
                   ).toString(),
                 ),
               ),
@@ -1650,7 +1650,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                 onTap: () => _openExternalUrl(
                   AppConfig.legalDocumentUri(
                     'privacy.html',
-                    languageCode: L10nService().locale.languageCode,
+                    languageCode: L10nService().localeCode,
                   ).toString(),
                 ),
               ),

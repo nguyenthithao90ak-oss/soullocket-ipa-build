@@ -10,8 +10,9 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
         .push<_CountdownModeSettingsResult>(
           MaterialPageRoute(
             fullscreenDialog: true,
-            builder: (_) => _CountdownModeEditorScreen(
+            builder: (_) => CountdownSpaceEditorScreen(
               currentHouseId: widget.currentHouseId,
+              spaceScope: currentSpaceId,
               isVipActive: widget.isVipActive,
               spaceTitle: _spaceTitle(currentSpaceId),
               isAccepted: _acceptedSpaceHouseIds.contains(currentSpaceId),
@@ -63,6 +64,8 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
     }
 
     if (result.action == _CountdownModeSettingsAction.save) {
+      // Không áp dụng bản nháp vào nhà chính nếu không gian đã bị xóa khi đang sửa.
+      if (_scopeKey != currentSpaceId) return;
       unawaited(_refreshCountdownStyleUnlockState());
       _safeSetState(() {
         _singleMode = result.singleMode;
@@ -81,10 +84,12 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
         _avatarUrl2 = result.avatarUrl2;
         _customBackgroundUrl = result.customBackgroundUrl;
         _centerIconType = result.centerIconType;
-        _spaceChromeVisible = false;
+        _spaceChromeVisible = true;
       });
-      await _saveLocalSettings();
-      if (mounted) _showMessage(context.tr('p7_countdown_space_saved'));
+      final saved = await _saveLocalSettings();
+      if (mounted && saved) {
+        _showMessage(context.tr('p7_countdown_space_saved'));
+      }
       return;
     }
 
@@ -478,8 +483,10 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
         _avatarUrl1 = result.avatarUrl1;
         _avatarUrl2 = result.avatarUrl2;
       });
-      await _saveLocalSettings();
-      if (mounted) _showMessage(context.tr('p7_countdown_space_saved'));
+      final saved = await _saveLocalSettings();
+      if (mounted && saved) {
+        _showMessage(context.tr('p7_countdown_space_saved'));
+      }
       return;
     }
 

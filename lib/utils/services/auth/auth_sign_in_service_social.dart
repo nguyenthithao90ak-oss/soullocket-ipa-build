@@ -437,10 +437,4 @@ extension AuthSignInServiceSocial on AuthSignInService {
       ).message;
     }
   }
-
-  Future<void> _reauthenticateCurrentUserWithFacebook(
-    firebase_auth.User user,
-  ) async {
-    throw 'Đăng nhập Facebook không còn được hỗ trợ. Hãy liên kết Google hoặc Apple.';
-  }
 }

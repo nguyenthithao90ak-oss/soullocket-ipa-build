@@ -435,33 +435,34 @@ class _CountdownModeSheetDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
+      key: ValueKey(value),
       initialValue: value,
       isExpanded: true,
-      iconEnabledColor: Colors.white70,
-      dropdownColor: const Color(0xFF162136),
+      iconEnabledColor: AppearancePanelStyle.muted,
+      dropdownColor: AppearancePanelStyle.paper,
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.06),
+        fillColor: AppearancePanelStyle.paper,
         labelStyle: SLTheme.quicksand(
-          color: Colors.white70,
+          color: AppearancePanelStyle.muted,
           fontWeight: FontWeight.w800,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+          borderSide: const BorderSide(color: AppearancePanelStyle.line),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+          borderSide: const BorderSide(color: AppearancePanelStyle.line),
         ),
         focusedBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(14)),
-          borderSide: BorderSide(color: Color(0xFF4BA7FF), width: 1.5),
+          borderSide: BorderSide(color: AppearancePanelStyle.rose, width: 1.5),
         ),
       ),
       style: SLTheme.quicksand(
-        color: Colors.white,
+        color: AppearancePanelStyle.ink,
         fontWeight: FontWeight.w800,
       ),
       items: options
@@ -473,7 +474,7 @@ class _CountdownModeSheetDropdown extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: SLTheme.quicksand(
-                  color: Colors.white,
+                  color: AppearancePanelStyle.ink,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -1134,34 +1135,6 @@ class _CountdownModeMenuRow extends StatelessWidget {
   }
 }
 
-class _CountdownModeGlowOrb extends StatelessWidget {
-  const _CountdownModeGlowOrb({required this.color, required this.size});
-
-  final Color color;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [
-              color.withValues(alpha: 0.70),
-              color.withValues(alpha: 0.20),
-              Colors.transparent,
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Overlay trái tim bay bổng, xoay lật 3D đa chiều cực kỳ cute và nổi bật.
 class FloatingHeartsRingOverlay extends StatefulWidget {
   const FloatingHeartsRingOverlay({
     super.key,

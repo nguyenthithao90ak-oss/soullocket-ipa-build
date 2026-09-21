@@ -1,12 +1,10 @@
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../views/ui_prefs.dart';
-import 'living_sticker.dart' show StickerAnimationScope;
+part 'original_sticker_rigs.dart';
+part 'original_sticker_performances.dart';
 
 /// Vùng chuyển động được đặt theo chi tiết thật trên ảnh gốc.
 /// Tọa độ chuẩn hóa theo từng ô atlas, không theo toàn bộ tấm ảnh.
@@ -21,34 +19,116 @@ class OriginalStickerRegion {
     this.dy = 0,
     this.grow = 0,
     this.blink = false,
+    this.angle = 0,
+    this.pivotX,
+    this.pivotY,
+    this.start = 0,
+    this.end = 1,
+    this.cue,
   });
-  final double x, y, rx, ry, dx, dy, grow;
-  final bool blink;
+  const OriginalStickerRegion.eye(double x, double y)
+    : this(x, y, .058, .062, blink: true);
 
-  Offset displacement(Offset point, double phase) {
+  /// Khớp cục bộ: đầu ngón/tai xoay quanh gốc, không xoay cả sticker.
+  const OriginalStickerRegion.joint(
+    double x,
+    double y,
+    double rx,
+    double ry, {
+    required double pivotX,
+    required double pivotY,
+    double angle = .16,
+  }) : this(
+         x,
+         y,
+         rx,
+         ry,
+         pivotX: pivotX,
+         pivotY: pivotY,
+         angle: angle,
+         start: .28,
+         end: .78,
+       );
+
+  const OriginalStickerRegion.breath(double x, double y, double rx, double ry)
+    : this(x, y, rx, ry, grow: .055, dy: -.008);
+
+  final double x, y, rx, ry, dx, dy, grow, angle, start, end;
+  final double? pivotX, pivotY;
+  final bool blink;
+  final OriginalStickerCue? cue;
+
+  OriginalStickerRegion directed(OriginalStickerCue cue) =>
+      OriginalStickerRegion(
+        x,
+        y,
+        rx,
+        ry,
+        dx: dx,
+        dy: dy,
+        grow: grow,
+        blink: blink,
+        angle: angle,
+        pivotX: pivotX,
+        pivotY: pivotY,
+        start: start,
+        end: end,
+        cue: cue,
+      );
+
+  double activity(double phase) {
+    if (cue != null) return cue!.valueAt(phase);
+    final from = blink ? .16 : start;
+    final to = blink ? .24 : end;
+    if (phase <= from || phase >= to) return 0;
+    final progress = (phase - from) / (to - from);
+    // Khép/mở một lần rồi nghỉ, không dao động liên tục gây cảm giác rung.
+    return (1 - math.cos(progress * math.pi * 2)) / 2;
+  }
+
+  Offset displacement(Offset point, double phase) =>
+      deformation(point) * activity(phase);
+
+  Offset deformation(Offset point) {
     final nx = (point.dx - x) / rx;
     final ny = (point.dy - y) / ry;
     final radius = nx * nx + ny * ny;
     if (radius >= 1) return Offset.zero;
-    final weight = math.pow(1 - radius, 2).toDouble();
-    // Mắt chỉ khép nhẹ trong một nhịp ngắn, không kéo méo cả khuôn mặt.
-    final activity = blink
-        ? (phase > .16 && phase < .24
-              ? math.sin((phase - .16) / .08 * math.pi)
-              : 0.0)
-        : (1 - math.cos(phase * math.pi * 2)) / 2;
+    // Giữ chuyển động đều trong lòng mắt, nối êm về 0 tại viền vùng rig.
+    final falloff = ((math.sqrt(radius) - .42) / .58).clamp(0.0, 1.0);
+    final weight = blink
+        ? 1 - falloff * falloff * (3 - 2 * falloff)
+        : (1 - radius) * (1 - radius);
+    final px = point.dx - (pivotX ?? x);
+    final py = point.dy - (pivotY ?? y);
+    final rotationX = px * (math.cos(angle) - 1) - py * math.sin(angle);
+    final rotationY = px * math.sin(angle) + py * (math.cos(angle) - 1);
     return Offset(
-      (dx + (point.dx - x) * grow) * weight * activity,
-      (dy + (point.dy - y) * (blink ? -.65 : grow)) * weight * activity,
+      (dx + (point.dx - x) * grow + rotationX) * weight,
+      (dy + (point.dy - y) * (blink ? -.94 : grow) + rotationY) * weight,
     );
   }
 }
 
 /// Chưa có rig thì hiển thị ảnh gốc tĩnh, không lắc ảnh để giả hoạt ảnh.
 abstract final class OriginalStickerRigs {
-  static const regions = <String, List<OriginalStickerRegion>>{
+  static final regions = Map<String, List<OriginalStickerRegion>>.unmodifiable(
+    _baseRegions.map((id, rig) {
+      final acting = OriginalStickerPerformances.byId[id]!;
+      assert(acting.cues.length == rig.length, id);
+      return MapEntry(
+        id,
+        List<OriginalStickerRegion>.unmodifiable([
+          for (var i = 0; i < rig.length; i++) rig[i].directed(acting.cues[i]),
+        ]),
+      );
+    }),
+  );
+
+  static const _baseRegions = <String, List<OriginalStickerRegion>>{
+    ..._additionalOriginalStickerRigs,
     'diary_reflective': [
-      OriginalStickerRegion(.51, .65, .14, .20, dx: .012, dy: -.012),
+      OriginalStickerRegion(.51, .65, .14, .20, dx: .035, dy: -.025),
       OriginalStickerRegion(.24, .49, .15, .27, dx: -.012),
     ],
     'diary_shy': [
@@ -57,6 +137,7 @@ abstract final class OriginalStickerRigs {
       OriginalStickerRegion(.605, .498, .07, .06, blink: true),
     ],
     'diary_missing': [
+      OriginalStickerRegion.eye(.542, .447),
       OriginalStickerRegion(.56, .67, .21, .18, grow: .12),
       OriginalStickerRegion(.21, .49, .16, .25, dx: -.012),
     ],
@@ -71,15 +152,25 @@ abstract final class OriginalStickerRigs {
     'diary_anxious': [
       OriginalStickerRegion(.40, .43, .065, .08, blink: true),
       OriginalStickerRegion(.565, .41, .065, .08, blink: true),
-      OriginalStickerRegion(.12, .32, .07, .20, dx: .012),
+      OriginalStickerRegion(.43, .60, .18, .15, dx: .012, dy: -.030),
     ],
     'diary_grumpy': [
-      OriginalStickerRegion(.54, .12, .26, .13, dx: .012),
-      OriginalStickerRegion(.43, .24, .04, .07, dy: .018),
-      OriginalStickerRegion(.62, .25, .04, .07, dy: .018),
+      OriginalStickerRegion.eye(.439, .457),
+      OriginalStickerRegion.eye(.626, .454),
+      OriginalStickerRegion(.48, .65, .23, .14, dx: .030, dy: -.018),
+      OriginalStickerRegion(.54, .12, .24, .12, dy: .022),
     ],
     'diary_playful': [
-      OriginalStickerRegion(.68, .51, .20, .20, dx: .013, dy: -.018),
+      OriginalStickerRegion.eye(.612, .302),
+      OriginalStickerRegion.joint(
+        .65,
+        .49,
+        .18,
+        .19,
+        pivotX: .59,
+        pivotY: .63,
+        angle: -.22,
+      ),
       OriginalStickerRegion(.80, .24, .10, .13, grow: .20),
     ],
     'diary_healing': [
@@ -87,23 +178,52 @@ abstract final class OriginalStickerRigs {
       OriginalStickerRegion(.48, .20, .17, .18, dx: .012),
     ],
     'motion_missing': [
-      OriginalStickerRegion(.77, .40, .15, .21, grow: .12, dy: -.016),
-      OriginalStickerRegion(.17, .52, .13, .27, dx: -.012),
+      OriginalStickerRegion(.60, .61, .18, .19, dx: -.025, dy: -.028),
+      OriginalStickerRegion.joint(
+        .16,
+        .50,
+        .14,
+        .27,
+        pivotX: .27,
+        pivotY: .20,
+        angle: -.17,
+      ),
+      OriginalStickerRegion.breath(.48, .72, .21, .19),
     ],
     'motion_cuddle': [
-      OriginalStickerRegion(.45, .76, .22, .20, grow: .14),
+      OriginalStickerRegion.joint(
+        .635,
+        .63,
+        .18,
+        .095,
+        pivotX: .74,
+        pivotY: .70,
+        angle: .26,
+      ),
+      OriginalStickerRegion(.42, .70, .19, .075, dx: .025, dy: -.012),
       OriginalStickerRegion(.35, .20, .16, .15, dy: -.016),
     ],
     'motion_kiss': [
+      OriginalStickerRegion.eye(.751, .505),
+      OriginalStickerRegion(.42, .50, .13, .15, dx: .030, dy: -.008),
       OriginalStickerRegion(.42, .20, .18, .20, grow: .12, dy: -.015),
-      OriginalStickerRegion(.14, .52, .12, .22, dx: -.012),
+      OriginalStickerRegion(.60, .66, .14, .16, dx: -.024),
     ],
     'motion_tease': [
-      OriginalStickerRegion(.52, .48, .19, .13, dx: -.018),
-      OriginalStickerRegion(.65, .36, .045, .06, blink: true),
+      OriginalStickerRegion.joint(
+        .53,
+        .49,
+        .18,
+        .13,
+        pivotX: .67,
+        pivotY: .60,
+        angle: .20,
+      ),
+      OriginalStickerRegion.eye(.551, .383),
+      OriginalStickerRegion.eye(.665, .442),
     ],
     'motion_comfort': [
-      OriginalStickerRegion(.50, .68, .34, .22, dy: -.01),
+      OriginalStickerRegion(.55, .52, .23, .13, dx: -.022, dy: .018),
       OriginalStickerRegion(.37, .15, .11, .12, grow: .15),
     ],
     'motion_celebrate': [
@@ -115,17 +235,27 @@ abstract final class OriginalStickerRigs {
       OriginalStickerRegion(.63, .11, .11, .09, grow: .18),
     ],
     'motion_send_love': [
+      OriginalStickerRegion.eye(.271, .403),
+      OriginalStickerRegion.eye(.363, .345),
       OriginalStickerRegion(.62, .11, .23, .14, dx: .012, dy: -.01),
-      OriginalStickerRegion(.25, .53, .14, .16, grow: .13),
+      OriginalStickerRegion(.39, .50, .16, .20, dx: .022, dy: -.038),
     ],
     'motion_dance': [
-      OriginalStickerRegion(.83, .49, .12, .20, dy: -.018),
+      OriginalStickerRegion.joint(
+        .83,
+        .49,
+        .12,
+        .20,
+        pivotX: .71,
+        pivotY: .62,
+        angle: -.24,
+      ),
       OriginalStickerRegion(.23, .17, .11, .13, grow: .14),
     ],
   };
 }
 
-/// Giữ nguyên texture gốc; chỉ biến đổi lưới tại các chi tiết đã đặt rig.
+/// Giữ nguyên ảnh gốc; chưa chạy chuyển động khi chưa có lớp/frame tách riêng.
 class OriginalSticker extends StatefulWidget {
   const OriginalSticker({
     super.key,
@@ -150,32 +280,16 @@ class OriginalSticker extends StatefulWidget {
   State<OriginalSticker> createState() => _OriginalStickerState();
 }
 
-class _OriginalStickerState extends State<OriginalSticker>
-    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 4200),
-  );
+class _OriginalStickerState extends State<OriginalSticker> {
   ImageStream? _stream;
   ImageInfo? _info;
-  bool _foreground = true;
   bool _failed = false;
   late final _listener = ImageStreamListener(_onImage, onError: _onError);
-
-  @override
-  void initState() {
-    super.initState();
-    final state = WidgetsBinding.instance.lifecycleState;
-    _foreground = state == null || state == AppLifecycleState.resumed;
-    WidgetsBinding.instance.addObserver(this);
-    UiPrefs.notifier.addListener(_sync);
-  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _resolveImage();
-    _sync();
   }
 
   @override
@@ -187,8 +301,6 @@ class _OriginalStickerState extends State<OriginalSticker>
       _failed = false;
       _resolveImage();
     }
-    if (oldWidget.stickerId != widget.stickerId) _controller.value = 0;
-    _sync();
   }
 
   void _resolveImage() {
@@ -211,50 +323,16 @@ class _OriginalStickerState extends State<OriginalSticker>
       _info = info;
       _failed = false;
     });
-    _sync();
   }
 
   void _onError(Object error, StackTrace? stack) {
-    if (!mounted) return;
-    setState(() => _failed = true);
-    _sync();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    _foreground = state == AppLifecycleState.resumed;
-    _sync();
-  }
-
-  void _sync() {
-    final enabled =
-        widget.animate &&
-        _info != null &&
-        !_failed &&
-        OriginalStickerRigs.regions.containsKey(widget.stickerId) &&
-        _foreground &&
-        TickerMode.valuesOf(context).enabled &&
-        StickerAnimationScope.enabledOf(context) &&
-        !MediaQuery.disableAnimationsOf(context) &&
-        UiPrefs.resolveEffectProfile(
-          state: UiPrefs.notifier.value,
-          isWeb: kIsWeb,
-        ).animationEnabled;
-    if (enabled && !_controller.isAnimating) {
-      _controller.repeat();
-    } else if (!enabled) {
-      _controller.stop();
-      _controller.value = 0;
-    }
+    if (mounted) setState(() => _failed = true);
   }
 
   @override
   void dispose() {
-    UiPrefs.notifier.removeListener(_sync);
-    WidgetsBinding.instance.removeObserver(this);
     _stream?.removeListener(_listener);
     _info?.dispose();
-    _controller.dispose();
     super.dispose();
   }
 
@@ -288,10 +366,8 @@ class _OriginalStickerState extends State<OriginalSticker>
                             source.width / widget.columns,
                             source.height / widget.rows,
                           ),
-                          regions:
-                              OriginalStickerRigs.regions[widget.stickerId] ??
-                              const [],
-                          animation: _controller,
+                          regions: const [],
+                          animation: const AlwaysStoppedAnimation(0),
                           filterQuality: widget.filterQuality,
                         ),
                 );
@@ -301,6 +377,8 @@ class _OriginalStickerState extends State<OriginalSticker>
   );
 }
 
+/// Ảnh phẳng không có lớp mắt/tay độc lập: không uốn texture để giả cử động.
+/// Giữ API cũ cho các caller; animation/regions không còn làm biến dạng ảnh.
 class OriginalStickerPainter extends CustomPainter {
   OriginalStickerPainter({
     required this.image,
@@ -308,104 +386,34 @@ class OriginalStickerPainter extends CustomPainter {
     required this.regions,
     required this.animation,
     this.filterQuality = FilterQuality.medium,
-  }) : super(repaint: animation);
+  });
+
   final ui.Image image;
   final Rect source;
   final List<OriginalStickerRegion> regions;
   final Animation<double> animation;
   final FilterQuality filterQuality;
-  static const _steps = 32;
-  static final _indices = Uint16List.fromList([
-    for (var y = 0; y < _steps; y++)
-      for (var x = 0; x < _steps; x++) ...[
-        y * (_steps + 1) + x,
-        y * (_steps + 1) + x + 1,
-        (y + 1) * (_steps + 1) + x,
-        y * (_steps + 1) + x + 1,
-        (y + 1) * (_steps + 1) + x + 1,
-        (y + 1) * (_steps + 1) + x,
-      ],
-  ]);
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (size.isEmpty) return;
-    final target = Offset.zero & size;
-    if (animation.value == 0 || animation.value == 1 || regions.isEmpty) {
-      canvas.drawImageRect(
-        image,
-        source,
-        target,
-        Paint()..filterQuality = filterQuality,
-      );
-      return;
-    }
-    final positions = Float32List((_steps + 1) * (_steps + 1) * 2);
-    final texture = Float32List(positions.length);
-    var index = 0;
-    for (var y = 0; y <= _steps; y++) {
-      for (var x = 0; x <= _steps; x++) {
-        final point = Offset(x / _steps, y / _steps);
-        var moved = point;
-        for (final region in regions) {
-          moved += region.displacement(point, animation.value);
-        }
-        positions[index] = moved.dx * size.width;
-        texture[index++] = source.left + point.dx * source.width;
-        positions[index] = moved.dy * size.height;
-        texture[index++] = source.top + point.dy * source.height;
-      }
-    }
-    final vertices = ui.Vertices.raw(
-      ui.VertexMode.triangles,
-      positions,
-      textureCoordinates: texture,
-      indices: _indices,
+    if (size.isEmpty || source.isEmpty) return;
+    // Giữ tỉ lệ ảnh ngay cả khi caller cung cấp khung không vuông.
+    final fitted = applyBoxFit(BoxFit.contain, source.size, size);
+    final target = Alignment.center.inscribe(
+      fitted.destination,
+      Offset.zero & size,
     );
-    final shader = ui.ImageShader(
-      image,
-      TileMode.clamp,
-      TileMode.clamp,
-      Float64List.fromList([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]),
-      filterQuality: filterQuality,
-    );
-    // Vẽ nền bằng đúng cách ở tư thế nghỉ. Chỉ thay pixel bên trong vùng rig;
-    // phần chân/viền không bị đổi bộ lọc khi bắt đầu chạy hoạt ảnh.
-    canvas.saveLayer(target, Paint());
     canvas.drawImageRect(
       image,
       source,
       target,
       Paint()..filterQuality = filterQuality,
     );
-    final animatedArea = Path();
-    for (final region in regions) {
-      animatedArea.addOval(
-        Rect.fromCenter(
-          center: Offset(region.x * size.width, region.y * size.height),
-          width: region.rx * size.width * 2,
-          height: region.ry * size.height * 2,
-        ),
-      );
-    }
-    canvas.clipPath(animatedArea);
-    canvas.drawVertices(
-      vertices,
-      BlendMode.src,
-      Paint()
-        ..shader = shader
-        ..blendMode = BlendMode.src,
-    );
-    canvas.restore();
-    vertices.dispose();
-    shader.dispose();
   }
 
   @override
   bool shouldRepaint(covariant OriginalStickerPainter oldDelegate) =>
       oldDelegate.image != image ||
       oldDelegate.source != source ||
-      oldDelegate.regions != regions ||
-      oldDelegate.animation != animation ||
       oldDelegate.filterQuality != filterQuality;
 }

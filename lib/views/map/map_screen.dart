@@ -8,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/app_help_center.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter_map/flutter_map.dart' as fm;
 import 'package:cached_network_image/cached_network_image.dart';
@@ -1515,6 +1516,22 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
         actions: [
+          AppHelpButton(
+            articleId: 'gps',
+            iconOnly: true,
+            statusKey: switch (_locationAccess.status) {
+              MapLocationAccessStatus.checking => 'map_refresh_checking',
+              MapLocationAccessStatus.permissionRequired =>
+                'map_refresh_permission_title',
+              MapLocationAccessStatus.deniedForever =>
+                'map_refresh_permission_blocked',
+              MapLocationAccessStatus.serviceDisabled =>
+                'map_refresh_service_off',
+              MapLocationAccessStatus.unavailable => 'map_refresh_unavailable',
+              MapLocationAccessStatus.ready =>
+                _locationAccess.approximate ? 'map_refresh_approximate' : null,
+            },
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 10),
             child: Container(

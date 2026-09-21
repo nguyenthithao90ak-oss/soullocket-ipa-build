@@ -1,63 +1,6 @@
 part of '../../diary_tab.dart';
 
 extension DiaryTabAdSection on _DiaryTabState {
-  void _loadBottomBanner() async {
-    if (kIsWeb) return;
-    final adMob = AdMobService();
-    await adMob.initialize();
-    if (!mounted) return;
-
-    if (await adMob.isProUser()) {
-      AdMobService().disposeBanner(_bottomBannerAd);
-      _bottomBannerAd = null;
-      if (!mounted) return;
-      setState(() => _isBottomBannerReady = false);
-      return;
-    }
-
-    AdMobService().disposeBanner(_bottomBannerAd);
-    _bottomBannerAd = null;
-    if (!mounted) return;
-    final banner = await adMob.createBannerAd(
-      onAdLoaded: (_) {
-        if (!mounted) return;
-        setState(() => _isBottomBannerReady = true);
-      },
-    );
-    if (!mounted) {
-      AdMobService().disposeBanner(banner);
-      return;
-    }
-    _bottomBannerAd = banner;
-  }
-
-  Widget _buildBottomAdBanner(BannerAd bannerAd) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          decoration: BoxDecoration(
-            color: SLColors.bgElevated.withValues(alpha: 0.72),
-            borderRadius: SLRadius.lgAll,
-            border: Border.all(
-              color: SLColors.bgElevated.withValues(alpha: 0.45),
-            ),
-            boxShadow: SLShadow.subtle,
-          ),
-          child: ClipRRect(
-            borderRadius: SLRadius.mdAll,
-            child: SizedBox(
-              width: bannerAd.size.width.toDouble(),
-              height: bannerAd.size.height.toDouble(),
-              child: ConsentAdView(ad: bannerAd),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   void _startDiaryActiveTimer() {
     _diaryActiveTimer?.cancel();
     _diaryActiveTimer = Timer.periodic(const Duration(seconds: 10), (timer) {

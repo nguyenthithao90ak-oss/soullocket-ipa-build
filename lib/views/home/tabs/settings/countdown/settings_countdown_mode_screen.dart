@@ -1,8 +1,10 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../../settings_tab.dart';
 
-class _CountdownModeIndependentScreen extends StatefulWidget {
-  const _CountdownModeIndependentScreen({
+class CountdownSpaceScreen extends StatefulWidget {
+  const CountdownSpaceScreen({
+    super.key,
+    this.spaceService,
     required this.currentHouseId,
     required this.isVipActive,
     required this.loveDate,
@@ -17,6 +19,7 @@ class _CountdownModeIndependentScreen extends StatefulWidget {
   });
 
   final String? currentHouseId;
+  final CountdownSpaceService? spaceService;
   final bool isVipActive;
   final String loveDate;
   final String birthDate;
@@ -29,26 +32,25 @@ class _CountdownModeIndependentScreen extends StatefulWidget {
   final String avatarUrl2;
 
   @override
-  State<_CountdownModeIndependentScreen> createState() =>
+  State<CountdownSpaceScreen> createState() =>
       _CountdownModeIndependentScreenState();
 }
 
-class _CountdownModeIndependentScreenState
-    extends State<_CountdownModeIndependentScreen> {
+class _CountdownModeIndependentScreenState extends State<CountdownSpaceScreen> {
   static const String _pendingSpaceAvatarUploadKeyPrefix =
       'countdown_space_avatar_';
 
   void _safeSetState(VoidCallback fn) {
     if (!mounted) {
-      fn();
       return;
     }
     setState(fn);
+    _spaceRevision.value++;
   }
 
   static const int _maxSpaces = CountdownSpaceService.maxSpacesPerHouse;
 
-  static final List<MapEntry<String, String>> _themeOptions = [
+  static List<MapEntry<String, String>> get _themeOptions => [
     MapEntry(L10nService().translate('home_tngtheoma_da55a7'), 'theme-auto'),
     MapEntry(L10nService().translate('home_snghng_641d9c'), 'theme-pink-glow'),
     MapEntry(L10nService().translate('home_mcnhsng_41d947'), 'theme-default'),
@@ -64,7 +66,9 @@ class _CountdownModeIndependentScreenState
   ];
 
   // Keep the most useful styles on top for a cleaner, faster settings flow.
-  static final List<MapEntry<String, String>> _countdownStyleOptions = [
+  static List<MapEntry<String, String>> get _countdownStyleOptions => [
+    for (final key in KeepsakePalette.newStyleKeys)
+      MapEntry(L10nService().translate('keepsake_$key'), key),
     MapEntry(
       L10nService().translate('countdown_floating_hearts'),
       'floating_hearts',
@@ -138,7 +142,9 @@ class _CountdownModeIndependentScreenState
   static Future<Set<String>> _getUnlockedCountdownStyleKeys() =>
       AdMobService().verifiedCountdownStyles();
 
-  static final List<MapEntry<String, String>> _avatarFrameOptions = [
+  static List<MapEntry<String, String>> get _avatarFrameOptions => [
+    for (final key in KeepsakePalette.newStyleKeys)
+      MapEntry(L10nService().translate('keepsake_$key'), key),
     MapEntry(L10nService().translate('home_khngkhung_e37077'), 'off'),
     MapEntry(L10nService().translate('p7_frame_circle'), 'circle'),
     MapEntry(L10nService().translate('p7_frame_rounded'), 'rounded'),
@@ -148,10 +154,11 @@ class _CountdownModeIndependentScreenState
     MapEntry(L10nService().translate('p7_frame_aurora'), 'vip'),
   ];
 
-  final CountdownSpaceService _countdownSpaceService = CountdownSpaceService();
-  final FriendsService _spaceLookupService = FriendsService();
-  final StorageService _storageService = StorageService();
-  final DatabaseReference _countdownSpaceDbRef = FirebaseDatabase.instance
+  late final CountdownSpaceService _countdownSpaceService =
+      widget.spaceService ?? CountdownSpaceService();
+  late final FriendsService _spaceLookupService = FriendsService();
+  late final StorageService _storageService = StorageService();
+  late final DatabaseReference _countdownSpaceDbRef = FirebaseDatabase.instance
       .ref();
   StreamSubscription<List<CountdownSpaceRequestInfo>>? _countdownRequestsSub;
   StreamSubscription<List<CountdownSpaceInfo>>? _countdownSpacesSub;
@@ -159,6 +166,12 @@ class _CountdownModeIndependentScreenState
   _countdownDeleteRequestsSub;
   StreamSubscription<Map<String, dynamic>>? _interactiveEventsSub;
   Timer? _countdownDeleteEvaluationTimer;
+
+  final ValueNotifier<int> _spaceRevision = ValueNotifier(0);
+  final Set<String> _spaceStreamErrors = {};
+  final Map<String, _CountdownSpaceSnapshot> _unsyncedSpaceSnapshots = {};
+  Future<void> _spaceSaveQueue = Future<void>.value();
+  bool _savingSpace = false;
 
   bool _singleMode = false;
   DateTime? _anchorDate;
@@ -209,11 +222,16 @@ class _CountdownModeIndependentScreenState
     unawaited(_setSystemUiVisible(true));
     unawaited(_loadSpaces());
     _listenCountdownSpaces();
-    if (widget.relationshipMode.trim() != 'single') {
+    if (widget.relationshipMode.trim() != 'single' &&
+        _selfSpaceHouseId != 'local_self') {
       _interactiveEventsSub = SoulMergeService()
           .watchInteractiveEvents()
           .listen((event) async {
-            if (!mounted || event.isEmpty) return;
+            if (!mounted ||
+                event.isEmpty ||
+                _openedSpaceHouseId != _selfSpaceHouseId) {
+              return;
+            }
             final prefs = await SharedPreferences.getInstance();
             final myRole = prefs.getString('il_role') ?? 'user1';
             final sender = event['sender']?.toString();
@@ -225,7 +243,7 @@ class _CountdownModeIndependentScreenState
                 event['customData']?['emoji']?.toString() ??
                 '❤️';
 
-            if (!mounted) return;
+            if (!mounted || _openedSpaceHouseId != _selfSpaceHouseId) return;
             if (type == 'photo_shot') {
               final size = MediaQuery.sizeOf(context);
               _heartsKey.currentState?.spawnLocalExplosion(
@@ -253,6 +271,8 @@ class _CountdownModeIndependentScreenState
     _countdownDeleteRequestsSub?.cancel();
     _interactiveEventsSub?.cancel();
     _countdownDeleteEvaluationTimer?.cancel();
+    _reactionFlightsNotifier.dispose();
+    _spaceRevision.dispose();
     super.dispose();
   }
 
@@ -322,7 +342,7 @@ class _CountdownModeIndependentScreenState
   Widget build(BuildContext context) {
     if (_openedSpaceHouseId == null) {
       return Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppearancePanelStyle.canvas,
         body: _buildSpacesGrid(context),
       );
     }
@@ -335,14 +355,16 @@ class _CountdownModeIndependentScreenState
       _transparentMode,
     );
 
+    final rightName = _nameU2.trim().isEmpty
+        ? context.tr('home_ngiy_5bab37')
+        : _nameU2.trim();
     return PopScope(
-      canPop: _openedSpaceHouseId == null,
+      canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
-        await _handleOpenedSpaceBack();
+        if (!didPop) await _handleOpenedSpaceBack();
       },
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppearancePanelStyle.canvas,
         body: GestureDetector(
           behavior: HitTestBehavior.translucent,
           onLongPress: () => unawaited(_toggleSpaceChromeVisibility()),
@@ -361,239 +383,197 @@ class _CountdownModeIndependentScreenState
               if (_customBackgroundUrl.trim().isNotEmpty)
                 Positioned.fill(
                   child: Opacity(
-                    opacity: themeData.imageOpacity,
+                    opacity: .22,
                     child: CachedNetworkImage(
                       imageUrl: _customBackgroundUrl,
                       fit: BoxFit.cover,
-                      filterQuality: FilterQuality.medium,
-                      fadeInDuration: const Duration(milliseconds: 180),
-                      maxWidthDiskCache: 1080,
-                      memCacheWidth: 400,
-                      placeholder: (_, _) => DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              themeData.orbA.withValues(alpha: 0.12),
-                              themeData.orbB.withValues(alpha: 0.16),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                      ),
+                      memCacheWidth: 900,
                       errorWidget: (_, _, _) => const SizedBox.shrink(),
                     ),
                   ),
                 ),
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: themeData.overlay,
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
+              SafeArea(
+                child: LayoutBuilder(
+                  builder: (context, constraints) => SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 560),
+                        child: Column(
+                          children: [
+                            if (_spaceChromeVisible) ...[
+                              Row(
+                                children: [
+                                  _buildActionButton(
+                                    icon: Icons.arrow_back_rounded,
+                                    foreground: themeData.foreground,
+                                    isDark: themeData.isDark,
+                                    onTap: () => unawaited(_closeOpenedSpace()),
+                                    tooltip: context.tr('p7_back'),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      _spaceTitle(_scopeKey),
+                                      style: SLTheme.quicksand(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w700,
+                                        color: themeData.foreground,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _buildActionButton(
+                                    icon: Icons.tune_rounded,
+                                    foreground: themeData.foreground,
+                                    isDark: themeData.isDark,
+                                    onTap: _savingSpace
+                                        ? () {}
+                                        : _openSettingsSheet,
+                                    tooltip: context.tr(
+                                      'home_citkhnggia_09f866',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                _spaceConnectionStatusLabel(_scopeKey),
+                                textAlign: TextAlign.center,
+                                style: SLTheme.quicksand(
+                                  fontSize: 12,
+                                  color: themeData.foreground,
+                                ),
+                              ),
+                            ],
+                            if (_savingSpace) const LinearProgressIndicator(),
+                            if (_unsyncedSpaceSnapshots.containsKey(_scopeKey))
+                              Container(
+                                margin: const EdgeInsets.only(top: 12),
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: AppearancePanelStyle.paper,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      context.tr('p7_countdown_sync_failed'),
+                                      style: SLTheme.quicksand(
+                                        color: AppearancePanelStyle.ink,
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: _savingSpace
+                                          ? null
+                                          : () => _saveLocalSettings(),
+                                      child: Text(context.tr('p7_retry')),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            const SizedBox(height: 22),
+                            _buildHeroCard(
+                              context,
+                              themeData,
+                              styleData,
+                              constraints,
+                            ),
+                            const SizedBox(height: 24),
+                            _CountdownModeAvatarCardStatic(
+                              isSingleMode: _singleMode,
+                              leftName: _nameU1.trim().isEmpty
+                                  ? L10nService().translate('home_bn_1fd75b')
+                                  : _nameU1.trim(),
+                              rightName: rightName,
+                              leftAvatarUrl: _avatarUrl1,
+                              rightAvatarUrl: _singleMode ? '' : _avatarUrl2,
+                              avatarFrameKey: _avatarFrameKey,
+                              fontKey: _fontKey,
+                              foreground: themeData.foreground,
+                              isDark: themeData.isDark,
+                              centerIconType: _centerIconType,
+                              onCenterIconChanged: (type) =>
+                                  unawaited(_updateCenterIconType(type)),
+                              onCenterIconTap: () {
+                                final preset =
+                                    _countdownModeCenterIconPresetFor(
+                                      _centerIconType,
+                                    );
+                                if (!_singleMode &&
+                                    _scopeKey == _selfSpaceHouseId) {
+                                  unawaited(
+                                    SoulMergeService().sendInteractiveEvent(
+                                      type: preset.type,
+                                    ),
+                                  );
+                                }
+                                _sendReactionFlight(
+                                  preset.type,
+                                  preset.emoji,
+                                  isIncoming: false,
+                                );
+                                HapticFeedback.mediumImpact();
+                              },
+                              onLeftAvatarTap: () =>
+                                  unawaited(_changeSpaceAvatar(isLeft: true)),
+                              onRightAvatarTap: () =>
+                                  unawaited(_changeSpaceAvatar(isLeft: false)),
+                              onRightAvatarChatTap:
+                                  (_selfSpaceHouseId == 'local_self' ||
+                                      (_scopeKey != _selfSpaceHouseId &&
+                                          !_isSharedSpace(_scopeKey)))
+                                  ? null
+                                  : () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => ChatDetailScreen(
+                                            myHouseId:
+                                                widget.currentHouseId ?? '',
+                                            targetHouseId: _scopeKey,
+                                            targetName: rightName,
+                                            targetAvatar: _avatarUrl2,
+                                            isInternal:
+                                                _scopeKey == _selfSpaceHouseId,
+                                            currentRole:
+                                                RoleUtils.currentRoleSync(),
+                                            targetRole:
+                                                RoleUtils.currentRoleSync() ==
+                                                    'user1'
+                                                ? 'user2'
+                                                : 'user1',
+                                          ),
+                                        ),
+                                      );
+                                    },
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
               Positioned.fill(
                 child: IgnorePointer(
-                  child: Opacity(
-                    opacity: themeData.isDark ? 0.12 : 0.24,
-                    child: SLTheme.meshPattern(),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: -60,
-                right: -40,
-                child: _CountdownModeGlowOrb(color: themeData.orbA, size: 220),
-              ),
-              Positioned(
-                left: -40,
-                bottom: 60,
-                child: _CountdownModeGlowOrb(color: themeData.orbB, size: 180),
-              ),
-              SafeArea(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final rightName = _nameU2.trim().isEmpty
-                        ? L10nService().translate('home_ngiy_5bab37')
-                        : _nameU2.trim();
-                    return Stack(
-                      children: [
-                        SingleChildScrollView(
-                          physics: const ClampingScrollPhysics(),
-                          padding: EdgeInsets.only(
-                            top: constraints.maxHeight < 720 ? 28 : 36,
-                            bottom: constraints.maxHeight < 720 ? 32 : 40,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 22),
-                            child: Center(
-                              child: ConstrainedBox(
-                                constraints: BoxConstraints(
-                                  maxWidth: (() {
-                                    final availableWidth =
-                                        (constraints.maxWidth - 44).toDouble();
-                                    final safeWidth = availableWidth > 0
-                                        ? availableWidth
-                                        : 320.0;
-                                    return safeWidth
-                                        .clamp(320.0, 860.0)
-                                        .toDouble();
-                                  })(),
-                                  minHeight: (() {
-                                    final minHeight =
-                                        constraints.maxHeight -
-                                        (constraints.maxHeight < 720
-                                            ? 28
-                                            : 36) -
-                                        (constraints.maxHeight < 720 ? 32 : 40);
-                                    return (minHeight > 0 ? minHeight : 0)
-                                        .toDouble();
-                                  })(),
-                                ),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    _buildHeroCard(
-                                      context,
-                                      themeData,
-                                      styleData,
-                                      constraints,
-                                    ),
-                                    const SizedBox(height: 18),
-                                    _CountdownModeAvatarCardStatic(
-                                      isSingleMode: _singleMode,
-                                      leftName: _nameU1.trim().isEmpty
-                                          ? L10nService().translate(
-                                              'home_bn_1fd75b',
-                                            )
-                                          : _nameU1.trim(),
-                                      rightName: rightName,
-                                      leftAvatarUrl: _avatarUrl1,
-                                      rightAvatarUrl: _singleMode
-                                          ? ''
-                                          : _avatarUrl2,
-                                      avatarFrameKey: _avatarFrameKey,
-                                      fontKey: _fontKey,
-                                      foreground: themeData.foreground,
-                                      isDark: themeData.isDark,
-                                      centerIconType: _centerIconType,
-                                      onCenterIconChanged: (type) => unawaited(
-                                        _updateCenterIconType(type),
-                                      ),
-                                      onCenterIconTap: () {
-                                        final preset =
-                                            _countdownModeCenterIconPresetFor(
-                                              _centerIconType,
-                                            );
-                                        if (!_singleMode) {
-                                          unawaited(
-                                            SoulMergeService()
-                                                .sendInteractiveEvent(
-                                                  type: preset.type,
-                                                ),
-                                          );
-                                        }
-                                        _sendReactionFlight(
-                                          preset.type,
-                                          preset.emoji,
-                                          isIncoming: false,
-                                        );
-                                        HapticFeedback.mediumImpact();
-                                      },
-                                      onLeftAvatarTap: () => unawaited(
-                                        _changeSpaceAvatar(isLeft: true),
-                                      ),
-                                      onRightAvatarTap: () => unawaited(
-                                        _changeSpaceAvatar(isLeft: false),
-                                      ),
-                                      onRightAvatarChatTap: () {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (_) => ChatDetailScreen(
-                                              myHouseId:
-                                                  widget.currentHouseId ?? '',
-                                              targetHouseId:
-                                                  widget.currentHouseId ?? '',
-                                              targetName: rightName,
-                                              targetAvatar: _avatarUrl2,
-                                              isInternal: true,
-                                              currentRole:
-                                                  RoleUtils.currentRoleSync(),
-                                              targetRole:
-                                                  RoleUtils.currentRoleSync() ==
-                                                      'user1'
-                                                  ? 'user2'
-                                                  : 'user1',
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    const SizedBox(height: 32),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: 8,
-                          left: 18,
-                          right: 18,
-                          child: IgnorePointer(
-                            ignoring: !_spaceChromeVisible,
-                            child: AnimatedOpacity(
-                              opacity: _spaceChromeVisible ? 1 : 0,
-                              duration: const Duration(milliseconds: 180),
-                              child: Row(
-                                children: [
-                                  const Spacer(),
-                                  _buildActionButton(
-                                    icon: Icons.settings_rounded,
-                                    foreground: themeData.foreground,
-                                    isDark: themeData.isDark,
-                                    onTap: _openSettingsSheet,
-                                    tooltip: L10nService().translate(
-                                      'home_citkhnggia_09f866',
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-              Positioned.fill(
-                child: ValueListenableBuilder<List<_CountdownReactionFlight>>(
-                  valueListenable: _reactionFlightsNotifier,
-                  builder: (context, flights, _) {
-                    return Stack(
-                      clipBehavior: Clip.none,
+                  child: ValueListenableBuilder<List<_CountdownReactionFlight>>(
+                    valueListenable: _reactionFlightsNotifier,
+                    builder: (context, flights, _) => Stack(
                       children: [
                         for (final flight in flights)
                           Positioned.fill(
                             key: ValueKey('countdown-flight-${flight.id}'),
-                            child: IgnorePointer(
-                              child: ShootingHeartEffect(
-                                shootToRight: flight.shootToRight,
-                                emoji: flight.emoji,
-                                assetPath: flight.assetPath,
-                                onComplete: () =>
-                                    _removeReactionFlight(flight.id),
-                              ),
+                            child: ShootingHeartEffect(
+                              shootToRight: flight.shootToRight,
+                              emoji: flight.emoji,
+                              assetPath: flight.assetPath,
+                              onComplete: () =>
+                                  _removeReactionFlight(flight.id),
                             ),
                           ),
                       ],
-                    );
-                  },
+                    ),
+                  ),
                 ),
               ),
               Positioned.fill(
@@ -614,7 +594,9 @@ class _CountdownModeIndependentScreenState
     String emoji, {
     required bool isIncoming,
   }) async {
+    final scope = _scopeKey;
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted || scope != _scopeKey) return;
     final myRole = prefs.getString('il_role') ?? 'user1';
     final bool shootToRight = isIncoming
         ? (myRole == 'user2')
@@ -637,7 +619,7 @@ class _CountdownModeIndependentScreenState
 
     _safeSetState(() {
       _reactionFlightsNotifier.value = [
-        ..._reactionFlightsNotifier.value,
+        ..._reactionFlightsNotifier.value.take(7),
         flight,
       ];
     });

@@ -139,7 +139,7 @@ extension MainHomeAvatarController on _MainHomeTabState {
     final role = isUser1 ? 'user1' : 'user2';
     final field = isUser1 ? 'avtUser1' : 'avtUser2';
     final pendingKey = _pendingAvatarUploadKeyForHouse(houseId);
-    setState(() {
+    _safeSetState(() {
       _uploadingAvatarRole = role;
     });
     _avatarUploadProgressNotifier.value = 0.0;
@@ -200,7 +200,7 @@ extension MainHomeAvatarController on _MainHomeTabState {
       }
 
       if (mounted) {
-        setState(() {
+        _safeSetState(() {
           _houseSettings ??= {};
           _houseSettings![field] = url;
         });
@@ -230,7 +230,7 @@ extension MainHomeAvatarController on _MainHomeTabState {
       }
     } finally {
       if (mounted) {
-        setState(() {
+        _safeSetState(() {
           _uploadingAvatarRole = null;
         });
         _avatarUploadProgressNotifier.value = -1.0;

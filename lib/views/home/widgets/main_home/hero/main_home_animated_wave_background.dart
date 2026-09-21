@@ -13,7 +13,8 @@ class AnimatedWaveBackground extends StatefulWidget {
   });
 
   static bool hasMotion(String styleKey) {
-    return styleKey != 'plain' && styleKey != 'floating_hearts';
+    return styleKey != 'plain' &&
+        !KeepsakePalette.refreshedRingKeys.contains(styleKey);
   }
 
   @override

@@ -7,8 +7,8 @@ extension PreviewEditorExt on _CountdownModeEditorScreenState {
     _CountdownModeThemeData themeData,
   ) {
     return [
-      Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+      Wrap(
+        alignment: WrapAlignment.end,
         children: [
           TextButton.icon(
             onPressed: _copyFromMainCountdown,

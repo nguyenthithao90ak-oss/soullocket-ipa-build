@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/app_help_center.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'auth_language_toggle.dart';
 import 'auth_visual_style.dart';
@@ -71,6 +72,20 @@ class AuthPageScaffold extends StatelessWidget {
                                   AuthLanguageToggle(
                                     currentLocale: l10n.localeCode,
                                     onSelect: (code) => l10n.setLocale(code),
+                                  ),
+                                  IconButton(
+                                    tooltip: l10n.translate(
+                                      'auth_help_center_guide',
+                                    ),
+                                    icon: const Icon(
+                                      Icons.help_outline_rounded,
+                                    ),
+                                    onPressed: () => Navigator.of(context).push(
+                                      MaterialPageRoute<void>(
+                                        builder: (_) =>
+                                            const AppHelpCenterScreen(),
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),

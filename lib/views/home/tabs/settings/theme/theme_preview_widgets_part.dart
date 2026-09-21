@@ -223,6 +223,30 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
   }
 
   _ThemePreviewCountdownVisual _themePreviewCountdownVisual(String styleKey) {
+    if (KeepsakePalette.refreshedRingKeys.contains(styleKey)) {
+      final p = KeepsakePalette.of(styleKey);
+      return _ThemePreviewCountdownVisual(
+        outerDecoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: p.rim,
+          border: Border.all(color: Colors.white, width: 2),
+        ),
+        innerDecoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: p.fill,
+          border: Border.all(color: p.accent.withValues(alpha: .12)),
+        ),
+        numberGradient: [
+          p.accent,
+          Color.lerp(p.accent, const Color(0xFF493D40), .2)!,
+        ],
+        topLabelColor: const Color(0xFF67565B),
+        bottomLabelColor: const Color(0xFF67565B),
+        labelShadows: const [],
+        numberShadows: const [],
+        backdropType: 'soft',
+      );
+    }
     switch (styleKey) {
       case 'plain':
         return const _ThemePreviewCountdownVisual(
@@ -576,11 +600,20 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
                 child: RepaintBoundary(
                   child: AnimatedWaveBackground(
                     styleKey: styleKey,
-                    enableMotion: true,
+                    enableMotion: !UiPrefs.notifier.value.liteMode,
                     transparentMode: transparentMode,
                   ),
                 ),
               ),
+              if (styleKey != 'default' &&
+                  styleKey != 'balanced' &&
+                  !transparentMode)
+                Positioned.fill(
+                  child: KeepsakeOrnaments(
+                    styleKey: styleKey,
+                    animate: !UiPrefs.notifier.value.liteMode,
+                  ),
+                ),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: size * 0.12),
                 child: Column(

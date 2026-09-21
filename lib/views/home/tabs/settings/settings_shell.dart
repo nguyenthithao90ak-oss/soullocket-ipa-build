@@ -1,6 +1,36 @@
 part of '../settings_tab.dart';
 
 extension _SettingsTabShell on _SettingsTabState {
+  void _openHelpCenter() {
+    final uid = _auth.currentUser?.uid;
+    final houseId = _houseId;
+    bool valid() =>
+        mounted && _auth.currentUser?.uid == uid && _houseId == houseId;
+    slPush(
+      context,
+      AppHelpCenterScreen(
+        isStillValid: valid,
+        featureActions: {
+          'account': () => _togglePanel('account'),
+          'security': () => _togglePanel('security'),
+          'personalize': () => _togglePanel('theme'),
+          if (!kIsWeb) 'widget': () => _togglePanel('widget'),
+          if ((houseId ?? '').isNotEmpty)
+            'pairing': () => slPush(context, const PairingDashboardScreen()),
+        },
+        onSupport: _openSupportContact,
+        onReplaySettings: () => _maybeShowSettingsGuideOnOpen(replay: true),
+        onReplayHome: widget.onReplayFirstSetupGuide == null
+            ? null
+            : () {
+                final replay = widget.onReplayFirstSetupGuide!;
+                Navigator.of(context).pop();
+                WidgetsBinding.instance.addPostFrameCallback((_) => replay());
+              },
+      ),
+    );
+  }
+
   String _sectionIdForPanel(String id) {
     switch (id) {
       case 'vip':
@@ -358,7 +388,9 @@ extension _SettingsTabShell on _SettingsTabState {
                               ready: _settingsIdentityReady,
                               failed: _settingsIdentityLoadFailed,
                               loadingLabel: context.tr('settings_loading_data'),
-                              errorLabel: context.tr('settings_initial_load_error'),
+                              errorLabel: context.tr(
+                                'settings_initial_load_error',
+                              ),
                               retryLabel: context.tr('core_retry'),
                               onRetry: () {
                                 setState(() {
@@ -561,6 +593,7 @@ extension _SettingsTabShell on _SettingsTabState {
   }
 
   Widget _buildiOSRow({
+    Key? guideKey,
     required IconData icon,
     required Color iconBgColor,
     Gradient? iconGradient,
@@ -575,6 +608,7 @@ extension _SettingsTabShell on _SettingsTabState {
         : (isDark ? Colors.white : SLColors.ink);
 
     return Material(
+      key: guideKey,
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
@@ -699,7 +733,9 @@ extension _SettingsTabShell on _SettingsTabState {
                 border: Border.all(color: SLColors.thread, width: 1.6),
               ),
               child: SettingsAccountAvatar(
-                key: ValueKey('${_auth.currentUser?.uid}:$_houseId:$_activeRoleKey'),
+                key: ValueKey(
+                  '${_auth.currentUser?.uid}:$_houseId:$_activeRoleKey',
+                ),
                 backgroundColor: SLColors.primarySoft,
                 foregroundColor: SLColors.primary,
                 image: avatarProvider,
@@ -816,6 +852,7 @@ extension _SettingsTabShell on _SettingsTabState {
             Expanded(
               child: _buildSettingsQuickAction(
                 icon: Icons.timelapse_rounded,
+                guideKey: _countdownGuideKey,
                 color: SLColors.secondary,
                 title: context.tr('settings_countdown_space_label'),
                 isDark: isDark,
@@ -826,6 +863,7 @@ extension _SettingsTabShell on _SettingsTabState {
             Expanded(
               child: _buildSettingsQuickAction(
                 icon: Icons.palette_outlined,
+                guideKey: _themeGuideKey,
                 color: SLColors.accentPurple,
                 title: context.tr('theme'),
                 isDark: isDark,
@@ -839,6 +877,7 @@ extension _SettingsTabShell on _SettingsTabState {
   }
 
   Widget _buildSettingsQuickAction({
+    Key? guideKey,
     required IconData icon,
     required Color color,
     required String title,
@@ -846,6 +885,7 @@ extension _SettingsTabShell on _SettingsTabState {
     required VoidCallback onTap,
   }) {
     return Material(
+      key: guideKey,
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
@@ -897,7 +937,10 @@ extension _SettingsTabShell on _SettingsTabState {
 
   List<Widget> _buildNewSettingsList(bool isDark) {
     return [
-      _buildSettingsAccountHero(isDark),
+      KeyedSubtree(
+        key: _accountGuideKey,
+        child: _buildSettingsAccountHero(isDark),
+      ),
       _buildSectionTitle(
         context.tr('settings_categories_title'),
         topPadding: 18,
@@ -922,6 +965,7 @@ extension _SettingsTabShell on _SettingsTabState {
         ],
         _buildiOSRow(
           icon: Icons.widgets_outlined,
+          guideKey: _widgetGuideKey,
           iconBgColor: SLColors.success,
           title: context.tr('settings_widget_label'),
           subtitle: kIsWeb
@@ -960,6 +1004,7 @@ extension _SettingsTabShell on _SettingsTabState {
       _buildiOSSectionCard([
         _buildiOSRow(
           icon: Icons.shield_outlined,
+          guideKey: _securityGuideKey,
           iconBgColor: SLColors.primary,
           title: context.tr('settings_security_label'),
           subtitle: context.tr('settings_security_desc'),
@@ -969,6 +1014,7 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildDivider(isDark),
         _buildiOSRow(
           icon: Icons.cloud_sync_outlined,
+          guideKey: _dataGuideKey,
           iconBgColor: SLColors.info,
           title: context.tr('settings_data_system_label'),
           subtitle: context.tr('settings_data_system_desc'),
@@ -1005,11 +1051,76 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildDivider(isDark),
         _buildiOSRow(
           icon: Icons.support_agent_rounded,
+          guideKey: _supportGuideKey,
           iconBgColor: SLColors.success,
           title: context.tr('support_center'),
           isDark: isDark,
           onTap: _openSupportContact,
         ),
+        _buildDivider(isDark),
+        _buildiOSRow(
+          icon: Icons.menu_book_outlined,
+          iconBgColor: SLColors.primary,
+          title: context.tr('auth_help_center_guide'),
+          isDark: isDark,
+          onTap: _openHelpCenter,
+        ),
+        _buildDivider(isDark),
+        _buildiOSRow(
+          icon: Icons.help_outline_rounded,
+          iconBgColor: SLColors.info,
+          title: context.tr('guide_replay_settings'),
+          isDark: isDark,
+          onTap: () => _maybeShowSettingsGuideOnOpen(replay: true),
+        ),
+        _buildDivider(isDark),
+        _buildiOSRow(
+          icon: Icons.explore_outlined,
+          iconBgColor: SLColors.primary,
+          title: context.tr('starter_title'),
+          isDark: isDark,
+          onTap: () {
+            final uid = _auth.currentUser?.uid ?? '';
+            final houseId = _houseId ?? '';
+            showModalBottomSheet<void>(
+              context: context,
+              isScrollControlled: true,
+              useSafeArea: true,
+              builder: (_) => FractionallySizedBox(
+                heightFactor: .85,
+                child: SafeArea(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: GettingStartedChecklist(
+                      uid: uid,
+                      houseId: houseId,
+                      isSingle: _relationshipMode == 'single',
+                      alwaysVisible: true,
+                      isStillValid: () =>
+                          mounted &&
+                          _auth.currentUser?.uid == uid &&
+                          _houseId == houseId,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+        if (widget.onReplayFirstSetupGuide != null) ...[
+          _buildDivider(isDark),
+          _buildiOSRow(
+            icon: Icons.home_outlined,
+            iconBgColor: SLColors.primary,
+            title: context.tr('guide_replay_home'),
+            isDark: isDark,
+            onTap: () {
+              final replay = widget.onReplayFirstSetupGuide!;
+              Navigator.of(context).pop();
+              WidgetsBinding.instance.addPostFrameCallback((_) => replay());
+            },
+          ),
+        ],
         _buildDivider(isDark),
         _buildiOSRow(
           icon: Icons.star_outline_rounded,
@@ -1165,7 +1276,10 @@ extension _SettingsTabShell on _SettingsTabState {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          const _SettingsBackgroundLayer(),
+          if (sectionId == 'theme')
+            const ColoredBox(color: AppearancePanelStyle.canvas)
+          else
+            const _SettingsBackgroundLayer(),
           ValueListenableBuilder<int>(
             valueListenable: _panelRebuildNotifier,
             builder: (context, _, _) {

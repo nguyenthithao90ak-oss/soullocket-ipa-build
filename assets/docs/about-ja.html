@@ -1,0 +1,56 @@
+<!DOCTYPE html><html lang="ja" dir="ltr"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="個人または 2 人が思い出を保存し、個人的な感想を書き、連絡を取り合うためのスペースです。">
+<meta name="soullocket-document-version" content="2026-09-09">
+<title>ソウルロケットについて</title>
+<style>
+:root{color-scheme:light;--ink:#30292d;--muted:#6d6067;--accent:#a13e5c;--line:#eadde2;--paper:#fff;--bg:#faf6f7}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 system-ui,-apple-system,"Segoe UI",sans-serif;overflow-wrap:anywhere}
+.page{max-width:880px;margin:auto;padding:28px 24px 56px}
+header,section,footer{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;margin:0 0 18px}
+.brand{font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:750;color:var(--accent)}
+h1{font-size:clamp(26px,5vw,36px);line-height:1.25;margin:12px 0 16px;letter-spacing:-.025em}
+h2{font-size:21px;line-height:1.4;margin:0 0 14px}h3{font-size:17px;margin:22px 0 10px}
+p{margin:0 0 14px}p:last-child,ul:last-child,ol:last-child{margin-bottom:0}
+.meta,.small{font-size:14px;color:var(--muted)}ul,ol{padding-left:24px;margin:10px 0 16px}li{margin:7px 0}
+a{color:var(--accent);text-underline-offset:3px}a:hover{text-decoration-thickness:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #7943ab;outline-offset:4px}
+nav{display:flex;flex-wrap:wrap;gap:10px 20px;margin:20px 0 0}nav a{font-size:14px}
+.note,.warning{padding:16px 18px;border-radius:10px;margin:16px 0;border-left:4px solid var(--accent);background:#fcf0f4}
+.warning{border-color:#a7641a;background:#fff6e8}.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}
+th{background:#faf5f7}button,.button{display:inline-block;padding:12px 18px;background:var(--accent);color:white;border:0;border-radius:10px;font:inherit;font-weight:650;cursor:pointer;text-decoration:none}
+button:disabled{opacity:.6;cursor:wait}label{display:block;font-weight:650;margin:16px 0 6px}
+input:not([type=checkbox]),textarea{width:100%;padding:12px;font:inherit;color:inherit;background:white;border:1px solid #a99aa2;border-radius:8px}
+textarea{resize:vertical;min-height:110px}.checkbox{display:flex;gap:12px;align-items:flex-start;margin:20px 0}
+.checkbox input{flex-shrink:0;width:20px;height:20px;margin-top:5px}.checkbox label{font-weight:400;margin:0}
+.status{display:none;padding:16px;margin-top:16px;border-radius:10px}.status.success{display:block;background:#eaf7ef;color:#245635}.status.error{display:block;background:#fff0f0;color:#96323c}
+.skip{position:absolute;top:-100px;left:16px;background:white;padding:12px;z-index:10}.skip:focus{top:10px}
+@media(max-width:560px){.page{padding:16px 12px 32px}header,section,footer{padding:20px 18px;border-radius:14px}th,td{padding:10px 8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{body{background:white}.page{max-width:none;padding:0}header,section,footer{border:0;padding:12px 0}nav,.skip,form{display:none}h2,h3{break-after:avoid}}
+</style>
+</head>
+<body>
+<a class="skip" href="#noi-dung-chinh">メインコンテンツにスキップ</a>
+<main class="page" id="noi-dung-chinh">
+<header><div class="brand">SoulLocket · ドキュメントとサポート</div><h1>ソウルロケットについて</h1><p>個人または 2 人が思い出を保存し、個人的な感想を書き、連絡を取り合うためのスペースです。</p><p class="meta">コンテンツが更新されました: <time datetime="2026-09-09">2026 年 9 月 9 日</time> · 文書バージョン 2026-09-09</p><nav aria-label="文書言語"><a href="about.html" lang="vi" hreflang="vi">Tiếng Việt</a><a href="about-en.html" lang="en" hreflang="en">English</a><a href="about-de.html" lang="de" hreflang="de">Deutsch</a><a href="about-fr.html" lang="fr" hreflang="fr">Français</a><a href="about-es.html" lang="es" hreflang="es">Español</a><a href="about-it.html" lang="it" hreflang="it">Italiano</a><a href="about-pt.html" lang="pt" hreflang="pt">Português</a><a href="about-ru.html" lang="ru" hreflang="ru">Русский</a><span lang="ja" aria-current="page">日本語</span><a href="about-ko.html" lang="ko" hreflang="ko">한국어</a><a href="about-zh.html" lang="zh" hreflang="zh">简体中文</a></nav><p class="small">文書バージョン 2026-09-09 の翻訳。文言が不明瞭な場合、または言語間で異なる場合は、サポートにお問い合わせください。</p><nav aria-label="内容"><a href="#tong-quan">1. アカウントと共有スペース</a>
+<a href="#tinh-nang">2. 機能グループ</a>
+<a href="#du-lieu">3. データとインフラストラクチャ</a>
+<a href="#gioi-han">4. 知っておくべき制限事項</a>
+<a href="#ban-quyen">5. 著作権とサポート</a></nav></header>
+
+<section id="tong-quan"><h2>1. アカウントと共有スペース</h2><p>アカウントはサインインとアクセスの管理に使用されます。ハウスは、プロフィール、日記、思い出、共有コンテンツを保持するスペースです。このアプリは自分で使用することもできます。接続する、開く <strong>設定 → パートナーと接続する</strong> 招待状を作成、入力、またはスキャンします。</p><p>ペアリングされると、画面には両方のアバター、名前、接続日が表示されます。この画面の外にあるショートカットには、アバターとペアリング ステータスの両方が表示されます。カップル モードを選択しても、2 つのアカウントのペアリングが置き換えられるわけではありません。</p></section>
+<section id="tinh-nang"><h2>2. 機能グループ</h2><ul><li>ホーム: アバター、曜日カウンター、プレゼンス、ショートカット。</li><li>日記/思い出: 個人的な感想、保存された写真、同期されたコンテンツ。</li><li>チャット/コミュニティ: 各機能の範囲内のコンテンツ、対話、共有。</li><li>アプリのバージョンで利用できるユーティリティ、ゲーム、クリエイティブ コンテンツ。</li><li>設定、セキュリティ、サポート、プライバシーの選択。</li></ul><p>可用性は、プラットフォーム、バージョン、デバイスの権限、構成によって異なります。ソース コード内の機能ファイルは、その機能がすべてのリリースで有効になっているか、動作することを意味するものではありません。</p></section>
+<section id="du-lieu"><h2>3. データとインフラストラクチャ</h2><p>SoulLocket は、認証、データベース、通知に Firebase を使用し、関連するファイルとサービス フローに Cloudflare R2/Workers を使用します。サーバー データに加えて、デバイスはドラフト、キャッシュ、ダウンロードを保持する場合があります。</p><p>あなたのハウスパートナーは、機能に従って共有コンテンツにアクセスできます。 PIN ロック自体は、共有コンテンツを自分だけが閲覧できるようにするものではありません。ペアリングする前に、古い House の警告を読み、保持する必要があるものはすべてバックアップしてください。</p><p>を参照してください。 <a href="privacy-ja.html">プライバシーポリシー</a> プロバイダー、データ、そしてあなたの権利のために。</p></section>
+<section id="gioi-han"><h2>4. 知っておくべき制限事項</h2><p>SoulLocket は、絶対的なセキュリティ、中断のない操作、すべてのデータの回復を保証するものではありません。緊急サービスや専門家のアドバイスに代わるものではありません。 AI コンテンツ、地図、プレゼンス ステータスは不正確または遅延する可能性があります。</p><p>SoulLocket を秘密裏に追跡したり、他人に強要したり、使用する資格のないデータを共有したりするために使用しないでください。</p></section>
+<section id="ban-quyen"><h2>5. 著作権とサポート</h2><p>ブランド、ソフトウェア、ドキュメントはそれぞれの所有者に帰属します。ユーザー コンテンツおよびサードパーティの資産は、独自の権利/ライセンスを保持します。アプリ内のすべてのコンテンツが SoulLocket の独占的な所有物であると想定しないでください。</p><p>アカウント、著作権、プライバシーの問題については、お問い合わせください <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a> またはアプリ内のサポートエリア。パスワード、PIN、またはワンタイム コードは送信しないでください。</p></section>
+<footer><h2>ソウルロケットのドキュメント</h2><nav aria-label="関連資料"><a href="about-ja.html">について</a><a href="huong_dan-ja.html">ユーザーガイド</a><a href="huong_dan_cai_dat_lan_dau-ja.html">最初のセットアップ</a><a href="privacy-ja.html">プライバシー</a><a href="terms-ja.html">利用規約</a><a href="cookie-policy-ja.html">Cookie</a><a href="delete-account-ja.html">アカウントを削除する</a><a href="support-ja.html">サポート</a></nav><p class="small">プライバシーとサポート: <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p></footer>
+</main>
+
+
+</body></html>

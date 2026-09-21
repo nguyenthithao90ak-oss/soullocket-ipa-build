@@ -1,0 +1,62 @@
+<!DOCTYPE html><html lang="ja" dir="ltr"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="ペアリング、日記、アプリのバージョンで利用できる機能を使用する前に、アカウントとデータ容量を確認してください。">
+<meta name="soullocket-document-version" content="2026-09-09">
+<title>SoulLocket ユーザーガイド</title>
+<style>
+:root{color-scheme:light;--ink:#30292d;--muted:#6d6067;--accent:#a13e5c;--line:#eadde2;--paper:#fff;--bg:#faf6f7}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 system-ui,-apple-system,"Segoe UI",sans-serif;overflow-wrap:anywhere}
+.page{max-width:880px;margin:auto;padding:28px 24px 56px}
+header,section,footer{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;margin:0 0 18px}
+.brand{font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:750;color:var(--accent)}
+h1{font-size:clamp(26px,5vw,36px);line-height:1.25;margin:12px 0 16px;letter-spacing:-.025em}
+h2{font-size:21px;line-height:1.4;margin:0 0 14px}h3{font-size:17px;margin:22px 0 10px}
+p{margin:0 0 14px}p:last-child,ul:last-child,ol:last-child{margin-bottom:0}
+.meta,.small{font-size:14px;color:var(--muted)}ul,ol{padding-left:24px;margin:10px 0 16px}li{margin:7px 0}
+a{color:var(--accent);text-underline-offset:3px}a:hover{text-decoration-thickness:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #7943ab;outline-offset:4px}
+nav{display:flex;flex-wrap:wrap;gap:10px 20px;margin:20px 0 0}nav a{font-size:14px}
+.note,.warning{padding:16px 18px;border-radius:10px;margin:16px 0;border-left:4px solid var(--accent);background:#fcf0f4}
+.warning{border-color:#a7641a;background:#fff6e8}.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}
+th{background:#faf5f7}button,.button{display:inline-block;padding:12px 18px;background:var(--accent);color:white;border:0;border-radius:10px;font:inherit;font-weight:650;cursor:pointer;text-decoration:none}
+button:disabled{opacity:.6;cursor:wait}label{display:block;font-weight:650;margin:16px 0 6px}
+input:not([type=checkbox]),textarea{width:100%;padding:12px;font:inherit;color:inherit;background:white;border:1px solid #a99aa2;border-radius:8px}
+textarea{resize:vertical;min-height:110px}.checkbox{display:flex;gap:12px;align-items:flex-start;margin:20px 0}
+.checkbox input{flex-shrink:0;width:20px;height:20px;margin-top:5px}.checkbox label{font-weight:400;margin:0}
+.status{display:none;padding:16px;margin-top:16px;border-radius:10px}.status.success{display:block;background:#eaf7ef;color:#245635}.status.error{display:block;background:#fff0f0;color:#96323c}
+.skip{position:absolute;top:-100px;left:16px;background:white;padding:12px;z-index:10}.skip:focus{top:10px}
+@media(max-width:560px){.page{padding:16px 12px 32px}header,section,footer{padding:20px 18px;border-radius:14px}th,td{padding:10px 8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{body{background:white}.page{max-width:none;padding:0}header,section,footer{border:0;padding:12px 0}nav,.skip,form{display:none}h2,h3{break-after:avoid}}
+</style>
+</head>
+<body>
+<a class="skip" href="#noi-dung-chinh">メインコンテンツにスキップ</a>
+<main class="page" id="noi-dung-chinh">
+<header><div class="brand">SoulLocket · ドキュメントとサポート</div><h1>SoulLocket ユーザーガイド</h1><p>ペアリング、日記、アプリのバージョンで利用できる機能を使用する前に、アカウントとデータ容量を確認してください。</p><p class="meta">コンテンツが更新されました: <time datetime="2026-09-09">2026 年 9 月 9 日</time> · 文書バージョン 2026-09-09</p><nav aria-label="文書言語"><a href="huong_dan.html" lang="vi" hreflang="vi">Tiếng Việt</a><a href="huong_dan-en.html" lang="en" hreflang="en">English</a><a href="huong_dan-de.html" lang="de" hreflang="de">Deutsch</a><a href="huong_dan-fr.html" lang="fr" hreflang="fr">Français</a><a href="huong_dan-es.html" lang="es" hreflang="es">Español</a><a href="huong_dan-it.html" lang="it" hreflang="it">Italiano</a><a href="huong_dan-pt.html" lang="pt" hreflang="pt">Português</a><a href="huong_dan-ru.html" lang="ru" hreflang="ru">Русский</a><span lang="ja" aria-current="page">日本語</span><a href="huong_dan-ko.html" lang="ko" hreflang="ko">한국어</a><a href="huong_dan-zh.html" lang="zh" hreflang="zh">简体中文</a></nav><p class="small">文書バージョン 2026-09-09 の翻訳。文言が不明瞭な場合、または言語間で異なる場合は、サポートにお問い合わせください。</p><nav aria-label="内容"><a href="#bat-dau">1. はじめに</a>
+<a href="#tai-khoan">2.ペアリングと別のQRコード</a>
+<a href="#nhat-ky">3. 感想を書いて思い出を保存する</a>
+<a href="#tinh-nang">4. チャットとユーティリティ</a>
+<a href="#bao-mat">5. セキュリティと同期</a>
+<a href="#vip">6. 取引と特典</a>
+<a href="#su-co">7. トラブルシューティング</a></nav></header>
+
+<section id="bat-dau"><h2>1. はじめに</h2><ol><li>選択した方法を使用して登録/サインインします。利用規約、ポリシー、プライバシーの選択をお読みください。</li><li>リクエストに応じて、プロフィール/ハウスのセットアップを完了します。設定で名前、アバター、アカウントのメールアドレスを確認してください。</li><li>関連する機能が必要な場合にのみ、カメラ、マイク、位置情報、または通知のアクセス許可を付与します。オペレーティング システムの権限を変更できます。</li><li>読む <a href="huong_dan_cai_dat_lan_dau-ja.html">最初のセットアップ</a> 短いエントリを保存して同期を確認します。</li></ol></section>
+<section id="tai-khoan"><h2>2.ペアリングと別のQRコード</h2><h3>2 つのアカウントをペアリングする</h3><ol><li>開く <strong>設定 → パートナーと接続する</strong>.</li><li>家を残したい人が選ぶ <strong>コードを作成する</strong>、有効期限を選択し、12 桁の招待状または QR をパートナーに送信します。</li><li>相手が選ぶ <strong>パートナーのコードを入力してください</strong>をクリックしてコードを入力/貼り付けるか、招待状 QR をスキャンします。</li><li>データ警告を読み、リクエストを送信し、作成者の承認を待ちます。ハウス ID を知っていても、自動的にアクセスが許可されるわけではありません。</li><li>完了したら、アバター、名前、接続日の両方を確認します。 「パートナーと接続」ショートカットにも、アバターと接続ステータスの両方が表示されます。</li></ol>
+<div class="warning"><strong>2 つのデータ スペースは自動的にはマージされません。</strong> コードを入力した人は作成者の家に移動します。メンバーが残っていない古い議院は掃除されるかもしれません。確認する前に、必要なものをエクスポートまたは保存します。招待コードや QR 画像を公開しないでください。</div>
+<h3>3種類のコード</h3><ul><li><strong>ペアリングコード/QR:</strong> 有効期限があり、承認が必要な 1 回限りの招待状。</li><li><strong>ログインQR:</strong> サインインしたいデバイスはコードを表示します。すでにサインインしているデバイスは、このフローが利用可能になるとスキャンして確認します。見知らぬ人のログインコードをスキャンしないでください。</li><li><strong>プロフィール/ハウスQR:</strong> 機能に従ってプロフィールまたは共有を開きます。それ自体はメンバーシップを付与するものではありません。</li></ul><p>設定で「カップル」を選択してもペアリングされたわけではありません。すでにパートナーがいるにもかかわらずコードの作成が表示される場合は、アカウント/ハウスと接続を確認し、サポートにお問い合わせください。トラブルシューティングのために新しいハウスを作成しないでください。</p></section>
+<section id="nhat-ky"><h2>3. 感想を書いて思い出を保存する</h2><ol><li>開く <strong>日記</strong>、次に選択します <strong>反射</strong> 書くか、 <strong>思い出</strong> 写真を追加します。</li><li>気分/コンテンツを選択して保存します。成功するまで待ち、エントリ/写真がリストに表示されることを確認します。</li><li>セッションの有効期限が切れた場合は、正しいアカウントに再度サインインする前に、未送信のコンテンツのコピーを保存してください。</li><li>同期が不完全な場合は、接続、正しいハウスおよびアップロードのステータスを確認してください。同期されていない下書きが残っている間は、アプリのデータを消去したり、アンインストールしたりしないでください。</li></ol><p>利用可能な機能を使用してコンテンツをエクスポート/ダウンロードし、保存されたファイルを確認します。エクスポートされたファイルはアプリのプライバシー管理の対象外です。安全に保管してください。</p></section>
+<section id="tinh-nang"><h2>4. チャットとユーティリティ</h2><p>アプリのバージョンで利用可能なセクションを使用して、メッセージを送信したり、コンテンツを共有したり、マップを表示したり、ユーティリティ/ゲームを開いたりします。すべての機能がすべてのプラットフォームで利用できるわけではありません。</p><ul><li>投稿、写真、カード、リンクを送信する前に、受信者と公開範囲を確認してください。</li><li>地図/位置情報の共有は、有効かつ許可されている場合、バックグラウンドで実行される場合があります。共有したくない場合は、機能またはオペレーティング システムでオフにします。</li><li>録音にはマイクが必要です。写真を撮ったり QR コードをスキャンしたりするにはカメラが必要です。テキストのみのメッセージングでは、テキストを送信するためだけにカメラやマイクにアクセスする必要はありません。</li><li>嫌がらせを受けた場合は報告/ブロックするか、サポートに連絡してください。 AI は参考用です。アカウントの秘密を AI に送信しないでください。</li></ul></section>
+<section id="bao-mat"><h2>5. セキュリティと同期</h2><p>サポートされている場合は PIN/生体認証ロックを有効にし、サインインしているデバイスを確認し、プライバシー設定を確認します。 PIN はインターフェイスへのアクセスをロックします。それ自体は下院パートナーの権限を変更するものではありません。</p><p>新しいデバイスで正しいアカウントにサインインすると、同期されたデータが復元される場合があります。下書き、キャッシュ、ローカルのみのコンテンツ、または保留中のアップロードは転送できない場合があります。デバイスを切り替える前に、データを確認し、重要なものをエクスポートしてください。</p><p>パスワード、PIN、ワンタイム コード、ログイン QR コードを共有しないでください。エラー スクリーンショットの個人情報を編集します。</p></section>
+<section id="vip"><h2>6. 取引と特典</h2><p>アプリのバージョンが有料機能を提供している場合は、確認画面で価格、期間、更新条件を確認してください。特典を復元するには、購入ストア アカウントを使用します。特典や特典が不足している場合は、調整のためにトランザクション ID またはイベント時間をサポートに送信してください。トラブルシューティングの手順として再度購入しないでください。</p><p>アプリをアンインストールしたり、アカウントを削除しても、サブスクリプションは自動的にキャンセルされません。関連する支払いプラットフォームを通じてプランを管理します。を参照してください。 <a href="terms-ja.html#vip">取引条件</a>.</p></section>
+<section id="su-co"><h2>7. トラブルシューティング</h2><ul><li><strong>サインイン/セッションの期限切れ:</strong> 接続、デバイスの時間、正しいアカウントのサインイン方法を確認してください。サインアウトする前に下書きを保存します。</li><li><strong>招待エラー:</strong> 12 桁すべて、有効期限、使用済みか承認待ちか、および QR タイプを確認します。スキャンが失敗した場合は、コードを手動で入力します。</li><li><strong>反射/写真は保存されません:</strong> コピーを保管し、保存されたリストを確認して重複を避け、それでも見つからない場合は問題を報告してください。</li><li><strong>古いデータが欠落しています:</strong> アカウントとハウスを確認してください。原因を特定する前にデータの削除や再ペアリングを行わないでください。</li></ul><p>プラットフォーム、バージョン、画面、アクション、エラー時間を送信してください。 <a href="support-ja.html">サポート</a>。パスワード/PIN/ワンタイム コードは送信しないでください。データを削除するには、を参照してください。 <a href="delete-account-ja.html">アカウント削除ガイド</a> 単にアプリをアンインストールするのではなく、</p></section>
+<footer><h2>ソウルロケットのドキュメント</h2><nav aria-label="関連資料"><a href="about-ja.html">について</a><a href="huong_dan-ja.html">ユーザーガイド</a><a href="huong_dan_cai_dat_lan_dau-ja.html">最初のセットアップ</a><a href="privacy-ja.html">プライバシー</a><a href="terms-ja.html">利用規約</a><a href="cookie-policy-ja.html">Cookie</a><a href="delete-account-ja.html">アカウントを削除する</a><a href="support-ja.html">サポート</a></nav><p class="small">プライバシーとサポート: <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p></footer>
+</main>
+
+
+</body></html>

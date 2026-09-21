@@ -1047,32 +1047,32 @@ class _HomeStoryLetterhead extends StatelessWidget {
     late final Color timeSurface;
 
     if (hour < 6) {
-      timeLabel = context.tr('Khuya rồi');
-      timeMood = context.tr('Nhẹ nhàng bên nhau một chút nhé');
+      timeLabel = context.tr('home_time_late_night_title');
+      timeMood = context.tr('home_time_late_night_sub');
       timeIcon = Icons.bedtime_rounded;
       timeAccent = const Color(0xFF8B72C8);
       timeSurface = const Color(0xFFF2EDFF);
     } else if (hour < 11) {
-      timeLabel = context.tr('Chào buổi sáng');
-      timeMood = context.tr('Một ngày mới của hai mình');
+      timeLabel = context.tr('home_time_morning_title');
+      timeMood = context.tr('home_time_morning_sub');
       timeIcon = Icons.wb_sunny_rounded;
       timeAccent = const Color(0xFFF3A64A);
       timeSurface = const Color(0xFFFFF5DD);
     } else if (hour < 14) {
-      timeLabel = context.tr('Buổi trưa dịu dàng');
-      timeMood = context.tr('Nhớ nghỉ một chút và thương nhau');
+      timeLabel = context.tr('home_time_noon_title');
+      timeMood = context.tr('home_time_noon_sub');
       timeIcon = Icons.light_mode_rounded;
       timeAccent = const Color(0xFFEA8B65);
       timeSurface = const Color(0xFFFFEEE5);
     } else if (hour < 19) {
-      timeLabel = context.tr('Chiều của chúng mình');
-      timeMood = context.tr('Lưu thêm một điều đáng nhớ hôm nay');
+      timeLabel = context.tr('home_time_afternoon_title');
+      timeMood = context.tr('home_time_afternoon_sub');
       timeIcon = Icons.auto_awesome_rounded;
       timeAccent = const Color(0xFFE46F91);
       timeSurface = const Color(0xFFFFEAF0);
     } else {
-      timeLabel = context.tr('Tối bình yên');
-      timeMood = context.tr('Khép ngày bằng một lời yêu thương');
+      timeLabel = context.tr('home_time_evening_title');
+      timeMood = context.tr('home_time_evening_sub');
       timeIcon = Icons.nightlight_round;
       timeAccent = const Color(0xFF8F72D8);
       timeSurface = const Color(0xFFF2ECFF);
@@ -1154,7 +1154,7 @@ class _HomeStoryLetterhead extends StatelessWidget {
                         ),
                         const SizedBox(height: 1),
                         Text(
-                          context.tr('Góc nhỏ của hai mình'),
+                          context.tr('home_scrapbook_our_corner'),
                           style: SLTheme.quicksand(
                             fontSize: 9.5,
                             fontWeight: FontWeight.w700,

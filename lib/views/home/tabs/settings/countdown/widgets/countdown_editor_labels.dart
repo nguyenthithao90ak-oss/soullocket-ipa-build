@@ -5,59 +5,59 @@ extension LabelsEditorExt on _CountdownModeEditorScreenState {
   List<Widget> _buildEditorLabels(
     BuildContext context,
     _CountdownModeThemeData themeData,
-  ) {
-    return [
-      _sectionCard(
-        icon: Icons.timelapse_rounded,
-        title: context.tr('p7_countdown_preview_title'),
-        subtitle: context.tr('p7_countdown_preview_subtitle'),
-        iconGradient: const [Color(0xFF3B82F6), Color(0xFF60A5FA)],
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFF6FA),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFF4D2E1)),
-          ),
-          child: Column(
-            children: [
-              Text(
-                _previewTopLabel(),
-                style: SLTheme.textStyleForKey(
-                  _fontKey,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF7C6D76),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _anchorDate == null
-                    ? '--'
-                    : _daysSince(_anchorDate!).toString(),
-                style: SLTheme.textStyleForKey(
-                  _fontKey,
-                  fontSize: 42,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFFD81B60),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                _previewBottomLabel(),
-                style: SLTheme.textStyleForKey(
-                  _fontKey,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF7C6D76),
-                ),
-              ),
-            ],
-          ),
-        ),
+  ) => [
+    Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppearancePanelStyle.paper,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppearancePanelStyle.line),
       ),
-      const SizedBox(height: 10),
-    ];
-  }
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+        final size = privateSpaceDialSize(constraints.maxWidth, _sizePx * .6);
+          final value = _anchorDate == null
+              ? '--'
+              : _daysSince(_anchorDate!).toString();
+          if ({'default', 'plain', 'rose_wave', ''}.contains(_styleKey)) {
+            return PrivateSpaceDial(
+              value: value,
+              topLabel: _previewTopLabel(),
+              bottomLabel: _previewBottomLabel(),
+              size: size,
+              fontKey: _fontKey,
+              transparent: _transparentMode,
+            );
+          }
+          return Center(
+            child: SizedBox(
+              width: size,
+              height: size,
+              child: FittedBox(
+                child: MediaQuery.withNoTextScaling(
+                  child: _CountdownModeCircle(
+                    size: 320,
+                    value: value,
+                    topLabel: _previewTopLabel(),
+                    bottomLabel: _previewBottomLabel(),
+                    styleData: _CountdownModeStyleData.resolve(
+                      _styleKey,
+                      _transparentMode,
+                    ),
+                    fontKey: _fontKey,
+                    styleKey: _styleKey,
+                    countdownShapeKey: UiPrefs.notifier.value.countdownShapeKey,
+                    transparentMode: _transparentMode,
+                    enableMotion: false,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    ),
+  ];
 }

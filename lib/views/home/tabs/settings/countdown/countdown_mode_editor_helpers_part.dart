@@ -95,84 +95,11 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
     List<Color>? iconGradient,
     required Widget child,
   }) {
-    final gradient =
-        iconGradient ?? const [Color(0xFFEC407A), Color(0xFFD81B60)];
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFFFFF), Color(0xFFFFF8FB), Color(0xFFFDF0F6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFF8DBE8), width: 1.0),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFD81B60).withValues(alpha: 0.05),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: gradient,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: gradient.last.withValues(alpha: 0.25),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Icon(icon, color: Colors.white, size: 16),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: SLTheme.quicksand(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFFD81B60),
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: SLTheme.quicksand(
-                        fontSize: 11.8,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF7C6D76),
-                        height: 1.42,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          child,
-        ],
-      ),
+    return AppearanceSectionCard(
+      icon: icon,
+      title: title,
+      description: subtitle,
+      child: child,
     );
   }
 

@@ -1,14 +1,14 @@
 import 'package:flutter/foundation.dart';
 
-enum HomeCompanionCharacter { bunny, bear }
+enum HomeCompanionCharacter { bunny, bear, kuromi, melody }
 
-enum CompanionHat { none, bow, cap, crown }
+enum CompanionHat { none, bow, cap, crown, beret, beanie }
 
-enum CompanionGlasses { none, round, sunglasses, star }
+enum CompanionGlasses { none, round, sunglasses, star, heart, monocle }
 
-enum CompanionClothes { classic, overalls, hoodie, night }
+enum CompanionClothes { classic, overalls, hoodie, night, raincoat, sailor }
 
-enum CompanionProp { none, mirror, flower, wand }
+enum CompanionProp { none, mirror, flower, wand, balloon, book }
 
 /// Tủ đồ trang trí trên thiết bị, độc lập cho từng bé, không chứa dữ liệu cá nhân.
 @immutable

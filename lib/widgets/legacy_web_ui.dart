@@ -1,7 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
-import 'package:soullocket_app/widgets/r2_sticker_image.dart';
+import 'keepsake_frame.dart';
+import '../views/ui_prefs.dart';
 import '../core/sl_theme.dart';
 
 class LegacyWebUi {
@@ -93,6 +94,21 @@ class LegacyWebUi {
       );
     }
 
+    if (KeepsakePalette.newStyleKeys.contains(frameKey)) {
+      final p = KeepsakePalette.of(frameKey);
+      return build(
+        gradient: p.rim,
+        border: Border.all(color: Colors.white, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: p.accent.withValues(alpha: .14),
+            blurRadius: blur * .6,
+            offset: Offset(0, yOffset * .6),
+          ),
+        ],
+      );
+    }
+
     switch (frameKey) {
       case 'off':
         return BoxDecoration(
@@ -177,7 +193,9 @@ class LegacyWebUi {
             end: Alignment.bottomRight,
           ),
           border: Border.all(
-              color: Colors.white.withValues(alpha: 0.92), width: 2.4),
+            color: Colors.white.withValues(alpha: 0.92),
+            width: 2.4,
+          ),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFF8DCDFD).withValues(alpha: 0.20),
@@ -212,7 +230,8 @@ class LegacyWebUi {
         return build(
           color: Colors.white,
           border: Border.all(
-            color: Color.lerp(accentColor, Colors.white, 0.52) ??
+            color:
+                Color.lerp(accentColor, Colors.white, 0.52) ??
                 const Color(0xFFFFB7CF),
             width: 4,
           ),
@@ -232,7 +251,8 @@ class LegacyWebUi {
     double radius = 28,
     List<Color>? colors,
   }) {
-    final palette = colors ??
+    final palette =
+        colors ??
         [
           SLColors.bgElevated.withValues(alpha: 0.98),
           Color.lerp(accent, SLColors.bgElevated, 0.92) ?? SLColors.bgElevated,
@@ -276,18 +296,24 @@ class LegacyWebUi {
       ),
       border: OutlineInputBorder(
         borderRadius: SLRadius.xlAll,
-        borderSide:
-            BorderSide(color: accent.withValues(alpha: 0.18), width: 1.2),
+        borderSide: BorderSide(
+          color: accent.withValues(alpha: 0.18),
+          width: 1.2,
+        ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: SLRadius.xlAll,
-        borderSide:
-            BorderSide(color: accent.withValues(alpha: 0.16), width: 1.2),
+        borderSide: BorderSide(
+          color: accent.withValues(alpha: 0.16),
+          width: 1.2,
+        ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: SLRadius.xlAll,
-        borderSide:
-            BorderSide(color: accent.withValues(alpha: 0.70), width: 1.8),
+        borderSide: BorderSide(
+          color: accent.withValues(alpha: 0.70),
+          width: 1.8,
+        ),
       ),
       filled: true,
       fillColor: SLColors.bgElevated.withValues(alpha: 0.96),
@@ -307,8 +333,12 @@ class LegacyWebUi {
     final messenger = ScaffoldMessenger.maybeOf(context);
     if (messenger == null) return;
 
-    final notice =
-        _resolveNoticeStyleV2(message, success, title: title, icon: icon);
+    final notice = _resolveNoticeStyleV2(
+      message,
+      success,
+      title: title,
+      icon: icon,
+    );
 
     messenger
       ..hideCurrentSnackBar()
@@ -322,14 +352,16 @@ class LegacyWebUi {
           duration: Duration(seconds: success ? 3 : 4),
           content: Container(
             padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
-            decoration: softPanelDecoration(
-              accent: notice.borderColor,
-              radius: 24,
-              colors: notice.gradient,
-            ).copyWith(
-              border:
-                  Border.all(color: notice.borderColor.withValues(alpha: 0.30)),
-            ),
+            decoration:
+                softPanelDecoration(
+                  accent: notice.borderColor,
+                  radius: 24,
+                  colors: notice.gradient,
+                ).copyWith(
+                  border: Border.all(
+                    color: notice.borderColor.withValues(alpha: 0.30),
+                  ),
+                ),
             child: Row(
               children: [
                 Container(
@@ -339,14 +371,15 @@ class LegacyWebUi {
                     gradient: LinearGradient(
                       colors: [
                         notice.iconTint.withValues(alpha: 0.16),
-                        Colors.white
+                        Colors.white,
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: SLRadius.lgAll,
                     border: Border.all(
-                        color: notice.iconTint.withValues(alpha: 0.14)),
+                      color: notice.iconTint.withValues(alpha: 0.14),
+                    ),
                   ),
                   child: Icon(notice.icon, color: notice.iconTint, size: 20),
                 ),
@@ -396,8 +429,12 @@ class LegacyWebUi {
     final messenger = ScaffoldMessenger.maybeOf(context);
     if (messenger == null) return;
 
-    final notice =
-        _resolveNoticeStyleV2(message, success, title: title, icon: icon);
+    final notice = _resolveNoticeStyleV2(
+      message,
+      success,
+      title: title,
+      icon: icon,
+    );
 
     messenger
       ..hideCurrentSnackBar()
@@ -411,14 +448,16 @@ class LegacyWebUi {
           duration: Duration(seconds: success ? 3 : 8),
           content: Container(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-            decoration: softPanelDecoration(
-              accent: notice.borderColor,
-              radius: 24,
-              colors: notice.gradient,
-            ).copyWith(
-              border:
-                  Border.all(color: notice.borderColor.withValues(alpha: 0.30)),
-            ),
+            decoration:
+                softPanelDecoration(
+                  accent: notice.borderColor,
+                  radius: 24,
+                  colors: notice.gradient,
+                ).copyWith(
+                  border: Border.all(
+                    color: notice.borderColor.withValues(alpha: 0.30),
+                  ),
+                ),
             child: Row(
               children: [
                 Container(
@@ -428,14 +467,15 @@ class LegacyWebUi {
                     gradient: LinearGradient(
                       colors: [
                         notice.iconTint.withValues(alpha: 0.16),
-                        Colors.white
+                        Colors.white,
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: SLRadius.lgAll,
                     border: Border.all(
-                        color: notice.iconTint.withValues(alpha: 0.14)),
+                      color: notice.iconTint.withValues(alpha: 0.14),
+                    ),
                   ),
                   child: Icon(notice.icon, color: notice.iconTint, size: 20),
                 ),
@@ -473,16 +513,17 @@ class LegacyWebUi {
                     onAction();
                   },
                   style: TextButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    foregroundColor: notice.iconTint,
-                    textStyle: SLTheme.quicksand(
-                      fontWeight: FontWeight.w900,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
                     ),
+                    foregroundColor: notice.iconTint,
+                    textStyle: SLTheme.quicksand(fontWeight: FontWeight.w900),
                     shape: RoundedRectangleBorder(
                       borderRadius: SLRadius.pillAll,
                       side: BorderSide(
-                          color: notice.iconTint.withValues(alpha: 0.28)),
+                        color: notice.iconTint.withValues(alpha: 0.28),
+                      ),
                     ),
                   ),
                   child: Text(actionLabel),
@@ -502,20 +543,24 @@ class LegacyWebUi {
     IconData? icon,
   }) {
     final lower = message.toLowerCase();
-    final isAccount = lower.contains('email') ||
+    final isAccount =
+        lower.contains('email') ||
         lower.contains('tài khoản') ||
         lower.contains('google') ||
         lower.contains('xác thực');
-    final isSecurity = lower.contains('bảo mật') ||
+    final isSecurity =
+        lower.contains('bảo mật') ||
         lower.contains('mật mã') ||
         lower.contains('khóa');
-    final isSave = lower.contains('lưu') ||
+    final isSave =
+        lower.contains('lưu') ||
         lower.contains('cập nhật') ||
         lower.contains('đồng bộ');
 
     if (isAccount) {
       return _LegacyNoticeStyle(
-        title: title ??
+        title:
+            title ??
             (success
                 ? L10nService().translate('legacy_account_status')
                 : L10nService().translate('legacy_account_check_needed')),
@@ -525,7 +570,7 @@ class LegacyWebUi {
         gradient: const [
           Color(0xFFFFFBFF),
           Color(0xFFF4EEFF),
-          Color(0xFFFFFFFF)
+          Color(0xFFFFFFFF),
         ],
         titleColor: const Color(0xFF5B35B1),
         bodyColor: const Color(0xFF564A74),
@@ -534,7 +579,8 @@ class LegacyWebUi {
 
     if (isSecurity) {
       return _LegacyNoticeStyle(
-        title: title ??
+        title:
+            title ??
             (success
                 ? L10nService().translate('legacy_security_updated')
                 : L10nService().translate('legacy_security_warning')),
@@ -544,7 +590,7 @@ class LegacyWebUi {
         gradient: const [
           Color(0xFFFFFCF7),
           Color(0xFFFFF1E4),
-          Color(0xFFFFFFFF)
+          Color(0xFFFFFFFF),
         ],
         titleColor: const Color(0xFFB05A00),
         bodyColor: const Color(0xFF755236),
@@ -553,15 +599,18 @@ class LegacyWebUi {
 
     if (isSave) {
       return _LegacyNoticeStyle(
-        title: title ??
+        title:
+            title ??
             (success
                 ? L10nService().translate('legacy_saved_success')
                 : L10nService().translate('legacy_save_failed')),
-        icon: icon ??
+        icon:
+            icon ??
             (success ? Icons.auto_awesome_rounded : Icons.warning_rounded),
         iconTint: success ? const Color(0xFFD81B60) : const Color(0xFFE53935),
-        borderColor:
-            success ? const Color(0xFFF48FB1) : const Color(0xFFEF9A9A),
+        borderColor: success
+            ? const Color(0xFFF48FB1)
+            : const Color(0xFFEF9A9A),
         gradient: success
             ? const [Color(0xFFFFFBFD), Color(0xFFFFEEF5), Color(0xFFFFFFFF)]
             : const [Color(0xFFFFF7F7), Color(0xFFFFEBEE), Color(0xFFFFFFFF)],
@@ -571,7 +620,8 @@ class LegacyWebUi {
     }
 
     return _LegacyNoticeStyle(
-      title: title ??
+      title:
+          title ??
           (success
               ? L10nService().translate('legacy_action_done')
               : L10nService().translate('legacy_error_occurred')),
@@ -595,21 +645,25 @@ _LegacyNoticeStyle _resolveNoticeStyleV2(
   IconData? icon,
 }) {
   final lower = message.toLowerCase();
-  final isAccount = lower.contains('email') ||
+  final isAccount =
+      lower.contains('email') ||
       lower.contains('tài khoản') ||
       lower.contains('google') ||
       lower.contains('xác thực');
-  final isSecurity = lower.contains('bảo mật') ||
+  final isSecurity =
+      lower.contains('bảo mật') ||
       lower.contains('mật mã') ||
       lower.contains('khóa') ||
       lower.contains('pin');
-  final isSave = lower.contains('lưu') ||
+  final isSave =
+      lower.contains('lưu') ||
       lower.contains('cập nhật') ||
       lower.contains('đồng bộ');
 
   if (isAccount) {
     return _LegacyNoticeStyle(
-      title: title ??
+      title:
+          title ??
           (success
               ? L10nService().translate('legacy_account_status')
               : L10nService().translate('legacy_account_check_needed')),
@@ -628,18 +682,15 @@ _LegacyNoticeStyle _resolveNoticeStyleV2(
 
   if (isSecurity) {
     return _LegacyNoticeStyle(
-      title: title ??
+      title:
+          title ??
           (success
               ? L10nService().translate('legacy_security_updated')
               : L10nService().translate('legacy_security_warning')),
       icon: icon ?? Icons.verified_user_rounded,
       iconTint: const Color(0xFFBF7A17),
       borderColor: const Color(0xFFE9C98C),
-      gradient: const [
-        Color(0xFFFFFCF7),
-        Color(0xFFFFF2DE),
-        Color(0xFFFFFFFF),
-      ],
+      gradient: const [Color(0xFFFFFCF7), Color(0xFFFFF2DE), Color(0xFFFFFFFF)],
       titleColor: const Color(0xFF935F14),
       bodyColor: const Color(0xFF7D5C38),
     );
@@ -647,32 +698,27 @@ _LegacyNoticeStyle _resolveNoticeStyleV2(
 
   if (isSave) {
     return _LegacyNoticeStyle(
-      title: title ??
+      title:
+          title ??
           (success
               ? L10nService().translate('legacy_saved_success')
               : L10nService().translate('legacy_save_failed')),
-      icon: icon ??
+      icon:
+          icon ??
           (success ? Icons.auto_awesome_rounded : Icons.warning_rounded),
       iconTint: success ? const Color(0xFF2E7D32) : SLColors.danger,
       borderColor: success ? const Color(0xFFA5D6A7) : const Color(0xFFF2C5C5),
       gradient: success
-          ? const [
-              Color(0xFFF9FFF9),
-              Color(0xFFF0FFF4),
-              Color(0xFFFFFFFF),
-            ]
-          : const [
-              Color(0xFFFFF7F7),
-              Color(0xFFFFEBEE),
-              Color(0xFFFFFFFF),
-            ],
+          ? const [Color(0xFFF9FFF9), Color(0xFFF0FFF4), Color(0xFFFFFFFF)]
+          : const [Color(0xFFFFF7F7), Color(0xFFFFEBEE), Color(0xFFFFFFFF)],
       titleColor: success ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
       bodyColor: success ? SLColors.textSecond : const Color(0xFF7A4D4D),
     );
   }
 
   return _LegacyNoticeStyle(
-    title: title ??
+    title:
+        title ??
         (success
             ? L10nService().translate('legacy_action_done')
             : L10nService().translate('legacy_error_occurred')),
@@ -856,10 +902,7 @@ class _SlAnimatedVipFrameState extends State<SlAnimatedVipFrame>
                   padding: widget.padding,
                   child: widget.isCircle
                       ? ClipOval(child: widget.child)
-                      : ClipRRect(
-                          borderRadius: radius!,
-                          child: widget.child,
-                        ),
+                      : ClipRRect(borderRadius: radius!, child: widget.child),
                 ),
               ],
             ),
@@ -896,6 +939,7 @@ class SlAvatarFrame extends StatelessWidget {
   final Color accentColor;
   final Widget child;
   final bool isUser1;
+  final bool animate;
 
   const SlAvatarFrame({
     super.key,
@@ -904,6 +948,7 @@ class SlAvatarFrame extends StatelessWidget {
     required this.accentColor,
     required this.child,
     this.isUser1 = true,
+    this.animate = true,
   });
 
   @override
@@ -913,8 +958,10 @@ class SlAvatarFrame extends StatelessWidget {
     final frameIsCircle = LegacyWebUi.avatarFrameIsCircle(frameKey);
 
     // Tính toán inner border radius để ôm concentric hoàn hảo
-    final double rawRadius =
-        LegacyWebUi.avatarBorderRadiusForKey(frameKey, size).bottomRight.x;
+    final double rawRadius = LegacyWebUi.avatarBorderRadiusForKey(
+      frameKey,
+      size,
+    ).bottomRight.x;
     final double rawPadding = framePadding.top;
     final innerRadius = frameIsCircle
         ? null
@@ -922,222 +969,37 @@ class SlAvatarFrame extends StatelessWidget {
 
     final clippedAvatar = frameIsCircle
         ? ClipOval(child: child)
-        : ClipRRect(
-            borderRadius: innerRadius ?? frameRadius,
-            child: child,
-          );
+        : ClipRRect(borderRadius: innerRadius ?? frameRadius, child: child);
 
-    final mainFrame = frameKey == 'vip'
-        ? SlAnimatedVipFrame(
-            size: size,
-            padding: framePadding,
-            isCircle: frameIsCircle,
-            borderRadius: frameRadius,
-            child: child,
-          )
-        : Container(
-            width: size,
-            height: size,
-            decoration: LegacyWebUi.avatarFrameDecoration(
-              frameKey,
-              size,
-              accentColor: accentColor,
-            ),
-            child: Padding(
-              padding: framePadding,
-              child: clippedAvatar,
-            ),
-          );
-
-    if (frameKey == 'off') {
-      return mainFrame;
-    }
-
-    final List<Widget> decorations = [];
-
-    switch (frameKey) {
-      case 'rounded':
-        decorations.addAll([
-          Positioned(
-            top: -size * 0.08,
-            right: -size * 0.08,
-            child: R2StickerImage(
-              'assets/images/anhtomau_stickers/sticker_20.gif',
-              width: size * 0.35,
-              height: size * 0.35,
-              fit: BoxFit.contain,
-            ),
-          ),
-          Positioned(
-            bottom: -size * 0.08,
-            left: -size * 0.08,
-            child: R2StickerImage(
-              'assets/images/anhtomau_stickers/sticker_21.gif',
-              width: size * 0.35,
-              height: size * 0.35,
-              fit: BoxFit.contain,
-            ),
-          ),
-        ]);
-        break;
-      case 'squircle':
-        decorations.addAll([
-          Positioned(
-            top: -size * 0.08,
-            left: -size * 0.08,
-            child: R2StickerImage(
-              'assets/images/anhtomau_stickers/sticker_14.gif',
-              width: size * 0.35,
-              height: size * 0.35,
-              fit: BoxFit.contain,
-            ),
-          ),
-          Positioned(
-            bottom: -size * 0.08,
-            right: -size * 0.08,
-            child: R2StickerImage(
-              'assets/images/anhtomau_stickers/sticker_22.gif',
-              width: size * 0.35,
-              height: size * 0.35,
-              fit: BoxFit.contain,
-            ),
-          ),
-        ]);
-        break;
-      case 'pearl':
-        decorations.addAll([
-          Positioned(
-            top: -size * 0.08,
-            right: -size * 0.08,
-            child: R2StickerImage(
-              'assets/images/anhtomau_stickers/sticker_17.gif',
-              width: size * 0.35,
-              height: size * 0.35,
-              fit: BoxFit.contain,
-            ),
-          ),
-          Positioned(
-            bottom: -size * 0.08,
-            left: -size * 0.08,
-            child: R2StickerImage(
-              'assets/images/anhtomau_stickers/sticker_25.gif',
-              width: size * 0.35,
-              height: size * 0.35,
-              fit: BoxFit.contain,
-            ),
-          ),
-        ]);
-        break;
-      case 'glass':
-        decorations.addAll([
-          Positioned(
-            top: -size * 0.08,
-            left: -size * 0.08,
-            child: R2StickerImage(
-              'assets/images/anhtomau_stickers/sticker_9.gif',
-              width: size * 0.35,
-              height: size * 0.35,
-              fit: BoxFit.contain,
-            ),
-          ),
-          Positioned(
-            bottom: -size * 0.08,
-            right: -size * 0.08,
-            child: R2StickerImage(
-              'assets/images/anhtomau_stickers/sticker_16.gif',
-              width: size * 0.35,
-              height: size * 0.35,
-              fit: BoxFit.contain,
-            ),
-          ),
-        ]);
-        break;
-      case 'vip':
-        decorations.addAll([
-          Positioned(
-            top: -size * 0.22,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: R2StickerImage(
-                'assets/images/anhtomau_stickers/sticker_30.gif',
-                width: size * 0.45,
-                height: size * 0.45,
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -size * 0.08,
-            left: -size * 0.08,
-            child: R2StickerImage(
-              'assets/images/anhtomau_stickers/sticker_31.gif',
-              width: size * 0.3,
-              height: size * 0.3,
-              fit: BoxFit.contain,
-            ),
-          ),
-          Positioned(
-            bottom: -size * 0.08,
-            right: -size * 0.08,
-            child: R2StickerImage(
-              'assets/images/anhtomau_stickers/sticker_34.gif',
-              width: size * 0.3,
-              height: size * 0.3,
-              fit: BoxFit.contain,
-            ),
-          ),
-        ]);
-        break;
-      case 'circle':
-      default:
-        decorations.addAll([
-          Positioned(
-            top: -size * 0.08,
-            left: -size * 0.08,
-            child: R2StickerImage(
-              'assets/images/anhtomau_stickers/sticker_2.gif',
-              width: size * 0.32,
-              height: size * 0.32,
-              fit: BoxFit.contain,
-            ),
-          ),
-          Positioned(
-            bottom: -size * 0.08,
-            right: -size * 0.08,
-            child: R2StickerImage(
-              'assets/images/anhtomau_stickers/sticker_3.gif',
-              width: size * 0.32,
-              height: size * 0.32,
-              fit: BoxFit.contain,
-            ),
-          ),
-        ]);
-        break;
-    }
-
-    if (frameKey.startsWith('sticker_')) {
-      decorations.add(
-        Positioned(
-          bottom: -size * 0.1,
-          right: -size * 0.15,
-          child: R2StickerImage(
-            'assets/images/anhtomau_stickers/sticker_27.gif',
-            width: size * 0.65,
-            height: size * 0.65,
-            fit: BoxFit.contain,
-          ),
-        ),
-      );
-    }
+    final mainFrame = Container(
+      width: size,
+      height: size,
+      decoration: LegacyWebUi.avatarFrameDecoration(
+        frameKey,
+        size,
+        accentColor: accentColor,
+      ),
+      padding: framePadding,
+      child: clippedAvatar,
+    );
+    if (frameKey == 'off') return mainFrame;
 
     return Stack(
       clipBehavior: Clip.none,
       children: [
         mainFrame,
-        ...decorations,
+        Positioned.fill(
+          child: ValueListenableBuilder<UiPrefsState>(
+            valueListenable: UiPrefs.notifier,
+            builder: (context, prefs, _) => KeepsakeOrnaments(
+              styleKey: frameKey,
+              avatar: true,
+              roundness: frameIsCircle ? .5 : rawRadius / size,
+              animate: animate && !prefs.liteMode,
+            ),
+          ),
+        ),
       ],
     );
   }
 }
-

@@ -28,6 +28,16 @@ extension _StickerObjects on LivingStickerPainter {
     var showFace = face;
     var faceAt = const Offset(0, 0);
     switch (subject) {
+      case StickerSubject.roseStem:
+      case StickerSubject.silverRings:
+      case StickerSubject.wineGlasses:
+      case StickerSubject.biscuitSticks:
+      case StickerSubject.wishBamboo:
+      case StickerSubject.lotusCandle:
+      case StickerSubject.chamomile:
+        _coupleHoliday(c, subject, a);
+        showFace = false;
+        break;
       case StickerSubject.pumpkin:
       case StickerSubject.lantern:
       case StickerSubject.stocking:

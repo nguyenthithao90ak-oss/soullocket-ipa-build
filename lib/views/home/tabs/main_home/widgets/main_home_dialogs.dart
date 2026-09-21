@@ -311,7 +311,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
         .then((updated) async {
           if (updated == true && mounted) {
             await _loadCustomStickers();
-            setState(() {});
+            _safeSetState(() {});
           }
         });
   }

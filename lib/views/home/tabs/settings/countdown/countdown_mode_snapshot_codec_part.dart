@@ -69,18 +69,21 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
     Map<String, dynamic> data, {
     required String scope,
   }) {
-    final fallback = _spaceSnapshots[scope] ??
+    final fallback =
+        _spaceSnapshots[scope] ??
         _spaceSnapshots[_selfSpaceHouseId] ??
         _captureCurrentSnapshot();
-    final rawAnchorDate =
-        (data['anchorDate'] ?? data['anchor_date'] ?? '').toString().trim();
-    final parsedAnchorDate =
-        rawAnchorDate.isEmpty ? null : DateInputUtils.parse(rawAnchorDate);
+    final rawAnchorDate = (data['anchorDate'] ?? data['anchor_date'] ?? '')
+        .toString()
+        .trim();
+    final parsedAnchorDate = rawAnchorDate.isEmpty
+        ? null
+        : DateInputUtils.parse(rawAnchorDate);
 
     return _CountdownSpaceSnapshot(
       singleMode:
           _readSerializedBool(data['singleMode'] ?? data['single_mode']) ??
-              fallback.singleMode,
+          fallback.singleMode,
       anchorDate: parsedAnchorDate ?? fallback.anchorDate,
       themeKey: (data['themeKey'] ?? data['theme_key'] ?? fallback.themeKey)
           .toString()
@@ -96,14 +99,16 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
       fontKey: (data['fontKey'] ?? data['font_key'] ?? fallback.fontKey)
           .toString()
           .trim(),
-      transparentMode: _readSerializedBool(
+      transparentMode:
+          _readSerializedBool(
             data['transparentMode'] ?? data['transparent_mode'],
           ) ??
           fallback.transparentMode,
-      sizePx: (_readSerializedDouble(data['sizePx'] ?? data['size_px']) ??
-              fallback.sizePx)
-          .clamp(200.0, UiPrefs.maxCountdownSizePx)
-          .toDouble(),
+      sizePx:
+          (_readSerializedDouble(data['sizePx'] ?? data['size_px']) ??
+                  fallback.sizePx)
+              .clamp(200.0, UiPrefs.maxCountdownSizePx)
+              .toDouble(),
       topLabel: (data['topLabel'] ?? data['top_label'] ?? fallback.topLabel)
           .toString(),
       bottomLabel:
@@ -117,18 +122,20 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
       avatarUrl2:
           (data['avatarUrl2'] ?? data['avatar_2'] ?? fallback.avatarUrl2)
               .toString(),
-      customBackgroundUrl: (data['customBackgroundUrl'] ??
-              data['custom_background_url'] ??
-              data['bg_url'] ??
-              fallback.customBackgroundUrl)
-          .toString(),
-      centerIconType: (data['centerIconType'] ??
-              data['center_icon_type'] ??
-              fallback.centerIconType)
-          .toString(),
+      customBackgroundUrl:
+          (data['customBackgroundUrl'] ??
+                  data['custom_background_url'] ??
+                  data['bg_url'] ??
+                  fallback.customBackgroundUrl)
+              .toString(),
+      centerIconType:
+          (data['centerIconType'] ??
+                  data['center_icon_type'] ??
+                  fallback.centerIconType)
+              .toString(),
       updatedAtMs:
           _readSerializedInt(data['updatedAtMs'] ?? data['updated_at_ms']) ??
-              fallback.updatedAtMs,
+          fallback.updatedAtMs,
     );
   }
 
@@ -208,7 +215,10 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
   }
 
   bool _isIncomingSnapshotNewer(
-      String scope, _CountdownSpaceSnapshot incoming) {
+    String scope,
+    _CountdownSpaceSnapshot incoming,
+  ) {
+    if (_unsyncedSpaceSnapshots.containsKey(scope)) return false;
     final current = _spaceSnapshots[scope];
     if (current == null) {
       return true;
@@ -224,82 +234,92 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
     final defaultSingleMode = widget.relationshipMode.trim() == 'single';
     final defaultTopLabel = defaultSingleMode
         ? (ui.countdownTopLabel.trim().isNotEmpty
-            ? ui.countdownTopLabel.trim()
-            : L10nService().translate('home_tuicati_5c654c'))
+              ? ui.countdownTopLabel.trim()
+              : L10nService().translate('home_tuicati_5c654c'))
         : (widget.fallbackTopLabel.trim().isNotEmpty
-            ? widget.fallbackTopLabel.trim()
-            : L10nService().translate('home_yunhau_501102'));
+              ? widget.fallbackTopLabel.trim()
+              : L10nService().translate('home_yunhau_501102'));
     final defaultBottomLabel = defaultSingleMode
         ? (ui.countdownBottomLabel.trim().isNotEmpty
-            ? ui.countdownBottomLabel.trim()
-            : L10nService().translate('home_ngytui_22bed4'))
+              ? ui.countdownBottomLabel.trim()
+              : L10nService().translate('home_ngytui_22bed4'))
         : (widget.fallbackBottomLabel.trim().isNotEmpty
-            ? widget.fallbackBottomLabel.trim()
-            : L10nService().translate('home_ngy_41ec10'));
+              ? widget.fallbackBottomLabel.trim()
+              : L10nService().translate('home_ngy_41ec10'));
     final defaultNameU1 = widget.nameU1.trim().isEmpty
         ? L10nService().translate('home_bn_1fd75b')
         : widget.nameU1.trim();
     final defaultNameU2 = widget.nameU2.trim().isEmpty
         ? L10nService().translate('home_ngiy_5bab37')
         : widget.nameU2.trim();
-    final defaultThemeKey =
-        ui.themeKey.trim().isEmpty ? 'theme-auto' : ui.themeKey.trim();
+    final defaultThemeKey = ui.themeKey.trim().isEmpty
+        ? 'theme-auto'
+        : ui.themeKey.trim();
     final defaultStyleKey = ui.countdownStyleKey.trim().isEmpty
         ? 'default'
         : ui.countdownStyleKey.trim();
-    final defaultFrameKey =
-        ui.avatarFrameKey.trim().isEmpty ? 'circle' : ui.avatarFrameKey.trim();
+    final defaultFrameKey = ui.avatarFrameKey.trim().isEmpty
+        ? 'circle'
+        : ui.avatarFrameKey.trim();
     final rawDate =
         prefs.getString(_prefKey('anchor_date', scope: scope)) ?? '';
-    final parsedDate = DateInputUtils.parse(rawDate) ??
+    final parsedDate =
+        DateInputUtils.parse(rawDate) ??
         _resolveInitialAnchorDate(defaultSingleMode);
 
     return _CountdownSpaceSnapshot(
-      singleMode: prefs.getBool(_prefKey('single_mode', scope: scope)) ??
+      singleMode:
+          prefs.getBool(_prefKey('single_mode', scope: scope)) ??
           defaultSingleMode,
       anchorDate: parsedDate,
-      themeKey: prefs.getString(_prefKey('theme_key', scope: scope)) ??
+      themeKey:
+          prefs.getString(_prefKey('theme_key', scope: scope)) ??
           defaultThemeKey,
       styleKey: _sanitizeCountdownSpaceStyle(
         prefs.getString(_prefKey('style_key', scope: scope)) ?? defaultStyleKey,
       ),
-      frameKey: prefs.getString(_prefKey('avatar_frame_key', scope: scope)) ??
+      frameKey:
+          prefs.getString(_prefKey('avatar_frame_key', scope: scope)) ??
           defaultFrameKey,
-      fontKey: prefs.getString(_prefKey('font_key', scope: scope)) ??
+      fontKey:
+          prefs.getString(_prefKey('font_key', scope: scope)) ??
           SLTheme.normalizeFontKey(ui.fontKey),
-      transparentMode: prefs.getBool(
-            _prefKey('transparent_mode', scope: scope),
-          ) ??
+      transparentMode:
+          prefs.getBool(_prefKey('transparent_mode', scope: scope)) ??
           ui.transparentMode,
-      sizePx: (prefs.getDouble(_prefKey('size_px', scope: scope)) ??
-              ui.countdownSizePx)
-          .clamp(200.0, UiPrefs.maxCountdownSizePx)
-          .toDouble(),
-      topLabel: prefs.getString(_prefKey('top_label', scope: scope)) ??
+      sizePx:
+          (prefs.getDouble(_prefKey('size_px', scope: scope)) ??
+                  ui.countdownSizePx)
+              .clamp(200.0, UiPrefs.maxCountdownSizePx)
+              .toDouble(),
+      topLabel:
+          prefs.getString(_prefKey('top_label', scope: scope)) ??
           defaultTopLabel,
-      bottomLabel: prefs.getString(_prefKey('bottom_label', scope: scope)) ??
+      bottomLabel:
+          prefs.getString(_prefKey('bottom_label', scope: scope)) ??
           defaultBottomLabel,
       nameU1: scope == _selfSpaceHouseId
           ? defaultNameU1
           : (prefs.getString(_prefKey('name_u1', scope: scope)) ??
-              defaultNameU1),
+                defaultNameU1),
       nameU2: scope == _selfSpaceHouseId
           ? defaultNameU2
           : (prefs.getString(_prefKey('name_u2', scope: scope)) ??
-              defaultNameU2),
+                defaultNameU2),
       avatarUrl1: scope == _selfSpaceHouseId
           ? widget.avatarUrl1.trim()
           : (prefs.getString(_prefKey('avatar_1', scope: scope)) ??
-              widget.avatarUrl1.trim()),
+                widget.avatarUrl1.trim()),
       avatarUrl2: scope == _selfSpaceHouseId
           ? widget.avatarUrl2.trim()
           : (prefs.getString(_prefKey('avatar_2', scope: scope)) ??
-              widget.avatarUrl2.trim()),
-      customBackgroundUrl: prefs.getString(_prefKey('bg_url', scope: scope)) ??
+                widget.avatarUrl2.trim()),
+      customBackgroundUrl:
+          prefs.getString(_prefKey('bg_url', scope: scope)) ??
           ui.customBackgroundUrl.trim(),
       centerIconType:
           prefs.getString(_prefKey('center_icon_type', scope: scope)) ??
-              'heart',
+          'heart',
       updatedAtMs: prefs.getInt(_prefKey('updated_at_ms', scope: scope)) ?? 0,
     );
   }
@@ -314,18 +334,18 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
     _anchorDate = _resolveInitialAnchorDate(_singleMode);
     _topLabelText = _singleMode
         ? (ui.countdownTopLabel.trim().isNotEmpty
-            ? ui.countdownTopLabel.trim()
-            : L10nService().translate('home_tuicati_5c654c'))
+              ? ui.countdownTopLabel.trim()
+              : L10nService().translate('home_tuicati_5c654c'))
         : (widget.fallbackTopLabel.trim().isNotEmpty
-            ? widget.fallbackTopLabel.trim()
-            : L10nService().translate('home_yunhau_501102'));
+              ? widget.fallbackTopLabel.trim()
+              : L10nService().translate('home_yunhau_501102'));
     _bottomLabelText = _singleMode
         ? (ui.countdownBottomLabel.trim().isNotEmpty
-            ? ui.countdownBottomLabel.trim()
-            : L10nService().translate('home_ngytui_22bed4'))
+              ? ui.countdownBottomLabel.trim()
+              : L10nService().translate('home_ngytui_22bed4'))
         : (widget.fallbackBottomLabel.trim().isNotEmpty
-            ? widget.fallbackBottomLabel.trim()
-            : L10nService().translate('home_ngy_41ec10'));
+              ? widget.fallbackBottomLabel.trim()
+              : L10nService().translate('home_ngy_41ec10'));
     _nameU1 = widget.nameU1.trim().isEmpty
         ? L10nService().translate('home_bn_1fd75b')
         : widget.nameU1.trim();
@@ -340,8 +360,9 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
         : ui.countdownStyleKey.trim();
     _centerIconType = 'heart';
     _fontKey = SLTheme.normalizeFontKey(ui.fontKey);
-    _avatarFrameKey =
-        ui.avatarFrameKey.trim().isEmpty ? 'circle' : ui.avatarFrameKey.trim();
+    _avatarFrameKey = ui.avatarFrameKey.trim().isEmpty
+        ? 'circle'
+        : ui.avatarFrameKey.trim();
     _transparentMode = ui.transparentMode;
     _countdownSizePx = ui.countdownSizePx;
     _customBackgroundUrl = ui.customBackgroundUrl.trim();

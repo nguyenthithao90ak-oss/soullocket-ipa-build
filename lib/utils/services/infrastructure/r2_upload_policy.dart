@@ -11,7 +11,27 @@ abstract final class R2UploadPolicy {
     'webm': 'video/webm',
     'm4v': 'video/x-m4v',
     '3gp': 'video/3gpp',
+    'mkv': 'video/x-matroska',
+    'avi': 'video/x-msvideo',
+    'heic': 'image/heic',
+    'heif': 'image/heif',
+    'bmp': 'image/bmp',
+    'svg': 'image/svg+xml',
+    'mp3': 'audio/mpeg',
+    'm4a': 'audio/mp4',
+    'aac': 'audio/aac',
+    'wav': 'audio/wav',
+    'ogg': 'audio/ogg',
+    'flac': 'audio/flac',
   };
+
+  static String extensionForMimeType(String mime) {
+    if (mime == 'application/octet-stream') return '.bin';
+    for (final entry in _mimeTypes.entries) {
+      if (entry.value == mime) return '.${entry.key}';
+    }
+    throw const FormatException('Unsupported media content type');
+  }
 
   static String mimeTypeForPath(String filePath) {
     final fileName = filePath.replaceAll('\\', '/').split('/').last;
@@ -25,7 +45,7 @@ abstract final class R2UploadPolicy {
       RegExp(r'^\.'),
       '',
     );
-    if (!(_mimeTypes[normalized]?.startsWith('image/') ?? false)) {
+    if (!const {'jpg', 'jpeg', 'png', 'webp', 'gif'}.contains(normalized)) {
       throw const FormatException('Unsupported image extension');
     }
     return normalized;

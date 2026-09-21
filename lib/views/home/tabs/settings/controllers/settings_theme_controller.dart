@@ -63,7 +63,7 @@ class SettingsThemeMusicDraft {
   final String type;
 
   const SettingsThemeMusicDraft({
-    this.autoplay = true,
+    this.autoplay = false,
     this.link = '',
     this.title = '',
     this.type = 'audio',

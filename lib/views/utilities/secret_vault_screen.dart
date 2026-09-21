@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/app_help_center.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -1037,6 +1038,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  const AppHelpButton(articleId: 'security'),
                   Text(
                     hasSetup
                         ? context.tr('util_nhpmtkhukh_e4639a')
@@ -1991,71 +1993,6 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     );
   }
 
-  void _showInfoDialog(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: _vaultBg,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: _vaultBorder, width: 1),
-        ),
-        title: Text(
-          L10nService().translate('vault_title'),
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.w900,
-            color: _vaultTextPrimary,
-          ),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                L10nService().translate('vault_features_label'),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: _vaultAccent,
-                ),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                '- Nơi an toàn nhất để cất giữ hình ảnh và video nhạy cảm, riêng tư.\n- Bảo vệ bằng mã PIN hoặc FaceID/Vân tay.\n- Tùy chọn "Mã PIN giả" để hiển thị một hầm trống khi bị ép buộc mở.',
-                style: TextStyle(color: _vaultTextSecondary),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                L10nService().translate('vault_how_to_use_label'),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: _vaultAccent,
-                ),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                '- Thiết lập mã PIN lần đầu khi truy cập.\n- Bấm biểu tượng + để thêm ảnh/video từ thư viện máy.\n- Bật tính năng Mã PIN giả trong phần cài đặt của hầm để tăng cường bảo mật.',
-                style: TextStyle(color: _vaultTextSecondary),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              L10nService().translate('vault_understood'),
-              style: const TextStyle(
-                color: _vaultAccent,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -2093,7 +2030,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
               color: Color(0xFF334155),
               size: 22,
             ),
-            onPressed: () => _showInfoDialog(context),
+            tooltip: context.tr('help_security_title'),
+            onPressed: () => showAppHelpArticle(context, 'security'),
           ),
           if (_encryptionReady)
             IconButton(

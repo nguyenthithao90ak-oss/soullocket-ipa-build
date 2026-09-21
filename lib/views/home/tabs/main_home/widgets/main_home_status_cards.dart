@@ -181,46 +181,15 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     addBirthday(dobU1, nameU1);
     addBirthday(dobU2, nameU2);
 
-    // 3. Ngày lễ lớn
-    final holidaysList = [
-      {'month': 1, 'day': 1, 'name': context.tr('Tết Dương Lịch 🎆')},
-      {
-        'month': 2,
-        'day': 14,
-        'name': context.tr('Lễ Tình Nhân (Valentine) 💝'),
-      },
-      {'month': 3, 'day': 8, 'name': context.tr('Quốc tế Phụ nữ 💐')},
-      {'month': 3, 'day': 14, 'name': context.tr('Valentine Trắng 🤍')},
-      {'month': 4, 'day': 1, 'name': context.tr('Cá tháng Tư 🃏')},
-      {'month': 4, 'day': 14, 'name': context.tr('Valentine Đen 🖤')},
-      {'month': 6, 'day': 1, 'name': context.tr('Quốc tế Thiếu nhi 🧸')},
-      {
-        'month': 6,
-        'day': 28,
-        'name': context.tr('Ngày Gia đình Việt Nam 👨‍👩‍👧‍👦'),
-      },
-      {'month': 10, 'day': 20, 'name': context.tr('Ngày Phụ nữ Việt Nam 🌸')},
-      {'month': 10, 'day': 31, 'name': context.tr('Lễ Halloween 🎃')},
-      {'month': 12, 'day': 24, 'name': context.tr('Đêm Giáng sinh 🎄')},
-      {'month': 12, 'day': 25, 'name': context.tr('Lễ Giáng sinh ❄️')},
-      {'month': 12, 'day': 31, 'name': context.tr('Đêm Giao thừa ✨')},
-    ];
-    for (final h in holidaysList) {
-      DateTime nextH = DateTime(
-        todayMidnight.year,
-        h['month'] as int,
-        h['day'] as int,
-      );
-      if (nextH.isBefore(todayMidnight)) {
-        nextH = DateTime(
-          todayMidnight.year + 1,
-          h['month'] as int,
-          h['day'] as int,
-        );
-      }
+    // 3. Ngày lễ lớn (lọc theo quốc gia / ngôn ngữ của người dùng)
+    final applicableHolidays = HolidayService.getApplicableHolidays();
+    for (final h in applicableHolidays) {
+      final nextH = h.nextOccurrence(todayMidnight);
+      if (nextH == null) continue;
+      final displayName = HolidayService.getLocalizedName(h);
       upcomingEvents.add(
         HomeUpcomingEvent(
-          title: h['name'] as String,
+          title: displayName,
           date: nextH,
           type: 'holiday',
         ),

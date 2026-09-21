@@ -313,7 +313,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
       if (_pendingInsightSettingsKey == settingsKey) {
         _pendingInsightSettingsKey = null;
       }
-      setState(() {
+      _safeSetState(() {
         _insightData = insight;
       });
     } finally {
@@ -329,7 +329,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
       if (isStale() || !mounted || !_isLoading || _houseSettings != null) {
         return;
       }
-      setState(() {
+      _safeSetState(() {
         _houseSettings = _buildDefaultHomeSettings();
         _isLoading = false;
       });
@@ -371,7 +371,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _presenceSnapshotFallbackTimer?.cancel();
     _presenceSnapshotFallbackTimer = Timer(const Duration(seconds: 6), () {
       if (isStale() || !mounted || _hasLoadedPresenceSnapshot) return;
-      setState(() {
+      _safeSetState(() {
         _hasLoadedPresenceSnapshot = true;
       });
     });
@@ -385,9 +385,10 @@ extension _MainHomeLoadController on _MainHomeTabState {
     bool forceWarmMedia = false,
   }) {
     _houseSettings = Map<String, dynamic>.from(settings);
-    _houseSettings!['relationshipMode'] = settings['relationshipMode'] ?? cachedRelMode;
+    _houseSettings!['relationshipMode'] =
+        settings['relationshipMode'] ?? cachedRelMode;
     if (mounted) {
-      setState(() {
+      _safeSetState(() {
         _isLoading = false;
       });
     } else {
@@ -485,7 +486,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
                 final nextConnected = raw.length >= 2;
                 if (_isCoupleConnected != nextConnected) {
                   if (isStale()) return;
-                  setState(() {
+                  _safeSetState(() {
                     _isCoupleConnected = nextConnected;
                   });
                 }
@@ -493,7 +494,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
             } else if (mounted) {
               if (_isCoupleConnected) {
                 if (isStale()) return;
-                setState(() {
+                _safeSetState(() {
                   _isCoupleConnected = false;
                 });
               }
@@ -600,7 +601,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
                   'Home presence field $role/$field listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: msgPresenceFail).message}',
                 );
                 if (mounted) {
-                  setState(() {
+                  _safeSetState(() {
                     _hasLoadedPresenceSnapshot = true;
                   });
                 }
@@ -815,7 +816,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
 
                 if (isStale()) return;
                 if (!mounted) return;
-                setState(() {
+                _safeSetState(() {
                   _houseSettings = settings;
                   _showStatus = nextShowStatus;
                   _showWeather = nextShowWeather;
@@ -840,13 +841,13 @@ extension _MainHomeLoadController on _MainHomeTabState {
                 );
               } else if (visibilityPrefsChanged && mounted) {
                 if (isStale()) return;
-                setState(() {
+                _safeSetState(() {
                   _showStatus = nextShowStatus;
                   _showWeather = nextShowWeather;
                 });
               } else if (_isLoading && mounted) {
                 if (isStale()) return;
-                setState(() => _isLoading = false);
+                _safeSetState(() => _isLoading = false);
                 unawaited(_maybeShowFirstSetupGuide());
               }
 
@@ -874,7 +875,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
                 _scheduleLoveWidgetSync(settings, includeDiaryMedia: true);
               }
             } else if (mounted) {
-              setState(() => _isLoading = false);
+              _safeSetState(() => _isLoading = false);
             }
           },
           onError: (Object error) {
@@ -882,7 +883,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
               'Home settings listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: msgLoadDataFail).message}',
             );
             if (mounted) {
-              setState(() {
+              _safeSetState(() {
                 _isLoading = false;
               });
             }
@@ -917,7 +918,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
         _presenceSubscription != null &&
         _settingsSubscription != null) {
       if (mounted && _isLoading) {
-        setState(() => _isLoading = false);
+        _safeSetState(() => _isLoading = false);
       }
       return;
     }
@@ -956,7 +957,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
     final user = _auth.currentUser;
     if (user == null) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        _safeSetState(() => _isLoading = false);
       }
       return;
     }
@@ -988,7 +989,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
         if (isNewHouseContext) {
           if (preserveVisibleState) {
             if (mounted) {
-              setState(() => _isLoading = true);
+              _safeSetState(() => _isLoading = true);
             } else {
               _isLoading = true;
             }
@@ -1027,7 +1028,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
           if (isStale()) return;
 
           if (mounted) {
-            setState(() {
+            _safeSetState(() {
               _isCoupleConnected = connected;
               _isLoading = false;
             });
@@ -1057,7 +1058,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
           houseId,
         );
         if (isStale()) return;
-        if (mounted) setState(() => _isCoupleConnected = connected);
+        if (mounted) _safeSetState(() => _isCoupleConnected = connected);
 
         // 4. Stream subscriptions setup
         _setupMembersSubscription(houseId, sessionId, isStale, msgMembersFail);
@@ -1092,7 +1093,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
 
       if (isStale()) return;
       if (mounted) {
-        setState(() {
+        _safeSetState(() {
           _houseSettings = _buildDefaultHomeSettings();
           _presenceData = {};
           _presenceDataNotifier.value = _presenceData;
@@ -1104,7 +1105,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
       debugPrint(
         'Home data load failed: ${AppErrorMapper.resolve(e, fallbackMessage: msgLoadDataFail).message}',
       );
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) _safeSetState(() => _isLoading = false);
     }
     _lastFetchTime = DateTime.now();
   }

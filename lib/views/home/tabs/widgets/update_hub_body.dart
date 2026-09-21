@@ -61,6 +61,7 @@ class UpdateHubBody extends StatefulWidget {
     required this.onNews,
     required this.feedback,
     this.onWebsite,
+    this.onGuide,
   });
   final String? version;
   final VoidCallback onSettings;
@@ -70,6 +71,7 @@ class UpdateHubBody extends StatefulWidget {
   final VoidCallback onDeleteRequest;
   final VoidCallback onNews;
   final VoidCallback? onWebsite;
+  final VoidCallback? onGuide;
   final Widget feedback;
 
   @override
@@ -237,7 +239,10 @@ class _UpdateHubBodyState extends State<UpdateHubBody> {
                                 'update_hub_guide',
                                 'update_hub_guide_note',
                                 const Color(0xFF8668AF),
-                                () => widget.onDocument(updateHubDocuments[0]),
+                                widget.onGuide ??
+                                    () => widget.onDocument(
+                                      updateHubDocuments[0],
+                                    ),
                               ),
                             ),
                             SizedBox(
@@ -569,7 +574,9 @@ class _UpdateHubBodyState extends State<UpdateHubBody> {
               color: const Color(0xFFA83F65),
               borderRadius: BorderRadius.circular(16),
               child: InkWell(
-                onTap: () => widget.onDocument(updateHubDocuments[0]),
+                onTap:
+                    widget.onGuide ??
+                    () => widget.onDocument(updateHubDocuments[0]),
                 borderRadius: BorderRadius.circular(16),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(

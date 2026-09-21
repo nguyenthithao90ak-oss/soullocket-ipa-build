@@ -1,32 +1,6 @@
 part of '../../main_home_tab.dart';
 
 extension MainHomeReactionController on _MainHomeTabState {
-  Future<void> _cleanupOldReactionFlights(String houseId) async {
-    try {
-      final cutoff =
-          DateTime.now().millisecondsSinceEpoch -
-          const Duration(minutes: 2).inMilliseconds;
-      final snapshot = await _dbRef
-          .child('houses/$houseId/reaction_flights')
-          .orderByChild('sentAt')
-          .endAt(cutoff)
-          .limitToFirst(30)
-          .get();
-      final raw = snapshot.value;
-      if (raw is! Map) return;
-
-      final updates = <String, Object?>{};
-      for (final key in raw.keys) {
-        updates['houses/$houseId/reaction_flights/${key.toString()}'] = null;
-      }
-      if (updates.isNotEmpty) {
-        await _dbRef.update(updates);
-      }
-    } catch (error) {
-      debugPrint('[MainHome] Cannot prune stale reaction data: $error');
-    }
-  }
-
   void triggerShootingHeartState({String? emoji, String? fromRole}) {
     final now = DateTime.now().millisecondsSinceEpoch;
     _showReactionFlight(

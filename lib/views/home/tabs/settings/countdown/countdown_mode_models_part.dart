@@ -105,7 +105,7 @@ extension _SettingsTabCountdownModeScreen on _SettingsTabState {
     await Navigator.of(context).push(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (_) => _CountdownModeIndependentScreen(
+        builder: (_) => CountdownSpaceScreen(
           currentHouseId: _houseId,
           isVipActive: _isVipActive,
           loveDate: _loveDate,

@@ -1,0 +1,60 @@
+<!DOCTYPE html><html lang="zh" dir="ltr"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="区分服务运行所需的存储与统计分析、广告及隐私选项。本文件涵盖设备端、网页端的 SoulLocket 及嵌入内容。">
+<meta name="soullocket-document-version" content="2026-09-09">
+<title>Cookie 与本地存储政策</title>
+<style>
+:root{color-scheme:light;--ink:#30292d;--muted:#6d6067;--accent:#a13e5c;--line:#eadde2;--paper:#fff;--bg:#faf6f7}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 system-ui,-apple-system,"Segoe UI",sans-serif;overflow-wrap:anywhere}
+.page{max-width:880px;margin:auto;padding:28px 24px 56px}
+header,section,footer{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;margin:0 0 18px}
+.brand{font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:750;color:var(--accent)}
+h1{font-size:clamp(26px,5vw,36px);line-height:1.25;margin:12px 0 16px;letter-spacing:-.025em}
+h2{font-size:21px;line-height:1.4;margin:0 0 14px}h3{font-size:17px;margin:22px 0 10px}
+p{margin:0 0 14px}p:last-child,ul:last-child,ol:last-child{margin-bottom:0}
+.meta,.small{font-size:14px;color:var(--muted)}ul,ol{padding-left:24px;margin:10px 0 16px}li{margin:7px 0}
+a{color:var(--accent);text-underline-offset:3px}a:hover{text-decoration-thickness:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #7943ab;outline-offset:4px}
+nav{display:flex;flex-wrap:wrap;gap:10px 20px;margin:20px 0 0}nav a{font-size:14px}
+.note,.warning{padding:16px 18px;border-radius:10px;margin:16px 0;border-left:4px solid var(--accent);background:#fcf0f4}
+.warning{border-color:#a7641a;background:#fff6e8}.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}
+th{background:#faf5f7}button,.button{display:inline-block;padding:12px 18px;background:var(--accent);color:white;border:0;border-radius:10px;font:inherit;font-weight:650;cursor:pointer;text-decoration:none}
+button:disabled{opacity:.6;cursor:wait}label{display:block;font-weight:650;margin:16px 0 6px}
+input:not([type=checkbox]),textarea{width:100%;padding:12px;font:inherit;color:inherit;background:white;border:1px solid #a99aa2;border-radius:8px}
+textarea{resize:vertical;min-height:110px}.checkbox{display:flex;gap:12px;align-items:flex-start;margin:20px 0}
+.checkbox input{flex-shrink:0;width:20px;height:20px;margin-top:5px}.checkbox label{font-weight:400;margin:0}
+.status{display:none;padding:16px;margin-top:16px;border-radius:10px}.status.success{display:block;background:#eaf7ef;color:#245635}.status.error{display:block;background:#fff0f0;color:#96323c}
+.skip{position:absolute;top:-100px;left:16px;background:white;padding:12px;z-index:10}.skip:focus{top:10px}
+@media(max-width:560px){.page{padding:16px 12px 32px}header,section,footer{padding:20px 18px;border-radius:14px}th,td{padding:10px 8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{body{background:white}.page{max-width:none;padding:0}header,section,footer{border:0;padding:12px 0}nav,.skip,form{display:none}h2,h3{break-after:avoid}}
+</style>
+</head>
+<body>
+<a class="skip" href="#noi-dung-chinh">跳转到主要内容</a>
+<main class="page" id="noi-dung-chinh">
+<header><div class="brand">SoulLocket · 文档与支持</div><h1>Cookie 与本地存储政策</h1><p>区分服务运行所需的存储与统计分析、广告及隐私选项。本文件涵盖设备端、网页端的 SoulLocket 及嵌入内容。</p><p class="meta">内容更新日期： <time datetime="2026-09-09">2026年9月9日</time> · 文档版本 2026-09-09</p><nav aria-label="文档语言"><a href="cookie-policy.html" lang="vi" hreflang="vi">Tiếng Việt</a><a href="cookie-policy-en.html" lang="en" hreflang="en">English</a><a href="cookie-policy-de.html" lang="de" hreflang="de">Deutsch</a><a href="cookie-policy-fr.html" lang="fr" hreflang="fr">Français</a><a href="cookie-policy-es.html" lang="es" hreflang="es">Español</a><a href="cookie-policy-it.html" lang="it" hreflang="it">Italiano</a><a href="cookie-policy-pt.html" lang="pt" hreflang="pt">Português</a><a href="cookie-policy-ru.html" lang="ru" hreflang="ru">Русский</a><a href="cookie-policy-ja.html" lang="ja" hreflang="ja">日本語</a><a href="cookie-policy-ko.html" lang="ko" hreflang="ko">한국어</a><span lang="zh" aria-current="page">简体中文</span></nav><p class="small">文档版本 2026-09-09 的译文。如有表述不清或不同语言之间存在差异，请联系支持团队。</p><nav aria-label="目录"><a href="#khai-niem">1. 使用的技术</a>
+<a href="#phan-loai">2. 存储数据的类别</a>
+<a href="#lua-chon">3. “仅必要”和“全部”的当前含义</a>
+<a href="#ben-thu-ba">4. 相关提供商</a>
+<a href="#quan-ly">5. 管理与撤回选择</a>
+<a href="#luu-tru">6. 保存期限与清除数据的影响</a>
+<a href="#cap-nhat">7. 更新与联系</a></nav></header>
+
+<section id="khai-niem"><h2>1. 使用的技术</h2><p>网页端可能使用 Cookie、localStorage、sessionStorage 和 IndexedDB。应用使用 SharedPreferences、安全身份验证存储、本地数据库及图片或文件缓存。它们并不都是同一种 Cookie，但都可能在设备上存储数据。</p><p>这些政策页面没有嵌入广告或 Analytics 代码。账号删除表单仅在你提交时发送数据；主应用和其他内容页面有各自的数据处理行为。</p></section>
+<section id="phan-loai"><h2>2. 存储数据的类别</h2><div class="table-wrap"><table><thead><tr><th>类别</th><th>目的与示例</th></tr></thead><tbody><tr><td>身份验证与安全</td><td>登录会话、令牌、设备状态和法律相关选择有助于维持并保护访问。</td></tr><tr><td>你的设置</td><td>语言、外观、标签页、锁定或显示配置；即使选择“仅必要”，这些设置仍可能被保存。</td></tr><tr><td>数据与缓存</td><td>草稿、同步队列、下载的图片或文件及本地数据库可能包含私人内容，并不会自动成为匿名数据。</td></tr><tr><td>诊断与统计分析</td><td>Firebase Analytics 和 Crashlytics 可能按照其集成方式处理事件、设备信息、错误及技术标识。</td></tr><tr><td>广告与交易</td><td>广告同意状态、广告标识、互动数据、购买或奖励验证令牌；不应将所有广告活动都归类为必要存储。</td></tr></tbody></table></div></section>
+<section id="lua-chon"><h2>3. “仅必要”和“全部”的含义</h2><p>新的集成中，“仅必要”会关闭 Analytics/Crashlytics 数据收集，并阻止应用初始化及加载广告。“全部”允许这些可选 SDK，但广告仍须符合 Google UMP 的同意要求及操作系统权限。应用会在设备上记录选择、时间和文档版本；未记录版本的旧选择需要重新确认。</p><p>撤回同意会阻止新的请求，并移除应用中已加载的广告；但无法收回已发送的数据，也无法撤销已在进行中的连接。原生 SDK 可能在本地保留崩溃报告；应用会在启用收集前请求删除尚未发送的报告。旧版应用可能没有这些控制项。</p><div class="warning">“仅必要”不会关闭登录、同步、交易、系统安全功能或所有第三方连接。它不能替代敏感数据授权、操作系统权限或单独的广告同意。</div></section>
+<section id="ben-thu-ba"><h2>4. 相关提供商</h2><p>Firebase/Google 登录、用于登录时的 Facebook、Google Mobile Ads/AdMob、支付平台、地图服务和 Cloudflare 基础设施可能为其功能使用令牌、缓存或技术状态信息。嵌入内容、字体和外部文件在加载时可能连接至其提供商。</p><p>数据类别、目的及分享范围见 <a href="privacy-zh.html">隐私政策</a>。提供商的政策不能替代 SoulLocket 对自身集成所承担的责任。</p></section>
+<section id="quan-ly"><h2>5. 管理与撤回选择</h2><ul><li>打开“设置 → 隐私选项”，可在“仅必要”和“全部”之间切换。选择“仅必要”即可撤回对可选 SDK 组的授权，无需清除应用数据。在适用情况下，“广告隐私选项”会打开 Google UMP 的选择界面。</li><li>在操作系统设置中管理位置、相机、麦克风、通知、健康及广告或跟踪权限。可用的控制项因设备而异。</li><li>使用浏览器的隐私设置查看或删除网站数据。阻止必要数据可能终止登录会话或影响功能。</li><li>如果界面缺少所需操作，请就隐私权利联系支持团队。不能把清除应用数据当作撤回同意的唯一方式。</li></ul></section>
+<section id="luu-tru"><h2>6. 保存期限与清除数据的影响</h2><p>会话数据可能在会话结束时过期；偏好设置和本地数据库则可能一直保留到你清除应用或网站数据。缓存有各自的有效期，之后也可能再次下载。退出登录不保证清除所有缓存、下载内容或设备备份。</p><p><strong>清除存储前，请导出或同步尚未保存的数据。</strong> 卸载应用、删除 Cookie 或关闭权限，不会删除你的账号、服务器数据或订阅。请参阅 <a href="delete-account-zh.html">账号与数据删除指南</a>.</p></section>
+<section id="cap-nhat"><h2>7. 更新与联系</h2><p>存储机制、SDK 或选择项变更时，本文件也需要相应更新。如有疑问，请发送至 <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a>，并注明平台和应用版本；请勿发送密码、PIN 或一次性验证码。</p></section>
+<footer><h2>SoulLocket 文档</h2><nav aria-label="相关文档"><a href="about-zh.html">关于</a><a href="huong_dan-zh.html">使用指南</a><a href="huong_dan_cai_dat_lan_dau-zh.html">首次设置</a><a href="privacy-zh.html">隐私</a><a href="terms-zh.html">使用条款</a><a href="cookie-policy-zh.html">Cookie</a><a href="delete-account-zh.html">删除账号</a><a href="support-zh.html">支持</a></nav><p class="small">隐私与支持： <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p></footer>
+</main>
+
+
+</body></html>

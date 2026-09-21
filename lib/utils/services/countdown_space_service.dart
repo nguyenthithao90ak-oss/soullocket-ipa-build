@@ -429,14 +429,22 @@ class CountdownSpaceService {
     required Map<String, dynamic> snapshot,
   }) async {
     final normalizedSpaceId = spaceId.trim();
-    if (normalizedSpaceId.isEmpty) return;
-    await CloudFunctionsHelper.callSecure<dynamic>(
+    if (normalizedSpaceId.isEmpty) throw ArgumentError('spaceId');
+    final response = await CloudFunctionsHelper.callSecure<dynamic>(
       'updateCountdownSpaceSecure',
       payload: <String, dynamic>{
         'spaceId': normalizedSpaceId,
         'snapshot': _sanitizeSnapshot(snapshot),
       },
     );
+    ensureWriteAcknowledged(response.data);
+  }
+
+  /// Callable có thể trả success=false khi giao dịch không còn hợp lệ.
+  static void ensureWriteAcknowledged(Object? data) {
+    if (_toMap(data)['success'] != true) {
+      throw StateError('countdown-space-write-not-acknowledged');
+    }
   }
 
   Future<void> requestDeleteSpace(String spaceId) async {
@@ -562,14 +570,15 @@ class CountdownSpaceService {
     required Map<String, dynamic> snapshot,
   }) async {
     final normalizedRequestId = requestId.trim();
-    if (normalizedRequestId.isEmpty) return;
-    await CloudFunctionsHelper.callSecure<dynamic>(
+    if (normalizedRequestId.isEmpty) throw ArgumentError('requestId');
+    final response = await CloudFunctionsHelper.callSecure<dynamic>(
       'updateCountdownSpaceRequestSecure',
       payload: <String, dynamic>{
         'requestId': normalizedRequestId,
         'snapshot': _sanitizeSnapshot(snapshot),
       },
     );
+    ensureWriteAcknowledged(response.data);
   }
 
   Future<void> updateSpaceSnapshot({

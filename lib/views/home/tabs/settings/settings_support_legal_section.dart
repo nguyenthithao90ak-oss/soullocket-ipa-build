@@ -186,7 +186,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   void _openDeleteAccountRequestPage() {
     final uri = AppConfig.legalDocumentUri(
       'delete-account.html',
-      languageCode: L10nService().locale.languageCode,
+      languageCode: L10nService().localeCode,
     );
     unawaited(
       launchUrl(

@@ -32,6 +32,8 @@ import 'package:soullocket_app/utils/services/storage/storage_web_picker_guard.d
 class StorageService {
   StorageService();
 
+  static int _uploadSequence = 0;
+
   static StorageService get instance => StorageService();
 
   static const int pickerImageQuality = StoragePickerService.pickerImageQuality;
@@ -1175,6 +1177,7 @@ class StorageService {
     int minWidth = 960,
     int minHeight = 960,
     int quality = 62,
+    Future<void> Function(int bytes)? beforeUpload,
   }) {
     return _uploadSignedImageWithCompression(
       file: file,
@@ -1191,6 +1194,7 @@ class StorageService {
       errorLabel: 'Memory image',
       mapResult: mapBasicStorageUploadResult,
       errorMessage: 'Lỗi tải ảnh đám mây.',
+      beforeUpload: beforeUpload,
     );
   }
 
@@ -1278,6 +1282,7 @@ class StorageService {
     int minHeight = 960,
     int quality = 62,
     ValueChanged<double>? onProgress,
+    Future<void> Function(int bytes)? beforeUpload,
   }) async {
     try {
       final nowMs = DateTime.now().millisecondsSinceEpoch;
@@ -1334,50 +1339,38 @@ class StorageService {
       }
 
       final currentUid = _requireCurrentUid();
-      final path = 'uploads/$currentUid/$folderName/$nowMs$fileExtension';
-      final normalizedStoragePath = _normalizeStorageWritePath(path);
+      final path =
+          'uploads/$currentUid/$folderName/${DateTime.now().microsecondsSinceEpoch}_${_uploadSequence++}$fileExtension';
 
       if (onProgress != null) onProgress(0.4);
 
       final finalContentType = detectContentType(path);
 
       try {
-        // Đo dung lượng file sau nén trước khi upload
-        int? compressedBytes;
-        try {
-          compressedBytes = await uploadFile.length();
-        } catch (error) {
-          debugPrint('[StorageService] Không đọc được kích thước tệp: $error');
-        }
-
-        final downloadUrl = _rawUploadHelper.uploadFileToPath(
+        return await _rawUploadHelper.uploadFileResult(
           storagePath: path,
           file: uploadFile,
           resolvedContentType: finalContentType,
           rejectVideoUpload: _rejectVideoUpload,
           purgeLegacyCache: _purgeLegacyImgBBKeyCache,
+          beforeUpload: beforeUpload,
           onProgress: onProgress != null
-              ? (p) => onProgress(0.4 + (p * 0.6))
+              ? (p) => onProgress(0.4 + p * 0.6)
               : null,
-        );
-
-        final url = await downloadUrl;
-        if (onProgress != null) onProgress(1.0);
-
-        return StorageUploadResult(
-          downloadUrl: url,
-          storagePath: normalizedStoragePath,
-          uploadedBytes: compressedBytes,
         );
       } finally {
         if (tempCompressedPath != null) {
-          final f = File(tempCompressedPath);
-          if (await f.exists()) await f.delete();
+          try {
+            final f = File(tempCompressedPath);
+            if (await f.exists()) await f.delete();
+          } catch (_) {
+            // Lỗi dọn cache không được biến upload thành công thành thất bại.
+          }
         }
       }
     } catch (e) {
       debugPrint('R2 upload error ($folderName): $e');
-      throw 'Không thể tải ảnh lên đám mây, vui lòng kiểm tra kết nối mạng.';
+      rethrow;
     }
   }
 
@@ -1397,6 +1390,7 @@ class StorageService {
     mapResult,
     required String errorMessage,
     ValueChanged<double>? onProgress,
+    Future<void> Function(int bytes)? beforeUpload,
   }) {
     // CHUYỂN SANG R2: bỏ qua Signed URL, upload trực tiếp qua R2
     return _uploadDirectToR2(
@@ -1406,6 +1400,7 @@ class StorageService {
       minHeight: minHeight,
       quality: quality,
       onProgress: onProgress,
+      beforeUpload: beforeUpload,
     );
   }
 

@@ -117,6 +117,15 @@ class _FullscreenHomeBody extends StatelessWidget {
                             maxWidth: min(viewSize.width - 76.0, 310.0),
                           ),
                           SizedBox(height: compactHeight ? 6 : 12),
+                          state._buildGettingStartedChecklist(
+                            isSingle: isSingle,
+                          ),
+                          const HomeCompanionJourneyCard(),
+                          TextButton.icon(
+                            onPressed: state._showCountdownQuickCustomizeSheet,
+                            icon: const Icon(Icons.tune_rounded, size: 18),
+                            label: Text(context.tr('home_tychnhvngm_09a3bd')),
+                          ),
                           Expanded(
                             child: Center(
                               child: Semantics(

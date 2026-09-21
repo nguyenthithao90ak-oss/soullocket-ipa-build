@@ -97,10 +97,7 @@ extension _MainHomeInsightCardExt on _MainHomeTabState {
                     padding: const EdgeInsets.fromLTRB(12, 12, 12, 13),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFFFFF0F6),
-                          Color(0xFFF8F0FF),
-                        ],
+                        colors: [Color(0xFFFFF0F6), Color(0xFFF8F0FF)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -108,8 +105,9 @@ extension _MainHomeInsightCardExt on _MainHomeTabState {
                       border: Border.all(color: const Color(0xFFF9D8E5)),
                       boxShadow: [
                         BoxShadow(
-                          color:
-                              const Color(0xFFFF6FA5).withValues(alpha: 0.08),
+                          color: const Color(
+                            0xFFFF6FA5,
+                          ).withValues(alpha: 0.08),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -139,7 +137,7 @@ extension _MainHomeInsightCardExt on _MainHomeTabState {
       tween: Tween(begin: 0.4, end: 1.0),
       duration: const Duration(milliseconds: 900),
       curve: Curves.easeInOut,
-      onEnd: () => setState(() {}),
+      onEnd: () => _safeSetState(() {}),
       builder: (context, value, _) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,

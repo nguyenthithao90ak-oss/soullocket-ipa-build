@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../../core/sl_theme.dart';
+import '../../../../widgets/app_help_center.dart';
 
 class UtilitiesHubHeader extends StatelessWidget {
   const UtilitiesHubHeader({
@@ -78,6 +79,7 @@ class UtilitiesHubHeader extends StatelessWidget {
                   ],
                 ),
               ),
+              const AppHelpButton(articleId: 'utilities', iconOnly: true),
               SizedBox(
                 width: 44,
                 child: Row(

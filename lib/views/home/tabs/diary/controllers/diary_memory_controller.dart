@@ -25,6 +25,7 @@ import '../../../../../utils/services/offline_cache_service.dart';
 import '../../../../../utils/services/purchase_service.dart';
 import '../../../../../utils/services/security_service.dart';
 import '../../../../../utils/services/storage/storage_service.dart';
+import '../utils/diary_memory_upload_commit.dart';
 import 'diary_feed_controller.dart';
 import 'diary_guard_controller.dart';
 import '../../../../ui_prefs.dart';
@@ -66,7 +67,6 @@ class DiaryMemoryController extends ChangeNotifier {
 
   static const int _webMemoryCacheLimit = 120;
   static const int _appMemoryCacheLimit = 200;
-  static const int _memoryUploadConcurrency = 5;
   static const Duration _memoryDownloadCacheTtl = Duration(days: 7);
   static const String _pendingUploadPrefsKey = 'diary_memory_pending_upload_v1';
 
@@ -98,6 +98,11 @@ class DiaryMemoryController extends ChangeNotifier {
   Object? _lastCachedLiveMemoriesSource;
   List<String> _pendingUploadPaths = const <String>[];
   String? _pendingUploadMessage;
+  final Map<String, XFile> _pendingFiles = {};
+  final Map<String, Map<String, dynamic>> _stagedUploads = {};
+  String? _pendingOwner;
+  String? _pendingHouse;
+  bool _preparingUpload = false;
   bool _isUploadingMemories = false;
   bool _isDisposed = false;
   final Map<String, Future<void>> _pendingUrlResolves =
@@ -137,27 +142,17 @@ class DiaryMemoryController extends ChangeNotifier {
     _pendingUploadPaths = List<String>.unmodifiable(paths);
     _pendingUploadMessage = message;
     if (notify) {
-      notifyListeners();
+      _notifyIfActive();
     }
   }
 
   Future<List<String>> _extractRecoverableImagePaths(List<XFile> images) async {
-    if (kIsWeb) {
-      return const <String>[];
-    }
     final paths = <String>[];
     for (final image in images) {
       final path = image.path.trim();
-      if (path.isEmpty) {
-        continue;
-      }
-      try {
-        if (await XFile(path).length() > 0) {
-          paths.add(path);
-        }
-      } catch (_) {
-        // skip unrecoverable files
-      }
+      if (path.isEmpty) continue;
+      _pendingFiles[path] = image;
+      paths.add(path);
     }
     return paths;
   }
@@ -176,19 +171,24 @@ class DiaryMemoryController extends ChangeNotifier {
       return;
     }
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
+    final saved = await prefs.setString(
       _pendingUploadPrefsKey,
       jsonEncode(<String, dynamic>{
         'houseId': houseId.trim(),
+        'uid': _pendingOwner,
+        'staged': _stagedUploads,
         'paths': normalizedPaths,
       }),
     );
+    if (!saved) throw StateError('Could not persist pending upload');
     _setPendingUploadState(normalizedPaths, message: message);
   }
 
   Future<void> _clearPendingUploadState({bool notify = true}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_pendingUploadPrefsKey);
+    _stagedUploads.clear();
+    _pendingFiles.clear();
     if (_pendingUploadPaths.isEmpty && _pendingUploadMessage == null) {
       return;
     }
@@ -226,13 +226,29 @@ class DiaryMemoryController extends ChangeNotifier {
       }
 
       final savedHouseId = decoded['houseId']?.toString().trim() ?? '';
-      if (savedHouseId != houseId) {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (savedHouseId != houseId || decoded['uid'] != uid) {
+        _stagedUploads.clear();
+        _pendingFiles.clear();
         if (_pendingUploadPaths.isNotEmpty || _pendingUploadMessage != null) {
           _setPendingUploadState(const <String>[], message: null);
         }
         return;
       }
 
+      if (_isDisposed || _currentHouseId != houseId) return;
+      _pendingOwner = uid;
+      _pendingHouse = houseId;
+      final staged = decoded['staged'];
+      if (staged is Map) {
+        _stagedUploads.addAll({
+          for (final entry in staged.entries)
+            if (entry.value is Map)
+              entry.key.toString(): Map<String, dynamic>.from(
+                entry.value as Map,
+              ),
+        });
+      }
       final rawPaths = decoded['paths'];
       if (rawPaths is! List) {
         await _clearPendingUploadState();
@@ -245,6 +261,12 @@ class DiaryMemoryController extends ChangeNotifier {
         if (path.isEmpty) {
           continue;
         }
+        if (_stagedUploads.containsKey(path) ||
+            _pendingFiles.containsKey(path)) {
+          recoverablePaths.add(path);
+          continue;
+        }
+        if (kIsWeb) continue;
         try {
           if (await XFile(path).length() > 0) {
             recoverablePaths.add(path);
@@ -279,6 +301,10 @@ class DiaryMemoryController extends ChangeNotifier {
     if (uploadedPaths.isEmpty) {
       return;
     }
+    for (final path in uploadedPaths) {
+      _stagedUploads.remove(path);
+      _pendingFiles.remove(path);
+    }
     final remaining = _pendingUploadPaths
         .where((path) => !uploadedPaths.contains(path))
         .toList();
@@ -303,6 +329,12 @@ class DiaryMemoryController extends ChangeNotifier {
       if (normalized.isEmpty) {
         continue;
       }
+      if (_stagedUploads.containsKey(normalized) ||
+          _pendingFiles.containsKey(normalized)) {
+        files.add(_pendingFiles[normalized] ?? XFile(normalized));
+        continue;
+      }
+      if (kIsWeb) continue;
       try {
         final file = XFile(normalized);
         if (await file.length() > 0) {
@@ -335,6 +367,9 @@ class DiaryMemoryController extends ChangeNotifier {
       return;
     }
     _currentHouseId = normalized;
+    _pendingFiles.clear();
+    _stagedUploads.clear();
+    _setPendingUploadState(const [], notify: false);
     _lastMemoriesCacheSignature = null;
     _resetMemoriesPagination();
     _resetMemoriesStreamCache();
@@ -1148,6 +1183,8 @@ class DiaryMemoryController extends ChangeNotifier {
             final restore = item['restorePayload'] as Map<String, dynamic>?;
             if (restore == null) continue;
             final size = (restore['fileSize'] as num?)?.toInt() ?? 0;
+            deletedImageBytes +=
+                (restore['thumbnailBytes'] as num?)?.toInt() ?? 0;
             if (size <= 0) continue;
             if (restore['type']?.toString().toLowerCase() == 'video') {
               deletedVideoBytes += size;
@@ -1427,6 +1464,13 @@ class DiaryMemoryController extends ChangeNotifier {
             singleDeleteUpdates['houses/$houseId/memoryStorageBytes/$typeKey'] =
                 ServerValue.increment(-delFileSize);
           }
+          final thumbnailBytes =
+              (payload['thumbnailBytes'] as num?)?.toInt() ?? 0;
+          if (thumbnailBytes > 0) {
+            final imageBytes = payload['type'] == 'video' ? 0 : delFileSize;
+            singleDeleteUpdates['houses/$houseId/memoryStorageBytes/image'] =
+                ServerValue.increment(-imageBytes - thumbnailBytes);
+          }
           await _dbRef.update(singleDeleteUpdates);
           await _logDeletedMemoriesToActivityHistory(
             houseId: houseId,
@@ -1468,6 +1512,8 @@ class DiaryMemoryController extends ChangeNotifier {
     required String authorEmail,
     required String authorRole,
     required int uploadQuality,
+    required String uid,
+    required Future<void> Function(int bytes, bool isVideo) beforeUpload,
     Position? position,
   }) async {
     try {
@@ -1485,7 +1531,7 @@ class DiaryMemoryController extends ChangeNotifier {
       }.contains(ext);
       if (isVideoFile && !AppConfig.isVideoUploadEnabled) {
         return (
-          error: 'Tính năng tải video đang tạm thời bảo trì để nâng cấp.',
+          error: L10nService().translate('memory_video_upload_unavailable'),
           payload: null,
           uploadedBytes: 0,
         );
@@ -1495,6 +1541,7 @@ class DiaryMemoryController extends ChangeNotifier {
         houseId,
         image,
         quality: uploadQuality,
+        beforeUpload: (bytes) => beforeUpload(bytes, isVideoFile),
       );
       final imageUrl = upload?.downloadUrl.trim() ?? '';
       if (upload == null || imageUrl.isEmpty) {
@@ -1507,6 +1554,8 @@ class DiaryMemoryController extends ChangeNotifier {
 
       // ── Tạo thumbnail cho video ──────────────────────────
       String? thumbnailUrl;
+      String? thumbnailStoragePath;
+      var thumbnailSize = 0;
       if (isVideoFile && !kIsWeb) {
         try {
           final thumbnailBytes = await VideoCompress.getByteThumbnail(
@@ -1525,8 +1574,11 @@ class DiaryMemoryController extends ChangeNotifier {
               houseId,
               thumbXFile,
               quality: 60,
+              beforeUpload: (bytes) => beforeUpload(bytes, false),
             );
             thumbnailUrl = thumbUpload?.downloadUrl.trim();
+            thumbnailStoragePath = thumbUpload?.storagePath;
+            thumbnailSize = thumbUpload?.uploadedBytes ?? 0;
           }
         } catch (e) {
           debugPrint(
@@ -1541,13 +1593,15 @@ class DiaryMemoryController extends ChangeNotifier {
         'ts': nowMs,
         'date': nowMs,
         'author': authorName.trim(),
-        'authorId': FirebaseAuth.instance.currentUser?.uid ?? '',
+        'authorId': uid,
         'authorName': authorName.trim(),
         'storagePath': upload.storagePath,
         'authorEmail': authorEmail.trim(),
         'authorRole': authorRole.trim(),
         'type': isVideoFile ? 'video' : 'image',
         'fileSize': upload.uploadedBytes ?? 0,
+        if (thumbnailSize > 0) 'thumbnailBytes': thumbnailSize,
+        'thumbnailStoragePath': ?thumbnailStoragePath,
         if (thumbnailUrl != null && thumbnailUrl.isNotEmpty)
           'thumbnailUrl': thumbnailUrl,
         if (position != null) 'lat': position.latitude,
@@ -1561,7 +1615,9 @@ class DiaryMemoryController extends ChangeNotifier {
     } catch (e) {
       debugPrint('Lỗi tải ảnh kỷ niệm: ${AppErrorMapper.resolve(e).message}');
       return (
-        error: AppErrorMapper.resolve(e).message,
+        error: e is DiaryMemoryQuotaExceeded
+            ? L10nService().translate('memory_upload_quota_exceeded')
+            : AppErrorMapper.resolve(e).message,
         payload: null,
         uploadedBytes: 0,
       );
@@ -1582,9 +1638,8 @@ class DiaryMemoryController extends ChangeNotifier {
         };
       }
     } catch (e) {
-      debugPrint(
-        'Failed to read memoryStorageBytes: ${AppErrorMapper.resolve(e).message}',
-      );
+      // Không coi lỗi đọc hạn mức là kho rỗng.
+      rethrow;
     }
     return {'image': 0, 'video': 0};
   }
@@ -1625,357 +1680,393 @@ class DiaryMemoryController extends ChangeNotifier {
     showSnackBar,
     List<XFile>? presetImages,
   }) async {
-    if (!await SecurityService().guardAction(context, 'diary_upload_photos')) {
-      return;
-    }
-
-    final houseId = await feedController.resolveHouseId();
-    if (houseId == null) {
-      showSnackBar(
-        L10nService().translate('diary_memory_house_missing'),
-        backgroundColor: const Color(0xFFE53935),
-      );
-      return;
-    }
-
-    // Chạy song song để giảm thời gian chờ trước khi hiện picker
-    final preCheckResults = await Future.wait([
-      PurchaseService().getVipAccessInfo(),
-      _getTotalStorageBytes(houseId),
-    ]);
-
-    final vipAccess = preCheckResults[0] as VipAccessInfo;
-    final totalStorageMap = preCheckResults[1] as Map<String, int>;
-    final totalImageBytes = totalStorageMap['image'] ?? 0;
-    final totalVideoBytes = totalStorageMap['video'] ?? 0;
-
-    // ── Kiểm tra tổng kho (tất cả thời gian) ──
-    final imageStorageCap = vipAccess.totalMemoryStorageCapMb * 1024 * 1024;
-    final videoStorageCap = vipAccess.totalMemoryVideoCapMb * 1024 * 1024;
-
-    if (totalImageBytes >= imageStorageCap &&
-        totalVideoBytes >= videoStorageCap) {
-      final imgCapMb = vipAccess.totalMemoryStorageCapMb;
-      final vidCapMb = vipAccess.totalMemoryVideoCapMb;
-      showSnackBar(
-        'Kho lưu trữ đã đầy (ảnh ${imgCapMb}MB, video ${vidCapMb}MB). Vui lòng xóa bớt kỷ niệm cũ để tải thêm mới.'
-        '${!vipAccess.isVip && AppConfig.isPurchaseEnabled ? ' Hoặc nâng cấp VIP để mở rộng kho!' : ''}',
-        backgroundColor: const Color(0xFFE53935),
-      );
-      return;
-    }
-
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? 'guest';
-    final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
-
-    // ── Đọc dung lượng ảnh + video đã upload hôm nay (bytes sau nén) ──
-    final uploadBytesRef = _dbRef.child(
-      'houses/$houseId/memoryUploadBytes/$todayStr/$uid',
-    );
-    final bytesSnap = await uploadBytesRef.get();
-    final bytesMap = bytesSnap.value is Map
-        ? Map<String, dynamic>.from(bytesSnap.value as Map)
-        : <String, dynamic>{};
-    final imageUploadedToday = (bytesMap['image'] as num?)?.toInt() ?? 0;
-    final videoUploadedToday = (bytesMap['video'] as num?)?.toInt() ?? 0;
-
-    final imageLimitBytes = vipAccess.dailyImageUploadLimitBytes;
-    final videoLimitBytes = vipAccess.dailyVideoUploadLimitBytes;
-
-    // Kiểm tra giới hạn dung lượng hàng ngày
-    if (imageUploadedToday >= imageLimitBytes &&
-        videoUploadedToday >= videoLimitBytes) {
-      final imageLimitMb = (imageLimitBytes / (1024 * 1024)).toStringAsFixed(0);
-      final videoLimitMb = (videoLimitBytes / (1024 * 1024)).toStringAsFixed(0);
-      showSnackBar(
-        vipAccess.isVip
-            ? 'Bạn đã dùng hết dung lượng tải lên hôm nay (ảnh ${imageLimitMb}MB, video ${videoLimitMb}MB). Vui lòng thử lại ngày mai.'
-            : AppConfig.isPurchaseEnabled
-            ? 'Tài khoản thường chỉ được tải lên ${imageLimitMb}MB ảnh và ${videoLimitMb}MB video mỗi ngày. Nâng cấp VIP để tải lên nhiều hơn!'
-            : 'Bạn đã dùng hết dung lượng tải lên hôm nay. Vui lòng thử lại ngày mai.',
-        backgroundColor: const Color(0xFFE53935),
-      );
-      return;
-    }
-
-    // Cho chọn ảnh/video thoải mái — giới hạn bằng dung lượng, không giới hạn số lượng
-    final limitToPick = StorageService.clampImagePickLimit(99);
-
-    final images =
-        presetImages ?? await _storageService.pickMedia(limit: limitToPick);
-    if (images.isEmpty || !context.mounted) {
-      return;
-    }
-
-    _isUploadingMemories = true;
-    notifyListeners();
-
+    if (_preparingUpload || _isUploadingMemories || _isDisposed) return;
+    _preparingUpload = true;
     try {
-      final recoverablePaths = await _extractRecoverableImagePaths(images);
-      if (recoverablePaths.isNotEmpty) {
-        await _savePendingUploadState(
-          houseId: houseId,
-          paths: recoverablePaths,
-          message: presetImages == null
-              ? L10nService().translate('home_nuappbttgi_9e97ec')
-              : L10nService().translate('home_angthlinhk_871c53'),
-        );
-      } else if (presetImages != null) {
-        await _clearPendingUploadState();
+      if (!await SecurityService().guardAction(
+        context,
+        'diary_upload_photos',
+      )) {
+        return;
       }
 
-      // Sau khi user chọn ảnh: resolve user + location song song
-      Future<Position?> locationFuture = Future.value(null);
-      if (!kIsWeb) {
-        locationFuture = Geolocator.isLocationServiceEnabled()
-            .then((enabled) async {
-              if (!enabled) return null;
-              final permission = await Geolocator.checkPermission();
-              if (permission != LocationPermission.always &&
-                  permission != LocationPermission.whileInUse) {
-                return null;
-              }
-              return Geolocator.getCurrentPosition(
-                locationSettings: const LocationSettings(
-                  accuracy: LocationAccuracy.low,
-                ),
-              ).timeout(const Duration(seconds: 1));
-            })
-            .catchError((_) => null as Position?);
-      }
-
-      final postPickResults = await Future.wait([
-        guardController.resolveCurrentUser(),
-        locationFuture,
-      ]);
-
-      final user = postPickResults[0] as User?;
-      if (user == null) {
+      final houseId = await feedController.resolveHouseId();
+      if (houseId == null) {
         showSnackBar(
-          L10nService().translate(
-            L10nService().translate('home_phinngnhpc_f6ac90'),
-          ),
+          L10nService().translate('diary_memory_house_missing'),
           backgroundColor: const Color(0xFFE53935),
         );
         return;
       }
 
-      final authorName = await feedController.resolveCurrentAuthorName(user);
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
+      bool scopeIsCurrent() =>
+          !_isDisposed &&
+          _currentHouseId == houseId &&
+          FirebaseAuth.instance.currentUser?.uid == uid;
+      if (!scopeIsCurrent()) return;
+      final isRetry = presetImages != null || _stagedUploads.isNotEmpty;
+      // Chạy song song để giảm thời gian chờ trước khi hiện picker
+      final preCheckResults = await Future.wait([
+        PurchaseService().getVipAccessInfo(),
+        _getTotalStorageBytes(houseId),
+      ]);
 
-      final authorEmail = user.email?.trim().toLowerCase() ?? '';
-      final authorRole = feedController.currentAuthorRole;
+      final vipAccess = preCheckResults[0] as VipAccessInfo;
+      final totalStorageMap = preCheckResults[1] as Map<String, int>;
+      final totalImageBytes = totalStorageMap['image'] ?? 0;
+      final totalVideoBytes = totalStorageMap['video'] ?? 0;
 
-      Position? position = postPickResults[1] as Position?;
-      bool skippedMapPinBecauseLimit = false;
+      // ── Kiểm tra tổng kho (tất cả thời gian) ──
+      final imageStorageCap = vipAccess.totalMemoryStorageCapMb * 1024 * 1024;
+      final videoStorageCap = vipAccess.totalMemoryVideoCapMb * 1024 * 1024;
 
-      if (position != null) {
-        final pinSnapshot = await _mapPinLimitService.getSnapshot(houseId);
-        final alreadyPinned = pinSnapshot.containsLocation(
-          position.latitude,
-          position.longitude,
+      if (!isRetry &&
+          totalImageBytes >= imageStorageCap &&
+          totalVideoBytes >= videoStorageCap) {
+        final imgCapMb = vipAccess.totalMemoryStorageCapMb;
+        final vidCapMb = vipAccess.totalMemoryVideoCapMb;
+        showSnackBar(
+          'Kho lưu trữ đã đầy (ảnh ${imgCapMb}MB, video ${vidCapMb}MB). Vui lòng xóa bớt kỷ niệm cũ để tải thêm mới.'
+          '${!vipAccess.isVip && AppConfig.isPurchaseEnabled ? ' Hoặc nâng cấp VIP để mở rộng kho!' : ''}',
+          backgroundColor: const Color(0xFFE53935),
         );
-        if (pinSnapshot.isFull && !alreadyPinned) {
-          // Giữ nguyên upload ảnh nhưng bỏ ghim vị trí mới để không vượt mốc 30 điểm.
-          position = null;
-          skippedMapPinBecauseLimit = true;
-        }
+        return;
       }
 
-      // Ensure Auth is ready and has a fresh token before starting batch upload
+      final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+      // ── Đọc dung lượng ảnh + video đã upload hôm nay (bytes sau nén) ──
+      final uploadBytesRef = _dbRef.child(
+        'houses/$houseId/memoryUploadBytes/$todayStr/$uid',
+      );
+      final bytesSnap = await uploadBytesRef.get();
+      final bytesMap = bytesSnap.value is Map
+          ? Map<String, dynamic>.from(bytesSnap.value as Map)
+          : <String, dynamic>{};
+      final imageUploadedToday = (bytesMap['image'] as num?)?.toInt() ?? 0;
+      final videoUploadedToday = (bytesMap['video'] as num?)?.toInt() ?? 0;
+
+      final imageLimitBytes = vipAccess.dailyImageUploadLimitBytes;
+      final videoLimitBytes = vipAccess.dailyVideoUploadLimitBytes;
+
+      // Kiểm tra giới hạn dung lượng hàng ngày
+      if (!isRetry &&
+          imageUploadedToday >= imageLimitBytes &&
+          videoUploadedToday >= videoLimitBytes) {
+        final imageLimitMb = (imageLimitBytes / (1024 * 1024)).toStringAsFixed(
+          0,
+        );
+        final videoLimitMb = (videoLimitBytes / (1024 * 1024)).toStringAsFixed(
+          0,
+        );
+        showSnackBar(
+          vipAccess.isVip
+              ? 'Bạn đã dùng hết dung lượng tải lên hôm nay (ảnh ${imageLimitMb}MB, video ${videoLimitMb}MB). Vui lòng thử lại ngày mai.'
+              : AppConfig.isPurchaseEnabled
+              ? 'Tài khoản thường chỉ được tải lên ${imageLimitMb}MB ảnh và ${videoLimitMb}MB video mỗi ngày. Nâng cấp VIP để tải lên nhiều hơn!'
+              : 'Bạn đã dùng hết dung lượng tải lên hôm nay. Vui lòng thử lại ngày mai.',
+          backgroundColor: const Color(0xFFE53935),
+        );
+        return;
+      }
+
+      // Cho chọn ảnh/video thoải mái — giới hạn bằng dung lượng, không giới hạn số lượng
+      final limitToPick = StorageService.clampImagePickLimit(99);
+
+      final selected =
+          presetImages ?? await _storageService.pickMedia(limit: limitToPick);
+      if (selected.isEmpty || !scopeIsCurrent()) return;
+      final pending = await _buildPendingUploadFiles();
+      final images = <String, XFile>{
+        for (final file in pending) file.path: file,
+        for (final file in selected) file.path: file,
+      }.values.toList();
+      if (images.isEmpty || !context.mounted || !scopeIsCurrent()) {
+        return;
+      }
+
+      if (_pendingOwner != uid || _pendingHouse != houseId) {
+        _stagedUploads.clear();
+        _pendingFiles.clear();
+      }
+      _pendingOwner = uid;
+      _pendingHouse = houseId;
+      _isUploadingMemories = true;
+      notifyListeners();
+
       try {
-        final user = await guardController.resolveCurrentUser();
-        if (user != null) {
-          await user.getIdToken(true);
+        final recoverablePaths = await _extractRecoverableImagePaths(images);
+        if (recoverablePaths.isNotEmpty) {
+          await _savePendingUploadState(
+            houseId: houseId,
+            paths: {..._pendingUploadPaths, ...recoverablePaths}.toList(),
+            message: presetImages == null
+                ? L10nService().translate('home_nuappbttgi_9e97ec')
+                : L10nService().translate('home_angthlinhk_871c53'),
+          );
+        } else if (presetImages != null) {
+          await _clearPendingUploadState();
         }
-      } catch (e) {
-        debugPrint('Auth warm-up failed: ${AppErrorMapper.resolve(e).message}');
-      }
 
-      final memoryUploadQuality = vipAccess.isVip ? 82 : 78;
+        // Sau khi user chọn ảnh: resolve user + location song song
+        Future<Position?> locationFuture = Future.value(null);
+        if (!kIsWeb) {
+          locationFuture = Geolocator.isLocationServiceEnabled()
+              .then((enabled) async {
+                if (!enabled) return null;
+                final permission = await Geolocator.checkPermission();
+                if (permission != LocationPermission.always &&
+                    permission != LocationPermission.whileInUse) {
+                  return null;
+                }
+                return Geolocator.getCurrentPosition(
+                  locationSettings: const LocationSettings(
+                    accuracy: LocationAccuracy.low,
+                  ),
+                ).timeout(const Duration(seconds: 1));
+              })
+              .catchError((_) => null as Position?);
+        }
 
-      var uploadedCount = 0;
-      final errorMessages = <String>[];
-      var sessionImageBytes = 0;
-      var sessionVideoBytes = 0;
-
-      for (
-        var start = 0;
-        start < images.length;
-        start += _memoryUploadConcurrency
-      ) {
-        final end = (start + _memoryUploadConcurrency).clamp(0, images.length);
-        final batch = images.sublist(start, end);
-
-        // Bước 1: upload R2 song song (concurrency = _memoryUploadConcurrency)
-        final batchResults = await Future.wait([
-          for (final image in batch)
-            _uploadSingleMemoryPhoto(
-              houseId: houseId,
-              image: image,
-              authorName: authorName,
-              authorEmail: authorEmail,
-              authorRole: authorRole,
-              uploadQuality: memoryUploadQuality,
-              position: position,
-            ),
+        final postPickResults = await Future.wait([
+          guardController.resolveCurrentUser(),
+          locationFuture,
         ]);
 
-        // Bước 2: gom tất cả Firebase writes thành 1 batch update duy nhất
-        final batchUpdates = <String, dynamic>{};
-        final completedImages = <XFile>[];
-        for (var index = 0; index < batchResults.length; index++) {
-          final result = batchResults[index];
-          if (result.error != null) {
-            errorMessages.add(result.error!);
-          } else if (result.payload != null) {
-            // Kiểm tra giới hạn dung lượng trước khi chấp nhận
-            final isVideo =
-                result.payload!['type']?.toString().toLowerCase() == 'video';
-            final bytes = result.uploadedBytes;
-            if (isVideo) {
-              if (videoUploadedToday + sessionVideoBytes + bytes >
-                  videoLimitBytes) {
-                final limitMb = (videoLimitBytes / (1024 * 1024))
-                    .toStringAsFixed(0);
-                errorMessages.add(
-                  'Vượt giới hạn video ${limitMb}MB/ngày. Bỏ qua file này.',
-                );
-                continue;
-              }
-              sessionVideoBytes += bytes;
-            } else {
-              if (imageUploadedToday + sessionImageBytes + bytes >
-                  imageLimitBytes) {
-                final limitMb = (imageLimitBytes / (1024 * 1024))
-                    .toStringAsFixed(0);
-                errorMessages.add(
-                  'Vượt giới hạn ảnh ${limitMb}MB/ngày. Bỏ qua file này.',
-                );
-                continue;
-              }
-              sessionImageBytes += bytes;
-            }
+        final user = postPickResults[0] as User?;
+        if (user == null) {
+          showSnackBar(
+            L10nService().translate(
+              L10nService().translate('home_phinngnhpc_f6ac90'),
+            ),
+            backgroundColor: const Color(0xFFE53935),
+          );
+          return;
+        }
 
-            final memoryKey =
-                _dbRef.child('houses/$houseId/memories').push().key ?? '';
-            if (memoryKey.isNotEmpty) {
-              batchUpdates['houses/$houseId/memories/$memoryKey'] =
-                  result.payload;
-              uploadedCount++;
-              completedImages.add(batch[index]);
-              debugPrint('✅ UPLOAD THÀNH CÔNG: Memory ID = $memoryKey');
-            }
+        final authorName = await feedController.resolveCurrentAuthorName(user);
+
+        final authorEmail = user.email?.trim().toLowerCase() ?? '';
+        final authorRole = feedController.currentAuthorRole;
+
+        Position? position = postPickResults[1] as Position?;
+        bool skippedMapPinBecauseLimit = false;
+
+        if (position != null) {
+          final pinSnapshot = await _mapPinLimitService.getSnapshot(houseId);
+          final alreadyPinned = pinSnapshot.containsLocation(
+            position.latitude,
+            position.longitude,
+          );
+          if (pinSnapshot.isFull && !alreadyPinned) {
+            // Giữ nguyên upload ảnh nhưng bỏ ghim vị trí mới để không vượt mốc 30 điểm.
+            position = null;
+            skippedMapPinBecauseLimit = true;
           }
         }
 
-        // Ghi Firebase 1 lần cho cả batch
-        if (batchUpdates.isNotEmpty) {
+        // Ensure Auth is ready and has a fresh token before starting batch upload
+        try {
+          final user = await guardController.resolveCurrentUser();
+          if (user != null) {
+            await user.getIdToken(true);
+          }
+        } catch (e) {
+          debugPrint(
+            'Auth warm-up failed: ${AppErrorMapper.resolve(e).message}',
+          );
+        }
+
+        final memoryUploadQuality = vipAccess.isVip ? 82 : 78;
+
+        var uploadedCount = 0;
+        final errorMessages = <String>[];
+        var sessionImageBytes = 0;
+        var sessionVideoBytes = 0;
+        var sessionDailyImageBytes = 0;
+        var sessionDailyVideoBytes = 0;
+
+        for (final image in images) {
+          if (!scopeIsCurrent()) break;
+          final path = image.path.trim();
           try {
-            await _dbRef.update(batchUpdates);
-          } catch (dbError) {
-            debugPrint('Lỗi batch-write Firebase: $dbError');
+            var staged = _stagedUploads[path];
+            if (staged == null) {
+              final result = await _uploadSingleMemoryPhoto(
+                houseId: houseId,
+                image: image,
+                uid: uid,
+                authorName: authorName,
+                authorEmail: authorEmail,
+                authorRole: authorRole,
+                uploadQuality: memoryUploadQuality,
+                position: position,
+                beforeUpload: (bytes, isVideo) async {
+                  if (!scopeIsCurrent()) {
+                    throw StateError('Upload scope changed');
+                  }
+                  final daily = isVideo
+                      ? videoUploadedToday
+                      : imageUploadedToday;
+                  final session = isVideo
+                      ? sessionVideoBytes
+                      : sessionImageBytes;
+                  final dailySession = isVideo
+                      ? sessionDailyVideoBytes
+                      : sessionDailyImageBytes;
+                  final total = isVideo ? totalVideoBytes : totalImageBytes;
+                  final dailyCap = isVideo ? videoLimitBytes : imageLimitBytes;
+                  final totalCap = isVideo ? videoStorageCap : imageStorageCap;
+                  if (daily + dailySession + bytes > dailyCap ||
+                      total + session + bytes > totalCap) {
+                    throw const DiaryMemoryQuotaExceeded();
+                  }
+                },
+              );
+              if (result.payload == null) {
+                errorMessages.add(
+                  result.error ??
+                      L10nService().translate('home_cannot_save_memory'),
+                );
+                continue;
+              }
+              if (!scopeIsCurrent()) return;
+              staged = {
+                'id': _dbRef.child('houses/$houseId/memories').push().key!,
+                'payload': result.payload!,
+                'day': todayStr,
+              };
+              _stagedUploads[path] = staged;
+            }
+            // Lưu URL và ID trước khi ghi database để retry không upload lại.
+            if (!scopeIsCurrent()) break;
+            await _savePendingUploadState(
+              houseId: houseId,
+              paths: _pendingUploadPaths,
+            );
+            if (!scopeIsCurrent()) break;
+            final payload = Map<String, dynamic>.from(staged['payload'] as Map);
+            final committed = await DiaryMemoryUploadCommit.commit(
+              houseId: houseId,
+              uid: uid,
+              day: staged['day'] as String,
+              memoryId: staged['id'] as String,
+              payload: payload,
+              exists: (path) async => (await _dbRef.child(path).get()).exists,
+              update: (values) async {
+                if (!scopeIsCurrent()) throw StateError('Upload scope changed');
+                await _dbRef.update(values);
+              },
+              increment: ServerValue.increment,
+            );
+            if (!scopeIsCurrent()) break;
+            if (committed) {
+              final bytes = (payload['fileSize'] as num?)?.toInt() ?? 0;
+              if (payload['type'] == 'video') {
+                sessionVideoBytes += bytes;
+                if (staged['day'] == todayStr) sessionDailyVideoBytes += bytes;
+              } else {
+                sessionImageBytes += bytes;
+                if (staged['day'] == todayStr) sessionDailyImageBytes += bytes;
+              }
+              final thumbBytes =
+                  (payload['thumbnailBytes'] as num?)?.toInt() ?? 0;
+              sessionImageBytes += thumbBytes;
+              if (staged['day'] == todayStr) {
+                sessionDailyImageBytes += thumbBytes;
+              }
+            }
+            uploadedCount++;
+            await _removePendingUploadedImages([image]);
+          } catch (error) {
             errorMessages.add(
               L10nService().translate('home_cannot_save_memory'),
             );
+            // Dừng lượt tải khi ghi lỗi; giữ journal và các file còn lại để thử lại.
+            break;
           }
         }
-        if (completedImages.isNotEmpty) {
-          await _removePendingUploadedImages(completedImages);
-        }
-      }
 
-      // Ghi dung lượng đã upload hôm nay (bytes) vào Firebase
-      final updatedBytes = <String, dynamic>{};
-      if (sessionImageBytes > 0) {
-        updatedBytes['image'] = imageUploadedToday + sessionImageBytes;
-      }
-      if (sessionVideoBytes > 0) {
-        updatedBytes['video'] = videoUploadedToday + sessionVideoBytes;
-      }
-      if (updatedBytes.isNotEmpty) {
-        await uploadBytesRef.update(updatedBytes);
-      }
-
-      // Cập nhật tổng kho (tất cả thời gian)
-      final storageIncrements = <String, dynamic>{};
-      if (sessionImageBytes > 0) {
-        storageIncrements['houses/$houseId/memoryStorageBytes/image'] =
-            ServerValue.increment(sessionImageBytes);
-      }
-      if (sessionVideoBytes > 0) {
-        storageIncrements['houses/$houseId/memoryStorageBytes/video'] =
-            ServerValue.increment(sessionVideoBytes);
-      }
-      if (storageIncrements.isNotEmpty) {
-        await _dbRef.update(storageIncrements);
-      }
-
-      if (uploadedCount > 0) {
-        await NotificationService().sendPartnerNotification(
-          houseId: houseId,
-          title: L10nService().translate(
-            L10nService().translate('home_knimmi_e43fdc'),
-          ),
-          body: L10nService().format('diary_partner_new_memory', {
-            'author': authorName,
-            'count': uploadedCount,
-          }),
-          data: {'screen': 'diary', 'type': 'new_memory'},
-        );
-      }
-
-      final failedCount = images.length - uploadedCount;
-
-      if (failedCount <= 0) {
-        await _clearPendingUploadState(notify: false);
-      } else {
-        final houseId = _currentHouseId?.trim() ?? '';
-        if (houseId.isNotEmpty && _pendingUploadPaths.isNotEmpty) {
-          await _savePendingUploadState(
+        if (!scopeIsCurrent()) return;
+        if (uploadedCount > 0) {
+          await NotificationService().sendPartnerNotification(
             houseId: houseId,
-            paths: _pendingUploadPaths,
-            message:
-                'Còn $failedCount ảnh Kỷ niệm chưa tải xong. Bạn có thể thử lại.',
+            title: L10nService().translate(
+              L10nService().translate('home_knimmi_e43fdc'),
+            ),
+            body: L10nService().format('diary_partner_new_memory', {
+              'author': authorName,
+              'count': uploadedCount,
+            }),
+            data: {'screen': 'diary', 'type': 'new_memory'},
           );
         }
-      }
 
-      if (!context.mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          duration: Duration(seconds: failedCount > 0 ? 5 : 3),
-          content: Text(
-            failedCount == 0
-                ? skippedMapPinBecauseLimit
-                      ? 'Đã thêm $uploadedCount kỷ niệm. Ảnh vẫn được lưu nhưng không ghim vị trí mới vì bản đồ đã đủ ${MapPinLimitService.maxPins} điểm.'
-                      : L10nService().format('diary_added_new_memories', {
-                          'count': uploadedCount,
-                        })
-                : skippedMapPinBecauseLimit
-                ? L10nService().translate('home_memory_added_skip_location')
-                : L10nService().translate('home_memory_added_with_errors'),
-          ),
-        ),
-      );
-    } catch (e) {
-      if (context.mounted) {
-        await _restorePendingUploadState();
+        final failedCount = images.length - uploadedCount;
+
+        if (_pendingUploadPaths.isNotEmpty) {
+          final houseId = _currentHouseId?.trim() ?? '';
+          if (houseId.isNotEmpty && _pendingUploadPaths.isNotEmpty) {
+            await _savePendingUploadState(
+              houseId: houseId,
+              paths: _pendingUploadPaths,
+              message: L10nService().format('home_memory_remaining_upload', {
+                'count': _pendingUploadPaths.length,
+              }),
+            );
+          }
+        }
+
         if (!context.mounted) {
           return;
         }
-        final resolved = AppErrorMapper.resolve(e);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(resolved.message),
-            backgroundColor: const Color(0xFFE53935),
+            duration: Duration(seconds: failedCount > 0 ? 5 : 3),
+            content: Text(
+              failedCount == 0
+                  ? skippedMapPinBecauseLimit
+                        ? 'Đã thêm $uploadedCount kỷ niệm. Ảnh vẫn được lưu nhưng không ghim vị trí mới vì bản đồ đã đủ ${MapPinLimitService.maxPins} điểm.'
+                        : L10nService().format('diary_added_new_memories', {
+                            'count': uploadedCount,
+                          })
+                  : uploadedCount == 0 && errorMessages.isNotEmpty
+                  ? errorMessages.first
+                  : skippedMapPinBecauseLimit
+                  ? L10nService().translate('home_memory_added_skip_location')
+                  : L10nService().translate('home_memory_added_with_errors'),
+            ),
           ),
+        );
+      } catch (e) {
+        if (context.mounted) {
+          await _restorePendingUploadState();
+          if (!context.mounted) {
+            return;
+          }
+          final resolved = AppErrorMapper.resolve(e);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(resolved.message),
+              backgroundColor: const Color(0xFFE53935),
+            ),
+          );
+        }
+      } finally {
+        _isUploadingMemories = false;
+        _notifyIfActive();
+      }
+    } catch (error) {
+      if (context.mounted && !_isDisposed) {
+        showSnackBar(
+          AppErrorMapper.resolve(error).message,
+          backgroundColor: const Color(0xFFE53935),
         );
       }
     } finally {
-      _isUploadingMemories = false;
-      _notifyIfActive();
+      _preparingUpload = false;
     }
   }
 

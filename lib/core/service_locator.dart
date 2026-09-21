@@ -15,6 +15,7 @@
 library;
 
 import 'package:get_it/get_it.dart';
+import 'package:soullocket_app/utils/services/companion_journey_service.dart';
 import 'package:soullocket_app/utils/services/privacy_collection_service.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
 import 'package:soullocket_app/utils/services/house_settings_service.dart';
@@ -37,6 +38,13 @@ final GetIt locator = GetIt.instance;
 /// - Storage: secure storage, offline cache.
 /// - Insight/Utility: love insight, utility chung, note.
 void setupLocator() {
+  // Bật cùng backend/rules đã kiểm thử; bản cũ giữ nguyên hành vi khi chưa rollout.
+  if (const bool.fromEnvironment('COMPANION_JOURNEY_ENABLED')) {
+    locator.registerLazySingleton(
+      () => CompanionJourneyService(),
+      dispose: (s) => s.dispose(),
+    );
+  }
   locator.registerLazySingleton(() => PrivacyCollectionService.instance);
   locator.registerLazySingleton(
     () => SoundService(),

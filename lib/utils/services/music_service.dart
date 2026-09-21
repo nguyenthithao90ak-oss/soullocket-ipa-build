@@ -128,6 +128,7 @@ class MusicService {
   StreamSubscription<PlayerState>? _playerStateSub;
   StreamSubscription<void>? _playerCompleteSub;
   bool _isInitialized = false;
+  bool _lastMusicAutoplay = false;
 
   Future<void> init() async {
     if (_isInitialized) return;
@@ -162,6 +163,9 @@ class MusicService {
 
   void _handleUiPrefsChanged() {
     final state = UiPrefs.notifier.value;
+    // Đổi màu/giao diện không được tự phát lại bài vừa tạm dừng.
+    if (state.musicAutoplay == _lastMusicAutoplay) return;
+    _lastMusicAutoplay = state.musicAutoplay;
     if (!state.musicAutoplay) {
       if (isPlayingNotifier.value) {
         stop(keepPlaylist: true);
@@ -180,6 +184,7 @@ class MusicService {
     _playlist = _readLocalMusicData(prefs);
     _currentIndex = 0;
     final allowLocalAutoplay = prefs.getBool('il_music_autoplay') ?? false;
+    _lastMusicAutoplay = allowLocalAutoplay;
 
     if (_playlist.isEmpty) {
       _playlist = [defaultTrack];
@@ -221,6 +226,20 @@ class MusicService {
   }
 
   Future<void> reloadPlaylist() async {
+    await _applyResolvedMusic();
+  }
+
+  Future<void> setAutoplay(bool enabled) async {
+    await UiPrefs.ensureLoaded();
+    // Phát/dừng một lần tại đây, tránh listener và nút cùng gọi player.
+    final previous = _lastMusicAutoplay;
+    _lastMusicAutoplay = enabled;
+    try {
+      await UiPrefs.setMusicAutoplay(enabled);
+    } catch (_) {
+      _lastMusicAutoplay = previous;
+      rethrow;
+    }
     await _applyResolvedMusic();
   }
 
