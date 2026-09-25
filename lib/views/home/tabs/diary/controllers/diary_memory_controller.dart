@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' show Random;
 import 'dart:typed_data';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,7 +15,9 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_compress/video_compress.dart';
 import '../../../../../core/constants/app_config.dart';
+import '../../../../../utils/services/storage/private_memory_lifecycle_policy.dart';
 import '../../../../../utils/services/private_media_url_service.dart';
+import '../utils/private_memory_link_policy.dart';
 import '../../../../../core/sl_theme.dart';
 import '../../../../../utils/services/map_pin_limit_service.dart';
 import '../../../../../utils/services/activity_history_service.dart';
@@ -105,9 +108,9 @@ class DiaryMemoryController extends ChangeNotifier {
   bool _preparingUpload = false;
   bool _isUploadingMemories = false;
   bool _isDisposed = false;
-  final Map<String, Future<void>> _pendingUrlResolves =
-      <String, Future<void>>{};
-  final Map<String, int> _lastUrlRefreshTimes = <String, int>{};
+  final Map<String, Future<PrivateMediaUrlResult>> _pendingUrlResolves =
+      <String, Future<PrivateMediaUrlResult>>{};
+  int _mediaScopeGeneration = 0;
 
   bool get isSelectionMode => _isSelectionMode;
   int get selectedMemoriesCount => _selectedMemories.length;
@@ -367,6 +370,8 @@ class DiaryMemoryController extends ChangeNotifier {
       return;
     }
     _currentHouseId = normalized;
+    _mediaScopeGeneration++;
+    _pendingUrlResolves.clear();
     _pendingFiles.clear();
     _stagedUploads.clear();
     _setPendingUploadState(const [], notify: false);
@@ -581,11 +586,22 @@ class DiaryMemoryController extends ChangeNotifier {
       if (DateTime.now().millisecondsSinceEpoch - cachedAt > ttlMs) {
         return null; // Cache hết hạn — app sẽ dùng live data
       }
-      return raw['items'];
+      return _withoutCachedMemoryLinks(raw['items']);
     }
     // Format cũ: List thẳng (backward compat — không có TTL nên chấp nhận)
-    if (raw is List) return raw;
+    if (raw is List) return _withoutCachedMemoryLinks(raw);
     return null;
+  }
+
+  List<Map<String, dynamic>>? _withoutCachedMemoryLinks(dynamic items) {
+    if (items is! List) return null;
+    return [
+      for (final item in items)
+        if (item is Map)
+          PrivateMemoryLinkPolicy.offlineMetadata(
+            Map<String, dynamic>.from(item),
+          ),
+    ];
   }
 
   int _readCacheTs(Map<String, dynamic> item) {
@@ -626,7 +642,7 @@ class DiaryMemoryController extends ChangeNotifier {
       }
       final item = Map<String, dynamic>.from(Map<dynamic, dynamic>.from(value));
       item['id'] = key;
-      cacheList.add(item);
+      cacheList.add(PrivateMemoryLinkPolicy.offlineMetadata(item));
     });
 
     cacheList.sort((a, b) => _readCacheTs(b).compareTo(_readCacheTs(a)));
@@ -644,11 +660,10 @@ class DiaryMemoryController extends ChangeNotifier {
   }
 
   bool _isMemoryUrlExpired(Map<String, dynamic> item) {
-    if (item['privateMedia'] != true && item['storageAccess'] != 'signed') {
-      return false;
-    }
-    final expiresAt = (item['urlExpiresAt'] as num?)?.toInt() ?? 0;
-    return expiresAt <= DateTime.now().millisecondsSinceEpoch + 60000;
+    return PrivateMemoryLinkPolicy.isExpired(
+      item,
+      DateTime.now().millisecondsSinceEpoch,
+    );
   }
 
   Future<void> ensureMemoryPhotoUrl({
@@ -657,104 +672,58 @@ class DiaryMemoryController extends ChangeNotifier {
   }) async {
     final existingUrl = item['url']?.toString().trim() ?? '';
     final memoryId = item['id']?.toString().trim() ?? '';
-    if (memoryId.isEmpty) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final generation = _mediaScopeGeneration;
+    bool scopeIsCurrent() =>
+        !_isDisposed &&
+        generation == _mediaScopeGeneration &&
+        _currentHouseId == houseId &&
+        FirebaseAuth.instance.currentUser?.uid == uid;
+    if (memoryId.isEmpty || uid == null || !scopeIsCurrent()) {
       return;
     }
     if (existingUrl.isNotEmpty && !_isMemoryUrlExpired(item)) {
       return;
     }
 
-    if (_pendingUrlResolves.containsKey(memoryId)) {
-      await _pendingUrlResolves[memoryId];
-      return;
-    }
-
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final lastRefresh = _lastUrlRefreshTimes[memoryId] ?? 0;
-    if (now - lastRefresh < 120000) {
-      return;
-    }
-    _lastUrlRefreshTimes[memoryId] = now;
-
-    debugPrint(
-      '[DiaryMemory] refreshing signed url id=$memoryId urlEmpty=${existingUrl.isEmpty}',
-    );
-
-    final future = () async {
-      try {
-        final result = await _privateMediaUrlService.resolve(
+    final requestKey = '$uid/$houseId/$memoryId';
+    final future = _pendingUrlResolves[requestKey] ??
+        _privateMediaUrlService.resolve(
           houseId: houseId,
           mediaId: memoryId,
           kind: 'memory_image',
         );
-        item['url'] = result.url;
-        item['urlExpiresAt'] = result.expiresAt;
-        debugPrint(
-          '[DiaryMemory] signed url refreshed id=$memoryId urlLen=${result.url.length}',
-        );
-
-        // Tối ưu hóa Cache: Ghi đè lại URL mới vào Offline Cache để lần sau mở app không cần resolve lại
-        try {
-          final cached = await OfflineCacheService.loadCache(
-            'memories_$houseId',
-          );
-          List? itemsList;
-          int? cachedAt;
-          // Hỗ trợ cả format mới {_cachedAt, items} và format cũ List
-          if (cached is Map) {
-            itemsList = cached['items'] as List?;
-            cachedAt = (cached['_cachedAt'] as num?)?.toInt();
-          } else if (cached is List) {
-            itemsList = cached;
-          }
-          if (itemsList != null) {
-            bool updated = false;
-            for (final cachedItem in itemsList) {
-              if (cachedItem is Map &&
-                  cachedItem['id']?.toString() == memoryId) {
-                cachedItem['url'] = result.url;
-                cachedItem['urlExpiresAt'] = result.expiresAt;
-                updated = true;
-                break;
-              }
-            }
-            if (updated) {
-              // Giữ nguyên _cachedAt để không reset TTL chỉ vì refresh URL
-              await OfflineCacheService.saveCache('memories_$houseId', {
-                '_cachedAt': cachedAt ?? DateTime.now().millisecondsSinceEpoch,
-                'items': itemsList,
-              });
-              debugPrint(
-                '[DiaryMemory] Offline Cache updated with new signed URL for memoryId=$memoryId',
-              );
-            }
-          }
-        } catch (cacheErr) {
-          debugPrint(
-            '[DiaryMemory] Failed to update offline cache with new signed URL: $cacheErr',
-          );
-        }
-      } catch (e) {
-        _lastUrlRefreshTimes.remove(memoryId);
-        final message = AppErrorMapper.resolve(
-          e,
-          fallbackMessage: L10nService().translate('home_khngthtili_5b2994'),
-        ).message;
-        debugPrint(
-          '[DiaryMemory] signed url refresh failed id=$memoryId message=$message',
-        );
-      }
-    }();
-
-    _pendingUrlResolves[memoryId] = future;
+    _pendingUrlResolves[requestKey] = future;
     try {
-      await future;
+      final result = await future;
+      if (!scopeIsCurrent()) return;
+      // Mỗi caller cập nhật bản sao item của mình, dù dùng chung request mạng.
+      item['url'] = result.url;
+      item['urlExpiresAt'] = result.expiresAt;
+      item['privateMedia'] = true;
+      item['storageAccess'] = 'signed';
+      // Chỉ giữ URL cấp quyền trong phiên đang mở, không ghi xuống offline cache.
+    } catch (e) {
+      final message = AppErrorMapper.resolve(
+        e,
+        fallbackMessage: L10nService().translate('home_khngthtili_5b2994'),
+      ).message;
+      debugPrint('[DiaryMemory] signed url refresh failed: $message');
     } finally {
-      _pendingUrlResolves.remove(memoryId);
+      if (identical(_pendingUrlResolves[requestKey], future)) {
+        _pendingUrlResolves.remove(requestKey);
+      }
     }
   }
 
   void _normalizeMemoryPhotoUrl(Map<String, dynamic> item) {
+    if (PrivateMemoryLinkPolicy.isPrivate(item)) {
+      PrivateMemoryLinkPolicy.normalizePrivate(
+        item,
+        DateTime.now().millisecondsSinceEpoch,
+      );
+      return;
+    }
     final fallbackUrl =
         item['downloadUrl']?.toString().trim().isNotEmpty == true
         ? item['downloadUrl'].toString().trim()
@@ -773,6 +742,7 @@ class DiaryMemoryController extends ChangeNotifier {
 
   List<Map<String, dynamic>> _memoryPhotosFromSource(
     Object? source, {
+    required String? houseId,
     required bool useLiveSource,
     required int limit,
   }) {
@@ -791,6 +761,7 @@ class DiaryMemoryController extends ChangeNotifier {
           Map<dynamic, dynamic>.from(value),
         );
         item['id'] = key.toString();
+        item['houseId'] = houseId;
         _normalizeMemoryPhotoUrl(item);
         photos.add(item);
       });
@@ -800,6 +771,7 @@ class DiaryMemoryController extends ChangeNotifier {
           continue;
         }
         final normalizedItem = Map<String, dynamic>.from(item);
+        normalizedItem['houseId'] = houseId;
         _normalizeMemoryPhotoUrl(normalizedItem);
         photos.add(normalizedItem);
       }
@@ -901,7 +873,7 @@ class DiaryMemoryController extends ChangeNotifier {
     final sourceKind = useLiveSource ? 'live' : 'cache';
     final limit = _memoryQueryLimit;
     final highlightKey =
-        '${startDate?.millisecondsSinceEpoch ?? 0}|$relationshipMode';
+        '${_normalizeHouseId(houseId)}|${startDate?.millisecondsSinceEpoch ?? 0}|$relationshipMode';
 
     if (_preparedMemoryFeed != null &&
         identical(_preparedMemorySource, source) &&
@@ -913,6 +885,7 @@ class DiaryMemoryController extends ChangeNotifier {
 
     final photos = _memoryPhotosFromSource(
       source,
+      houseId: _normalizeHouseId(houseId),
       useLiveSource: useLiveSource,
       limit: limit,
     );
@@ -1144,7 +1117,13 @@ class DiaryMemoryController extends ChangeNotifier {
           errorText.contains('not-found') ||
           errorText.contains('NOT_FOUND') ||
           errorText.contains(L10nService().translate('home_khngtmthyn_b3a1a6'));
-      if (isNotFound) {
+      if (isNotFound &&
+          PrivateMemoryLifecyclePolicy.allowsLegacyFallback(
+            privateUploadEnabled: AppConfig.privateMemoryUploadEnabled,
+            records: _selectedMemories.entries.map(
+              (entry) => {...entry.value, 'id': entry.key},
+            ),
+          )) {
         final now = DateTime.now().millisecondsSinceEpoch;
         final purgeAt = now + const Duration(days: 3).inMilliseconds;
         final updates = <String, dynamic>{};
@@ -1257,20 +1236,20 @@ class DiaryMemoryController extends ChangeNotifier {
 
       int savedCount = 0;
       int i = 0;
-      for (final item in _selectedMemories.values) {
-        final url = item['url']?.toString().trim() ?? '';
-        if (url.isEmpty) {
-          i++;
-          continue;
-        }
-        final bytes = await _storageService.downloadBytesWithCache(
-          url,
-          namespace: 'diary_memory_gallery',
-          cacheKey: item['id']?.toString() ?? 'memory_$i',
-          ttl: _memoryDownloadCacheTtl,
+      final houseId = _currentHouseId;
+      final generation = _mediaScopeGeneration;
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      bool current() => !_isDisposed && context.mounted &&
+          generation == _mediaScopeGeneration && _currentHouseId == houseId &&
+          uid != null && FirebaseAuth.instance.currentUser?.uid == uid;
+      if (houseId == null || !current()) return;
+      for (final item in _selectedMemories.values.toList()) {
+        final downloaded = await _storageService.downloadPrivateMemory(
+          houseId: houseId, memoryId: item['id']?.toString() ?? '', scopeIsCurrent: current,
         );
-        if (bytes != null && bytes.isNotEmpty) {
-          await _saveMemoryBytesToGallery(bytes, url: url, index: i);
+        if (!current()) return;
+        if (downloaded.bytes.isNotEmpty) {
+          await _saveMemoryBytesToGallery(downloaded.bytes, url: downloaded.url, index: i);
           savedCount++;
         }
         i++;
@@ -1309,7 +1288,7 @@ class DiaryMemoryController extends ChangeNotifier {
 
   Future<void> downloadSingleImage({
     required BuildContext context,
-    required String url,
+    required Map<String, dynamic> item,
     required DiaryGuardController guardController,
     required void Function(String message, {Color? backgroundColor})
     showSnackBar,
@@ -1328,14 +1307,19 @@ class DiaryMemoryController extends ChangeNotifier {
         return;
       }
 
-      final bytes = await _storageService.downloadBytesWithCache(
-        url,
-        namespace: 'diary_memory_gallery',
-        cacheKey: 'single_${p.basenameWithoutExtension(url.split('?').first)}',
-        ttl: _memoryDownloadCacheTtl,
+      final houseId = _currentHouseId;
+      final generation = _mediaScopeGeneration;
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      bool current() => !_isDisposed && context.mounted &&
+          generation == _mediaScopeGeneration && _currentHouseId == houseId &&
+          uid != null && FirebaseAuth.instance.currentUser?.uid == uid;
+      if (houseId == null || !current()) return;
+      final downloaded = await _storageService.downloadPrivateMemory(
+        houseId: houseId, memoryId: item['id']?.toString() ?? '', scopeIsCurrent: current,
       );
-      if (bytes != null && bytes.isNotEmpty) {
-        await _saveMemoryBytesToGallery(bytes, url: url, index: 0);
+      if (!current()) return;
+      if (downloaded.bytes.isNotEmpty) {
+        await _saveMemoryBytesToGallery(downloaded.bytes, url: downloaded.url, index: 0);
         if (!context.mounted) {
           return;
         }
@@ -1440,7 +1424,11 @@ class DiaryMemoryController extends ChangeNotifier {
           errorText.contains('not-found') ||
           errorText.contains('NOT_FOUND') ||
           errorText.contains(L10nService().translate('home_khngtmthyn_b3a1a6'));
-      if (isNotFound && memoryId.isNotEmpty) {
+      if (isNotFound && memoryId.isNotEmpty &&
+          PrivateMemoryLifecyclePolicy.allowsLegacyFallback(
+            privateUploadEnabled: AppConfig.privateMemoryUploadEnabled,
+            records: [item],
+          )) {
         final now = DateTime.now().millisecondsSinceEpoch;
         final purgeAt = now + const Duration(days: 3).inMilliseconds;
         final memoryRef = _dbRef.child('houses/$houseId/memories/$memoryId');
@@ -1893,6 +1881,41 @@ class DiaryMemoryController extends ChangeNotifier {
           final path = image.path.trim();
           try {
             var staged = _stagedUploads[path];
+            if (AppConfig.privateMemoryUploadEnabled) {
+              // Journal cũ không chứng minh ownership; không tự chuyển URL cũ
+              // thành session mới hoặc ghi đè bản đang chờ xác nhận.
+              if (staged != null && staged['privateRequestId'] is! String) {
+                throw StateError('Legacy upload requires reconciliation');
+              }
+              if (staged == null) {
+                final random = Random.secure();
+                final requestId = List.generate(16,
+                  (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
+                staged = {'privateRequestId': requestId};
+                _stagedUploads[path] = staged;
+              }
+              // Bắt buộc durable ID trước cả create session và PUT. Retry kể cả
+              // sau restart dùng lại ID này, không lưu bearer URL vào journal.
+              await _savePendingUploadState(houseId: houseId, paths: _pendingUploadPaths);
+              if (!scopeIsCurrent()) break;
+              await _storageService.uploadPrivateMemory(
+                houseId: houseId,
+                requestId: staged['privateRequestId'] as String,
+                file: image,
+                authorName: authorName,
+                quality: memoryUploadQuality,
+                scopeIsCurrent: scopeIsCurrent,
+                latitude: position?.latitude,
+                longitude: position?.longitude,
+              );
+              if (!scopeIsCurrent()) break;
+              uploadedCount++;
+              await _removePendingUploadedImages([image]);
+              continue;
+            }
+            if (staged?['privateRequestId'] != null) {
+              throw StateError('Private upload cannot use legacy commit');
+            }
             if (staged == null) {
               final result = await _uploadSingleMemoryPhoto(
                 houseId: houseId,

@@ -1,4 +1,14 @@
 {
+  "companion_journey_xp_total": "कुल XP: {xp}",
+  "companion_journey_xp_note": "सर्वर XP की पुष्टि करता है, अधिकतम 40 प्रतिदिन। विज्ञापनों से खरीदारी के अंक मिलते हैं, XP नहीं।",
+  "companion_journey_quest_daily_checkin": "आज की हाज़िरी",
+  "companion_journey_quest_diary_entry": "डायरी लिखें",
+  "companion_journey_quest_partner_interaction": "प्यार भेजें",
+  "companion_journey_quest_map_checkin": "किसी जगह चेक-इन करें",
+  "companion_journey_quest_simultaneous_online": "साथ ऑनलाइन रहें",
+  "companion_journey_quest_xp": "अधिकतम +{xp} XP",
+  "companion_journey_done": "आज दर्ज हो गया",
+  "companion_journey_soon": "यह कार्य अभी उपलब्ध नहीं है",
   "nav_restore_action": "नेविगेशन दिखाएँ",
   "nav_restore_hint": "नेविगेशन बार केवल सिमटा हुआ है। टैब फिर से दिखाने के लिए नीचे दिए तीर पर टैप करें। आप तीर पर ऊपर की ओर स्वाइप भी कर सकते हैं।",
   "help_intro": "गाइड ऑफ़लाइन पढ़ सकते हैं। पढ़ना अनुमति नहीं देता, कोड नहीं भेजता और डेटा नहीं बदलता।",
@@ -8335,5 +8345,6 @@
   "appearance_frame_title": "फ़्रेम और आकार",
   "appearance_font_title": "फ़ॉन्ट और भाषा",
   "appearance_music_title": "संगीत",
-  "space_invite_friends": "दोस्तों को आमंत्रित करें"
+  "space_invite_friends": "दोस्तों को आमंत्रित करें",
+  "premium_store_price_note": "स्टोर की कीमतें। खरीदने से पहले विवरण देखने के लिए अवधि चुनें।"
 }

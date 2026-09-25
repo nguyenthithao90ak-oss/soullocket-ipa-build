@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 class VaultMediaUrlResult {
@@ -10,8 +11,45 @@ class VaultMediaUrlResult {
 }
 
 class VaultMediaUrlService {
-  VaultMediaUrlService._();
+  VaultMediaUrlService._()
+    : _currentUid = (() => FirebaseAuth.instance.currentUser?.uid),
+      _loadUrl = _loadFromCallable {
+    _scopeUid = _currentUid();
+    // Singleton sống cùng ứng dụng; xóa cả khi đăng xuất rồi đăng nhập lại cùng UID.
+    _authSubscription = FirebaseAuth.instance
+        .authStateChanges()
+        .map((user) => user?.uid)
+        .listen(_syncAccount);
+  }
+
+  @visibleForTesting
+  VaultMediaUrlService.forTesting(
+    this._currentUid,
+    this._loadUrl, {
+    Stream<String?>? authChanges,
+  }) {
+    _scopeUid = _currentUid();
+    _authSubscription = authChanges?.listen(_syncAccount);
+  }
+
   static final instance = VaultMediaUrlService._();
+
+  final String? Function() _currentUid;
+  final Future<VaultMediaUrlResult> Function(Map<String, dynamic>) _loadUrl;
+  String? _scopeUid;
+  StreamSubscription<String?>? _authSubscription;
+
+  void _syncAccount(String? uid) {
+    if (_scopeUid == uid) return;
+    clearCache();
+    _scopeUid = uid;
+  }
+
+  Future<void> dispose() async {
+    clearCache();
+    await _authSubscription?.cancel();
+    _authSubscription = null;
+  }
 
   final _cache = <String, VaultMediaUrlResult>{};
   final _inFlight = <String, Future<String>>{};
@@ -25,6 +63,9 @@ class VaultMediaUrlService {
     required String houseId,
     required String mediaId,
   }) async {
+    final uid = _currentUid();
+    _syncAccount(uid);
+    if (uid == null || uid.isEmpty) return '';
     final normalizedPath = storagePath.trim();
     final normalizedHouseId = houseId.trim();
     final normalizedMediaId = mediaId.trim();
@@ -34,7 +75,8 @@ class VaultMediaUrlService {
       return '';
     }
 
-    final cacheKey = '$normalizedHouseId/$normalizedMediaId/$normalizedPath';
+    final cacheKey =
+        '$uid/$normalizedHouseId/$normalizedMediaId/$normalizedPath';
     final cached = _cache[cacheKey];
     if (cached != null &&
         cached.expiresAt >
@@ -50,6 +92,7 @@ class VaultMediaUrlService {
     final request = _fetchSignedUrl(
       cacheKey: cacheKey,
       generation: generation,
+      uid: uid,
       storagePath: normalizedPath,
       houseId: normalizedHouseId,
       mediaId: normalizedMediaId,
@@ -67,38 +110,57 @@ class VaultMediaUrlService {
   Future<String> _fetchSignedUrl({
     required String cacheKey,
     required int generation,
+    required String uid,
     required String storagePath,
     required String houseId,
     required String mediaId,
   }) async {
     try {
-      final callable = FirebaseFunctions.instance.httpsCallable(
-        'generateReadUrl',
-        options: HttpsCallableOptions(timeout: const Duration(seconds: 15)),
-      );
-      final result = await callable.call<Map<String, dynamic>>({
+      final result = await _loadUrl({
         'storagePath': storagePath,
         'houseId': houseId,
         'mediaId': mediaId,
       });
 
-      final data = result.data;
-      final url = data['url']?.toString().trim() ?? '';
-      final rawExpiresAt = data['expiresAt'];
-      final expiresAt = rawExpiresAt is num
-          ? rawExpiresAt.toInt()
-          : int.tryParse(rawExpiresAt?.toString() ?? '') ?? 0;
-
-      if (generation == _cacheGeneration &&
-          url.isNotEmpty &&
-          expiresAt > DateTime.now().millisecondsSinceEpoch) {
-        _cache[cacheKey] = VaultMediaUrlResult(url: url, expiresAt: expiresAt);
+      // Không trả kết quả cũ sau khi khóa Hầm, rời màn hình hoặc đổi tài khoản.
+      if (generation != _cacheGeneration || uid != _currentUid()) return '';
+      final url = result.url.trim();
+      final uri = Uri.tryParse(url);
+      if (uri == null ||
+          uri.scheme != 'https' ||
+          uri.host.isEmpty ||
+          uri.userInfo.isNotEmpty ||
+          result.expiresAt <= DateTime.now().millisecondsSinceEpoch) {
+        return '';
       }
+      _cache[cacheKey] = VaultMediaUrlResult(
+        url: url,
+        expiresAt: result.expiresAt,
+      );
       return url;
-    } catch (e) {
-      debugPrint('[VaultMedia] Failed to resolve URL: $e');
+    } catch (_) {
+      // Lỗi provider có thể chứa URL đã ký; không đưa credential vào log.
+      debugPrint('[VaultMedia] Failed to resolve URL');
       return '';
     }
+  }
+
+  static Future<VaultMediaUrlResult> _loadFromCallable(
+    Map<String, dynamic> payload,
+  ) async {
+    final callable = FirebaseFunctions.instance.httpsCallable(
+      'generateReadUrl',
+      options: HttpsCallableOptions(timeout: const Duration(seconds: 15)),
+    );
+    final result = await callable.call<Map<String, dynamic>>(payload);
+    final data = result.data;
+    final rawExpiresAt = data['expiresAt'];
+    return VaultMediaUrlResult(
+      url: data['url']?.toString().trim() ?? '',
+      expiresAt: rawExpiresAt is num
+          ? rawExpiresAt.toInt()
+          : int.tryParse(rawExpiresAt?.toString() ?? '') ?? 0,
+    );
   }
 
   /// Dữ liệu rất cũ không có storagePath vẫn cần hiển thị để người dùng
@@ -110,6 +172,7 @@ class VaultMediaUrlService {
 
   void clearCache() {
     _cache.clear();
+    _inFlight.clear();
     _cacheGeneration++;
   }
 }

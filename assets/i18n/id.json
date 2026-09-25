@@ -1,4 +1,14 @@
 {
+  "companion_journey_xp_total": "Total XP: {xp}",
+  "companion_journey_xp_note": "XP diverifikasi server, maksimal 40 per hari. Iklan memberi poin belanja, bukan XP.",
+  "companion_journey_quest_daily_checkin": "Check-in hari ini",
+  "companion_journey_quest_diary_entry": "Menulis catatan harian",
+  "companion_journey_quest_partner_interaction": "Kirim kasih sayang",
+  "companion_journey_quest_map_checkin": "Check-in di suatu tempat",
+  "companion_journey_quest_simultaneous_online": "Online bersama",
+  "companion_journey_quest_xp": "Hingga +{xp} XP",
+  "companion_journey_done": "Tercatat hari ini",
+  "companion_journey_soon": "Misi ini belum tersedia",
   "nav_restore_action": "Tampilkan navigasi",
   "nav_restore_hint": "Bilah navigasi hanya sedang diciutkan. Ketuk panah di bawah untuk menampilkan tab kembali. Anda juga bisa mengusap ke atas pada panah.",
   "help_intro": "Panduan dapat dibaca offline. Membuka artikel tidak memberi izin, mengirim kode atau mengubah data.",
@@ -8335,5 +8345,6 @@
   "appearance_frame_title": "Bingkai & ukuran",
   "appearance_font_title": "Font & bahasa",
   "appearance_music_title": "Musik",
-  "space_invite_friends": "Undang teman"
+  "space_invite_friends": "Undang teman",
+  "premium_store_price_note": "Harga dari toko. Pilih durasi untuk melihat detail sebelum membeli."
 }

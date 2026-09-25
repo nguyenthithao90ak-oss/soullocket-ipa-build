@@ -337,8 +337,8 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
 
     final now = DateTime.now();
     if (_lastActiveStrokeSentAt != null &&
-        now.difference(_lastActiveStrokeSentAt!).inMilliseconds < 100) {
-      return; // throttle 100ms
+        now.difference(_lastActiveStrokeSentAt!).inMilliseconds < 160) {
+      return; // Preview khoảng 6 lần/giây, nét hoàn tất giữ độ chi tiết cao hơn.
     }
     _lastActiveStrokeSentAt = now;
 

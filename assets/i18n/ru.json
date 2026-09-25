@@ -1,4 +1,14 @@
 {
+  "companion_journey_xp_total": "Всего опыта: {xp}",
+  "companion_journey_xp_note": "Опыт подтверждается сервером: до 40 в день. Реклама даёт баллы для покупок, а не опыт.",
+  "companion_journey_quest_daily_checkin": "Отметиться сегодня",
+  "companion_journey_quest_diary_entry": "Написать в дневнике",
+  "companion_journey_quest_partner_interaction": "Отправить знак внимания",
+  "companion_journey_quest_map_checkin": "Отметиться в месте",
+  "companion_journey_quest_simultaneous_online": "Быть онлайн вместе",
+  "companion_journey_quest_xp": "До +{xp} опыта",
+  "companion_journey_done": "Засчитано сегодня",
+  "companion_journey_soon": "Это задание пока недоступно",
   "nav_restore_action": "Показать навигацию",
   "nav_restore_hint": "Панель навигации просто свёрнута. Нажмите на стрелку внизу, чтобы вернуть вкладки. Также можно провести по стрелке вверх.",
   "help_intro": "Инструкции доступны офлайн. Чтение не выдаёт разрешений, не отправляет коды и не меняет данные.",
@@ -8335,5 +8345,6 @@
   "appearance_frame_title": "Рамки и размер",
   "appearance_font_title": "Шрифт и язык",
   "appearance_music_title": "Музыка",
-  "space_invite_friends": "Пригласить друзей"
+  "space_invite_friends": "Пригласить друзей",
+  "premium_store_price_note": "Цены из магазина. Выберите срок, чтобы посмотреть подробности перед покупкой."
 }

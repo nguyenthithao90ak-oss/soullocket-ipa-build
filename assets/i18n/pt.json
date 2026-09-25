@@ -1,4 +1,14 @@
 {
+  "companion_journey_xp_total": "EXP total: {xp}",
+  "companion_journey_xp_note": "A EXP é verificada pelo servidor, até 40 por dia. Os anúncios dão pontos para compras, não EXP.",
+  "companion_journey_quest_daily_checkin": "Registrar presença hoje",
+  "companion_journey_quest_diary_entry": "Escrever no diário",
+  "companion_journey_quest_partner_interaction": "Enviar carinho",
+  "companion_journey_quest_map_checkin": "Registrar uma visita",
+  "companion_journey_quest_simultaneous_online": "Ficar online juntos",
+  "companion_journey_quest_xp": "Até +{xp} EXP",
+  "companion_journey_done": "Registrado hoje",
+  "companion_journey_soon": "Esta missão ainda não está disponível",
   "nav_restore_action": "Mostrar navegação",
   "nav_restore_hint": "A barra de navegação está apenas recolhida. Toque na seta abaixo para voltar a ver as abas. Também pode deslizar para cima sobre a seta.",
   "help_intro": "Guias disponíveis offline. Ler não concede permissões, envia códigos ou altera dados.",
@@ -8335,5 +8345,6 @@
   "appearance_frame_title": "Molduras e tamanho",
   "appearance_font_title": "Fonte e idioma",
   "appearance_music_title": "Música",
-  "space_invite_friends": "Convidar amigos"
+  "space_invite_friends": "Convidar amigos",
+  "premium_store_price_note": "Preços da loja. Escolha uma duração para consultar os detalhes antes de comprar."
 }

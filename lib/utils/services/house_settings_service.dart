@@ -225,6 +225,8 @@ class HouseSettingsService {
     await _dbRef.update({
       'houses/$houseId/houseName': safeHouseName,
       'houses/$houseId/settings/houseName': safeHouseName,
+      'houses_public/$houseId/houseName': safeHouseName,
+      'house_profiles/$houseId/houseName': safeHouseName,
       'houses/$houseId/settings/nameU1': safeNameU1,
       'houses/$houseId/settings/nameU2': safeNameU2,
       'houses/$houseId/settings/startDate': safeStartDate,
@@ -383,6 +385,8 @@ class HouseSettingsService {
     await _dbRef.update({
       'houses/$houseId/houseName': trimmed,
       'houses/$houseId/settings/houseName': trimmed,
+      'houses_public/$houseId/houseName': trimmed,
+      'house_profiles/$houseId/houseName': trimmed,
       'houses/$houseId/updatedAt': ServerValue.timestamp,
       ...SingleMatchService.profileIndexUpdates(
         houseId: houseId,

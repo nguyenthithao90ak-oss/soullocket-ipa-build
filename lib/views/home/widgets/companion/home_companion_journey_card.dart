@@ -7,8 +7,25 @@ import 'package:soullocket_app/views/utilities/reward_store_screen.dart';
 import 'home_companion_motion.dart';
 import 'home_companion_painter.dart';
 
-class HomeCompanionJourneyCard extends StatelessWidget {
+class HomeCompanionJourneyCard extends StatefulWidget {
   const HomeCompanionJourneyCard({super.key});
+
+  @override
+  State<HomeCompanionJourneyCard> createState() =>
+      _HomeCompanionJourneyCardState();
+}
+
+class _HomeCompanionJourneyCardState extends State<HomeCompanionJourneyCard> {
+  @override
+  void initState() {
+    super.initState();
+    // Bảng hành trình vẫn tải khi người dùng tắt hoạt ảnh pet trên Home.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && locator.isRegistered<CompanionJourneyService>()) {
+        locator<CompanionJourneyService>().start();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +56,11 @@ class HomeCompanionJourneyCard extends StatelessWidget {
                             .replaceAll('{level}', '${state.level}'),
                       ),
                       const SizedBox(height: 6),
+                      Text(
+                        context
+                            .tr('companion_journey_xp_total')
+                            .replaceAll('{xp}', '${state.xp}'),
+                      ),
                       LinearProgressIndicator(
                         value: state.progress,
                         borderRadius: BorderRadius.circular(8),
@@ -78,6 +100,29 @@ class _JourneySheetState extends State<_JourneySheet> {
   bool _adBusy = false;
   String? _adMessage;
   int? _messageGeneration;
+  bool _checkinBusy = false;
+  bool _checkinFailed = false;
+  int? _checkinGeneration;
+
+  Future<void> _checkIn() async {
+    if (_checkinBusy) return;
+    final generation = widget.service.accountGeneration;
+    setState(() {
+      _checkinBusy = true;
+      _checkinFailed = false;
+      _checkinGeneration = generation;
+    });
+    try {
+      await widget.service.checkIn();
+    } catch (_) {
+      if (mounted && generation == widget.service.accountGeneration) {
+        setState(() => _checkinFailed = true);
+      }
+    } finally {
+      if (mounted) setState(() => _checkinBusy = false);
+    }
+  }
+
   Future<void> _rewardAd({bool showIfNone = false}) async {
     if (_adBusy) return;
     final generation = widget.service.accountGeneration;
@@ -169,6 +214,11 @@ class _JourneySheetState extends State<_JourneySheet> {
                     .replaceAll('{level}', '${state.level}'),
               ),
               const SizedBox(height: 10),
+              Text(
+                context
+                    .tr('companion_journey_xp_total')
+                    .replaceAll('{xp}', '${state.xp}'),
+              ),
               LinearProgressIndicator(value: state.progress),
               const SizedBox(height: 8),
               Text(
@@ -184,10 +234,68 @@ class _JourneySheetState extends State<_JourneySheet> {
               if (widget.service.loading) const LinearProgressIndicator(),
               if (widget.service.error != null)
                 Text(context.tr('companion_wardrobe_error')),
+              const SizedBox(height: 16),
+              Text(
+                context.tr('companion_journey_quests'),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              Text(context.tr('companion_journey_xp_note')),
+              for (final entry in state.quests.entries)
+                Card(
+                  key: ValueKey('journey-quest-${entry.key}'),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          context.tr('companion_journey_quest_${entry.key}'),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          context
+                              .tr('companion_journey_quest_xp')
+                              .replaceAll('{xp}', '${entry.value.xp}'),
+                        ),
+                        if (entry.value.completed)
+                          Text(context.tr('companion_journey_done'))
+                        else if (!entry.value.available)
+                          Text(context.tr('companion_journey_soon'))
+                        else if (entry.key == 'daily_checkin')
+                          FilledButton.icon(
+                            key: const ValueKey('journey-checkin'),
+                            onPressed:
+                                _checkinBusy ||
+                                    widget.service.loading ||
+                                    _adBusy
+                                ? null
+                                : _checkIn,
+                            icon: const Icon(Icons.today_rounded),
+                            label: Text(
+                              context.tr(
+                                'companion_journey_quest_daily_checkin',
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              if (_checkinFailed &&
+                  _checkinGeneration == widget.service.accountGeneration)
+                Text(context.tr('companion_wardrobe_error')),
+              TextButton.icon(
+                key: const ValueKey('journey-refresh'),
+                onPressed: widget.service.loading || _checkinBusy || _adBusy
+                    ? null
+                    : widget.service.refresh,
+                icon: const Icon(Icons.refresh),
+                label: Text(context.tr('core_retry')),
+              ),
               if (!kIsWeb) ...[
                 OutlinedButton.icon(
                   key: const ValueKey('journey-reward-ad'),
-                  onPressed: _adBusy || widget.service.loading
+                  onPressed: _adBusy || _checkinBusy || widget.service.loading
                       ? null
                       : () => _rewardAd(showIfNone: state.adRemaining > 0),
                   icon: _adBusy

@@ -1,4 +1,6 @@
 import 'diary/widgets/diary_memory_video_player.dart';
+import 'diary/widgets/private_diary_image.dart';
+import 'diary/utils/private_memory_link_policy.dart';
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'dart:async';
 
@@ -643,7 +645,7 @@ class _DiaryTabState extends State<DiaryTab>
 
     switch (action) {
       case 'save':
-        await _downloadSingleImage(item['url']);
+        await _downloadSingleImage(item);
         break;
       case 'share':
         Navigator.pop(dialogContext);
@@ -659,12 +661,10 @@ class _DiaryTabState extends State<DiaryTab>
     }
   }
 
-  Future<void> _downloadSingleImage(String? url) async {
-    final trimmed = url?.trim() ?? '';
-    if (trimmed.isEmpty) return;
+  Future<void> _downloadSingleImage(Map<String, dynamic> item) async {
     await _memoryController.downloadSingleImage(
       context: context,
-      url: trimmed,
+      item: item,
       guardController: _guardController,
       showSnackBar: _showDiarySnackBar,
     );
@@ -1481,7 +1481,7 @@ class _DiaryTabState extends State<DiaryTab>
                                                 switch (value) {
                                                   case 'save':
                                                     await _downloadSingleImage(
-                                                      currentItem['url'],
+                                                      currentItem,
                                                     );
                                                     break;
                                                   case 'share':
@@ -1821,6 +1821,11 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
   }
 
   void _resolveImageProvider() {
+    if (PrivateMemoryLinkPolicy.isPrivate(widget.item)) {
+      _imageProvider = null;
+      _lastResolvedUrl = '';
+      return;
+    }
     if (isDiaryMemoryVideo(widget.item)) {
       _lastResolvedUrl = '';
       _imageProvider = null;
@@ -1888,12 +1893,22 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
                     interactionEndFrictionCoefficient: 0.00008,
                     child: _isVideo
                         ? DiaryMemoryVideoPlayer(
+                            requireFreshAuthorization: PrivateMemoryLinkPolicy.isPrivate(widget.item),
                             isActive: widget.isActive,
                             url: url,
                             houseId:
                                 widget.item['houseId']?.toString() ??
                                 widget.item['house_id']?.toString(),
                             memoryId: widget.item['id']?.toString(),
+                          )
+                        : PrivateMemoryLinkPolicy.isPrivate(widget.item)
+                        ? Hero(
+                            tag: 'memory_image_${widget.item['id']}',
+                            child: PrivateDiaryImage(
+                              houseId: widget.item['houseId']?.toString() ?? widget.item['house_id']?.toString() ?? '',
+                              memoryId: widget.item['id']?.toString() ?? '',
+                              fit: BoxFit.contain, cacheWidth: 2200,
+                            ),
                           )
                         : _imageProvider != null
                         ? Hero(

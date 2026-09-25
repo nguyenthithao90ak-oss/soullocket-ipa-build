@@ -1,4 +1,14 @@
 {
+  "companion_journey_xp_total": "총 경험치: {xp}",
+  "companion_journey_xp_note": "경험치는 서버에서 확인하며 하루 최대 40입니다. 광고는 쇼핑 포인트만 지급하고 경험치는 지급하지 않습니다.",
+  "companion_journey_quest_daily_checkin": "오늘 출석하기",
+  "companion_journey_quest_diary_entry": "일기 쓰기",
+  "companion_journey_quest_partner_interaction": "애정 보내기",
+  "companion_journey_quest_map_checkin": "장소 체크인",
+  "companion_journey_quest_simultaneous_online": "함께 접속하기",
+  "companion_journey_quest_xp": "최대 +{xp} 경험치",
+  "companion_journey_done": "오늘 기록됨",
+  "companion_journey_soon": "아직 이용할 수 없는 미션입니다",
   "nav_restore_action": "탐색 메뉴 표시",
   "nav_restore_hint": "탐색 메뉴는 접혀 있을 뿐이에요. 아래 화살표를 누르면 탭이 다시 나타나요. 화살표를 위로 밀어도 열 수 있어요.",
   "help_intro": "오프라인으로 읽을 수 있어요. 가이드를 열어도 권한 허용, 코드 전송, 데이터 변경은 하지 않습니다.",
@@ -8335,5 +8345,6 @@
   "appearance_frame_title": "프레임 및 크기",
   "appearance_font_title": "글꼴 및 언어",
   "appearance_music_title": "음악",
-  "space_invite_friends": "친구 초대"
+  "space_invite_friends": "친구 초대",
+  "premium_store_price_note": "스토어에서 제공하는 가격입니다. 기간을 선택하고 구매 전에 상세 내용을 확인하세요."
 }

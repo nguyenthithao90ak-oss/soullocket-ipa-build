@@ -1,4 +1,14 @@
 {
+  "companion_journey_xp_total": "Totale XP: {xp}",
+  "companion_journey_xp_note": "XP wordt door de server bevestigd, maximaal 40 per dag. Advertenties geven winkelpunten, geen XP.",
+  "companion_journey_quest_daily_checkin": "Vandaag inchecken",
+  "companion_journey_quest_diary_entry": "In het dagboek schrijven",
+  "companion_journey_quest_partner_interaction": "Liefde sturen",
+  "companion_journey_quest_map_checkin": "Op een locatie inchecken",
+  "companion_journey_quest_simultaneous_online": "Samen online zijn",
+  "companion_journey_quest_xp": "Tot +{xp} XP",
+  "companion_journey_done": "Vandaag geregistreerd",
+  "companion_journey_soon": "Deze opdracht is nog niet beschikbaar",
   "nav_restore_action": "Navigatie tonen",
   "nav_restore_hint": "De navigatiebalk is alleen ingeklapt. Tik op de pijl hieronder om de tabbladen weer te tonen. Je kunt ook omhoog vegen op de pijl.",
   "help_intro": "Deze gidsen werken offline. Lezen verleent geen toestemming, verstuurt geen code en wijzigt geen gegevens.",
@@ -8335,5 +8345,6 @@
   "appearance_frame_title": "Kaders en formaat",
   "appearance_font_title": "Lettertype en taal",
   "appearance_music_title": "Muziek",
-  "space_invite_friends": "Vrienden uitnodigen"
+  "space_invite_friends": "Vrienden uitnodigen",
+  "premium_store_price_note": "Prijzen uit de store. Kies een looptijd en bekijk de details voordat je koopt."
 }

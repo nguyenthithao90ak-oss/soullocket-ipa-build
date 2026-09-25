@@ -1,4 +1,14 @@
 {
+  "companion_journey_xp_total": "إجمالي الخبرة: {xp}",
+  "companion_journey_xp_note": "يتحقق الخادم من الخبرة بحد أقصى 40 يوميًا. تمنح الإعلانات نقاط تسوق، وليس خبرة.",
+  "companion_journey_quest_daily_checkin": "تسجيل حضور اليوم",
+  "companion_journey_quest_diary_entry": "كتابة يوميات",
+  "companion_journey_quest_partner_interaction": "إرسال المحبة",
+  "companion_journey_quest_map_checkin": "تسجيل زيارة مكان",
+  "companion_journey_quest_simultaneous_online": "الاتصال معًا",
+  "companion_journey_quest_xp": "حتى +{xp} خبرة",
+  "companion_journey_done": "تم التسجيل اليوم",
+  "companion_journey_soon": "هذه المهمة غير متاحة بعد",
   "nav_restore_action": "إظهار شريط التنقل",
   "nav_restore_hint": "شريط التنقل مطوي فقط. اضغط على السهم أدناه لإظهار علامات التبويب مجددًا. يمكنك أيضًا السحب لأعلى فوق السهم.",
   "help_intro": "الأدلة متاحة دون إنترنت. القراءة لا تمنح إذناً ولا ترسل رمزاً ولا تغير بيانات.",
@@ -8335,5 +8345,6 @@
   "appearance_frame_title": "الإطارات والحجم",
   "appearance_font_title": "الخط واللغة",
   "appearance_music_title": "الموسيقى",
-  "space_invite_friends": "دعوة الأصدقاء"
+  "space_invite_friends": "دعوة الأصدقاء",
+  "premium_store_price_note": "الأسعار من المتجر. اختر المدة لمراجعة التفاصيل قبل الشراء."
 }

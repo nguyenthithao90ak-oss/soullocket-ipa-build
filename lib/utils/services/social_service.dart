@@ -389,8 +389,8 @@ class SocialService {
     final candidates = <String>[
       'houses/$normalized/settings/houseName',
       'houses/$normalized/houseName',
-      'house_profiles/$normalized/houseName',
       'houses_public/$normalized/houseName',
+      'house_profiles/$normalized/houseName',
     ];
 
     for (final path in candidates) {

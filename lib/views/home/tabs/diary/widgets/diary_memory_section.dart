@@ -18,6 +18,9 @@ import '../controllers/diary_memory_controller.dart';
 import '../utils/diary_memory_media.dart';
 import 'diary_tab_shell_sections.dart';
 import 'diary_album_style.dart';
+import 'private_diary_image.dart';
+import 'diary_memory_video_player.dart';
+import '../utils/private_memory_link_policy.dart';
 
 typedef DiaryPrepareMemoryFeedCallback =
     PreparedDiaryMemoryFeed Function({
@@ -295,6 +298,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
     }
     final urls = <String>[
       for (final photo in photos.take(_thumbnailWarmupCount))
+        if (!PrivateMemoryLinkPolicy.isPrivate(photo))
         (isDiaryMemoryVideo(photo)
                     ? resolveDiaryMemoryVideoThumbnailUrl(photo)
                     : resolveDiaryMemoryMediaUrl(photo))
@@ -967,6 +971,7 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
   }
 
   Future<void> _refreshUrlsIfNeeded() async {
+    if (PrivateMemoryLinkPolicy.isPrivate(widget.photo)) return;
     if (_urlsRefreshing) return;
     _urlsRefreshing = true;
     try {
@@ -1083,6 +1088,7 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
   }
 
   String _resolvePhotoUrl(Map<String, dynamic> photo) {
+    if (PrivateMemoryLinkPolicy.isPrivate(photo)) return photo['url']?.toString() ?? '';
     final isVideo = isDiaryMemoryVideo(photo);
     final fallbackUrl = isVideo
         ? _stableFallbackVideoUrl(photo)
@@ -1097,6 +1103,13 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
   }
 
   Widget _buildVideoThumbnail(Map<String, dynamic> photo, String videoUrl) {
+    if (PrivateMemoryLinkPolicy.isPrivate(photo)) {
+      return IgnorePointer(child: DiaryMemoryVideoPlayer(
+        url: '', houseId: photo['houseId']?.toString() ?? photo['house_id']?.toString(),
+        memoryId: photo['id']?.toString(), requireFreshAuthorization: true,
+        previewOnly: true, isActive: false,
+      ));
+    }
     return _DiaryMemoryVideoPreview(
       videoUrl: videoUrl,
       thumbnailUrl: resolveDiaryMemoryVideoThumbnailUrl(photo) ?? '',
@@ -1117,7 +1130,7 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
 
     final isVideo = isDiaryMemoryVideo(photo);
 
-    if (photoUrl.isEmpty) {
+    if (photoUrl.isEmpty && !PrivateMemoryLinkPolicy.isPrivate(photo)) {
       if (_retryCount < 1) {
         _retryCount++;
         WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -1157,6 +1170,12 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
               tag: 'memory_image_${photo['id']}',
               child: isVideo
                   ? _buildVideoThumbnail(photo, photoUrl)
+                  : PrivateMemoryLinkPolicy.isPrivate(photo)
+                  ? PrivateDiaryImage(
+                      houseId: photo['houseId']?.toString() ?? photo['house_id']?.toString() ?? '',
+                      memoryId: photoId, cacheWidth: widget.thumbnailCacheWidth,
+                      fit: isStickerOrPng ? BoxFit.contain : BoxFit.cover,
+                    )
                   : CachedNetworkImage(
                       key: ValueKey('$photoId-$_imageAttempt'),
                       imageUrl: photoUrl,

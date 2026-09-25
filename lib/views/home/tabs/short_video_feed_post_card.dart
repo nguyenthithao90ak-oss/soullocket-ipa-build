@@ -33,8 +33,6 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
   bool _isVideoInitialized = false;
   bool _isPreparingVideo = false;
   int _videoLoadToken = 0;
-  Timer? _videoCacheTimer;
-  bool _needsReplayCache = false;
 
   bool get _canPlayVideo =>
       mounted &&
@@ -77,8 +75,6 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
   }
 
   void _resetVideoState({bool disposeController = false}) {
-    _videoCacheTimer?.cancel();
-    _needsReplayCache = false;
     _videoLoadToken++;
     _isPreparingVideo = false;
     _isVideoInitialized = false;
@@ -137,13 +133,11 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
       final previousController = _videoCtrl;
       _videoCtrl = controller;
       _isVideoInitialized = true;
-      _needsReplayCache = cachedController == null && !kIsWeb;
       if (previousController != null) {
         unawaited(previousController.dispose());
       }
       if (_canPlayVideo) {
         unawaited(controller.play());
-        _scheduleReplayCache();
       }
       setState(() {});
     } catch (_) {
@@ -155,27 +149,8 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
     }
   }
 
-  void _scheduleReplayCache() {
-    _videoCacheTimer?.cancel();
-    if (!_needsReplayCache || !_canPlayVideo) return;
-    final token = _videoLoadToken;
-    final mediaUrl = _mediaUrl;
-    _videoCacheTimer = Timer(const Duration(seconds: 5), () {
-      if (!_canPlayVideo || token != _videoLoadToken) return;
-      final value = _videoCtrl?.value;
-      if (value == null || !value.isPlaying || value.hasError) return;
-      // Đợi bộ phát có đủ buffer để cache nền không tranh mạng với lần xem đầu.
-      final fullyBuffered =
-          value.duration > Duration.zero &&
-          value.buffered.any((range) => range.end >= value.duration);
-      if (value.isBuffering || !fullyBuffered) {
-        _scheduleReplayCache();
-        return;
-      }
-      _needsReplayCache = false;
-      unawaited(cacheVideoForReplay(mediaUrl));
-    });
-  }
+  // Không tải thêm bản sao để cache sau khi player đã buffer video qua mạng.
+  // Cache có sẵn vẫn dùng được; video mới để player quản lý một luồng tải.
 
   Future<void> _checkIfLiked() async {
     final postId = widget.post.id;
@@ -197,11 +172,9 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    _videoCacheTimer?.cancel();
     if (!_isVideoInitialized || _videoCtrl == null) return;
     if (state == AppLifecycleState.resumed && widget.isActive) {
       unawaited(_videoCtrl!.play());
-      _scheduleReplayCache();
       return;
     }
     unawaited(_videoCtrl!.pause());
@@ -237,10 +210,8 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
         unawaited(_ensureVideoReady());
         if (_videoCtrl != null && _canPlayVideo) {
           unawaited(_videoCtrl!.play());
-          _scheduleReplayCache();
         }
       } else {
-        _videoCacheTimer?.cancel();
         if (_videoCtrl != null) {
           unawaited(_videoCtrl!.pause());
           unawaited(_videoCtrl!.seekTo(Duration.zero));
@@ -251,7 +222,6 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
 
   @override
   void dispose() {
-    _videoCacheTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _videoLoadToken++;
     _likeCtrl.dispose();

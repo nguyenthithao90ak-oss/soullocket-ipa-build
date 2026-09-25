@@ -11,6 +11,7 @@ import '../../../core/sl_theme.dart';
 import '../../../core/sl_route.dart';
 import '../../../utils/services/global_search_service.dart';
 import '../../utilities/history_screen.dart';
+import 'search_utility_icon.dart';
 
 class GlobalSearchScreen extends StatefulWidget {
   final GlobalSearchService? searchService;
@@ -221,14 +222,10 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: tint.withValues(alpha: .09),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(result.icon, color: tint, size: 22),
+                  SearchUtilityIcon(
+                    actionId: result.actionId,
+                    fallbackIcon: result.icon,
+                    fallbackColor: tint,
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -274,7 +271,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
         const Divider(
           height: 1,
           thickness: .7,
-          indent: 62,
+          indent: 70,
           color: Color(0xFFEAE5E7),
         ),
       ],

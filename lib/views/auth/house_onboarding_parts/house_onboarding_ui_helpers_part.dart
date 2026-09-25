@@ -73,7 +73,7 @@ extension HouseOnboardingUiHelpersPart on _HouseOnboardingScreenState {
     final selected = _mode == value;
     return InkWell(
       borderRadius: BorderRadius.circular(20),
-      onTap: () => setState(() => _mode = value),
+      onTap: () => _selectRelationshipMode(value),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
         padding: SLSpacing.all12,

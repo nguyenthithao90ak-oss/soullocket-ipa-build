@@ -1,4 +1,14 @@
 {
+  "companion_journey_xp_total": "Łączne PD: {xp}",
+  "companion_journey_xp_note": "PD potwierdza serwer, maksymalnie 40 dziennie. Reklamy dają punkty na zakupy, nie PD.",
+  "companion_journey_quest_daily_checkin": "Zamelduj się dzisiaj",
+  "companion_journey_quest_diary_entry": "Napisz w dzienniku",
+  "companion_journey_quest_partner_interaction": "Wyślij czułość",
+  "companion_journey_quest_map_checkin": "Zamelduj się w miejscu",
+  "companion_journey_quest_simultaneous_online": "Bądźcie razem online",
+  "companion_journey_quest_xp": "Do +{xp} PD",
+  "companion_journey_done": "Zapisano dzisiaj",
+  "companion_journey_soon": "To zadanie nie jest jeszcze dostępne",
   "nav_restore_action": "Pokaż nawigację",
   "nav_restore_hint": "Pasek nawigacji jest tylko zwinięty. Dotknij strzałki poniżej, aby ponownie pokazać karty. Możesz też przesunąć palcem w górę po strzałce.",
   "help_intro": "Poradniki działają offline. Czytanie nie nadaje uprawnień, nie wysyła kodów i nie zmienia danych.",
@@ -8335,5 +8345,6 @@
   "appearance_frame_title": "Ramki i rozmiar",
   "appearance_font_title": "Czcionka i język",
   "appearance_music_title": "Muzyka",
-  "space_invite_friends": "Zaproś znajomych"
+  "space_invite_friends": "Zaproś znajomych",
+  "premium_store_price_note": "Ceny ze sklepu. Wybierz okres, aby sprawdzić szczegóły przed zakupem."
 }

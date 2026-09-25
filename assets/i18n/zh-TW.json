@@ -1,4 +1,14 @@
 {
+  "companion_journey_xp_total": "總經驗值：{xp}",
+  "companion_journey_xp_note": "經驗值由伺服器確認，每天最多40點。廣告只獎勵購物點數，不增加經驗值。",
+  "companion_journey_quest_daily_checkin": "今日簽到",
+  "companion_journey_quest_diary_entry": "寫日記",
+  "companion_journey_quest_partner_interaction": "傳遞愛意",
+  "companion_journey_quest_map_checkin": "地點打卡",
+  "companion_journey_quest_simultaneous_online": "一起上線",
+  "companion_journey_quest_xp": "最多+{xp}經驗值",
+  "companion_journey_done": "今日已記錄",
+  "companion_journey_soon": "此任務尚未開放",
   "nav_restore_action": "顯示導覽列",
   "nav_restore_hint": "導覽列只是收起了。點選下方箭頭即可重新顯示各個分頁，也可以在箭頭上向上滑動。",
   "help_intro": "指南可離線閱讀。開啟文章不會授權、傳送驗證碼或修改資料。",
@@ -8335,5 +8345,6 @@
   "appearance_frame_title": "相框與尺寸",
   "appearance_font_title": "字型與語言",
   "appearance_music_title": "音樂",
-  "space_invite_friends": "邀請好友"
+  "space_invite_friends": "邀請好友",
+  "premium_store_price_note": "價格由商店提供。選擇期限，在購買前查看詳情。"
 }

@@ -1,4 +1,14 @@
 {
+  "companion_journey_xp_total": "Total XP: {xp}",
+  "companion_journey_xp_note": "XP is verified by the server, up to 40 per day. Ads grant shopping points, not XP.",
+  "companion_journey_quest_daily_checkin": "Check in today",
+  "companion_journey_quest_diary_entry": "Write a diary entry",
+  "companion_journey_quest_partner_interaction": "Send affection",
+  "companion_journey_quest_map_checkin": "Check in at a place",
+  "companion_journey_quest_simultaneous_online": "Be online together",
+  "companion_journey_quest_xp": "Up to +{xp} XP",
+  "companion_journey_done": "Recorded today",
+  "companion_journey_soon": "This quest is not available yet",
   "nav_restore_action": "Show navigation",
   "nav_restore_hint": "The navigation bar is only collapsed. Tap the arrow below to bring the tabs back. You can also swipe up on the arrow.",
   "help_intro": "Read these guides offline. Choose what you need; opening an article grants no permission, sends no code and changes no data.",
@@ -8335,5 +8345,6 @@
   "appearance_frame_title": "Frames & size",
   "appearance_font_title": "Fonts & language",
   "appearance_music_title": "Music",
-  "space_invite_friends": "Invite friends"
+  "space_invite_friends": "Invite friends",
+  "premium_store_price_note": "Prices from the store. Choose a duration to review the details before buying."
 }

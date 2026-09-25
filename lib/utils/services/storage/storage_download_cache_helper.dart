@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
+
+import 'package:crypto/crypto.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -13,6 +16,7 @@ class StorageDownloadCacheHelper {
   const StorageDownloadCacheHelper();
 
   static final _memoryCache = DownloadBytesMemoryCache();
+  static final Map<String, Future<File?>> _downloads = {};
 
   String _normalizeNamespace(String namespace) => namespace.trim().isEmpty
       ? 'downloads'
@@ -26,14 +30,9 @@ class StorageDownloadCacheHelper {
         '${normalizedKey.length}:$normalizedKey$url';
   }
 
-  String stableCacheToken(String value) {
-    var hash = 2166136261;
-    for (final codeUnit in value.codeUnits) {
-      hash ^= codeUnit;
-      hash = (hash * 16777619) & 0xffffffff;
-    }
-    return hash.toUnsigned(32).toRadixString(16).padLeft(8, '0');
-  }
+  // Hash đủ dài để URL khác nhau không dùng nhầm cùng một tệp cache.
+  String stableCacheToken(String value) =>
+      sha256.convert(utf8.encode(value)).toString();
 
   String cacheFileExtension(String url) {
     final parsed = Uri.tryParse(url);
@@ -59,9 +58,7 @@ class StorageDownloadCacheHelper {
       await cacheDir.create(recursive: true);
     }
 
-    final keySource = (cacheKey ?? '').trim().isNotEmpty
-        ? '${cacheKey!.trim()}|$url'
-        : url;
+    final keySource = _memoryCacheKey(url, namespace, cacheKey);
     final fileName = '${stableCacheToken(keySource)}${cacheFileExtension(url)}';
     return File(p.join(cacheDir.path, fileName));
   }
@@ -103,22 +100,53 @@ class StorageDownloadCacheHelper {
       return cacheFile;
     }
 
+    // Gộp cả forceRefresh đồng thời để nhiều widget chỉ tải một lần.
+    final pending = _downloads[cacheFile.path];
+    if (pending != null) return pending;
+    final task = _downloadFile(normalizedUrl, cacheFile, memKey, namespace);
+    _downloads[cacheFile.path] = task;
     try {
-      final response = await http
-          .get(Uri.parse(normalizedUrl))
+      return await task;
+    } finally {
+      if (identical(_downloads[cacheFile.path], task)) {
+        _downloads.remove(cacheFile.path);
+      }
+    }
+  }
+
+  Future<File?> _downloadFile(
+    String url,
+    File cacheFile,
+    String memKey,
+    String namespace,
+  ) async {
+    final client = http.Client();
+    final pendingFile = File('${cacheFile.path}.download');
+    try {
+      final response = await client
+          .get(Uri.parse(url))
           .timeout(const Duration(seconds: 10));
       if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
-        await cacheFile.writeAsBytes(response.bodyBytes, flush: true);
+        // Chỉ thay bản cũ sau khi ghi xong; không để cache chứa tệp đang ghi dở.
+        await pendingFile.writeAsBytes(response.bodyBytes, flush: true);
+        await pendingFile.rename(cacheFile.path);
         _memoryCache.remove(memKey);
         return cacheFile;
       }
+      // URL có thể chứa chữ ký truy cập riêng tư, không ghi URL ra log.
       debugPrint(
-        'Cached download failed ($namespace): ${AppErrorMapper.resolve(response.statusCode, fallbackMessage: 'Không thể tải cache từ mạng.').message} $normalizedUrl',
+        'Cached download failed ($namespace): HTTP ${response.statusCode}',
       );
-    } catch (e) {
-      debugPrint(
-        'Cached download error ($namespace): ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể tải cache từ mạng.').message}',
-      );
+    } catch (_) {
+      debugPrint('Cached download error ($namespace)');
+    } finally {
+      // Future.timeout không tự hủy HTTP: đóng client để dừng tải quá hạn.
+      client.close();
+      try {
+        if (await pendingFile.exists()) await pendingFile.delete();
+      } catch (_) {
+        // Tệp tạm sẽ được dọn trong lần bảo trì cache tiếp theo.
+      }
     }
 
     if (await cacheFile.exists() && await cacheFile.length() > 0) {

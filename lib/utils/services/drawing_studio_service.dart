@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vision_gallery_saver/vision_gallery_saver.dart';
 
 import 'offline_cache_service.dart';
+import 'storage/drawing_sync_payload.dart';
 
 class DrawingStudioGalleryItem {
   final String id;
@@ -187,14 +188,14 @@ class DrawingStudioStroke {
     );
   }
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toMap({int maxPoints = 2048}) {
     return {
       'authorUid': authorUid,
       'authorName': authorName,
       'color': colorValue,
       'width': width,
       'tool': tool,
-      'points': points,
+      'points': boundedDrawingPoints(points, maxPoints: maxPoints),
       'createdAt': createdAt,
       'endedAt': ServerValue.timestamp,
     };
@@ -217,7 +218,9 @@ class DrawingStudioPresence {
   final int updatedAt;
 
   factory DrawingStudioPresence.fromMap(
-      String uid, Map<dynamic, dynamic>? map) {
+    String uid,
+    Map<dynamic, dynamic>? map,
+  ) {
     return DrawingStudioPresence(
       uid: uid,
       name: (map?['name'] ?? '').toString().trim(),
@@ -240,10 +243,8 @@ double _readDouble(Object? value, {double fallback = 0}) {
 }
 
 class DrawingStudioService {
-  DrawingStudioService({
-    FirebaseDatabase? database,
-    Object? storageService,
-  }) : _db = database ?? FirebaseDatabase.instance;
+  DrawingStudioService({FirebaseDatabase? database, Object? storageService})
+    : _db = database ?? FirebaseDatabase.instance;
 
   final FirebaseDatabase _db;
 
@@ -263,11 +264,9 @@ class DrawingStudioService {
   }
 
   Stream<List<DrawingStudioStroke>> streamStrokes(String houseId) {
-    return _studioRef(houseId)
-        .child('strokes')
-        .limitToLast(1000)
-        .onValue
-        .map((event) {
+    return _studioRef(houseId).child('strokes').limitToLast(1000).onValue.map((
+      event,
+    ) {
       final value = event.snapshot.value;
       if (value is! Map) return const <DrawingStudioStroke>[];
       final strokes = <DrawingStudioStroke>[];
@@ -304,11 +303,14 @@ class DrawingStudioService {
   }
 
   Future<void> updateActiveStroke(
-      String houseId, String uid, DrawingStudioStroke stroke) async {
+    String houseId,
+    String uid,
+    DrawingStudioStroke stroke,
+  ) async {
     try {
-      await _studioRef(houseId)
-          .child('active_strokes/$uid')
-          .set(stroke.toMap());
+      await _studioRef(
+        houseId,
+      ).child('active_strokes/$uid').set(stroke.toMap(maxPoints: 256));
     } catch (e) {
       debugPrint('[DrawingStudioService] updateActiveStroke error: $e');
     }
@@ -327,10 +329,12 @@ class DrawingStudioService {
       final value = event.snapshot.value;
       if (value is! Map) return const <DrawingStudioPresence>[];
       return value.entries
-          .map((entry) => DrawingStudioPresence.fromMap(
-                entry.key.toString(),
-                entry.value is Map ? entry.value as Map : null,
-              ))
+          .map(
+            (entry) => DrawingStudioPresence.fromMap(
+              entry.key.toString(),
+              entry.value is Map ? entry.value as Map : null,
+            ),
+          )
           .toList();
     });
   }
@@ -364,9 +368,9 @@ class DrawingStudioService {
     required String uid,
     required DrawingStudioBackground background,
   }) async {
-    await _studioRef(houseId)
-        .child('background')
-        .set(background.toMap(updatedBy: uid));
+    await _studioRef(
+      houseId,
+    ).child('background').set(background.toMap(updatedBy: uid));
   }
 
   Future<String> pushStroke({
@@ -424,15 +428,13 @@ class DrawingStudioService {
     return item;
   }
 
-  Future<String?> saveBytesToDevice(
-    Uint8List bytes, {
-    String? fileName,
-  }) async {
+  Future<String?> saveBytesToDevice(Uint8List bytes, {String? fileName}) async {
     if (kIsWeb) {
       throw UnsupportedError('Trình duyệt hiện chưa hỗ trợ lưu trực tiếp.');
     }
 
-    final name = fileName ??
+    final name =
+        fileName ??
         'soullocket_drawing_${DateTime.now().millisecondsSinceEpoch}';
     final result = await VisionGallerySaver.saveImage(
       bytes,
@@ -494,7 +496,8 @@ class DrawingStudioService {
 
   Future<List<DrawingStudioGalleryItem>> _loadLocalGallery() async {
     try {
-      final prefs = OfflineCacheService.getPrefsSync() ??
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
       final raw = prefs.getString(_galleryPrefsKey);
       if (raw == null || raw.isEmpty) {
@@ -517,13 +520,16 @@ class DrawingStudioService {
   }
 
   Future<void> _persistLocalGallery(
-      List<DrawingStudioGalleryItem> items) async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    List<DrawingStudioGalleryItem> items,
+  ) async {
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     await prefs.setString(
       _galleryPrefsKey,
       jsonEncode(
-          _normalizeGallery(items).map((item) => item.toJson()).toList()),
+        _normalizeGallery(items).map((item) => item.toJson()).toList(),
+      ),
     );
   }
 
@@ -590,7 +596,8 @@ class DrawingStudioService {
 
   Future<void> _clearCloudMarkers(String houseId) async {
     final trimmedHouseId = houseId.trim();
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     if (trimmedHouseId.isNotEmpty) {
       await prefs.remove('$_cachePrefix$trimmedHouseId');
@@ -621,10 +628,9 @@ class DrawingStudioService {
       );
     }
 
-    final values = byId.values
-        .where((item) => item.isValidForCurrentPlatform)
-        .toList()
-      ..sort((a, b) => b.createdAtMs.compareTo(a.createdAtMs));
+    final values =
+        byId.values.where((item) => item.isValidForCurrentPlatform).toList()
+          ..sort((a, b) => b.createdAtMs.compareTo(a.createdAtMs));
     if (values.length > maxGalleryItems) {
       return values.take(maxGalleryItems).toList();
     }

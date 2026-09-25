@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import '../../../../../utils/services/infrastructure/cloudflare_r2_service.dart';
@@ -13,6 +14,10 @@ class DiaryMemoryVideoPlayer extends StatefulWidget {
   final Future<String> Function()? resolveUrl;
   final String? houseId;
   final String? memoryId;
+  final bool requireFreshAuthorization;
+  final bool previewOnly;
+  final Stream<String?>? authChanges;
+  final String? Function()? currentUid;
 
   const DiaryMemoryVideoPlayer({
     super.key,
@@ -23,6 +28,10 @@ class DiaryMemoryVideoPlayer extends StatefulWidget {
     this.initializationTimeout = const Duration(seconds: 20),
     this.controllerFactory,
     this.resolveUrl,
+    this.requireFreshAuthorization = false,
+    this.previewOnly = false,
+    this.authChanges,
+    this.currentUid,
   });
 
   @override
@@ -37,6 +46,12 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
 
   int _generation = 0;
   bool _foreground = true;
+  StreamSubscription<String?>? _auth;
+  Timer? _expiry;
+  String? _uid;
+  String? get _currentUid => widget.currentUid != null
+      ? widget.currentUid!()
+      : FirebaseAuth.instance.currentUser?.uid;
 
   @override
   void initState() {
@@ -45,7 +60,18 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
     _foreground =
         WidgetsBinding.instance.lifecycleState == null ||
         WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
-    unawaited(_initVideo());
+    if (widget.requireFreshAuthorization) {
+      _uid = _currentUid;
+      _auth =
+          (widget.authChanges ??
+                  FirebaseAuth.instance.authStateChanges().map(
+                    (user) => user?.uid,
+                  ))
+              .listen((uid) {
+                if (uid != _uid) _invalidateAuthorization();
+              }, onError: (Object _) => _invalidateAuthorization());
+    }
+    if (_foreground) unawaited(_initVideo());
   }
 
   @override
@@ -63,15 +89,35 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _foreground = state == AppLifecycleState.resumed;
+    if (widget.requireFreshAuthorization) {
+      if (_foreground) {
+        unawaited(_initVideo());
+      } else {
+        _invalidateAuthorization();
+      }
+      return;
+    }
     // Khi quay lại ứng dụng, để người dùng chủ động phát tiếp.
     if (!_foreground) unawaited(_syncPlayback());
+  }
+
+  void _invalidateAuthorization() {
+    ++_generation;
+    _expiry?.cancel();
+    unawaited(_releaseController());
+    if (mounted) {
+      setState(() {
+        _initialized = false;
+        _hasError = true;
+      });
+    }
   }
 
   Future<void> _syncPlayback() async {
     final controller = _controller;
     if (controller == null || !_initialized) return;
     try {
-      if (widget.isActive && _foreground) {
+      if (widget.isActive && _foreground && !widget.previewOnly) {
         await controller.play();
       } else {
         await controller.pause();
@@ -83,17 +129,30 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
     }
   }
 
-  Future<String> _freshUrl() async {
+  Future<String> _freshUrl(int generation) async {
     if (widget.resolveUrl != null) return widget.resolveUrl!();
     if (widget.houseId?.isNotEmpty != true ||
         widget.memoryId?.isNotEmpty != true) {
       throw StateError('Missing media reference');
     }
-    return (await PrivateMediaUrlService().resolve(
+    final result = await PrivateMediaUrlService().resolve(
       houseId: widget.houseId!,
       mediaId: widget.memoryId!,
       kind: 'memory_image',
-    )).url;
+    );
+    if (widget.requireFreshAuthorization &&
+        mounted &&
+        generation == _generation) {
+      final lifetime =
+          result.expiresAt - DateTime.now().millisecondsSinceEpoch - 5000;
+      if (lifetime <= 0) throw StateError('Expired authorization');
+      _expiry?.cancel();
+      _expiry = Timer(
+        Duration(milliseconds: lifetime),
+        () => unawaited(_initVideo()),
+      );
+    }
+    return result.url;
   }
 
   Future<void> _releaseController() async {
@@ -104,7 +163,13 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
 
   Future<void> _initVideo() async {
     final generation = ++_generation;
-    bool current() => mounted && generation == _generation;
+    final oldPosition = _controller?.value.position ?? Duration.zero;
+    _expiry?.cancel();
+    bool current() =>
+        mounted &&
+        generation == _generation &&
+        (!widget.requireFreshAuthorization ||
+            (_foreground && _uid != null && _uid == _currentUid));
     setState(() {
       _initialized = false;
       _hasError = false;
@@ -113,13 +178,24 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
     for (var attempt = 0; attempt < 2 && current(); attempt++) {
       VideoPlayerController? candidate;
       try {
-        var url = attempt == 0 ? widget.url.trim() : '';
+        var url = attempt == 0 && !widget.requireFreshAuthorization
+            ? widget.url.trim()
+            : '';
         if (url.isEmpty) {
-          url = await _freshUrl().timeout(widget.initializationTimeout);
+          url = await _freshUrl(
+            generation,
+          ).timeout(widget.initializationTimeout);
         }
         if (!current()) return;
         if (url.isEmpty) throw StateError('Missing media URL');
-        final uri = Uri.parse(CloudflareR2Service.resolveVideoUrl(url));
+        final uri = Uri.parse(
+          widget.requireFreshAuthorization
+              ? url
+              : CloudflareR2Service.resolveVideoUrl(url),
+        );
+        if (widget.requireFreshAuthorization && uri.scheme != 'https') {
+          throw StateError('Invalid media URL');
+        }
         candidate =
             widget.controllerFactory?.call(uri) ??
             VideoPlayerController.networkUrl(uri);
@@ -127,6 +203,10 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
         await candidate.initialize().timeout(widget.initializationTimeout);
         if (!current()) return;
         await candidate.setLooping(true);
+        if (widget.previewOnly) await candidate.setVolume(0);
+        if (oldPosition > Duration.zero && !widget.previewOnly) {
+          await candidate.seekTo(oldPosition);
+        }
         if (!current()) return;
         setState(() => _initialized = true);
         await _syncPlayback();
@@ -143,6 +223,8 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
   @override
   void dispose() {
     ++_generation;
+    _expiry?.cancel();
+    unawaited(_auth?.cancel());
     WidgetsBinding.instance.removeObserver(this);
     unawaited(_releaseController());
     super.dispose();
@@ -237,7 +319,7 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
 
         return GestureDetector(
           onTap: () {
-            if (!widget.isActive || !_foreground) return;
+            if (widget.previewOnly || !widget.isActive || !_foreground) return;
             if (controller.value.isPlaying) {
               controller.pause();
             } else {
@@ -251,7 +333,9 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
                 child: hasValidSize
                     ? Center(
                         child: FittedBox(
-                          fit: BoxFit.contain,
+                          fit: widget.previewOnly
+                              ? BoxFit.cover
+                              : BoxFit.contain,
                           child: SizedBox(
                             width: size.width,
                             height: size.height,

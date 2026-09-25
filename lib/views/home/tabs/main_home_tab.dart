@@ -213,11 +213,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   };
   static const Duration _kReactionThrowWindow = Duration(seconds: 10);
   static const int _kReactionThrowBurstLimit = 5;
-  static const List<String> _kCountdownPressHoldTips = [
-    '💡 Bấm giữ thẻ đếm ngược để mở nhanh bảng đổi giao diện & màu sắc!',
-    '🎨 Bấm giữ đếm ngược để tùy chỉnh font chữ, hiệu ứng và màu sắc riêng!',
-    '✨ Nhấn giữ thẻ đếm ngày để tùy biến đếm ngược theo phong cách của bạn!',
-  ];
 
   bool _hideSettingsButtonUntilRestart = false;
   int _lastChatMessageTs = 0;
@@ -437,8 +432,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   final ValueNotifier<Map<String, dynamic>?> _homeMyBatteryNotifier =
       ValueNotifier<Map<String, dynamic>?>(null);
   final ValueNotifier<bool> _isScrollingNotifier = ValueNotifier<bool>(false);
-  int _wishIndex = -1;
-  int _tipIndex = -1;
   Timer? _weatherRefreshTimer;
   Timer? _loveWidgetSyncDebounce;
 

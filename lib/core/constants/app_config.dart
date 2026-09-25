@@ -53,6 +53,10 @@ class AppConfig {
     'PLAY_INTEGRITY_CLOUD_PROJECT_NUMBER',
     defaultValue: 89966120534,
   );
+  static const String androidAppCheckDebugToken = String.fromEnvironment(
+    'APP_CHECK_ANDROID_DEBUG_TOKEN',
+    defaultValue: 'e093f0e4-3b78-4a1f-b339-5dc8a1c65807',
+  );
   static const String openStreetMapTileUrl = String.fromEnvironment(
     'OSM_TILE_URL',
     defaultValue: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
@@ -106,6 +110,12 @@ class AppConfig {
   /// Upload video đã được kiểm tra ổn định qua streamed PUT lên R2.
   /// Non-VIP tự động nén 720p qua video_compress trước khi upload.
   static const bool isVideoUploadEnabled = true;
+  /// Upload vào bucket riêng tư qua các endpoint đã triển khai đồng bộ.
+  /// Không fallback về upload public khi luồng này gặp lỗi.
+  static const bool privateMemoryUploadEnabled = bool.fromEnvironment(
+    'PRIVATE_MEMORY_UPLOAD_ENABLED',
+    defaultValue: true,
+  );
   static const String communityMaintenanceModePath =
       'sys_settings/community_maintenance_mode';
   static const String communityMaintenanceMsgPath =

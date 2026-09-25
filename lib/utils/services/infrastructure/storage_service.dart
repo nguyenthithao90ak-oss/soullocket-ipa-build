@@ -10,6 +10,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
+import 'package:soullocket_app/utils/services/storage/private_memory_lifecycle_policy.dart';
+import 'package:soullocket_app/utils/services/storage/private_memory_download_helper.dart';
+import 'package:soullocket_app/utils/services/private_media_url_service.dart';
 import 'cloudflare_r2_service.dart';
 import 'package:soullocket_app/utils/services/offline_cache_service.dart';
 import 'package:soullocket_app/utils/services/secret_vault_media_policy.dart'
@@ -28,6 +32,7 @@ import 'package:soullocket_app/utils/services/storage/storage_upload_result.dart
 import 'package:soullocket_app/utils/services/storage/storage_upload_session_helper.dart';
 import 'package:soullocket_app/utils/services/storage/storage_upload_result_mapper.dart';
 import 'package:soullocket_app/utils/services/storage/storage_web_picker_guard.dart';
+import 'package:soullocket_app/utils/services/storage/storage_private_memory_upload_helper.dart';
 
 class StorageService {
   StorageService();
@@ -126,6 +131,26 @@ class StorageService {
       ttl: ttl,
       forceRefresh: forceRefresh,
     );
+  }
+
+  Future<({Uint8List bytes, String url})> downloadPrivateMemory({
+    required String houseId,
+    required String memoryId,
+    required bool Function() scopeIsCurrent,
+  }) async {
+    final client = http.Client();
+    try {
+      return await const PrivateMemoryDownloadHelper().download(
+        resolve: () => PrivateMediaUrlService().resolve(
+          houseId: houseId, mediaId: memoryId, kind: 'memory_image'),
+        client: client,
+        currentUid: () => _auth.currentUser?.uid,
+        authChanges: _auth.authStateChanges().map((user) => user?.uid),
+        scopeIsCurrent: scopeIsCurrent,
+      );
+    } finally {
+      client.close();
+    }
   }
 
   Future<Uint8List?> downloadBytesWithCache(
@@ -644,10 +669,61 @@ class StorageService {
     }
   }
 
+  Future<Map<String, dynamic>> _invokePrivateMemoryAction(
+    String name,
+    Map<String, dynamic> payload,
+  ) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) {
+      throw FirebaseFunctionsException(code: 'unauthenticated', message: '');
+    }
+    var scopeChanged = false;
+    final subscription = _auth.authStateChanges().listen((user) {
+      if (user?.uid != uid) scopeChanged = true;
+    });
+    void checkScope() {
+      if (scopeChanged || _auth.currentUser?.uid != uid) {
+        throw FirebaseFunctionsException(code: 'unauthenticated', message: '');
+      }
+    }
+
+    try {
+      // Payload và operationId giữ nguyên qua retry App Check; không gọi
+      // server của phiên mới nếu người dùng đổi tài khoản giữa thao tác.
+      final result = await _finalizeHelper.invokeMapResult(
+        invokeCallable: (functionName, data) => _callWithAppCheckRetry(() {
+          checkScope();
+          return _functions
+              .httpsCallable(functionName,
+                  options: HttpsCallableOptions(
+                    timeout: const Duration(seconds: 120),
+                  ))
+              .call(data);
+        }),
+        functionName: name,
+        payload: payload,
+        invalidResponseMessage: 'Invalid private media response.',
+      );
+      checkScope();
+      return result;
+    } finally {
+      await subscription.cancel();
+    }
+  }
+
   Future<Map<String, dynamic>> moveMemoryImagesToTrash({
     required String houseId,
     required List<String> memoryIds,
   }) async {
+    if (AppConfig.privateMemoryUploadEnabled ||
+        memoryIds.any(PrivateMemoryLifecyclePolicy.isPrivateId)) {
+      return _invokePrivateMemoryAction('trashPrivateMemories', {
+        'houseId': houseId.trim(),
+        'memoryIds': memoryIds.map((id) => id.trim()).toSet().toList(),
+        'operationId': PrivateMemoryLifecyclePolicy.newOperationId(),
+        'operationCreatedAt': DateTime.now().millisecondsSinceEpoch,
+      });
+    }
     const authRequiredMessage = 'Cần đăng nhập để xóa ảnh Kỷ niệm.';
     final normalizedIds = memoryIds
         .map((id) => id.trim())
@@ -718,6 +794,15 @@ class StorageService {
     required String houseId,
     required String memoryId,
   }) async {
+    if (AppConfig.privateMemoryUploadEnabled ||
+        PrivateMemoryLifecyclePolicy.isPrivateId(memoryId)) {
+      return _invokePrivateMemoryAction('restorePrivateMemory', {
+        'houseId': houseId.trim(),
+        'memoryId': memoryId.trim(),
+        'operationId': PrivateMemoryLifecyclePolicy.newOperationId(),
+        'operationCreatedAt': DateTime.now().millisecondsSinceEpoch,
+      });
+    }
     try {
       return await _finalizeHelper.invokeMapResult(
         invokeCallable: (name, payload) => _callWithAppCheckRetry(
@@ -769,6 +854,11 @@ class StorageService {
   Future<Map<String, dynamic>> cleanupExpiredMemoryImagesTrash({
     required String houseId,
   }) async {
+    if (AppConfig.privateMemoryUploadEnabled) {
+      return _invokePrivateMemoryAction('cleanupPrivateMemoryTrash', {
+        'houseId': houseId.trim(),
+      });
+    }
     try {
       return await _finalizeHelper.invokeMapResult(
         invokeCallable: (name, payload) => _callWithAppCheckRetry(
@@ -1169,6 +1259,80 @@ class StorageService {
       mapResult: mapChatStorageUploadResult,
       errorMessage: 'Không thể tải ảnh chat lên máy chủ.',
     );
+  }
+
+  /// Luồng mới: server commit record/quota, không trả URL công khai cho client ghi.
+  /// requestId phải được controller lưu vào journal trước khi gọi phương thức này.
+  Future<PrivateMemoryUploadReceipt> uploadPrivateMemory({
+    required String houseId,
+    required String requestId,
+    required XFile file,
+    required String authorName,
+    required bool Function() scopeIsCurrent,
+    int quality = 78,
+    Future<void> Function(int bytes, bool isVideo)? beforeUpload,
+    double? latitude,
+    double? longitude,
+  }) async {
+    final uid = _requireCurrentUid();
+    String? compressedPath;
+    final client = http.Client();
+    try {
+      return await const StoragePrivateMemoryUploadHelper().upload(
+        uid: uid,
+        houseId: houseId,
+        requestId: requestId,
+        authorName: authorName,
+        currentUid: () => _auth.currentUser?.uid,
+        authChanges: _auth.authStateChanges().map((user) => user?.uid),
+        scopeIsCurrent: scopeIsCurrent,
+        invoke: (name, payload) async {
+          final result = await _callWithAppCheckRetry(
+            () => _functions.httpsCallable(
+              name,
+              options: HttpsCallableOptions(timeout: const Duration(seconds: 120)),
+            ).call<Map<String, dynamic>>(payload),
+          );
+          return result.data;
+        },
+        client: client,
+        beforeUpload: beforeUpload,
+        latitude: latitude,
+        longitude: longitude,
+        prepareFile: () async {
+          final name = file.name.isNotEmpty ? file.name : file.path;
+          final contentType = detectContentType(name);
+          _rejectVideoUpload(storagePath: name, resolvedContentType: contentType,
+            originalFileName: name);
+          if (!kIsWeb && file.path.isNotEmpty && contentType.startsWith('image/') &&
+              contentType != 'image/gif') {
+            try {
+              final temp = await getTemporaryDirectory();
+              compressedPath = p.join(temp.path,
+                'private_memory_${requestId}_${DateTime.now().microsecondsSinceEpoch}.webp');
+              final compressed = await FlutterImageCompress.compressAndGetFile(
+                file.path, compressedPath!, minWidth: 1080, minHeight: 1920,
+                quality: quality.clamp(70, 100), format: CompressFormat.webp,
+              );
+              if (compressed != null) return (file: compressed, contentType: 'image/webp');
+            } catch (_) {
+              // File gốc vẫn được kiểm tra MIME/kích thước và checksum bởi server.
+            }
+          }
+          return (file: file, contentType: contentType);
+        },
+      );
+    } finally {
+      client.close();
+      if (compressedPath != null) {
+        try {
+          final temporaryFile = File(compressedPath!);
+          if (await temporaryFile.exists()) await temporaryFile.delete();
+        } catch (_) {
+          // Không biến commit thành công thành lỗi do dọn file tạm.
+        }
+      }
+    }
   }
 
   Future<StorageUploadResult?> uploadMemoryImage(

@@ -1,4 +1,14 @@
 {
+  "companion_journey_xp_total": "Tổng EXP: {xp}",
+  "companion_journey_xp_note": "EXP được máy chủ xác nhận, tối đa 40 mỗi ngày. Quảng cáo chỉ cộng điểm mua đồ, không cộng EXP.",
+  "companion_journey_quest_daily_checkin": "Điểm danh hôm nay",
+  "companion_journey_quest_diary_entry": "Viết nhật ký",
+  "companion_journey_quest_partner_interaction": "Gửi yêu thương",
+  "companion_journey_quest_map_checkin": "Check-in địa điểm",
+  "companion_journey_quest_simultaneous_online": "Cùng online",
+  "companion_journey_quest_xp": "Tối đa +{xp} EXP",
+  "companion_journey_done": "Đã ghi nhận hôm nay",
+  "companion_journey_soon": "Chưa mở nhiệm vụ này",
   "nav_restore_action": "Hiện thanh điều hướng",
   "nav_restore_hint": "Thanh điều hướng chỉ đang thu gọn. Bấm mũi tên phía dưới để hiện lại các mục. Bạn cũng có thể vuốt lên trên mũi tên.",
   "help_intro": "Hướng dẫn đọc được khi không có mạng. Chọn điều bạn cần; đọc bài không tự cấp quyền, gửi mã hay thay đổi dữ liệu.",
@@ -8335,5 +8345,6 @@
   "appearance_frame_title": "Khung hình & kích thước",
   "appearance_font_title": "Phông chữ & ngôn ngữ",
   "appearance_music_title": "Âm nhạc",
-  "space_invite_friends": "Mời bạn bè"
+  "space_invite_friends": "Mời bạn bè",
+  "premium_store_price_note": "Giá từ cửa hàng. Chọn thời hạn để xem chi tiết trước khi mua."
 }

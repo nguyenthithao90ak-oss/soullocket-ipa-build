@@ -1,9 +1,6 @@
-import 'dart:convert';
+import 'dart:async';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:http/http.dart' as http;
-
-import 'package:soullocket_app/core/constants/app_config.dart';
-import 'package:soullocket_app/utils/app_error_mapper.dart';
 
 class PrivateMediaUrlResult {
   const PrivateMediaUrlResult({required this.url, required this.expiresAt});
@@ -12,20 +9,34 @@ class PrivateMediaUrlResult {
 }
 
 class PrivateMediaUrlService {
-  PrivateMediaUrlService();
+  PrivateMediaUrlService({
+    String? Function()? currentUid,
+    Stream<String?> Function()? authChanges,
+    Future<Map<String, dynamic>> Function(Map<String, dynamic>)? invoke,
+  }) : _currentUid =
+           currentUid ?? (() => FirebaseAuth.instance.currentUser?.uid),
+       _authChanges =
+           authChanges ??
+           (() => FirebaseAuth.instance.authStateChanges().map(
+             (user) => user?.uid,
+           )),
+       _invoke = invoke ?? _invokeCallable;
 
-  Future<User?> _waitForCurrentUser() async {
-    final auth = FirebaseAuth.instance;
-    final currentUser = auth.currentUser;
-    if (currentUser != null) return currentUser;
-    try {
-      return auth
-          .authStateChanges()
-          .firstWhere((user) => user != null)
-          .timeout(const Duration(seconds: 3));
-    } catch (_) {
-      return auth.currentUser;
-    }
+  final String? Function() _currentUid;
+  final Stream<String?> Function() _authChanges;
+  final Future<Map<String, dynamic>> Function(Map<String, dynamic>) _invoke;
+
+  static Future<Map<String, dynamic>> _invokeCallable(
+    Map<String, dynamic> payload,
+  ) async {
+    // SDK gửi Firebase Auth và App Check; Worker cũ không có route này.
+    final result = await FirebaseFunctions.instance
+        .httpsCallable(
+          'resolveHouseMediaUrlSecure',
+          options: HttpsCallableOptions(timeout: const Duration(seconds: 20)),
+        )
+        .call<Map<String, dynamic>>(payload);
+    return result.data;
   }
 
   Future<PrivateMediaUrlResult> resolve({
@@ -33,42 +44,65 @@ class PrivateMediaUrlService {
     required String mediaId,
     required String kind,
   }) async {
-    final user = await _waitForCurrentUser();
-    if (user == null) throw Exception('Vui lòng đăng nhập lại để xem nội dung này.');
-    final idToken = await user.getIdToken() ?? '';
-
+    final uid = _currentUid();
+    if (uid == null || uid.isEmpty) {
+      throw FirebaseFunctionsException(code: 'unauthenticated', message: '');
+    }
     final normalizedHouseId = houseId.trim();
     final normalizedMediaId = mediaId.trim();
     final normalizedKind = kind.trim();
-    if (normalizedHouseId.isEmpty || normalizedMediaId.isEmpty || normalizedKind.isEmpty) {
-      throw Exception('Thiếu thông tin media cần mở.');
+    bool validId(String value) =>
+        value.isNotEmpty &&
+        value.length <= 128 &&
+        !RegExp(r'[.#$\[\]/\\\s\x00-\x1f\x7f]').hasMatch(value);
+    if (!validId(normalizedHouseId) ||
+        !validId(normalizedMediaId) ||
+        !const {
+          'memory_image',
+          'album_image',
+          'voice',
+        }.contains(normalizedKind)) {
+      throw FirebaseFunctionsException(code: 'invalid-argument', message: '');
     }
-
+    var sessionChanged = false;
+    final subscription = _authChanges().listen(
+      (nextUid) {
+        if (nextUid != uid) sessionChanged = true;
+      },
+      onError: (Object _) {
+        sessionChanged = true;
+      },
+    );
     try {
-      final response = await http.post(
-        Uri.parse('${AppConfig.cloudflareWorkerUrl}/api/resolvePrivateMediaUrl'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        },
-        body: jsonEncode({
-          'houseId': normalizedHouseId,
-          'mediaId': normalizedMediaId,
-          'kind': normalizedKind,
-        }),
-      );
-      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-      if (response.statusCode != 200) {
-        final msg = (decoded['error'] as Map?)?['message'] ?? 'Lỗi không xác định.';
-        throw Exception(msg);
+      final data = await _invoke({
+        'houseId': normalizedHouseId,
+        'mediaId': normalizedMediaId,
+        'kind': normalizedKind,
+      });
+      if (sessionChanged || uid != _currentUid()) {
+        throw FirebaseFunctionsException(code: 'unauthenticated', message: '');
       }
-      final data = Map<String, dynamic>.from(decoded['result'] as Map);
       final url = data['url']?.toString().trim() ?? '';
       final expiresAt = (data['expiresAt'] as num?)?.toInt() ?? 0;
-      if (url.isEmpty || expiresAt <= 0) throw Exception('Không lấy được liên kết media tạm thời.');
+      final uri = Uri.tryParse(url);
+      if (data['ok'] != true ||
+          data['kind'] != normalizedKind ||
+          data['mediaId'] != normalizedMediaId ||
+          uri == null ||
+          uri.scheme != 'https' ||
+          uri.host.isEmpty ||
+          uri.userInfo.isNotEmpty ||
+          expiresAt <= DateTime.now().millisecondsSinceEpoch) {
+        throw FirebaseFunctionsException(code: 'unavailable', message: '');
+      }
       return PrivateMediaUrlResult(url: url, expiresAt: expiresAt);
-    } catch (error) {
-      throw Exception(AppErrorMapper.resolve(error).message);
+    } on FirebaseFunctionsException catch (error) {
+      // Không chuyển message/details có thể chứa bearer URL ra UI hoặc log.
+      throw FirebaseFunctionsException(code: error.code, message: '');
+    } catch (_) {
+      throw FirebaseFunctionsException(code: 'unavailable', message: '');
+    } finally {
+      await subscription.cancel();
     }
   }
 }

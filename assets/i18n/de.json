@@ -1,4 +1,14 @@
 {
+  "companion_journey_xp_total": "Gesamt-EP: {xp}",
+  "companion_journey_xp_note": "EP werden vom Server bestätigt, höchstens 40 pro Tag. Werbung gibt Einkaufspunkte, keine EP.",
+  "companion_journey_quest_daily_checkin": "Heute einchecken",
+  "companion_journey_quest_diary_entry": "Tagebucheintrag schreiben",
+  "companion_journey_quest_partner_interaction": "Zuneigung senden",
+  "companion_journey_quest_map_checkin": "An einem Ort einchecken",
+  "companion_journey_quest_simultaneous_online": "Gemeinsam online sein",
+  "companion_journey_quest_xp": "Bis zu +{xp} EP",
+  "companion_journey_done": "Heute erfasst",
+  "companion_journey_soon": "Diese Aufgabe ist noch nicht verfügbar",
   "nav_restore_action": "Navigation anzeigen",
   "nav_restore_hint": "Die Navigationsleiste ist nur eingeklappt. Tippe auf den Pfeil unten, um die Tabs wieder anzuzeigen. Du kannst auch auf dem Pfeil nach oben wischen.",
   "help_intro": "Diese Anleitungen sind offline lesbar. Lesen erteilt keine Berechtigung, versendet keinen Code und ändert keine Daten.",
@@ -8335,5 +8345,6 @@
   "appearance_frame_title": "Rahmen & Größe",
   "appearance_font_title": "Schrift & Sprache",
   "appearance_music_title": "Musik",
-  "space_invite_friends": "Freunde einladen"
+  "space_invite_friends": "Freunde einladen",
+  "premium_store_price_note": "Preise aus dem Store. Wähle eine Laufzeit und prüfe die Details vor dem Kauf."
 }

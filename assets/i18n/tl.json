@@ -1,4 +1,14 @@
 {
+  "companion_journey_xp_total": "Kabuuang XP: {xp}",
+  "companion_journey_xp_note": "Kinukumpirma ng server ang XP, hanggang 40 bawat araw. Puntos sa pamimili ang bigay ng mga ad, hindi XP.",
+  "companion_journey_quest_daily_checkin": "Mag-check in ngayon",
+  "companion_journey_quest_diary_entry": "Sumulat sa talaarawan",
+  "companion_journey_quest_partner_interaction": "Magpadala ng pagmamahal",
+  "companion_journey_quest_map_checkin": "Mag-check in sa lugar",
+  "companion_journey_quest_simultaneous_online": "Mag-online nang magkasama",
+  "companion_journey_quest_xp": "Hanggang +{xp} XP",
+  "companion_journey_done": "Naitala na ngayong araw",
+  "companion_journey_soon": "Hindi pa available ang misyong ito",
   "nav_restore_action": "Ipakita ang nabigasyon",
   "nav_restore_hint": "Nakatiklop lang ang navigation bar. Pindutin ang arrow sa ibaba para muling makita ang mga tab. Maaari ka ring mag-swipe pataas sa arrow.",
   "help_intro": "Mababasa offline ang mga gabay. Hindi nagbibigay ng permiso, nagpapadala ng code o nagbabago ng data ang pagbukas ng artikulo.",
@@ -8335,5 +8345,6 @@
   "appearance_frame_title": "Frame at laki",
   "appearance_font_title": "Font at wika",
   "appearance_music_title": "Musika",
-  "space_invite_friends": "Mag-imbita ng mga kaibigan"
+  "space_invite_friends": "Mag-imbita ng mga kaibigan",
+  "premium_store_price_note": "Mga presyo mula sa tindahan. Pumili ng tagal para makita ang detalye bago bumili."
 }

@@ -1,4 +1,14 @@
 {
+  "companion_journey_xp_total": "合計EXP：{xp}",
+  "companion_journey_xp_note": "EXPはサーバーで確認され、1日最大40です。広告では買い物用ポイントのみ獲得でき、EXPは増えません。",
+  "companion_journey_quest_daily_checkin": "今日のチェックイン",
+  "companion_journey_quest_diary_entry": "日記を書く",
+  "companion_journey_quest_partner_interaction": "愛情を送る",
+  "companion_journey_quest_map_checkin": "場所にチェックイン",
+  "companion_journey_quest_simultaneous_online": "一緒にオンラインになる",
+  "companion_journey_quest_xp": "最大+{xp} EXP",
+  "companion_journey_done": "本日記録済み",
+  "companion_journey_soon": "このミッションはまだ利用できません",
   "nav_restore_action": "ナビゲーションを表示",
   "nav_restore_hint": "ナビゲーションバーは折りたたまれているだけです。下の矢印をタップすると、タブが再び表示されます。矢印を上にスワイプしても開けます。",
   "help_intro": "オフラインで読めるガイドです。閲覧だけで権限許可、コード送信、データ変更は行いません。",
@@ -8335,5 +8345,6 @@
   "appearance_frame_title": "フレームとサイズ",
   "appearance_font_title": "フォントと言語",
   "appearance_music_title": "音楽",
-  "space_invite_friends": "友達を招待"
+  "space_invite_friends": "友達を招待",
+  "premium_store_price_note": "ストアの価格です。期間を選択して、購入前に詳細をご確認ください。"
 }

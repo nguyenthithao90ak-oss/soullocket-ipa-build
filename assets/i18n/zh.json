@@ -1,4 +1,14 @@
 {
+  "companion_journey_xp_total": "总经验值：{xp}",
+  "companion_journey_xp_note": "经验值由服务器确认，每天最多40点。广告只奖励购物积分，不增加经验值。",
+  "companion_journey_quest_daily_checkin": "今日签到",
+  "companion_journey_quest_diary_entry": "写日记",
+  "companion_journey_quest_partner_interaction": "传递爱意",
+  "companion_journey_quest_map_checkin": "地点打卡",
+  "companion_journey_quest_simultaneous_online": "一起在线",
+  "companion_journey_quest_xp": "最多+{xp}经验值",
+  "companion_journey_done": "今日已记录",
+  "companion_journey_soon": "此任务尚未开放",
   "nav_restore_action": "显示导航栏",
   "nav_restore_hint": "导航栏只是收起了。点击下方箭头即可重新显示各个标签页，也可以在箭头上向上滑动。",
   "help_intro": "指南可离线阅读。打开文章不会授权、发送验证码或修改数据。",
@@ -8335,5 +8345,6 @@
   "appearance_frame_title": "相框与尺寸",
   "appearance_font_title": "字体与语言",
   "appearance_music_title": "音乐",
-  "space_invite_friends": "邀请好友"
+  "space_invite_friends": "邀请好友",
+  "premium_store_price_note": "价格由商店提供。选择期限，在购买前查看详情。"
 }

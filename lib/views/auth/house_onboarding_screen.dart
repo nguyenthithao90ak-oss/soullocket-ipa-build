@@ -53,6 +53,11 @@ class HouseOnboardingScreen extends StatefulWidget {
 }
 
 class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
+  void _selectRelationshipMode(String value) {
+    if (!mounted || _mode == value) return;
+    setState(() => _mode = value);
+  }
+
   String _defaultHouseName() =>
       L10nService().translate('onboarding_default_house_name');
   static const String _savedGenderPrefsKey = 'il_saved_gender';

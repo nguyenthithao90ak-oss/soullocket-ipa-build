@@ -1,4 +1,14 @@
 {
+  "companion_journey_xp_total": "EXP รวม: {xp}",
+  "companion_journey_xp_note": "เซิร์ฟเวอร์ยืนยัน EXP สูงสุดวันละ 40 โฆษณาให้คะแนนซื้อของเท่านั้น ไม่เพิ่ม EXP",
+  "companion_journey_quest_daily_checkin": "เช็กอินวันนี้",
+  "companion_journey_quest_diary_entry": "เขียนไดอารี่",
+  "companion_journey_quest_partner_interaction": "ส่งความรัก",
+  "companion_journey_quest_map_checkin": "เช็กอินสถานที่",
+  "companion_journey_quest_simultaneous_online": "ออนไลน์พร้อมกัน",
+  "companion_journey_quest_xp": "สูงสุด +{xp} EXP",
+  "companion_journey_done": "บันทึกแล้ววันนี้",
+  "companion_journey_soon": "ภารกิจนี้ยังไม่เปิดให้ใช้งาน",
   "nav_restore_action": "แสดงแถบนำทาง",
   "nav_restore_hint": "แถบนำทางเพียงแค่ย่ออยู่ แตะลูกศรด้านล่างเพื่อแสดงแท็บอีกครั้ง หรือปัดขึ้นบนลูกศรก็ได้",
   "help_intro": "อ่านคู่มือแบบออฟไลน์ได้ การเปิดบทความไม่ให้สิทธิ์ ไม่ส่งรหัส และไม่แก้ข้อมูล",
@@ -8335,5 +8345,6 @@
   "appearance_frame_title": "กรอบและขนาด",
   "appearance_font_title": "แบบอักษรและภาษา",
   "appearance_music_title": "เพลง",
-  "space_invite_friends": "เชิญเพื่อน"
+  "space_invite_friends": "เชิญเพื่อน",
+  "premium_store_price_note": "ราคาจากร้านค้า เลือกระยะเวลาเพื่อดูรายละเอียดก่อนซื้อ"
 }

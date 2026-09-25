@@ -21,6 +21,32 @@ class CompanionJourneyService extends ChangeNotifier {
   int get accountGeneration => _generation;
   int _request = 0;
   bool _disposed = false;
+  bool _checkinBusy = false;
+
+  Future<void> checkIn() async {
+    if (_checkinBusy ||
+        _disposed ||
+        _uid == null ||
+        state?.enabled != true ||
+        state?.quests['daily_checkin']?.available != true) {
+      return;
+    }
+    final generation = _generation;
+    _checkinBusy = true;
+    try {
+      final result = await AdMobService().claimDailyCheckinReward();
+      if (_disposed || generation != _generation) return;
+      // Kể cả mất phản hồi, đọc lại trạng thái; không tự cộng XP hoặc tự đánh dấu xong.
+      await refresh();
+      if (!result.ok &&
+          !result.alreadyClaimed &&
+          state?.claims.contains('daily_checkin') != true) {
+        throw StateError('checkin_unconfirmed');
+      }
+    } finally {
+      _checkinBusy = false;
+    }
+  }
 
   void start() {
     if (_authSubscription != null || _disposed) return;

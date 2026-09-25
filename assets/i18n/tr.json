@@ -1,4 +1,14 @@
 {
+  "companion_journey_xp_total": "Toplam XP: {xp}",
+  "companion_journey_xp_note": "XP sunucu tarafından doğrulanır, günde en fazla 40 verilir. Reklamlar XP değil, alışveriş puanı verir.",
+  "companion_journey_quest_daily_checkin": "Bugün giriş yap",
+  "companion_journey_quest_diary_entry": "Günlüğe yaz",
+  "companion_journey_quest_partner_interaction": "Sevgi gönder",
+  "companion_journey_quest_map_checkin": "Bir konumda giriş yap",
+  "companion_journey_quest_simultaneous_online": "Birlikte çevrimiçi ol",
+  "companion_journey_quest_xp": "En fazla +{xp} XP",
+  "companion_journey_done": "Bugün kaydedildi",
+  "companion_journey_soon": "Bu görev henüz kullanılamıyor",
   "nav_restore_action": "Gezinmeyi göster",
   "nav_restore_hint": "Gezinme çubuğu yalnızca daraltıldı. Sekmeleri yeniden göstermek için aşağıdaki oka dokunun. Okun üzerinde yukarı da kaydırabilirsiniz.",
   "help_intro": "Kılavuzlar çevrimdışı okunur. Okumak izin vermez, kod göndermez veya veri değiştirmez.",
@@ -8335,5 +8345,6 @@
   "appearance_frame_title": "Çerçeve ve boyut",
   "appearance_font_title": "Yazı tipi ve dil",
   "appearance_music_title": "Müzik",
-  "space_invite_friends": "Arkadaşlarını davet et"
+  "space_invite_friends": "Arkadaşlarını davet et",
+  "premium_store_price_note": "Mağaza fiyatları. Satın almadan önce ayrıntıları görmek için bir süre seçin."
 }

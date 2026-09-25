@@ -1,4 +1,14 @@
 {
+  "companion_journey_xp_total": "Jumlah XP: {xp}",
+  "companion_journey_xp_note": "XP disahkan oleh pelayan, maksimum 40 sehari. Iklan memberi mata membeli-belah, bukan XP.",
+  "companion_journey_quest_daily_checkin": "Daftar masuk hari ini",
+  "companion_journey_quest_diary_entry": "Tulis diari",
+  "companion_journey_quest_partner_interaction": "Kirim kasih sayang",
+  "companion_journey_quest_map_checkin": "Daftar masuk di lokasi",
+  "companion_journey_quest_simultaneous_online": "Dalam talian bersama",
+  "companion_journey_quest_xp": "Sehingga +{xp} XP",
+  "companion_journey_done": "Direkodkan hari ini",
+  "companion_journey_soon": "Misi ini belum tersedia",
   "nav_restore_action": "Tunjukkan navigasi",
   "nav_restore_hint": "Bar navigasi hanya dikecilkan. Ketik anak panah di bawah untuk memaparkan tab semula. Anda juga boleh meleret ke atas pada anak panah.",
   "help_intro": "Panduan boleh dibaca luar talian. Membuka artikel tidak memberi izin, menghantar kod atau mengubah data.",
@@ -8335,5 +8345,6 @@
   "appearance_frame_title": "Bingkai & saiz",
   "appearance_font_title": "Fon & bahasa",
   "appearance_music_title": "Muzik",
-  "space_invite_friends": "Jemput rakan"
+  "space_invite_friends": "Jemput rakan",
+  "premium_store_price_note": "Harga daripada kedai. Pilih tempoh untuk melihat butiran sebelum membeli."
 }

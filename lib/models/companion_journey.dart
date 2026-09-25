@@ -16,6 +16,7 @@ class CompanionJourney {
     this.outfits = const {},
     this.catalog = const {},
     this.claims = const {},
+    this.quests = const {},
   });
 
   final bool enabled;
@@ -27,6 +28,7 @@ class CompanionJourney {
   final Map<HomeCompanionCharacter, HomeCompanionOutfit> outfits;
   final Map<String, CompanionShopItem> catalog;
   final Set<String> claims;
+  final Map<String, CompanionQuest> quests;
 
   bool owns(String category, String item) =>
       owned.contains('${category}_$item');
@@ -50,6 +52,7 @@ class CompanionJourney {
     final rawOutfits = json['outfits'] is Map
         ? json['outfits'] as Map
         : const {};
+    final rawQuests = json['quests'] is Map ? json['quests'] as Map : const {};
     final rawCatalog = json['catalog'] is Map
         ? json['catalog'] as Map
         : const {};
@@ -71,6 +74,11 @@ class CompanionJourney {
       unlocked: Set.unmodifiable(characters),
       owned: Set.unmodifiable(flags('owned')),
       claims: Set.unmodifiable(flags('claims')),
+      quests: Map.unmodifiable({
+        for (final entry in rawQuests.entries)
+          if (CompanionQuest.ids.contains(entry.key) && entry.value is Map)
+            entry.key.toString(): CompanionQuest.fromJson(entry.value as Map),
+      }),
       outfits: Map.unmodifiable({
         for (final character in characters)
           if (rawOutfits[character.name] is Map)
@@ -88,6 +96,28 @@ class CompanionJourney {
       }),
     );
   }
+}
+
+class CompanionQuest {
+  const CompanionQuest({
+    required this.xp,
+    this.available = false,
+    this.completed = false,
+  });
+  static const ids = {
+    'daily_checkin',
+    'diary_entry',
+    'partner_interaction',
+    'map_checkin',
+    'simultaneous_online',
+  };
+  final int xp;
+  final bool available, completed;
+  factory CompanionQuest.fromJson(Map<dynamic, dynamic> json) => CompanionQuest(
+    xp: json['xp'] is num ? (json['xp'] as num).toInt().clamp(0, 40) : 0,
+    available: json['available'] == true,
+    completed: json['completed'] == true,
+  );
 }
 
 class CompanionShopItem {
