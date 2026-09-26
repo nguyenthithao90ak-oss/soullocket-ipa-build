@@ -25,7 +25,7 @@ class SoulEventService {
   }
 
   Future<List<SoulEvent>> getEvents(String houseId) async {
-    final cacheData = await LocalDatabaseService().getCacheEntry(
+    final cacheData = await LocalDatabaseService().getLocalEntry(
       'soul_events_local_$houseId',
     );
     if (cacheData != null) {
@@ -40,9 +40,7 @@ class SoulEventService {
         }
       } catch (error) {
         debugPrint('[SoulEventService] Bỏ cache sự kiện bị lỗi: $error');
-        await LocalDatabaseService().clearCacheEntry(
-          'soul_events_local_$houseId',
-        );
+        // Giữ dữ liệu gốc để có thể phục hồi, không xóa tự động khi đọc lỗi.
       }
     }
     return [];
@@ -82,7 +80,7 @@ class SoulEventService {
     final cacheJson = jsonEncode(
       events.map((e) => e.toJson()..['id'] = e.id).toList(),
     );
-    await LocalDatabaseService().setCacheEntry(
+    await LocalDatabaseService().setLocalEntry(
       'soul_events_local_$houseId',
       cacheJson,
     );

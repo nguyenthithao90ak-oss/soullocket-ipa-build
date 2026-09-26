@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'core/cloud_functions_helper.dart';
+
 class PrivateMediaUrlResult {
   const PrivateMediaUrlResult({required this.url, required this.expiresAt});
   final String url;
@@ -29,13 +31,15 @@ class PrivateMediaUrlService {
   static Future<Map<String, dynamic>> _invokeCallable(
     Map<String, dynamic> payload,
   ) async {
-    // SDK gửi Firebase Auth và App Check; Worker cũ không có route này.
-    final result = await FirebaseFunctions.instance
-        .httpsCallable(
-          'resolveHouseMediaUrlSecure',
-          options: HttpsCallableOptions(timeout: const Duration(seconds: 20)),
-        )
-        .call<Map<String, dynamic>>(payload);
+    // Chuẩn bị App Check trước khi xin link; làm mới và thử lại một lần
+    // nếu máy chủ từ chối token, như các callable bảo vệ khác trong app.
+    final result = await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
+      'resolveHouseMediaUrlSecure',
+      payload: payload,
+      timeout: const Duration(seconds: 20),
+      requireAppCheck: true,
+      throwOriginalException: true,
+    );
     return result.data;
   }
 

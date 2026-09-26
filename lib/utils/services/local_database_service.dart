@@ -6,6 +6,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 
@@ -28,11 +29,12 @@ class SyncQueueSummary {
 
 class _MemoryCacheEntry {
   final dynamic data;
-  final DateTime expiresAt;
+  final DateTime? expiresAt;
 
   _MemoryCacheEntry({required this.data, required this.expiresAt});
 
-  bool get isExpired => DateTime.now().isAfter(expiresAt);
+  bool get isExpired =>
+      expiresAt != null && !DateTime.now().isBefore(expiresAt!);
 }
 
 /// Hỗ trợ read-through cache: lưu snapshot từ Firebase Realtime vào local SQLite
@@ -42,10 +44,19 @@ class LocalDatabaseService {
   static final LocalDatabaseService _instance =
       LocalDatabaseService._internal();
   factory LocalDatabaseService() => _instance;
-  LocalDatabaseService._internal();
+  LocalDatabaseService._internal() : _databaseFactory = null;
+
+  @visibleForTesting
+  LocalDatabaseService.forTesting(
+    Database? database, {
+    DatabaseFactory? factory,
+  }) : _db = database,
+       _databaseFactory = factory;
+
+  final DatabaseFactory? _databaseFactory;
 
   static const _databaseName = 'soullocket_offline.db';
-  static const _databaseVersion = 4; // nâng lên v4 để tạo indexes cho SQLite
+  static const _databaseVersion = 5; // Giữ lại sự kiện chỉ lưu trên thiết bị.
   static const _queueStatusPending = 'pending';
   static const _queueStatusSyncing = 'syncing';
   static const _queueStatusFailed = 'failed';
@@ -93,26 +104,35 @@ class LocalDatabaseService {
   }
 
   Future<void> _openDatabase() async {
-    final dbPath = await getDatabasesPath();
+    final factory = _databaseFactory ?? databaseFactory;
+    final dbPath = await factory.getDatabasesPath();
     final path = join(dbPath, _databaseName);
 
-    _db = await openDatabase(
+    _db = await factory.openDatabase(
       path,
-      version: _databaseVersion,
-      onCreate: (db, version) async {
-        await _createSchema(db);
-      },
-      onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 2) {
-          await _upgradeToV2(db);
-        }
-        if (oldVersion < 3) {
-          await _upgradeToV3(db);
-        }
-        if (oldVersion < 4) {
-          await _upgradeToV4(db);
-        }
-      },
+      options: OpenDatabaseOptions(
+        version: _databaseVersion,
+        onCreate: (db, version) async {
+          await _createSchema(db);
+        },
+        onUpgrade: (db, oldVersion, newVersion) async {
+          if (oldVersion < 2) {
+            await _upgradeToV2(db);
+          }
+          if (oldVersion < 3) {
+            await _upgradeToV3(db);
+          }
+          if (oldVersion < 4) {
+            await _upgradeToV4(db);
+          }
+          if (oldVersion < 5) {
+            // Cứu dữ liệu gốc còn trên máy trước khi dọn các bản cache hết hạn.
+            await db.update('cache_entries', {
+              'expires_at': 0,
+            }, where: "cache_key GLOB 'soul_events_local_*'");
+          }
+        },
+      ),
     );
 
     await _publishQueueSummary();
@@ -251,35 +271,60 @@ class LocalDatabaseService {
   // Read-through cache: ưu tiên local → fallback Firebase
   // ───────────────────────────────────────────────────────────
 
-  /// Lưu cache entry vào cả RAM (nhanh) và SQLite (bền).
-  Future<void> setCacheEntry(String key, dynamic data, {Duration? ttl}) async {
-    final resolvedTtl = ttl ?? _defaultCacheTtl;
-    // RAM — LRU eviction nếu quá tải
-    if (_readCache.length >= _readCacheMaxSize) {
-      String? oldestKey;
-      DateTime? oldestTime;
-      for (final entry in _readCache.entries) {
-        if (oldestTime == null || entry.value.expiresAt.isBefore(oldestTime)) {
-          oldestTime = entry.value.expiresAt;
-          oldestKey = entry.key;
-        }
-      }
-      if (oldestKey != null) _readCache.remove(oldestKey);
+  /// Dữ liệu gốc trên thiết bị không tự hết hạn như bản sao tải từ mạng.
+  Future<void> setLocalEntry(String key, dynamic data) async {
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = await prefs.setString(
+        'local_record_$key',
+        jsonEncode(data),
+      );
+      if (!saved) throw StateError('Local data could not be saved');
+      return;
     }
-    _readCache[key] = _MemoryCacheEntry(
-      data: data,
-      expiresAt: DateTime.now().add(resolvedTtl),
-    );
-    // SQLite
+    await _saveEntry(key, data, expiresAt: null);
+  }
+
+  Future<dynamic> getLocalEntry(String key) async {
+    if (!kIsWeb) return getCacheEntry(key);
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('local_record_$key');
+    return raw == null ? null : jsonDecode(raw);
+  }
+
+  /// Lưu bản sao có TTL; không dùng làm nơi duy nhất lưu dữ liệu gốc.
+  Future<void> setCacheEntry(String key, dynamic data, {Duration? ttl}) =>
+      _saveEntry(
+        key,
+        data,
+        expiresAt: DateTime.now().add(ttl ?? _defaultCacheTtl),
+      );
+
+  void _rememberEntry(String key, dynamic data, DateTime? expiresAt) {
+    // Giới hạn RAM cả khi ghi mới và khi đọc lại từ SQLite.
+    _readCache.remove(key);
+    while (_readCache.length >= _readCacheMaxSize) {
+      _readCache.remove(_readCache.keys.first);
+    }
+    _readCache[key] = _MemoryCacheEntry(data: data, expiresAt: expiresAt);
+  }
+
+  Future<void> _saveEntry(
+    String key,
+    dynamic data, {
+    required DateTime? expiresAt,
+  }) async {
     final db = await _requireDatabase();
-    if (db == null) return;
-    final now = DateTime.now().millisecondsSinceEpoch;
-    await db.insert('cache_entries', {
-      'cache_key': key,
-      'data': jsonEncode(data),
-      'cached_at': now,
-      'expires_at': now + resolvedTtl.inMilliseconds,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    if (db != null) {
+      await db.insert('cache_entries', {
+        'cache_key': key,
+        'data': jsonEncode(data),
+        'cached_at': DateTime.now().millisecondsSinceEpoch,
+        'expires_at': expiresAt?.millisecondsSinceEpoch ?? 0,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    // Chỉ công bố bản mới sau khi lưu thành công.
+    _rememberEntry(key, data, expiresAt);
   }
 
   /// Đọc từ cache (RAM → SQLite). Trả về null nếu miss.
@@ -287,6 +332,7 @@ class LocalDatabaseService {
     // 1. RAM cache trước
     final ramEntry = _readCache[key];
     if (ramEntry != null && !ramEntry.isExpired) {
+      _rememberEntry(key, ramEntry.data, ramEntry.expiresAt);
       return ramEntry.data;
     }
     if (ramEntry != null) _readCache.remove(key);
@@ -305,7 +351,7 @@ class LocalDatabaseService {
     final row = rows.first;
     final expiresAt = row['expires_at'] as int? ?? 0;
     final now = DateTime.now().millisecondsSinceEpoch;
-    if (expiresAt > 0 && now > expiresAt) {
+    if (expiresAt > 0 && now >= expiresAt) {
       await db.delete(
         'cache_entries',
         where: 'cache_key = ?',
@@ -319,9 +365,10 @@ class LocalDatabaseService {
     try {
       final data = jsonDecode(raw);
       // RAM warm-up
-      _readCache[key] = _MemoryCacheEntry(
-        data: data,
-        expiresAt: DateTime.fromMillisecondsSinceEpoch(expiresAt),
+      _rememberEntry(
+        key,
+        data,
+        expiresAt > 0 ? DateTime.fromMillisecondsSinceEpoch(expiresAt) : null,
       );
       return data;
     } catch (_) {
