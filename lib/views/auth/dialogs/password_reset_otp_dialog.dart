@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../utils/services/l10n_service.dart';
@@ -126,6 +127,9 @@ class PasswordResetOtpDialog {
                         controller: otpController,
                         enabled: canConfirm,
                         keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
                         maxLength: 6,
                         textAlign: TextAlign.center,
                         onChanged: (value) {

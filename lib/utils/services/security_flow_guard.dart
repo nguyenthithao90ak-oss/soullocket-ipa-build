@@ -11,11 +11,7 @@ import 'security_verdict_cache_service.dart';
 
 typedef SecurityPrefsProvider = Future<SharedPreferences> Function();
 
-enum SecurityRiskLevel {
-  allow,
-  warn,
-  block,
-}
+enum SecurityRiskLevel { allow, warn, block }
 
 enum SensitiveActionType {
   loginWithPassword,
@@ -24,8 +20,6 @@ enum SensitiveActionType {
   loginWithApple,
   forgotPasswordSendOtp,
   forgotPasswordReset,
-  qrLoginDisplay,
-  qrLoginAuthorize,
   verifyPrimaryEmail,
   linkGoogleAccount,
   linkAppleAccount,
@@ -98,19 +92,19 @@ class SecurityFlowGuard {
     SecurityVerdictCacheService? verdictCacheService,
     LocalActionThrottleService? localActionThrottleService,
     SecurityRuntimeRiskService? runtimeRiskService,
-  })  : _deviceManagerService = deviceManagerService ?? DeviceManagerService(),
-        _securityService = securityService ?? SecurityService(),
-        _verdictCacheService = verdictCacheService ??
-            SecurityVerdictCacheService(prefsProvider: prefsProvider),
-        _localActionThrottleService =
-            localActionThrottleService ?? LocalActionThrottleService.instance,
-        _runtimeRiskService =
-            runtimeRiskService ?? SecurityRuntimeRiskService.instance;
+  }) : _deviceManagerService = deviceManagerService ?? DeviceManagerService(),
+       _securityService = securityService ?? SecurityService(),
+       _verdictCacheService =
+           verdictCacheService ??
+           SecurityVerdictCacheService(prefsProvider: prefsProvider),
+       _localActionThrottleService =
+           localActionThrottleService ?? LocalActionThrottleService.instance,
+       _runtimeRiskService =
+           runtimeRiskService ?? SecurityRuntimeRiskService.instance;
 
   static final SecurityFlowGuard instance = SecurityFlowGuard();
 
   static const Set<SensitiveActionType> _trustedDeviceOnlyActions = {
-    SensitiveActionType.qrLoginAuthorize,
     SensitiveActionType.verifyPrimaryEmail,
     SensitiveActionType.linkGoogleAccount,
     SensitiveActionType.linkAppleAccount,
@@ -131,8 +125,6 @@ class SecurityFlowGuard {
     SensitiveActionType.loginWithApple,
     SensitiveActionType.forgotPasswordSendOtp,
     SensitiveActionType.forgotPasswordReset,
-    SensitiveActionType.qrLoginDisplay,
-    SensitiveActionType.qrLoginAuthorize,
     SensitiveActionType.verifyPrimaryEmail,
     SensitiveActionType.linkGoogleAccount,
     SensitiveActionType.linkAppleAccount,
@@ -151,8 +143,6 @@ class SecurityFlowGuard {
 
   static const Set<SensitiveActionType> _captureBlockedActions = {
     SensitiveActionType.forgotPasswordReset,
-    SensitiveActionType.qrLoginDisplay,
-    SensitiveActionType.qrLoginAuthorize,
     SensitiveActionType.verifyPrimaryEmail,
     SensitiveActionType.passwordResetFromSettings,
     SensitiveActionType.setupAppPin,
@@ -392,7 +382,8 @@ class SecurityFlowGuard {
 
   Future<DeviceTrustState> _loadTrustStateWithRetry() async {
     final first = await _deviceManagerService.getCurrentDeviceTrustState(
-        autoApprove: true);
+      autoApprove: true,
+    );
     if (first.isTrusted || first.isPendingApproval || first.isBlocked) {
       return first;
     }
@@ -510,10 +501,7 @@ class SecurityFlowGuard {
 
     var level = verdict.level;
     if (level == null || level == SecurityRiskLevel.allow) {
-      level = _fallbackLevelFromCode(
-        action: action,
-        code: verdict.code,
-      );
+      level = _fallbackLevelFromCode(action: action, code: verdict.code);
     }
     if (level == null || level == SecurityRiskLevel.allow) {
       return null;
@@ -659,8 +647,9 @@ class SecurityFlowGuard {
     String? continueLabel,
     bool requiresStepUp = false,
   }) {
-    final accent =
-        isBlocking ? const Color(0xFFC62828) : const Color(0xFFD81B60);
+    final accent = isBlocking
+        ? const Color(0xFFC62828)
+        : const Color(0xFFD81B60);
     final icon = isBlocking ? Icons.block_rounded : Icons.warning_amber_rounded;
 
     return showDialog<bool>(
@@ -712,7 +701,7 @@ class SecurityFlowGuard {
                 isBlocking
                     ? 'Đã hiểu'
                     : continueLabel ??
-                        (requiresStepUp ? 'Xác minh thêm' : 'Vẫn tiếp tục'),
+                          (requiresStepUp ? 'Xác minh thêm' : 'Vẫn tiếp tục'),
               ),
             ),
           ],

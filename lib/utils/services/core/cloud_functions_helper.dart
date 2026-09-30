@@ -38,7 +38,10 @@ class CloudFunctionsHelper {
     bool requireAppCheck = false,
   }) async {
     try {
-      final callable = _functions.httpsCallable(functionName);
+      final callable = _functions.httpsCallable(
+        functionName,
+        options: HttpsCallableOptions(timeout: timeout),
+      );
       Future<HttpsCallableResult<T>> invoke() => callable
           .call<T>(payload)
           .timeout(

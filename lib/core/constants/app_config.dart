@@ -5,7 +5,7 @@ class AppConfig {
       'soullockket.firebaseapp.com';
   static const String webBaseUrl = String.fromEnvironment(
     'WEB_BASE_URL',
-    defaultValue: 'https://soullockket.web.app',
+    defaultValue: 'https://soullocket.pro.vn',
   );
   static const String authActionBaseUrl = String.fromEnvironment(
     'AUTH_ACTION_BASE_URL',
@@ -84,7 +84,7 @@ class AppConfig {
   );
   static const String iOSAssociatedDomainWeb = String.fromEnvironment(
     'IOS_ASSOCIATED_DOMAIN_WEB',
-    defaultValue: 'applinks:soullockket.web.app',
+    defaultValue: 'applinks:soullocket.pro.vn',
   );
   static const String iOSAssociatedDomainAuth = String.fromEnvironment(
     'IOS_ASSOCIATED_DOMAIN_AUTH',
@@ -249,11 +249,11 @@ class AppConfig {
     defaultValue:
         'https://us-central1-soullockket.cloudfunctions.net/reportAdResolutionHttp',
   );
-  static const String deleteAccountPageUrl = '$webBaseUrl/delete-account.html';
-  static const String supportPageUrl = '$webBaseUrl/support.html';
-  static const String privacyPolicyUrl = '$webBaseUrl/privacy.html';
-  static const String termsOfUseUrl = '$webBaseUrl/terms.html';
-  static const String cookiePolicyUrl = '$webBaseUrl/cookie-policy.html';
+  static const String deleteAccountPageUrl = '$webBaseUrl/delete-account';
+  static const String supportPageUrl = '$webBaseUrl/support';
+  static const String privacyPolicyUrl = '$webBaseUrl/privacy';
+  static const String termsOfUseUrl = '$webBaseUrl/terms';
+  static const String cookiePolicyUrl = '$webBaseUrl/cookie-policy';
 
   /// Tạo liên kết tài liệu theo ngôn ngữ tại lúc mở, không lưu locale từ trước.
   static Uri legalDocumentUri(String fileName, {required String languageCode}) {

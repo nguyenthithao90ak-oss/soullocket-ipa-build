@@ -19,6 +19,7 @@ import '../utils/diary_memory_media.dart';
 import 'diary_tab_shell_sections.dart';
 import 'diary_album_style.dart';
 import 'private_diary_image.dart';
+import 'private_diary_image_scope.dart';
 import 'diary_memory_video_player.dart';
 import '../utils/private_memory_link_policy.dart';
 
@@ -346,6 +347,13 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
       );
     }
 
+    return PrivateDiaryImageScope(
+      houseId: widget.houseId!,
+      child: _buildContent(),
+    );
+  }
+
+  Widget _buildContent() {
     return Stack(
       key: const ValueKey('memory_content_shell'),
       children: [

@@ -15,6 +15,7 @@ Uri accountDeletionSiblingUri(String configuredUrl, String endpoint) {
       !const {
         'getOwnAccountDeletionStatusHttp',
         'undoAccountDeletionHttp',
+        'approvePartnerDeletionHttp',
       }.contains(endpoint)) {
     throw const FormatException('invalid_deletion_endpoint');
   }
@@ -43,6 +44,12 @@ String? accountDeletionErrorKey(String body) {
     if (decoded is! Map) return null;
     return switch (decoded['error']) {
       'app_check_required' => 'account_deletion_app_check_required',
+      'deletion_verification_required' => 'account_deletion_verify_again',
+      'requires_recent_login' => 'account_deletion_verify_again',
+      'deletion_request_not_found' => 'account_deletion_no_pending',
+      'deletion_request_not_awaiting_partner' =>
+        'account_deletion_state_conflict',
+      'partner_approval_ambiguous' => 'account_deletion_state_conflict',
       'deletion_not_cancellable' => 'account_deletion_not_cancellable',
       'deletion_state_conflict' => 'account_deletion_state_conflict',
       'house_state_conflict' => 'account_deletion_state_conflict',

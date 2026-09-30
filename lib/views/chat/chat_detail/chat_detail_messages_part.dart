@@ -194,35 +194,31 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
             widget.targetHouseId,
             afterTs: _liveMessageAnchorTs,
           );
-    _liveMessageSub = stream.listen((message) {
-      if (!mounted) return;
-      if (_hasLiveMessageError) {
-        setState(() => _hasLiveMessageError = false);
-      }
-      // Cache offline có thể trả trang đầu rỗng dù server còn lịch sử.
-      // Cho phép phân trang sau khi seed có dữ liệu, kể cả chưa đủ 25 tin.
-      if (mayEnableSeedPagination) {
-        mayEnableSeedPagination = false;
-        _hasMoreMessages = true;
-      }
-      _upsertLiveMessage(message);
-    }, onError: (Object error, StackTrace stack) {
-      if (mounted) setState(() => _hasLiveMessageError = true);
-    });
+    _liveMessageSub = stream.listen(
+      (message) {
+        if (!mounted) return;
+        if (_hasLiveMessageError) {
+          setState(() => _hasLiveMessageError = false);
+        }
+        // Cache offline có thể trả trang đầu rỗng dù server còn lịch sử.
+        // Cho phép phân trang sau khi seed có dữ liệu, kể cả chưa đủ 25 tin.
+        if (mayEnableSeedPagination) {
+          mayEnableSeedPagination = false;
+          _hasMoreMessages = true;
+        }
+        _upsertLiveMessage(message);
+      },
+      onError: (Object error, StackTrace stack) {
+        if (mounted) setState(() => _hasLiveMessageError = true);
+      },
+    );
   }
 
-  Widget _buildMsgBubble(ChatMessage msg, bool isMe,
-      {bool isLatestMe = false}) {
-    // Aurora Soft v2 — delegate to redesigned bubble widget
-    if (UiPrefs.notifier.value.uiVersion == 'v2') {
-      return AuroraChatBubbles.buildMessageBubble(
-        context: context,
-        message: msg,
-        isFromMe: isMe,
-        isLatestMe: isLatestMe,
-        onReact: () => _showReactionPicker(msg),
-      );
-    }
+  Widget _buildMsgBubble(
+    ChatMessage msg,
+    bool isMe, {
+    bool isLatestMe = false,
+  }) {
     if (msg.type == 'call_invite') {
       return _buildCallInviteBubble(msg, isMe);
     }
@@ -241,12 +237,17 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
           margin: const EdgeInsets.symmetric(vertical: 10),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-              color: Colors.grey[300], borderRadius: SLRadius.lgAll),
-          child: Text(msg.text,
-              style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.black54,
-                  fontStyle: FontStyle.italic)),
+            color: Colors.grey[300],
+            borderRadius: SLRadius.lgAll,
+          ),
+          child: Text(
+            msg.text,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.black54,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
         ),
       );
     }
@@ -257,10 +258,11 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
     final screenWidth = mediaQuery.size.width;
     final maxBubbleWidth = screenWidth * 0.72;
     final imageSize = (screenWidth * 0.56).clamp(140.0, 260.0).toDouble();
-    final effectiveImageSize =
-        imageSize < maxBubbleWidth ? imageSize : maxBubbleWidth;
-    final imageCacheWidth =
-        (effectiveImageSize * mediaQuery.devicePixelRatio).round();
+    final effectiveImageSize = imageSize < maxBubbleWidth
+        ? imageSize
+        : maxBubbleWidth;
+    final imageCacheWidth = (effectiveImageSize * mediaQuery.devicePixelRatio)
+        .round();
 
     return GestureDetector(
       onLongPress: () => _showReactionPicker(msg),
@@ -300,8 +302,9 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                       : [
                           BoxShadow(
                             color: isMe
-                                ? const Color(0xFF0A7CFF)
-                                    .withValues(alpha: 0.24)
+                                ? const Color(
+                                    0xFF0A7CFF,
+                                  ).withValues(alpha: 0.24)
                                 : Colors.black.withValues(alpha: 0.06),
                             blurRadius: isMe ? 8 : 4,
                             offset: const Offset(0, 2),
@@ -309,8 +312,9 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                         ],
                 ),
                 child: Column(
-                  crossAxisAlignment:
-                      isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                  crossAxisAlignment: isMe
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start,
                   children: [
                     if (msg.type == 'image')
                       msg.hasActiveImage
@@ -391,10 +395,10 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) =>
                             const Icon(
-                          Icons.broken_image_rounded,
-                          color: Colors.grey,
-                          size: 42,
-                        ),
+                              Icons.broken_image_rounded,
+                              color: Colors.grey,
+                              size: 42,
+                            ),
                       )
                     else
                       Text(
@@ -446,8 +450,10 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                   right: isMe ? 10 : null,
                   left: isMe ? null : 10,
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: SLRadius.mdAll,
@@ -464,8 +470,10 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                       children: msg.reactions.values.toSet().map((emoji) {
                         return Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 2),
-                          child:
-                              Text(emoji, style: const TextStyle(fontSize: 12)),
+                          child: Text(
+                            emoji,
+                            style: const TextStyle(fontSize: 12),
+                          ),
                         );
                       }).toList(),
                     ),
@@ -542,9 +550,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                       horizontal: 12,
                       vertical: 10,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: SLRadius.mdAll,
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
                   ),
                   icon: Icon(isVideo ? Icons.videocam : Icons.call, size: 16),
                   label: Text(
@@ -606,10 +612,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                 msg.sharedUrl!,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.black54,
-                  fontSize: 12,
-                ),
+                style: const TextStyle(color: Colors.black54, fontSize: 12),
               ),
             ],
             SLSpacing.h8,
@@ -631,9 +634,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                       horizontal: 12,
                       vertical: 10,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: SLRadius.mdAll,
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
                   ),
                   icon: const Icon(Icons.open_in_new, size: 16),
                   label: Text(

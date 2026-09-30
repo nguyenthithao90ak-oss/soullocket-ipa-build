@@ -94,6 +94,8 @@ extension MainHomeReactionController on _MainHomeTabState {
   }
 
   Future<void> _handleSendInteraction(String type, String emoji) async {
+    if (_isSendingInteraction) return;
+
     final cleanEmoji = emoji.trim().isEmpty
         ? _emojiForInteractionType(type)
         : emoji;
@@ -106,12 +108,10 @@ extension MainHomeReactionController on _MainHomeTabState {
     }
     if (!mounted) return;
 
+    _isSendingInteraction = true;
     _sendReactionFlight(type, cleanEmoji);
     _triggerMissYouEffect(type);
     _vibrateHeartbeat();
-
-    if (_isSendingInteraction) return;
-    _isSendingInteraction = true;
 
     final preset = _maybePresetForInteractionType(type);
     final randomTitle = preset == null
@@ -138,7 +138,7 @@ extension MainHomeReactionController on _MainHomeTabState {
       }),
     );
 
-    Future.delayed(const Duration(seconds: 2), () {
+    Future.delayed(const Duration(milliseconds: 3000), () {
       if (mounted) {
         _isSendingInteraction = false;
       }

@@ -12,15 +12,18 @@ extension _SoulBlockBoard on _SoulBlockGameState {
       },
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
-          final double boardExtent =
-              min(constraints.maxWidth, constraints.maxHeight);
+          final double boardExtent = min(
+            constraints.maxWidth,
+            constraints.maxHeight,
+          );
           final double cellExtent = _resolveBoardCellExtent(
             boardExtent,
             devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
           );
           final double innerExtent =
               boardExtent - (_SoulBlockGameState._boardPanelPadding * 2) - 6.0;
-          final double contentExtent = (cellExtent * _boardSize) +
+          final double contentExtent =
+              (cellExtent * _boardSize) +
               (_SoulBlockGameState._boardGap * (_boardSize - 1));
           final double contentSlack = max(0, innerExtent - contentExtent);
 
@@ -39,19 +42,19 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                   ),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(28),
-                    gradient: LinearGradient(
+                    gradient: const LinearGradient(
                       colors: <Color>[
-                        Color.lerp(_kSoulPanelTop, Colors.white, 0.12)!,
-                        Color.lerp(_kSoulPanelMid, _kSoulChrome, 0.04)!,
-                        Color.lerp(_kSoulPanelBottom, Colors.black, 0.12)!,
+                        _kSoulPanelTop,
+                        _kSoulBoardTop,
+                        _kSoulBoardBottom,
                       ],
-                      stops: const <double>[0, 0.48, 1],
+                      stops: <double>[0, 0.48, 1],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     border: Border.all(
-                      color: _kSoulChrome.withValues(alpha: 0.40),
-                      width: 1.15,
+                      color: _kSoulChrome.withValues(alpha: 0.20),
+                      width: 1.0,
                     ),
                     boxShadow: <BoxShadow>[
                       BoxShadow(
@@ -75,7 +78,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                         end: Alignment.bottomRight,
                       ),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.08),
+                        color: Colors.white.withValues(alpha: 0.025),
                       ),
                     ),
                     child: Padding(
@@ -87,46 +90,42 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               mainAxisSize: MainAxisSize.min,
-                              children: List<Widget>.generate(
-                                _boardSize,
-                                (int row) {
-                                  final bool isLastRow =
-                                      row == (_boardSize - 1);
-                                  return Padding(
-                                    padding: EdgeInsets.only(
-                                      bottom: isLastRow ? 0 : boardGap,
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: List<Widget>.generate(
-                                        _boardSize,
-                                        (int col) {
-                                          final bool isLastCol =
-                                              col == (_boardSize - 1);
-                                          return Padding(
-                                            padding: EdgeInsets.only(
-                                              right: isLastCol ? 0 : boardGap,
+                              children: List<Widget>.generate(_boardSize, (
+                                int row,
+                              ) {
+                                final bool isLastRow = row == (_boardSize - 1);
+                                return Padding(
+                                  padding: EdgeInsets.only(
+                                    bottom: isLastRow ? 0 : boardGap,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: List<Widget>.generate(
+                                      _boardSize,
+                                      (int col) {
+                                        final bool isLastCol =
+                                            col == (_boardSize - 1);
+                                        return Padding(
+                                          padding: EdgeInsets.only(
+                                            right: isLastCol ? 0 : boardGap,
+                                          ),
+                                          child: SizedBox(
+                                            width: cellExtent,
+                                            height: cellExtent,
+                                            child: _buildBoardCell(
+                                              row: row,
+                                              col: col,
+                                              cellExtent: cellExtent,
                                             ),
-                                            child: SizedBox(
-                                              width: cellExtent,
-                                              height: cellExtent,
-                                              child: _buildBoardCell(
-                                                row: row,
-                                                col: col,
-                                                cellExtent: cellExtent,
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                        growable: false,
-                                      ),
+                                          ),
+                                        );
+                                      },
+                                      growable: false,
                                     ),
-                                  );
-                                },
-                                growable: false,
-                              ),
+                                  ),
+                                );
+                              }, growable: false),
                             ),
                           );
                         },
@@ -134,7 +133,8 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                     ),
                   ),
                 ),
-                if (_isGameOver) _buildGameOverOverlay(),
+                if (_isGameOver && !_isResolvingGameOver)
+                  _buildGameOverOverlay(),
               ],
             ),
           );
@@ -147,53 +147,6 @@ extension _SoulBlockBoard on _SoulBlockGameState {
     return _GameOverOverlayContent(this);
   }
 
-  bool _hasLinkedTile(
-    int row,
-    int col,
-    int rowDelta,
-    int colDelta,
-  ) {
-    final _SoulTile? tile = _board[row][col];
-    if (tile == null) {
-      return false;
-    }
-
-    final int nextRow = row + rowDelta;
-    final int nextCol = col + colDelta;
-    if (nextRow < 0 ||
-        nextCol < 0 ||
-        nextRow >= _boardSize ||
-        nextCol >= _boardSize) {
-      return false;
-    }
-
-    final _SoulTile? neighbor = _board[nextRow][nextCol];
-    return neighbor != null && neighbor.pieceId == tile.pieceId;
-  }
-
-  int _templateCellKey(int x, int y) => (x << 16) ^ (y & 0xFFFF);
-
-  bool _templateKeyContains(Set<int> cells, int x, int y) {
-    return cells.contains(_templateCellKey(x, y));
-  }
-
-  ({Color tone, Set<int> templateCells}) _pieceRenderCache(
-    _SoulPieceOption piece,
-  ) {
-    final Color tone;
-    if (piece.isGold) {
-      tone = const Color(0xFFFFD700);
-    } else if (piece.isBomb) {
-      tone = const Color(0xFFFF4500);
-    } else {
-      tone = _kSoulTones[piece.toneIndex % _kSoulTones.length];
-    }
-    return (
-      tone: tone,
-      templateCells: piece.template.cellKeySet,
-    );
-  }
-
   Widget _buildBoardCell({
     required int row,
     required int col,
@@ -202,286 +155,170 @@ extension _SoulBlockBoard on _SoulBlockGameState {
     final _SoulTile? tile = _board[row][col];
     final _SoulPieceOption? draggingPiece = _draggingPiece;
     final bool hasPreviewAnchor = _previewRow >= 0 && _previewCol >= 0;
-    final bool isPreview = draggingPiece != null &&
+    final bool isPreview =
+        draggingPiece != null &&
         hasPreviewAnchor &&
         _isCellInPreviewFootprint(row, col);
-    final bool isClearing = _clearingRows.contains(row) ||
+    final bool isClearing =
+        _clearingRows.contains(row) ||
         _clearingCols.contains(col) ||
         _clearingCells.contains(Point<int>(col, row));
 
     if (tile != null) {
-      final Color tone = tile.toneIndex == 999
-          ? const Color(0xFFFFD700)
-          : _kSoulTones[tile.toneIndex % _kSoulTones.length];
-      final Widget block = _buildGlossyBlock(
+      return _buildPhotoTile(
         width: cellExtent,
         height: cellExtent,
-        tone: tone,
-        isClearing: isClearing,
-        connectTop: _hasLinkedTile(row, col, -1, 0),
-        connectRight: _hasLinkedTile(row, col, 0, 1),
-        connectBottom: _hasLinkedTile(row, col, 1, 0),
-        connectLeft: _hasLinkedTile(row, col, 0, -1),
+        crop: _tilePhotoRect(tile, row, col),
+        clearing: isClearing,
+        gold: tile.toneIndex == 999,
       );
-      return block;
     }
-
     if (isPreview) {
-      final ({Color tone, Set<int> templateCells}) renderCache =
-          _dragPieceRenderCache ?? _pieceRenderCache(draggingPiece);
-      final int localX = col - _previewCol;
-      final int localY = row - _previewRow;
-      return _buildGlossyBlock(
+      return _buildPhotoTile(
         width: cellExtent,
         height: cellExtent,
-        tone: renderCache.tone,
-        isPreview: true,
-        isFloating: true,
-        connectTop:
-            _templateKeyContains(renderCache.templateCells, localX, localY - 1),
-        connectRight:
-            _templateKeyContains(renderCache.templateCells, localX + 1, localY),
-        connectBottom:
-            _templateKeyContains(renderCache.templateCells, localX, localY + 1),
-        connectLeft:
-            _templateKeyContains(renderCache.templateCells, localX - 1, localY),
+        crop: _piecePhotoRect(
+          draggingPiece,
+          col - _previewCol,
+          row - _previewRow,
+          boardRow: row,
+          boardCol: col,
+        ),
+        preview: true,
+        gold: draggingPiece.isGold,
+        bomb: draggingPiece.isBomb,
       );
     }
-
+    // Gợi ý nước đi vẫn được tính nội bộ để chọn mảnh và kiểm tra Game Over,
+    // nhưng không phủ ô hướng dẫn lên bàn khi người chơi chưa kéo mảnh.
     return _buildSocketCell(cellExtent, cellExtent);
   }
 
   Widget _buildHoldEmptyCard({bool compact = false}) {
-    final double radius = compact ? 18 : 20;
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF141C30).withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(
-          color: const Color(0xFF818CF8).withValues(alpha: 0.35),
-          width: 1.4,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF6366F1).withValues(alpha: 0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+        color: _kSoulChrome.withValues(alpha: .06),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _kSoulChrome.withValues(alpha: .18)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.move_to_inbox_outlined,
+            color: _kSoulChrome,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              context.tr('soul_block_hold'),
+              textAlign: TextAlign.center,
+              style: SLTheme.quicksand(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: _kSoulChrome,
+              ),
+            ),
           ),
         ],
-      ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: const Color(0xFF6366F1).withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.archive_rounded,
-                color: const Color(0xFFA5B4FC),
-                size: compact ? 16 : 18,
-              ),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              'HOLD',
-              style: SLTheme.quicksand(
-                fontSize: compact ? 8.5 : 10,
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFFA5B4FC),
-                letterSpacing: 0.8,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
 
   Widget _buildTrayPanel({bool compact = false}) {
-    final double pieceGap = compact ? 5 : 6;
-    final List<_SoulPieceOption?> slots = List<_SoulPieceOption?>.generate(
+    final slots = List<_SoulPieceOption?>.generate(
       3,
-      (int index) => index < _tray.length ? _tray[index] : null,
+      (index) => index < _tray.length ? _tray[index] : null,
     );
-
-    final Widget holdWidget = SizedBox(
-      key: _holdAreaKey,
-      child: _holdPiece == null
-          ? _buildHoldEmptyCard(compact: compact)
-          : _buildPieceCard(_holdPiece!, compact: compact, isHold: true),
-    );
-
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(
-        compact ? 10 : 14,
-        compact ? 8 : 12,
-        compact ? 10 : 14,
-        compact ? 10 : 14,
-      ),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(compact ? 24 : 28),
-        gradient: const LinearGradient(
-          colors: <Color>[
-            Color(0xFF162035),
-            Color(0xFF0F1728),
-            Color(0xFF080C16),
-          ],
-          stops: [0.0, 0.45, 1.0],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: Border.all(
-          color: const Color(0xFF38BDF8).withValues(alpha: 0.35),
-          width: 1.2,
-        ),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: const Color(0xFF0284C7).withValues(alpha: 0.12),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-          BoxShadow(
-            color: Colors.black54,
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: compact ? 9 : 11,
-                  vertical: compact ? 5 : 6,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  color: Colors.white.withValues(alpha: 0.10),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.10),
-                  ),
-                ),
-                child: Text(
-                  'NEXT SET',
-                  style: SLTheme.quicksand(
-                    fontSize: compact ? 9.8 : 10.8,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white.withValues(alpha: 0.78),
-                    letterSpacing: 0.75,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: compact ? 9 : 10,
-                  vertical: compact ? 5 : 6,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  gradient: const LinearGradient(
-                    colors: <Color>[
-                      Color(0xFFFFD978),
-                      Color(0xFFE9A93A),
-                    ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                  boxShadow: <BoxShadow>[
-                    BoxShadow(
-                      color: const Color(0xFFFFC95D).withValues(alpha: 0.20),
-                      blurRadius: 8,
-                      spreadRadius: -6,
-                      offset: const Offset(0, 4),
+    final textScale = MediaQuery.textScalerOf(context).scale(12) / 12;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.tr('soul_block_tray'),
+                    style: SLTheme.quicksand(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: _kSoulIvory,
                     ),
-                  ],
-                ),
-                child: Text(
-                  '${_tray.length}/3',
-                  style: SLTheme.quicksand(
-                    fontSize: compact ? 10.2 : 11.5,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF28334B),
-                    letterSpacing: compact ? 0.45 : 0.6,
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    [_tray.length, 3].join(' / '),
+                    style: SLTheme.quicksand(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: _kSoulMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Tooltip(
+                message: context.tr('soul_block_hold_hint'),
+                child: Semantics(
+                  label: context.tr('soul_block_hold_hint'),
+                  child: SizedBox(
+                    key: _holdAreaKey,
+                    width: 144,
+                    height: 52 + max(0.0, textScale - 1) * 18,
+                    child: _holdPiece == null
+                        ? _buildHoldEmptyCard(compact: compact)
+                        : _buildPieceCard(
+                            _holdPiece!,
+                            compact: compact,
+                            isHold: true,
+                          ),
                   ),
                 ),
               ),
-            ],
-          ),
-          SizedBox(height: compact ? 8 : 10),
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Expanded(
-                  flex: 1,
-                  child: holdWidget,
-                ),
-                SizedBox(width: compact ? 8 : 12),
-                Expanded(
-                  flex: 3,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: List<Widget>.generate(slots.length, (int index) {
-                      final _SoulPieceOption? piece = slots[index];
-                      final bool isLast = index == slots.length - 1;
-                      return Expanded(
-                        child: Padding(
-                          padding:
-                              EdgeInsets.only(right: isLast ? 0 : pieceGap),
-                          child: RepaintBoundary(
-                            child: piece == null
-                                ? _buildEmptyPieceCard(compact: compact)
-                                : _buildPieceCard(piece, compact: compact),
-                          ),
-                        ),
-                      );
-                    }),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: List.generate(slots.length, (index) {
+              final piece = slots[index];
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsetsDirectional.only(
+                    end: index == slots.length - 1 ? 0 : 8,
+                  ),
+                  child: RepaintBoundary(
+                    child: piece == null
+                        ? _buildEmptyPieceCard(compact: compact)
+                        : _buildPieceCard(piece, compact: compact),
                   ),
                 ),
-              ],
-            ),
+              );
+            }),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildEmptyPieceCard({bool compact = false}) {
-    final double radius = compact ? 18 : 20;
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.02),
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.04),
-          width: 1.0,
-        ),
+        color: Colors.white.withValues(alpha: .018),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: .04)),
       ),
-      child: Center(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List<Widget>.generate(
-            3,
-            (int index) => Container(
-              width: compact ? 7 : 8,
-              height: compact ? 7 : 8,
-              margin: EdgeInsets.symmetric(horizontal: compact ? 2 : 3),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(999),
-              ),
-            ),
-          ),
-        ),
+      child: const Center(
+        child: Icon(Icons.check_rounded, size: 20, color: Color(0x446D7697)),
       ),
     );
   }
@@ -491,211 +328,101 @@ extension _SoulBlockBoard on _SoulBlockGameState {
     bool compact = false,
     bool isHold = false,
   }) {
-    final bool isDragging = _draggingPiece?.id == piece.id;
-    final bool isSnapBack = _snapBackPieceId == piece.id;
-    final bool isRecommended = _recommendedMove?.pieceId == piece.id;
-    final Color pieceColor = piece.isGold
-        ? const Color(0xFFFFB703)
-        : (piece.isBomb
-            ? const Color(0xFFFF0054)
-            : _kSoulTones[piece.toneIndex % _kSoulTones.length]);
+    final isDragging = _draggingPiece?.id == piece.id;
+    final isSnapBack = _snapBackPieceId == piece.id;
+    final accent = piece.isGold
+        ? _kSoulWarm
+        : piece.isBomb
+        ? const Color(0xFFE9A7AC)
+        : _kSoulChrome;
+    final pieceCardChild = Container(
+      decoration: BoxDecoration(
+        color: _kSoulPanelTop.withValues(alpha: .42),
+        borderRadius: BorderRadius.circular(isHold ? 16 : 18),
+        border: Border.all(color: Colors.white.withValues(alpha: .08)),
+      ),
 
-    final Widget pieceCardChild = Transform.scale(
-      scale: isDragging ? 0.96 : 1.0,
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF131B2E).withValues(alpha: 0.75),
-          borderRadius: BorderRadius.circular(compact ? 18 : 20),
-          border: Border.all(
-            color: isRecommended
-                ? const Color(0xFFFFD166).withValues(alpha: 0.55)
-                : pieceColor.withValues(alpha: 0.22),
-            width: isRecommended ? 1.4 : 1.0,
-          ),
-          boxShadow: <BoxShadow>[
-            if (isRecommended)
-              BoxShadow(
-                color: const Color(0xFFFFD166).withValues(alpha: 0.18),
-                blurRadius: 12,
-                offset: const Offset(0, 3),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final sideControls =
+              isHold || piece.template.height > piece.template.width;
+          final previewPadding = sideControls
+              ? const EdgeInsetsDirectional.fromSTEB(8, 8, 44, 8)
+              : const EdgeInsetsDirectional.fromSTEB(8, 8, 8, 44);
+          return Stack(
+            children: [
+              Positioned.fill(
+                child: Padding(
+                  padding: previewPadding,
+                  child: RepaintBoundary(
+                    child: _buildPieceGrid(piece, compact: compact),
+                  ),
+                ),
               ),
-            BoxShadow(
-              color: pieceColor.withValues(alpha: 0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final double hitPaddingX = compact ? 8 : 10;
-            final double hitPaddingY = compact ? 6 : 8;
-            return SizedBox.expand(
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: <Widget>[
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: RadialGradient(
-                            colors: <Color>[
-                              pieceColor.withValues(
-                                  alpha: isRecommended ? 0.18 : 0.08),
-                              Colors.transparent,
-                            ],
-                            radius: 0.88,
-                            center: const Alignment(0, -0.08),
-                          ),
-                        ),
-                      ),
-                    ),
+              PositionedDirectional(
+                end: 0,
+                bottom: isHold ? null : 0,
+                top: isHold ? 0 : null,
+                child: IconButton(
+                  tooltip: context.tr('soul_block_rotate'),
+                  onPressed: () => _rotatePiece(piece),
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size.square(48),
+                    maximumSize: const Size.square(48),
+                    padding: EdgeInsets.zero,
+                    foregroundColor: _kSoulMuted,
                   ),
-                  Center(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        hitPaddingX,
-                        hitPaddingY,
-                        hitPaddingX,
-                        compact ? 4 : 5,
-                      ),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minWidth:
-                              max(0, constraints.maxWidth - (hitPaddingX * 2)),
-                          minHeight:
-                              max(0, constraints.maxHeight - hitPaddingY - 5),
-                        ),
-                        child: RepaintBoundary(
-                          child: _buildPieceGrid(piece, compact: compact),
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (isRecommended)
-                    Positioned(
-                      top: compact ? -2 : -1,
-                      right: compact ? 2 : 4,
-                      child: Container(
-                        width: 18,
-                        height: 18,
-                        decoration: BoxDecoration(
-                          color:
-                              const Color(0xFFFFD166).withValues(alpha: 0.18),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color:
-                                const Color(0xFFFFD166).withValues(alpha: 0.30),
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.auto_awesome_rounded,
-                          size: 11,
-                          color: Color(0xFFFFD166),
-                        ),
-                      ),
-                    ),
-                  Positioned(
-                    top: compact ? -4 : -3,
-                    left: compact ? 2 : 4,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => _rotatePiece(piece),
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.6),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            width: 1,
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.rotate_right_rounded,
-                          size: 14,
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (piece.isGold)
-                    Positioned(
-                      bottom: compact ? -4 : -2,
-                      right: compact ? 2 : 4,
-                      child: Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.6),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color:
-                                const Color(0xFFFFD700).withValues(alpha: 0.4),
-                            width: 1,
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.star_rounded,
-                          size: 12,
-                          color: Color(0xFFFFD700),
-                        ),
-                      ),
-                    ),
-                  if (piece.isBomb)
-                    Positioned(
-                      bottom: compact ? -4 : -2,
-                      right: compact ? 2 : 4,
-                      child: Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.6),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color:
-                                const Color(0xFFFF4500).withValues(alpha: 0.4),
-                            width: 1,
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.local_fire_department_rounded,
-                          size: 12,
-                          color: Color(0xFFFF4500),
-                        ),
-                      ),
-                    ),
-                ],
+                  icon: const Icon(Icons.rotate_right_rounded, size: 20),
+                ),
               ),
-            );
-          },
-        ),
+              if (!isHold && (piece.isGold || piece.isBomb))
+                PositionedDirectional(
+                  start: sideControls ? null : 12,
+                  end: sideControls ? 16 : null,
+                  top: sideControls ? 12 : null,
+                  bottom: sideControls ? null : 16,
+                  child: Icon(
+                    piece.isGold
+                        ? Icons.star_rounded
+                        : piece.isBomb
+                        ? Icons.local_fire_department_rounded
+                        : Icons.auto_awesome_rounded,
+                    size: 16,
+                    color: accent,
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
-
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onPanStart: (DragStartDetails details) {
-        _startDrag(piece, details.globalPosition, fromHold: isHold);
-      },
-      onPanUpdate: (DragUpdateDetails details) =>
-          _updateDrag(details.globalPosition),
+      onPanStart: (details) =>
+          _startDrag(piece, details.globalPosition, fromHold: isHold),
+      onPanUpdate: (details) => _updateDrag(details.globalPosition),
       onPanEnd: (_) => unawaited(_endDrag()),
       onPanCancel: _cancelDrag,
       child: AnimatedScale(
-        duration: Duration(milliseconds: isSnapBack ? 170 : 120),
+        duration: Duration(
+          milliseconds: MediaQuery.disableAnimationsOf(context)
+              ? 0
+              : isSnapBack
+              ? 170
+              : 120,
+        ),
         curve: isSnapBack ? Curves.easeOutBack : Curves.easeOut,
         scale: isDragging
-            ? 0.94
+            ? .96
             : isSnapBack
-                ? 1.06
-                : 1.0,
+            ? 1.04
+            : 1,
         child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 120),
-          curve: Curves.easeOut,
-          opacity: isDragging ? 0.0 : 1.0,
-          child: IgnorePointer(
-            ignoring: isDragging,
-            child: pieceCardChild,
+          duration: Duration(
+            milliseconds: MediaQuery.disableAnimationsOf(context) ? 0 : 120,
           ),
+          opacity: isDragging ? .12 : 1,
+          child: IgnorePointer(ignoring: isDragging, child: pieceCardChild),
         ),
       ),
     );
@@ -706,410 +433,308 @@ extension _SoulBlockBoard on _SoulBlockGameState {
       return const SizedBox.shrink();
     }
 
-    final ({Color tone, Set<int> templateCells}) renderCache =
-        _dragPieceRenderCache ?? _pieceRenderCache(piece);
+    final anchor = _previewRow >= 0 && _previewCol >= 0
+        ? Point<int>(_previewCol, _previewRow)
+        : _piecePhotoAnchor(piece);
     final double cellFullSize =
         _boardCellExtent + _SoulBlockGameState._boardGap;
     return RepaintBoundary(
       child: Stack(
         clipBehavior: Clip.none,
-        children: piece.template.cells.map((Point<int> cell) {
-          return Positioned(
-            left: cell.x * cellFullSize,
-            top: cell.y * cellFullSize,
-            width: _boardCellExtent,
-            height: _boardCellExtent,
-            child: RepaintBoundary(
-              child: _buildGlossyBlock(
+        children: piece.template.cells
+            .map((Point<int> cell) {
+              return Positioned(
+                left: cell.x * cellFullSize,
+                top: cell.y * cellFullSize,
                 width: _boardCellExtent,
                 height: _boardCellExtent,
-                tone: renderCache.tone,
-                isFloating: true,
-                connectTop: _templateKeyContains(
-                    renderCache.templateCells, cell.x, cell.y - 1),
-                connectRight: _templateKeyContains(
-                    renderCache.templateCells, cell.x + 1, cell.y),
-                connectBottom: _templateKeyContains(
-                    renderCache.templateCells, cell.x, cell.y + 1),
-                connectLeft: _templateKeyContains(
-                    renderCache.templateCells, cell.x - 1, cell.y),
-              ),
-            ),
-          );
-        }).toList(growable: false),
+                child: RepaintBoundary(
+                  child: _buildPhotoTile(
+                    width: _boardCellExtent,
+                    height: _boardCellExtent,
+                    crop: _boardPhotoRect(anchor.y + cell.y, anchor.x + cell.x),
+                    floating: true,
+                    gold: piece.isGold,
+                    bomb: piece.isBomb,
+                  ),
+                ),
+              );
+            })
+            .toList(growable: false),
       ),
     );
   }
 
-  Widget _buildPieceGrid(
-    _SoulPieceOption piece, {
-    bool compact = false,
-  }) {
-    final ({Color tone, Set<int> templateCells}) renderCache =
-        _pieceRenderCache(piece);
+  Widget _buildPieceGrid(_SoulPieceOption piece, {bool compact = false}) {
     return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        final double previewGap = compact ? 1.6 : 2.0;
-        final double previewStrideBase =
-            previewGap * (_SoulBlockGameState._trayPreviewGridSize - 1);
-        final double usableWidth =
-            max(0, constraints.maxWidth + (compact ? 14 : 18));
-        final double usableHeight =
-            max(0, constraints.maxHeight + (compact ? 12 : 16));
-        final double previewCell = min(
-          (usableWidth - previewStrideBase) /
-              _SoulBlockGameState._trayPreviewGridSize,
-          (usableHeight - previewStrideBase) /
-              _SoulBlockGameState._trayPreviewGridSize,
-        ).clamp(10.0, compact ? 30.0 : 36.0).toDouble();
-        final int templateWidth = piece.template.width;
-        final int templateHeight = piece.template.height;
-        final double previewStride = previewCell + previewGap;
-        final double contentWidth =
-            (templateWidth * previewCell) + ((templateWidth - 1) * previewGap);
-        final double contentHeight = (templateHeight * previewCell) +
-            ((templateHeight - 1) * previewGap);
-        final double originX =
-            max(0, (constraints.maxWidth - contentWidth) / 2);
-        final double originY =
-            max(0, (constraints.maxHeight - contentHeight) / 2);
-
+      builder: (context, constraints) {
+        final anchor = _piecePhotoAnchor(piece);
+        final columns = piece.template.width;
+        final rows = piece.template.height;
+        final gap = compact ? 2.0 : 2.5;
+        // Tính theo kích thước thật của mảnh, tránh ép mọi mảnh vào lưới 5 × 5.
+        final cell = max(
+          0.0,
+          min(
+            compact ? 38.0 : 44.0,
+            min(
+              (constraints.maxWidth - gap * (columns - 1)) / columns,
+              (constraints.maxHeight - gap * (rows - 1)) / rows,
+            ),
+          ),
+        );
+        if (cell <= 0) {
+          return const SizedBox.shrink();
+        }
+        final width = columns * cell + (columns - 1) * gap;
+        final height = rows * cell + (rows - 1) * gap;
+        final originX = (constraints.maxWidth - width) / 2;
+        final originY = (constraints.maxHeight - height) / 2;
         return Stack(
-          clipBehavior: Clip.none,
-          children: piece.template.cells.map((Point<int> cell) {
-            return Positioned(
-              left: originX + (cell.x * previewStride),
-              top: originY + (cell.y * previewStride),
-              width: previewCell,
-              height: previewCell,
-              child: _buildGlossyBlock(
-                width: previewCell,
-                height: previewCell,
-                tone: renderCache.tone,
-                connectTop: _templateKeyContains(
-                  renderCache.templateCells,
-                  cell.x,
-                  cell.y - 1,
+          children: piece.template.cells
+              .map(
+                (point) => Positioned(
+                  left: originX + point.x * (cell + gap),
+                  top: originY + point.y * (cell + gap),
+                  width: cell,
+                  height: cell,
+                  child: _buildPhotoTile(
+                    width: cell,
+                    height: cell,
+                    crop: _boardPhotoRect(
+                      anchor.y + point.y,
+                      anchor.x + point.x,
+                    ),
+                    gold: piece.isGold,
+                    bomb: piece.isBomb,
+                  ),
                 ),
-                connectRight: _templateKeyContains(
-                    renderCache.templateCells, cell.x + 1, cell.y),
-                connectBottom: _templateKeyContains(
-                    renderCache.templateCells, cell.x, cell.y + 1),
-                connectLeft: _templateKeyContains(
-                    renderCache.templateCells, cell.x - 1, cell.y),
-              ),
-            );
-          }).toList(growable: false),
+              )
+              .toList(growable: false),
         );
       },
     );
   }
 
-  Widget _buildGlossyBlock({
-    required double width,
-    required double height,
-    required Color tone,
-    bool isPreview = false,
-    bool isClearing = false,
-    bool isFloating = false,
-    bool connectTop = false,
-    bool connectRight = false,
-    bool connectBottom = false,
-    bool connectLeft = false,
-  }) {
-    final bool isGold = tone == const Color(0xFFFFD700) || tone == const Color(0xFFFFB703);
-    final bool isBomb = tone == const Color(0xFFFF4500) || tone == const Color(0xFFFF0054);
-
-    final double shortSide = min(width, height);
-    final double outerRadius = shortSide * 0.22;
-    final double joinedRadius = max(2.5, shortSide * 0.08);
-    final double faceInset = max(1.2, shortSide * 0.085);
-    final double connectedInset = max(0.5, faceInset * 0.25);
-    final double leftInset = connectLeft ? connectedInset : faceInset;
-    final double rightInset = connectRight ? connectedInset : faceInset;
-    final double topInset = connectTop ? connectedInset : faceInset;
-    final double bottomInset = connectBottom ? connectedInset : faceInset;
-
-    final Color shellTop = Color.lerp(
-      tone,
-      Colors.white,
-      isPreview ? 0.70 : 0.55,
-    )!;
-    final Color shellBottom = Color.lerp(
-      tone,
-      const Color(0xFF030712),
-      isPreview ? 0.15 : 0.28,
-    )!;
-    final Color faceTop = Color.lerp(
-      tone,
-      Colors.white,
-      isPreview ? 0.75 : 0.62,
-    )!;
-    final Color faceBottom = Color.lerp(
-      tone,
-      const Color(0xFF02040A),
-      isPreview ? 0.20 : 0.18,
-    )!;
-
-    final BorderRadius shellRadius = BorderRadius.only(
-      topLeft: Radius.circular(
-        _blockCornerRadius(connectTop, connectLeft, outerRadius, joinedRadius),
-      ),
-      topRight: Radius.circular(
-        _blockCornerRadius(
-          connectTop,
-          connectRight,
-          outerRadius,
-          joinedRadius,
-        ),
-      ),
-      bottomLeft: Radius.circular(
-        _blockCornerRadius(
-          connectBottom,
-          connectLeft,
-          outerRadius,
-          joinedRadius,
-        ),
-      ),
-      bottomRight: Radius.circular(
-        _blockCornerRadius(
-          connectBottom,
-          connectRight,
-          outerRadius,
-          joinedRadius,
-        ),
-      ),
-    );
-
-    final double faceRadiusBase = max(
-      joinedRadius,
-      outerRadius - (faceInset * 0.5),
-    );
-    final BorderRadius faceRadius = BorderRadius.only(
-      topLeft: Radius.circular(
-        _blockCornerRadius(
-          connectTop,
-          connectLeft,
-          faceRadiusBase,
-          joinedRadius,
-        ),
-      ),
-      topRight: Radius.circular(
-        _blockCornerRadius(
-          connectTop,
-          connectRight,
-          faceRadiusBase,
-          joinedRadius,
-        ),
-      ),
-      bottomLeft: Radius.circular(
-        _blockCornerRadius(
-          connectBottom,
-          connectLeft,
-          faceRadiusBase,
-          joinedRadius,
-        ),
-      ),
-      bottomRight: Radius.circular(
-        _blockCornerRadius(
-          connectBottom,
-          connectRight,
-          faceRadiusBase,
-          joinedRadius,
-        ),
-      ),
-    );
-
-    return Container(
+  Widget _buildSocketCell(double width, double height, {Rect? crop}) {
+    return DecoratedBox(
       decoration: BoxDecoration(
-        borderRadius: shellRadius,
-        gradient: LinearGradient(
-          colors: <Color>[
-            shellTop.withValues(alpha: isPreview ? 0.88 : 0.98),
-            tone.withValues(alpha: isPreview ? 0.82 : 0.95),
-            shellBottom.withValues(alpha: 0.96),
-          ],
-          stops: const <double>[0, 0.40, 1],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: _kSoulStageBottom.withValues(alpha: .64),
+        borderRadius: BorderRadius.circular(min(width, height) * .18),
         border: Border.all(
-          color: isGold
-              ? const Color(0xFFFFE066)
-              : (isBomb
-                  ? const Color(0xFFFF5252)
-                  : Colors.white.withValues(alpha: isPreview ? 0.60 : 0.45)),
-          width: (isGold || isBomb) ? 1.4 : 0.9,
-        ),
-        boxShadow: <BoxShadow>[
-          if (!_smoothGraphics) ...[
-            BoxShadow(
-              color: tone.withValues(alpha: isPreview ? 0.35 : (isClearing ? 0.65 : 0.22)),
-              blurRadius: isClearing ? shortSide * 0.6 : (isPreview ? shortSide * 0.35 : shortSide * 0.25),
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ],
-      ),
-      child: Padding(
-        padding:
-            EdgeInsets.fromLTRB(leftInset, topInset, rightInset, bottomInset),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: faceRadius,
-            gradient: LinearGradient(
-              colors: <Color>[
-                faceTop.withValues(alpha: isPreview ? 0.90 : 0.98),
-                tone.withValues(alpha: isPreview ? 0.85 : 0.94),
-                faceBottom.withValues(alpha: 0.90),
-              ],
-              stops: const <double>[0, 0.50, 1],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            border: Border.all(
-              color: Colors.white.withValues(
-                  alpha: isPreview ? 0.70 : (isClearing ? 0.50 : 0.30)),
-              width: 0.8,
-            ),
-          ),
-          child: Stack(
-            fit: StackFit.expand,
-            children: <Widget>[
-              // Top Specular Highlight Pill
-              Align(
-                alignment: Alignment.topCenter,
-                child: Container(
-                  margin: EdgeInsets.fromLTRB(
-                    shortSide * 0.16,
-                    max(1.0, shortSide * 0.08),
-                    shortSide * 0.16,
-                    0,
-                  ),
-                  height: max(1.2, shortSide * 0.09),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(shortSide),
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.white.withValues(alpha: isPreview ? 0.45 : 0.35),
-                        Colors.white.withValues(alpha: 0.05),
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                  ),
-                ),
-              ),
-              if (isGold)
-                Center(
-                  child: Icon(
-                    Icons.star_rounded,
-                    color: Colors.white,
-                    size: shortSide * 0.55,
-                    shadows: const [
-                      Shadow(color: Color(0xFFFFD700), blurRadius: 8),
-                    ],
-                  ),
-                ),
-              if (isBomb)
-                Center(
-                  child: Icon(
-                    Icons.local_fire_department_rounded,
-                    color: Colors.white,
-                    size: shortSide * 0.55,
-                    shadows: const [
-                      Shadow(color: Color(0xFFFF1744), blurRadius: 8),
-                    ],
-                  ),
-                ),
-            ],
-          ),
+          color: Colors.white.withValues(alpha: .045),
+          width: .7,
         ),
       ),
+      child: _boardPhoto != null && crop != null
+          ? CustomPaint(painter: _SoulPhotoReferencePainter(_boardPhoto!, crop))
+          : null,
     );
-  }
-
-  Widget _buildSocketCell(double width, double height) {
-    final double shortSide = min(width, height);
-    final BorderRadius radius = BorderRadius.circular(shortSide * 0.20);
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: radius,
-        gradient: const LinearGradient(
-          colors: <Color>[
-            Color(0xFF161F33),
-            Color(0xFF0F1626),
-            Color(0xFF0A0F1B),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: Border.all(
-          color: const Color(0xFF263554).withValues(alpha: 0.6),
-          width: 0.8,
-        ),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(shortSide * 0.08),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(shortSide * 0.14),
-            gradient: const LinearGradient(
-              colors: <Color>[
-                Color(0xFF090D18),
-                Color(0xFF060911),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  double _blockCornerRadius(
-    bool primaryConnected,
-    bool secondaryConnected,
-    double exposedRadius,
-    double joinedRadius,
-  ) {
-    return (primaryConnected || secondaryConnected)
-        ? joinedRadius
-        : exposedRadius;
   }
 }
 
 class _GameOverOverlayContent extends StatelessWidget {
-  final _SoulBlockGameState state;
-
   const _GameOverOverlayContent(this.state);
+  final _SoulBlockGameState state;
 
   @override
   Widget build(BuildContext context) {
+    final bool canRevive =
+        !state._isReviving &&
+        !state._isRestarting &&
+        !state._isResolvingGameOver &&
+        !state._isShowingFullscreenAd &&
+        state._reviveAdsUsed < state._maxReviveAdsPerRun;
+    final String reviveCount = L10nService().format(
+      'soul_block_revive_count',
+      <String, Object?>{
+        'used': state._reviveAdsUsed,
+        'limit': state._maxReviveAdsPerRun,
+      },
+    );
     return Positioned.fill(
-      child: Container(
-        color: Colors.black54,
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'GAME OVER',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: ColoredBox(
+          color: _kSoulStageBottom.withValues(alpha: .92),
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.emoji_events_outlined,
+                    color: _kSoulWarm,
+                    size: 32,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    context.tr('util_trchiktthc_010cc1'),
+                    textAlign: TextAlign.center,
+                    style: SLTheme.quicksand(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: _kSoulIvory,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    context.tr('soul_block_score'),
+                    style: SLTheme.quicksand(fontSize: 12, color: _kSoulMuted),
+                  ),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      state._formatNumber(state._score),
+                      style: SLTheme.quicksand(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w900,
+                        color: _kSoulChrome,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: _kSoulPanelTop.withValues(alpha: .78),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: _kSoulWarm.withValues(alpha: .28),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.ondemand_video_rounded,
+                                color: _kSoulWarm,
+                                size: 19,
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  context.tr('soul_block_revive'),
+                                  textAlign: TextAlign.center,
+                                  style: SLTheme.quicksand(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w800,
+                                    color: _kSoulIvory,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            reviveCount,
+                            textAlign: TextAlign.center,
+                            style: SLTheme.quicksand(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: _kSoulMuted,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          if (state._reviveAdsUsed >= state._maxReviveAdsPerRun)
+                            Text(
+                              context.tr('soul_block_revive_limit'),
+                              textAlign: TextAlign.center,
+                              style: SLTheme.quicksand(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: _kSoulMuted,
+                              ),
+                            )
+                          else
+                            FilledButton.icon(
+                              onPressed: canRevive
+                                  ? state._reviveFromRewardedAd
+                                  : null,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: _kSoulWarm,
+                                foregroundColor: _kSoulStageBottom,
+                                disabledBackgroundColor: _kSoulWarm.withValues(
+                                  alpha: .35,
+                                ),
+                                disabledForegroundColor: _kSoulIvory.withValues(
+                                  alpha: .62,
+                                ),
+                                minimumSize: const Size(0, 46),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 18,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                              ),
+                              icon: state._isReviving
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.play_circle_fill_rounded,
+                                      size: 21,
+                                    ),
+                              label: Text(
+                                state._isReviving
+                                    ? context.tr('p7_ad_loading')
+                                    : context.tr('watch_ad'),
+                                textAlign: TextAlign.center,
+                                style: SLTheme.quicksand(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  FilledButton.icon(
+                    onPressed:
+                        state._isRestarting || state._isShowingFullscreenAd
+                        ? null
+                        : state._restartAfterGameOver,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _kSoulChrome,
+                      foregroundColor: _kSoulStageBottom,
+                      disabledBackgroundColor: _kSoulChrome.withValues(
+                        alpha: .35,
+                      ),
+                      minimumSize: const Size(0, 48),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    icon: const Icon(Icons.refresh_rounded, size: 22),
+                    label: Text(
+                      context.tr('util_chili_ddbf84'),
+                      textAlign: TextAlign.center,
+                      style: SLTheme.quicksand(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () {
-                  state._restartAfterGameOver();
-                },
-                child: const Text('Chơi lại'),
-              ),
-            ],
+            ),
           ),
         ),
       ),

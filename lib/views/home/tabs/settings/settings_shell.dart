@@ -1023,6 +1023,17 @@ extension _SettingsTabShell on _SettingsTabState {
         ),
         _buildDivider(isDark),
         _buildiOSRow(
+          icon: Icons.location_on_outlined,
+          iconBgColor: const Color(0xFF0288D1),
+          title: context.tr('settings_gps_mode_title'),
+          subtitle: _gpsMode == LocationService.kGpsModeAlways
+              ? context.tr('settings_gps_mode_always')
+              : context.tr('settings_gps_mode_foreground'),
+          isDark: isDark,
+          onTap: _showGpsModeSelectorDialog,
+        ),
+        _buildDivider(isDark),
+        _buildiOSRow(
           icon: Icons.admin_panel_settings_outlined,
           iconBgColor: SLColors.accentPurple,
           title: context.tr('theme_permission_center'),

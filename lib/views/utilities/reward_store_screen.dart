@@ -3,7 +3,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -12,9 +11,11 @@ import '../../utils/services/admob_service.dart';
 import '../../utils/services/daily_quest_service.dart';
 import '../../core/constants/app_config.dart';
 import '../../core/sl_theme.dart';
-import '../../widgets/sl_bouncing_button.dart';
 import '../../utils/services/security_service.dart';
 import '../../utils/app_error_mapper.dart';
+import '../../models/reward_missions.dart';
+import '../../utils/services/consent_service.dart';
+import 'reward_store_panels.dart';
 
 class RewardStoreScreen extends StatefulWidget {
   const RewardStoreScreen({super.key});
@@ -23,15 +24,19 @@ class RewardStoreScreen extends StatefulWidget {
   State<RewardStoreScreen> createState() => _RewardStoreScreenState();
 }
 
-class _RewardStoreScreenState extends State<RewardStoreScreen> {
+class _RewardStoreScreenState extends State<RewardStoreScreen>
+    with WidgetsBindingObserver {
   final AdMobService _adMob = AdMobService();
   final DailyQuestService _dailyQuestService = DailyQuestService();
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   late final Stream<int> _proUntilStream;
   late final Stream<int> _pointsStream;
-  late final Stream<Map<String, dynamic>> _questsStream;
+  late Stream<Map<String, dynamic>> _questsStream;
+  String _rewardDay = rewardDayKey();
+  Timer? _dayTimer;
   StreamSubscription<DatabaseEvent>? _userSubscription;
+  StreamSubscription<DatabaseEvent>? _adRewardsSubscription;
   bool _isWatchingAd = false;
   bool _isRedeeming = false;
   bool _isCheckingIn = false;
@@ -44,8 +49,10 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
   // Daily ad limit tracking
   int _dailyAdCount = 0;
   final int _dailyAdLimit = AdMobService.dailyRewardedAdLimit;
+  bool _isAdRewardsLoaded = false;
+  bool _adRewardsHasError = false;
 
-  static final List<_RewardPlan> _plans = [
+  List<_RewardPlan> get _plans => [
     _RewardPlan(
       id: 'pro_12h',
       title: L10nService().translate('util_gi12gi_9c0202'),
@@ -98,27 +105,100 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    ConsentService.optionalCollectionAllowed.addListener(_refreshPrivacy);
     _proUntilStream = _adMob.streamCurrentProUntil().asBroadcastStream();
     _pointsStream = _adMob.streamUserPoints().asBroadcastStream();
-    _questsStream = _dailyQuestService.streamQuests().asBroadcastStream();
+    _questsStream = _dailyQuestService.streamQuests();
     _loadCheckinData();
-    _loadDailyAdCount();
+    _listenAdRewardData();
+    _scheduleRewardDayRefresh();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    ConsentService.optionalCollectionAllowed.removeListener(_refreshPrivacy);
+    _dayTimer?.cancel();
     _cooldownTimer?.cancel();
     _userSubscription?.cancel();
+    _adRewardsSubscription?.cancel();
     super.dispose();
   }
 
-  void _loadDailyAdCount() async {
-    final count = await _adMob.getDailyRewardedAdCount();
-    if (mounted) {
-      setState(() {
-        _dailyAdCount = count;
-      });
+  void _refreshPrivacy() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshRewardDay();
+      _scheduleRewardDayRefresh();
     }
+  }
+
+  void _scheduleRewardDayRefresh() {
+    _dayTimer?.cancel();
+    final now = rewardCalendarNow();
+    final midnight = DateTime.utc(now.year, now.month, now.day + 1);
+    _dayTimer = Timer(midnight.difference(now), () {
+      if (!mounted) return;
+      _refreshRewardDay();
+      _scheduleRewardDayRefresh();
+    });
+  }
+
+  void _refreshRewardDay() {
+    final day = rewardDayKey();
+    if (!mounted || _rewardDay == day) return;
+    setState(() {
+      _rewardDay = day;
+      _questsStream = _dailyQuestService.streamQuests();
+      _dailyAdCount = 0;
+      _isAdRewardsLoaded = false;
+      _checkedInToday = _checkinDays[day] == true;
+      _streak = _calculateStreak(_checkinDays);
+    });
+    _adRewardsSubscription?.cancel();
+    _listenAdRewardData();
+  }
+
+  void _listenAdRewardData() {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    _adRewardsSubscription = _dbRef
+        .child('users/${user.uid}/adRewards')
+        .onValue
+        .listen(
+          (event) {
+            final rawValue = event.snapshot.value;
+            final data = rawValue is Map
+                ? Map<dynamic, dynamic>.from(rawValue)
+                : <dynamic, dynamic>{};
+            final day = data['day']?.toString();
+            final count = day == rewardDayKey()
+                ? (data['count'] as num?)?.toInt() ?? 0
+                : 0;
+            if (!mounted) return;
+            setState(() {
+              _dailyAdCount = count.clamp(0, _dailyAdLimit);
+              _isAdRewardsLoaded = true;
+              _adRewardsHasError = false;
+            });
+          },
+          onError: (Object error) {
+            debugPrint(
+              'Reward ad quota listener failed: ${AppErrorMapper.resolve(error).message}',
+            );
+            if (!mounted) return;
+            setState(() {
+              _isAdRewardsLoaded = true;
+              _adRewardsHasError = true;
+            });
+          },
+        );
   }
 
   void _loadCheckinData() {
@@ -138,10 +218,6 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
               final nextDays = _parseCheckinDays(data);
               final nextCheckedInToday = nextDays[_todayKey()] == true;
               final nextStreak = _calculateStreak(nextDays);
-
-              if (_isCheckingIn && !nextCheckedInToday) {
-                return;
-              }
 
               if (!_isCheckinLoaded ||
                   _checkedInToday != nextCheckedInToday ||
@@ -165,7 +241,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
   }
 
   String _todayKey([DateTime? date]) {
-    return DateFormat('yyyy-MM-dd').format(date ?? DateTime.now());
+    return rewardDayKey(date);
   }
 
   Map<String, bool> _parseCheckinDays(Object? rawValue) {
@@ -189,7 +265,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
 
   int _calculateStreak(Map<String, bool> dayMap) {
     int streak = 0;
-    DateTime checkDate = DateTime.now();
+    DateTime checkDate = DateTime.now().toUtc();
     while (true) {
       final key = _todayKey(checkDate);
       if (dayMap[key] == true) {
@@ -202,153 +278,49 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
     return streak;
   }
 
-  void _markCheckedInToday() {
-    if (!mounted) return;
-    final today = _todayKey();
-    final nextDays = Map<String, bool>.from(_checkinDays)..[today] = true;
-    setState(() {
-      _checkinDays = nextDays;
-      _checkedInToday = true;
-      _streak = _calculateStreak(nextDays);
-    });
-  }
-
   Future<void> _executeCheckin() async {
-    if (_isCheckingIn) return;
-
-    if (_checkedInToday) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(L10nService().translate('util_hmnaybnimd_35fac7')),
-        ),
-      );
-      return;
-    }
-
-    if (_auth.currentUser == null) return;
-
-    // Save previous state for reverting in case of failure
-    final previousCheckinDays = Map<String, bool>.from(_checkinDays);
-    final previousCheckedInToday = _checkedInToday;
-    final previousStreak = _streak;
-
-    // Optimistically mark checked-in locally to provide instant response
-    _markCheckedInToday();
+    _refreshRewardDay();
+    if (_isCheckingIn || !_isCheckinLoaded || _checkedInToday) return;
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
     setState(() => _isCheckingIn = true);
-
     try {
       if (!await SecurityService().guardAction(
         context,
         'reward_daily_checkin',
       )) {
-        if (mounted) {
-          setState(() {
-            _checkinDays = previousCheckinDays;
-            _checkedInToday = previousCheckedInToday;
-            _streak = previousStreak;
-            _isCheckingIn = false;
-          });
-        }
         return;
       }
-      if (!mounted) return;
-
-      final scaffoldMessenger = ScaffoldMessenger.of(context);
-      RewardClaimResult result;
-      try {
-        result = await _adMob.claimDailyCheckinReward();
-      } catch (error) {
-        debugPrint(
-          'Daily check-in failed: ${AppErrorMapper.resolve(error).message}',
-        );
-        result = const RewardClaimResult(ok: false, error: 'network_error');
-      }
-      debugPrint(
-        'Daily check-in result: ok=${result.ok} error=${result.error} '
-        'status=${result.statusCode} granted=${result.granted}',
-      );
-      if (!mounted) return;
-
-      if (result.alreadyClaimed) {
-        // Keep optimistic state since they are checked-in anyway
-        scaffoldMessenger.showSnackBar(
-          SnackBar(
-            content: Text(L10nService().translate('util_hmnaybnimd_35fac7')),
-            backgroundColor: Colors.green,
-          ),
-        );
-        return;
-      }
-
-      if (!result.ok) {
-        if (kDebugMode &&
-            (result.networkIssue ||
-                result.appCheckIssue ||
-                result.endpointMissing)) {
-          final user = _auth.currentUser;
-          if (user != null) {
-            final today = _todayKey();
-            try {
-              await _dbRef.update({
-                'users/${user.uid}/points': ServerValue.increment(50),
-                'users/${user.uid}/checkinDays/$today': true,
-              });
-              if (!mounted) return;
-              scaffoldMessenger.showSnackBar(
-                SnackBar(
-                  content: Text(
-                    L10nService().translate('util_imdanhdebu_ef8981'),
-                  ),
-                  backgroundColor: Colors.green,
-                ),
-              );
-              // Fallback update succeeded, keep the optimistic check-in
-              return;
-            } catch (error) {
-              debugPrint(
-                'Debug check-in fallback write failed: ${AppErrorMapper.resolve(error).message}',
-              );
-              if (!mounted) return;
-              setState(() {
-                _checkinDays = previousCheckinDays;
-                _checkedInToday = previousCheckedInToday;
-                _streak = previousStreak;
-              });
-              scaffoldMessenger.showSnackBar(
-                SnackBar(
-                  content: Text(
-                    L10nService().translate('util_bndebugcha_3d3468'),
-                  ),
-                ),
-              );
-            }
-            return;
-          }
-        }
-
-        // Revert optimistic update on failure
-        setState(() {
-          _checkinDays = previousCheckinDays;
-          _checkedInToday = previousCheckedInToday;
-          _streak = previousStreak;
-        });
-        scaffoldMessenger.showSnackBar(
-          SnackBar(content: Text(_checkinFailureMessage(result))),
-        );
-        return;
-      }
-
-      // Success, keep the optimistic update
-      scaffoldMessenger.showSnackBar(
+      if (!mounted || _auth.currentUser?.uid != uid) return;
+      final result = await _adMob.claimDailyCheckinReward();
+      if (!mounted || _auth.currentUser?.uid != uid) return;
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(L10nService().translate('util_imdanhthnh_93f64e')),
-          backgroundColor: Colors.green,
+          content: Text(
+            result.alreadyClaimed
+                ? context.tr('util_hmnaybnimd_35fac7')
+                : result.ok
+                ? context
+                      .tr('ad_reward_points_received')
+                      .replaceAll('{points}', '${result.granted}')
+                : _checkinFailureMessage(result),
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted || _auth.currentUser?.uid != uid) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppErrorMapper.resolve(
+              error,
+              fallbackMessage: context.tr('util_imdanhchat_39e77b'),
+            ).message,
+          ),
         ),
       );
     } finally {
-      if (mounted) {
-        setState(() => _isCheckingIn = false);
-      }
+      if (mounted) setState(() => _isCheckingIn = false);
     }
   }
 
@@ -360,9 +332,6 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       return L10nService().translate('util_phinngnhph_d65516');
     }
     if (result.appCheckIssue) {
-      if (kDebugMode) {
-        return 'Thiết bị test chưa qua App Check (${result.error}). ${L10nService().translate('util_nuangchybn_c52bf0')}';
-      }
       return L10nService().translate('util_thitbchasn_1e1378');
     }
     if (result.rateLimited) {
@@ -382,9 +351,6 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       return L10nService().translate('util_phinngnhph_c11b0a');
     }
     if (result.appCheckIssue) {
-      if (kDebugMode) {
-        return 'Máy test chưa được Firebase App Check cho phép (${result.error}). ${L10nService().translate('util_thmdebugto_3b76d4')}';
-      }
       return L10nService().translate('util_thitbchasn_1e1378');
     }
     if (result.rateLimited) {
@@ -424,11 +390,6 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
     _consecutiveAdsWatched++;
     _lastAdWatchTimeMs = nowMs;
 
-    if (_consecutiveAdsWatched <= 2) {
-      // 2 lần đầu không có cooldown
-      return;
-    }
-
     // Tính thời gian cooldown tăng dần ngẫu nhiên
     // Lần 3: 15-30s
     // Lần 4: 30-60s
@@ -438,7 +399,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
     int baseSeconds;
     int rangeSeconds;
 
-    if (_consecutiveAdsWatched == 3) {
+    if (_consecutiveAdsWatched <= 3) {
       baseSeconds = 15;
       rangeSeconds = 15;
     } else if (_consecutiveAdsWatched == 4) {
@@ -456,7 +417,10 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
     }
 
     final random = math.Random();
-    _adCooldownSeconds = baseSeconds + random.nextInt(rangeSeconds + 1);
+    _adCooldownSeconds = math.max(
+      45,
+      baseSeconds + random.nextInt(rangeSeconds + 1),
+    );
     _adCooldownEndTimeMs =
         DateTime.now().millisecondsSinceEpoch + (_adCooldownSeconds * 1000);
 
@@ -465,12 +429,15 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
     });
 
     _cooldownTimer?.cancel();
-    _cooldownTimer = Timer(Duration(seconds: _adCooldownSeconds), () {
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) return;
       setState(() {
-        _isAdCooldown = false;
-        _adCooldownSeconds = 0;
-        _adCooldownEndTimeMs = 0;
+        _adCooldownSeconds = _remainingAdCooldownSeconds();
+        if (_adCooldownSeconds == 0) {
+          _isAdCooldown = false;
+          _adCooldownEndTimeMs = 0;
+          timer.cancel();
+        }
       });
     });
   }
@@ -483,116 +450,62 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
   }
 
   Future<void> _watchAd(int proUntil) async {
-    if (_isWatchingAd) return;
-
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-
-    if (_isAdCooldown) {
-      final secondsLeft = _remainingAdCooldownSeconds();
-      if (secondsLeft <= 0) {
-        setState(() {
-          _isAdCooldown = false;
-          _adCooldownSeconds = 0;
-          _adCooldownEndTimeMs = 0;
-        });
-      } else {
-        _adCooldownSeconds = secondsLeft;
-      }
-    }
-
-    if (_isAdCooldown) {
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            'Chờ $_adCooldownSeconds giây nữa để xem quảng cáo tiếp theo nhé ⏳',
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    _refreshRewardDay();
+    if (_isWatchingAd ||
+        kIsWeb ||
+        !_isAdRewardsLoaded ||
+        _adRewardsHasError ||
+        _dailyAdCount >= _dailyAdLimit ||
+        !ConsentService.optionalCollectionAllowed.value ||
+        _remainingAdCooldownSeconds() > 0 ||
+        (AppConfig.isPurchaseEnabled &&
+            proUntil > DateTime.now().millisecondsSinceEpoch)) {
       return;
     }
-
-    if (AppConfig.isPurchaseEnabled &&
-        proUntil > DateTime.now().millisecondsSinceEpoch) {
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: Text(L10nService().translate('util_hydngimdan_c203ca')),
-        ),
-      );
-      return;
-    }
-
-    if (_dailyAdCount >= _dailyAdLimit) {
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: Text(L10nService().translate('util_bnchmmcltx_bdf8ba')),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
     setState(() => _isWatchingAd = true);
     try {
       if (!await SecurityService().guardAction(context, 'reward_watch_ad')) {
         return;
       }
-      if (!mounted) return;
-
-      bool worked = false;
-
-      if (kIsWeb) {
-        worked = false; // AdMob không phát rewarded trên Web.
-      } else {
-        final navigator = Navigator.of(context);
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (ctx) => const Center(
-            child: CircularProgressIndicator(color: SLTheme.primary),
-          ),
+      if (!mounted || _auth.currentUser?.uid != uid) return;
+      final worked = await _adMob.showRewardedAd(verifiedPurpose: 'points');
+      if (!mounted || _auth.currentUser?.uid != uid) return;
+      if (!worked) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.tr('util_khngticqun_ce9d80'))),
         );
-        worked = await _adMob.showRewardedAd(verifiedPurpose: 'points');
-        if (mounted && navigator.canPop()) {
-          navigator.pop();
-        }
+        return;
       }
-
-      if (worked) {
-        final result = await _adMob.claimRewardedAdPoints();
-        if (!mounted) return;
-
-        if (!result.ok) {
-          scaffoldMessenger.showSnackBar(
-            SnackBar(content: Text(_rewardedAdFailureMessage(result))),
-          );
-          return;
-        }
-        _startAdCooldown();
-        _loadDailyAdCount();
-        final grantedPoints = result.granted > 0
-            ? result.granted
-            : AdMobService.rewardedMainPoints;
-        scaffoldMessenger.showSnackBar(
-          SnackBar(
-            content: Text(
-              L10nService()
-                  .translate('ad_reward_points_received')
-                  .replaceAll('{points}', '$grantedPoints'),
-            ),
+      _startAdCooldown();
+      final result = await _adMob.claimRewardedAdPoints();
+      if (!mounted || _auth.currentUser?.uid != uid) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            result.ok
+                ? context
+                      .tr('ad_reward_points_received')
+                      .replaceAll('{points}', '${result.granted}')
+                : _rewardedAdFailureMessage(result),
           ),
-        );
-      } else {
-        if (!mounted) return;
-        scaffoldMessenger.showSnackBar(
-          SnackBar(
-            content: Text(L10nService().translate('util_khngticqun_ce9d80')),
+        ),
+      );
+    } catch (error) {
+      if (!mounted || _auth.currentUser?.uid != uid) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppErrorMapper.resolve(
+              error,
+              fallbackMessage: context.tr('util_khngticqun_ce9d80'),
+            ).message,
           ),
-        );
-      }
+        ),
+      );
     } finally {
-      if (mounted) {
-        setState(() => _isWatchingAd = false);
-      }
+      if (mounted) setState(() => _isWatchingAd = false);
     }
   }
 
@@ -600,9 +513,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
     if (_isRedeeming) return;
     if (!AppConfig.isPurchaseEnabled) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Gói nâng cấp chưa khả dụng trên phiên bản này.'),
-        ),
+        SnackBar(content: Text(context.tr('p5_premium_unavailable'))),
       );
       return;
     }
@@ -659,7 +570,11 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       }
       if (result.ok) {
         scaffoldMessenger.showSnackBar(
-          SnackBar(content: Text('Đã đổi thành công ${plan.title}! 👑')),
+          SnackBar(
+            content: Text(
+              '${context.tr('reward_store_completed')} · ${plan.title}',
+            ),
+          ),
         );
       } else {
         debugPrint(
@@ -677,14 +592,15 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
   }
 
   String _buildInsufficientRedeemMessage(_RewardPlan plan, int currentPoints) {
-    return 'Điểm hiện tại của bạn là ${_formatPointAmount(currentPoints)}. '
-        'Cần ${_formatPointAmount(plan.points)} điểm để đổi ${plan.title}.';
+    return '${context.tr('not_enough_points')} · '
+        '${context.tr('reward_store_balance')}: ${_formatPointAmount(currentPoints)} / '
+        '${_formatPointAmount(plan.points)}';
   }
 
   String _redeemErrorMessage(_RewardPlan plan, RewardClaimResult result) {
     switch (result.error) {
       case 'not_enough_points':
-        return 'Bạn không đủ điểm để đổi ${plan.title}.';
+        return context.tr('not_enough_points');
       case 'points_sync_retry':
         return L10nService().translate('util_imvacngbli_8a0f32');
       case 'house_not_found':
@@ -701,415 +617,138 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       case 'invalid_plan':
         return L10nService().translate('util_giiimkhngh_64e725');
       default:
-        return 'Không thể đổi ${plan.title} lúc này. Hãy thử lại.';
+        return context.tr('util_khngktnicm_155696');
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: false,
-      appBar: SLTheme.appBar(
-        context,
-        L10nService().translate('util_cahngvtphm_a6a4f6'),
-        actions: [
-          StreamBuilder<int>(
-            stream: _pointsStream,
-            builder: (ctx, snapshot) {
-              final val = snapshot.data ?? 0;
-              return Container(
-                margin: const EdgeInsets.only(right: 15, top: 10, bottom: 10),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  borderRadius: SLRadius.pillAll,
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.45),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.stars_rounded,
-                      color: SLTheme.primary,
-                      size: 20,
-                    ),
-                    SLSpacing.w4,
-                    Text(
-                      '$val',
-                      style: SLTheme.quicksand(
-                        fontWeight: FontWeight.w900,
-                        color: SLTheme.textMain,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: _buildStoreBackground(
-        child: SafeArea(
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: const Color(0xFFFFF7F8),
+    appBar: SLTheme.appBar(context, context.tr('util_cahngvtphm_a6a4f6')),
+    body: SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
           child: StreamBuilder<int>(
             stream: _proUntilStream,
-            builder: (context, proSnapshot) {
-              final proUntil = proSnapshot.data ?? 0;
-              return StreamBuilder<int>(
-                stream: _pointsStream,
-                builder: (context, pointSnapshot) {
-                  final points = pointSnapshot.data ?? 0;
-                  return ListView(
-                    scrollCacheExtent: const ScrollCacheExtent.pixels(900.0),
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                    children: [
-                      _buildWatchAdCard(proUntil),
-                      SLSpacing.h20,
-                      _buildCheckinSection(),
-                      SLSpacing.h20,
-                      _buildStatusCard(points, proUntil),
-                      if (AppConfig.isPurchaseEnabled) ...[
-                        SLSpacing.h16,
-                        _buildProRedeemSection(points),
-                      ],
-                      SLSpacing.h20,
-                      _buildDailyQuestsCard(),
-                      if (kIsWeb)
-                        Container(
-                          padding: SLSpacing.all12,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.72),
-                            borderRadius: SLRadius.lgAll,
-                            border: Border.all(color: SLTheme.glassBorderThin),
-                          ),
-                          child: Text(
-                            L10nService().translate('util_trnlocalho_b7eee3'),
-                            style: SLTheme.quicksand(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: SLTheme.textMuted,
-                              height: 1.45,
-                            ),
-                          ),
-                        ),
+            builder: (context, proSnapshot) => StreamBuilder<int>(
+              stream: _pointsStream,
+              builder: (context, pointSnapshot) {
+                final proUntil = proSnapshot.data ?? 0;
+                final isPro =
+                    AppConfig.isPurchaseEnabled &&
+                    proUntil > DateTime.now().millisecondsSinceEpoch;
+                final status = proSnapshot.hasError
+                    ? context.tr('reward_store_error')
+                    : !proSnapshot.hasData
+                    ? context.tr('reward_store_loading')
+                    : !isPro
+                    ? context.tr('util_thng_c10b85')
+                    : DateTime.fromMillisecondsSinceEpoch(proUntil).year >= 9999
+                    ? context.tr('reward_store_pro_lifetime')
+                    : context
+                          .tr('reward_store_pro_until')
+                          .replaceAll('{date}', _formatDateTime(proUntil));
+                final points = pointSnapshot.data ?? 0;
+                return ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                  children: [
+                    RewardWalletCard(
+                      balance: pointSnapshot.hasError
+                          ? context.tr('reward_store_error')
+                          : pointSnapshot.hasData
+                          ? _formatPointAmount(points)
+                          : '—',
+                      status: status,
+                      streak: _streak,
+                    ),
+                    const SizedBox(height: 20),
+                    RewardCheckinCard(
+                      days: _checkinDays,
+                      loaded: _isCheckinLoaded,
+                      busy: _isCheckingIn,
+                      streak: _streak,
+                      onCheckin: _executeCheckin,
+                    ),
+                    const SizedBox(height: 24),
+                    StreamBuilder<Map<String, dynamic>>(
+                      key: ValueKey(_rewardDay),
+                      stream: _questsStream,
+                      builder: (context, snapshot) => RewardMissionsPanel(
+                        data: snapshot.data ?? const {},
+                        loading: !snapshot.hasData && !snapshot.hasError,
+                        hasError: snapshot.hasError,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildVideoCard(proSnapshot, isPro),
+                    if (AppConfig.isPurchaseEnabled &&
+                        pointSnapshot.hasData &&
+                        !pointSnapshot.hasError) ...[
+                      const SizedBox(height: 24),
+                      _buildProRedeemSection(points),
                     ],
-                  );
-                },
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStoreBackground({required Widget child}) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFFFF4E1), Color(0xFFFFE8F1), Color(0xFFF7E8FF)],
-        ),
-      ),
-      child: Stack(
-        children: [
-          const Positioned(
-            top: -72,
-            right: -48,
-            child: _StoreGlow(
-              size: 210,
-              color: Color(0xFFFFC85C),
-              opacity: 0.34,
-            ),
-          ),
-          const Positioned(
-            top: 128,
-            left: -80,
-            child: _StoreGlow(
-              size: 190,
-              color: Color(0xFFFF7BA8),
-              opacity: 0.22,
-            ),
-          ),
-          const Positioned(
-            bottom: -86,
-            right: -62,
-            child: _StoreGlow(
-              size: 240,
-              color: Color(0xFFB67CFF),
-              opacity: 0.18,
-            ),
-          ),
-          Positioned(
-            top: 28,
-            left: 24,
-            child: Icon(
-              Icons.local_mall_rounded,
-              size: 54,
-              color: Colors.white.withValues(alpha: 0.18),
-            ),
-          ),
-          Positioned(
-            top: 172,
-            right: 28,
-            child: Icon(
-              Icons.stars_rounded,
-              size: 42,
-              color: Colors.white.withValues(alpha: 0.22),
-            ),
-          ),
-          Positioned(
-            bottom: 118,
-            left: 34,
-            child: Icon(
-              Icons.redeem_rounded,
-              size: 48,
-              color: Colors.white.withValues(alpha: 0.18),
-            ),
-          ),
-          child,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusCard(int points, int proUntil) {
-    final isPro =
-        AppConfig.isPurchaseEnabled &&
-        proUntil > DateTime.now().millisecondsSinceEpoch;
-    return Container(
-      padding: SLSpacing.all16,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFF8FB), Color(0xFFFFEEF6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: SLRadius.xlAll,
-        border: Border.all(color: SLTheme.glassBorder),
-        boxShadow: SLTheme.cardShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: SLSpacing.all12,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFE2EF),
-                  borderRadius: SLRadius.lgAll,
-                ),
-                child: const Icon(
-                  Icons.card_giftcard_rounded,
-                  color: SLTheme.primary,
-                  size: 28,
-                ),
-              ),
-              SLSpacing.w12,
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      L10nService().translate('util_imquynli_2a770a'),
-                      style: SLTheme.quicksand(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: SLTheme.textMain,
-                      ),
-                    ),
-                    Text(
-                      isPro
-                          ? 'PRO đang hoạt động đến ${_formatDateTime(proUntil)}'
-                          : L10nService().translate('util_bnanggithn_6ed061'),
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: SLTheme.textMuted,
-                        height: 1.45,
-                      ),
-                    ),
                   ],
-                ),
-              ),
-            ],
-          ),
-          SLSpacing.h12,
-          Row(
-            children: [
-              Expanded(
-                child: _buildMiniStat(
-                  L10nService().translate('util_imhinc_915e21'),
-                  '${_formatPointAmount(points)} điểm',
-                ),
-              ),
-              SLSpacing.w8,
-              Expanded(
-                child: _buildMiniStat(
-                  L10nService().translate('util_trngthi_0fbc27'),
-                  isPro ? 'PRO' : L10nService().translate('util_thng_c10b85'),
-                  accent: isPro ? const Color(0xFF8E24AA) : SLTheme.primary,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMiniStat(String label, String value, {Color? accent}) {
-    final color = accent ?? SLTheme.primary;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.84),
-        borderRadius: SLRadius.lgAll,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: SLTheme.quicksand(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: SLTheme.textMuted,
+                );
+              },
             ),
           ),
-          SLSpacing.h4,
-          Text(
-            value,
-            style: SLTheme.quicksand(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: color,
-            ),
-          ),
-        ],
+        ),
       ),
-    );
-  }
+    ),
+  );
 
-  Widget _buildWatchAdCard(int proUntil) {
-    final isPro =
-        AppConfig.isPurchaseEnabled &&
-        proUntil > DateTime.now().millisecondsSinceEpoch;
-    final isLimitReached = _dailyAdCount >= _dailyAdLimit;
-
-    return Container(
-      padding: SLSpacing.all20,
-      decoration: BoxDecoration(
-        color: SLTheme.glassCardColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: SLTheme.glassBorder),
-        boxShadow: SLTheme.cardShadow,
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: SLSpacing.all16,
-                decoration: BoxDecoration(
-                  color: SLTheme.primary.withValues(alpha: 0.14),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.play_circle_filled,
-                  color: SLTheme.primary,
-                  size: 36,
-                ),
-              ),
-              SLSpacing.w16,
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      L10nService().translate('util_xemvideonh_dd1fb1'),
-                      style: SLTheme.quicksand(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: SLTheme.textMain,
-                      ),
-                    ),
-                    Text(
-                      isPro
-                          ? (AppConfig.isPurchaseEnabled
-                                ? L10nService().translate(
-                                    'util_tikhonnykh_357e73',
-                                  )
-                                : L10nService().translate(
-                                    'util_tikhonnykh_357e73',
-                                  ))
-                          : isLimitReached
-                          ? L10nService().translate('util_bntgiihnng_fd08ae')
-                          : 'Mỗi video +${AdMobService.rewardedMainPoints} điểm thưởng.',
-                      style: SLTheme.quicksand(
-                        color: SLTheme.textMuted,
-                        fontSize: 12,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SLBouncingButton(
-                child: SLTheme.primaryButton(
-                  label: isPro
-                      ? 'PRO'
-                      : isLimitReached
-                      ? L10nService().translate('util_hmnayri_46d3f2')
-                      : _isWatchingAd
-                      ? L10nService().translate('util_angm_112640')
-                      : 'Xem ngay',
-                  onPressed: isPro || _isWatchingAd || isLimitReached
-                      ? () {}
-                      : () => _watchAd(proUntil),
-                  width: 112,
-                ),
-              ),
-            ],
-          ),
-          if (!isPro && !isLimitReached)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: _dailyAdCount / _dailyAdLimit,
-                        minHeight: 6,
-                        backgroundColor: SLTheme.primary.withValues(alpha: 0.2),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          SLTheme.primary.withValues(alpha: 0.8),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    '$_dailyAdCount/$_dailyAdLimit',
-                    style: SLTheme.quicksand(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: SLTheme.textMuted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
+  Widget _buildVideoCard(AsyncSnapshot<int> proSnapshot, bool isPro) {
+    final seconds = _remainingAdCooldownSeconds();
+    final privacyAllowed = ConsentService.optionalCollectionAllowed.value;
+    final limitReached = _dailyAdCount >= _dailyAdLimit;
+    final unavailable =
+        !proSnapshot.hasData ||
+        proSnapshot.hasError ||
+        !_isAdRewardsLoaded ||
+        _adRewardsHasError;
+    final message = isPro
+        ? context.tr('reward_store_pro')
+        : kIsWeb
+        ? context.tr('reward_store_web')
+        : !privacyAllowed
+        ? context.tr('reward_store_consent')
+        : _adRewardsHasError || proSnapshot.hasError
+        ? context.tr('reward_store_error')
+        : unavailable
+        ? context.tr('reward_store_loading')
+        : limitReached
+        ? context.tr('util_bntgiihnng_fd08ae')
+        : null;
+    final label = _isWatchingAd
+        ? context.tr('util_angm_112640')
+        : seconds > 0
+        ? context.tr('reward_store_wait').replaceAll('{seconds}', '$seconds')
+        : limitReached
+        ? context
+              .tr('reward_store_ad_count')
+              .replaceAll('{count}', '$_dailyAdCount')
+              .replaceAll('{limit}', '$_dailyAdLimit')
+        : context
+              .tr('reward_store_watch')
+              .replaceAll('{points}', '${AdMobService.rewardedMainPoints}');
+    return RewardVideoCard(
+      count: _dailyAdCount,
+      limit: _dailyAdLimit,
+      points: AdMobService.rewardedMainPoints,
+      buttonLabel: label,
+      message: message,
+      busy: _isWatchingAd,
+      onWatch:
+          unavailable ||
+              isPro ||
+              kIsWeb ||
+              !privacyAllowed ||
+              limitReached ||
+              _isWatchingAd ||
+              seconds > 0
+          ? null
+          : () => _watchAd(proSnapshot.data!),
     );
   }
 
@@ -1192,367 +831,6 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildCheckinSection() {
-    final List<DateTime> last7Days = List.generate(
-      7,
-      (index) => DateTime.now().subtract(Duration(days: 6 - index)),
-    );
-
-    return Container(
-      padding: SLSpacing.all20,
-      decoration: BoxDecoration(
-        color: SLTheme.glassCardColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: SLTheme.glassBorder),
-        boxShadow: SLTheme.cardShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: SLSpacing.all12,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF0F7),
-                  borderRadius: SLRadius.lgAll,
-                ),
-                child: const Icon(
-                  Icons.calendar_month_rounded,
-                  color: SLTheme.primary,
-                  size: 28,
-                ),
-              ),
-              SLSpacing.w16,
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      L10nService().translate('util_imdanhhngn_d32a8b'),
-                      style: SLTheme.quicksand(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: SLTheme.textMain,
-                      ),
-                    ),
-                    Text(
-                      _checkedInToday
-                          ? 'Bạn đã điểm danh hôm nay! ✨\nChuỗi hiện tại: $_streak ngày'
-                          : L10nService().translate('util_imdanhngay_da87d4'),
-                      style: SLTheme.quicksand(
-                        color: SLTheme.textMuted,
-                        fontSize: 12,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SLSpacing.h16,
-          Text(
-            L10nService().translate('util_lchs7ngy_03e02e'),
-            style: SLTheme.quicksand(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: SLTheme.textMuted,
-            ),
-          ),
-          SLSpacing.h12,
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: last7Days.map((date) {
-              final key = _todayKey(date);
-              final checked = _checkinDays[key] == true;
-              final now = DateTime.now();
-              final isToday =
-                  date.day == now.day &&
-                  date.month == now.month &&
-                  date.year == now.year;
-
-              return Column(
-                children: [
-                  Text(
-                    isToday
-                        ? 'Nay'
-                        : 'T${date.weekday + 1 > 7 ? 1 : date.weekday + 1}',
-                    style: SLTheme.quicksand(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: isToday ? SLTheme.primary : SLTheme.textMuted,
-                    ),
-                  ),
-                  SLSpacing.h8,
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: checked
-                          ? const Color(0xFFEAFBF2)
-                          : Colors.white.withValues(alpha: 0.7),
-                      borderRadius: SLRadius.mdAll,
-                      border: Border.all(
-                        color: checked
-                            ? const Color(0xFF79D6A3)
-                            : SLTheme.outlineSoft,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Icon(
-                      checked ? Icons.check : Icons.close,
-                      color: checked
-                          ? const Color(0xFF2EA86B)
-                          : SLTheme.textLight,
-                      size: 18,
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
-          SLSpacing.h16,
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: (!_isCheckinLoaded || _checkedInToday || _isCheckingIn)
-                  ? null
-                  : _executeCheckin,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: SLTheme.primary,
-                disabledBackgroundColor: SLTheme.primary.withValues(
-                  alpha: 0.35,
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: SLRadius.pillAll),
-                elevation: 0,
-              ),
-              child: _isCheckingIn
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : Text(
-                      !_isCheckinLoaded
-                          ? L10nService().translate('util_angtiimdan_3fdaf8')
-                          : _checkedInToday
-                          ? L10nService().translate('util_imdanh_682dd9')
-                          : L10nService().translate('util_bmimdanh_d15143'),
-                      style: SLTheme.quicksand(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
-                    ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDailyQuestsCard() {
-    return StreamBuilder<Map<String, dynamic>>(
-      stream: _questsStream,
-      builder: (context, snapshot) {
-        final data = snapshot.data ?? {};
-
-        final quests = DailyQuestService.questsConfig.entries.map((e) {
-          final id = e.key;
-          final config = e.value;
-          final questData = data[id] is Map ? data[id] as Map : {};
-          final progress = (questData['progress'] as num?)?.toInt() ?? 0;
-          final done = questData['done'] == true;
-          final target = config['target'] as int;
-
-          return {
-            'id': id,
-            'title': config['title'],
-            'desc': config['desc'],
-            'points': config['points'],
-            'progress': '${progress > target ? target : progress}/$target',
-            'done': done,
-            'icon': config['icon'],
-          };
-        }).toList();
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              L10nService().translate('util_nhimvhngng_beafae'),
-              style: SLTheme.quicksand(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: SLTheme.textMain,
-              ),
-            ),
-            SLSpacing.h8,
-            Text(
-              L10nService().translate('util_honthnhccn_0999c5'),
-              style: SLTheme.quicksand(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: SLTheme.textMuted,
-              ),
-            ),
-            SLSpacing.h8,
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF4E5),
-                borderRadius: SLRadius.mdAll,
-                border: Border.all(color: const Color(0xFFFFD1DC)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.info_outline_rounded,
-                    size: 16,
-                    color: Color(0xFFD81B60),
-                  ),
-                  SLSpacing.w8,
-                  Expanded(
-                    child: Text(
-                      L10nService().translate('util_luc2philmc_8df71e'),
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFFD81B60),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SLSpacing.h12,
-            ...quests.map(
-              (q) => Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: SLTheme.glassBorderThin),
-                  boxShadow: SLShadow.subtle,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: SLColors.primaryLight,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        q['icon'] as String,
-                        style: const TextStyle(fontSize: 20),
-                      ),
-                    ),
-                    SLSpacing.w16,
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            q['title'] as String,
-                            style: SLTheme.quicksand(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: SLTheme.textMain,
-                            ),
-                          ),
-                          SLSpacing.h4,
-                          Text(
-                            q['desc'] as String,
-                            style: SLTheme.quicksand(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: SLTheme.textMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: SLColors.warningLight,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: SLColors.warningGold.withValues(
-                                alpha: 0.5,
-                              ),
-                            ),
-                          ),
-                          child: Text(
-                            '+${q['points']} ${L10nService().translate('util_im_4e6ac8')}',
-                            style: SLTheme.quicksand(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFFB45309),
-                            ),
-                          ),
-                        ),
-                        SLSpacing.h8,
-                        SizedBox(
-                          height: 28,
-                          child: FilledButton(
-                            onPressed: () {},
-                            style: FilledButton.styleFrom(
-                              backgroundColor: (q['done'] as bool)
-                                  ? const Color(
-                                      0xFF2EA86B,
-                                    ).withValues(alpha: 0.15)
-                                  : SLColors.primaryLight,
-                              foregroundColor: (q['done'] as bool)
-                                  ? const Color(0xFF2EA86B)
-                                  : SLTheme.primary,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            child: Text(
-                              (q['done'] as bool)
-                                  ? L10nService().translate(
-                                      'util_honthnh_eb889c',
-                                    )
-                                  : (q['progress'] as String),
-                              style: SLTheme.quicksand(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 
@@ -1667,7 +945,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                     SLSpacing.gapW(5),
                     Expanded(
                       child: Text(
-                        'Cần $planPointText điểm',
+                        context
+                            .tr('reward_store_points')
+                            .replaceAll('{points}', planPointText),
                         style: SLTheme.quicksand(
                           fontSize: compact ? 11.5 : 12,
                           fontWeight: FontWeight.w900,
@@ -1679,7 +959,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                       child: Text(
                         affordable
                             ? L10nService().translate('util_im_e5cb90')
-                            : 'Thiếu $missingPointText điểm',
+                            : context.tr('not_enough_points'),
                         textAlign: TextAlign.right,
                         style: SLTheme.quicksand(
                           fontSize: compact ? 10.5 : 11,
@@ -1694,7 +974,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                 ),
                 SLSpacing.gapH(3),
                 Text(
-                  'Bạn có $balancePointText điểm',
+                  '${context.tr('reward_store_balance')}: $balancePointText',
                   style: SLTheme.quicksand(
                     fontSize: compact ? 10.5 : 11,
                     fontWeight: FontWeight.w700,
@@ -1726,8 +1006,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                 fit: BoxFit.scaleDown,
                 child: Text(
                   affordable
-                      ? 'Đổi $planPointText điểm'
-                      : 'Thiếu $missingPointText điểm',
+                      ? '${context.tr('redeem')} · $planPointText'
+                      : '−$missingPointText',
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w900,
                     color: Colors.white,
@@ -1769,35 +1049,4 @@ class _RewardPlan {
     required this.points,
     required this.duration,
   });
-}
-
-class _StoreGlow extends StatelessWidget {
-  final double size;
-  final Color color;
-  final double opacity;
-
-  const _StoreGlow({
-    required this.size,
-    required this.color,
-    required this.opacity,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [
-              color.withValues(alpha: opacity),
-              color.withValues(alpha: 0),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }

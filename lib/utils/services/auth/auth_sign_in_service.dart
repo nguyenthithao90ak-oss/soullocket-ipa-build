@@ -1183,7 +1183,123 @@ class AuthSignInService {
     }
   }
 
-  Future<Map<String, dynamic>> deleteAccount() async {
+  Future<String> verifyAccountDeletionOtp(
+    String email,
+    String otp, {
+    required String expectedUid,
+    String? partnerUid,
+  }) async {
+    if (_auth.currentUser?.uid != expectedUid) {
+      throw AppErrorInfo(
+        kind: AppErrorKind.user,
+        message: AppErrorMapper.authSyncMessage,
+      );
+    }
+    final result = await _functions
+        .httpsCallable(
+          'verifyAccountDeletionOTP',
+          options: HttpsCallableOptions(timeout: const Duration(seconds: 15)),
+        )
+        .call<dynamic>({
+          'email': email,
+          'otp': otp,
+          'action': partnerUid == null ? 'request' : 'approve',
+          'targetUid': ?partnerUid,
+        })
+        .timeout(const Duration(seconds: 15));
+    if (_auth.currentUser?.uid != expectedUid) {
+      throw AppErrorInfo(
+        kind: AppErrorKind.user,
+        message: AppErrorMapper.authSyncMessage,
+      );
+    }
+    final data = result.data;
+    if (data is! Map ||
+        data['proof'] is! String ||
+        !RegExp(r'^[a-f0-9]{64}$').hasMatch(data['proof'] as String)) {
+      throw AppErrorInfo(
+        kind: AppErrorKind.server,
+        message: L10nService().translate('account_deletion_verify_again'),
+      );
+    }
+    return data['proof'] as String;
+  }
+
+  Future<int> approvePartnerDeletion({
+    required String partnerUid,
+    required String expectedUid,
+    required String verificationProof,
+  }) async {
+    final user = _auth.currentUser;
+    void checkIdentity() {
+      if (user == null ||
+          user.uid != expectedUid ||
+          _auth.currentUser?.uid != expectedUid ||
+          partnerUid == expectedUid ||
+          partnerUid.isEmpty) {
+        throw AppErrorInfo(
+          kind: AppErrorKind.user,
+          message: AppErrorMapper.authSyncMessage,
+        );
+      }
+    }
+
+    checkIdentity();
+    final token = await user!
+        .getIdToken(true)
+        .timeout(const Duration(seconds: 8));
+    if (token == null || token.isEmpty) {
+      throw AppErrorInfo(
+        kind: AppErrorKind.user,
+        message: AppErrorMapper.authSyncMessage,
+      );
+    }
+    final headers = await AppCheckHttpHeaders.withOptionalToken({
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    }).timeout(const Duration(seconds: 8));
+    checkIdentity();
+    final response = await _httpPost(
+      accountDeletionSiblingUri(
+        AppConfig.deleteAccountUrl,
+        'approvePartnerDeletionHttp',
+      ),
+      headers: headers,
+      body: jsonEncode({
+        'partnerUid': partnerUid,
+        'verificationProof': verificationProof,
+      }),
+    ).timeout(const Duration(seconds: 15));
+    checkIdentity();
+    if (response.statusCode != 200) {
+      throw accountDeletionError(response.body) ??
+          AppErrorInfo(
+            kind: AppErrorKind.server,
+            message: L10nService().translate(
+              'account_deletion_status_unavailable',
+            ),
+          );
+    }
+    final result = jsonDecode(response.body);
+    final date = result is Map ? result['scheduledAt'] : null;
+    if (result is! Map ||
+        result['ok'] != true ||
+        result['status'] != 'partner_approved' ||
+        date is! int ||
+        date <= 0 ||
+        date > 8640000000000000) {
+      throw AppErrorInfo(
+        kind: AppErrorKind.server,
+        message: L10nService().translate('account_deletion_status_unavailable'),
+      );
+    }
+    return date;
+  }
+
+  Future<Map<String, dynamic>> deleteAccount({
+    String? verificationProof,
+    String? expectedUid,
+  }) async {
     if (kIsWeb) {
       throw 'Tính năng xóa tài khoản không được hỗ trợ trên phiên bản Web. Vui lòng sử dụng ứng dụng di động để thực hiện thao tác này.';
     }
@@ -1193,6 +1309,13 @@ class AuthSignInService {
       throw 'Chưa cấu hình máy chủ xóa tài khoản.';
     }
     final user = _auth.currentUser;
+    if (verificationProof != null &&
+        (expectedUid == null || user?.uid != expectedUid)) {
+      throw AppErrorInfo(
+        kind: AppErrorKind.user,
+        message: AppErrorMapper.authSyncMessage,
+      );
+    }
     if (user == null) {
       throw 'Bạn chưa đăng nhập. Không thể xóa tài khoản.';
     }
@@ -1204,7 +1327,10 @@ class AuthSignInService {
     }
 
     try {
-      final result = await _deleteAccountFromServer(user);
+      final result = await _deleteAccountFromServer(
+        user,
+        verificationProof: verificationProof,
+      );
       if (kDebugMode) {
         debugPrint('deleteAccount(): success uid=${user.uid}');
       }
@@ -1221,7 +1347,10 @@ class AuthSignInService {
           debugPrint('deleteAccount(): reauth required, retrying once');
         }
         await _reauthenticateCurrentUserWithLinkedProvider(user);
-        final result = await _deleteAccountFromServer(user);
+        final result = await _deleteAccountFromServer(
+          user,
+          verificationProof: verificationProof,
+        );
         if (kDebugMode) {
           debugPrint('deleteAccount(): success after reauth uid=${user.uid}');
         }
@@ -1239,7 +1368,10 @@ class AuthSignInService {
           debugPrint('deleteAccount(): retrying after session error: $error');
         }
         await _reauthenticateCurrentUserWithLinkedProvider(user);
-        final result = await _deleteAccountFromServer(user);
+        final result = await _deleteAccountFromServer(
+          user,
+          verificationProof: verificationProof,
+        );
         if (kDebugMode) {
           debugPrint(
             'deleteAccount(): success after session retry uid=${user.uid}',
@@ -1717,8 +1849,9 @@ class AuthSignInService {
   }
 
   Future<Map<String, dynamic>> _deleteAccountFromServer(
-    firebase_auth.User user,
-  ) async {
+    firebase_auth.User user, {
+    String? verificationProof,
+  }) async {
     final endpoint = AppConfig.deleteAccountUrl.trim();
     if (endpoint.isEmpty) {
       throw 'Chưa cấu hình máy chủ xóa tài khoản.';
@@ -1742,14 +1875,31 @@ class AuthSignInService {
           '_deleteAccountFromServer(): endpoint=$endpoint deviceId=$deviceId',
         );
       }
+      final headers = await AppCheckHttpHeaders.withOptionalToken({
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $idToken',
+      });
+      if (_auth.currentUser?.uid != user.uid) {
+        throw AppErrorInfo(
+          kind: AppErrorKind.user,
+          message: AppErrorMapper.authSyncMessage,
+        );
+      }
       final response = await _httpPost(
         Uri.parse(endpoint),
-        headers: await AppCheckHttpHeaders.withOptionalToken({
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
+        headers: headers,
+        body: jsonEncode({
+          'source': 'flutter_app',
+          'deviceId': deviceId,
+          'verificationProof': ?verificationProof,
         }),
-        body: jsonEncode({'source': 'flutter_app', 'deviceId': deviceId}),
       ).timeout(const Duration(seconds: 20));
+      if (_auth.currentUser?.uid != user.uid) {
+        throw AppErrorInfo(
+          kind: AppErrorKind.user,
+          message: AppErrorMapper.authSyncMessage,
+        );
+      }
 
       if (kDebugMode) {
         debugPrint(

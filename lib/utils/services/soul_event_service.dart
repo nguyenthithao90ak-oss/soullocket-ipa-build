@@ -15,6 +15,8 @@ class SoulEventService {
   final _updateController = StreamController<String>.broadcast();
   final Random _random = Random();
 
+  Stream<String> get changes => _updateController.stream;
+
   Stream<List<SoulEvent>> streamEvents(String houseId) async* {
     yield await getEvents(houseId);
     await for (final _ in _updateController.stream.where(

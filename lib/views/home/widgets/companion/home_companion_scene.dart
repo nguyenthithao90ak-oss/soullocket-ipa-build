@@ -109,6 +109,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
 
   void _journeyChanged() {
     if (!mounted) return;
+    _cancelPetHold();
     final next = _journey?.state?.unlocked ?? <HomeCompanionCharacter>{};
     if (!setEquals(next, _characters)) {
       _characters = Set.of(next);
@@ -170,6 +171,12 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   bool _wardrobeOpen = false;
   bool _spriteHandledThisTap = false;
   bool _spriteGestureRejected = false;
+  HomeCompanionCharacter? _heldCharacter;
+  HomeCompanionCharacter? _pressedCharacter;
+  Offset? _petHoldOrigin;
+  Offset _petDragOffset = Offset.zero;
+  bool _petMoved = false;
+  final _pinnedPlacements = <HomeCompanionCharacter, Offset>{};
   late HomeCompanionAudio _audio;
   late final Ticker _ticker;
   final _paintKey = GlobalKey();
@@ -248,6 +255,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     _listen(oldWidget, false);
     _listen(widget, true);
     if (oldWidget.motion != widget.motion) {
+      _cancelPetHold();
       _ticker.stop();
       _traffic.dispose();
       _play.cancel();
@@ -271,6 +279,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   }
 
   bool get _canShow =>
+      mounted &&
       widget.enabled &&
       !_wardrobeOpen &&
       _foreground &&
@@ -327,9 +336,13 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   }
 
   void _sync() {
+    if (!mounted) return;
     final show = _canShow;
     final becameHidden = _visible.value && !show;
-    if (!show) _clearPointers();
+    if (!show) {
+      _cancelPetHold();
+      _clearPointers();
+    }
     if (!show || !widget.animate || _reduced) {
       _play.cancel();
       _guestPlay.cancel();
@@ -344,6 +357,8 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
         show &&
         widget.animate &&
         !_reduced &&
+        _heldCharacter == null &&
+        _pressedCharacter == null &&
         (widget.pinToViewport || _followingScroll || !_interactionPaused) &&
         _motion.hasSurfaces;
     _audio.setEnabled(
@@ -354,7 +369,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
           widget.soundEnabled &&
           !(widget.audioSuppressed?.value ?? false),
     );
-    _audio.setPaused(_interactionPaused);
+    _audio.setPaused(_interactionPaused || _heldCharacter != null);
     if (run && !_ticker.isActive) {
       _lastTick = Duration.zero;
       _ticker.start();
@@ -363,7 +378,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
       _lastTick = Duration.zero;
       // Giữ nguyên cả vị trí và độ cao cú nhảy khi người dùng chạm/giữ.
       // settle() ở đây sẽ làm bé rơi về mặt ô, trông như biến mất/chớp hình.
-      if (!show || !_interactionPaused) {
+      if (!show || (!_interactionPaused && _heldCharacter == null)) {
         _motion.settle();
         _buddy.settle();
         _kuromi.settle();
@@ -708,12 +723,117 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     }
   }
 
-  Future<void> _openWardrobe(Offset global) async {
-    final character = _spriteAt(global);
+  Offset? _contentPoint(Offset global) {
+    final box = _paintKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return null;
+    return box.globalToLocal(global) -
+        (widget.followScroll ? _paintOffset.value : Offset.zero);
+  }
+
+  void _startPetHold(LongPressStartDetails details) {
+    final character = _pressedCharacter;
+    final point = _contentPoint(details.globalPosition);
     if (character == null ||
-        _wardrobeOpen ||
+        point == null ||
         _spriteGestureRejected ||
         _downPointers.length != 1 ||
+        _localScrolling) {
+      return;
+    }
+    final pet = _motionFor(character);
+    final pose = _playFor(character).pose(character);
+    _heldCharacter = character;
+    _petHoldOrigin = details.globalPosition;
+    _petDragOffset =
+        pet.position +
+        pose.offset -
+        Offset(0, widget.animate && !_reduced ? pet.hopLift + pose.lift : 0) -
+        point;
+    _petMoved = false;
+    _spriteHandledThisTap = true;
+    _pendingApproach = null;
+    _pendingSprite = null;
+    _sync();
+  }
+
+  void _movePetHold(LongPressMoveUpdateDetails details) {
+    final character = _heldCharacter;
+    final origin = _petHoldOrigin;
+    if (character == null || origin == null || !_canShow) return;
+    final pet = _motionFor(character);
+    if (!_petMoved) {
+      if ((details.globalPosition - origin).distance <= kTouchSlop) return;
+      _play.cancel();
+      _guestPlay.cancel();
+      _socialPlay.cancel();
+      _pendingPlay = null;
+      _pendingGuestPlay = null;
+      _chase = null;
+      _meeting = null;
+      if (!pet.beginDrag()) return;
+      _petMoved = true;
+    }
+    final point = _contentPoint(details.globalPosition);
+    final box = _paintKey.currentContext?.findRenderObject();
+    if (point == null || box is! RenderBox || !box.hasSize) return;
+    final viewport = widget.safeInsets
+        .deflateRect(Offset.zero & box.size)
+        .shift(widget.followScroll ? -_paintOffset.value : Offset.zero);
+    if (viewport.isEmpty) return;
+    final feet = point + _petDragOffset;
+    pet.dragTo(
+      Offset(
+        feet.dx.clamp(viewport.left, viewport.right),
+        feet.dy.clamp(viewport.top, viewport.bottom),
+      ),
+    );
+  }
+
+  void _endPetHold(LongPressEndDetails details) {
+    final character = _heldCharacter;
+    if (character == null) return;
+    final moved = _petMoved;
+    final pet = _motionFor(character);
+    pet.endDrag(
+      canLand: (feet) {
+        final body = HomeCompanionTraffic.body(character, feet, 0);
+        return _characters.every(
+          (other) =>
+              other == character ||
+              !_motionFor(other).hasSurfaces ||
+              !body.overlaps(
+                HomeCompanionTraffic.body(
+                  other,
+                  _motionFor(other).position,
+                  _motionFor(other).hopLift,
+                ),
+              ),
+        );
+      },
+    );
+    if (moved && widget.pinToViewport) {
+      _pinnedPlacements[character] = pet.position;
+    }
+    _heldCharacter = null;
+    _petHoldOrigin = null;
+    _petMoved = false;
+    _sync();
+    _scheduleMeasure();
+    if (!moved) unawaited(_openWardrobe(character));
+  }
+
+  void _cancelPetHold() {
+    final character = _heldCharacter;
+    _heldCharacter = null;
+    _petHoldOrigin = null;
+    _petMoved = false;
+    if (character != null) _motionFor(character).endDrag(cancel: true);
+  }
+
+  Future<void> _openWardrobe(HomeCompanionCharacter character) async {
+    if (!_canShow ||
+        _wardrobeOpen ||
+        _spriteGestureRejected ||
         _localScrolling) {
       return;
     }
@@ -752,6 +872,8 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
 
   @override
   void didChangeMetrics() {
+    _cancelPetHold();
+    _sync();
     // Viewport đổi khi xoay máy/resize cửa sổ, kể cả child không rebuild.
     _scheduleMeasure();
   }
@@ -780,6 +902,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _measureScheduled = false;
       if (!mounted) return;
+      if (_heldCharacter != null) return;
       // Trong lúc kéo, giữ hình học hợp lệ gần nhất. Đo lại sau khi thả
       // thay vì liên tục xóa/đổi đường đi theo các ô đang lướt khỏi màn hình.
       if (widget.enabled &&
@@ -801,17 +924,24 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
         return;
       }
       if (widget.pinToViewport) {
-        _motion.setPinnedPosition(viewport.bottomRight, viewport);
+        _motion.setPinnedPosition(
+          _pinnedPlacements[HomeCompanionCharacter.bunny] ??
+              viewport.bottomRight,
+          viewport,
+        );
         _buddy.setPinnedPosition(
-          viewport.bottomRight - const Offset(56, 0),
+          _pinnedPlacements[HomeCompanionCharacter.bear] ??
+              viewport.bottomRight - const Offset(56, 0),
           viewport,
         );
         _kuromi.setPinnedPosition(
-          viewport.bottomRight - const Offset(112, 0),
+          _pinnedPlacements[HomeCompanionCharacter.kuromi] ??
+              viewport.bottomRight - const Offset(112, 0),
           viewport,
         );
         _melody.setPinnedPosition(
-          viewport.bottomRight - const Offset(168, 0),
+          _pinnedPlacements[HomeCompanionCharacter.melody] ??
+              viewport.bottomRight - const Offset(168, 0),
           viewport,
         );
         for (final character in HomeCompanionCharacter.values) {
@@ -952,6 +1082,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     _downPointers.add(event.pointer);
     if (_downPointers.length == 1) {
       _spriteGestureRejected = false;
+      _pressedCharacter = _spriteAt(event.position);
       _pointer = event.pointer;
       _pointerOrigin = event.position;
       _pointerStart = event.timeStamp;
@@ -963,6 +1094,8 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
         _dragged = true;
       });
     } else {
+      _cancelPetHold();
+      _pressedCharacter = null;
       _dragged = true;
       _spriteGestureRejected = true;
     }
@@ -970,11 +1103,14 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   }
 
   void _onPointerMove(PointerMoveEvent event) {
+    if (_heldCharacter != null) return;
     if (_pointer == event.pointer &&
         _pointerOrigin != null &&
         (event.position - _pointerOrigin!).distance > kTouchSlop) {
       _dragged = true;
       _spriteGestureRejected = true;
+      _pressedCharacter = null;
+      _sync();
     }
   }
 
@@ -1079,11 +1215,13 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     _pointer = null;
     _pointerOrigin = null;
     _pointerStart = null;
+    _pressedCharacter = null;
     _dragged = false;
   }
 
   @override
   void dispose() {
+    _cancelPetHold();
     _journey?.removeListener(_journeyChanged);
     _holdTimer?.cancel();
     _listen(widget, false);
@@ -1126,6 +1264,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
             onPointerMove: _onPointerMove,
             onPointerUp: _onPointerUp,
             onPointerCancel: (_) {
+              _cancelPetHold();
               _clearPointers();
               _sync();
               _scheduleMeasure();
@@ -1283,10 +1422,13 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
                           >(() => _CompanionHoldRecognizer(), (recognizer) {
                             recognizer.allowed = (position) =>
                                 _spriteAt(position) != null;
-                            recognizer.onLongPressStart = (details) =>
-                                unawaited(
-                                  _openWardrobe(details.globalPosition),
-                                );
+                            recognizer.onLongPressStart = _startPetHold;
+                            recognizer.onLongPressMoveUpdate = _movePetHold;
+                            recognizer.onLongPressEnd = _endPetHold;
+                            recognizer.onLongPressCancel = () {
+                              _cancelPetHold();
+                              _sync();
+                            };
                           }),
                     },
                   ),

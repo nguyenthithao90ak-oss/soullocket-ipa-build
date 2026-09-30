@@ -1047,12 +1047,14 @@ class _DiaryTabState extends State<DiaryTab>
     List<Map<String, dynamic>> allPhotos,
   ) {
     // Refresh signed URL cho item hiện tại trước khi mở viewer
-    unawaited(
-      _memoryController.ensureMemoryPhotoUrl(
-        houseId: _houseId ?? '',
-        item: initialItem,
-      ),
-    );
+    if (!PrivateMemoryLinkPolicy.isPrivate(initialItem)) {
+      unawaited(
+        _memoryController.ensureMemoryPhotoUrl(
+          houseId: _houseId ?? '',
+          item: initialItem,
+        ),
+      );
+    }
 
     final initialIndex = allPhotos.indexWhere(
       (photo) => photo['id'] == initialItem['id'],
@@ -1126,12 +1128,16 @@ class _DiaryTabState extends State<DiaryTab>
                                 isZoomedInNotifier.value = false;
                                 _warmMemoryViewerAroundIndex(allPhotos, index);
                                 // Refresh signed URL cho item mới
-                                unawaited(
-                                  _memoryController.ensureMemoryPhotoUrl(
-                                    houseId: _houseId ?? '',
-                                    item: allPhotos[index],
-                                  ),
-                                );
+                                if (!PrivateMemoryLinkPolicy.isPrivate(
+                                  allPhotos[index],
+                                )) {
+                                  unawaited(
+                                    _memoryController.ensureMemoryPhotoUrl(
+                                      houseId: _houseId ?? '',
+                                      item: allPhotos[index],
+                                    ),
+                                  );
+                                }
                               },
                               itemBuilder: (context, index) {
                                 return _MemoryViewerPage(
@@ -1621,9 +1627,9 @@ class _DiaryTabState extends State<DiaryTab>
 
   int _memoryThumbnailCacheWidth(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
-    return ((mediaQuery.size.width / 3) * mediaQuery.devicePixelRatio * 1.18)
-        .round()
-        .clamp(480, 1440);
+    return (((mediaQuery.size.width - 64) / 3) * mediaQuery.devicePixelRatio)
+        .ceil()
+        .clamp(240, 768);
   }
 
   int _postImageCacheWidth(BuildContext context) {

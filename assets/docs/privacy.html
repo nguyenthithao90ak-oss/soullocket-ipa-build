@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="referrer" content="no-referrer">
 <meta name="description" content="Cách SoulLocket xử lý dữ liệu tài khoản, không gian chung, nội dung riêng tư và các dịch vụ tích hợp. Hãy đọc phần chia sẻ và xóa dữ liệu trước khi ghép nối hoặc đưa nội dung nhạy cảm lên ứng dụng.">
-<meta name="soullocket-document-version" content="2026-09-09">
+<meta name="soullocket-document-version" content="2026-09-28">
 <title>Chính sách bảo mật SoulLocket</title>
 <style>
 :root{color-scheme:light;--ink:#30292d;--muted:#6d6067;--accent:#a13e5c;--line:#eadde2;--paper:#fff;--bg:#faf6f7}
@@ -40,7 +40,7 @@ textarea{resize:vertical;min-height:110px}.checkbox{display:flex;gap:12px;align-
 <body>
 <a class="skip" href="#noi-dung-chinh">Đến nội dung chính</a>
 <main class="page" id="noi-dung-chinh">
-<header><div class="brand">SoulLocket · Tài liệu và hỗ trợ</div><h1>Chính sách bảo mật SoulLocket</h1><p>Cách SoulLocket xử lý dữ liệu tài khoản, không gian chung, nội dung riêng tư và các dịch vụ tích hợp. Hãy đọc phần chia sẻ và xóa dữ liệu trước khi ghép nối hoặc đưa nội dung nhạy cảm lên ứng dụng.</p><p class="meta">Cập nhật nội dung: <time datetime="2026-09-09">09/09/2026</time> · Phiên bản tài liệu 2026-09-09</p><nav aria-label="Ngôn ngữ tài liệu"><span lang="vi" aria-current="page">Tiếng Việt</span><a href="privacy-en.html" lang="en" hreflang="en">English</a></nav><nav aria-label="Mục lục"><a href="#pham-vi">1. Phạm vi và đơn vị vận hành</a>
+<header><div class="brand">SoulLocket · Tài liệu và hỗ trợ</div><h1>Chính sách bảo mật SoulLocket</h1><p>Cách SoulLocket xử lý dữ liệu tài khoản, không gian chung, nội dung riêng tư và các dịch vụ tích hợp. Hãy đọc phần chia sẻ và xóa dữ liệu trước khi ghép nối hoặc đưa nội dung nhạy cảm lên ứng dụng.</p><p class="meta">Cập nhật nội dung: <time datetime="2026-09-28">28/09/2026</time> · Phiên bản tài liệu 2026-09-28</p><nav aria-label="Ngôn ngữ tài liệu"><span lang="vi" aria-current="page">Tiếng Việt</span><a href="privacy-en.html" lang="en" hreflang="en">English</a></nav><nav aria-label="Mục lục"><a href="#tom-tat">Tóm tắt dễ hiểu</a><a href="#pham-vi">1. Phạm vi và đơn vị vận hành</a>
 <a href="#thu-thap">2. Dữ liệu và mục đích xử lý</a>
 <a href="#chia-se">3. Ai có thể nhận hoặc xem dữ liệu</a>
 <a href="#co-so">4. Cơ sở, lựa chọn và nơi xử lý</a>
@@ -50,8 +50,16 @@ textarea{resize:vertical;min-height:110px}.checkbox{display:flex;gap:12px;align-
 <a href="#tre-em">8. Trẻ em và an toàn cá nhân</a>
 <a href="#cap-nhat">9. Cập nhật và tài liệu liên quan</a></nav></header>
 
-<section id="pham-vi"><h2>1. Phạm vi và đơn vị vận hành</h2>
-<p>Chính sách áp dụng cho ứng dụng SoulLocket, các trang web của dự án và kênh hỗ trợ liên quan. “Chúng tôi” là nhóm vận hành SoulLocket. Đầu mối tiếp nhận yêu cầu về dữ liệu: <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a>.</p>
+<section id="tom-tat"><h2>Những điều cần biết trước khi dùng</h2><ul>
+<li><strong>Người chịu trách nhiệm vận hành SoulLocket:</strong> Trương Việt Hoàng.</li>
+<li><strong>Tên trên cửa hàng:</strong> tên nhà phát triển hiển thị trên Google Play là NGUYỄN THỊ THẠO, trên App Store là THAO NGUYEN THI. Tài liệu này chưa công bố tên pháp nhân doanh nghiệp hoặc mã đăng ký công ty; không nên hiểu tên ứng dụng là chứng nhận một công ty đã được xác minh.</li>
+<li><strong>Dữ liệu chia sẻ:</strong> một số dữ liệu được chuyển đến Google/Firebase, Cloudflare, dịch vụ quảng cáo, bản đồ, thanh toán hoặc AI khi tính năng tương ứng hoạt động. Người cùng House hoặc người nhận liên kết cũng có thể xem nội dung bạn chia sẻ. Xem <a href="#chia-se">phạm vi và bên nhận</a>.</li>
+<li><strong>Mã hóa:</strong> ứng dụng không cung cấp cam kết mã hóa đầu cuối (E2EE) cho nhật ký, chat và ảnh. PIN/sinh trắc học là khóa truy cập trên thiết bị, không ngăn tuyệt đối khả năng xử lý dữ liệu trên máy chủ. Đừng lưu nội dung quá nhạy cảm nếu bạn cần mức bảo vệ E2EE.</li>
+<li><strong>Ảnh và nhật ký:</strong> nội dung đồng bộ có thể lưu trên Firebase/Cloudflare R2 thay vì chỉ nằm trên máy của bạn.</li>
+<li><strong>Xóa dữ liệu:</strong> gỡ app hoặc đăng xuất không xóa dữ liệu trên máy chủ. <a href="delete-account.html">Yêu cầu xóa tài khoản</a> có thời gian chờ và hiện chưa bảo đảm tự xóa mọi media R2, dữ liệu House chung hay bản sao người khác đã lưu.</li>
+</ul><p class="small">Các thông tin trên mô tả giới hạn hiện tại, không phải đánh giá độc lập rằng ứng dụng an toàn tuyệt đối hay không an toàn tuyệt đối.</p></section>
+<section id="pham-vi"><h2>1. Phạm vi và đơn vị vận hành</h2><p><strong>Người chịu trách nhiệm vận hành SoulLocket:</strong> Trương Việt Hoàng.</p>
+<p>Chính sách áp dụng cho ứng dụng SoulLocket, các trang web của dự án và kênh hỗ trợ liên quan. “Chúng tôi” là nhóm vận hành SoulLocket. Tên nhà phát triển hiển thị trên cửa hàng ứng dụng được nêu ở phần tóm tắt; chính sách không tự xác nhận tư cách pháp nhân. Đầu mối tiếp nhận yêu cầu về dữ liệu: <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a>.</p>
 <p>Những tính năng được mô tả có thể khác nhau theo nền tảng, bản phát hành và cấu hình. Dữ liệu kỹ thuật phục vụ đăng nhập, an toàn, chẩn đoán hoặc SDK có thể phát sinh khi ứng dụng hoạt động; không phải mọi dữ liệu đều chờ bạn nhấn nút tải lên.</p></section>
 <section id="thu-thap"><h2>2. Dữ liệu và mục đích xử lý</h2>
 <h3>Tài khoản và bảo vệ truy cập</h3><p>Email, mã tài khoản (UID), tên và ảnh hồ sơ, phương thức đăng nhập, phiên xác thực, thông tin thiết bị và token thông báo được dùng để đăng nhập, khôi phục tài khoản, gửi thông báo và quản lý quyền truy cập. Các phương thức đăng nhập bên thứ ba như Google hoặc Facebook chỉ áp dụng khi được cung cấp và bạn chọn sử dụng.</p>

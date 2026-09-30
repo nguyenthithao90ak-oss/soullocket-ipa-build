@@ -17,11 +17,10 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
       final leaderboard = _decodeLeaderboard(prefs.getString(_leaderboardKey));
       final houseId = await _houseService.getCurrentHouseId();
       final isPremiumUser = await _readPremiumStatus();
-      final memoryBurstGallery = _decodeMemoryBurstGallery(
-        prefs.getString(_memoryBurstGalleryKeyFor(houseId)),
-      );
+      await prefs.remove(_memoryBurstGalleryKeyFor(houseId));
       final _PreparedSoulRun? savedRun = _decodeSavedRun(
         prefs.getString(_savedRunKey),
+        houseId: houseId,
       );
       final _PreparedSoulRun preparedMenuRun = savedRun ?? _prepareFreshRun();
       final autoTrayShuffleEnabled =
@@ -39,11 +38,13 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
       setState(() {
         _bestScore = max(_bestScore, bestScore);
         _soundEnabled = soundEnabled;
+        _audioSettingsLoaded = true;
         _vibrationEnabled = vibrationEnabled;
         _smoothGraphics = smoothGraphics;
         _leaderboard = leaderboard;
         _houseId = houseId;
-        _memoryBurstGallery = memoryBurstGallery;
+        _photoUnavailable = houseId == null;
+
         _preparedMenuRun = savedRun == null ? preparedMenuRun : null;
         _autoTrayShuffleEnabled = autoTrayShuffleEnabled;
         _isPremiumUser = isPremiumUser;
@@ -58,7 +59,10 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
           }
           _recommendedMove = savedRun.recommendedMove;
           _currentSessionId = savedRun.sessionId;
-          _isGameOver = false;
+          // Một snapshot Game Over vẫn được khôi phục để người chơi còn
+          // thấy nút hồi sinh và số lượt quảng cáo còn lại.
+          _isGameOver = savedRun.recommendedMove == null;
+          _isResolvingGameOver = false;
           _isBusy = false;
           _isReviving = false;
           _isRestarting = false;
@@ -71,12 +75,9 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
       if (storedAutoTrayShuffleEnabled && !autoTrayShuffleEnabled) {
         unawaited(_persistSetting(_autoTrayShuffleEnabledKey, false));
       }
-      if (memoryBurstGallery.isNotEmpty) {
-        unawaited(_warmMemoryBurstImages(memoryBurstGallery));
-      }
       unawaited(_syncBgmWithSound());
       if (houseId != null && houseId.trim().isNotEmpty) {
-        unawaited(_refreshMemoryBurstGallery(houseId));
+        unawaited(_loadDiaryPhoto());
       }
     } catch (_) {
       await splashDelay;

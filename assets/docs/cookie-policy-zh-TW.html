@@ -1,0 +1,60 @@
+<!DOCTYPE html><html lang="zh-TW" dir="ltr"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="將服務所需的儲存與測量、廣告和隱私選擇區分開來。本文檔涵蓋裝置、網路和嵌入式內容上的 SoulLocket。">
+<meta name="soullocket-document-version" content="2026-09-28">
+<title>Cookie 和本地儲存策略</title>
+<style>
+:root{color-scheme:light;--ink:#30292d;--muted:#6d6067;--accent:#a13e5c;--line:#eadde2;--paper:#fff;--bg:#faf6f7}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 system-ui,-apple-system,"Segoe UI",sans-serif;overflow-wrap:anywhere}
+.page{max-width:880px;margin:auto;padding:28px 24px 56px}
+header,section,footer{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;margin:0 0 18px}
+.brand{font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:750;color:var(--accent)}
+h1{font-size:clamp(26px,5vw,36px);line-height:1.25;margin:12px 0 16px;letter-spacing:-.025em}
+h2{font-size:21px;line-height:1.4;margin:0 0 14px}h3{font-size:17px;margin:22px 0 10px}
+p{margin:0 0 14px}p:last-child,ul:last-child,ol:last-child{margin-bottom:0}
+.meta,.small{font-size:14px;color:var(--muted)}ul,ol{padding-left:24px;margin:10px 0 16px}li{margin:7px 0}
+a{color:var(--accent);text-underline-offset:3px}a:hover{text-decoration-thickness:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #7943ab;outline-offset:4px}
+nav{display:flex;flex-wrap:wrap;gap:10px 20px;margin:20px 0 0}nav a{font-size:14px}
+.note,.warning{padding:16px 18px;border-radius:10px;margin:16px 0;border-left:4px solid var(--accent);background:#fcf0f4}
+.warning{border-color:#a7641a;background:#fff6e8}.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}
+th{background:#faf5f7}button,.button{display:inline-block;padding:12px 18px;background:var(--accent);color:white;border:0;border-radius:10px;font:inherit;font-weight:650;cursor:pointer;text-decoration:none}
+button:disabled{opacity:.6;cursor:wait}label{display:block;font-weight:650;margin:16px 0 6px}
+input:not([type=checkbox]),textarea{width:100%;padding:12px;font:inherit;color:inherit;background:white;border:1px solid #a99aa2;border-radius:8px}
+textarea{resize:vertical;min-height:110px}.checkbox{display:flex;gap:12px;align-items:flex-start;margin:20px 0}
+.checkbox input{flex-shrink:0;width:20px;height:20px;margin-top:5px}.checkbox label{font-weight:400;margin:0}
+.status{display:none;padding:16px;margin-top:16px;border-radius:10px}.status.success{display:block;background:#eaf7ef;color:#245635}.status.error{display:block;background:#fff0f0;color:#96323c}
+.skip{position:absolute;top:-100px;left:16px;background:white;padding:12px;z-index:10}.skip:focus{top:10px}
+@media(max-width:560px){.page{padding:16px 12px 32px}header,section,footer{padding:20px 18px;border-radius:14px}th,td{padding:10px 8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{body{background:white}.page{max-width:none;padding:0}header,section,footer{border:0;padding:12px 0}nav,.skip,form{display:none}h2,h3{break-after:avoid}}
+</style>
+</head>
+<body>
+<a class="skip" href="#noi-dung-chinh">跳至主要內容</a>
+<main class="page" id="noi-dung-chinh">
+<header><div class="brand">SoulLocket · 文件和支持</div><h1>Cookie 和本地儲存策略</h1><p>將服務所需的儲存與測量、廣告和隱私選擇區分開來。本文檔涵蓋裝置、網路和嵌入式內容上的 SoulLocket。</p><p class="meta">更新內容： <time datetime="2026-09-28">2026 年 9 月 28 日</time> · 文件版本2026-09-28</p><nav aria-label="文件語言"><a href="cookie-policy.html" lang="vi" hreflang="vi">Tiếng Việt</a><a href="cookie-policy-en.html" lang="en" hreflang="en">English</a><a href="cookie-policy-de.html" lang="de" hreflang="de">Deutsch</a><a href="cookie-policy-fr.html" lang="fr" hreflang="fr">Français</a><a href="cookie-policy-es.html" lang="es" hreflang="es">Español</a><a href="cookie-policy-it.html" lang="it" hreflang="it">Italiano</a><a href="cookie-policy-pt.html" lang="pt" hreflang="pt">Português</a><a href="cookie-policy-ru.html" lang="ru" hreflang="ru">Русский</a><a href="cookie-policy-ja.html" lang="ja" hreflang="ja">日本語</a><a href="cookie-policy-ko.html" lang="ko" hreflang="ko">한국어</a><a href="cookie-policy-zh.html" lang="zh" hreflang="zh">简体中文</a><span lang="zh-TW" aria-current="page">繁體中文</span><a href="cookie-policy-th.html" lang="th" hreflang="th">ไทย</a><a href="cookie-policy-id.html" lang="id" hreflang="id">Bahasa Indonesia</a><a href="cookie-policy-ms.html" lang="ms" hreflang="ms">Bahasa Melayu</a><a href="cookie-policy-ar.html" lang="ar" hreflang="ar">العربية</a><a href="cookie-policy-hi.html" lang="hi" hreflang="hi">हिन्दी</a><a href="cookie-policy-nl.html" lang="nl" hreflang="nl">Nederlands</a><a href="cookie-policy-pl.html" lang="pl" hreflang="pl">Polski</a><a href="cookie-policy-tr.html" lang="tr" hreflang="tr">Türkçe</a><a href="cookie-policy-tl.html" lang="tl" hreflang="tl">Filipino</a></nav><p class="small">文件版本 2026-09-28 的翻譯。如果任何措辭不清楚或不同語言之間存在差異，請聯繫支援人員。</p><nav aria-label="內容"><a href="#khai-niem">1. 使用的技術</a>
+<a href="#phan-loai">2. 儲存資料的類別</a>
+<a href="#lua-chon">3.「基本」與「全部」目前的意義</a>
+<a href="#ben-thu-ba">4. 相關供應商</a>
+<a href="#quan-ly">5. 管理和撤銷選擇</a>
+<a href="#luu-tru">6. 清除資料的保留和影響</a>
+<a href="#cap-nhat">7. 更新及聯絡方式</a></nav></header>
+
+<section id="khai-niem"><h2>1. 使用的技術</h2><p>網路可能使用 cookie、localStorage、sessionStorage 和 IndexedDB。該應用程式使用 SharedPreferences、安全身份驗證儲存、本機資料庫和映像/檔案快取。這些 cookie 並不都是同一類型，但它們都可能在您的裝置上儲存資料。</p><p>這些政策頁面不嵌入廣告或分析程式碼。帳戶刪除表單僅在您提交時才會傳送資料；主應用程式和其他內容頁面具有單獨的處理行為。</p></section>
+<section id="phan-loai"><h2>2. 儲存資料的類別</h2><div class="table-wrap"><table><thead><tr><th>類別</th><th>目的和範例</th></tr></thead><tbody><tr><td>身份驗證和安全</td><td>登入會話、令牌、裝置狀態和法律選擇有助於維護和保護存取。</td></tr><tr><td>您的設定</td><td>語言、外觀、選項卡、鎖定或顯示配置；即使您選擇“基本”，這些選項也可能會被儲存。</td></tr><tr><td>資料和快取</td><td>草稿、同步佇列、下載的圖像/檔案和本機資料庫可能包含私有內容；他們不會自動匿名。</td></tr><tr><td>診斷/測量</td><td>Firebase Analytics 和 Crashlytics 可能會根據其整合來處理事件、裝置資訊、錯誤和技術識別碼。</td></tr><tr><td>廣告和交易</td><td>廣告同意狀態、廣告識別碼、互動、購買或獎勵驗證令牌；並非所有廣告活動都應歸類為必要儲存。</td></tr></tbody></table></div></section>
+<section id="lua-chon"><h2>3.「必需」和「全部」是什麼意思</h2><p>在新的整合中，「Essential」會停用 Analytics/Crashlytics 收集並阻止廣告初始化和透過應用程式載入。 「全部」允許這些可選 SDK；廣告仍必須獲得 Google UMP 的允許並遵循作業系統權限。應用程式記錄裝置上的選擇、時間和文件版本；沒有版本的遺留選擇需要再次確認。</p><p>提款會阻止新請求並刪除應用程式中載入的廣告；它無法呼叫已傳送的資料或已進行的連線。原生 SDK 可能會在本機儲存崩潰報告；該應用程式請求在啟用收集之前刪除未發送的報告。較舊的應用程式版本可能不包含這些控制項。</p><div class="warning">「基本」不會關閉登入、同步、交易、系統安全或每個第三方連線。它不會取代敏感資料權限、作業系統權限或單獨的廣告同意。</div></section>
+<section id="ben-thu-ba"><h2>4. 相關供應商</h2><p>Firebase/Google 登入、用於登入的 Facebook、Google 行動廣告/AdMob、支付平台、地圖服務和 Cloudflare 基礎架構可能會使用令牌、快取或技術狀態來實現其功能。嵌入的內容、字體和外部文件在載入時可以連接到提供者。</p><p>資料類別、用途和共享範圍描述於 <a href="privacy-zh-TW.html">隱私權政策</a>。提供者的政策不能取代 SoulLocket 的整合責任。</p></section>
+<section id="quan-ly"><h2>5. 管理和撤銷選擇</h2><ul><li>開啟設定 → 隱私選項，在「基本」和「全部」之間切換。選擇「基本」可撤回對選用 SDK 群組的權限，而不清除應用程式資料。廣告隱私權選擇會開啟 Google UMP 選擇（如果適用）。</li><li>在作業系統設定中管理位置、攝影機、麥克風、通知、健康狀況和廣告/追蹤權限。可用的控制項因設備而異。</li><li>使用瀏覽器的隱私設定來檢查/刪除網站資料。阻止重要資料可能會結束您的登入工作階段或中斷功能。</li><li>當介面缺乏所需的操作時，請聯絡支援人員以了解隱私權。清除應用程式資料不得被視為撤回同意的唯一方法。</li></ul></section>
+<section id="luu-tru"><h2>6. 清除資料的保留和影響</h2><p>會話資料可能會在會話結束時過期；首選項和本機資料庫可能會保留，直到您清除應用程式/網站資料。快取有自己的生命週期，可以再次下載。註銷並不保證刪除所有快取、下載或裝置備份。</p><p><strong>在清除儲存之前匯出或同步未儲存的資料。</strong> 卸載應用程式、刪除 cookie 或停用權限不會刪除您的帳戶、伺服器資料或訂閱。請參閱 <a href="delete-account-zh-TW.html">帳戶和資料刪除指南</a>.</p></section>
+<section id="cap-nhat"><h2>7. 更新及聯絡方式</h2><p>當儲存機制、SDK或選擇發生變化時，本文檔需要相應更新。將問題發送至 <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a>，包括平台和應用程式版本；請勿發送密碼、PIN 碼或一次性代碼。</p></section>
+<footer><h2>SoulLocket 文件</h2><nav aria-label="相關文件"><a href="about-zh-TW.html">關於</a><a href="huong_dan-zh-TW.html">使用者指南</a><a href="huong_dan_cai_dat_lan_dau-zh-TW.html">首次設定</a><a href="privacy-zh-TW.html">隱私</a><a href="terms-zh-TW.html">使用條款</a><a href="cookie-policy-zh-TW.html">Cookie</a><a href="delete-account-zh-TW.html">刪除帳戶</a><a href="support-zh-TW.html">支援</a></nav><p class="small">隱私和支援： <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p></footer>
+</main>
+
+
+</body></html>

@@ -371,6 +371,7 @@ class DiaryMemoryController extends ChangeNotifier {
     }
     _currentHouseId = normalized;
     _mediaScopeGeneration++;
+    _privateMediaUrlService.clear();
     _pendingUrlResolves.clear();
     _pendingFiles.clear();
     _stagedUploads.clear();
@@ -687,7 +688,8 @@ class DiaryMemoryController extends ChangeNotifier {
     }
 
     final requestKey = '$uid/$houseId/$memoryId';
-    final future = _pendingUrlResolves[requestKey] ??
+    final future =
+        _pendingUrlResolves[requestKey] ??
         _privateMediaUrlService.resolve(
           houseId: houseId,
           mediaId: memoryId,
@@ -1239,17 +1241,27 @@ class DiaryMemoryController extends ChangeNotifier {
       final houseId = _currentHouseId;
       final generation = _mediaScopeGeneration;
       final uid = FirebaseAuth.instance.currentUser?.uid;
-      bool current() => !_isDisposed && context.mounted &&
-          generation == _mediaScopeGeneration && _currentHouseId == houseId &&
-          uid != null && FirebaseAuth.instance.currentUser?.uid == uid;
+      bool current() =>
+          !_isDisposed &&
+          context.mounted &&
+          generation == _mediaScopeGeneration &&
+          _currentHouseId == houseId &&
+          uid != null &&
+          FirebaseAuth.instance.currentUser?.uid == uid;
       if (houseId == null || !current()) return;
       for (final item in _selectedMemories.values.toList()) {
         final downloaded = await _storageService.downloadPrivateMemory(
-          houseId: houseId, memoryId: item['id']?.toString() ?? '', scopeIsCurrent: current,
+          houseId: houseId,
+          memoryId: item['id']?.toString() ?? '',
+          scopeIsCurrent: current,
         );
         if (!current()) return;
         if (downloaded.bytes.isNotEmpty) {
-          await _saveMemoryBytesToGallery(downloaded.bytes, url: downloaded.url, index: i);
+          await _saveMemoryBytesToGallery(
+            downloaded.bytes,
+            url: downloaded.url,
+            index: i,
+          );
           savedCount++;
         }
         i++;
@@ -1310,16 +1322,26 @@ class DiaryMemoryController extends ChangeNotifier {
       final houseId = _currentHouseId;
       final generation = _mediaScopeGeneration;
       final uid = FirebaseAuth.instance.currentUser?.uid;
-      bool current() => !_isDisposed && context.mounted &&
-          generation == _mediaScopeGeneration && _currentHouseId == houseId &&
-          uid != null && FirebaseAuth.instance.currentUser?.uid == uid;
+      bool current() =>
+          !_isDisposed &&
+          context.mounted &&
+          generation == _mediaScopeGeneration &&
+          _currentHouseId == houseId &&
+          uid != null &&
+          FirebaseAuth.instance.currentUser?.uid == uid;
       if (houseId == null || !current()) return;
       final downloaded = await _storageService.downloadPrivateMemory(
-        houseId: houseId, memoryId: item['id']?.toString() ?? '', scopeIsCurrent: current,
+        houseId: houseId,
+        memoryId: item['id']?.toString() ?? '',
+        scopeIsCurrent: current,
       );
       if (!current()) return;
       if (downloaded.bytes.isNotEmpty) {
-        await _saveMemoryBytesToGallery(downloaded.bytes, url: downloaded.url, index: 0);
+        await _saveMemoryBytesToGallery(
+          downloaded.bytes,
+          url: downloaded.url,
+          index: 0,
+        );
         if (!context.mounted) {
           return;
         }
@@ -1424,7 +1446,8 @@ class DiaryMemoryController extends ChangeNotifier {
           errorText.contains('not-found') ||
           errorText.contains('NOT_FOUND') ||
           errorText.contains(L10nService().translate('home_khngtmthyn_b3a1a6'));
-      if (isNotFound && memoryId.isNotEmpty &&
+      if (isNotFound &&
+          memoryId.isNotEmpty &&
           PrivateMemoryLifecyclePolicy.allowsLegacyFallback(
             privateUploadEnabled: AppConfig.privateMemoryUploadEnabled,
             records: [item],
@@ -1889,14 +1912,19 @@ class DiaryMemoryController extends ChangeNotifier {
               }
               if (staged == null) {
                 final random = Random.secure();
-                final requestId = List.generate(16,
-                  (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
+                final requestId = List.generate(
+                  16,
+                  (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+                ).join();
                 staged = {'privateRequestId': requestId};
                 _stagedUploads[path] = staged;
               }
               // Bắt buộc durable ID trước cả create session và PUT. Retry kể cả
               // sau restart dùng lại ID này, không lưu bearer URL vào journal.
-              await _savePendingUploadState(houseId: houseId, paths: _pendingUploadPaths);
+              await _savePendingUploadState(
+                houseId: houseId,
+                paths: _pendingUploadPaths,
+              );
               if (!scopeIsCurrent()) break;
               await _storageService.uploadPrivateMemory(
                 houseId: houseId,
@@ -2131,6 +2159,7 @@ class DiaryMemoryController extends ChangeNotifier {
   @override
   void dispose() {
     _isDisposed = true;
+    _privateMediaUrlService.dispose();
     selectionTickVN.dispose();
     super.dispose();
   }

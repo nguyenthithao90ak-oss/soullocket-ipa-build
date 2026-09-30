@@ -1,17 +1,7 @@
 part of '../soul_block_game.dart';
 
 const LinearGradient _kSoulSplashProgressGradient = LinearGradient(
-  colors: <Color>[
-    Color(0x00FFD978),
-    Color(0xFFFF8E53),
-    Color(0xFFFF5FA2),
-    Color(0xFF7C7BFF),
-    Color(0xFF53E0FF),
-    Color(0x00FFD978),
-  ],
-  stops: <double>[0, 0.14, 0.34, 0.58, 0.84, 1],
-  begin: Alignment.centerLeft,
-  end: Alignment.centerRight,
+  colors: [Color(0x00C3B6F6), _kSoulChrome, _kSoulWarm, Color(0x00E9C9A2)],
 );
 
 const List<double> _kMemoryBurstSparkleAngles = <double>[
@@ -28,174 +18,79 @@ const Offset _kExplosionOrigin = Offset.zero;
 extension _SoulBlockPanels on _SoulBlockGameState {
   Widget _buildSplashScreen() {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: TweenAnimationBuilder<double>(
-          tween: Tween<double>(begin: 0, end: 1),
-          duration: const Duration(milliseconds: 420),
-          curve: Curves.easeOutCubic,
-          builder: (context, value, child) {
-            return Opacity(
-              opacity: value,
-              child: Transform.translate(
-                offset: Offset(0, 20 * (1 - value)),
-                child: child,
-              ),
-            );
-          },
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 360),
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(34),
-                gradient: LinearGradient(
-                  colors: <Color>[
-                    const Color(0xFF182448).withValues(alpha: 0.96),
-                    const Color(0xFF101A39).withValues(alpha: 0.98),
-                    const Color(0xFF070D1E),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(32),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 320),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildGameLogo(size: 160),
+              const SizedBox(height: 28),
+              Text(
+                widget.gameTitle,
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  fontSize: 34,
+                  fontWeight: FontWeight.w900,
+                  color: _kSoulIvory,
+                  letterSpacing: -1,
                 ),
-                border: Border.all(
-                  color: _kSoulChrome.withValues(alpha: 0.18),
-                  width: 1.15,
-                ),
-                boxShadow: <BoxShadow>[
-                  BoxShadow(
-                    color: const Color(0xFF070C19).withValues(alpha: 0.56),
-                    blurRadius: 30,
-                    spreadRadius: -10,
-                    offset: const Offset(0, 18),
-                  ),
-                  BoxShadow(
-                    color: const Color(0xFF4B65FF).withValues(alpha: 0.14),
-                    blurRadius: 34,
-                    spreadRadius: -18,
-                    offset: const Offset(0, 14),
-                  ),
-                ],
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: <Color>[
-                          Colors.white.withValues(alpha: 0.10),
-                          const Color(0xFF8B5CFF).withValues(alpha: 0.10),
-                          const Color(0xFF3CD8FF).withValues(alpha: 0.06),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.10),
-                      ),
-                    ),
-                    child: _buildGameLogo(size: 94),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    widget.gameTitle,
-                    textAlign: TextAlign.center,
-                    style: SLTheme.quicksand(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w900,
-                      color: _kSoulIvory,
-                      letterSpacing: 1.0,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Preparing a deeper neon board',
-                    textAlign: TextAlign.center,
-                    style: SLTheme.quicksand(
-                      fontSize: 13.2,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white.withValues(alpha: 0.74),
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                  const SizedBox(height: 22),
-                  Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(999),
-                      color: Colors.white.withValues(alpha: 0.06),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.08),
-                      ),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 14,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: <Color>[
-                                Colors.white.withValues(alpha: 0.05),
-                                const Color(0xFF111B39),
-                                Colors.black.withValues(alpha: 0.18),
-                              ],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                            ),
-                          ),
-                          child: AnimatedBuilder(
-                            animation: _playPulseController,
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: FractionallySizedBox(
-                                widthFactor: 0.42,
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    gradient: _kSoulSplashProgressGradient,
-                                    boxShadow: <BoxShadow>[
-                                      BoxShadow(
-                                        color: const Color(
-                                          0xFF53E0FF,
-                                        ).withValues(alpha: 0.34),
-                                        blurRadius: 14,
-                                        spreadRadius: -6,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            builder: (context, child) {
-                              return Transform.translate(
-                                offset: Offset(
-                                  _playPulseController.value * 150,
-                                  0,
-                                ),
-                                child: child,
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    'Blocks, tray, score and effects are syncing now',
-                    textAlign: TextAlign.center,
-                    style: SLTheme.quicksand(
-                      fontSize: 11.6,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white.withValues(alpha: 0.58),
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 10),
+              Text(
+                context.tr('soul_block_tagline'),
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  fontSize: 14,
+                  height: 1.5,
+                  fontWeight: FontWeight.w600,
+                  color: _kSoulMuted,
+                ),
+              ),
+              const SizedBox(height: 40),
+              SizedBox(width: 220, child: _buildSoulLoadingBar()),
+              const SizedBox(height: 16),
+              Text(
+                context.tr('soul_block_preparing'),
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: _kSoulMuted,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSoulLoadingBar() {
+    final reducedMotion = MediaQuery.disableAnimationsOf(context);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(4),
+      child: SizedBox(
+        height: 4,
+        child: ColoredBox(
+          color: Colors.white.withValues(alpha: .07),
+          child: AnimatedBuilder(
+            animation: _playPulseController,
+            builder: (context, child) => Align(
+              alignment: Alignment(
+                reducedMotion ? 0 : -1 + _playPulseController.value * 2,
+                0,
+              ),
+              child: child,
+            ),
+            child: const FractionallySizedBox(
+              widthFactor: .45,
+              heightFactor: 1,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: _kSoulSplashProgressGradient,
+                ),
               ),
             ),
           ),
@@ -588,7 +483,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                                     dimension: safeBoardExtent,
                                     child: ValueListenableBuilder<int>(
                                       valueListenable: _dragVisualTick,
-                                      builder: (context, _, __) {
+                                      builder: (context, _, _) {
                                         return _buildBoardPanel();
                                       },
                                     ),
@@ -598,7 +493,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                                   height: trayHeight,
                                   child: ValueListenableBuilder<int>(
                                     valueListenable: _trayVisualTick,
-                                    builder: (context, _, __) {
+                                    builder: (context, _, _) {
                                       return _buildTrayPanel(
                                         compact: trayCompact,
                                       );
@@ -943,107 +838,88 @@ extension _SoulBlockPanels on _SoulBlockGameState {
     _emitClickFeedback();
     await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
-      builder: (BuildContext context) {
+      barrierColor: _kSoulStageBottom.withValues(alpha: .72),
+      constraints: const BoxConstraints(maxWidth: 560),
+      builder: (context) {
         return SafeArea(
+          top: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: FastBackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0D121D).withValues(alpha: 0.65),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: const Color(0xFF00C3FF).withValues(alpha: 0.2),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF00C3FF).withValues(alpha: 0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 4),
+            padding: const EdgeInsets.all(12),
+            child: Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(context).height * .78,
+              ),
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: _kSoulPanelBottom,
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: Colors.white.withValues(alpha: .1)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.emoji_events_outlined,
+                        color: _kSoulWarm,
+                        size: 26,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          context.tr('Bảng điểm'),
+                          style: SLTheme.quicksand(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            color: _kSoulIvory,
+                          ),
+                        ),
+                      ),
+                      _SoulIconButton(
+                        icon: Icons.close_rounded,
+                        tooltip: context.tr('close'),
+                        onPressed: () => Navigator.of(context).pop(),
                       ),
                     ],
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Row(
-                          children: <Widget>[
-                            const Icon(
-                              Icons.emoji_events_rounded,
-                              color: Color(0xFFFFD700),
-                              size: 28,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Leaderboard',
-                              style: SLTheme.quicksand(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                                letterSpacing: 1.0,
-                              ),
-                            ),
-                            const Spacer(),
-                            IconButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              icon: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.close_rounded,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        if (_leaderboard.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            child: Text(
-                              context.tr('util_chacltchin_2aa20c'),
-                              textAlign: TextAlign.center,
-                              style: SLTheme.quicksand(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white70,
-                              ),
-                            ),
-                          )
-                        else
-                          Flexible(
-                            child: ListView.separated(
-                              shrinkWrap: true,
-                              itemCount: _leaderboard.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 10),
-                              itemBuilder: (context, index) {
-                                final item = _leaderboard[index];
-                                return _LeaderboardTile(
-                                  rank: index + 1,
-                                  score: _formatNumber(item.score),
-                                  lines: item.lines,
-                                  stamp: item.stampLabel,
-                                );
-                              },
-                            ),
+                  const SizedBox(height: 18),
+                  if (_leaderboard.isEmpty)
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(vertical: 28),
+                        child: Text(
+                          context.tr('util_chacltchin_2aa20c'),
+                          textAlign: TextAlign.center,
+                          style: SLTheme.quicksand(
+                            fontSize: 14,
+                            height: 1.5,
+                            color: _kSoulMuted,
                           ),
-                      ],
+                        ),
+                      ),
+                    )
+                  else
+                    Flexible(
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: _leaderboard.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          final item = _leaderboard[index];
+                          return _LeaderboardTile(
+                            rank: index + 1,
+                            score: _formatNumber(item.score),
+                            lines: item.lines,
+                            stamp: item.stampLabel,
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                ),
+                ],
               ),
             ),
           ),
@@ -1055,217 +931,209 @@ extension _SoulBlockPanels on _SoulBlockGameState {
   Future<void> _openSettingsSheet() async {
     _emitClickFeedback();
     await _refreshPremiumStatus();
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
+    var sound = _soundEnabled;
+    var vibration = _vibrationEnabled;
+    var smoothGraphics = _smoothGraphics;
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
-      builder: (BuildContext context) {
-        var sound = _soundEnabled;
-        var vibration = _vibrationEnabled;
-        var smoothGraphics = _smoothGraphics;
-        final l10n = L10nService();
+      barrierColor: _kSoulStageBottom.withValues(alpha: .72),
+      constraints: const BoxConstraints(maxWidth: 560),
+      builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
+            Widget divider() => Divider(
+              height: 1,
+              indent: 60,
+              endIndent: 14,
+              color: Colors.white.withValues(alpha: .06),
+            );
             return SafeArea(
+              top: false,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
                 child: Container(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.sizeOf(context).height * .9,
+                  ),
+                  padding: const EdgeInsets.fromLTRB(18, 10, 18, 18),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF182238),
-                        Color(0xFF0F1728),
-                        Color(0xFF0A0F1D),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: _kSoulPanelBottom,
                     borderRadius: BorderRadius.circular(28),
                     border: Border.all(
-                      color: const Color(0xFF38BDF8).withValues(alpha: 0.30),
-                      width: 1.2,
+                      color: Colors.white.withValues(alpha: .10),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF0284C7).withValues(alpha: 0.15),
-                        blurRadius: 28,
-                        offset: const Offset(0, 8),
-                      ),
-                      BoxShadow(
-                        color: Colors.black87,
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          Row(
-                            children: <Widget>[
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      Color(0xFF00E5FF),
-                                      Color(0xFF7C3AED),
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(
-                                  Icons.tune_rounded,
-                                  size: 18,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                l10n.translate('Settings'),
-                                style: SLTheme.quicksand(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const Spacer(),
-                              GestureDetector(
-                                onTap: () => Navigator.of(context).pop(),
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.08),
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.12,
-                                      ),
-                                    ),
-                                  ),
-                                  child: const Icon(
-                                    Icons.close_rounded,
-                                    color: Colors.white70,
-                                    size: 18,
-                                  ),
-                                ),
-                              ),
-                            ],
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 32,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: _kSoulMuted.withValues(alpha: .3),
+                            borderRadius: BorderRadius.circular(4),
                           ),
-                          const SizedBox(height: 10),
-                          Text(
-                            l10n.translate(
-                              'Tùy chỉnh âm thanh, độ mượt và lối tắt nhanh',
-                            ),
-                            textAlign: TextAlign.center,
-                            style: SLTheme.quicksand(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white70,
-                              height: 1.35,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              context.tr('Settings'),
+                              style: SLTheme.quicksand(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: _kSoulIvory,
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 18),
-                          _SettingsSwitchTile(
-                            icon: Icons.music_note_rounded,
-                            title: l10n.translate('Âm thanh'),
-                            value: sound,
-                            accentColor: const Color(0xFF00E5FF),
-                            onChanged: (value) async {
-                              setModalState(() => sound = value);
-                              await _setSoundEnabled(value);
-                            },
-                          ),
-                          const SizedBox(height: 10),
-                          _SettingsSwitchTile(
-                            icon: Icons.vibration_rounded,
-                            title: l10n.translate('Rung'),
-                            value: vibration,
-                            accentColor: const Color(0xFFFF2A85),
-                            onChanged: (value) async {
-                              setModalState(() => vibration = value);
-                              await _setVibrationEnabled(value);
-                            },
-                          ),
-                          const SizedBox(height: 10),
-                          _SettingsSwitchTile(
-                            icon: Icons.bolt_rounded,
-                            title: l10n.translate('Đồ họa mượt mà (Giảm lag)'),
-                            value: smoothGraphics,
-                            accentColor: const Color(0xFF00E676),
-                            onChanged: (value) async {
-                              setModalState(() => smoothGraphics = value);
-                              await _setSmoothGraphicsEnabled(value);
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
-                            alignment: WrapAlignment.center,
-                            children: <Widget>[
-                              _SettingsActionButton(
-                                icon: Icons.home_rounded,
-                                label: l10n.translate('Trang chủ'),
-                                accent: const Color(0xFF00E5FF),
-                                onTap: () async {
-                                  Navigator.of(context).pop();
-                                  await _exitToHomeFromSettings();
-                                },
-                              ),
-                              _SettingsActionButton(
-                                icon: Icons.emoji_events_rounded,
-                                label: l10n.translate('Bảng điểm'),
-                                accent: const Color(0xFFFFB703),
-                                onTap: () async {
-                                  Navigator.of(context).pop();
-                                  await _openLeaderboardSheet();
-                                },
-                              ),
-                              if (AppConfig.isPurchaseEnabled)
-                                _SettingsActionButton(
-                                  icon: Icons.workspace_premium_rounded,
-                                  label: l10n.translate('Gỡ quảng cáo'),
-                                  accent: const Color(0xFF9D4EDD),
-                                  onTap: () async {
-                                    Navigator.of(context).pop();
-                                    await _openPremiumStore();
-                                  },
-                                ),
-                              _SettingsActionButton(
-                                icon: _view == _SoulGameView.gameplay
-                                    ? Icons.refresh_rounded
-                                    : Icons.play_arrow_rounded,
-                                label: _view == _SoulGameView.gameplay
-                                    ? l10n.translate('Chơi lại')
-                                    : l10n.translate('Tiếp tục'),
-                                accent: const Color(0xFF00E676),
-                                onTap: () {
-                                  Navigator.of(context).pop();
-                                  _restartCurrentRunFromSettings();
-                                },
-                              ),
-                              _SettingsActionButton(
-                                icon: Icons.grid_view_rounded,
-                                label: l10n.translate('Menu'),
-                                accent: const Color(0xFF3A86FF),
-                                onTap: () {
-                                  Navigator.of(context).pop();
-                                  _returnToMenuFromSettings();
-                                },
-                                enabled: _view == _SoulGameView.gameplay,
-                              ),
-                            ],
+                          _SoulIconButton(
+                            icon: Icons.close_rounded,
+                            tooltip: context.tr('close'),
+                            onPressed: () => Navigator.of(context).pop(),
                           ),
                         ],
                       ),
-                    ),
+                      Text(
+                        context.tr('soul_block_settings_hint'),
+                        style: SLTheme.quicksand(
+                          fontSize: 12,
+                          height: 1.5,
+                          color: _kSoulMuted,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Flexible(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: _kSoulPanelTop.withValues(alpha: .55),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Column(
+                                  children: [
+                                    _SettingsSwitchTile(
+                                      icon: Icons.volume_up_outlined,
+                                      title: context.tr('Âm thanh'),
+                                      value: sound,
+                                      onChanged: (value) async {
+                                        setModalState(() => sound = value);
+                                        await _setSoundEnabled(value);
+                                      },
+                                    ),
+                                    divider(),
+                                    _SettingsSwitchTile(
+                                      icon: Icons.vibration_rounded,
+                                      title: context.tr('Rung'),
+                                      value: vibration,
+                                      onChanged: (value) async {
+                                        setModalState(() => vibration = value);
+                                        await _setVibrationEnabled(value);
+                                      },
+                                    ),
+                                    divider(),
+                                    _SettingsSwitchTile(
+                                      icon: Icons.speed_rounded,
+                                      title: context.tr('soul_block_smooth'),
+                                      subtitle: context.tr(
+                                        'soul_block_smooth_hint',
+                                      ),
+                                      value: smoothGraphics,
+                                      onChanged: (value) async {
+                                        setModalState(
+                                          () => smoothGraphics = value,
+                                        );
+                                        await _setSmoothGraphicsEnabled(value);
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: _kSoulPanelTop.withValues(alpha: .28),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Column(
+                                  children: [
+                                    _SettingsActionButton(
+                                      icon: _view == _SoulGameView.gameplay
+                                          ? Icons.refresh_rounded
+                                          : Icons.play_arrow_rounded,
+                                      label: context.tr(
+                                        _view == _SoulGameView.gameplay
+                                            ? 'Chơi lại'
+                                            : 'Tiếp tục',
+                                      ),
+                                      accent: _kSoulChrome,
+                                      onTap: () {
+                                        Navigator.of(context).pop();
+                                        _restartCurrentRunFromSettings();
+                                      },
+                                    ),
+                                    divider(),
+                                    _SettingsActionButton(
+                                      icon: Icons.emoji_events_outlined,
+                                      label: context.tr('Bảng điểm'),
+                                      accent: _kSoulWarm,
+                                      onTap: () async {
+                                        Navigator.of(context).pop();
+                                        await _openLeaderboardSheet();
+                                      },
+                                    ),
+                                    if (AppConfig.isPurchaseEnabled) ...[
+                                      divider(),
+                                      _SettingsActionButton(
+                                        icon: Icons.workspace_premium_outlined,
+                                        label: context.tr('Gỡ quảng cáo'),
+                                        accent: _kSoulChrome,
+                                        onTap: () async {
+                                          Navigator.of(context).pop();
+                                          await _openPremiumStore();
+                                        },
+                                      ),
+                                    ],
+                                    if (_view == _SoulGameView.gameplay) ...[
+                                      divider(),
+                                      _SettingsActionButton(
+                                        icon: Icons.grid_view_rounded,
+                                        label: context.tr('Menu'),
+                                        accent: _kSoulMuted,
+                                        onTap: () {
+                                          Navigator.of(context).pop();
+                                          _returnToMenuFromSettings();
+                                        },
+                                      ),
+                                    ],
+                                    divider(),
+                                    _SettingsActionButton(
+                                      icon: Icons.home_outlined,
+                                      label: context.tr('Trang chủ'),
+                                      accent: _kSoulMuted,
+                                      onTap: () async {
+                                        Navigator.of(context).pop();
+                                        await _exitToHomeFromSettings();
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -1321,78 +1189,83 @@ extension _SoulBlockPanels on _SoulBlockGameState {
   }
 
   Widget _buildFloatingToast() {
-    final slide =
-        Tween<Offset>(
-          begin: const Offset(0, 0.24),
-          end: const Offset(0, -0.62),
-        ).animate(
-          CurvedAnimation(
-            parent: _floatingController,
-            curve: Curves.easeOutCubic,
-          ),
-        );
-
+    final reduced = MediaQuery.disableAnimationsOf(context);
     return Positioned.fill(
       child: IgnorePointer(
-        child: Center(
-          child: FadeTransition(
-            opacity: CurvedAnimation(
-              parent: _floatingController,
-              curve: Curves.easeOut,
-            ),
-            child: SlideTransition(
-              position: slide,
-              child: ScaleTransition(
-                scale: CurvedAnimation(
-                  parent: _floatingController,
-                  curve: Curves.easeOutBack,
+        child: Align(
+          alignment: const Alignment(0, -.48),
+          child: AnimatedBuilder(
+            animation: _floatingController,
+            child: RepaintBoundary(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: min(320, MediaQuery.sizeOf(context).width - 32),
                 ),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 30,
-                    vertical: 18,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: _kSoulStageBottom.withValues(alpha: .96),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: _floatingTextColor.withValues(alpha: .8),
+                    width: 1.4,
                   ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: <Color>[
-                        _floatingTextColor.withValues(alpha: 0.46),
-                        _floatingTextColor.withValues(alpha: 0.20),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(
-                      color: _floatingTextColor.withValues(alpha: 0.78),
-                      width: 2.2,
-                    ),
-                    boxShadow: <BoxShadow>[
-                      BoxShadow(
-                        color: _floatingTextColor.withValues(alpha: 0.30),
-                        blurRadius: 24,
-                        spreadRadius: -2,
-                        offset: const Offset(0, 10),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_boardPhoto != null) ...[
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(9),
+                        child: SizedBox.square(
+                          dimension: 36,
+                          child: RawImage(
+                            image: _boardPhoto,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       ),
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.18),
-                        blurRadius: 18,
-                        spreadRadius: -6,
-                        offset: const Offset(0, 12),
-                      ),
+                      const SizedBox(width: 10),
                     ],
-                  ),
-                  child: Text(
-                    _floatingText ?? '',
-                    style: SLTheme.quicksand(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: 1.2,
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          _floatingText ?? '',
+                          style: SLTheme.quicksand(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            color: _floatingTextColor,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),
+            builder: (context, child) {
+              final t = _floatingController.value;
+              final appear = (t / .18).clamp(0.0, 1.0);
+              final fade = (1 - (t - .64) / .36).clamp(0.0, 1.0);
+              return Opacity(
+                opacity: reduced ? 1 : appear * fade,
+                child: Transform.translate(
+                  offset: Offset(
+                    0,
+                    reduced ? 0 : 10 - 20 * Curves.easeOutCubic.transform(t),
+                  ),
+                  child: Transform.scale(
+                    scale: reduced
+                        ? 1
+                        : .9 + .1 * Curves.easeOutBack.transform(appear),
+                    child: child,
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -1406,8 +1279,8 @@ extension _SoulBlockPanels on _SoulBlockGameState {
     }
     final _SoulBlockPerformanceProfile profile = _performanceProfile;
     final double cardWidth = min(
-      MediaQuery.sizeOf(context).width * 0.72,
-      276.0,
+      MediaQuery.sizeOf(context).width * 0.46,
+      176.0,
     );
 
     return Positioned.fill(
@@ -1461,7 +1334,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                                 sparkleOpacity: sparkleOpacity,
                                 sparkleCount: profile.memoryBurstSparkleCount,
                               ),
-                            if (child != null) child,
+                            ?child,
                           ],
                         ),
                       ),
@@ -1489,6 +1362,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
               center: _explosionCenter,
               accent: _explosionAccent,
               particles: _explosionParticles,
+              photoImage: _boardPhoto,
               drawRing:
                   _performanceProfile.tier != _SoulBlockPerformanceTier.low,
             ),
@@ -1543,7 +1417,6 @@ extension _SoulBlockPanels on _SoulBlockGameState {
     required _MemoryBurstSnapshot snapshot,
     required _SoulBlockPerformanceProfile profile,
   }) {
-    final ({int width, int height}) cacheSize = _memoryBurstCacheSize();
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
@@ -1604,59 +1477,10 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                         ),
                       ),
                     ),
-                    CachedNetworkImage(
-                      imageUrl: snapshot.imageUrl,
-                      maxWidthDiskCache: cacheSize.width,
-                      maxHeightDiskCache: cacheSize.height,
-                      memCacheWidth: 400,
-                      fadeInDuration: Duration.zero,
-                      filterQuality: FilterQuality.medium,
-                      imageBuilder: (context, imageProvider) {
-                        return FittedBox(
-                          fit: BoxFit.cover,
-                          alignment: Alignment.center,
-                          clipBehavior: Clip.hardEdge,
-                          child: SizedBox(
-                            width: 100,
-                            height:
-                                100 /
-                                _SoulBlockGameState._memoryBurstCardAspectRatio,
-                            child: Image(
-                              image: imageProvider,
-                              fit: BoxFit.cover,
-                              filterQuality: FilterQuality.medium,
-                              alignment: Alignment.center,
-                            ),
-                          ),
-                        );
-                      },
-                      placeholder: (_, __) => Center(
-                        child: SizedBox(
-                          width: 28,
-                          height: 28,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: snapshot.accent,
-                          ),
-                        ),
-                      ),
-                      errorWidget: (_, __, ___) => DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: <Color>[
-                              snapshot.accent.withValues(alpha: 0.26),
-                              const Color(0xFF162538),
-                            ],
-                          ),
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.photo_library_rounded,
-                            color: Colors.white70,
-                            size: 42,
-                          ),
-                        ),
-                      ),
+                    RawImage(
+                      image: snapshot.image,
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.low,
                     ),
                     Positioned(
                       left: 12,

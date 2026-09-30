@@ -1,5 +1,5 @@
 name: soullocket_app
-description: "SoulLocket-Đếm Ngày yêu. - Ứng dụng nhật ký tình yêu và lưu giữ kỷ niệm dành cho các cặp đôi."
+description: "SoulLocket: Đếm Ngày Yêu Đôi - Ứng dụng nhật ký tình yêu và lưu giữ kỷ niệm dành cho các cặp đôi."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -185,8 +185,8 @@ flutter:
   assets:
 
     - assets/docs/
+    - assets/fonts/
 
-    - assets/games/rhythm-tiles/
     - assets/i18n/
     - assets/icon.png
     - assets/images/avatar_male.jpg
@@ -305,6 +305,7 @@ flutter:
     - assets/images/sticker_import/cutout/sheet_04/sticker_12.webp
     - assets/images/sticker_import/cutout/sheet_04/sticker_13.webp
     - assets/images/sticker_import/cutout/sheet_04/sticker_14.webp
+    - assets/audio/soul_block/soul_block_bgm.mp3
     - assets/music/
 
   # An image asset can refer to one or more resolution-specific "variants", see

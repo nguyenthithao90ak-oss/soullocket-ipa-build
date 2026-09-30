@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'offline_cache_service.dart';
 
 class ConsentService {
-  static const currentPolicyVersion = '2026-09-09';
+  static const currentPolicyVersion = '2026-09-28';
   static const policyVersionKey = 'il_consent_policy_version';
   static const recordedAtKey = 'il_consent_recorded_at';
   static final ValueNotifier<bool> optionalCollectionAllowed = ValueNotifier(

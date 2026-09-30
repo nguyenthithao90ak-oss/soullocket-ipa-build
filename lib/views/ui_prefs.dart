@@ -45,7 +45,6 @@ class UiPrefsState {
   final String homeLayoutKey;
   final bool showAvatarFrameIcon;
   final String friendlyChatPersona;
-  final String uiVersion;
 
   const UiPrefsState({
     required this.themeKey,
@@ -81,7 +80,6 @@ class UiPrefsState {
     required this.homeLayoutKey,
     required this.showAvatarFrameIcon,
     required this.friendlyChatPersona,
-    required this.uiVersion,
   });
 
   UiPrefsState copyWith({
@@ -118,7 +116,6 @@ class UiPrefsState {
     String? homeLayoutKey,
     bool? showAvatarFrameIcon,
     String? friendlyChatPersona,
-    String? uiVersion,
   }) {
     return UiPrefsState(
       themeKey: themeKey ?? this.themeKey,
@@ -158,7 +155,6 @@ class UiPrefsState {
       homeLayoutKey: homeLayoutKey ?? this.homeLayoutKey,
       showAvatarFrameIcon: showAvatarFrameIcon ?? this.showAvatarFrameIcon,
       friendlyChatPersona: friendlyChatPersona ?? this.friendlyChatPersona,
-      uiVersion: uiVersion ?? this.uiVersion,
     );
   }
 
@@ -199,7 +195,6 @@ class UiPrefsState {
     homeLayoutKey: 'classic',
     showAvatarFrameIcon: true,
     friendlyChatPersona: "",
-    uiVersion: 'v1',
   );
 }
 
@@ -314,7 +309,6 @@ class UiPrefs {
   static const _kShowAvatarFrameIconKey = 'il_show_avatar_frame_icon';
   static const _kFriendlyChatPersonaKey = 'il_friendly_chat_persona';
   static const _kHomeLayoutKey = 'il_home_layout_key';
-  static const _kUiVersionKey = 'il_ui_version_key';
 
   static final ValueNotifier<UiPrefsState> notifier =
       ValueNotifier<UiPrefsState>(UiPrefsState.defaults);
@@ -444,6 +438,9 @@ class UiPrefs {
     final prefs =
         OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
+    if (prefs.containsKey('il_ui_version_key')) {
+      await prefs.remove('il_ui_version_key');
+    }
     // Đọc theme đã lưu từ SharedPreferences, fallback về default nếu chưa có.
     _restoreCompanionOutfits(prefs);
     final themeKey =
@@ -564,9 +561,6 @@ class UiPrefs {
             (prefs.getString(_kFriendlyChatPersonaKey) ??
                     UiPrefsState.defaults.friendlyChatPersona)
                 .trim(),
-        uiVersion:
-            (prefs.getString(_kUiVersionKey) ?? UiPrefsState.defaults.uiVersion)
-                .trim(),
       ),
     );
   }
@@ -670,7 +664,6 @@ class UiPrefs {
       _kHomeCompanionSoundEnabledKey,
       normalized.homeCompanionSoundEnabled,
     );
-    await prefs.setString(_kUiVersionKey, normalized.uiVersion);
 
     try {
       unawaited(SettingsSyncService().backupSettingsToCloud());
@@ -686,7 +679,8 @@ class UiPrefs {
   /// Lựa chọn phát nhạc của thiết bị: chỉ thay khi người dùng bật/tắt.
   static Future<void> setMusicAutoplay(bool enabled) async {
     await ensureLoaded();
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     await prefs.setBool(_kMusicAutoplayKey, enabled);
     notifier.value = notifier.value.copyWith(musicAutoplay: enabled);
@@ -738,7 +732,6 @@ class UiPrefs {
       homeCompanionSoundEnabled: state.homeCompanionSoundEnabled,
       showAvatarFrameIcon: state.showAvatarFrameIcon,
       friendlyChatPersona: state.friendlyChatPersona.trim(),
-      uiVersion: _normalizeUiVersion(state.uiVersion),
     );
   }
 
@@ -815,18 +808,5 @@ class UiPrefs {
     await saveState(
       notifier.value.copyWith(friendlyChatPersona: persona.trim()),
     );
-  }
-
-  static String _normalizeUiVersion(String value) {
-    final normalized = value.trim().toLowerCase();
-    if (normalized == 'v2' || normalized == 'aurora') return 'v2';
-    return 'v1';
-  }
-
-  static Future<void> setUiVersion(String version) async {
-    await ensureLoaded();
-    final normalized = _normalizeUiVersion(version);
-    if (notifier.value.uiVersion == normalized) return;
-    await saveState(notifier.value.copyWith(uiVersion: normalized));
   }
 }

@@ -328,6 +328,8 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
         'status2': status2Text,
         'isOnline1': isOnline1,
         'isOnline2': isOnline2,
+        'locale': L10nService().localeCode,
+        'market': MarketService.instance.marketCode,
         'weather1': w1,
         'weather2': w2,
         'stars1': stars1Text,
@@ -381,6 +383,7 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       );
       await WidgetService.syncCycleWidgetData(houseId: houseId);
       await WidgetService.syncCalendarWidgetData(houseId: houseId);
+      await WidgetService.syncSoulEventWidgetData(houseId: houseId);
       await SoulMergeService().syncSoulMergeWidgetNow();
       _lastLoveWidgetSignature = widgetSignature;
     } catch (error) {

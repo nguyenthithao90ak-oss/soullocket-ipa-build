@@ -16,6 +16,14 @@ class AccountDeletionStatus {
   final bool requiresReconciliation;
   final String? pendingIssue;
 
+  bool canApproveFor(String uid) =>
+      uid.isNotEmpty &&
+      uid != requesterUid &&
+      requesterUid.isNotEmpty &&
+      status == 'partner_wait' &&
+      !requiresReconciliation &&
+      pendingIssue == null;
+
   bool get canCancel =>
       !requiresReconciliation &&
       (cancellationAllowed ??
@@ -33,10 +41,14 @@ class AccountDeletionStatus {
     if (status == 'initializing') return 'account_deletion_initializing';
     if (!canCancel) return 'account_deletion_state_conflict';
     if (pendingIssue == 'data_review') {
-      return isMine ? 'account_deletion_pending_review_self' : 'account_deletion_pending_review_partner';
+      return isMine
+          ? 'account_deletion_pending_review_self'
+          : 'account_deletion_pending_review_partner';
     }
     if (pendingIssue == 'service_unavailable') {
-      return isMine ? 'account_deletion_pending_service_self' : 'account_deletion_pending_service_partner';
+      return isMine
+          ? 'account_deletion_pending_service_self'
+          : 'account_deletion_pending_service_partner';
     }
     return isMine
         ? 'account_deletion_pending_self'
@@ -65,7 +77,9 @@ class AccountDeletionStatus {
     final status = request['status'] as String;
     final review = request['requiresReconciliation'] as bool;
     final issue = request['pendingIssue'];
-    if (issue != null && issue != 'data_review' && issue != 'service_unavailable') {
+    if (issue != null &&
+        issue != 'data_review' &&
+        issue != 'service_unavailable') {
       throw const FormatException('invalid_deletion_status_response');
     }
     if (!date.isFinite ||
@@ -123,8 +137,13 @@ class AccountDeletionStatus {
       requesterUid: rawUid.trim(),
       scheduledAtMs: date.toInt(),
       status: status,
-      pendingIssue: const {'data_review', 'service_unavailable'}.contains(map['pendingIssue'])
-          ? map['pendingIssue'] as String : null,
+      pendingIssue:
+          const {
+            'data_review',
+            'service_unavailable',
+          }.contains(map['pendingIssue'])
+          ? map['pendingIssue'] as String
+          : null,
     );
   }
 }

@@ -49,6 +49,16 @@ const legalDocumentAvailableLanguages = <String>{
   'ja',
   'ko',
   'zh',
+  'zh-TW',
+  'th',
+  'id',
+  'ms',
+  'ar',
+  'hi',
+  'nl',
+  'pl',
+  'tr',
+  'tl',
 };
 
 String legalDocumentLanguage(String languageCode) {
@@ -70,12 +80,7 @@ String localizedLegalDocumentFileName(
     return fileName;
   }
   final requested = legalDocumentLanguage(languageCode);
-  // Hai cẩm nang đã bổ sung đủ 21 ngôn ngữ; chính sách vẫn fallback riêng.
-  final isGuide =
-      fileName == 'huong_dan.html' ||
-      fileName == 'huong_dan_cai_dat_lan_dau.html';
-  final language =
-      (isGuide || legalDocumentAvailableLanguages.contains(requested))
+  final language = legalDocumentAvailableLanguages.contains(requested)
       ? requested
       : 'en';
   if (language == 'vi') return fileName;

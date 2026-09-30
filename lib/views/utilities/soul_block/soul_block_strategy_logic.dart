@@ -11,8 +11,9 @@ mixin _SoulBlockStrategyLogic {
 
   double get _batchDifficultyProgress {
     final double turnProgress = (_turn / 18).clamp(0.0, 1.0).toDouble();
-    final double clearProgress =
-        (_clearedLines / 28).clamp(0.0, 1.0).toDouble();
+    final double clearProgress = (_clearedLines / 28)
+        .clamp(0.0, 1.0)
+        .toDouble();
     return ((turnProgress * 0.55) + (clearProgress * 0.45))
         .clamp(0.0, 1.0)
         .toDouble();
@@ -31,16 +32,13 @@ mixin _SoulBlockStrategyLogic {
     }
   }
 
-  double _templateBatchWeight(
-    _SoulPieceTemplate template,
-    double progress,
-  ) {
+  double _templateBatchWeight(_SoulPieceTemplate template, double progress) {
     final double tierWeight = _tierWeightForProgress(template.tier, progress);
     final double sizePenalty = template.cellCount >= 9
         ? (0.72 + (progress * 0.42))
         : template.cellCount >= 5
-            ? (0.88 + (progress * 0.30))
-            : 1.0;
+        ? (0.88 + (progress * 0.30))
+        : 1.0;
     return max(0.12, tierWeight * sizePenalty);
   }
 
@@ -48,8 +46,10 @@ mixin _SoulBlockStrategyLogic {
     final filledRatio =
         _filledCount(boardMask) / (_strategyBoardSize * _strategyBoardSize);
     final holesPressure = (_countHoles(boardMask) / 12).clamp(0.0, 1.0);
-    final edgePressure =
-        (_countNearCompleteLines(boardMask) / 8).clamp(0.0, 1.0);
+    final edgePressure = (_countNearCompleteLines(boardMask) / 8).clamp(
+      0.0,
+      1.0,
+    );
     return ((filledRatio * 0.45) +
             (holesPressure * 0.30) +
             (edgePressure * 0.25))
@@ -81,13 +81,18 @@ mixin _SoulBlockStrategyLogic {
   }
 
   bool _hasEasyAnchor(List<_SoulPieceTemplate> combo) {
-    return combo
-        .any((template) => template.tier == 0 && template.cellCount <= 4);
+    return combo.any(
+      (template) => template.tier == 0 && template.cellCount <= 4,
+    );
   }
 
   bool _hasRecoveryPiece(List<_SoulPieceTemplate> combo) {
-    return combo.any((template) =>
-        template.cellCount <= 3 || template.width == 1 || template.height == 1);
+    return combo.any(
+      (template) =>
+          template.cellCount <= 3 ||
+          template.width == 1 ||
+          template.height == 1,
+    );
   }
 
   List<_SoulPieceTemplate> _stageBagTemplates(
@@ -108,10 +113,12 @@ mixin _SoulBlockStrategyLogic {
         .map((item) => item.template)
         .toList(growable: false);
     final rescue = fittingCandidates
-        .where((item) =>
-            item.template.cellCount <= 3 ||
-            item.template.width == 1 ||
-            item.template.height == 1)
+        .where(
+          (item) =>
+              item.template.cellCount <= 3 ||
+              item.template.width == 1 ||
+              item.template.height == 1,
+        )
         .map((item) => item.template)
         .toList(growable: false);
 
@@ -159,11 +166,12 @@ mixin _SoulBlockStrategyLogic {
     double progress,
   ) {
     final stress = _boardStressLevel(boardMask);
-    final avgTier = combo.fold<double>(0, (total, item) => total + item.tier) /
+    final avgTier =
+        combo.fold<double>(0, (total, item) => total + item.tier) /
         combo.length;
     final avgCells =
         combo.fold<double>(0, (total, item) => total + item.cellCount) /
-            combo.length;
+        combo.length;
     final hasEasyAnchor = _hasEasyAnchor(combo);
     final hasRecoveryPiece = _hasRecoveryPiece(combo);
 
@@ -222,47 +230,43 @@ mixin _SoulBlockStrategyLogic {
     return chosen;
   }
 
-  List<_SoulPieceTemplate> _pickBatchWinnerPool(
-    List<_BatchChoice> rankedBatches,
-    double progress,
-  ) {
-    final int winnerCount = progress < 0.28
-        ? min(6, rankedBatches.length)
-        : progress < 0.62
-            ? min(5, rankedBatches.length)
-            : min(4, rankedBatches.length);
-    final candidates = rankedBatches
-        .take(max(1, winnerCount))
-        .map((choice) => choice.templates)
-        .toList(growable: false);
-    final sampled = _weightedTemplateSample(
-      candidates.map((templates) => templates.first).toList(growable: false),
-      1,
-      progress,
-    );
-    final sampledFirst = sampled.first;
-    return candidates.firstWhere(
-      (templates) => identical(templates.first, sampledFirst),
-      orElse: () => candidates[_random.nextInt(candidates.length)],
-    );
-  }
-
   List<_SoulPieceOption> _buildSmartBatch(List<List<_SoulTile?>> boardTiles) {
     final boardMask = _boardMask(boardTiles);
+    // Mỗi trạng thái bàn + mẫu chỉ tính placements một lần trong lượt refill.
+    // Beam search dùng lại cache này để tránh quét lặp khi ba mảnh có đường đi chung.
+    final placementMemo = <String, List<_PlacementEval>>{};
+    List<_PlacementEval> placementsFor(
+      List<List<bool>> mask,
+      _SoulPieceTemplate template, {
+      bool bomb = false,
+    }) {
+      final key = '${_serializeBoard(mask)}|${template.id}|${bomb ? '1' : '0'}';
+      final cached = placementMemo[key];
+      if (cached != null) {
+        return cached;
+      }
+      final placements = _findPlacements(mask, template, bomb: bomb);
+      // Cache cục bộ, có trần để một bàn bất thường không giữ quá nhiều board copy.
+      if (placementMemo.length < 128) {
+        placementMemo[key] = placements;
+      }
+      return placements;
+    }
+
     final fittingCandidates = <_TemplateScore>[];
     for (final template in _kSoulBlockTemplates) {
       if (template.id == 'single') {
-        final double stress = _boardStressLevel(boardMask);
-        final bool allowSingle = stress >= 0.82 || _random.nextDouble() < 0.02;
+        final stress = _boardStressLevel(boardMask);
+        final allowSingle = stress >= 0.82 || _random.nextDouble() < 0.02;
         if (!allowSingle) {
           continue;
         }
       }
-      final placements = _findPlacements(boardMask, template);
+      final placements = placementsFor(boardMask, template);
       if (placements.isEmpty) {
         continue;
       }
-      final _PlacementEval bestPlacement = _bestPlacement(placements);
+      final bestPlacement = _bestPlacement(placements);
       fittingCandidates.add(
         _TemplateScore(
           template: template,
@@ -273,7 +277,17 @@ mixin _SoulBlockStrategyLogic {
     }
 
     if (fittingCandidates.isEmpty) {
-      return const <_SoulPieceOption>[];
+      // Nếu bàn còn ô trống nhưng tất cả mẫu lớn đều bị kẹt, cho một mảnh
+      // đơn kèm bomb để người chơi có cơ hội dọn vùng cuối thay vì deadlock giả.
+      final single = _kSoulBlockTemplates.firstWhere(
+        (template) => template.id == 'single',
+      );
+      if (placementsFor(boardMask, single).isEmpty) {
+        return const <_SoulPieceOption>[];
+      }
+      return <_SoulPieceOption>[
+        _spawnPieceFromTemplate(single, forceBomb: true),
+      ];
     }
 
     fittingCandidates.sort((a, b) {
@@ -284,15 +298,15 @@ mixin _SoulBlockStrategyLogic {
       return b.playableCount.compareTo(a.playableCount);
     });
 
-    final double progress = _batchDifficultyProgress;
-    final double boardStress = _boardStressLevel(boardMask);
+    final progress = _batchDifficultyProgress;
+    final boardStress = _boardStressLevel(boardMask);
     final pool = <_SoulPieceTemplate>[];
     final pooledTemplateIds = <String>{};
-    final int rankedTake = progress < 0.30
+    final rankedTake = progress < 0.30
         ? 8
         : progress < 0.70
-            ? 7
-            : 6;
+        ? 7
+        : 6;
     for (final candidate in fittingCandidates.take(rankedTake)) {
       if (pooledTemplateIds.add(candidate.template.id)) {
         pool.add(candidate.template);
@@ -310,115 +324,252 @@ mixin _SoulBlockStrategyLogic {
         pool.add(template);
       }
     }
-    final List<_SoulPieceTemplate> easierTemplates = fittingCandidates
-        .where((element) => element.template.tier == 0)
-        .map((element) => element.template)
+    final easierTemplates = fittingCandidates
+        .where((item) => item.template.tier == 0)
+        .map((item) => item.template)
         .toList(growable: false);
-    final List<_SoulPieceTemplate> diverseTemplates = fittingCandidates
-        .where((element) => element.template.tier <= 1)
-        .map((element) => element.template)
+    final diverseTemplates = fittingCandidates
+        .where((item) => item.template.tier <= 1)
+        .map((item) => item.template)
         .toList(growable: false);
     final supplementalTemplates = progress < 0.32 || boardStress >= 0.58
         ? _weightedTemplateSample(easierTemplates, 3, progress)
         : _weightedTemplateSample(diverseTemplates, 3, progress);
     for (final template in supplementalTemplates) {
-      if (pool.length >= 9) {
+      if (pool.length >= 10) {
         break;
       }
       if (pooledTemplateIds.add(template.id)) {
         pool.add(template);
       }
     }
-    if (pool.length < 6) {
+    for (final candidate in fittingCandidates) {
+      if (pool.length >= 10) {
+        break;
+      }
+      if (pooledTemplateIds.add(candidate.template.id)) {
+        pool.add(candidate.template);
+      }
+    }
+
+    // Giữ tối đa 10 mẫu để có đủ khối hồi phục nhưng vẫn giới hạn số nhánh.
+    final shortlist = pool.take(10).toList(growable: false);
+    final beamWidth = boardStress >= 0.62 ? 4 : 3;
+    var beam =
+        <
+          ({
+            List<List<bool>> board,
+            List<_SoulPieceTemplate> templates,
+            double score,
+            int clearedLines,
+          })
+        >[
+          (
+            board: boardMask,
+            templates: <_SoulPieceTemplate>[],
+            score: 0,
+            clearedLines: 0,
+          ),
+        ];
+
+    for (var depth = 0; depth < 3; depth++) {
+      final next =
+          <
+            ({
+              List<List<bool>> board,
+              List<_SoulPieceTemplate> templates,
+              double score,
+              int clearedLines,
+            })
+          >[];
+      for (final plan in beam) {
+        for (final template in shortlist) {
+          final placements = placementsFor(plan.board, template);
+          if (placements.isEmpty) {
+            continue;
+          }
+          for (final placement in _topPlacements(placements, 2)) {
+            final templates = <_SoulPieceTemplate>[...plan.templates, template];
+            final repeated = plan.templates.any(
+              (item) => item.id == template.id,
+            );
+            final mobility = _countPlayableTemplates(
+              placement.boardAfter,
+              shortlist,
+            );
+            final clearBonus =
+                placement.clearedLines * (progress < 0.60 ? 76.0 : 54.0);
+            final mobilityBonus = mobility * (depth == 2 ? 12.0 : 4.0);
+            final deadlockPenalty = mobility == 0 ? 180.0 : 0.0;
+            final bias = depth == 2
+                ? _difficultyBiasForCombo(boardMask, templates, progress)
+                : 0.0;
+            next.add((
+              board: placement.boardAfter,
+              templates: templates,
+              score:
+                  plan.score +
+                  placement.heuristic +
+                  clearBonus +
+                  mobilityBonus +
+                  bias +
+                  (repeated ? -18.0 : 9.0) -
+                  deadlockPenalty,
+              clearedLines: plan.clearedLines + placement.clearedLines,
+            ));
+          }
+        }
+      }
+      if (next.isEmpty) {
+        break;
+      }
+      next.sort((a, b) {
+        final clearCompare = b.clearedLines.compareTo(a.clearedLines);
+        if (depth == 2 &&
+            clearCompare != 0 &&
+            (progress < 0.60 || boardStress >= 0.48)) {
+          return clearCompare;
+        }
+        return b.score.compareTo(a.score);
+      });
+      final signatures = <String>{};
+      beam = next
+          .where(
+            (plan) => signatures.add(
+              plan.templates.map((template) => template.id).join('|') +
+                  _serializeBoard(plan.board),
+            ),
+          )
+          .take(beamWidth)
+          .toList(growable: false);
+    }
+
+    var completePlans = beam
+        .where((plan) => plan.templates.length == 3)
+        .toList(growable: false);
+
+    if (completePlans.isEmpty) {
+      // Beam có thể bỏ mất nhánh hợp lệ khi bàn chật. Greedy fallback quét
+      // toàn bộ mẫu đang hợp lệ theo từng trạng thái, luôn giữ chuỗi khả thi.
+      final sequencePool = <_SoulPieceTemplate>[...pool];
       for (final candidate in fittingCandidates) {
-        if (pool.length >= 6) {
+        if (!sequencePool.any((item) => item.id == candidate.template.id)) {
+          sequencePool.add(candidate.template);
+        }
+      }
+      final single = _kSoulBlockTemplates.firstWhere(
+        (template) => template.id == 'single',
+      );
+      if (!sequencePool.any((item) => item.id == single.id)) {
+        sequencePool.add(single);
+      }
+      var fallbackBoard = boardMask;
+      var fallbackScore = 0.0;
+      var fallbackClearedLines = 0;
+      final fallbackTemplates = <_SoulPieceTemplate>[];
+      for (var depth = 0; depth < 3; depth++) {
+        final choices =
+            <
+              ({
+                _SoulPieceTemplate template,
+                _PlacementEval placement,
+                double score,
+              })
+            >[];
+        for (final template in sequencePool) {
+          final placements = placementsFor(fallbackBoard, template);
+          for (final placement in _topPlacements(placements, 3)) {
+            final mobility = _countPlayableTemplates(
+              placement.boardAfter,
+              sequencePool,
+            );
+            choices.add((
+              template: template,
+              placement: placement,
+              score:
+                  placement.heuristic +
+                  (placement.clearedLines * 92.0) +
+                  (mobility * 10.0) -
+                  (mobility == 0 ? 160.0 : 0.0),
+            ));
+          }
+        }
+        if (choices.isEmpty) {
           break;
         }
-        if (pooledTemplateIds.add(candidate.template.id)) {
-          pool.add(candidate.template);
+        choices.sort((a, b) => b.score.compareTo(a.score));
+        final choice = choices.first;
+        fallbackTemplates.add(choice.template);
+        fallbackBoard = choice.placement.boardAfter;
+        fallbackScore += choice.score;
+        fallbackClearedLines += choice.placement.clearedLines;
+      }
+      completePlans =
+          <
+            ({
+              List<List<bool>> board,
+              List<_SoulPieceTemplate> templates,
+              double score,
+              int clearedLines,
+            })
+          >[];
+      if (fallbackTemplates.isNotEmpty) {
+        completePlans =
+            <
+              ({
+                List<List<bool>> board,
+                List<_SoulPieceTemplate> templates,
+                double score,
+                int clearedLines,
+              })
+            >[
+              (
+                board: fallbackBoard,
+                templates: fallbackTemplates,
+                score: fallbackScore,
+                clearedLines: fallbackClearedLines,
+              ),
+            ];
+      }
+    }
+
+    if (completePlans.isEmpty) {
+      return fittingCandidates
+          .take(3)
+          .map((candidate) => _spawnPieceFromTemplate(candidate.template))
+          .toList(growable: false);
+    }
+    final hasClearPlan = completePlans.any((plan) => plan.clearedLines > 0);
+    completePlans.sort((a, b) {
+      if (hasClearPlan) {
+        final aHasClear = a.clearedLines > 0 ? 1 : 0;
+        final bHasClear = b.clearedLines > 0 ? 1 : 0;
+        if (aHasClear != bHasClear) {
+          return bHasClear.compareTo(aHasClear);
         }
       }
-    }
-
-    final bool forceEasyAnchor = (progress < 0.35 || boardStress >= 0.50) &&
-        fittingCandidates.any((candidate) => candidate.template.tier == 0);
-
-    // Early-game: tính trước piece nào clear được ngay để ưu tiên
-    final bool isEarlyGame = progress < 0.25;
-    final Map<String, bool> canClearMap = <String, bool>{};
-    if (isEarlyGame) {
-      for (final candidate in fittingCandidates) {
-        final placements = _findPlacements(boardMask, candidate.template);
-        canClearMap[candidate.template.id] =
-            placements.any((p) => p.clearedLines > 0);
+      final clearCompare = b.clearedLines.compareTo(a.clearedLines);
+      if (clearCompare != 0) {
+        return clearCompare;
       }
-    }
+      return b.score.compareTo(a.score);
+    });
+    final winnerCount = min(2, completePlans.length);
+    final chosenPlan = completePlans[_random.nextInt(winnerCount)];
+    final chosenTemplates = chosenPlan.templates;
 
-    final allCombos = _pickTemplateCombos(pool, 3);
-    if (allCombos.isEmpty) {
-      return fittingCandidates
-          .take(3)
-          .map((candidate) => _spawnPieceFromTemplate(candidate.template))
-          .toList(growable: false);
-    }
-
-    final memo = <String, double>{};
-    final rankedBatches = <_BatchChoice>[];
-    for (final combo in allCombos) {
-      if (forceEasyAnchor && !_hasEasyAnchor(combo)) {
-        continue;
-      }
-      final uniqueTiers = combo.map((e) => e.tier).toSet().length;
-      final uniqueIds = combo.map((e) => e.id).toSet().length;
-      final double varietyBonus = (uniqueTiers * 5.0) + (uniqueIds * 3.0);
-      final difficultyBias =
-          _difficultyBiasForCombo(boardMask, combo, progress);
-
-      // Early-game clear bonus: mỗi piece trong combo clear được ngay +60
-      double earlyGameClearBonus = 0;
-      if (isEarlyGame) {
-        final clearableCount =
-            combo.where((t) => canClearMap[t.id] == true).length;
-        earlyGameClearBonus = clearableCount * 60.0;
-      }
-
-      final score = _evaluateBatchPlan(boardMask, combo, memo);
-      if (score.isFinite) {
-        rankedBatches.add(_BatchChoice(
-          templates: combo,
-          score: score + varietyBonus + difficultyBias + earlyGameClearBonus,
-        ));
-      }
-    }
-
-    if (rankedBatches.isEmpty) {
-      return fittingCandidates
-          .take(3)
-          .map((candidate) => _spawnPieceFromTemplate(candidate.template))
-          .toList(growable: false);
-    }
-
-    rankedBatches.sort((a, b) => b.score.compareTo(a.score));
-    late final List<_SoulPieceTemplate> chosenTemplates;
-    if (rankedBatches.isEmpty) {
-      chosenTemplates = fittingCandidates
-          .take(3)
-          .map((candidate) => candidate.template)
-          .toList(growable: false);
-    } else {
-      chosenTemplates = _pickBatchWinnerPool(rankedBatches, progress);
-    }
-
-    final bool shouldRescue = boardStress >= 0.65;
-    bool gaveBomb = false;
-    return chosenTemplates.map((t) {
-      bool makeBomb = false;
-      if (!gaveBomb && shouldRescue && _random.nextInt(100) < 85) {
-        makeBomb = true;
-        gaveBomb = true;
-      }
-      return _spawnPieceFromTemplate(t, forceBomb: makeBomb);
-    }).toList(growable: false);
+    final shouldRescue = boardStress >= 0.65;
+    var gaveBomb = false;
+    return chosenTemplates
+        .map((template) {
+          var makeBomb = false;
+          if (!gaveBomb && shouldRescue && _random.nextInt(100) < 85) {
+            makeBomb = true;
+            gaveBomb = true;
+          }
+          return _spawnPieceFromTemplate(template, forceBomb: makeBomb);
+        })
+        .toList(growable: false);
   }
 
   _SoulPieceOption _spawnPieceFromTemplate(
@@ -427,7 +578,7 @@ mixin _SoulBlockStrategyLogic {
   }) {
     _pieceSequence += 1;
     final int roll = _random.nextInt(100);
-    final bool isGold = roll < 15; // 15% (buffed from 12)
+    final bool isGold = !forceBomb && roll < 15; // 15% (buffed from 12)
     final bool isBomb =
         forceBomb || (!isGold && (roll >= 15 && roll < 25)); // 10% or forced
     return _SoulPieceOption(
@@ -439,29 +590,57 @@ mixin _SoulBlockStrategyLogic {
     );
   }
 
+  String? _moveCacheBoard;
+  int? _moveCacheCombo;
+  final Map<(int, String, int, bool, bool), _RecommendedMove?> _moveCache = {};
+
   _RecommendedMove? _recommendMoveFor(
     List<List<_SoulTile?>> boardTiles,
     List<_SoulPieceOption> tray,
   ) {
     final boardMask = _boardMask(boardTiles);
+    final boardKey = _serializeBoard(boardMask);
+    if (_moveCacheBoard != boardKey || _moveCacheCombo != _combo) {
+      _moveCache.clear();
+      _moveCacheBoard = boardKey;
+      _moveCacheCombo = _combo;
+    }
+    if (_moveCache.length > 32) _moveCache.clear();
     _RecommendedMove? bestMove;
     for (final piece in tray) {
-      final placements = _findPlacements(boardMask, piece.template);
-      if (placements.isEmpty) {
-        continue;
-      }
-      final bestPlacement = _bestPlacement(placements);
-      final expectedGain =
-          _scoreGainFor(piece.template, bestPlacement.clearedLines, _combo);
-      if (bestMove == null || bestPlacement.heuristic > bestMove.heuristic) {
-        bestMove = _RecommendedMove(
-          pieceId: piece.id,
-          row: bestPlacement.row,
-          col: bestPlacement.col,
-          heuristic: bestPlacement.heuristic,
-          expectedGain: expectedGain,
-          clearCount: bestPlacement.clearedLines,
+      final key = (
+        piece.id,
+        piece.template.id,
+        piece.template.quarterTurns,
+        piece.isGold,
+        piece.isBomb,
+      );
+      if (!_moveCache.containsKey(key)) {
+        final placements = _findPlacements(
+          boardMask,
+          piece.template,
+          bomb: piece.isBomb,
         );
+        if (placements.isEmpty) {
+          _moveCache[key] = null;
+        } else {
+          final best = _bestPlacement(placements);
+          _moveCache[key] = _RecommendedMove(
+            pieceId: piece.id,
+            row: best.row,
+            col: best.col,
+            heuristic: best.heuristic,
+            expectedGain:
+                _scoreGainFor(piece.template, best.clearedLines, _combo) *
+                (piece.isGold ? 2 : 1),
+            clearCount: best.clearedLines,
+          );
+        }
+      }
+      final move = _moveCache[key];
+      if (move != null &&
+          (bestMove == null || move.heuristic > bestMove.heuristic)) {
+        bestMove = move;
       }
     }
     return bestMove;
@@ -479,15 +658,18 @@ mixin _SoulBlockStrategyLogic {
 
   List<_PlacementEval> _findPlacements(
     List<List<bool>> boardMask,
-    _SoulPieceTemplate template,
-  ) {
+    _SoulPieceTemplate template, {
+    bool bomb = false,
+  }) {
     final placements = <_PlacementEval>[];
     for (var row = 0; row <= _strategyBoardSize - template.height; row++) {
       for (var col = 0; col <= _strategyBoardSize - template.width; col++) {
         if (!_canPlace(boardMask, template, row, col)) {
           continue;
         }
-        placements.add(_simulatePlacement(boardMask, template, row, col));
+        placements.add(
+          _simulatePlacement(boardMask, template, row, col, bomb: bomb),
+        );
       }
     }
     return placements;
@@ -646,8 +828,9 @@ mixin _SoulBlockStrategyLogic {
     List<List<bool>> boardMask,
     _SoulPieceTemplate template,
     int startRow,
-    int startCol,
-  ) {
+    int startCol, {
+    bool bomb = false,
+  }) {
     final nextBoard = List<List<bool>>.generate(
       _strategyBoardSize,
       (row) => List<bool>.from(boardMask[row]),
@@ -657,6 +840,25 @@ mixin _SoulBlockStrategyLogic {
       nextBoard[startRow + cell.y][startCol + cell.x] = true;
     }
 
+    var bombCells = 0;
+    if (bomb) {
+      final centerRow = startRow + template.height ~/ 2;
+      final centerCol = startCol + template.width ~/ 2;
+      for (
+        var row = max(0, centerRow - 1);
+        row <= min(_strategyBoardSize - 1, centerRow + 1);
+        row++
+      ) {
+        for (
+          var col = max(0, centerCol - 1);
+          col <= min(_strategyBoardSize - 1, centerCol + 1);
+          col++
+        ) {
+          if (nextBoard[row][col]) bombCells++;
+          nextBoard[row][col] = false;
+        }
+      }
+    }
     final clearedRows = <int>[];
     final clearedCols = <int>[];
 
@@ -698,8 +900,10 @@ mixin _SoulBlockStrategyLogic {
         _filledCount(nextBoard) / (_strategyBoardSize * _strategyBoardSize);
     final centerBias = _centerBias(template, startRow, startCol);
 
-    final heuristic = _basePiecePoints(template).toDouble() +
+    final heuristic =
+        _basePiecePoints(template).toDouble() +
         (clearedLines * 145) +
+        (bombCells * 18) +
         (nearLinePressure * 16) +
         (adjacency * 1.6) -
         (tightHoles * 18) -
@@ -715,6 +919,32 @@ mixin _SoulBlockStrategyLogic {
     );
   }
 
+  int _countPlayableTemplates(
+    List<List<bool>> boardMask,
+    Iterable<_SoulPieceTemplate> templates,
+  ) {
+    var playable = 0;
+    for (final template in templates) {
+      var hasPlacement = false;
+      for (
+        var row = 0;
+        row <= _strategyBoardSize - template.height && !hasPlacement;
+        row++
+      ) {
+        for (var col = 0; col <= _strategyBoardSize - template.width; col++) {
+          if (_canPlace(boardMask, template, row, col)) {
+            hasPlacement = true;
+            break;
+          }
+        }
+      }
+      if (hasPlacement) {
+        playable += 1;
+      }
+    }
+    return playable;
+  }
+
   // ignore: unused_element
   bool _hasAnyPlayableMove(
     List<List<_SoulTile?>> boardTiles,
@@ -722,12 +952,16 @@ mixin _SoulBlockStrategyLogic {
   ) {
     final boardMask = _boardMask(boardTiles);
     for (final piece in tray) {
-      for (var row = 0;
-          row <= _strategyBoardSize - piece.template.height;
-          row++) {
-        for (var col = 0;
-            col <= _strategyBoardSize - piece.template.width;
-            col++) {
+      for (
+        var row = 0;
+        row <= _strategyBoardSize - piece.template.height;
+        row++
+      ) {
+        for (
+          var col = 0;
+          col <= _strategyBoardSize - piece.template.width;
+          col++
+        ) {
           if (_canPlace(boardMask, piece.template, row, col)) {
             return true;
           }
@@ -825,83 +1059,14 @@ mixin _SoulBlockStrategyLogic {
     return count;
   }
 
-  double _centerBias(
-    _SoulPieceTemplate template,
-    int startRow,
-    int startCol,
-  ) {
+  double _centerBias(_SoulPieceTemplate template, int startRow, int startCol) {
     final pieceCenterRow = startRow + ((template.height - 1) / 2);
     final pieceCenterCol = startCol + ((template.width - 1) / 2);
     final boardCenter = (_strategyBoardSize - 1) / 2;
-    final distance = (pieceCenterRow - boardCenter).abs() +
+    final distance =
+        (pieceCenterRow - boardCenter).abs() +
         (pieceCenterCol - boardCenter).abs();
     return distance * 2.4;
-  }
-
-  List<List<_SoulPieceTemplate>> _pickTemplateCombos(
-    List<_SoulPieceTemplate> pool,
-    int size,
-  ) {
-    final combos = <List<_SoulPieceTemplate>>[];
-
-    void visit(int index, List<_SoulPieceTemplate> current) {
-      if (current.length == size) {
-        combos.add(List<_SoulPieceTemplate>.from(current));
-        return;
-      }
-      for (var i = index; i < pool.length; i++) {
-        current.add(pool[i]);
-        visit(i + 1, current);
-        current.removeLast();
-      }
-    }
-
-    visit(0, <_SoulPieceTemplate>[]);
-    return combos;
-  }
-
-  double _evaluateBatchPlan(
-    List<List<bool>> boardMask,
-    List<_SoulPieceTemplate> templates,
-    Map<String, double> memo,
-  ) {
-    if (templates.isEmpty) {
-      return 0;
-    }
-
-    final pieceIds = templates.map((template) => template.id).toList()..sort();
-    final key = '${_serializeBoard(boardMask)}|${pieceIds.join(",")}';
-    final cached = memo[key];
-    if (cached != null) {
-      return cached;
-    }
-
-    var best = double.negativeInfinity;
-    for (var i = 0; i < templates.length; i++) {
-      final template = templates[i];
-      final placements = _findPlacements(boardMask, template);
-      if (placements.isEmpty) {
-        continue;
-      }
-      for (final placement in _topPlacements(placements, 4)) {
-        final remaining = List<_SoulPieceTemplate>.from(templates)..removeAt(i);
-        final next = _evaluateBatchPlan(
-          placement.boardAfter,
-          remaining,
-          memo,
-        );
-        if (!next.isFinite) {
-          continue;
-        }
-        final batchBias = templates.length == 3
-            ? (template.tier * 9) + (template.cellCount * 1.4)
-            : 0;
-        best = max(best, placement.heuristic + next + batchBias);
-      }
-    }
-
-    memo[key] = best;
-    return best;
   }
 
   String _serializeBoard(List<List<bool>> boardMask) {

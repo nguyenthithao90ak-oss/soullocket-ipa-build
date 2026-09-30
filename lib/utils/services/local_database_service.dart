@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -44,19 +45,32 @@ class LocalDatabaseService {
   static final LocalDatabaseService _instance =
       LocalDatabaseService._internal();
   factory LocalDatabaseService() => _instance;
-  LocalDatabaseService._internal() : _databaseFactory = null;
+  LocalDatabaseService._internal()
+    : _databaseFactory = null,
+      _uidForTesting = null,
+      _sendForTesting = null;
 
   @visibleForTesting
   LocalDatabaseService.forTesting(
     Database? database, {
     DatabaseFactory? factory,
+    String? Function()? currentUid,
+    Future<void> Function(String path, String action, dynamic data)? send,
   }) : _db = database,
-       _databaseFactory = factory;
+       _databaseFactory = factory,
+       _uidForTesting = currentUid ?? (() => null),
+       _sendForTesting = send;
 
   final DatabaseFactory? _databaseFactory;
+  final String? Function()? _uidForTesting;
+  final Future<void> Function(String, String, dynamic)? _sendForTesting;
+  String? get _currentUid => _uidForTesting != null
+      ? _uidForTesting()
+      : FirebaseAuth.instance.currentUser?.uid;
+  String? _summaryUid;
 
   static const _databaseName = 'soullocket_offline.db';
-  static const _databaseVersion = 5; // Giữ lại sự kiện chỉ lưu trên thiết bị.
+  static const _databaseVersion = 6; // Gắn lệnh offline với tài khoản tạo lệnh.
   static const _queueStatusPending = 'pending';
   static const _queueStatusSyncing = 'syncing';
   static const _queueStatusFailed = 'failed';
@@ -131,10 +145,27 @@ class LocalDatabaseService {
               'expires_at': 0,
             }, where: "cache_key GLOB 'soul_events_local_*'");
           }
+          if (oldVersion < 6) {
+            // Giữ nguyên lệnh cũ không rõ chủ; không tự gán cho người đăng nhập mới.
+            await db.execute('ALTER TABLE sync_queue ADD COLUMN ownerUid TEXT');
+            await db.update(
+              'sync_queue',
+              {'status': _queueStatusPending},
+              where: 'status = ?',
+              whereArgs: [_queueStatusSyncing],
+            );
+          }
         },
       ),
     );
 
+    // Khôi phục lệnh đang gửi nếu phiên trước bị đóng đột ngột.
+    await _db!.update(
+      'sync_queue',
+      {'status': _queueStatusPending},
+      where: 'status = ?',
+      whereArgs: [_queueStatusSyncing],
+    );
     await _publishQueueSummary();
     unawaited(syncPendingData());
   }
@@ -173,7 +204,8 @@ class LocalDatabaseService {
         retryCount INTEGER NOT NULL DEFAULT 0,
         lastError TEXT,
         createdAt INTEGER,
-        syncedAt INTEGER
+        syncedAt INTEGER,
+        ownerUid TEXT
       )
     ''');
 
@@ -442,20 +474,36 @@ class LocalDatabaseService {
     String? operationId,
     String? entityType,
   }) async {
+    final ownerUid = _currentUid;
+    if (ownerUid == null) throw StateError('Authentication required for sync');
     final db = await _requireDatabase();
     if (db == null) return;
+    if (_currentUid != ownerUid) {
+      throw StateError('Account changed during enqueue');
+    }
 
     final now = DateTime.now().millisecondsSinceEpoch;
-    final resolvedId = (operationId?.trim().isNotEmpty ?? false)
+    final operation = (operationId?.trim().isNotEmpty ?? false)
         ? operationId!.trim()
-        : '$now';
+        : '${DateTime.now().microsecondsSinceEpoch}_${Random.secure().nextInt(1 << 32)}';
+    final scopedOperation = '${ownerUid.length}:$ownerUid:$operation';
+    // Mỗi bản ghi có ID riêng để hoàn tất lệnh đang gửi không đánh dấu
+    // nhầm bản cập nhật mới của cùng operationId là đã đồng bộ.
+    final resolvedId =
+        '$scopedOperation:${DateTime.now().microsecondsSinceEpoch}_${Random.secure().nextInt(1 << 32)}';
+    final normalizedAction = action.toUpperCase();
+    // PUSH phải có đích cố định để retry không tạo bản ghi trùng.
+    final resolvedPath = normalizedAction == 'PUSH'
+        ? '$path/${base64Url.encode(utf8.encode(scopedOperation)).replaceAll('=', '')}'
+        : path;
     await db.insert('sync_queue', {
       'id': resolvedId,
-      'path': path,
-      'action': action.toUpperCase(),
+      'path': resolvedPath,
+      'action': normalizedAction == 'PUSH' ? 'SET' : normalizedAction,
+      'ownerUid': ownerUid,
       'payload': payload,
       'timestamp': now,
-      'operationId': resolvedId,
+      'operationId': operation,
       'entityType': (entityType ?? 'generic').trim(),
       'status': _queueStatusPending,
       'retryCount': 0,
@@ -469,12 +517,14 @@ class LocalDatabaseService {
   }
 
   Future<SyncQueueSummary> getQueueSummary({bool forceRefresh = false}) async {
-    if (!forceRefresh && _lastQueueSummary != null) {
+    final uid = _currentUid;
+    if (!forceRefresh && _lastQueueSummary != null && _summaryUid == uid) {
       return _lastQueueSummary!;
     }
 
     final db = await _requireDatabase();
-    if (db == null) {
+    _summaryUid = uid;
+    if (db == null || uid == null) {
       _lastQueueSummary = const SyncQueueSummary(
         pendingCount: 0,
         syncingCount: 0,
@@ -486,8 +536,8 @@ class LocalDatabaseService {
 
     Future<int> countStatus(String status) async {
       final result = await db.rawQuery(
-        'SELECT COUNT(*) AS count FROM sync_queue WHERE status = ?',
-        [status],
+        'SELECT COUNT(*) AS count FROM sync_queue WHERE status = ? AND ownerUid = ?',
+        [status, uid],
       );
       return Sqflite.firstIntValue(result) ?? 0;
     }
@@ -507,36 +557,26 @@ class LocalDatabaseService {
       return;
     }
 
-    final db = await _requireDatabase();
-    if (db == null) return;
-
-    final queue = await db.query(
-      'sync_queue',
-      where: 'status IN (?, ?)',
-      whereArgs: [_queueStatusPending, _queueStatusFailed],
-      orderBy: 'createdAt ASC, timestamp ASC',
-    );
-    if (queue.isEmpty) {
-      await _publishQueueSummary();
-      return;
-    }
-
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      await _publishQueueSummary();
-      return;
-    }
-
+    // Đặt khóa trước await để các tín hiệu reconnect không gửi trùng hàng đợi.
     _isSyncing = true;
-    final fbDb = FirebaseDatabase.instance;
-
     try {
+      final ownerUid = _currentUid;
+      if (ownerUid == null) return;
+      final db = await _requireDatabase();
+      if (db == null || _currentUid != ownerUid) return;
+      final queue = await db.query(
+        'sync_queue',
+        where: 'status IN (?, ?) AND ownerUid = ?',
+        whereArgs: [_queueStatusPending, _queueStatusFailed, ownerUid],
+        orderBy: 'createdAt ASC, timestamp ASC',
+      );
       var shouldStopProcessing = false;
       for (final task in queue) {
-        if (shouldStopProcessing) {
+        if (shouldStopProcessing || _currentUid != ownerUid) {
           break;
         }
 
+        if (task['ownerUid'] != ownerUid) continue;
         final id = task['id'] as String;
         final taskPath = task['path'] as String;
         final action = (task['action'] as String).toUpperCase();
@@ -568,23 +608,36 @@ class LocalDatabaseService {
               ? null
               : json.decode(payloadStr);
 
-          switch (action) {
-            case 'SET':
-              await fbDb.ref(taskPath).set(data);
-              break;
-            case 'UPDATE':
-              await fbDb
-                  .ref(taskPath)
-                  .update(Map<String, dynamic>.from(data as Map));
-              break;
-            case 'PUSH':
-              await fbDb.ref(taskPath).push().set(data);
-              break;
-            case 'DELETE':
-              await fbDb.ref(taskPath).remove();
-              break;
-            default:
-              throw StateError('Unknown sync action: $action');
+          if (_currentUid != ownerUid) {
+            await db.update(
+              'sync_queue',
+              {'status': _queueStatusPending},
+              where: 'id = ?',
+              whereArgs: [id],
+            );
+            break;
+          }
+          if (_sendForTesting != null) {
+            await _sendForTesting(taskPath, action, data);
+          } else {
+            switch (action) {
+              case 'SET':
+                await FirebaseDatabase.instance.ref(taskPath).set(data);
+                break;
+              case 'UPDATE':
+                await FirebaseDatabase.instance
+                    .ref(taskPath)
+                    .update(Map<String, dynamic>.from(data as Map));
+                break;
+              case 'PUSH':
+                await FirebaseDatabase.instance.ref(taskPath).push().set(data);
+                break;
+              case 'DELETE':
+                await FirebaseDatabase.instance.ref(taskPath).remove();
+                break;
+              default:
+                throw StateError('Unknown sync action: $action');
+            }
           }
 
           await db.update(

@@ -946,7 +946,6 @@ class _CountdownModeCircle extends StatelessWidget {
             countdownShapeKey,
             side: BorderSide.none,
           ),
-          color: styleData.outerColor,
           gradient: styleData.outerGradient,
           shadows: styleData.shadows,
         ),
@@ -958,7 +957,6 @@ class _CountdownModeCircle extends StatelessWidget {
                 countdownShapeKey,
                 side: styleData.innerBorder.top,
               ),
-              color: styleData.innerColor,
               gradient: styleData.innerGradient,
             ),
             child: Stack(
@@ -1011,16 +1009,23 @@ class _CountdownModeCircle extends StatelessWidget {
                           minWidth: (resolvedSize * 0.26).clamp(82.0, 148.0),
                           minHeight: (resolvedSize * 0.14).clamp(42.0, 76.0),
                         ),
-                        child: Text(
-                          value,
-                          textAlign: TextAlign.center,
-                          style: SLTheme.textStyleForKey(
-                            fontKey,
-                            fontSize: (resolvedSize * 0.36).clamp(54.0, 142.0),
-                            fontWeight: FontWeight.w900,
-                            height: 1.0,
-                            foreground: valuePaint,
-                            shadows: styleData.numberShadows,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            value,
+                            maxLines: 1,
+                            textAlign: TextAlign.center,
+                            style: SLTheme.textStyleForKey(
+                              fontKey,
+                              fontSize: (resolvedSize * 0.36).clamp(
+                                54.0,
+                                142.0,
+                              ),
+                              fontWeight: FontWeight.w900,
+                              height: 1.0,
+                              foreground: valuePaint,
+                              shadows: styleData.numberShadows,
+                            ),
                           ),
                         ),
                       ),

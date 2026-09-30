@@ -15,6 +15,8 @@
 library;
 
 import 'package:get_it/get_it.dart';
+import '../utils/services/games/soul_block_memory_service.dart';
+import '../utils/services/market_service.dart';
 import 'package:soullocket_app/utils/services/companion_journey_service.dart';
 import 'package:soullocket_app/utils/services/privacy_collection_service.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
@@ -22,6 +24,7 @@ import 'package:soullocket_app/utils/services/house_settings_service.dart';
 import 'package:soullocket_app/utils/services/location_service.dart';
 import 'package:soullocket_app/utils/services/love_insight_service.dart';
 import 'package:soullocket_app/utils/services/notification_service.dart';
+import 'package:soullocket_app/utils/services/soul_event_reminder_service.dart';
 import 'package:soullocket_app/utils/services/presence_service.dart';
 import 'package:soullocket_app/utils/services/storage/storage_service.dart';
 import 'package:soullocket_app/utils/services/utilities/note_service.dart';
@@ -38,8 +41,13 @@ final GetIt locator = GetIt.instance;
 /// - Storage: secure storage, offline cache.
 /// - Insight/Utility: love insight, utility chung, note.
 void setupLocator() {
+  locator.registerFactory(() => SoulBlockMemoryService());
+  locator.registerLazySingleton(() => MarketService.instance);
   // Bật cùng backend/rules đã kiểm thử; bản cũ giữ nguyên hành vi khi chưa rollout.
-  if (const bool.fromEnvironment('COMPANION_JOURNEY_ENABLED')) {
+  if (const bool.fromEnvironment(
+    'COMPANION_JOURNEY_ENABLED',
+    defaultValue: true,
+  )) {
     locator.registerLazySingleton(
       () => CompanionJourneyService(),
       dispose: (s) => s.dispose(),
@@ -57,6 +65,7 @@ void setupLocator() {
   // ── Realtime / Presence ─────────────────────────────────────────────────
   locator.registerLazySingleton(() => PresenceService());
   locator.registerLazySingleton(() => NotificationService());
+  locator.registerLazySingleton(() => SoulEventReminderService.instance);
   locator.registerLazySingleton(() => LocationService());
 
   // ── Storage & Cache ─────────────────────────────────────────────────────

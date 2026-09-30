@@ -16,6 +16,8 @@ import 'package:soullocket_app/utils/permission_helper.dart';
 import 'offline_cache_service.dart';
 import 'package:soullocket_app/views/map/map_screen.dart';
 import 'package:soullocket_app/utils/services/error_logger_service.dart';
+import 'house_service.dart';
+import 'role_utils.dart';
 
 class LocationService {
   static const int _kGpsHistoryRetentionDays = 14;
@@ -130,6 +132,56 @@ class LocationService {
     return hasBackgroundPermission();
   }
 
+  static const String kGpsUpdateModeKey = 'il_gps_update_mode';
+  static const String kGpsModeForegroundOnly = 'foreground_only';
+  static const String kGpsModeAlways = 'always';
+
+  static Future<String> getGpsUpdateMode() async {
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
+    return prefs.getString(kGpsUpdateModeKey) ?? kGpsModeForegroundOnly;
+  }
+
+  static Future<void> setGpsUpdateMode(String mode) async {
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
+    await prefs.setString(kGpsUpdateModeKey, mode);
+    if (mode == kGpsModeForegroundOnly) {
+      await LocationService().stopTracking();
+    } else {
+      final houseId = _activeHouseId;
+      final role = _activeRole;
+      if (houseId != null && role != null) {
+        await LocationService().startTracking(houseId, role);
+      }
+    }
+  }
+
+  static String? _cachedHouseId;
+  static String? _cachedRole;
+
+  Future<void> onAppBackgrounded() async {
+    final mode = await getGpsUpdateMode();
+    if (mode == kGpsModeForegroundOnly) {
+      await stopTracking();
+    }
+  }
+
+  Future<void> onAppResumed([String? houseId, String? role]) async {
+    final mode = await getGpsUpdateMode();
+    if (mode == kGpsModeForegroundOnly) {
+      final targetHouseId =
+          houseId ?? _cachedHouseId ?? await HouseService().getCurrentHouseId();
+      final targetRole = role ?? _cachedRole ?? RoleUtils.currentRoleSync();
+      if ((targetHouseId ?? '').trim().isNotEmpty &&
+          targetRole.trim().isNotEmpty) {
+        await startTracking(targetHouseId!, targetRole);
+      }
+    }
+  }
+
   Future<bool> hasBackgroundPermission() async {
     final status = await Geolocator.checkPermission().timeout(
       const Duration(seconds: 6),
@@ -149,6 +201,8 @@ class LocationService {
     if (normalizedHouseId.isEmpty || normalizedRole.isEmpty) {
       return false;
     }
+    _cachedHouseId = normalizedHouseId;
+    _cachedRole = normalizedRole;
 
     final hasPermission = await requestPermission(
       context: context,
@@ -227,7 +281,9 @@ class LocationService {
       }
     }
 
-    final useBackgroundSettings = await hasBackgroundPermission();
+    final mode = await getGpsUpdateMode();
+    final isAlwaysMode = mode == kGpsModeAlways;
+    final useBackgroundSettings = isAlwaysMode && await hasBackgroundPermission();
     _positionStream =
         Geolocator.getPositionStream(
           locationSettings: useBackgroundSettings

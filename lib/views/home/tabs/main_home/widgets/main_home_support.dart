@@ -105,6 +105,8 @@ class _ParticleData {
 
 class _ShootingHeartEffectState extends State<ShootingHeartEffect>
     with SingleTickerProviderStateMixin {
+  static const Duration _kFlightDuration = Duration(milliseconds: 4500);
+
   late AnimationController _controller;
   final List<_ParticleData> _particles = [];
   late final List<Widget> _particleWidgets;
@@ -115,10 +117,7 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 3000),
-      vsync: this,
-    );
+    _controller = AnimationController(duration: _kFlightDuration, vsync: this);
 
     final random = Random();
     const particleCount = 3;
@@ -130,8 +129,8 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
     for (int i = 0; i < particleCount; i++) {
       _particles.add(
         _ParticleData(
-          delay: i * 0.08 + random.nextDouble() * 0.06,
-          flightDuration: 0.62 + random.nextDouble() * 0.08,
+          delay: i * 0.1 + random.nextDouble() * 0.06,
+          flightDuration: 0.78 + random.nextDouble() * 0.08,
           peakHeight: 0.9 + random.nextDouble() * 0.5 + i * 0.15,
           size: 48.0 + random.nextDouble() * 14 + i * 3,
           baseRotation: (random.nextDouble() - 0.5) * 0.5,

@@ -1,0 +1,817 @@
+{
+  "families": [
+    "Quicksand",
+    "PatrickHand",
+    "DancingScript",
+    "Caveat",
+    "Lora",
+    "Nunito",
+    "Comfortaa",
+    "PlayfairDisplay",
+    "BeVietnamPro",
+    "JetBrainsMono"
+  ],
+  "fonts": [
+    {
+      "family": "Quicksand",
+      "method": "quicksand",
+      "weight": 300,
+      "style": "normal",
+      "file": "Quicksand-Light.ttf",
+      "sha256": "1706916eebf8882bedc1c8f4a7300c744431eac4b54c820ea5502196d387dd8b",
+      "size": 72940
+    },
+    {
+      "family": "Quicksand",
+      "method": "quicksand",
+      "weight": 400,
+      "style": "normal",
+      "file": "Quicksand-Regular.ttf",
+      "sha256": "1af2320c17e48cec8f6f73590d9ff01e2c391182dca5a1c4aae4f13ff74b3d27",
+      "size": 73200
+    },
+    {
+      "family": "Quicksand",
+      "method": "quicksand",
+      "weight": 500,
+      "style": "normal",
+      "file": "Quicksand-Medium.ttf",
+      "sha256": "656b9306f9d219ab4ab3a75cead3dbfbd95c2e03810da37caf64f657fe7797c2",
+      "size": 73208
+    },
+    {
+      "family": "Quicksand",
+      "method": "quicksand",
+      "weight": 600,
+      "style": "normal",
+      "file": "Quicksand-SemiBold.ttf",
+      "sha256": "eafa4e892358ecd36b0985550d530d2fe41e4147d0cc9fb212008d5d9c44257e",
+      "size": 73116
+    },
+    {
+      "family": "Quicksand",
+      "method": "quicksand",
+      "weight": 700,
+      "style": "normal",
+      "file": "Quicksand-Bold.ttf",
+      "sha256": "75e85595ac7acf57cdb1c64202577c48150e7aee3fcf600c558d082b040cb8c1",
+      "size": 72892
+    },
+    {
+      "family": "PatrickHand",
+      "method": "patrickHand",
+      "weight": 400,
+      "style": "normal",
+      "file": "PatrickHand-Regular.ttf",
+      "sha256": "309ba7d5200f03efa6c3d747d7ad47a5a354464ae0a6ffcb02c747286bc50964",
+      "size": 81712
+    },
+    {
+      "family": "DancingScript",
+      "method": "dancingScript",
+      "weight": 400,
+      "style": "normal",
+      "file": "DancingScript-Regular.ttf",
+      "sha256": "14e256280323ac39486a22d4a7cd6f5a737772ea4a7ec3052ee4ac463b71c4aa",
+      "size": 76316
+    },
+    {
+      "family": "DancingScript",
+      "method": "dancingScript",
+      "weight": 500,
+      "style": "normal",
+      "file": "DancingScript-Medium.ttf",
+      "sha256": "dda703227cc2f5d3f56dc1c9ec3c37e4d4b026d24f2b6e44bf5b8cfa4b559020",
+      "size": 76648
+    },
+    {
+      "family": "DancingScript",
+      "method": "dancingScript",
+      "weight": 600,
+      "style": "normal",
+      "file": "DancingScript-SemiBold.ttf",
+      "sha256": "97d2263b9b1d7efddb6f49f40c0b2a7a7295320e8ebe57a4d3dca77540c75efa",
+      "size": 76640
+    },
+    {
+      "family": "DancingScript",
+      "method": "dancingScript",
+      "weight": 700,
+      "style": "normal",
+      "file": "DancingScript-Bold.ttf",
+      "sha256": "5a34e8870af44a503c21ab233077f9f516b1588cfe364192ba084b41e1d0ca3a",
+      "size": 76572
+    },
+    {
+      "family": "Caveat",
+      "method": "caveat",
+      "weight": 400,
+      "style": "normal",
+      "file": "Caveat-Regular.ttf",
+      "sha256": "34d93913b0b739f8049d0260b968c4f370b7fef57b018f81820f67784c067213",
+      "size": 251000
+    },
+    {
+      "family": "Caveat",
+      "method": "caveat",
+      "weight": 500,
+      "style": "normal",
+      "file": "Caveat-Medium.ttf",
+      "sha256": "bd52370c5ab257b65b726d86455ffe555369e12894f9e36e988542ed070b3a6c",
+      "size": 251728
+    },
+    {
+      "family": "Caveat",
+      "method": "caveat",
+      "weight": 600,
+      "style": "normal",
+      "file": "Caveat-SemiBold.ttf",
+      "sha256": "1d988352c5dfe7470c2a06a3b52f61c83c1504a62a19e9103ca095ed9ef9e796",
+      "size": 251792
+    },
+    {
+      "family": "Caveat",
+      "method": "caveat",
+      "weight": 700,
+      "style": "normal",
+      "file": "Caveat-Bold.ttf",
+      "sha256": "f6ed5c0085b69b0967290b0f1c184af8df4ddea2a781f61537910c0a772ca07c",
+      "size": 251232
+    },
+    {
+      "family": "Lora",
+      "method": "lora",
+      "weight": 400,
+      "style": "normal",
+      "file": "Lora-Regular.ttf",
+      "sha256": "e9b4141f57f365b3de9be91123b343311c4c292f063635d38b4bce7f6b19c052",
+      "size": 132164
+    },
+    {
+      "family": "Lora",
+      "method": "lora",
+      "weight": 500,
+      "style": "normal",
+      "file": "Lora-Medium.ttf",
+      "sha256": "9173dc957c855415544d0766f962a978285c7766161cb1d4ca68394fdb2e6201",
+      "size": 132296
+    },
+    {
+      "family": "Lora",
+      "method": "lora",
+      "weight": 600,
+      "style": "normal",
+      "file": "Lora-SemiBold.ttf",
+      "sha256": "6d8f94a1d0c946a7d97ce4ad3c6697c1251b108424375214e2d60b92231972a8",
+      "size": 132648
+    },
+    {
+      "family": "Lora",
+      "method": "lora",
+      "weight": 700,
+      "style": "normal",
+      "file": "Lora-Bold.ttf",
+      "sha256": "ab1ab40116296c0df36bd1d714a4bc32f6d6d003868d01b4421106b55593d926",
+      "size": 132100
+    },
+    {
+      "family": "Lora",
+      "method": "lora",
+      "weight": 400,
+      "style": "italic",
+      "file": "Lora-Italic.ttf",
+      "sha256": "a1c1b5ce4c23f967575ae2c3284d4a60960f9571f0ebe92b8a91e6c1408ac873",
+      "size": 137304
+    },
+    {
+      "family": "Lora",
+      "method": "lora",
+      "weight": 500,
+      "style": "italic",
+      "file": "Lora-MediumItalic.ttf",
+      "sha256": "db8c608068c0b4bcbc75d33b69a75765fc4a99ac2f83f542c6cbbae9a02fe6c8",
+      "size": 138264
+    },
+    {
+      "family": "Lora",
+      "method": "lora",
+      "weight": 600,
+      "style": "italic",
+      "file": "Lora-SemiBoldItalic.ttf",
+      "sha256": "3e2fd2336ff19cad12a5b7153d9977b6daebe39c2d81f7c4673e93d909a2c090",
+      "size": 138404
+    },
+    {
+      "family": "Lora",
+      "method": "lora",
+      "weight": 700,
+      "style": "italic",
+      "file": "Lora-BoldItalic.ttf",
+      "sha256": "63f2549223fdb2319965cd17935c78aefcb609041770cf87d83e4914a4b2ca32",
+      "size": 138328
+    },
+    {
+      "family": "Nunito",
+      "method": "nunito",
+      "weight": 200,
+      "style": "normal",
+      "file": "Nunito-ExtraLight.ttf",
+      "sha256": "a699f7f28981eea3c9beb5b01129f0d5a745c613376350ea01d599fc3aeab432",
+      "size": 125388
+    },
+    {
+      "family": "Nunito",
+      "method": "nunito",
+      "weight": 300,
+      "style": "normal",
+      "file": "Nunito-Light.ttf",
+      "sha256": "689cc9cc60675d7d9efa0b4fd7492045c8bac6bb73569a4dbbd5ef2ebabdc309",
+      "size": 125540
+    },
+    {
+      "family": "Nunito",
+      "method": "nunito",
+      "weight": 400,
+      "style": "normal",
+      "file": "Nunito-Regular.ttf",
+      "sha256": "33383e64e1f3603142b718d1854778a9c9c5e2744b5aafdac2b66fedde54a98d",
+      "size": 125504
+    },
+    {
+      "family": "Nunito",
+      "method": "nunito",
+      "weight": 500,
+      "style": "normal",
+      "file": "Nunito-Medium.ttf",
+      "sha256": "578b7f3f76615d258788124d9299d5fcef1711101cee45c494cc985a9d736c4e",
+      "size": 125628
+    },
+    {
+      "family": "Nunito",
+      "method": "nunito",
+      "weight": 600,
+      "style": "normal",
+      "file": "Nunito-SemiBold.ttf",
+      "sha256": "da0d941aa9dda69a63c9d611ba4dbdb490ea43a61edc611f0e66cdbfc2ac0a18",
+      "size": 125512
+    },
+    {
+      "family": "Nunito",
+      "method": "nunito",
+      "weight": 700,
+      "style": "normal",
+      "file": "Nunito-Bold.ttf",
+      "sha256": "c4ee3c72ba7b147e5386f71fe18f7c076016c947b8956a7affcd338101f9ddcd",
+      "size": 125440
+    },
+    {
+      "family": "Nunito",
+      "method": "nunito",
+      "weight": 800,
+      "style": "normal",
+      "file": "Nunito-ExtraBold.ttf",
+      "sha256": "89122aad8fac58cb57e90b1560e0de7bcf458341752f4f1bf7e6c27578e22b1e",
+      "size": 125392
+    },
+    {
+      "family": "Nunito",
+      "method": "nunito",
+      "weight": 900,
+      "style": "normal",
+      "file": "Nunito-Black.ttf",
+      "sha256": "8d18d333bff5d00f5094d887290556281a163ca2375d920df2527c7dc2e00e3b",
+      "size": 125352
+    },
+    {
+      "family": "Nunito",
+      "method": "nunito",
+      "weight": 200,
+      "style": "italic",
+      "file": "Nunito-ExtraLightItalic.ttf",
+      "sha256": "a93b0ce427cccfced788a33baaf4735f2b7c06e5c59e492b5e11992d230b6618",
+      "size": 128248
+    },
+    {
+      "family": "Nunito",
+      "method": "nunito",
+      "weight": 300,
+      "style": "italic",
+      "file": "Nunito-LightItalic.ttf",
+      "sha256": "c80b0d0eb71e5d27ee7064f89d80f6d04b7efc5f7316e0df2e17f2a0f9295b97",
+      "size": 128508
+    },
+    {
+      "family": "Nunito",
+      "method": "nunito",
+      "weight": 400,
+      "style": "italic",
+      "file": "Nunito-Italic.ttf",
+      "sha256": "3ea474b0be3d68d751c274c95dbfe0d7215091f388aec3e41fea8ce02e64bcc7",
+      "size": 128376
+    },
+    {
+      "family": "Nunito",
+      "method": "nunito",
+      "weight": 500,
+      "style": "italic",
+      "file": "Nunito-MediumItalic.ttf",
+      "sha256": "0460f98aa8ef237a182eaf4c88c5c6629d3bae448bf05ce5b6fbeafaa348ef71",
+      "size": 128440
+    },
+    {
+      "family": "Nunito",
+      "method": "nunito",
+      "weight": 600,
+      "style": "italic",
+      "file": "Nunito-SemiBoldItalic.ttf",
+      "sha256": "72106e753bb7e88c2b99e5cff9bda977be76d25cf5395a1e61fd24b83f17f981",
+      "size": 128304
+    },
+    {
+      "family": "Nunito",
+      "method": "nunito",
+      "weight": 700,
+      "style": "italic",
+      "file": "Nunito-BoldItalic.ttf",
+      "sha256": "371e6cfbed5ed0e3f6b8bb8843de51378e72b8b7237c0e609282cde18dd509e4",
+      "size": 128244
+    },
+    {
+      "family": "Nunito",
+      "method": "nunito",
+      "weight": 800,
+      "style": "italic",
+      "file": "Nunito-ExtraBoldItalic.ttf",
+      "sha256": "628fd3502d5e333692382dc285269409031258b9798bc1bbf27c68af24cb0aae",
+      "size": 128280
+    },
+    {
+      "family": "Nunito",
+      "method": "nunito",
+      "weight": 900,
+      "style": "italic",
+      "file": "Nunito-BlackItalic.ttf",
+      "sha256": "b54ad50ee4fa68d81fdff08d49852c0368df3cb79771ba25df5bc94f7d1d6143",
+      "size": 128188
+    },
+    {
+      "family": "Comfortaa",
+      "method": "comfortaa",
+      "weight": 300,
+      "style": "normal",
+      "file": "Comfortaa-Light.ttf",
+      "sha256": "de814fc0e38c179e2a26f9ca1d578d6347e209436b02176713d7f94448d29ad4",
+      "size": 109976
+    },
+    {
+      "family": "Comfortaa",
+      "method": "comfortaa",
+      "weight": 400,
+      "style": "normal",
+      "file": "Comfortaa-Regular.ttf",
+      "sha256": "dbc6e401cec88236b5a768669a49d3dacbb8ae3efa717c031b8bbbdf38da92fa",
+      "size": 109976
+    },
+    {
+      "family": "Comfortaa",
+      "method": "comfortaa",
+      "weight": 500,
+      "style": "normal",
+      "file": "Comfortaa-Medium.ttf",
+      "sha256": "6f903ca8cb6ffdcd21ac7c7673eb4d3fde5b0208ac1cfc723bc27d5a7bcd9d08",
+      "size": 110028
+    },
+    {
+      "family": "Comfortaa",
+      "method": "comfortaa",
+      "weight": 600,
+      "style": "normal",
+      "file": "Comfortaa-SemiBold.ttf",
+      "sha256": "b26509645900650134a239738515e76809818b4492b8c8b0130af443813b168e",
+      "size": 110116
+    },
+    {
+      "family": "Comfortaa",
+      "method": "comfortaa",
+      "weight": 700,
+      "style": "normal",
+      "file": "Comfortaa-Bold.ttf",
+      "sha256": "1d5e9b0471c85f9a0cb2757591b404371bff9dc3141879ff12bdaaf755313db0",
+      "size": 110148
+    },
+    {
+      "family": "PlayfairDisplay",
+      "method": "playfairDisplay",
+      "weight": 400,
+      "style": "normal",
+      "file": "PlayfairDisplay-Regular.ttf",
+      "sha256": "775cd3f92411b97cc374e0d8909c5caf3713508120866dc62b08f7a20213ba6d",
+      "size": 123216
+    },
+    {
+      "family": "PlayfairDisplay",
+      "method": "playfairDisplay",
+      "weight": 500,
+      "style": "normal",
+      "file": "PlayfairDisplay-Medium.ttf",
+      "sha256": "102a056af74fd12dd9436188b5c3bf72aa6e7e1ae55223d4e6cd76652edff492",
+      "size": 123584
+    },
+    {
+      "family": "PlayfairDisplay",
+      "method": "playfairDisplay",
+      "weight": 600,
+      "style": "normal",
+      "file": "PlayfairDisplay-SemiBold.ttf",
+      "sha256": "9d28ec9ef0160652a7f0c9a1be5a55361b9f5249e8da1ad0b81916dbf1fee7e5",
+      "size": 123648
+    },
+    {
+      "family": "PlayfairDisplay",
+      "method": "playfairDisplay",
+      "weight": 700,
+      "style": "normal",
+      "file": "PlayfairDisplay-Bold.ttf",
+      "sha256": "529bffba18f383c1e3d0c1851b77b3bccfdd841ab051a5517543efca15b65038",
+      "size": 123512
+    },
+    {
+      "family": "PlayfairDisplay",
+      "method": "playfairDisplay",
+      "weight": 800,
+      "style": "normal",
+      "file": "PlayfairDisplay-ExtraBold.ttf",
+      "sha256": "3deba1ed67c7bec5ee3e5700c2d6d83d9924a4f86bbaaa384cfeeffc1a78b10d",
+      "size": 123584
+    },
+    {
+      "family": "PlayfairDisplay",
+      "method": "playfairDisplay",
+      "weight": 900,
+      "style": "normal",
+      "file": "PlayfairDisplay-Black.ttf",
+      "sha256": "c3f0632fe42bdeeb4fec24a7f834ab4456190ed005811d20637fd94146557738",
+      "size": 123508
+    },
+    {
+      "family": "PlayfairDisplay",
+      "method": "playfairDisplay",
+      "weight": 400,
+      "style": "italic",
+      "file": "PlayfairDisplay-Italic.ttf",
+      "sha256": "ef34ad679cbd7e276b4f9571d5e3137f01375933b014491057999ab8bfcfb098",
+      "size": 110792
+    },
+    {
+      "family": "PlayfairDisplay",
+      "method": "playfairDisplay",
+      "weight": 500,
+      "style": "italic",
+      "file": "PlayfairDisplay-MediumItalic.ttf",
+      "sha256": "91e3874ae9688ff249b7a421a4e4b1195045493e04b08e8689e7e921a80b98ca",
+      "size": 111144
+    },
+    {
+      "family": "PlayfairDisplay",
+      "method": "playfairDisplay",
+      "weight": 600,
+      "style": "italic",
+      "file": "PlayfairDisplay-SemiBoldItalic.ttf",
+      "sha256": "f69cc5c56ec3b71180884c7e773e10bece78999e5adb6342a0e545bc7bcf954a",
+      "size": 111184
+    },
+    {
+      "family": "PlayfairDisplay",
+      "method": "playfairDisplay",
+      "weight": 700,
+      "style": "italic",
+      "file": "PlayfairDisplay-BoldItalic.ttf",
+      "sha256": "8f3e22cdbc44cf8bb17383f36cc23c73b70cb15e4c6d9a28f55ed4eaa77b294c",
+      "size": 111104
+    },
+    {
+      "family": "PlayfairDisplay",
+      "method": "playfairDisplay",
+      "weight": 800,
+      "style": "italic",
+      "file": "PlayfairDisplay-ExtraBoldItalic.ttf",
+      "sha256": "aad0b6d9413555eef1df8d7257a88bbec727fc407cffacddc945e2a5f986a858",
+      "size": 111092
+    },
+    {
+      "family": "PlayfairDisplay",
+      "method": "playfairDisplay",
+      "weight": 900,
+      "style": "italic",
+      "file": "PlayfairDisplay-BlackItalic.ttf",
+      "sha256": "ad2fa5f23dc596322ff1fd50252c044c45a9f679ef81a8059b6c0767bd37248b",
+      "size": 110732
+    },
+    {
+      "family": "BeVietnamPro",
+      "method": "beVietnamPro",
+      "weight": 100,
+      "style": "normal",
+      "file": "BeVietnamPro-Thin.ttf",
+      "sha256": "0abbd9ed2dbeca4d90ae2160babc5683fee0623d6619e98677d6c6c64a47e78d",
+      "size": 72348
+    },
+    {
+      "family": "BeVietnamPro",
+      "method": "beVietnamPro",
+      "weight": 100,
+      "style": "italic",
+      "file": "BeVietnamPro-ThinItalic.ttf",
+      "sha256": "b31747559492756ac1ec72a582043ef3c4bb01b9644cacd0bf2341d97ab69438",
+      "size": 73916
+    },
+    {
+      "family": "BeVietnamPro",
+      "method": "beVietnamPro",
+      "weight": 200,
+      "style": "normal",
+      "file": "BeVietnamPro-ExtraLight.ttf",
+      "sha256": "8442b499dec3f7ca8019bc9061a5e40b23df049b68fd6fb09e0ca82634de7fc6",
+      "size": 72252
+    },
+    {
+      "family": "BeVietnamPro",
+      "method": "beVietnamPro",
+      "weight": 200,
+      "style": "italic",
+      "file": "BeVietnamPro-ExtraLightItalic.ttf",
+      "sha256": "007babe76f7a0def9016117a5415c497089962a52f481521aa7b07923b3a2b54",
+      "size": 74416
+    },
+    {
+      "family": "BeVietnamPro",
+      "method": "beVietnamPro",
+      "weight": 300,
+      "style": "normal",
+      "file": "BeVietnamPro-Light.ttf",
+      "sha256": "528f2c40df7b2e351de21c89fa2d2da9dc391eb91e462c4ca6d596626942c063",
+      "size": 72484
+    },
+    {
+      "family": "BeVietnamPro",
+      "method": "beVietnamPro",
+      "weight": 300,
+      "style": "italic",
+      "file": "BeVietnamPro-LightItalic.ttf",
+      "sha256": "97539b3eaac44fbfc77db70d3bb13477b61b28d82002d6712421e9c34d307423",
+      "size": 74252
+    },
+    {
+      "family": "BeVietnamPro",
+      "method": "beVietnamPro",
+      "weight": 400,
+      "style": "normal",
+      "file": "BeVietnamPro-Regular.ttf",
+      "sha256": "7137b7b25895e70fcb54f9459a4fbc520288ee1c5d1433a6b6ef7e46fe80f41c",
+      "size": 72288
+    },
+    {
+      "family": "BeVietnamPro",
+      "method": "beVietnamPro",
+      "weight": 400,
+      "style": "italic",
+      "file": "BeVietnamPro-Italic.ttf",
+      "sha256": "84ee08dc99068044d207dd0b14e83a0fa9daba6b5c52eeefcbf1d502d49edeb1",
+      "size": 74040
+    },
+    {
+      "family": "BeVietnamPro",
+      "method": "beVietnamPro",
+      "weight": 500,
+      "style": "normal",
+      "file": "BeVietnamPro-Medium.ttf",
+      "sha256": "8f73837ad7634172954987002dcf5644fd5bcfa44917d53341aa6ea27eeac36c",
+      "size": 72424
+    },
+    {
+      "family": "BeVietnamPro",
+      "method": "beVietnamPro",
+      "weight": 500,
+      "style": "italic",
+      "file": "BeVietnamPro-MediumItalic.ttf",
+      "sha256": "4f965490bf034f592e9517ccd411a2fe5e9dff0b58e0b57bc0c644cdaf44065d",
+      "size": 73976
+    },
+    {
+      "family": "BeVietnamPro",
+      "method": "beVietnamPro",
+      "weight": 600,
+      "style": "normal",
+      "file": "BeVietnamPro-SemiBold.ttf",
+      "sha256": "0d403b77523ec5de7390d86eccaf8510f49274ed9a0621eb1350d65b6db8f8ac",
+      "size": 72268
+    },
+    {
+      "family": "BeVietnamPro",
+      "method": "beVietnamPro",
+      "weight": 600,
+      "style": "italic",
+      "file": "BeVietnamPro-SemiBoldItalic.ttf",
+      "sha256": "628b394f3e80196aacdcc6828ce411db4e6fe4d0b398da75a0ab22087d6264c6",
+      "size": 73448
+    },
+    {
+      "family": "BeVietnamPro",
+      "method": "beVietnamPro",
+      "weight": 700,
+      "style": "normal",
+      "file": "BeVietnamPro-Bold.ttf",
+      "sha256": "9349ce8e551cd214fbfcabb8b758e9cef74da57d5fb61678058909a60c916bb0",
+      "size": 72172
+    },
+    {
+      "family": "BeVietnamPro",
+      "method": "beVietnamPro",
+      "weight": 700,
+      "style": "italic",
+      "file": "BeVietnamPro-BoldItalic.ttf",
+      "sha256": "cda4804e2a4fec70726ee9226a1cc997345332de65ca50a4e317551ee39957f5",
+      "size": 73308
+    },
+    {
+      "family": "BeVietnamPro",
+      "method": "beVietnamPro",
+      "weight": 800,
+      "style": "normal",
+      "file": "BeVietnamPro-ExtraBold.ttf",
+      "sha256": "f47dd6df4d2348f0779645e06f9219c95e1a984142a9a2fba624f7d4cd6c5c2c",
+      "size": 71864
+    },
+    {
+      "family": "BeVietnamPro",
+      "method": "beVietnamPro",
+      "weight": 800,
+      "style": "italic",
+      "file": "BeVietnamPro-ExtraBoldItalic.ttf",
+      "sha256": "062e86d2f3da0c837ae71af66ca70c3e70513d416fbf01a2cb38e472f3677820",
+      "size": 73248
+    },
+    {
+      "family": "BeVietnamPro",
+      "method": "beVietnamPro",
+      "weight": 900,
+      "style": "normal",
+      "file": "BeVietnamPro-Black.ttf",
+      "sha256": "6eae3f450064c57f6f23ece8d287942d39ef4d1983fe30d427aa890455042be4",
+      "size": 70768
+    },
+    {
+      "family": "BeVietnamPro",
+      "method": "beVietnamPro",
+      "weight": 900,
+      "style": "italic",
+      "file": "BeVietnamPro-BlackItalic.ttf",
+      "sha256": "480c256a2c227c03dc31705117db93192bbc4dcda9a89d2694dbfa2644e67bd1",
+      "size": 72052
+    },
+    {
+      "family": "JetBrainsMono",
+      "method": "jetBrainsMono",
+      "weight": 100,
+      "style": "normal",
+      "file": "JetBrainsMono-Thin.ttf",
+      "sha256": "9a44b1b4adc03c445877e325d57d0879cb22840ff640a40e6515be59c845b015",
+      "size": 112252
+    },
+    {
+      "family": "JetBrainsMono",
+      "method": "jetBrainsMono",
+      "weight": 200,
+      "style": "normal",
+      "file": "JetBrainsMono-ExtraLight.ttf",
+      "sha256": "9133ef0d504f0d80e5478902ee49e8f815ade6f5621fc89c5d6b9263549325d7",
+      "size": 112340
+    },
+    {
+      "family": "JetBrainsMono",
+      "method": "jetBrainsMono",
+      "weight": 300,
+      "style": "normal",
+      "file": "JetBrainsMono-Light.ttf",
+      "sha256": "0623d0562debca9e5d97996af1de5e98f672a20f2ee6085cec86cd6a77ec3595",
+      "size": 112276
+    },
+    {
+      "family": "JetBrainsMono",
+      "method": "jetBrainsMono",
+      "weight": 400,
+      "style": "normal",
+      "file": "JetBrainsMono-Regular.ttf",
+      "sha256": "fc34426314d00825ccc768a0c4b1178fe704f04bd947882ef10c2b71b7e355e7",
+      "size": 112148
+    },
+    {
+      "family": "JetBrainsMono",
+      "method": "jetBrainsMono",
+      "weight": 500,
+      "style": "normal",
+      "file": "JetBrainsMono-Medium.ttf",
+      "sha256": "ba10286722bd7dc2274b817575046e39ee816d6ba1e2ace48e22bcd068576941",
+      "size": 112180
+    },
+    {
+      "family": "JetBrainsMono",
+      "method": "jetBrainsMono",
+      "weight": 600,
+      "style": "normal",
+      "file": "JetBrainsMono-SemiBold.ttf",
+      "sha256": "f833596d98e0e021dd43d993254658d0f32318f82f08afee0fc2e41c16ce9571",
+      "size": 112136
+    },
+    {
+      "family": "JetBrainsMono",
+      "method": "jetBrainsMono",
+      "weight": 700,
+      "style": "normal",
+      "file": "JetBrainsMono-Bold.ttf",
+      "sha256": "b43a7dfebfb8816fb3859f6a7932824f594e115538ccd3f1ebc0ffc231b0acab",
+      "size": 112068
+    },
+    {
+      "family": "JetBrainsMono",
+      "method": "jetBrainsMono",
+      "weight": 800,
+      "style": "normal",
+      "file": "JetBrainsMono-ExtraBold.ttf",
+      "sha256": "98ea78a2337e1ef2274f247c857a63e40e975c6907a7baff9209033fa42142ac",
+      "size": 112064
+    },
+    {
+      "family": "JetBrainsMono",
+      "method": "jetBrainsMono",
+      "weight": 100,
+      "style": "italic",
+      "file": "JetBrainsMono-ThinItalic.ttf",
+      "sha256": "0ad56d15852c41931b3640756ff18d55178c649d5fb55daf346a6831918c2c49",
+      "size": 115164
+    },
+    {
+      "family": "JetBrainsMono",
+      "method": "jetBrainsMono",
+      "weight": 200,
+      "style": "italic",
+      "file": "JetBrainsMono-ExtraLightItalic.ttf",
+      "sha256": "446787ed370004cd92c5043b5710c0fe7222eea7b1cce8d6a0d48008e8d4fa9b",
+      "size": 115260
+    },
+    {
+      "family": "JetBrainsMono",
+      "method": "jetBrainsMono",
+      "weight": 300,
+      "style": "italic",
+      "file": "JetBrainsMono-LightItalic.ttf",
+      "sha256": "9002d02f91013aaf6ee54f0d03bde3e7d114597f49401b022c948ed5c4229702",
+      "size": 115136
+    },
+    {
+      "family": "JetBrainsMono",
+      "method": "jetBrainsMono",
+      "weight": 400,
+      "style": "italic",
+      "file": "JetBrainsMono-Italic.ttf",
+      "sha256": "93f2f2d90bcd64e35bf1b7bd90149b168df727499667b5d2fde1758ed0297da5",
+      "size": 114936
+    },
+    {
+      "family": "JetBrainsMono",
+      "method": "jetBrainsMono",
+      "weight": 500,
+      "style": "italic",
+      "file": "JetBrainsMono-MediumItalic.ttf",
+      "sha256": "d33f9b81805d2984778b134e68b0a7f242a2d10a81fa5299b8c5081f3f7f0e83",
+      "size": 115060
+    },
+    {
+      "family": "JetBrainsMono",
+      "method": "jetBrainsMono",
+      "weight": 600,
+      "style": "italic",
+      "file": "JetBrainsMono-SemiBoldItalic.ttf",
+      "sha256": "93aae81b1f8697f683ae32b65bacb4d74679d7a6a69357fbe45858aaa05db9b4",
+      "size": 115004
+    },
+    {
+      "family": "JetBrainsMono",
+      "method": "jetBrainsMono",
+      "weight": 700,
+      "style": "italic",
+      "file": "JetBrainsMono-BoldItalic.ttf",
+      "sha256": "a89a53b6ccccdfd6431441572e542901c7620e55d91f10d0eaa3fd39adaa3b83",
+      "size": 114932
+    },
+    {
+      "family": "JetBrainsMono",
+      "method": "jetBrainsMono",
+      "weight": 800,
+      "style": "italic",
+      "file": "JetBrainsMono-ExtraBoldItalic.ttf",
+      "sha256": "013382b52ceb65565ac0ecf7dbaaf9369d29f4d4d3a8763439e3eb77c2b1009b",
+      "size": 114984
+    }
+  ]
+}

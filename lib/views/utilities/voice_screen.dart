@@ -166,6 +166,7 @@ class _VoiceScreenState extends State<VoiceScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _privateMediaUrlService.dispose();
     _playbackStateSub?.cancel();
     _playbackCompleteSub?.cancel();
     _releaseVoicePlaybackQuiet();
@@ -176,6 +177,14 @@ class _VoiceScreenState extends State<VoiceScreen>
     _player.dispose();
     _bounceController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed &&
+        state != AppLifecycleState.inactive) {
+      _privateMediaUrlService.clear();
+    }
   }
 
   Future<void> _pickAndUploadVoice() async {

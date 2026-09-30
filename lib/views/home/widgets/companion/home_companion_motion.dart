@@ -115,6 +115,9 @@ class HomeCompanionMotion extends ChangeNotifier {
   Offset? _pendingTouch;
   bool _settled = false;
   Offset? _pinnedPosition;
+  Offset? _dragOrigin;
+
+  bool get isDragging => _dragOrigin != null;
 
   /// Scene cung cấp kiểm tra chiếm chỗ trước khi thay đổi vị trí thật.
   bool Function(Offset feet, double lift)? canMoveTo;
@@ -306,6 +309,7 @@ class HomeCompanionMotion extends ChangeNotifier {
         _sameSurfaces(valid, _surfaces)) {
       return;
     }
+    endDrag(cancel: true);
     final previousId = _track?.surface.id;
     _viewport = viewport;
     _surfaces = List.unmodifiable(valid);
@@ -364,6 +368,7 @@ class HomeCompanionMotion extends ChangeNotifier {
       position.dy.clamp(viewport.top, viewport.bottom),
     );
     if (_pinnedPosition == pinned && _viewport == viewport) return;
+    endDrag(cancel: true);
     _pass = null;
     _viewport = viewport;
     _pinnedPosition = pinned;
@@ -383,9 +388,80 @@ class HomeCompanionMotion extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool beginDrag() {
+    if (!hasSurfaces || isDragging) return false;
+    _dragOrigin = _position;
+    _journey.clear();
+    _pass = null;
+    _pendingTouch = null;
+    _greetingOnArrival = false;
+    _affectionUntil = -1;
+    _cleaningSeed = null;
+    _settled = false;
+    _rest();
+    notifyListeners();
+    return true;
+  }
+
+  void dragTo(Offset feet) {
+    if (!isDragging || !_finiteOffset(feet)) return;
+    _position = Offset(
+      feet.dx.clamp(_viewport.left, _viewport.right),
+      feet.dy.clamp(_viewport.top, _viewport.bottom),
+    );
+    notifyListeners();
+  }
+
+  void endDrag({bool cancel = false, bool Function(Offset)? canLand}) {
+    final origin = _dragOrigin;
+    if (origin == null) return;
+    _dragOrigin = null;
+    final target = cancel ? origin : _position;
+    if (_pinnedPosition != null) {
+      _position = canLand?.call(target) == false ? origin : target;
+      _pinnedPosition = _position;
+    } else if (_tracks.isNotEmpty) {
+      final candidates = <(_Track, double)>[];
+      for (final track in _tracks) {
+        candidates.add((track, track.project(target).$1));
+        for (double distance = 0; distance <= track.length; distance += 24) {
+          candidates.add((track, distance));
+        }
+        candidates.add((track, track.length));
+      }
+      candidates.sort(
+        (first, second) => (first.$1.at(first.$2) - target).distanceSquared
+            .compareTo((second.$1.at(second.$2) - target).distanceSquared),
+      );
+      final available = candidates.where(
+        (candidate) => canLand?.call(candidate.$1.at(candidate.$2)) ?? true,
+      );
+      if (available.isNotEmpty) {
+        final landing = available.first;
+        _track = landing.$1;
+        _distance = landing.$2;
+      } else {
+        _track = _tracks.reduce(
+          (first, second) =>
+              first.project(origin).$2 < second.project(origin).$2
+              ? first
+              : second,
+        );
+        _distance = _track!.project(origin).$1;
+      }
+      _position = _track!.at(_distance);
+      _lastVisited[_track!.surface.id] = ++_visitSerial;
+    }
+    _blockedFor = 0;
+    movementBlocked = false;
+    _finishedPatrol = false;
+    _rest();
+    notifyListeners();
+  }
+
   /// Bỏ qua phần thời gian app bị treo/ra nền, không chạy bù hàng giây.
   void advance(Duration delta) {
-    if (!hasSurfaces || delta <= Duration.zero) return;
+    if (!hasSurfaces || isDragging || delta <= Duration.zero) return;
     final dt = math.min(delta.inMicroseconds / 1000000, 0.10);
     _elapsed += dt;
     _phaseTime += dt;

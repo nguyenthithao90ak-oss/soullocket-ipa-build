@@ -321,6 +321,100 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   }
 
   void _deleteAccount() async {
+    if (_accountDeletionActionBusy) return;
+    setState(() => _accountDeletionActionBusy = true);
+    try {
+      await _runDeleteAccount();
+    } finally {
+      if (mounted) setState(() => _accountDeletionActionBusy = false);
+    }
+  }
+
+  Future<void> _approvePartnerAccountDeletion(
+    AccountDeletionStatus deletion,
+  ) async {
+    if (_accountDeletionActionBusy) return;
+    final user = _auth.currentUser;
+    if (user == null || !deletion.canApproveFor(user.uid)) return;
+    setState(() => _accountDeletionActionBusy = true);
+    try {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(context.tr('account_deletion_approve')),
+          content: Text(context.tr('account_deletion_approve_warning')),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(context.tr('cancel')),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(context.tr('account_deletion_approve')),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !mounted) return;
+      final email = user.email;
+      if (email == null || email.trim().isEmpty) {
+        SLNotice.showError(
+          context,
+          context.tr('p6_delete_account_email_missing'),
+        );
+        return;
+      }
+      String? proof;
+      final verified = await showSettingsEmailOtpDialog(
+        context: context,
+        title: context.tr('p6_delete_account_verify_title'),
+        email: email,
+        sendCode: () => _authService.sendOtpEmail(email),
+        verifyCode: (otp) async {
+          proof = await _authService.verifyAccountDeletionOtp(
+            email,
+            otp,
+            expectedUid: user.uid,
+            partnerUid: deletion.requesterUid,
+          );
+        },
+      );
+      if (!verified || proof == null || !mounted) return;
+      final scheduledAt = await _authService.approvePartnerDeletion(
+        partnerUid: deletion.requesterUid,
+        expectedUid: user.uid,
+        verificationProof: proof!,
+      );
+      if (!mounted || _auth.currentUser?.uid != user.uid) return;
+      setState(
+        () => _accountDeletionStatus = AccountDeletionStatus(
+          requesterUid: deletion.requesterUid,
+          scheduledAtMs: scheduledAt,
+          status: 'partner_approved',
+        ),
+      );
+      SLNotice.showSuccess(
+        context,
+        L10nService().format('account_deletion_approved', {
+          'date': _formatPendingAccountDeletionDate(scheduledAt),
+        }),
+      );
+    } catch (error) {
+      if (!mounted || _auth.currentUser?.uid != user.uid) return;
+      SLNotice.showError(
+        context,
+        AppErrorMapper.resolve(
+          error,
+          fallbackMessage: context.tr('account_deletion_status_unavailable'),
+        ).message,
+      );
+      await _loadPendingAccountDeletionState();
+    } finally {
+      if (mounted) setState(() => _accountDeletionActionBusy = false);
+    }
+  }
+
+  Future<void> _runDeleteAccount() async {
     final houseId = _houseId?.trim();
     try {
       if (houseId != null &&
@@ -532,8 +626,9 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
 
       if (finalConfirm == true) {
         if (!mounted) return;
+        final verificationUid = _auth.currentUser?.uid;
         final email = _auth.currentUser?.email;
-        if (email == null || email.trim().isEmpty) {
+        if (verificationUid == null || email == null || email.trim().isEmpty) {
           SLNotice.showError(
             context,
             context.tr('p6_delete_account_email_missing'),
@@ -541,6 +636,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
           return;
         }
 
+        String? verificationProof;
         final otpVerified = await showSettingsEmailOtpDialog(
           context: context,
           title: context.tr('p6_delete_account_verify_title'),
@@ -549,18 +645,25 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
             await _authService.sendOtpEmail(email);
           },
           verifyCode: (otp) async {
-            await _authService.validateEmailOTP(email, otp);
+            verificationProof = await _authService.verifyAccountDeletionOtp(
+              email,
+              otp,
+              expectedUid: verificationUid,
+            );
           },
         );
 
-        if (!otpVerified) {
+        if (!otpVerified || verificationProof == null) {
           return;
         }
 
         if (!mounted) return;
         SLNotice.showInfo(context, context.tr('home_angthitlpl_42ed13'));
         try {
-          final result = await _authService.deleteAccount();
+          final result = await _authService.deleteAccount(
+            verificationProof: verificationProof,
+            expectedUid: verificationUid,
+          );
           if (!mounted) return;
           int days = result['delayDays'] ?? 3;
           final scheduledAt = result['scheduledAt'];

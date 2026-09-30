@@ -20,9 +20,9 @@ class PresenceService {
   PresenceService._internal();
 
   static const Duration onlineFreshness = Duration(minutes: 3);
-  // Heartbeat mỗi 60s để session luôn fresh trong ngưỡng 30 phút stale threshold.
+  // Heartbeat 90s vẫn nằm dưới ngưỡng fresh 3 phút, đồng thời giảm số lần ghi.
   // Lightweight heartbeat chỉ ghi 1 field 'ts' → ít writes, ít băng thông.
-  static const Duration heartbeatInterval = Duration(seconds: 60);
+  static const Duration heartbeatInterval = Duration(seconds: 90);
   static const Duration staleSessionThreshold = Duration(minutes: 30);
   static const Duration justDisconnectedThreshold = Duration(minutes: 1);
 
@@ -348,7 +348,7 @@ class PresenceService {
       return;
     }
 
-    // ⚡ Full heartbeat mỗi 10 lần (thay vì 5) = mỗi 50 phút thay vì 15 phút
+    // Full heartbeat mỗi 10 lần = khoảng 15 phút một lần.
     final shouldRunFull = _heartbeatCount == 0 || _heartbeatCount % 10 == 0;
     _heartbeatCount++;
 

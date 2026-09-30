@@ -23,7 +23,7 @@ class UpdateTab extends StatefulWidget {
 
 class _UpdateTabState extends State<UpdateTab>
     with AutomaticKeepAliveClientMixin {
-  static const _supportEmail = 'hotroviethoangdev.lo.ve@gmail.com';
+  static const _supportEmail = 'support@soullocket.pro.vn';
   final _feedbackCtrl = TextEditingController();
   bool _isSendingFeedback = false;
   String? _version;

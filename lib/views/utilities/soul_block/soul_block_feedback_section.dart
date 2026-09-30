@@ -87,13 +87,9 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
             _tone(86, 64, 0.76, noiseMix: 0.03),
             _tone(91, 96, 0.64, noiseMix: 0.02),
           ], masterGain: 0.76);
-      _memoryBurstSfxBytes =
-          await _loadAudioAssetBytes(
-            'assets/audio/soul_block/big_win_memory_second_half.mp3',
-          ) ??
-          _bestScoreSfxBytes;
+      if (!mounted) return;
       _audioReady = true;
-      unawaited(_initBgm());
+      unawaited(_syncBgmWithSound());
     } catch (error) {
       debugPrint(
         'Soul Block audio init failed: ${AppErrorMapper.resolve(error, fallbackMessage: errorFallback).message}',
@@ -103,74 +99,49 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
   }
 
   Future<Source> _getBgmSource() async {
-    const fileName = 'soul_block_bgm.mp3';
-    final localPath = await GameDownloadService().getLocalPath(
-      'soul_block',
-      fileName,
-    );
-    if (await File(localPath).exists()) {
-      debugPrint('Soul Block: Using LOCAL BGM: $localPath');
-      return DeviceFileSource(localPath);
-    }
-    debugPrint('Soul Block: Using ASSET BGM');
-    return AssetSource('audio/soul_block/$fileName');
+    // Bản nhạc Soul Block gốc được khôi phục từ lịch sử Git và đóng gói để chơi offline.
+    const bundledAsset = 'audio/soul_block/soul_block_bgm.mp3';
+    debugPrint('Soul Block: Using bundled BGM: $bundledAsset');
+    return AssetSource(bundledAsset);
   }
 
-  Future<void> _initBgm() async {
-    final bgmErrorFallback = context.tr('util_khngthkhit_38747d');
-    try {
-      final source = await _getBgmSource();
-      await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
-      await _bgmPlayer.setVolume(0.52);
-      await _bgmPlayer.setSource(source);
-      await _syncBgmWithSound(restartIfStopped: true);
-    } catch (error) {
-      debugPrint(
-        'Soul Block bgm init failed: ${AppErrorMapper.resolve(error, fallbackMessage: bgmErrorFallback).message}',
-      );
-    }
-  }
+  bool get _canPlayAudio =>
+      mounted && _soundEnabled && _appActive && !_isShowingFullscreenAd;
 
-  Future<void> _resumeBgm({bool restartIfStopped = false}) async {
-    try {
-      if (!_soundEnabled) {
-        await _bgmPlayer.pause();
-        return;
-      }
-      await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
-      await _bgmPlayer.setVolume(0.52);
-      if (restartIfStopped) {
-        final source = await _getBgmSource();
-        await _bgmPlayer.play(source, volume: 0.52);
-        return;
-      }
-      await _bgmPlayer.resume();
-    } catch (_) {
-      if (restartIfStopped) {
-        try {
-          final source = await _getBgmSource();
-          await _bgmPlayer.play(source, volume: 0.52);
-        } catch (error) {
-          debugPrint(
-            '[SuppressedError] lib/views/utilities/soul_block/soul_block_feedback_section.dart: $error',
-          );
+  Future<void> _syncBgmWithSound() {
+    // Tuần tự hóa lệnh: trở lại app tiếp tục bản nhạc đang phát.
+    _bgmSyncQueue = _bgmSyncQueue.then((_) async {
+      if (!mounted || !_audioSettingsLoaded) return;
+      try {
+        if (!_canPlayAudio) {
+          if (_bgmPlayer.state == PlayerState.playing) await _bgmPlayer.pause();
+          return;
         }
+        if (!_bgmSourceReady) {
+          final source = await _getBgmSource();
+          if (!mounted) return;
+          await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
+          if (!mounted) return;
+          await _bgmPlayer.setVolume(0.36);
+          if (!mounted) return;
+          await _bgmPlayer.setSource(source);
+          _bgmSourceReady = true;
+        }
+        if (!mounted) return;
+        if (!_canPlayAudio) {
+          await _bgmPlayer.pause();
+        } else if (_bgmPlayer.state == PlayerState.stopped ||
+            _bgmPlayer.state == PlayerState.completed) {
+          await _bgmPlayer.play(await _getBgmSource(), volume: 0.36);
+        } else if (_bgmPlayer.state != PlayerState.playing) {
+          await _bgmPlayer.resume();
+        }
+      } catch (error) {
+        // Web có thể chặn autoplay; thao tác chạm tiếp theo sẽ thử lại.
+        debugPrint(AppErrorMapper.resolve(error).message);
       }
-    }
-  }
-
-  Future<void> _syncBgmWithSound({bool restartIfStopped = false}) async {
-    try {
-      if (_soundEnabled) {
-        await _resumeBgm(restartIfStopped: true);
-      } else {
-        await _bgmPlayer.pause();
-      }
-    } catch (error) {
-      debugPrint(
-        '[SuppressedError] lib/views/utilities/soul_block/soul_block_feedback_section.dart: $error',
-      );
-    }
+    });
+    return _bgmSyncQueue;
   }
 
   _SoulSfxTone _tone(
@@ -274,18 +245,22 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
   }
 
   Future<Uint8List?> _loadAudioAssetBytes(String assetPath) async {
-    final loadSfxErrorFallback = context.tr('util_khngthtihi_635113');
+    if (!mounted) return null;
+    final loadSfxErrorFallback = L10nService().translate(
+      'util_khngthtihi_635113',
+    );
     try {
-      final fileName = p.basename(assetPath);
-      final localPath = await GameDownloadService().getLocalPath(
-        'soul_block',
-        fileName,
-      );
-      final localFile = File(localPath);
-
-      if (await localFile.exists()) {
-        debugPrint('Soul Block: Loading SFX from LOCAL: $localPath');
-        return await localFile.readAsBytes();
+      if (!kIsWeb) {
+        try {
+          final localPath = await GameDownloadService().getLocalPath(
+            'soul_block',
+            p.basename(assetPath),
+          );
+          final localFile = File(localPath);
+          if (await localFile.exists()) return await localFile.readAsBytes();
+        } catch (_) {
+          // Nếu gói tải về không có, tiếp tục thử asset và âm thanh tạo sẵn.
+        }
       }
 
       debugPrint('Soul Block: Loading SFX from ASSET: $assetPath');
@@ -300,22 +275,36 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
   }
 
   Future<void> _playSfx(Uint8List? bytes, {double volume = 1}) async {
-    if (!_soundEnabled || !_audioReady || bytes == null || bytes.isEmpty) {
+    if (!_canPlayAudio || !_audioReady || bytes == null || bytes.isEmpty) {
       return;
     }
-    final AudioPlayer player =
-        _sfxPlayers[_sfxPlayerIndex % _sfxPlayers.length];
-    _sfxPlayerIndex += 1;
+    final index = _sfxPlayerIndex++ % _sfxPlayers.length;
+    final player = _sfxPlayers[index];
+    final request = ++_sfxRequests[index];
+    final isWave =
+        bytes.length >= 12 &&
+        bytes[0] == 82 &&
+        bytes[1] == 73 &&
+        bytes[2] == 70 &&
+        bytes[3] == 70 &&
+        bytes[8] == 87 &&
+        bytes[9] == 65;
     try {
-      await player.setVolume(volume.clamp(0.0, 1.0).toDouble());
       await player.stop();
-      await player.play(BytesSource(bytes, mimeType: 'audio/wav'));
+      if (!_canPlayAudio || request != _sfxRequests[index]) return;
+      await player.play(
+        BytesSource(bytes, mimeType: isWave ? 'audio/wav' : 'audio/mpeg'),
+        volume: volume.clamp(0.0, 1.0).toDouble(),
+      );
     } catch (_) {
-      unawaited(SystemSound.play(SystemSoundType.click));
+      if (_canPlayAudio) unawaited(SystemSound.play(SystemSoundType.click));
     }
   }
 
   void _emitClickFeedback() {
+    if (_canPlayAudio && _bgmPlayer.state != PlayerState.playing) {
+      unawaited(_syncBgmWithSound());
+    }
     if (!_soundEnabled) {
       return;
     }
@@ -327,6 +316,9 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
   }
 
   void _emitLiftFeedback() {
+    if (_canPlayAudio && _bgmPlayer.state != PlayerState.playing) {
+      unawaited(_syncBgmWithSound());
+    }
     if (_soundEnabled) {
       if (_audioReady) {
         unawaited(_playSfx(_liftSfxBytes, volume: 0.52));
@@ -411,57 +403,28 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     unawaited(SystemSound.play(SystemSoundType.alert));
   }
 
-  void _emitMemoryBurstFeedback() {
-    if (!_soundEnabled) {
-      return;
-    }
-    if (_audioReady) {
-      unawaited(_playSfx(_memoryBurstSfxBytes, volume: 0.58));
-      return;
-    }
-    unawaited(SystemSound.play(SystemSoundType.alert));
-  }
-
   void _showComboBurst(int clearedCount) {
     if (clearedCount <= 0) {
       return;
     }
-    if (clearedCount == 2) {
-      _showFloatingMessage('COMBO x2', color: const Color(0xFF67E8FF));
-      return;
-    }
-    if (clearedCount == 3) {
-      _showFloatingMessage('COMBO x3', color: const Color(0xFFFFB347));
-      return;
-    }
+    final level = min(4, max(2, clearedCount));
+    const colors = <Color>[
+      Color(0xFF9DE7FF),
+      Color(0xFFC3B6F6),
+      Color(0xFFE9C9A2),
+    ];
     _showFloatingMessage(
-      'COMBO x$clearedCount',
-      color: const Color(0xFFFFD166),
+      L10nService().format('soul_block_combo', {'level': level}),
+      color: colors[min(level - 2, colors.length - 1)],
     );
   }
 
   void _triggerScreenPulse() {
+    if (MediaQuery.disableAnimationsOf(context) || _draggingPiece != null) {
+      return;
+    }
     _shakeController.forward(from: 0);
     _flashController.forward(from: 0);
-  }
-
-  // ignore: unused_element
-  void _showStreakBurst(int streakCount) {
-    if (streakCount < 2) {
-      return;
-    }
-    if (streakCount == 2) {
-      _showFloatingMessage('STREAK 2', color: const Color(0xFF67E8FF));
-      return;
-    }
-    if (streakCount == 3) {
-      _showFloatingMessage('STREAK 3', color: const Color(0xFFFFA1B7));
-      return;
-    }
-    _showFloatingMessage(
-      'STREAK x$streakCount',
-      color: const Color(0xFFFF8A65),
-    );
   }
 
   void _showFloatingMessage(String message, {required Color color}) {
@@ -489,7 +452,7 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     required List<int> clearedCols,
     bool subtle = false,
   }) {
-    if (clearedCount < 1) {
+    if (clearedCount < 1 || MediaQuery.disableAnimationsOf(context)) {
       return;
     }
     if (_boardCellExtent <= 0) {
@@ -515,21 +478,20 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
       sumDx += anchor.dx;
       sumDy += anchor.dy;
     }
-    final Offset epicenter = Offset(
-      sumDx / anchors.length,
-      sumDy / anchors.length,
-    );
+    final renderBox = _effectsKey.currentContext?.findRenderObject();
+    final effectsOrigin = renderBox is RenderBox
+        ? renderBox.localToGlobal(Offset.zero)
+        : Offset.zero;
+    final Offset epicenter =
+        Offset(sumDx / anchors.length, sumDy / anchors.length) - effectsOrigin;
 
     final Color accent =
         _kSoulBurstPalette[_random.nextInt(_kSoulBurstPalette.length)];
     final _SoulBlockPerformanceProfile profile = _performanceProfile;
     const bool simpleParticles = true;
     final int particleCount = subtle
-        ? min((6 + (clearedCount * 2)).clamp(6, 12), profile.subtleParticleCap)
-        : min(
-            (10 + (clearedCount * 3)).clamp(12, 20),
-            profile.strongParticleCap,
-          );
+        ? min((4 + clearedCount).clamp(4, 8), profile.subtleParticleCap)
+        : min((7 + (clearedCount * 2)).clamp(8, 14), profile.strongParticleCap);
     final double maxDistance = subtle
         ? ((60 + (clearedCount * 12)).clamp(70, 140).toDouble() *
               profile.subtleDistanceScale)
@@ -596,119 +558,16 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     required int clearedCount,
     required int streakCount,
   }) {
-    if (_memoryBurstGallery.isEmpty) {
-      final String? houseId = _houseId?.trim();
-      if (houseId != null && houseId.isNotEmpty) {
-        unawaited(_refreshMemoryBurstGallery(houseId));
-      }
-      return;
-    }
-
-    final List<String> warmedGallery = _memoryBurstGallery
-        .where(_memoryBurstWarmUrls.contains)
-        .toList(growable: false);
-    final List<String> selectionPool = warmedGallery.isNotEmpty
-        ? warmedGallery
-        : _memoryBurstGallery;
-    final String imageUrl = _pickMemoryBurstImage(selectionPool);
-    final Color accent =
-        _kSoulBurstPalette[_random.nextInt(_kSoulBurstPalette.length)];
-    final bool megaBurst = clearedCount >= 4 || streakCount >= 5;
-    final List<String> labels = megaBurst
-        ? const <String>[
-            'Soul Sync Bloom',
-            'Locket Love Burst',
-            'Heartbeat Memory',
-            'Soullight Moment',
-            'Our Little Spark',
-            'Together in Bloom',
-            'Love Note Glow',
-            'Memory Kiss Pop',
-            'Soulmate Flash',
-            'Golden Heartbeat',
-            'Sweet Story Shine',
-            'Our Day in Lights',
-          ]
-        : clearedCount >= 4
-        ? const <String>[
-            'Soul Bloom',
-            'Locket Spark',
-            'Memory Glow',
-            'Little Love Pop',
-            'Our Soft Flash',
-            'Heartbeat Shine',
-            'Sweet Memory Beat',
-            'Soul Note Light',
-            'Photo Glow Up',
-            'Love Story Pop',
-            'Tiny Star Moment',
-            'Dreamy Heart Sync',
-          ]
-        : const <String>[
-            'Soft Memory',
-            'Soul Wink',
-            'Locket Glow',
-            'Love Flicker',
-            'Our Little Frame',
-            'Heartnote Spark',
-            'Sweet Tiny Burst',
-            'Memory Blink',
-            'Photo Kiss',
-            'Soul Thread',
-            'Quiet Heart Glow',
-            'Mini Love Flash',
-          ];
-    final List<String> subtitles = megaBurst
-        ? <String>[
-            'Combo x$streakCount • tim rung lên một nhịp đẹp',
-            'Chuỗi $streakCount • khoảnh khắc của hai đứa vừa sáng lên',
-            'Combo x$streakCount • một mảnh ký ức đang nở hoa',
-            'Chuỗi $streakCount • Soul Locket đang phát sáng',
-            'Combo x$streakCount • ảnh hiện ra như một lời thương',
-            'Chuỗi $streakCount • khung hình này thật sự rất dịu',
-            'Combo x$streakCount • lại thêm một đoạn yêu được mở ra',
-            'Chuỗi $streakCount • hôm nay của mình đẹp ghê',
-          ]
-        : clearedCount >= 4
-        ? <String>[
-            'Clear $clearedCount dòng • ký ức bật lên thật xinh',
-            'Clear $clearedCount dòng • một khung ảnh vừa sáng dịu',
-            'Chuỗi $streakCount • ảnh hiện ra ở đúng khoảnh khắc đẹp',
-            'Clear $clearedCount dòng • Soul Locket vừa nở sáng',
-            'Chuỗi $streakCount • một chút đáng yêu vừa chạm tới',
-            'Clear $clearedCount dòng • tấm này lên hình rất tình',
-            'Chuỗi $streakCount • nhìn như một chiếc locket đang mở',
-          ]
-        : <String>[
-            'Chuỗi $streakCount • một mẩu ký ức vừa lóe lên',
-            'Clear $clearedCount dòng • ảnh nhỏ mà vẫn rất xinh',
-            'Chuỗi $streakCount • một góc thương vừa hiện ra',
-            'Clear $clearedCount dòng • cảm giác như mở locket nhỏ',
-            'Chuỗi $streakCount • nhẹ thôi nhưng rất dễ thương',
-            'Clear $clearedCount dòng • giữ lại khoảnh khắc này nhé',
-            'Chuỗi $streakCount • một tấm ảnh, một nhịp tim',
-          ];
-    final String label = labels[_random.nextInt(labels.length)];
-    final String subtitle = subtitles[_random.nextInt(subtitles.length)];
-
+    final image = _boardPhoto;
+    if (image == null || MediaQuery.disableAnimationsOf(context)) return;
     setState(() {
       _memoryBurstSnapshot = _MemoryBurstSnapshot(
-        imageUrl: imageUrl,
-        label: label,
-        subtitle: subtitle,
-        accent: accent,
+        image: image,
+        label: context.tr('soul_block_photo_ready'),
+        subtitle: '×${max(clearedCount, streakCount)}',
+        accent: const Color(0xFFCCDCF5),
       );
     });
-
-    unawaited(
-      _warmMemoryBurstImages(
-        _memoryBurstGallery.where(
-          (String url) => !_memoryBurstWarmUrls.contains(url),
-        ),
-        limit: 1,
-      ),
-    );
-    _emitMemoryBurstFeedback();
     _memoryBurstController.forward(from: 0);
   }
 
@@ -730,13 +589,20 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
 
   double get _boardShakeX {
     final progress = _shakeController.value;
-    return sin(progress * pi * 7) * 12 * (1 - progress);
+    if (MediaQuery.disableAnimationsOf(context)) return 0;
+    final amplitude = _smoothGraphics ? 2.2 : 4.8;
+    return sin(progress * pi * 6) * amplitude * (1 - progress);
   }
 
   double get _boardShakeY {
     final progress = _shakeController.value;
-    return cos(progress * pi * 10) * 3 * (1 - progress);
+    if (MediaQuery.disableAnimationsOf(context)) return 0;
+    final amplitude = _smoothGraphics ? .8 : 1.8;
+    return sin(progress * pi * 8) * amplitude * (1 - progress);
   }
 
-  double get _backgroundFlashOpacity => (1 - _flashController.value) * 0.07;
+  double get _backgroundFlashOpacity =>
+      _flashController.isAnimating && !MediaQuery.disableAnimationsOf(context)
+      ? sin(_flashController.value * pi) * (_smoothGraphics ? .018 : .035)
+      : 0;
 }

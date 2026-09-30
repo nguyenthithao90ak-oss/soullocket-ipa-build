@@ -131,7 +131,11 @@ class SettingsSyncService {
         'schemaVersion': 2,
         'updatedAt': ServerValue.timestamp,
       };
-      await _db.child('users/${user.uid}/settings').set(settings);
+      await _db.child('users/${user.uid}/settings').update({
+        for (final key in _syncKeys) key: null,
+        ...legacyCloudRemovals,
+        ...settings,
+      });
     } else if (legacyCloudRemovals.isNotEmpty) {
       await _db.child('users/${user.uid}/settings').update(legacyCloudRemovals);
     }

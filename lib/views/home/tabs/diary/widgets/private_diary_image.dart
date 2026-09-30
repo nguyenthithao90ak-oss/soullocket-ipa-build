@@ -1,13 +1,17 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../../utils/private_media_load_queue.dart';
 import '../../../../../utils/services/l10n_service.dart';
 import '../../../../../utils/services/private_media_url_service.dart';
+import 'private_diary_image_scope.dart';
 
-/// Ảnh House không đi qua disk cache chung hoặc nhận URL từ bản ghi client.
-/// Provider chỉ sống trong widget; đổi phiên, vào nền hoặc hết hạn phải cấp lại.
+/// Ảnh House dùng cache đĩa riêng theo tài khoản/nhà/kỷ niệm.
+/// Không dùng URL ký làm khóa nên có thể mở lại khi mất mạng trong 7 ngày.
 class PrivateDiaryImage extends StatefulWidget {
   const PrivateDiaryImage({
     super.key,
@@ -19,6 +23,7 @@ class PrivateDiaryImage extends StatefulWidget {
     this.authChanges,
     this.currentUid,
     this.imageProviderFactory,
+    this.loadQueue,
   });
 
   final String houseId;
@@ -29,6 +34,7 @@ class PrivateDiaryImage extends StatefulWidget {
   final Stream<String?>? authChanges;
   final String? Function()? currentUid;
   final ImageProvider<Object> Function(String)? imageProviderFactory;
+  final PrivateMediaLoadQueue? loadQueue;
 
   @override
   State<PrivateDiaryImage> createState() => _PrivateDiaryImageState();
@@ -36,13 +42,23 @@ class PrivateDiaryImage extends StatefulWidget {
 
 class _PrivateDiaryImageState extends State<PrivateDiaryImage>
     with WidgetsBindingObserver {
+  static final _loadQueue = PrivateMediaLoadQueue();
+  late final _urlService = PrivateMediaUrlService(
+    currentUid: widget.currentUid,
+    authChanges: widget.authChanges == null ? null : () => widget.authChanges!,
+  );
   ImageProvider<Object>? _provider;
+  PrivateDiaryImageCache? _cache;
+  PrivateDiaryImageCacheEntry? _entry;
   StreamSubscription<String?>? _auth;
   Timer? _expiry;
   Timer? _loadingDeadline;
   int _generation = 0;
   bool _failed = false;
-  bool _visible = true;
+  bool _appVisible = true;
+  bool _tabVisible = false;
+
+  bool get _visible => _appVisible && _tabVisible;
   String? _uid;
 
   String? get currentUid =>
@@ -55,7 +71,7 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _visible =
+    _appVisible =
         WidgetsBinding.instance.lifecycleState == null ||
         WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed ||
         WidgetsBinding.instance.lifecycleState == AppLifecycleState.inactive;
@@ -69,17 +85,39 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
               (uid) {
                 if (uid != _uid) {
                   _uid = uid;
+                  _urlService.clear();
+                  _cache?.clear();
+                  unawaited(PrivateDiaryDiskCache.clear());
                   _clear();
                   // Không tải lại ảnh của House cũ bằng phiên đăng nhập mới.
                   if (mounted) setState(() => _failed = true);
                 }
               },
               onError: (Object _) {
+                _urlService.clear();
+                _cache?.clear();
                 _clear();
                 if (mounted) setState(() => _failed = true);
               },
             );
-    if (_visible) unawaited(_load());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final cache = PrivateDiaryImageScope.maybeOf(context, widget.houseId);
+    final cacheChanged = cache != _cache;
+    _cache = cache;
+    final visible = TickerMode.valuesOf(context).enabled;
+    if (visible == _tabVisible && !cacheChanged) return;
+    _tabVisible = visible;
+    // Tab được giữ sống vẫn nhận timer khi ẩn. Dừng cấp URL ở tab ẩn và
+    // xin quyền mới khi mở lại, kể cả lần tải trước đã thất bại.
+    if (_visible) {
+      unawaited(_load());
+    } else {
+      _clear();
+    }
   }
 
   void _clear() {
@@ -87,13 +125,18 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
     _expiry?.cancel();
     _loadingDeadline?.cancel();
     final provider = _provider;
+    final retained = _entry != null && (_cache?.contains(_entry!) ?? false);
     _provider = null;
-    if (provider != null) unawaited(provider.evict());
+    _entry = null;
+    if (provider != null && !retained) unawaited(provider.evict());
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool refresh = false}) async {
+    final previous = _entry;
+    if (refresh && previous != null) _cache?.remove(previous);
     _clear();
     if (!_visible || !mounted) return;
+    final started = Stopwatch()..start();
     final generation = _generation;
     final uid = currentUid;
     bool current() =>
@@ -103,43 +146,118 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
         uid != null &&
         uid == currentUid;
     if (mounted) setState(() => _failed = false);
-    // Bao gồm cả thời gian SDK chờ Auth/App Check trước khi gửi callable.
-    _loadingDeadline = Timer(const Duration(seconds: 25), () {
-      if (!current()) return;
-      ++_generation;
-      setState(() => _failed = true);
-    });
     try {
       if (uid == null) throw StateError('Authentication required');
-      final result =
-          await (widget.resolve?.call() ??
-              PrivateMediaUrlService().resolve(
-                houseId: widget.houseId,
-                mediaId: widget.memoryId,
-                kind: 'memory_image',
-              ));
-      if (!current()) return;
+      _cache?.bindSession(
+        uid,
+        widget.authChanges ??
+            FirebaseAuth.instance.authStateChanges().map((user) => user?.uid),
+      );
+      final key = (
+        uid: uid,
+        houseId: widget.houseId,
+        memoryId: widget.memoryId,
+        width: widget.cacheWidth,
+      );
+      final cached = refresh ? null : _cache?.get(key);
+      if (cached != null) {
+        _show(cached);
+        if (kDebugMode) debugPrint('[PrivateDiaryImage] RAM cache hit');
+        return;
+      }
+      final diskKey = PrivateDiaryDiskCache.key(
+        uid: uid,
+        houseId: widget.houseId,
+        memoryId: widget.memoryId,
+        width: widget.cacheWidth,
+      );
+      if (widget.imageProviderFactory == null &&
+          await PrivateDiaryDiskCache.hasFresh(diskKey)) {
+        final entry = PrivateDiaryImageCacheEntry(
+          CachedNetworkImageProvider(
+            'https://private-cache.invalid/$diskKey',
+            cacheKey: diskKey,
+            cacheManager: PrivateDiaryDiskCache.manager,
+            maxWidth: widget.cacheWidth,
+          ),
+          DateTime.now().millisecondsSinceEpoch +
+              PrivateDiaryDiskCache.ttl.inMilliseconds,
+        );
+        _cache?.put(key, entry);
+        _show(entry);
+        if (kDebugMode) debugPrint('[PrivateDiaryImage] disk cache hit');
+        return;
+      }
+      final result = await (widget.loadQueue ?? _loadQueue)
+          .run<PrivateMediaUrlResult>(
+            isCurrent: current,
+            action: () {
+              _loadingDeadline = Timer(const Duration(seconds: 25), () {
+                if (!current()) return;
+                ++_generation;
+                if (kDebugMode) {
+                  debugPrint('[PrivateDiaryImage] authorization deadline');
+                }
+                setState(() => _failed = true);
+              });
+              return (widget.resolve?.call() ??
+                      (_cache?.urlService ?? _urlService).resolve(
+                        houseId: widget.houseId,
+                        mediaId: widget.memoryId,
+                        kind: 'memory_image',
+                        forceRefresh: refresh,
+                      ))
+                  .timeout(const Duration(seconds: 25));
+            },
+          );
+      if (!current() || result == null) return;
       _loadingDeadline?.cancel();
-      final lifetime = result.expiresAt - DateTime.now().millisecondsSinceEpoch;
+      if (kDebugMode) {
+        debugPrint(
+          '[PrivateDiaryImage] authorized after ${started.elapsedMilliseconds}ms',
+        );
+      }
+      final lifetime =
+          (result.expiresAt - DateTime.now().millisecondsSinceEpoch).clamp(
+            0,
+            120000,
+          );
       if (lifetime <= 5000) throw StateError('Expired media authorization');
-      // NetworkImage không ghi disk; ResizeImage giữ giới hạn giải mã thumbnail.
-      final provider = ResizeImage.resizeIfNeeded(
-        widget.cacheWidth,
-        null,
-        widget.imageProviderFactory?.call(result.url) ??
-            NetworkImage(result.url),
+      final provider =
+          widget.imageProviderFactory?.call(result.url) ??
+          CachedNetworkImageProvider(
+            result.url,
+            cacheKey: diskKey,
+            cacheManager: PrivateDiaryDiskCache.manager,
+            maxWidth: widget.cacheWidth,
+          );
+      final entry = PrivateDiaryImageCacheEntry(
+        provider,
+        DateTime.now().millisecondsSinceEpoch + lifetime - 5000,
       );
-      setState(() => _provider = provider);
-      _expiry = Timer(
-        Duration(milliseconds: lifetime - 5000),
-        () => unawaited(_load()),
-      );
-    } catch (_) {
+      _cache?.put(key, entry);
+      _show(entry);
+    } catch (error) {
+      // Chỉ ghi loại lỗi/thời gian, không ghi URL ký, tài khoản hay nội dung ảnh.
+      if (kDebugMode) {
+        final code = error is FirebaseException
+            ? error.code
+            : error.runtimeType;
+        debugPrint(
+          '[PrivateDiaryImage] authorization failed: $code after ${started.elapsedMilliseconds}ms',
+        );
+      }
       if (mounted && generation == _generation) {
         _loadingDeadline?.cancel();
         setState(() => _failed = true);
       }
     }
+  }
+
+  void _show(PrivateDiaryImageCacheEntry entry) {
+    _entry = entry;
+    setState(() => _provider = entry.provider);
+    _expiry = Timer(entry.remaining, () => unawaited(_load(refresh: true)));
   }
 
   @override
@@ -159,11 +277,13 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
     final visible =
         state == AppLifecycleState.resumed ||
         state == AppLifecycleState.inactive;
-    if (visible == _visible) return;
-    _visible = visible;
+    if (visible == _appVisible) return;
+    _appVisible = visible;
     if (_visible) {
       unawaited(_load());
     } else {
+      _urlService.clear();
+      _cache?.clearMemory();
       _clear();
       if (mounted) setState(() {});
     }
@@ -172,6 +292,7 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
   @override
   void dispose() {
     _clear();
+    _urlService.dispose();
     unawaited(_auth?.cancel());
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -180,7 +301,7 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
   Widget _retry() => Center(
     child: IconButton(
       tooltip: L10nService().translate('core_retry'),
-      onPressed: () => unawaited(_load()),
+      onPressed: () => unawaited(_load(refresh: true)),
       icon: const Icon(Icons.refresh_rounded),
     ),
   );
@@ -198,7 +319,15 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
       width: double.infinity,
       height: double.infinity,
       gaplessPlayback: false,
-      errorBuilder: (_, error, stack) => _retry(),
+      errorBuilder: (_, error, stack) {
+        if (kDebugMode) {
+          final code = error is NetworkImageLoadException
+              ? error.statusCode
+              : error.runtimeType;
+          debugPrint('[PrivateDiaryImage] image failed: $code');
+        }
+        return _retry();
+      },
     );
   }
 }

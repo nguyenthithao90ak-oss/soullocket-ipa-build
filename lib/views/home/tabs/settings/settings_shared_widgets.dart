@@ -1005,38 +1005,55 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
               color: const Color(0xFF6B2B2B),
             ),
           ),
+          if (deletion.canApproveFor(currentUid))
+            TextButton.icon(
+              onPressed: _accountDeletionActionBusy
+                  ? null
+                  : () => _approvePartnerAccountDeletion(deletion),
+              icon: const Icon(Icons.check_circle_outline, size: 16),
+              label: Text(context.tr('account_deletion_approve')),
+            ),
           if (isMine && deletion.canCancel) ...[
             const SizedBox(height: 10),
             Align(
               alignment: Alignment.centerRight,
               child: TextButton.icon(
-                onPressed: () async {
-                  try {
-                    SLNotice.showInfo(
-                      context,
-                      context.tr('home_anghontc_b7c262'),
-                    );
-                    await _authService.undoScheduledDeletion();
-                    if (!mounted) return;
-                    setState(() {
-                      _accountDeletionStatus = null;
-                    });
-                    SLNotice.showSuccess(
-                      context,
-                      context.tr('home_hontcxathn_58b732'),
-                    );
-                  } catch (e) {
-                    if (!mounted) return;
-                    SLNotice.showError(
-                      context,
-                      AppErrorMapper.resolve(
-                        e,
-                        fallbackMessage: context.tr('home_chathhontc_cd8493'),
-                      ).message,
-                    );
-                    await _loadPendingAccountDeletionState();
-                  }
-                },
+                onPressed: _accountDeletionActionBusy
+                    ? null
+                    : () async {
+                        setState(() => _accountDeletionActionBusy = true);
+                        try {
+                          SLNotice.showInfo(
+                            context,
+                            context.tr('home_anghontc_b7c262'),
+                          );
+                          await _authService.undoScheduledDeletion();
+                          if (!mounted) return;
+                          setState(() {
+                            _accountDeletionStatus = null;
+                          });
+                          SLNotice.showSuccess(
+                            context,
+                            context.tr('home_hontcxathn_58b732'),
+                          );
+                        } catch (e) {
+                          if (!mounted) return;
+                          SLNotice.showError(
+                            context,
+                            AppErrorMapper.resolve(
+                              e,
+                              fallbackMessage: context.tr(
+                                'home_chathhontc_cd8493',
+                              ),
+                            ).message,
+                          );
+                          await _loadPendingAccountDeletionState();
+                        } finally {
+                          if (mounted) {
+                            setState(() => _accountDeletionActionBusy = false);
+                          }
+                        }
+                      },
                 icon: const Icon(Icons.undo_rounded, size: 16),
                 label: Text(
                   context.tr('home_hontc_96ce27'),

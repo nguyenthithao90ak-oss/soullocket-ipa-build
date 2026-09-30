@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'core/constants/app_locale_registry.dart';
+import 'utils/services/market_service.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,22 +21,27 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final appStateListenable = Listenable.merge([
       L10nService(),
+      MarketService.instance,
       UiPrefs.notifier,
     ]);
     final baseTextTheme = ThemeData(useMaterial3: true).textTheme;
     return ListenableBuilder(
       listenable: appStateListenable,
       builder: (context, _) {
+        final displayLocale = AppLocaleRegistry.formattingLocale(
+          L10nService().locale,
+          MarketService.instance.marketCode,
+        );
         return MaterialApp.router(
           title: 'SoulLocket',
           routerConfig: AppRouter.router,
-          locale: L10nService().locale,
+          locale: displayLocale,
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          supportedLocales: L10nService().supportedLocales,
+          supportedLocales: {displayLocale, ...L10nService().supportedLocales},
           scrollBehavior: const SoulLocketScrollBehavior(),
           themeAnimationDuration: const Duration(milliseconds: 160),
           themeAnimationCurve: Curves.easeOutCubic,

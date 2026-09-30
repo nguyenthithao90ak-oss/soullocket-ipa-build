@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -14,6 +15,11 @@ import 'download_bytes_memory_cache.dart';
 
 class StorageDownloadCacheHelper {
   const StorageDownloadCacheHelper();
+
+  static const maxDownloadBytes = 64 * 1024 * 1024;
+  static const maxDiskCacheBytes = 256 * 1024 * 1024;
+  static const diskRetention = Duration(days: 30);
+  static Future<void>? _purging;
 
   static final _memoryCache = DownloadBytesMemoryCache();
   static final Map<String, Future<File?>> _downloads = {};
@@ -44,16 +50,20 @@ class StorageDownloadCacheHelper {
     return ext;
   }
 
+  @visibleForTesting
+  Future<Directory> cacheDirectory() async {
+    final tempDir = await getTemporaryDirectory();
+    return Directory(p.join(tempDir.path, 'soullocket_cache'));
+  }
+
   Future<File> resolveCachedDownloadFile(
     String url, {
     required String namespace,
     String? cacheKey,
   }) async {
-    final tempDir = await getTemporaryDirectory();
+    final baseDirectory = await cacheDirectory();
     final normalizedNamespace = _normalizeNamespace(namespace);
-    final cacheDir = Directory(
-      p.join(tempDir.path, 'soullocket_cache', normalizedNamespace),
-    );
+    final cacheDir = Directory(p.join(baseDirectory.path, normalizedNamespace));
     if (!await cacheDir.exists()) {
       await cacheDir.create(recursive: true);
     }
@@ -64,15 +74,15 @@ class StorageDownloadCacheHelper {
   }
 
   Future<bool> hasFreshCache(File cacheFile, {required Duration ttl}) async {
-    if (!await cacheFile.exists()) {
+    try {
+      final stat = await cacheFile.stat();
+      return stat.type == FileSystemEntityType.file &&
+          stat.size > 0 &&
+          stat.size <= maxDownloadBytes &&
+          DateTime.now().difference(stat.modified) <= ttl;
+    } on FileSystemException {
       return false;
     }
-    final fileSize = await cacheFile.length();
-    if (fileSize <= 0) {
-      return false;
-    }
-    final modifiedAt = await cacheFile.lastModified();
-    return DateTime.now().difference(modifiedAt) <= ttl;
   }
 
   Future<File?> getCachedNetworkFile(
@@ -83,7 +93,11 @@ class StorageDownloadCacheHelper {
     bool forceRefresh = false,
   }) async {
     final normalizedUrl = url.trim();
-    if (normalizedUrl.isEmpty) {
+    final uri = Uri.tryParse(normalizedUrl);
+    if (kIsWeb ||
+        uri == null ||
+        (uri.scheme != 'https' && uri.scheme != 'http') ||
+        uri.host.isEmpty) {
       return null;
     }
 
@@ -122,35 +136,67 @@ class StorageDownloadCacheHelper {
   ) async {
     final client = http.Client();
     final pendingFile = File('${cacheFile.path}.download');
+    StreamIterator<List<int>>? chunks;
+    RandomAccessFile? output;
+    final elapsed = Stopwatch()..start();
+    Duration remaining() {
+      final left = const Duration(seconds: 10) - elapsed.elapsed;
+      if (left <= Duration.zero) throw TimeoutException('Download timeout');
+      return left;
+    }
+
     try {
       final response = await client
-          .get(Uri.parse(url))
-          .timeout(const Duration(seconds: 10));
-      if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
-        // Chỉ thay bản cũ sau khi ghi xong; không để cache chứa tệp đang ghi dở.
-        await pendingFile.writeAsBytes(response.bodyBytes, flush: true);
-        await pendingFile.rename(cacheFile.path);
-        _memoryCache.remove(memKey);
-        return cacheFile;
+          .send(http.Request('GET', Uri.parse(url)))
+          .timeout(remaining());
+      if (response.statusCode != 200 ||
+          (response.contentLength ?? 0) > maxDownloadBytes) {
+        throw const FormatException('Unusable download response');
       }
-      // URL có thể chứa chữ ký truy cập riêng tư, không ghi URL ra log.
-      debugPrint(
-        'Cached download failed ($namespace): HTTP ${response.statusCode}',
-      );
+      // Ghi theo luồng, giới hạn cả phản hồi không có Content-Length.
+      output = await pendingFile.open(mode: FileMode.write);
+      chunks = StreamIterator(response.stream);
+      var received = 0;
+      while (await chunks.moveNext().timeout(remaining())) {
+        received += chunks.current.length;
+        if (received > maxDownloadBytes) {
+          throw const FormatException('Download too large');
+        }
+        await output.writeFrom(chunks.current);
+      }
+      if (received == 0 ||
+          (response.contentLength != null &&
+              received != response.contentLength)) {
+        throw const FormatException('Incomplete download');
+      }
+      await output.close();
+      output = null;
+      await pendingFile.rename(cacheFile.path);
+      _memoryCache.remove(memKey);
+      await purgeStaleCache();
+      return cacheFile;
     } catch (_) {
-      debugPrint('Cached download error ($namespace)');
+      // Không ghi URL/chữ ký truy cập riêng tư vào log.
+      debugPrint('Cached download failed ($namespace)');
     } finally {
-      // Future.timeout không tự hủy HTTP: đóng client để dừng tải quá hạn.
       client.close();
+      await chunks?.cancel();
+      await output?.close();
       try {
         if (await pendingFile.exists()) await pendingFile.delete();
       } catch (_) {
-        // Tệp tạm sẽ được dọn trong lần bảo trì cache tiếp theo.
+        // Tệp tạm sẽ được dọn trong lần bảo trì tiếp theo.
       }
     }
-
-    if (await cacheFile.exists() && await cacheFile.length() > 0) {
-      return cacheFile;
+    try {
+      final stat = await cacheFile.stat();
+      if (stat.type == FileSystemEntityType.file &&
+          stat.size > 0 &&
+          stat.size <= maxDownloadBytes) {
+        return cacheFile;
+      }
+    } on FileSystemException {
+      // Cache có thể vừa được dọn bởi một tác vụ khác.
     }
     return null;
   }
@@ -212,46 +258,69 @@ class StorageDownloadCacheHelper {
   }
 
   Future<void> purgeStaleCache({
-    Duration staleThreshold = const Duration(days: 3),
+    Duration staleThreshold = diskRetention,
+    int maxBytes = maxDiskCacheBytes,
   }) async {
+    if (kIsWeb) return;
+    if (maxBytes < 0) throw ArgumentError.value(maxBytes, 'maxBytes');
+    final pending = _purging;
+    if (pending != null) return pending;
+    final task = _purge(staleThreshold, maxBytes);
+    _purging = task;
     try {
-      final tempDir = await getTemporaryDirectory();
-      final baseCacheDir = Directory(p.join(tempDir.path, 'soullocket_cache'));
-      if (!await baseCacheDir.exists()) {
-        return;
-      }
+      await task;
+    } finally {
+      if (identical(_purging, task)) _purging = null;
+    }
+  }
 
+  Future<void> _purge(Duration retention, int maxBytes) async {
+    try {
+      final directory = await cacheDirectory();
+      if (!await directory.exists()) return;
       final now = DateTime.now();
-      int deletedCount = 0;
-      int freedBytes = 0;
-
-      await for (final entity in baseCacheDir.list(
+      final retained = <({File file, FileStat stat})>[];
+      var total = 0;
+      bool active(String path) =>
+          _downloads.containsKey(path) ||
+          (path.endsWith('.download') &&
+              _downloads.containsKey(path.substring(0, path.length - 9)));
+      await for (final entity in directory.list(
         recursive: true,
         followLinks: false,
       )) {
-        if (entity is File) {
-          try {
-            final stat = await entity.stat();
-            if (now.difference(stat.modified) > staleThreshold) {
-              freedBytes += stat.size;
-              await entity.delete();
-              deletedCount++;
-            }
-          } catch (error) {
-            debugPrint(
-              'StorageDownloadCacheHelper: Cannot inspect cached file: $error',
-            );
+        if (entity is! File) continue;
+        try {
+          final stat = await entity.stat();
+          if (stat.type != FileSystemEntityType.file) continue;
+          total += stat.size;
+          if (active(entity.path)) continue;
+          final temporary = entity.path.endsWith('.download');
+          final ageLimit = temporary ? const Duration(days: 1) : retention;
+          if (now.difference(stat.modified) > ageLimit) {
+            await entity.delete();
+            total -= stat.size;
+          } else {
+            retained.add((file: entity, stat: stat));
           }
+        } on FileSystemException {
+          // Tệp có thể vừa bị hệ điều hành hoặc tác vụ khác dọn.
         }
       }
-
-      if (deletedCount > 0) {
-        debugPrint(
-          'StorageDownloadCacheHelper: Purged $deletedCount stale files, freed ${(freedBytes / 1024 / 1024).toStringAsFixed(2)} MB',
-        );
+      // Chỉ dọn bản tải lại được trong thư mục cache; giữ tệp đang tải.
+      retained.sort((a, b) => a.stat.modified.compareTo(b.stat.modified));
+      for (final entry in retained) {
+        if (total <= maxBytes) break;
+        if (active(entry.file.path)) continue;
+        try {
+          await entry.file.delete();
+          total -= entry.stat.size;
+        } on FileSystemException {
+          // Thử lại trong lần bảo trì tiếp theo.
+        }
       }
-    } catch (e) {
-      debugPrint('StorageDownloadCacheHelper: Failed to purge stale cache: $e');
+    } catch (_) {
+      debugPrint('StorageDownloadCacheHelper: Cache maintenance unavailable');
     }
   }
 }

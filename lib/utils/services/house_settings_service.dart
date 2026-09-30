@@ -19,9 +19,13 @@ class HouseSettingsService {
     return _instance;
   }
 
-  HouseSettingsService._internal();
+  HouseSettingsService._internal() : _dbRef = FirebaseDatabase.instance.ref();
 
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+  @visibleForTesting
+  HouseSettingsService.forTesting(DatabaseReference reference)
+    : _dbRef = reference;
+
+  final DatabaseReference _dbRef;
   static const Duration startDateChangeCooldown = Duration(days: 3);
 
   static int? _readEpochMs(dynamic raw) {
@@ -538,14 +542,23 @@ class HouseSettingsService {
   }
 
   Future<Map<String, dynamic>?> fetchHouseProfile(String houseId) async {
-    final cacheKey = 'house_profile_$houseId';
+    final normalized = houseId.trim();
+    if (normalized.isEmpty ||
+        normalized.length > 128 ||
+        RegExp(r'[.#$\[\]/\\\s\x00-\x1f\x7f]').hasMatch(normalized)) {
+      return null;
+    }
+    final cacheKey = 'house_profile_$normalized';
     final cachedData = OfflineCacheService.getMemoryCache(cacheKey);
     if (cachedData is Map<String, dynamic>) {
       return cachedData;
     }
 
     try {
-      final snap = await _dbRef.get().timeout(const Duration(seconds: 3));
+      final snap = await _dbRef
+          .child('house_profiles/$normalized')
+          .get()
+          .timeout(const Duration(seconds: 3));
       if (!snap.exists || snap.value == null) return null;
       final profile = _asStringDynamicMap(snap.value);
       OfflineCacheService.setMemoryCache(

@@ -37,8 +37,6 @@ import '../../core/fast_backdrop_filter.dart';
 import '../../core/sl_route.dart';
 import '../../utils/rapid_action_feedback_policy.dart';
 import '../../widgets/animated_rabbit_sticker.dart';
-import '../../views/ui_prefs.dart';
-import 'chat_detail/chat_detail_messages_aurora_part.dart';
 
 part 'chat_detail/chat_detail_helpers_part.dart';
 part 'chat_detail/chat_detail_actions_part.dart';

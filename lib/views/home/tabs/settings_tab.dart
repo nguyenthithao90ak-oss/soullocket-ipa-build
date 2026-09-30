@@ -1,3 +1,5 @@
+import 'settings/region_preferences_panel.dart';
+import '../../../core/constants/app_locale_registry.dart';
 import 'settings/countdown/widgets/private_space_widgets.dart';
 import 'settings/theme/appearance_panel_widgets.dart';
 // ignore_for_file: unused_field, unused_import
@@ -40,6 +42,7 @@ import '../../../utils/services/offline_cache_service.dart';
 
 import 'dart:io';
 import '../../../utils/services/notification_service.dart';
+import '../../../utils/services/soul_event_reminder_service.dart';
 import '../../../utils/services/push_notification_helper.dart';
 import '../../../utils/services/core/presence_service.dart';
 import 'package:home_widget/home_widget.dart';
@@ -86,7 +89,6 @@ import '../../../views/utilities/wheel/wheel_screen.dart';
 import '../../utilities/wishlist_screen.dart';
 import '../../utilities/diary_export_screen.dart';
 import '../../utilities/device_manager_screen.dart';
-// import '../../auth/qr_authorize_scanner_screen.dart';
 import '../../utilities/user_support_chat_screen.dart';
 import 'package:soullocket_app/core/sl_countdown_shapes.dart';
 import '../../../utils/services/l10n_service.dart';
@@ -431,6 +433,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _showWeather = true;
   bool _showStatus = true;
   bool _isGrantingPermissions = false;
+  String _gpsMode = LocationService.kGpsModeForegroundOnly;
   bool _isUploadingThemeBackground = false;
   double? _themeUploadProgress;
   bool _didPromptPendingThemeBackgroundRetry = false;
@@ -471,6 +474,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   AccountDeletionStatus? _accountDeletionStatus;
   String? _accountDeletionStatusError;
   bool _accountDeletionStatusLoading = false;
+  bool _accountDeletionActionBusy = false;
   String? _draftThemeKey;
   String? _draftEffectKey;
   double? _draftAvatarSizePx;

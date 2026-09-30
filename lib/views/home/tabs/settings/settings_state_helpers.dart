@@ -140,6 +140,9 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
                   controller: otpCtrl,
                   enabled: canConfirm,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
                   maxLength: 6,
                   textAlign: TextAlign.center,
                   onChanged: (_) {
@@ -361,6 +364,9 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                     controller: otpCtrl,
                     enabled: canConfirm,
                     keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
                     maxLength: 6,
                     textAlign: TextAlign.center,
                     onChanged: (_) {

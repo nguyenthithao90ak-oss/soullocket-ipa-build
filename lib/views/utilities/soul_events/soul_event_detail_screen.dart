@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../../utils/calendar/soul_event_calendar_export.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/models/soul_event.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -22,6 +24,7 @@ class SoulEventDetailScreen extends StatefulWidget {
 
 class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
   late SoulEvent _event;
+  bool _exporting = false;
 
   @override
   void initState() {
@@ -29,12 +32,10 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
     _event = widget.event;
   }
 
-  int _calculateDaysDiff(int dateMs) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final eventDate = DateTime.fromMillisecondsSinceEpoch(dateMs);
-    final eventDay = DateTime(eventDate.year, eventDate.month, eventDate.day);
-    return eventDay.difference(today).inDays;
+  int? _calculateDaysDiff(SoulEvent event) {
+    final today = DateTime.now();
+    final date = event.calculateNextOccurrence(today);
+    return date == null ? null : SoulEvent.daysBetween(date, today);
   }
 
   void _editEvent() {
@@ -51,6 +52,40 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
         });
       }
     });
+  }
+
+  Future<void> _exportCalendar(BuildContext buttonContext) async {
+    if (_exporting) return;
+    final date = _event.calculateNextOccurrence(DateTime.now());
+    if (date == null || (_event.isLunar && !_event.hasConfirmedLunarDate)) {
+      return;
+    }
+    final box = buttonContext.findRenderObject() as RenderBox?;
+    final origin = box != null && box.hasSize
+        ? box.localToGlobal(Offset.zero) & box.size
+        : null;
+    setState(() => _exporting = true);
+    try {
+      final bytes = SoulEventCalendarExport.create(
+        event: _event,
+        occurrence: date,
+        generatedAt: DateTime.now(),
+      );
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile.fromData(bytes, mimeType: 'text/calendar')],
+          fileNameOverrides: ['soullocket-${SoulEvent.dateKey(date)}.ics'],
+          sharePositionOrigin: origin,
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.tr('event_export_error'))));
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
   }
 
   Future<void> _deleteEvent() async {
@@ -83,21 +118,20 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final diff = _calculateDaysDiff(_event.dateMs);
-    final isPast = diff < 0;
-    final displayDays = diff.abs();
+    final diff = _calculateDaysDiff(_event);
+    final isPast = diff != null && diff < 0;
+    final displayDays = diff?.abs().toString() ?? '—';
     final color = Color(
       int.tryParse(_event.colorHex.replaceFirst('#', '0xFF')) ?? 0xFFFF4D94,
     );
-    final date = DateTime.fromMillisecondsSinceEpoch(_event.dateMs);
-    final l10n = L10nScope.of(context);
-    final dateStr = l10n.format('p8_events_date_full', {
-      'day': date.day,
-      'month': date.month,
-      'year': date.year,
-    });
+    final date = _event.calculateNextOccurrence(DateTime.now());
+    final dateStr = date == null
+        ? context.tr('event_no_next_date')
+        : MaterialLocalizations.of(context).formatFullDate(date);
     final dDayLabel = context.tr(
-      diff == 0
+      diff == null
+          ? 'event_no_next_date'
+          : diff == 0
           ? 'p8_events_today_upper'
           : isPast
           ? 'p8_events_day_elapsed_label'
@@ -222,11 +256,45 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
                               ),
                           ],
                         ),
+                        if (_event.isLunar &&
+                            !_event.hasConfirmedLunarDate) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            context.tr('event_lunar_legacy'),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        Builder(
+                          builder: (buttonContext) => OutlinedButton.icon(
+                            onPressed:
+                                _exporting ||
+                                    date == null ||
+                                    (_event.isLunar &&
+                                        !_event.hasConfirmedLunarDate)
+                                ? null
+                                : () => _exportCalendar(buttonContext),
+                            icon: _exporting
+                                ? const SizedBox.square(
+                                    dimension: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.calendar_month_outlined),
+                            label: Text(context.tr('event_export_calendar')),
+                          ),
+                        ),
+                        Text(
+                          context.tr('event_export_hint'),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                         const SizedBox(height: 36),
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
-                            '$displayDays',
+                            displayDays,
                             style: TextStyle(
                               fontSize: 100,
                               fontWeight: FontWeight.w900,

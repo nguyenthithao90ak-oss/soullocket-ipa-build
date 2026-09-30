@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:soullocket_app/utils/services/storage/resolved_file_cache.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/helpers/cloudflare_image_helper.dart';
@@ -22,22 +24,9 @@ class R2NetworkImage extends StatefulWidget {
     this.errorWidget,
   });
 
-  // RAM cache tĩnh để tránh chớp nháy tuyệt đối khi bất kỳ widget nào rebuild
-  // Giới hạn tối đa 100 phần tử theo cơ chế LRU eviction
-  static const int _maxCacheSize = 100;
-  static final Map<String, File> _resolvedNetworkFiles = {};
-
-  /// Thêm entry vào cache với LRU eviction khi đầy
-  static void _cacheFile(String key, File file) {
-    if (_resolvedNetworkFiles.containsKey(key)) {
-      // Di chuyển entry lên đầu (most recently used)
-      _resolvedNetworkFiles.remove(key);
-    } else if (_resolvedNetworkFiles.length >= _maxCacheSize) {
-      // Xóa phần tử cũ nhất (đầu Map)
-      _resolvedNetworkFiles.remove(_resolvedNetworkFiles.keys.first);
-    }
-    _resolvedNetworkFiles[key] = file;
-  }
+  static final _resolvedNetworkFiles = ResolvedFileCache(
+    ttl: const Duration(days: 14),
+  );
 
   @override
   State<R2NetworkImage> createState() => _R2NetworkImageState();
@@ -55,7 +44,8 @@ class _R2NetworkImageState extends State<R2NetworkImage> {
   @override
   void didUpdateWidget(covariant R2NetworkImage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.imageUrl != widget.imageUrl) {
+    if (oldWidget.imageUrl != widget.imageUrl ||
+        oldWidget.width != widget.width) {
       _initFutureIfNeeded();
     }
   }
@@ -66,12 +56,12 @@ class _R2NetworkImageState extends State<R2NetworkImage> {
       originalUrl,
       width: widget.width?.toInt(),
     );
-    
-    if (cleanUrl.isEmpty || cleanUrl.startsWith('assets/')) {
+
+    if (kIsWeb || cleanUrl.isEmpty || cleanUrl.startsWith('assets/')) {
       _fileFuture = null;
       return;
     }
-    if (R2NetworkImage._resolvedNetworkFiles.containsKey(cleanUrl)) {
+    if (R2NetworkImage._resolvedNetworkFiles.get(cleanUrl) != null) {
       _fileFuture = null;
       return;
     }
@@ -106,7 +96,7 @@ class _R2NetworkImageState extends State<R2NetworkImage> {
     }
 
     // Nạp đồng bộ ngay lập tức từ RAM cache nếu đã sẵn sàng (0ms flicker)
-    final cachedFile = R2NetworkImage._resolvedNetworkFiles[cleanUrl];
+    final cachedFile = R2NetworkImage._resolvedNetworkFiles.get(cleanUrl);
     if (cachedFile != null && cachedFile.existsSync()) {
       return Image.file(
         cachedFile,
@@ -130,14 +120,15 @@ class _R2NetworkImageState extends State<R2NetworkImage> {
 
         final file = snapshot.data;
         if (file != null && file.existsSync()) {
-          R2NetworkImage._cacheFile(cleanUrl, file);
+          R2NetworkImage._resolvedNetworkFiles.put(cleanUrl, file);
           return Image.file(
             file,
             fit: widget.fit,
             width: widget.width,
             height: widget.height,
-            cacheWidth:
-                widget.width != null ? (widget.width! * 2).toInt() : 800,
+            cacheWidth: widget.width != null
+                ? (widget.width! * 2).toInt()
+                : 800,
           );
         }
 

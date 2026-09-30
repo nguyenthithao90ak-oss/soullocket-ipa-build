@@ -179,17 +179,13 @@ class _ModernHomeBody extends StatelessWidget {
               }
 
               Widget buildInsight(bool isSwiping) {
-                final bool enableMotionBase =
-                    effectProfile.animationEnabled &&
-                    !state._deferHeavyHomeMotion &&
-                    !isSwiping;
-
                 return RepaintBoundary(
                   child: state._buildModernInsightCard(
                     isSingle: isSingle,
                     nameU1: nameU1,
                     nameU2: nameU2,
-                    enableMotion: enableMotionBase,
+                    avatarU1: avtUser1,
+                    avatarU2: avtUser2,
                   ),
                 );
               }

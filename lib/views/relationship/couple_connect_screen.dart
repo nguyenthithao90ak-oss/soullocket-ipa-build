@@ -176,14 +176,6 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
     }
 
     final payloadKind = QRPayloadCodec.detectKind(value);
-    if (payloadKind == QRPayloadKind.login) {
-      _setError(
-        context.tr('relationship_ylqrngnhpk_40b3b8'),
-        scannedValue: value,
-      );
-      return;
-    }
-
     if (payloadKind == QRPayloadKind.community) {
       _setError(
         context.tr('relationship_ylqrcngngg_af5cca'),

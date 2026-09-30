@@ -14,8 +14,10 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
                 '')
             .trim();
     final localLoveUnit = (prefs.getString('il_love_unit_text') ?? '').trim();
+    final localGpsMode = await LocationService.getGpsUpdateMode();
     if (!mounted) return;
     setState(() {
+      _gpsMode = localGpsMode;
       _musicAutoplay = prefs.getBool('il_music_autoplay') ?? false;
       final playlistJson = prefs.getString('il_local_music_playlist');
       _playlist = [];

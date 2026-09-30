@@ -1,3 +1,4 @@
+import '../../../utils/services/market_service.dart';
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'package:lottie/lottie.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
@@ -5,6 +6,7 @@ import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
 import 'package:soullocket_app/views/utilities/tarot/tarot_screen.dart';
 import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/map_tilt_card.dart';
+import 'package:soullocket_app/views/home/widgets/home_insight_card.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/hero/heartbeat_thread_painter.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/widgets/getting_started_guide.dart';
@@ -592,6 +594,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    MarketService.instance.addListener(_onRegionPreferencesChanged);
+    L10nService().addListener(_onRegionPreferencesChanged);
     unawaited(_loadCustomStickers());
     WidgetsBinding.instance.addObserver(this);
     _isTabActive = widget.isActiveListenable.value;
@@ -662,8 +666,16 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     }
   }
 
+  void _onRegionPreferencesChanged() {
+    if (!mounted) return;
+    _lastLoveWidgetSignature = '';
+    setState(() {});
+  }
+
   @override
   void dispose() {
+    MarketService.instance.removeListener(_onRegionPreferencesChanged);
+    L10nService().removeListener(_onRegionPreferencesChanged);
     WidgetsBinding.instance.removeObserver(this);
     widget.isActiveListenable.removeListener(_onActiveChanged);
     _invalidateLiveWorkSession();

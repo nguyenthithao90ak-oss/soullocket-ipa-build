@@ -32,12 +32,10 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
     setState(() => _houseId = houseId);
   }
 
-  int _calculateDaysDiff(int dateMs) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final eventDate = DateTime.fromMillisecondsSinceEpoch(dateMs);
-    final eventDay = DateTime(eventDate.year, eventDate.month, eventDate.day);
-    return eventDay.difference(today).inDays;
+  int? _calculateDaysDiff(SoulEvent event) {
+    final today = DateTime.now();
+    final date = event.calculateNextOccurrence(today);
+    return date == null ? null : SoulEvent.daysBetween(date, today);
   }
 
   IconData _getEventIcon(String title) {
@@ -73,7 +71,8 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
     return Icons.event_note_rounded;
   }
 
-  String _dDayText(BuildContext context, int diff) {
+  String _dDayText(BuildContext context, int? diff) {
+    if (diff == null) return context.tr('event_no_next_date');
     final days = diff.abs().toString();
     if (diff == 0) return context.tr('p8_events_today');
     final key = diff < 0
@@ -82,8 +81,8 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
     return context.tr(key).replaceAll('{days}', days);
   }
 
-  Widget _buildDDayBadge(BuildContext context, int diff, Color color) {
-    final isPast = diff < 0;
+  Widget _buildDDayBadge(BuildContext context, int? diff, Color color) {
+    final isPast = diff == null || diff < 0;
     final badgeColor = isPast
         ? SLColors.textSecond.withValues(alpha: 0.15)
         : color.withValues(alpha: diff == 0 ? 1 : 0.92);
@@ -247,8 +246,12 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
                         if (first.isPinned != second.isPinned) {
                           return first.isPinned ? -1 : 1;
                         }
-                        final firstDiff = _calculateDaysDiff(first.dateMs);
-                        final secondDiff = _calculateDaysDiff(second.dateMs);
+                        final firstDiff = _calculateDaysDiff(first);
+                        final secondDiff = _calculateDaysDiff(second);
+                        if (firstDiff == null) {
+                          return secondDiff == null ? 0 : 1;
+                        }
+                        if (secondDiff == null) return -1;
                         if (firstDiff >= 0 && secondDiff >= 0) {
                           return firstDiff.compareTo(secondDiff);
                         }
@@ -263,7 +266,9 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
                     }
 
                     final upcomingCount = sortedEvents
-                        .where((event) => _calculateDaysDiff(event.dateMs) >= 0)
+                        .where(
+                          (event) => (_calculateDaysDiff(event) ?? -1) >= 0,
+                        )
                         .length;
                     return ListView.separated(
                       physics: SLResponsive.scrollPhysicsForPlatform(),
@@ -413,12 +418,14 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
   }
 
   Widget _buildEventCard(BuildContext context, SoulEvent event) {
-    final diff = _calculateDaysDiff(event.dateMs);
+    final diff = _calculateDaysDiff(event);
     final accentColor = Color(
       int.tryParse(event.colorHex.replaceFirst('#', '0xFF')) ?? 0xFFFF4D94,
     );
-    final date = DateTime.fromMillisecondsSinceEpoch(event.dateMs);
-    final dateText = MaterialLocalizations.of(context).formatMediumDate(date);
+    final date = event.calculateNextOccurrence(DateTime.now());
+    final dateText = date == null
+        ? context.tr('event_no_next_date')
+        : MaterialLocalizations.of(context).formatMediumDate(date);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -466,6 +473,11 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
                 ),
                 if (event.isLunar)
                   _buildLunarChip(context, color: Colors.amber.shade800),
+                if (event.isLunar && !event.hasConfirmedLunarDate)
+                  Text(
+                    context.tr('event_lunar_legacy'),
+                    style: SLTypography.bodySmall,
+                  ),
               ],
             ),
           ],

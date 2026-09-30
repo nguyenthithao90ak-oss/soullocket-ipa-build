@@ -1,4 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../utils/sharing/external_share_links.dart';
+import '../utils/services/market_service.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -100,7 +103,7 @@ Widget _buildModernSocialIcon({
 }
 
 class _ShareBottomSheetState extends State<ShareBottomSheet> {
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+  DatabaseReference get _dbRef => FirebaseDatabase.instance.ref();
   final ChatService _chatService = ChatService();
   final GroupChatService _groupChatService = GroupChatService();
   final SocialService _socialService = SocialService();
@@ -108,22 +111,11 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
   List<GroupChatRoom> _groups = <GroupChatRoom>[];
   final Set<String> _sendingTargetIds = <String>{};
   bool _isLoading = true;
+  bool _externalBusy = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && widget.shareUrl.trim().isNotEmpty) {
-        Clipboard.setData(ClipboardData(text: widget.shareUrl.trim()));
-        ScaffoldMessenger.of(context).showSnackBar(
-          _buildFeedbackSnackBar(
-            message: L10nService().translate('share_copied'),
-            icon: Icons.check_circle_rounded,
-            accentColor: const Color(0xFF0F9D58),
-          ),
-        );
-      }
-    });
     if (widget.loadInAppTargets) {
       _loadFriends();
     } else {
@@ -226,79 +218,95 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
     }
   }
 
-  void _shareToExternal() {
-    final text = '${widget.contentToShare}\n${widget.shareUrl}'.trim();
+  String get _externalText =>
+      ExternalShareLinks.compose(widget.contentToShare, widget.shareUrl);
+
+  Future<void> _openSystemShare({String? channel}) async {
+    if (!mounted) return;
+    if (channel != null && channel != 'System') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            L10nService().format('share_choose_app', {'app': channel}),
+          ),
+        ),
+      );
+    }
     final box = context.findRenderObject() as RenderBox?;
-    final rect = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
-    // ignore: deprecated_member_use
-    Share.share(text, sharePositionOrigin: rect);
-    Navigator.pop(context);
+    final rect = box != null && box.hasSize
+        ? box.localToGlobal(Offset.zero) & box.size
+        : null;
+    await SharePlus.instance.share(
+      ShareParams(text: _externalText, sharePositionOrigin: rect),
+    );
   }
 
-  void _shareToSpecific(String platform) async {
-    final link = Uri.encodeComponent(widget.shareUrl.trim());
-    final text = Uri.encodeComponent(
-      '${widget.contentToShare}\n${widget.shareUrl}'.trim(),
-    );
-    String urlStr = '';
-
-    switch (platform) {
-      case 'Facebook':
-        urlStr = 'https://www.facebook.com/sharer/sharer.php?u=$link';
-        break;
-      case 'Messenger':
-        urlStr = 'fb-messenger://share?link=$link';
-        break;
-      case 'Zalo':
-        urlStr = 'https://zalo.me/share?url=$link';
-        break;
-      case 'Telegram':
-        urlStr = 'https://t.me/share/url?url=$link&text=$text';
-        break;
-      case 'Instagram':
-        _copyToClipboard();
-        urlStr = 'instagram://app';
-        break;
-      case 'SMS':
-        urlStr = 'sms:?body=$text';
-        break;
-      default:
-        _shareToExternal();
-        return;
-    }
-
+  Future<void> _shareToSpecific(String platform) async {
+    if (_externalBusy || _externalText.isEmpty) return;
+    setState(() => _externalBusy = true);
     try {
-      final uri = Uri.parse(urlStr);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-        if (mounted) Navigator.pop(context);
-      } else {
-        _shareToExternal();
+      final mobile =
+          defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS;
+      final uri = platform == 'LINE' && !mobile
+          ? null
+          : ExternalShareLinks.build(
+              platform,
+              content: widget.contentToShare,
+              link: widget.shareUrl,
+            );
+      var opened = false;
+      if (uri != null) {
+        try {
+          opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } catch (_) {
+          // Có nút sao chép và trình chia sẻ hệ thống khi app ngoài chưa sẵn sàng.
+        }
       }
+      if (!opened && mounted) await _openSystemShare(channel: platform);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        _buildFeedbackSnackBar(
+          message: AppErrorMapper.resolve(
+            error,
+            fallbackMessage: context.tr('share_send_failed'),
+          ).message,
+          icon: Icons.error_outline_rounded,
+          accentColor: const Color(0xFFDC2626),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _externalBusy = false);
+    }
+  }
+
+  Future<void> _copyLinkToClipboard({bool closeSheet = false}) async {
+    final text = widget.shareUrl.trim().isEmpty
+        ? _externalText
+        : widget.shareUrl.trim();
+    if (text.isEmpty) return;
+    try {
+      await Clipboard.setData(ClipboardData(text: text));
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      if (closeSheet) Navigator.pop(context);
+      messenger.showSnackBar(
+        _buildFeedbackSnackBar(
+          message: L10nService().translate('share_copied'),
+          icon: Icons.check_circle_rounded,
+          accentColor: const Color(0xFF0F9D58),
+        ),
+      );
     } catch (_) {
-      _shareToExternal();
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.tr('share_send_failed'))));
     }
   }
 
-  void _copyLinkToClipboard({bool closeSheet = false}) {
-    final link = widget.shareUrl.trim();
-    if (link.isEmpty) return;
-    Clipboard.setData(ClipboardData(text: link));
-    if (closeSheet && mounted) {
-      Navigator.pop(context);
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      _buildFeedbackSnackBar(
-        message: L10nService().translate('share_copied'),
-        icon: Icons.check_circle_rounded,
-        accentColor: const Color(0xFF0F9D58),
-      ),
-    );
-  }
-
-  void _copyToClipboard() {
-    _copyLinkToClipboard(closeSheet: true);
-  }
+  Future<void> _copyToClipboard() => _copyLinkToClipboard(closeSheet: true);
 
   String _composeShareMessage() {
     final lines = <String>[
@@ -840,165 +848,17 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                             ),
                           ),
                           children: [
+                            for (final channel in ExternalShareLinks.ordered(
+                              MarketService.instance.profile.shareChannels,
+                            ))
+                              _buildChannelItem(channel, compact, screenWidth),
                             _buildExternalShareItem(
-                              icon: _buildModernSocialIcon(
-                                size: SLResponsive.dp(
-                                  compact ? 48 : 52,
-                                  screenWidth,
-                                ),
-                                svgData: _zaloSvg,
-                                fallbackColors: const [
-                                  Color(0xFF00B2FF),
-                                  Color(0xFF0068FF),
-                                ],
+                              icon: _plainShareIcon(
+                                Icons.copy_all_rounded,
+                                const Color(0xFF64748B),
                               ),
-                              label: 'Zalo',
-                              onTap: () => _shareToSpecific('Zalo'),
-                              compact: compact,
-                              screenWidth: screenWidth,
-                            ),
-                            _buildExternalShareItem(
-                              icon: _buildModernSocialIcon(
-                                size: SLResponsive.dp(
-                                  compact ? 48 : 52,
-                                  screenWidth,
-                                ),
-                                svgData: _fbSvg,
-                                fallbackColors: const [
-                                  Color(0xFF1877F2),
-                                  Color(0xFF0C56B6),
-                                ],
-                              ),
-                              label: 'Facebook',
-                              onTap: () => _shareToSpecific('Facebook'),
-                              compact: compact,
-                              screenWidth: screenWidth,
-                            ),
-                            _buildExternalShareItem(
-                              icon: _buildModernSocialIcon(
-                                size: SLResponsive.dp(
-                                  compact ? 48 : 52,
-                                  screenWidth,
-                                ),
-                                svgData: _messengerSvg,
-                                fallbackColors: const [
-                                  Color(0xFF00B2FF),
-                                  Color(0xFF006AFF),
-                                  Color(0xFFA100FF),
-                                  Color(0xFFFF2E93),
-                                ],
-                              ),
-                              label: 'Messenger',
-                              onTap: () => _shareToSpecific('Messenger'),
-                              compact: compact,
-                              screenWidth: screenWidth,
-                            ),
-                            _buildExternalShareItem(
-                              icon: _buildModernSocialIcon(
-                                size: SLResponsive.dp(
-                                  compact ? 48 : 52,
-                                  screenWidth,
-                                ),
-                                svgData: _instagramSvg,
-                                customGradient: const RadialGradient(
-                                  colors: [
-                                    Color(0xFFFFDD55),
-                                    Color(0xFFFF543F),
-                                    Color(0xFFC837AB),
-                                    Color(0xFF3770E0),
-                                  ],
-                                  center: Alignment(-0.6, 0.9),
-                                  radius: 1.3,
-                                ),
-                              ),
-                              label: 'Instagram',
-                              onTap: () => _shareToSpecific('Instagram'),
-                              compact: compact,
-                              screenWidth: screenWidth,
-                            ),
-                            _buildExternalShareItem(
-                              icon: _buildModernSocialIcon(
-                                size: SLResponsive.dp(
-                                  compact ? 48 : 52,
-                                  screenWidth,
-                                ),
-                                svgData: _telegramSvg,
-                                fallbackColors: const [
-                                  Color(0xFF24A1DE),
-                                  Color(0xFF1E88BE),
-                                ],
-                              ),
-                              label: 'Telegram',
-                              onTap: () => _shareToSpecific('Telegram'),
-                              compact: compact,
-                              screenWidth: screenWidth,
-                            ),
-                            _buildExternalShareItem(
-                              icon: Container(
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF34C759),
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(14),
-                                  ),
-                                ),
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  Icons.chat_bubble_rounded,
-                                  color: Colors.white,
-                                  size: SLResponsive.dp(
-                                    compact ? 22 : 24,
-                                    screenWidth,
-                                  ),
-                                ),
-                              ),
-                              label: 'Tin nhắn',
-                              onTap: _shareToExternal,
-                              compact: compact,
-                              screenWidth: screenWidth,
-                            ),
-                            _buildExternalShareItem(
-                              icon: Container(
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF64748B),
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(14),
-                                  ),
-                                ),
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  Icons.copy_all_rounded,
-                                  color: Colors.white,
-                                  size: SLResponsive.dp(
-                                    compact ? 22 : 24,
-                                    screenWidth,
-                                  ),
-                                ),
-                              ),
-                              label: L10nService().translate('core_copy'),
+                              label: context.tr('core_copy'),
                               onTap: _copyToClipboard,
-                              compact: compact,
-                              screenWidth: screenWidth,
-                            ),
-                            _buildExternalShareItem(
-                              icon: Container(
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF94A3B8),
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(14),
-                                  ),
-                                ),
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  Icons.share_rounded,
-                                  color: Colors.white,
-                                  size: SLResponsive.dp(
-                                    compact ? 22 : 24,
-                                    screenWidth,
-                                  ),
-                                ),
-                              ),
-                              label: L10nService().translate('core_other'),
-                              onTap: _shareToExternal,
                               compact: compact,
                               screenWidth: screenWidth,
                             ),
@@ -1354,7 +1214,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: onTap,
+            onTap: _externalBusy ? null : onTap,
             borderRadius: BorderRadius.circular(
               SLResponsive.dp(22, screenWidth),
             ),
@@ -1506,6 +1366,61 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _plainShareIcon(IconData icon, Color color) => Container(
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(14),
+    ),
+    alignment: Alignment.center,
+    child: Icon(icon, color: Colors.white, size: 26),
+  );
+
+  Widget _buildChannelItem(String channel, bool compact, double screenWidth) {
+    final svg = switch (channel) {
+      'Zalo' => _zaloSvg,
+      'Facebook' => _fbSvg,
+      'Messenger' => _messengerSvg,
+      'Instagram' => _instagramSvg,
+      'Telegram' => _telegramSvg,
+      _ => null,
+    };
+    final color = switch (channel) {
+      'Zalo' || 'Messenger' => const Color(0xFF0068FF),
+      'Facebook' => const Color(0xFF1877F2),
+      'Instagram' => const Color(0xFFC837AB),
+      'Telegram' => const Color(0xFF24A1DE),
+      'WhatsApp' => const Color(0xFF128C7E),
+      'LINE' => const Color(0xFF06A44D),
+      'KakaoTalk' => const Color(0xFF59422A),
+      'SMS' => const Color(0xFF238A42),
+      _ => const Color(0xFF64748B),
+    };
+    final label = channel == 'System'
+        ? context.tr('core_other')
+        : context.tr('share_channel_${channel.toLowerCase()}');
+    return Tooltip(
+      message: label,
+      child: _buildExternalShareItem(
+        icon: svg == null
+            ? _plainShareIcon(
+                channel == 'System'
+                    ? Icons.share_rounded
+                    : Icons.chat_bubble_rounded,
+                color,
+              )
+            : _buildModernSocialIcon(
+                size: SLResponsive.dp(compact ? 48 : 52, screenWidth),
+                svgData: svg,
+                fallbackColors: [color],
+              ),
+        label: label,
+        onTap: () => _shareToSpecific(channel),
+        compact: compact,
+        screenWidth: screenWidth,
       ),
     );
   }

@@ -247,6 +247,7 @@ class _MemoryVideoWidget extends StatefulWidget {
 }
 
 class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
+  final _urlService = PrivateMediaUrlService();
   VideoPlayerController? _controller;
   bool _initialized = false;
   bool _hasError = false;
@@ -266,7 +267,7 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
           widget.memoryId != null &&
           widget.memoryId!.isNotEmpty) {
         try {
-          final res = await PrivateMediaUrlService().resolve(
+          final res = await _urlService.resolve(
             houseId: widget.houseId!,
             mediaId: widget.memoryId!,
             kind: 'memory_image',
@@ -312,7 +313,7 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
           widget.memoryId != null &&
           widget.memoryId!.isNotEmpty) {
         try {
-          final res = await PrivateMediaUrlService().resolve(
+          final res = await _urlService.resolve(
             houseId: widget.houseId!,
             mediaId: widget.memoryId!,
             kind: 'memory_image',
@@ -351,6 +352,7 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
 
   @override
   void dispose() {
+    _urlService.dispose();
     _controller?.dispose();
     super.dispose();
   }

@@ -9,7 +9,6 @@ class _TopScoreCard extends StatelessWidget {
     this.dense = false,
     this.ultraCompact = false,
   });
-
   final String label;
   final IconData icon;
   final Color accent;
@@ -19,108 +18,40 @@ class _TopScoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: ultraCompact
-            ? 10
-            : dense
-                ? 12
-                : 14,
-        vertical: ultraCompact
-            ? 7
-            : dense
-                ? 9
-                : 10,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: <Color>[
-            accent.withValues(alpha: 0.28),
-            const Color(0xFF141C30).withValues(alpha: 0.95),
-            const Color(0xFF0A0F1D).withValues(alpha: 0.98),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(dense ? 18 : 20),
-        border: Border.all(
-          color: accent.withValues(alpha: 0.45),
-          width: 1.2,
-        ),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: accent.withValues(alpha: 0.12),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-          BoxShadow(
-            color: Colors.black45,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Icon(
-                icon,
-                color: accent,
-                size: ultraCompact
-                    ? 13
-                    : dense
-                        ? 15
-                        : 16,
-              ),
-              SizedBox(
-                width: ultraCompact
-                    ? 5
-                    : dense
-                        ? 6
-                        : 7,
-              ),
-              Text(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: accent, size: 14),
+            const SizedBox(width: 5),
+            Flexible(
+              child: Text(
                 label,
                 style: SLTheme.quicksand(
-                  fontSize: ultraCompact
-                      ? 8.5
-                      : dense
-                          ? 9.5
-                          : 10.5,
-                  fontWeight: FontWeight.w900,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
                   color: accent,
-                  letterSpacing: 0.8,
                 ),
               ),
-            ],
-          ),
-          SizedBox(
-            height: ultraCompact
-                ? 2
-                : dense
-                    ? 3
-                    : 4,
-          ),
-          Text(
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
             value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
             style: SLTheme.quicksand(
-              fontSize: ultraCompact
-                  ? 15
-                  : dense
-                      ? 17
-                      : 19,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-              letterSpacing: 0.2,
+              fontSize: ultraCompact ? 17 : 19,
+              height: 1.1,
+              fontWeight: FontWeight.w800,
+              color: _kSoulIvory,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -131,80 +62,50 @@ class _SettingsActionButton extends StatelessWidget {
     required this.label,
     required this.accent,
     required this.onTap,
-    this.enabled = true,
   });
-
   final IconData icon;
   final String label;
   final Color accent;
   final VoidCallback onTap;
-  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 140,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: enabled ? onTap : null,
-          borderRadius: BorderRadius.circular(16),
-          child: Ink(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: LinearGradient(
-                colors: <Color>[
-                  accent.withValues(alpha: enabled ? 0.22 : 0.06),
-                  const Color(0xFF131B2D).withValues(alpha: enabled ? 0.95 : 0.75),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: .10),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(icon, size: 19, color: accent),
               ),
-              border: Border.all(
-                color: enabled
-                    ? accent.withValues(alpha: 0.40)
-                    : Colors.white.withValues(alpha: 0.06),
-                width: 1.2,
-              ),
-              boxShadow: [
-                if (enabled)
-                  BoxShadow(
-                    color: accent.withValues(alpha: 0.10),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-              ],
-            ),
-            child: Row(
-              children: <Widget>[
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: enabled ? 0.18 : 0.08),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 16,
-                    color: enabled ? accent : Colors.white38,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: SLTheme.quicksand(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: _kSoulIvory,
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: SLTheme.quicksand(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: enabled ? Colors.white : Colors.white38,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 10),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: _kSoulMuted.withValues(alpha: .7),
+              ),
+            ],
           ),
         ),
       ),
@@ -219,7 +120,6 @@ class _LeaderboardTile extends StatelessWidget {
     required this.lines,
     required this.stamp,
   });
-
   final int rank;
   final String score;
   final int lines;
@@ -227,108 +127,79 @@ class _LeaderboardTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isTop1 = rank == 1;
-    final bool isTop2 = rank == 2;
-    final bool isTop3 = rank == 3;
-    final bool isTop3Any = isTop1 || isTop2 || isTop3;
-
-    Color badgeColor;
-    Color borderColor;
-    Color bgColor;
-
-    if (isTop1) {
-      badgeColor = const Color(0xFFFFD700); // Gold
-      borderColor = const Color(0xFFFFD700).withValues(alpha: 0.4);
-      bgColor = const Color(0xFFFFD700).withValues(alpha: 0.1);
-    } else if (isTop2) {
-      badgeColor = const Color(0xFFE0E0E0); // Silver
-      borderColor = const Color(0xFFE0E0E0).withValues(alpha: 0.3);
-      bgColor = const Color(0xFFE0E0E0).withValues(alpha: 0.06);
-    } else if (isTop3) {
-      badgeColor = const Color(0xFFCD7F32); // Bronze
-      borderColor = const Color(0xFFCD7F32).withValues(alpha: 0.3);
-      bgColor = const Color(0xFFCD7F32).withValues(alpha: 0.06);
-    } else {
-      badgeColor = const Color(0xFF00C3FF).withValues(alpha: 0.7);
-      borderColor = Colors.white.withValues(alpha: 0.06);
-      bgColor = Colors.white.withValues(alpha: 0.03);
-    }
-
+    final first = rank == 1;
+    final accent = first ? _kSoulWarm : _kSoulMuted;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor, width: isTop3Any ? 1.5 : 1.0),
-        boxShadow: isTop1
-            ? [
-                BoxShadow(
-                  color: const Color(0xFFFFD700).withValues(alpha: 0.15),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                )
-              ]
-            : null,
+        color: first
+            ? _kSoulWarm.withValues(alpha: .07)
+            : _kSoulPanelTop.withValues(alpha: .3),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: first
+              ? _kSoulWarm.withValues(alpha: .18)
+              : Colors.white.withValues(alpha: .04),
+        ),
       ),
       child: Row(
-        children: <Widget>[
+        children: [
           Container(
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: badgeColor.withValues(alpha: 0.2),
-              border: isTop3Any
-                  ? Border.all(
-                      color: badgeColor.withValues(alpha: 0.5), width: 1.5)
-                  : null,
+              color: accent.withValues(alpha: .1),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
-              child: isTop1
-                  ? const Icon(Icons.emoji_events_rounded,
-                      color: Color(0xFFFFD700), size: 22)
+              child: first
+                  ? Icon(Icons.emoji_events_rounded, color: accent, size: 22)
                   : Text(
                       '$rank',
                       style: SLTheme.quicksand(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 16,
-                        color: isTop3Any ? badgeColor : Colors.white70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: accent,
                       ),
                     ),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  score,
-                  style: SLTheme.quicksand(
-                    fontSize: isTop1 ? 22 : 18,
-                    fontWeight: FontWeight.w900,
-                    color: isTop1 ? const Color(0xFFFFD700) : Colors.white,
-                    letterSpacing: 1.2,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    score,
+                    style: SLTheme.quicksand(
+                      fontSize: first ? 24 : 20,
+                      fontWeight: FontWeight.w900,
+                      color: _kSoulIvory,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
-                  '$lines lines • $stamp',
+                  "${context.tr('soul_block_lines')}: $lines",
                   style: SLTheme.quicksand(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white54,
+                    fontSize: 11,
+                    height: 1.4,
+                    color: _kSoulMuted,
+                  ),
+                ),
+                Text(
+                  stamp,
+                  style: SLTheme.quicksand(
+                    fontSize: 11,
+                    height: 1.4,
+                    color: _kSoulMuted,
                   ),
                 ),
               ],
             ),
           ),
-          if (isTop1)
-            const Icon(
-              Icons.star_rounded,
-              color: Color(0xFFFFD700),
-              size: 24,
-            ),
         ],
       ),
     );
@@ -343,15 +214,43 @@ class _SoulExplosionPainter extends CustomPainter {
     required this.accent,
     required List<_ExplosionParticle> particles,
     required this.drawRing,
-  })  : _particles = List<_ExplosionParticle>.unmodifiable(particles),
-        super(repaint: repaint);
+    required this.photoImage,
+  }) : _particles = particles,
+       _photoSources = photoImage == null
+           ? const []
+           : [
+               for (final particle in particles)
+                 particle.photoRect == null
+                     ? null
+                     : _sourcePhotoRect(photoImage, particle.photoRect!),
+             ],
+       super(repaint: repaint);
 
   final Animation<double> progress;
   final Offset center;
   final Color accent;
   final bool drawRing;
+  final ui.Image? photoImage;
   final List<_ExplosionParticle> _particles;
-  final Paint _particlePaint = Paint()..style = PaintingStyle.fill;
+  final List<Rect?> _photoSources;
+  final Paint _particlePaint = Paint()
+    ..style = PaintingStyle.fill
+    ..filterQuality = FilterQuality.low;
+  final Paint _edgePaint = Paint()..style = PaintingStyle.stroke;
+  final Paint _ringPaint = Paint()..style = PaintingStyle.stroke;
+  static const Rect _unitPhotoRect = Rect.fromLTWH(-.5, -.5, 1, 1);
+  static final List<Path> _photoShards = [
+    Path()
+      ..moveTo(-.5, -.5)
+      ..lineTo(.5, -.5)
+      ..lineTo(.5, .5)
+      ..close(),
+    Path()
+      ..moveTo(-.5, -.5)
+      ..lineTo(-.5, .5)
+      ..lineTo(.5, .5)
+      ..close(),
+  ];
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -364,9 +263,20 @@ class _SoulExplosionPainter extends CustomPainter {
       return;
     }
 
-    // Rings and streaks removed for a cleaner, gentler particle fallback effect.
+    // Vòng sáng đơn giản cho combo, chỉ một nét vẽ mỗi khung nên nhẹ hơn hạt dày.
+    if (drawRing && rawProgress < 0.86) {
+      final ringProgress = Curves.easeOutCubic.transform(
+        (rawProgress / 0.86).clamp(0.0, 1.0),
+      );
+      final ringOpacity = ((1 - ringProgress) * 0.48).clamp(0.0, 0.48);
+      _ringPaint
+        ..strokeWidth = 1.6 + (1 - ringProgress) * 1.4
+        ..color = accent.withValues(alpha: ringOpacity);
+      canvas.drawCircle(center, 16 + (ringProgress * 88), _ringPaint);
+    }
 
-    for (final _ExplosionParticle particle in _particles) {
+    for (var index = 0; index < _particles.length; index++) {
+      final particle = _particles[index];
       final double remainingFraction = 1.0 - particle.delayFraction;
       if (remainingFraction <= 0) {
         continue;
@@ -394,7 +304,7 @@ class _SoulExplosionPainter extends CustomPainter {
           particle.rotation + (travel * particle.twist * pi);
       final double width =
           (particle.isShard ? particle.size * 1.7 : particle.size * 1.12) *
-              scale;
+          scale;
 
       canvas.save();
       canvas.translate(
@@ -404,7 +314,27 @@ class _SoulExplosionPainter extends CustomPainter {
       canvas.rotate(rotation);
 
       _particlePaint.color = particle.color.withValues(alpha: opacity);
-      if (particle.simpleDraw) {
+      if (photoImage != null && particle.photoRect != null) {
+        // Tọa độ nguồn và hai đường tam giác được tạo trước, không cấp
+        // phát Path/Paint mới cho từng mảnh ở mỗi khung hình.
+        final side = particle.size * scale;
+        final shard = _photoShards[particle.shapeType == 4 ? 0 : 1];
+        canvas.scale(side);
+        canvas.save();
+        canvas.clipPath(shard, doAntiAlias: false);
+        _particlePaint.color = Colors.white.withValues(alpha: opacity);
+        canvas.drawImageRect(
+          photoImage!,
+          _photoSources[index]!,
+          _unitPhotoRect,
+          _particlePaint,
+        );
+        canvas.restore();
+        _edgePaint
+          ..strokeWidth = .7 / side
+          ..color = Colors.white.withValues(alpha: opacity * .6);
+        canvas.drawPath(shard, _edgePaint);
+      } else if (particle.simpleDraw) {
         canvas.drawCircle(_kExplosionOrigin, width / 2.4, _particlePaint);
       } else {
         if (particle.shapeType == 1) {
@@ -463,6 +393,8 @@ class _SoulExplosionPainter extends CustomPainter {
   bool shouldRepaint(covariant _SoulExplosionPainter oldDelegate) {
     return center != oldDelegate.center ||
         accent != oldDelegate.accent ||
+        photoImage != oldDelegate.photoImage ||
+        drawRing != oldDelegate.drawRing ||
         !identical(_particles, oldDelegate._particles);
   }
 }
@@ -473,161 +405,119 @@ class _SettingsSwitchTile extends StatelessWidget {
     required this.title,
     required this.value,
     required this.onChanged,
-    this.accentColor = const Color(0xFF00E5FF),
+    this.subtitle,
   });
-
   final IconData icon;
   final String title;
+  final String? subtitle;
   final bool value;
   final ValueChanged<bool> onChanged;
-  final Color accentColor;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => onChanged(!value),
-        borderRadius: BorderRadius.circular(16),
-        child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: const Color(0xFF131B2D).withValues(alpha: 0.85),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: value
-                  ? accentColor.withValues(alpha: 0.35)
-                  : Colors.white.withValues(alpha: 0.07),
-              width: 1.2,
-            ),
-            boxShadow: [
-              if (value)
-                BoxShadow(
-                  color: accentColor.withValues(alpha: 0.08),
-                  blurRadius: 12,
-                  offset: const Offset(0, 3),
-                ),
-            ],
-          ),
-          child: Row(
-            children: <Widget>[
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: (value ? accentColor : Colors.white).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  icon,
-                  color: value ? accentColor : Colors.white70,
-                  size: 18,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  title,
-                  style: SLTheme.quicksand(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Switch.adaptive(
-                value: value,
-                onChanged: onChanged,
-                activeTrackColor: accentColor,
-                activeThumbColor: Colors.white,
-              ),
-            ],
-          ),
+    return SwitchListTile.adaptive(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      secondary: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          color: _kSoulChrome.withValues(alpha: .10),
+          borderRadius: BorderRadius.circular(11),
+        ),
+        child: Icon(icon, color: _kSoulChrome, size: 19),
+      ),
+      title: Text(
+        title,
+        style: SLTheme.quicksand(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: _kSoulIvory,
         ),
       ),
+      subtitle: subtitle == null
+          ? null
+          : Text(
+              subtitle!,
+              style: SLTheme.quicksand(
+                fontSize: 12,
+                height: 1.4,
+                color: _kSoulMuted,
+              ),
+            ),
+      value: value,
+      onChanged: onChanged,
+      activeTrackColor: _kSoulChrome,
+      activeThumbColor: _kSoulStageBottom,
+      inactiveTrackColor: _kSoulPanelTop,
+      inactiveThumbColor: _kSoulMuted,
     );
   }
 }
 
 extension _SoulBlockLogoBuilder on _SoulBlockGameState {
   Widget _buildGameLogo({double size = 94}) {
-    final borderRadius = BorderRadius.circular(size * 0.26);
-    final tileSize = size * 0.22;
-    final tileRadius = BorderRadius.circular(size * 0.08);
-
-    Widget tile(Color color) {
-      return Container(
-        width: tileSize,
-        height: tileSize,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: tileRadius,
-          border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-          boxShadow: <BoxShadow>[
-            BoxShadow(
-              color: color.withValues(alpha: 0.24),
-              blurRadius: 10,
-              spreadRadius: -6,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return SizedBox(
-      width: size,
-      height: size,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: borderRadius,
-          gradient: LinearGradient(
-            colors: <Color>[
-              _kSoulPanelTop.withValues(alpha: 0.94),
-              _kSoulPanelBottom,
+    final tileSize = size * .235;
+    return ExcludeSemantics(
+      child: RepaintBoundary(
+        child: SizedBox.square(
+          dimension: size,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        _kSoulChrome.withValues(alpha: .17),
+                        _kSoulChrome.withValues(alpha: 0),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              for (var row = 0; row < 3; row++)
+                for (var col = 0; col < 3; col++)
+                  Positioned(
+                    left:
+                        size *
+                        (.12 + col * .255 + (row == 0 && col == 2 ? .04 : 0)),
+                    top:
+                        size *
+                        (.12 + row * .255 - (row == 0 && col == 2 ? .04 : 0)),
+                    width: tileSize,
+                    height: tileSize,
+                    child: Transform.rotate(
+                      angle: row == 0 && col == 2
+                          ? .12
+                          : (row == 2 && col == 0 ? -.08 : 0),
+                      child: _buildPhotoTile(
+                        width: tileSize,
+                        height: tileSize,
+                        crop: Rect.fromLTWH(col / 3, row / 3, 1 / 3, 1 / 3),
+                      ),
+                    ),
+                  ),
+              if (_boardPhoto == null)
+                Center(
+                  child: Icon(
+                    Icons.favorite_rounded,
+                    size: size * .18,
+                    color: _kSoulChrome,
+                  ),
+                ),
+              Positioned(
+                right: 0,
+                bottom: size * .09,
+                child: Icon(
+                  Icons.auto_awesome_rounded,
+                  color: _kSoulWarm,
+                  size: size * .13,
+                ),
+              ),
             ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
           ),
-          border: Border.all(color: _kSoulChrome.withValues(alpha: 0.30)),
-          boxShadow: <BoxShadow>[
-            BoxShadow(
-              color: _kSoulChrome.withValues(alpha: 0.12),
-              blurRadius: 18,
-              spreadRadius: -12,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: <Widget>[
-            Positioned(
-              top: size * 0.18,
-              left: size * 0.18,
-              child: tile(_kSoulChrome.withValues(alpha: 0.92)),
-            ),
-            Positioned(
-              top: size * 0.18,
-              right: size * 0.18,
-              child: tile(const Color(0xFF69D2FF)),
-            ),
-            Positioned(
-              bottom: size * 0.18,
-              left: size * 0.18,
-              child: tile(const Color(0xFF7CF29C).withValues(alpha: 0.92)),
-            ),
-            Positioned(
-              bottom: size * 0.18,
-              right: size * 0.18,
-              child: tile(Colors.white.withValues(alpha: 0.14)),
-            ),
-            Icon(
-              Icons.auto_awesome_rounded,
-              size: size * 0.24,
-              color: _kSoulIvory,
-            ),
-          ],
         ),
       ),
     );

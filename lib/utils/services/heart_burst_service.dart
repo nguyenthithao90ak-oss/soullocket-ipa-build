@@ -1,6 +1,5 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
-import 'intimacy_service.dart';
 
 class HeartBurstEvent {
   final String id;
@@ -45,16 +44,6 @@ class HeartBurstService {
       'count': count,
       'timestamp': now,
     });
-
-    // Thưởng EXP thân mật
-    unawaited(
-      IntimacyService.instance.addExp(
-        houseId: houseId,
-        action: 'heart_burst',
-        exp: 5,
-        description: 'Bắn tim tương tác yêu thương (+5 EXP)',
-      ),
-    );
   }
 
   Stream<HeartBurstEvent?> streamPartnerBursts({
@@ -70,23 +59,24 @@ class HeartBurstService {
         .limitToLast(1)
         .onChildAdded
         .map((event) {
-      if (!event.snapshot.exists || event.snapshot.value is! Map) return null;
-      final map = event.snapshot.value as Map;
-      final senderRole = map['senderRole']?.toString() ?? '';
-      final ts = (map['timestamp'] as num?)?.toInt() ?? 0;
+          if (!event.snapshot.exists || event.snapshot.value is! Map)
+            return null;
+          final map = event.snapshot.value as Map;
+          final senderRole = map['senderRole']?.toString() ?? '';
+          final ts = (map['timestamp'] as num?)?.toInt() ?? 0;
 
-      // Only trigger if sent by partner and is recent
-      if (senderRole != myRole && ts > _lastHandledTs) {
-        _lastHandledTs = ts;
-        return HeartBurstEvent(
-          id: event.snapshot.key ?? '',
-          senderRole: senderRole,
-          emoji: map['emoji']?.toString() ?? '💖',
-          count: (map['count'] as num?)?.toInt() ?? 5,
-          timestamp: ts,
-        );
-      }
-      return null;
-    });
+          // Only trigger if sent by partner and is recent
+          if (senderRole != myRole && ts > _lastHandledTs) {
+            _lastHandledTs = ts;
+            return HeartBurstEvent(
+              id: event.snapshot.key ?? '',
+              senderRole: senderRole,
+              emoji: map['emoji']?.toString() ?? '💖',
+              count: (map['count'] as num?)?.toInt() ?? 5,
+              timestamp: ts,
+            );
+          }
+          return null;
+        });
   }
 }

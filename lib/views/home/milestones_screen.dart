@@ -1,3 +1,4 @@
+import '../../utils/services/market_service.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import 'package:soullocket_app/widgets/milestone_embedded_sticker.dart';
@@ -54,10 +55,18 @@ class _MilestonesScreenState extends State<MilestonesScreen>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _calculateEvents();
+    MarketService.instance.addListener(_onRegionChanged);
+    L10nService().addListener(_onRegionChanged);
+  }
+
+  void _onRegionChanged() {
+    if (mounted) setState(_calculateEvents);
   }
 
   @override
   void dispose() {
+    MarketService.instance.removeListener(_onRegionChanged);
+    L10nService().removeListener(_onRegionChanged);
     _tabController.dispose();
     super.dispose();
   }

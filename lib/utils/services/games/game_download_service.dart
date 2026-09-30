@@ -44,18 +44,15 @@ class GameDownloadService extends ChangeNotifier {
   double? getProgress(String gameId) => _downloadProgress[gameId];
   bool isDownloading(String gameId) => _isDownloading[gameId] ?? false;
 
-  // Cấu hình các file cần tải cho từng game
+  // Cấu hình các file cần tải cho từng game.
+  // soul_block: audio SFX được synthesize trực tiếp trong code (fallback),
+  // không cần tải file ngoài từ R2 nữa → relativePaths rỗng.
   final Map<String, GameAssetInfo> _gameConfigs = {
     'soul_block': const GameAssetInfo(
       gameId: 'soul_block',
       storagePath: 'game_assets/soul_block',
-      downloadSizeLabel: 'khoảng 2 MB',
-      relativePaths: [
-        'soul_block_bgm.mp3',
-        'big_win.mp3',
-        'clear_burst.mp3',
-        'drag_lift.mp3',
-      ],
+      downloadSizeLabel: '< 1 MB',
+      relativePaths: [],
     ),
   };
 
@@ -189,6 +186,15 @@ class GameDownloadService extends ChangeNotifier {
       _downloadProgress.remove(gameId);
       _isDownloading[gameId] = false;
       notifyListeners();
+    } on DioException catch (e) {
+      _isDownloading[gameId] = false;
+      _downloadProgress.remove(gameId);
+      notifyListeners();
+      final code = e.response?.statusCode;
+      if (code == 401 || code == 403) {
+        throw 'Không có quyền truy cập file game (HTTP $code). Vui lòng thử lại sau.';
+      }
+      throw AppErrorMapper.resolve(e).message;
     } catch (e) {
       final errorMessage = AppErrorMapper.resolve(e).message;
       debugPrint('Lỗi tải game: $errorMessage');

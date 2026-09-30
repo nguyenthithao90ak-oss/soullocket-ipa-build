@@ -5,11 +5,13 @@ class _SoulTile {
     required this.toneIndex,
     required this.pieceId,
     required this.placedTurn,
+    this.photoRect,
   });
 
   final int toneIndex;
   final int pieceId;
   final int placedTurn;
+  final Rect? photoRect;
 }
 
 class _SoulPieceOption {
@@ -37,6 +39,7 @@ class _SoulPieceTemplate {
     required this.width,
     required this.height,
     required this.cellCount,
+    this.quarterTurns = 0,
   });
 
   final String id;
@@ -46,16 +49,21 @@ class _SoulPieceTemplate {
   final int width;
   final int height;
   final int cellCount;
+  final int quarterTurns;
 
-  static final Map<String, ({int width, int height, int cellCount})>
-      _metadataCache = <String, ({int width, int height, int cellCount})>{};
-  static final Map<String, Set<int>> _cellKeyCache = <String, Set<int>>{};
+  static final Map<(String, int), ({int width, int height, int cellCount})>
+  _metadataCache = <(String, int), ({int width, int height, int cellCount})>{};
+  static final Map<(String, int), Set<int>> _cellKeyCache =
+      <(String, int), Set<int>>{};
 
   ({int width, int height, int cellCount}) get metadata =>
-      _metadataCache[id] ??=
-          (width: width, height: height, cellCount: cellCount);
+      _metadataCache[(id, quarterTurns)] ??= (
+        width: width,
+        height: height,
+        cellCount: cellCount,
+      );
 
-  Set<int> get cellKeySet => _cellKeyCache[id] ??= cells
+  Set<int> get cellKeySet => _cellKeyCache[(id, quarterTurns)] ??= cells
       .map((Point<int> cell) => (cell.x << 16) ^ (cell.y & 0xFFFF))
       .toSet();
 
@@ -63,8 +71,9 @@ class _SoulPieceTemplate {
     final rotatedCells = cells.map((p) => Point<int>(-p.y, p.x)).toList();
     final minX = rotatedCells.map((p) => p.x).reduce(min);
     final minY = rotatedCells.map((p) => p.y).reduce(min);
-    final normalizedCells =
-        rotatedCells.map((p) => Point<int>(p.x - minX, p.y - minY)).toList();
+    final normalizedCells = rotatedCells
+        .map((p) => Point<int>(p.x - minX, p.y - minY))
+        .toList();
 
     final newWidth = normalizedCells.map((p) => p.x).reduce(max) + 1;
     final newHeight = normalizedCells.map((p) => p.y).reduce(max) + 1;
@@ -77,6 +86,7 @@ class _SoulPieceTemplate {
       width: newWidth,
       height: newHeight,
       cellCount: cellCount,
+      quarterTurns: (quarterTurns + 1) % 4,
     );
   }
 }
@@ -133,16 +143,6 @@ class _TemplateScore {
   final _SoulPieceTemplate template;
   final double bestHeuristic;
   final int playableCount;
-}
-
-class _BatchChoice {
-  const _BatchChoice({
-    required this.templates,
-    required this.score,
-  });
-
-  final List<_SoulPieceTemplate> templates;
-  final double score;
 }
 
 class _RecommendedMove {
@@ -253,6 +253,7 @@ class _ExplosionParticle {
     required this.isShard,
     required this.simpleDraw,
     required this.shapeType,
+    this.photoRect,
   });
 
   final Offset startOffset;
@@ -266,27 +267,24 @@ class _ExplosionParticle {
   final bool isShard;
   final bool simpleDraw;
   final int shapeType;
+  final Rect? photoRect;
 }
 
 class _MemoryBurstSnapshot {
   const _MemoryBurstSnapshot({
-    required this.imageUrl,
+    required this.image,
     required this.label,
     required this.subtitle,
     required this.accent,
   });
 
-  final String imageUrl;
+  final ui.Image image;
   final String label;
   final String subtitle;
   final Color accent;
 }
 
-enum _SoulBlockPerformanceTier {
-  low,
-  mid,
-  high,
-}
+enum _SoulBlockPerformanceTier { low, mid, high }
 
 class _SoulBlockPerformanceProfile {
   const _SoulBlockPerformanceProfile({
@@ -378,17 +376,19 @@ class _SoulBlockPerformanceProfile {
   );
 }
 
-const Color _kSoulStageTop = Color(0xFF0D1322);
-const Color _kSoulStageMid = Color(0xFF090D18);
-const Color _kSoulStageBottom = Color(0xFF05070D);
-const Color _kSoulPanelTop = Color(0xFF151D30);
-const Color _kSoulPanelMid = Color(0xFF0F1626);
-const Color _kSoulPanelBottom = Color(0xFF0A0E1A);
-const Color _kSoulBoardTop = Color(0xFF141C2E);
-const Color _kSoulBoardMid = Color(0xFF0D1322);
-const Color _kSoulBoardBottom = Color(0xFF080C16);
-const Color _kSoulChrome = Color(0xFF67E8F9);
-const Color _kSoulIvory = Color(0xFFFFFFFF);
+const Color _kSoulStageTop = Color(0xFF191B30);
+const Color _kSoulStageMid = Color(0xFF111423);
+const Color _kSoulStageBottom = Color(0xFF0C0F1B);
+const Color _kSoulPanelTop = Color(0xFF262B42);
+const Color _kSoulPanelMid = Color(0xFF1C2034);
+const Color _kSoulPanelBottom = Color(0xFF15192A);
+const Color _kSoulBoardTop = Color(0xFF1B2034);
+const Color _kSoulBoardMid = Color(0xFF171C2E);
+const Color _kSoulBoardBottom = Color(0xFF131829);
+const Color _kSoulChrome = Color(0xFFC3B6F6);
+const Color _kSoulIvory = Color(0xFFF6F2EB);
+const Color _kSoulMuted = Color(0xFFA9AEC5);
+const Color _kSoulWarm = Color(0xFFE9C9A2);
 
 const List<Color> _kSoulTones = <Color>[
   Color(0xFF00E5FF), // Electric Cyan Gem
@@ -425,10 +425,7 @@ const List<_SoulPieceTemplate> _kSoulBlockTemplates = <_SoulPieceTemplate>[
   _SoulPieceTemplate(
     id: 'duo_h',
     label: 'Duo H',
-    cells: <Point<int>>[
-      Point<int>(0, 0),
-      Point<int>(1, 0),
-    ],
+    cells: <Point<int>>[Point<int>(0, 0), Point<int>(1, 0)],
     tier: 0,
     width: 2,
     height: 1,
@@ -437,10 +434,7 @@ const List<_SoulPieceTemplate> _kSoulBlockTemplates = <_SoulPieceTemplate>[
   _SoulPieceTemplate(
     id: 'duo_v',
     label: 'Duo V',
-    cells: <Point<int>>[
-      Point<int>(0, 0),
-      Point<int>(0, 1),
-    ],
+    cells: <Point<int>>[Point<int>(0, 0), Point<int>(0, 1)],
     tier: 0,
     width: 1,
     height: 2,
@@ -449,11 +443,7 @@ const List<_SoulPieceTemplate> _kSoulBlockTemplates = <_SoulPieceTemplate>[
   _SoulPieceTemplate(
     id: 'tri_h',
     label: 'Line 3 H',
-    cells: <Point<int>>[
-      Point<int>(0, 0),
-      Point<int>(1, 0),
-      Point<int>(2, 0),
-    ],
+    cells: <Point<int>>[Point<int>(0, 0), Point<int>(1, 0), Point<int>(2, 0)],
     tier: 0,
     width: 3,
     height: 1,
@@ -462,11 +452,7 @@ const List<_SoulPieceTemplate> _kSoulBlockTemplates = <_SoulPieceTemplate>[
   _SoulPieceTemplate(
     id: 'tri_v',
     label: 'Line 3 V',
-    cells: <Point<int>>[
-      Point<int>(0, 0),
-      Point<int>(0, 1),
-      Point<int>(0, 2),
-    ],
+    cells: <Point<int>>[Point<int>(0, 0), Point<int>(0, 1), Point<int>(0, 2)],
     tier: 0,
     width: 1,
     height: 3,
@@ -489,11 +475,7 @@ const List<_SoulPieceTemplate> _kSoulBlockTemplates = <_SoulPieceTemplate>[
   _SoulPieceTemplate(
     id: 'l_small',
     label: 'L Small',
-    cells: <Point<int>>[
-      Point<int>(0, 0),
-      Point<int>(0, 1),
-      Point<int>(1, 1),
-    ],
+    cells: <Point<int>>[Point<int>(0, 0), Point<int>(0, 1), Point<int>(1, 1)],
     tier: 0,
     width: 2,
     height: 2,

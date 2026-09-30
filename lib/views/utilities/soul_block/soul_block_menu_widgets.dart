@@ -1,10 +1,7 @@
 part of '../soul_block_game.dart';
 
 class _GlowOrb extends StatelessWidget {
-  const _GlowOrb({
-    required this.color,
-    required this.size,
-  });
+  const _GlowOrb({required this.color, required this.size});
 
   final Color color;
   final double size;
@@ -26,69 +23,67 @@ class _GlowOrb extends StatelessWidget {
   }
 }
 
+class _SoulIconButton extends StatelessWidget {
+  const _SoulIconButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onPressed,
+      tooltip: tooltip,
+      icon: Icon(icon, size: 22),
+      style: IconButton.styleFrom(
+        minimumSize: const Size.square(48),
+        foregroundColor: _kSoulIvory,
+        backgroundColor: Colors.white.withValues(alpha: .05),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+    );
+  }
+}
+
 class _MenuMiniButton extends StatelessWidget {
   const _MenuMiniButton({
     required this.icon,
     required this.label,
     required this.onTap,
   });
-
   final IconData icon;
   final String label;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
+    return Material(
+      color: _kSoulPanelTop.withValues(alpha: .55),
       borderRadius: BorderRadius.circular(18),
-      child: Ink(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: <Color>[
-              Colors.white.withValues(alpha: 0.05),
-              _kSoulPanelTop.withValues(alpha: 0.08),
-              _kSoulPanelBottom.withValues(alpha: 0.92),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: const Color(0xFF5B8CFF).withValues(alpha: 0.15),
-            width: 1.0,
-          ),
-          boxShadow: <BoxShadow>[
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
-              blurRadius: 12,
-              spreadRadius: -8,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Column(
-          children: <Widget>[
-            Icon(
-              icon,
-              color: _kSoulIvory,
-              size: 22,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: SLTheme.quicksand(
-                fontSize: 11.1,
-                fontWeight: FontWeight.w800,
-                color: Colors.white.withValues(alpha: 0.78),
-                letterSpacing: 0.2,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+          child: Column(
+            children: [
+              Icon(icon, color: _kSoulMuted, size: 22),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: _kSoulIvory,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -32,6 +32,7 @@ import '../../utils/services/house_settings_service.dart';
 import '../../utils/services/music_service.dart';
 import '../../utils/services/breakup_service.dart';
 import '../../utils/services/military_lock_service.dart';
+import '../../utils/services/location_service.dart';
 import '../../utils/services/notification_service.dart';
 import '../../utils/services/role_utils.dart';
 import '../../utils/services/schedule_notif_service.dart';
@@ -454,6 +455,9 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     super.initState();
     unawaited(LiveActivityService().init());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(NotificationService().handleSoulEventLaunch());
+    });
     _autoSyncOverlayData();
     RoleUtils.roleNotifier.addListener(_handleGlobalRoleChanged);
     RoleUtils.duplicateRoleNotifier.addListener(_handleDuplicateRoleWarning);
@@ -1149,6 +1153,7 @@ class _HomeScreenState extends State<HomeScreen>
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached ||
         state == AppLifecycleState.inactive) {
+      unawaited(LocationService().onAppBackgrounded());
       _detachNotificationBadgeListener(resetCounter: false);
       _musicController.stop();
       if (_musicController.value != 0) {
@@ -1158,6 +1163,7 @@ class _HomeScreenState extends State<HomeScreen>
       _inactivityTimer?.cancel();
       unawaited(_syncLiveActivity());
     } else if (state == AppLifecycleState.resumed) {
+      unawaited(LocationService().onAppResumed());
       unawaited(_syncNotificationBadgeListener(forceRestart: true));
       unawaited(WidgetService.checkAndProcessPendingWidgetActions());
       _syncMusicAnimationState();

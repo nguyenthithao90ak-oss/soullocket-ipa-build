@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:soullocket_app/utils/services/storage/resolved_file_cache.dart';
 import 'dart:math' as math;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +32,9 @@ class R2StickerImage extends StatelessWidget {
   });
 
   // Lưu trữ in-memory cache của các sticker file đã được nạp thành công để tránh nháy khi rebuild
-  static final Map<String, File> _resolvedStickerFiles = {};
+  static final _resolvedStickerFiles = ResolvedFileCache(
+    ttl: const Duration(days: 30),
+  );
 
   static const Set<String> _bundledHomeStickers = {
     'assets/images/interaction_stickers/custom/numbered/sticker_001.png',
@@ -141,18 +145,18 @@ class R2StickerImage extends StatelessWidget {
           r2Url.toLowerCase().endsWith('.json') ||
           r2Url.toLowerCase().endsWith('.lottie');
 
-      final cachedFile = _resolvedStickerFiles[r2Url];
+      final cachedFile = _resolvedStickerFiles.get(r2Url);
       // Giữ nguyên cây widget sau khi cache nóng, không dựng lại Image/Lottie.
       return StableFutureBuilder<File?>(
         requestKey: r2Url,
-        initialData: cachedFile != null && cachedFile.existsSync()
-            ? cachedFile
-            : null,
-        load: () => const StorageDownloadCacheHelper().getCachedNetworkFile(
-          r2Url,
-          namespace: 'stickers',
-          ttl: const Duration(days: 30),
-        ),
+        initialData: cachedFile,
+        load: () => kIsWeb
+            ? Future.value(null)
+            : const StorageDownloadCacheHelper().getCachedNetworkFile(
+                r2Url,
+                namespace: 'stickers',
+                ttl: const Duration(days: 30),
+              ),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting &&
               !snapshot.hasData) {
@@ -174,7 +178,7 @@ class R2StickerImage extends StatelessWidget {
           final file = snapshot.data;
           if (file != null && file.existsSync()) {
             // Lưu vào RAM cache để các lần build tiếp theo nạp đồng bộ ngay lập tức
-            _resolvedStickerFiles[r2Url] = file;
+            _resolvedStickerFiles.put(r2Url, file);
             if (isLottieUrl) {
               return Lottie.file(file, fit: fit, width: width, height: height);
             }

@@ -22,9 +22,12 @@ enum FriendRequestPolicy { all, mutual, none }
 class FriendsService {
   static final FriendsService _instance = FriendsService._internal();
   factory FriendsService() => _instance;
-  FriendsService._internal();
+  FriendsService._internal() : _db = FirebaseDatabase.instance;
 
-  final _db = FirebaseDatabase.instance;
+  @visibleForTesting
+  FriendsService.forTesting(FirebaseDatabase database) : _db = database;
+
+  final FirebaseDatabase _db;
 
   Map<String, dynamic>? _asStringDynamicMap(Object? raw) {
     if (raw is! Map) {
@@ -359,31 +362,77 @@ class FriendsService {
     String query, {
     int limit = 50,
   }) async {
-    final effectiveLimit = limit < 1 ? 1 : limit;
-    // ⚡ Tối ưu hóa băng thông: Chỉ tải node houses_public (chứa thông tin công khai siêu nhẹ)
-    // thay vì tải toàn bộ cây houses (chứa nhật ký, ảnh album của tất cả mọi nhà).
-    final snap = await _db.ref('houses_public').get();
-    final rawValue = snap.value;
-    if (!snap.exists || rawValue is! Map) return [];
-    final raw = Map<dynamic, dynamic>.from(rawValue);
+    final effectiveLimit = limit.clamp(1, 50);
 
     // Extract ID or Username from URL if user pastes a link
-    String q = query.toLowerCase().trim();
+    String q = query.trim();
     final webHost = AppConfig.webHost;
     final knownWebHosts = <String>{
       if (webHost.isNotEmpty) webHost,
       'soullockket.web.app',
+      'soullocket.pro.vn',
       'soullocket.com',
     };
     if (knownWebHosts.any(q.contains)) {
       final uri = Uri.tryParse(q);
       if (uri != null && uri.pathSegments.isNotEmpty) {
-        q = uri.pathSegments.last.toLowerCase();
+        q = uri.pathSegments.last;
       } else {
         final parts = q.split('/');
-        q = parts.last.toLowerCase();
+        q = parts.last;
       }
     }
+
+    if (q.length > 128 || RegExp(r'[\x00-\x1f\x7f]').hasMatch(q)) {
+      return [];
+    }
+    final directory = _db.ref('houses_public');
+    final queries = <Query>[];
+    if (q.isEmpty) {
+      queries.add(
+        directory.orderByChild('updated_at').limitToLast(effectiveLimit),
+      );
+    } else {
+      final variants = {
+        q,
+        q.toLowerCase(),
+        q.toUpperCase(),
+        '${q[0].toUpperCase()}${q.substring(1).toLowerCase()}',
+      };
+      for (final prefix in variants) {
+        if (!RegExp(r'[.#$\[\]/\\\s]').hasMatch(prefix)) {
+          queries.add(
+            directory
+                .orderByKey()
+                .startAt(prefix)
+                .endAt('$prefix\uf8ff')
+                .limitToFirst(effectiveLimit),
+          );
+        }
+        queries.add(
+          directory
+              .orderByChild('houseName')
+              .startAt(prefix)
+              .endAt('$prefix\uf8ff')
+              .limitToFirst(effectiveLimit),
+        );
+      }
+      queries.add(
+        directory
+            .orderByChild('settings/username')
+            .startAt(q.toLowerCase())
+            .endAt('${q.toLowerCase()}\uf8ff')
+            .limitToFirst(effectiveLimit),
+      );
+    }
+    final snapshots = await Future.wait(
+      queries.map((query) => query.get().timeout(const Duration(seconds: 8))),
+    );
+    final raw = <dynamic, dynamic>{};
+    for (final snapshot in snapshots) {
+      if (snapshot.value is Map) raw.addAll(snapshot.value as Map);
+    }
+    q = q.toLowerCase();
 
     final exactMatches = <Map<String, dynamic>>[];
     final partialMatches = <Map<String, dynamic>>[];
@@ -394,13 +443,15 @@ class FriendsService {
       final settings = data['settings'];
 
       // Kiểm tra cài đặt bảo mật: Có cho phép tìm kiếm không?
-      final bool searchPrivacy = settings is Map
-          ? (settings['searchPrivacy'] != false)
-          : true;
+      final bool searchPrivacy =
+          data['searchPrivacy'] != false &&
+          (settings is! Map || settings['searchPrivacy'] != false);
       if (!searchPrivacy) return;
 
       final name =
-          (settings is Map ? settings['houseName']?.toString() : null) ?? '';
+          data['houseName']?.toString() ??
+          (settings is Map ? settings['houseName']?.toString() : null) ??
+          '';
       final username =
           (settings is Map ? settings['username']?.toString() : null) ?? '';
       final houseIdStr = hid.toString().toLowerCase();
@@ -413,7 +464,9 @@ class FriendsService {
           'id': hid.toString(),
           'houseName': name.isEmpty ? hid.toString() : name,
           'username': username,
-          'houseAvatar': settings is Map ? settings['houseAvatar'] : null,
+          'houseAvatar':
+              data['houseAvatar'] ??
+              (settings is Map ? settings['houseAvatar'] : null),
           'matchScore':
               (username.isNotEmpty ? 30 : 0) + (name.isNotEmpty ? 20 : 0),
         });
@@ -426,7 +479,9 @@ class FriendsService {
           'id': hid.toString(),
           'houseName': name,
           'username': username,
-          'houseAvatar': settings is Map ? settings['houseAvatar'] : null,
+          'houseAvatar':
+              data['houseAvatar'] ??
+              (settings is Map ? settings['houseAvatar'] : null),
           'matchScore': 100,
         });
         return;
@@ -440,7 +495,9 @@ class FriendsService {
           'id': hid.toString(),
           'houseName': name,
           'username': username,
-          'houseAvatar': settings is Map ? settings['houseAvatar'] : null,
+          'houseAvatar':
+              data['houseAvatar'] ??
+              (settings is Map ? settings['houseAvatar'] : null),
           'matchScore': nameLower.startsWith(q) || usernameLower.startsWith(q)
               ? 50
               : 10,

@@ -1,3 +1,4 @@
+import 'l10n_service.dart';
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -100,9 +101,10 @@ class MemoryShareService {
     : _auth = auth ?? FirebaseAuth.instance;
 
   static int get maxPhotosPerShare => fallbackMemoryLimits.shareMaxItems;
-  static const String defaultShareTitle = 'Kỷ niệm của chúng mình';
-  static const String defaultShareDescription =
-      'SoulLocket lưu giữ những khoảnh khắc riêng tư của hai bạn và biến chúng thành album kỷ niệm dễ chia sẻ.';
+  static String get defaultShareTitle =>
+      L10nService().translate('memory_share_default_title');
+  static String get defaultShareDescription =>
+      L10nService().translate('memory_share_default_description');
   static const String defaultBrandLabel = 'SoulLocket Memories';
   static const String defaultTheme = 'soullocket_dream';
 

@@ -6,30 +6,7 @@ part of '../settings_tab.dart';
 const Color _settingsAccountAccentColor = Color(0xFFD81B60);
 const Color _settingsAccountPurpleTextColor = Color(0xFF7A6A86);
 
-const List<({String code, String badge, String title})>
-_settingsLanguageOptions = [
-  (code: 'vi', badge: 'VN', title: 'Tiếng Việt'),
-  (code: 'en', badge: 'US', title: 'English'),
-  (code: 'zh', badge: 'CN', title: '中文 (简体)'),
-  (code: 'zh-TW', badge: 'TW', title: '中文 (繁體)'),
-  (code: 'ja', badge: 'JP', title: '日本語'),
-  (code: 'ko', badge: 'KR', title: '한국어'),
-  (code: 'th', badge: 'TH', title: 'ภาษาไทย'),
-  (code: 'id', badge: 'ID', title: 'Bahasa Indonesia'),
-  (code: 'es', badge: 'ES', title: 'Español'),
-  (code: 'pt', badge: 'PT', title: 'Português'),
-  (code: 'fr', badge: 'FR', title: 'Français'),
-  (code: 'de', badge: 'DE', title: 'Deutsch'),
-  (code: 'it', badge: 'IT', title: 'Italiano'),
-  (code: 'ru', badge: 'RU', title: 'Русский'),
-  (code: 'hi', badge: 'IN', title: 'हिन्दी'),
-  (code: 'tr', badge: 'TR', title: 'Türkçe'),
-  (code: 'ar', badge: 'SA', title: 'العربية'),
-  (code: 'ms', badge: 'MY', title: 'Bahasa Melayu'),
-  (code: 'tl', badge: 'PH', title: 'Tagalog'),
-  (code: 'nl', badge: 'NL', title: 'Nederlands'),
-  (code: 'pl', badge: 'PL', title: 'Polski'),
-];
+const _settingsLanguageOptions = AppLocaleRegistry.options;
 
 extension _SettingsTabAccountSection on _SettingsTabState {
   String _displayFlexibleDate(String raw) {
@@ -1280,6 +1257,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 ),
               ),
             ),
+            const RegionPreferencesPanel(),
           ],
         ),
       ),

@@ -28,8 +28,6 @@ import 'login/auth_panel_shell.dart';
 import 'login/forgot_password_launcher.dart';
 import 'login/login_shell.dart';
 import 'login/social_auth_action_helper.dart';
-import 'login/aurora_login_screen.dart';
-import '../../views/ui_prefs.dart';
 import 'register/register_shell.dart';
 import 'widgets/gender_selection_dialog.dart';
 import 'widgets/relationship_mode_dialog.dart';
@@ -961,72 +959,64 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<UiPrefsState>(
-      valueListenable: UiPrefs.notifier,
-      builder: (context, prefs, _) {
-        if (prefs.uiVersion == 'v2') return const AuroraLoginScreen();
-        return ListenableBuilder(
-          listenable: L10nService(),
-          builder: (context, _) => SensitiveContentGuard(
-            child: AuthPageScaffold(
-              copyrightYear: _copyrightYear.toString(),
-              transitioning: _isSuccessTransition,
-              onSyncGuide: () => _showSyncGuideDialog(context),
-              contentBuilder: (compact) => AuthPanelShell(
-                compact: compact,
-                isLoginTab: _isLoginTab,
-                onSelectLogin: () => _setAuthTab(true),
-                onSelectRegister: () => _setAuthTab(false),
-                authSection: _isLoginTab
-                    ? LoginShell(
-                        emailController: _emailController,
-                        passwordController: _passwordController,
-                        obscurePassword: _obscurePassword,
-                        isLoading: _isLoading,
-                        rememberMe: _rememberMe,
-                        onToggleObscure: () => setState(
-                          () => _obscurePassword = !_obscurePassword,
-                        ),
-                        onRememberMeChanged: (value) =>
-                            setState(() => _rememberMe = value ?? true),
-                        onLogin: _handleAuthAction,
-                        onForgotPassword: _handleForgotPasswordAction,
-                        onSocialLogin: _handleSocialLogin,
-                      )
-                    : RegisterShell(
-                        emailController: _emailController,
-                        passwordController: _passwordController,
-                        obscurePassword: _obscurePassword,
-                        isLoading: _isLoading,
-                        acceptTerms: _acceptTerms,
-                        showSecurityQuestion: _showSecurityQuestion,
-                        selectedSecurityQuestion: _selectedSecurityQuestion,
-                        securityQuestions: _cleanSecurityQuestions,
-                        securityAnswerController: _securityAnswerController,
-                        onToggleObscure: () => setState(
-                          () => _obscurePassword = !_obscurePassword,
-                        ),
-                        onAcceptTermsChanged: (value) =>
-                            setState(() => _acceptTerms = value ?? false),
-                        onToggleSecurityQuestion: () => setState(
-                          () => _showSecurityQuestion = !_showSecurityQuestion,
-                        ),
-                        onSecurityQuestionChanged: (value) {
-                          if (value == null) return;
-                          setState(() => _selectedSecurityQuestion = value);
-                        },
-                        onRegister: _handleAuthAction,
-                        onSocialLogin: _handleSocialLogin,
-                        onTermsTap: _openTermsDocument,
-                        onPrivacyTap: _openPrivacyDocument,
-                      ),
-                onOpenGuide: _openGuideDocument,
-                onOpenContact: _showContactDialog,
-              ),
-            ),
+    return ListenableBuilder(
+      listenable: L10nService(),
+      builder: (context, _) => SensitiveContentGuard(
+        child: AuthPageScaffold(
+          copyrightYear: _copyrightYear.toString(),
+          transitioning: _isSuccessTransition,
+          onSyncGuide: () => _showSyncGuideDialog(context),
+          contentBuilder: (compact) => AuthPanelShell(
+            compact: compact,
+            isLoginTab: _isLoginTab,
+            onSelectLogin: () => _setAuthTab(true),
+            onSelectRegister: () => _setAuthTab(false),
+            authSection: _isLoginTab
+                ? LoginShell(
+                    emailController: _emailController,
+                    passwordController: _passwordController,
+                    obscurePassword: _obscurePassword,
+                    isLoading: _isLoading,
+                    rememberMe: _rememberMe,
+                    onToggleObscure: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
+                    onRememberMeChanged: (value) =>
+                        setState(() => _rememberMe = value ?? true),
+                    onLogin: _handleAuthAction,
+                    onForgotPassword: _handleForgotPasswordAction,
+                    onSocialLogin: _handleSocialLogin,
+                  )
+                : RegisterShell(
+                    emailController: _emailController,
+                    passwordController: _passwordController,
+                    obscurePassword: _obscurePassword,
+                    isLoading: _isLoading,
+                    acceptTerms: _acceptTerms,
+                    showSecurityQuestion: _showSecurityQuestion,
+                    selectedSecurityQuestion: _selectedSecurityQuestion,
+                    securityQuestions: _cleanSecurityQuestions,
+                    securityAnswerController: _securityAnswerController,
+                    onToggleObscure: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
+                    onAcceptTermsChanged: (value) =>
+                        setState(() => _acceptTerms = value ?? false),
+                    onToggleSecurityQuestion: () => setState(
+                      () => _showSecurityQuestion = !_showSecurityQuestion,
+                    ),
+                    onSecurityQuestionChanged: (value) {
+                      if (value == null) return;
+                      setState(() => _selectedSecurityQuestion = value);
+                    },
+                    onRegister: _handleAuthAction,
+                    onSocialLogin: _handleSocialLogin,
+                    onTermsTap: _openTermsDocument,
+                    onPrivacyTap: _openPrivacyDocument,
+                  ),
+            onOpenGuide: _openGuideDocument,
+            onOpenContact: _showContactDialog,
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 

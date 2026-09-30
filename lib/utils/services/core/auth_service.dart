@@ -287,8 +287,40 @@ class AuthService {
     return _signInService.signOut();
   }
 
-  Future<Map<String, dynamic>> deleteAccount() {
-    return _signInService.deleteAccount();
+  Future<Map<String, dynamic>> deleteAccount({
+    String? verificationProof,
+    String? expectedUid,
+  }) {
+    return _signInService.deleteAccount(
+      verificationProof: verificationProof,
+      expectedUid: expectedUid,
+    );
+  }
+
+  Future<String> verifyAccountDeletionOtp(
+    String email,
+    String otp, {
+    required String expectedUid,
+    String? partnerUid,
+  }) {
+    return _signInService.verifyAccountDeletionOtp(
+      email,
+      otp,
+      expectedUid: expectedUid,
+      partnerUid: partnerUid,
+    );
+  }
+
+  Future<int> approvePartnerDeletion({
+    required String partnerUid,
+    required String expectedUid,
+    required String verificationProof,
+  }) {
+    return _signInService.approvePartnerDeletion(
+      partnerUid: partnerUid,
+      expectedUid: expectedUid,
+      verificationProof: verificationProof,
+    );
   }
 
   Future<void> undoScheduledDeletion() {

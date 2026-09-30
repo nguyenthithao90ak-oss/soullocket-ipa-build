@@ -3,6 +3,9 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import '../../core/constants/app_locale_registry.dart';
+import 'market_service.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:path_provider/path_provider.dart';
@@ -11,6 +14,7 @@ import '../../core/constants/app_config.dart';
 import '../../utils/app_error_mapper.dart';
 import 'storage/storage_service.dart';
 import 'package:soullocket_app/utils/flexible_date_input.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1113,6 +1117,18 @@ class WidgetService {
     }
   }
 
+  static Future<String> _formatCalendarDate(
+    DateTime date, {
+    bool full = false,
+  }) async {
+    final locale = AppLocaleRegistry.formattingLocale(
+      L10nService().locale,
+      MarketService.instance.marketCode,
+    );
+    final strings = await GlobalMaterialLocalizations.delegate.load(locale);
+    return full ? strings.formatFullDate(date) : strings.formatMediumDate(date);
+  }
+
   static Future<void> syncCalendarWidgetData({required String houseId}) async {
     if (kIsWeb || !Platform.isAndroid) return;
     try {
@@ -1184,28 +1200,19 @@ class WidgetService {
         return;
       }
 
-      final diffDays = nearestDate!.difference(todayMidnight).inDays;
+      final diffDays = SoulEvent.daysBetween(nearestDate!, todayMidnight);
       String countdownText = '';
       if (diffDays == 0) {
-        countdownText = 'Hôm nay 📍';
+        countdownText = L10nService().translate('milestone_today');
       } else if (diffDays == 1) {
-        countdownText = 'Ngày mai 📅';
+        countdownText = L10nService().translate('milestone_tomorrow');
       } else {
-        countdownText = 'Còn $diffDays ngày';
+        countdownText = L10nService().format('milestone_days_left', {
+          'days': diffDays,
+        });
       }
 
-      final weekdays = [
-        'Thứ Hai',
-        'Thứ Ba',
-        'Thứ Tư',
-        'Thứ Năm',
-        'Thứ Sáu',
-        'Thứ Bảy',
-        'Chủ Nhật',
-      ];
-      final weekdayStr = weekdays[nearestDate!.weekday - 1];
-      final dateLabel =
-          '$weekdayStr, ${nearestDate!.day.toString().padLeft(2, '0')}/${nearestDate!.month.toString().padLeft(2, '0')}/${nearestDate!.year}';
+      final dateLabel = await _formatCalendarDate(nearestDate!, full: true);
 
       final eventsText = nearestEvents.map((title) => '• $title').join('\n');
 
@@ -1266,43 +1273,43 @@ class WidgetService {
           lastYear: 2100,
         );
 
+        var displayDate = customDate.isEmpty ? '--/--/----' : customDate;
         String daysStr = '0';
-        String labelStr = 'ngày nữa';
+        String labelStr = L10nService().translate(
+          'p8_events_days_remaining_label',
+        );
         if (parsedDate != null) {
-          var nextDate = DateTime(
-            parsedDate.year,
-            parsedDate.month,
-            parsedDate.day,
-          );
-          if (nextDate.isBefore(today)) {
-            nextDate = DateTime(today.year, parsedDate.month, parsedDate.day);
-            if (nextDate.isBefore(today)) {
-              nextDate = DateTime(
-                today.year + 1,
-                parsedDate.month,
-                parsedDate.day,
-              );
-            }
-          }
-          final diff = nextDate.difference(today).inDays;
-          final isToday = nextDate.isAtSameMomentAs(today);
+          final nextDate = SoulEvent(
+            id: 'custom-widget',
+            title: customTitle,
+            dateMs: parsedDate.millisecondsSinceEpoch,
+            civilDate: SoulEvent.dateKey(parsedDate),
+            category: 'all',
+            colorHex: customColor,
+            createdAt: 0,
+            isAnniversary: true,
+          ).calculateNextOccurrence(today)!;
+          displayDate = await _formatCalendarDate(nextDate);
+          final diff = SoulEvent.daysBetween(nextDate, today);
+          final isToday = SoulEvent.daysBetween(nextDate, today) == 0;
           if (isToday) {
-            daysStr = 'HÔM NAY';
+            daysStr = L10nService().translate('p8_events_today_upper');
             labelStr = '🎉';
           } else {
             daysStr = diff.toString();
-            labelStr = 'ngày nữa';
+            labelStr = L10nService().translate(
+              'p8_events_days_remaining_label',
+            );
           }
         }
 
         await _saveWidgetDataIfChanged(
           'se_title',
-          customTitle.isEmpty ? 'Sự kiện & Kỷ niệm' : customTitle,
+          customTitle.isEmpty
+              ? L10nService().translate('p8_events_title')
+              : customTitle,
         );
-        await _saveWidgetDataIfChanged(
-          'se_date',
-          customDate.isEmpty ? '--/--/----' : customDate,
-        );
+        await _saveWidgetDataIfChanged('se_date', displayDate);
         await _saveWidgetDataIfChanged('se_days', daysStr);
         await _saveWidgetDataIfChanged('se_label', labelStr);
         await _saveWidgetDataIfChanged('se_color', customColor);
@@ -1330,7 +1337,7 @@ class WidgetService {
 
         final nextDate = event.calculateNextOccurrence(today);
         if (nextDate != null) {
-          final diff = nextDate.difference(today).inDays;
+          final diff = SoulEvent.daysBetween(nextDate, today);
           if (diff >= 0 && diff < minDays) {
             minDays = diff;
             topEvent = event;
@@ -1343,7 +1350,7 @@ class WidgetService {
         for (final event in events) {
           final nextDate = event.calculateNextOccurrence(today);
           if (nextDate != null) {
-            final diff = nextDate.difference(today).inDays;
+            final diff = SoulEvent.daysBetween(nextDate, today);
             if (diff >= 0 && diff < minDays) {
               minDays = diff;
               topEvent = event;
@@ -1354,20 +1361,26 @@ class WidgetService {
 
       if (topEvent != null) {
         final nextDate = topEvent.calculateNextOccurrence(today)!;
-        final isToday = nextDate.isAtSameMomentAs(today);
+        final isToday = SoulEvent.daysBetween(nextDate, today) == 0;
 
         await _saveWidgetDataIfChanged('se_title', topEvent.title);
         await _saveWidgetDataIfChanged(
           'se_date',
-          '${nextDate.day.toString().padLeft(2, '0')}/${nextDate.month.toString().padLeft(2, '0')}/${nextDate.year}',
+          await _formatCalendarDate(nextDate),
         );
 
         if (isToday) {
-          await _saveWidgetDataIfChanged('se_days', 'HÔM NAY');
+          await _saveWidgetDataIfChanged(
+            'se_days',
+            L10nService().translate('p8_events_today_upper'),
+          );
           await _saveWidgetDataIfChanged('se_label', '🎉');
         } else {
           await _saveWidgetDataIfChanged('se_days', minDays.toString());
-          await _saveWidgetDataIfChanged('se_label', 'ngày nữa');
+          await _saveWidgetDataIfChanged(
+            'se_label',
+            L10nService().translate('p8_events_days_remaining_label'),
+          );
         }
 
         final colorHex = topEvent.colorHex.isNotEmpty
@@ -1375,10 +1388,16 @@ class WidgetService {
             : '#FF4D94';
         await _saveWidgetDataIfChanged('se_color', colorHex);
       } else {
-        await _saveWidgetDataIfChanged('se_title', 'Sự kiện & Kỷ niệm');
+        await _saveWidgetDataIfChanged(
+          'se_title',
+          L10nService().translate('p8_events_title'),
+        );
         await _saveWidgetDataIfChanged('se_date', '--/--/----');
         await _saveWidgetDataIfChanged('se_days', '0');
-        await _saveWidgetDataIfChanged('se_label', 'ngày nữa');
+        await _saveWidgetDataIfChanged(
+          'se_label',
+          L10nService().translate('p8_events_days_remaining_label'),
+        );
         await _saveWidgetDataIfChanged('se_color', '#FF4D94');
       }
 

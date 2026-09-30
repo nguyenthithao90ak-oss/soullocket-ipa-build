@@ -22,6 +22,9 @@ import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'house_service.dart';
+import '../../views/utilities/soul_events/soul_events_screen.dart';
+import '../../views/utilities/soul_events/soul_event_detail_screen.dart';
+import 'soul_event_service.dart';
 import 'offline_cache_service.dart';
 import 'role_utils.dart';
 import 'widget_service.dart';
@@ -54,6 +57,9 @@ class NotificationService {
   String? _lastOpenedMessageKey;
   DateTime? _lastOpenedHandledAt;
   bool _timeZoneReady = false;
+  bool _localPluginReady = false;
+  bool _didCheckSoulEventLaunch = false;
+  Future<void>? _localPluginTask;
 
   static const int _dailySleepReminderId = 21450045;
 
@@ -116,39 +122,7 @@ class NotificationService {
 
     final task = () async {
       try {
-        await _localNotif
-            .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin
-            >()
-            ?.createNotificationChannel(_channel);
-
-        const AndroidInitializationSettings androidSettings =
-            AndroidInitializationSettings('@mipmap/ic_launcher');
-
-        const DarwinInitializationSettings iosSettings =
-            DarwinInitializationSettings(
-              requestAlertPermission: true,
-              requestBadgePermission: true,
-              requestSoundPermission: true,
-            );
-
-        const WindowsInitializationSettings windowsSettings =
-            WindowsInitializationSettings(
-              appName: 'SoulLocket',
-              appUserModelId: 'SoulLocket.App',
-              guid: '8d76c80d-3f20-4f42-9ad0-7f3f148bf17c',
-            );
-
-        const InitializationSettings initSettings = InitializationSettings(
-          android: androidSettings,
-          iOS: iosSettings,
-          windows: windowsSettings,
-        );
-
-        await _localNotif.initialize(
-          settings: initSettings,
-          onDidReceiveNotificationResponse: _onNotificationTap,
-        );
+        await _ensureLocalPluginInitialized();
 
         await _saveFcmToken();
 
@@ -342,10 +316,45 @@ class NotificationService {
 
   /// Xử lý khi user tap vào Local Notification
   void _onNotificationTap(NotificationResponse response) {
-    if (response.payload == null) return;
-    final decoded = jsonDecode(response.payload!);
-    if (decoded is Map) {
-      _navigateFromData(Map<String, dynamic>.from(decoded));
+    unawaited(_openLocalPayload(response.payload));
+  }
+
+  Future<void> _openLocalPayload(
+    String? payload, {
+    bool eventsOnly = false,
+  }) async {
+    if (payload == null) return;
+    try {
+      final decoded = jsonDecode(payload);
+      if (decoded is! Map) return;
+      final data = Map<String, dynamic>.from(decoded);
+      if (eventsOnly && data['type'] != 'soul_event_reminder_v1') return;
+      await _navigateFromData(data);
+    } catch (error) {
+      debugPrint(AppErrorMapper.resolve(error).message);
+    }
+  }
+
+  /// Chỉ xử lý cold start sau khi màn hình chính đã qua luồng đăng nhập.
+  Future<void> handleSoulEventLaunch() async {
+    if (kIsWeb ||
+        _didCheckSoulEventLaunch ||
+        (defaultTargetPlatform != TargetPlatform.android &&
+            defaultTargetPlatform != TargetPlatform.iOS)) {
+      return;
+    }
+    try {
+      await _ensureLocalPluginInitialized();
+      if (_didCheckSoulEventLaunch) return;
+      _didCheckSoulEventLaunch = true;
+      final details = await _localNotif.getNotificationAppLaunchDetails();
+      if (details?.didNotificationLaunchApp != true) return;
+      await _openLocalPayload(
+        details?.notificationResponse?.payload,
+        eventsOnly: true,
+      );
+    } catch (error) {
+      debugPrint(AppErrorMapper.resolve(error).message);
     }
   }
 
@@ -354,6 +363,7 @@ class NotificationService {
     final context = navigatorKey.currentContext;
     if (navigator == null || context == null) return;
 
+    final requestUid = FirebaseAuth.instance.currentUser?.uid;
     final screen = data['screen']?.toString() ?? 'home';
     final houseService = HouseService();
     final myHouseId = await houseService.getCurrentHouseId();
@@ -421,6 +431,21 @@ class NotificationService {
           );
         }
         break;
+      case 'soul_events':
+        if (requestUid == null ||
+            myHouseId == null ||
+            data['accountUid'] != requestUid ||
+            data['houseId'] != myHouseId ||
+            FirebaseAuth.instance.currentUser?.uid != requestUid) {
+          return;
+        }
+        final events = await SoulEventService().getEvents(myHouseId);
+        if (FirebaseAuth.instance.currentUser?.uid != requestUid) return;
+        final event = events.where((e) => e.id == data['eventId']).firstOrNull;
+        destination = event == null
+            ? const SoulEventsScreen()
+            : SoulEventDetailScreen(houseId: myHouseId, event: event);
+        break;
       case 'diary':
         destination = const HomeScreen(initialTab: 2);
         break;
@@ -448,6 +473,7 @@ class NotificationService {
         break;
     }
 
+    if (!navigator.mounted) return;
     await navigator.push(MaterialPageRoute(builder: (_) => destination));
   }
 
@@ -664,19 +690,81 @@ class NotificationService {
     );
   }
 
+  Future<void> _ensureLocalPluginInitialized() async {
+    if (kIsWeb || _localPluginReady) return;
+    if (_localPluginTask != null) return _localPluginTask;
+    final task = () async {
+      await _localNotif
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.createNotificationChannel(_channel);
+
+      const AndroidInitializationSettings androidSettings =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+
+      const DarwinInitializationSettings iosSettings =
+          DarwinInitializationSettings(
+            requestAlertPermission: false,
+            requestBadgePermission: false,
+            requestSoundPermission: false,
+          );
+
+      const WindowsInitializationSettings windowsSettings =
+          WindowsInitializationSettings(
+            appName: 'SoulLocket',
+            appUserModelId: 'SoulLocket.App',
+            guid: '8d76c80d-3f20-4f42-9ad0-7f3f148bf17c',
+          );
+
+      const InitializationSettings initSettings = InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+        windows: windowsSettings,
+      );
+
+      await _localNotif.initialize(
+        settings: initSettings,
+        onDidReceiveNotificationResponse: _onNotificationTap,
+      );
+
+      _localPluginReady = true;
+    }();
+    _localPluginTask = task;
+    try {
+      await task;
+    } finally {
+      if (identical(_localPluginTask, task)) _localPluginTask = null;
+    }
+  }
+
+  Future<List<PendingNotificationRequest>> pendingLocalNotifications() async {
+    if (kIsWeb) return const [];
+    await _ensureLocalPluginInitialized();
+    return _localNotif.pendingNotificationRequests();
+  }
+
+  Future<bool> refreshLocalTimeZone() {
+    _timeZoneReady = false;
+    return _ensureTimeZoneReady();
+  }
+
   /// Cài đặt thông báo cục bộ theo thời gian
-  Future<void> scheduleLocalNotification({
+  Future<bool> scheduleLocalNotification({
     required int id,
     required String title,
     required String body,
     required DateTime scheduledDate,
+    Map<String, dynamic>? data,
   }) async {
-    if (scheduledDate.isBefore(DateTime.now())) return;
-    if (kIsWeb) return;
-
-    await initialize();
-    if (!_isInitialized || !await hasPermission()) return;
-    if (!await _ensureTimeZoneReady()) return;
+    if (!scheduledDate.isAfter(DateTime.now()) || kIsWeb) return false;
+    final prefs = await SharedPreferences.getInstance();
+    if (!(prefs.getBool('il_notifications_enabled') ?? true) ||
+        !await hasPermission()) {
+      return false;
+    }
+    await _ensureLocalPluginInitialized();
+    if (!await _ensureTimeZoneReady()) return false;
 
     await _localNotif.zonedSchedule(
       id: id,
@@ -687,17 +775,18 @@ class NotificationService {
       payload: jsonEncode(<String, dynamic>{
         'screen': 'home',
         'type': 'scheduled_local',
+        ...?data,
       }),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
     );
+    return true;
   }
 
   /// Hủy nhiều thông báo cục bộ theo ID đã lưu cho cùng một nghiệp vụ.
   Future<void> cancelLocalNotifications(Iterable<int> ids) async {
     if (kIsWeb) return;
 
-    await initialize();
-    if (!_isInitialized) return;
+    await _ensureLocalPluginInitialized();
 
     for (final id in ids.toSet()) {
       await _localNotif.cancel(id: id);

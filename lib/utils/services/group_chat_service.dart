@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../models/chat_message.dart';
 import '../../models/group_chat_room.dart';
+import '../group_room_list_stream.dart';
 import 'chat_service.dart';
 import 'package:soullocket_app/utils/rapid_action_feedback_policy.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
@@ -38,6 +39,7 @@ class GroupChatService {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final FirebaseFunctions _functions = FirebaseFunctions.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final _groupStreams = <String, Stream<List<GroupChatRoom>>>{};
   final AntiSpamRateLimitService _antiSpamRateLimitService =
       AntiSpamRateLimitService();
 
@@ -463,103 +465,45 @@ class GroupChatService {
   }
 
   Stream<List<GroupChatRoom>> streamGroupsForHouse(String houseId) {
-    late final StreamController<List<GroupChatRoom>> controller;
-    StreamSubscription<DatabaseEvent>? indexSub;
-    final Map<String, StreamSubscription<DatabaseEvent>> groupSubs =
-        <String, StreamSubscription<DatabaseEvent>>{};
-    final Map<String, GroupChatRoom> groups = <String, GroupChatRoom>{};
-    Timer? emitDebounce;
-
-    void emit() {
-      if (controller.isClosed) {
-        return;
-      }
-      emitDebounce?.cancel();
-      emitDebounce = Timer(const Duration(milliseconds: 200), () {
-        if (controller.isClosed) return;
-        final items = groups.values.toList()
-          ..sort((a, b) => b.sortTimestamp.compareTo(a.sortTimestamp));
-        controller.add(items);
-      });
+    final normalized = houseId.trim();
+    final uid = _auth.currentUser?.uid;
+    if (uid == null ||
+        normalized.isEmpty ||
+        RegExp(r'[.#$\[\]/\\\s]').hasMatch(normalized)) {
+      return Stream.value(const []);
     }
-
-    Future<void> syncGroupSubscriptions(List<String> nextIds) async {
-      final nextSet = nextIds.toSet();
-
-      final removedIds = groupSubs.keys.where((id) => !nextSet.contains(id));
-      for (final groupId in removedIds.toList()) {
-        await groupSubs.remove(groupId)?.cancel();
-        groups.remove(groupId);
-      }
-
-      for (final groupId in nextIds) {
-        if (groupSubs.containsKey(groupId)) {
-          continue;
-        }
-        groupSubs[groupId] = _dbRef
-            .child('groups/$groupId')
-            .onValue
-            .listen(
-              (event) {
-                if (!event.snapshot.exists || event.snapshot.value is! Map) {
-                  groups.remove(groupId);
-                  emit();
-                  return;
-                }
-                groups[groupId] = GroupChatRoom.fromMap(
-                  event.snapshot.key ?? groupId,
-                  Map<dynamic, dynamic>.from(event.snapshot.value as Map),
-                );
-                emit();
-              },
-              onError: (Object error) {
-                debugPrint(
-                  '[GroupChat] group room stream failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể tải phòng chat nhóm.').message}',
-                );
-              },
-            );
-      }
-
-      emit();
-    }
-
-    controller = StreamController<List<GroupChatRoom>>(
-      onListen: () {
-        indexSub = _dbRef
-            .child('houses/$houseId/group_ids')
-            .limitToLast(20)
-            .onValue
-            .listen(
-              (event) {
-                final ids = <String>[];
-                final raw = event.snapshot.value;
-                if (raw is Map) {
-                  for (final entry in raw.entries) {
-                    final groupId = entry.key.toString().trim();
-                    final enabled = entry.value == true || entry.value == 1;
-                    if (groupId.isNotEmpty && enabled) {
-                      ids.add(groupId);
-                    }
-                  }
-                }
-                ids.sort();
-                unawaited(syncGroupSubscriptions(ids));
-              },
-              onError: (Object error) {
-                debugPrint(
-                  '[GroupChat] group index stream failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể tải chỉ mục nhóm.').message}',
-                );
-              },
-            );
-      },
-      onCancel: () async {
-        await indexSub?.cancel();
-        for (final sub in groupSubs.values) {
-          await sub.cancel();
-        }
+    final key = '$uid/$normalized';
+    final existing = _groupStreams[key];
+    if (existing != null) return existing;
+    late final Stream<List<GroupChatRoom>> stream;
+    stream = sharedGroupRoomList(
+      index: _dbRef
+          .child('houses/$normalized/group_ids')
+          .limitToLast(20)
+          .onValue
+          .map((event) {
+            final raw = event.snapshot.value;
+            if (raw is! Map) return <String>[];
+            return raw.entries
+                .where((entry) => entry.value == true || entry.value == 1)
+                .map((entry) => entry.key.toString())
+                .toList()
+              ..sort();
+          }),
+      watchRoom: (groupId) => streamGroupRoom(groupId).map(
+        (room) => room != null && isHouseMemberOfGroup(room, normalized)
+            ? room
+            : null,
+      ),
+      revoked: _auth
+          .authStateChanges()
+          .where((user) => user?.uid != uid)
+          .map<void>((_) {}),
+      onIdle: () {
+        if (identical(_groupStreams[key], stream)) _groupStreams.remove(key);
       },
     );
-
-    return controller.stream;
+    _groupStreams[key] = stream;
+    return stream;
   }
 }

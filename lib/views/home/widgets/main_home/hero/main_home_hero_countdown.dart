@@ -226,6 +226,8 @@ class HomeExplodingPhotoWidget extends StatefulWidget {
 
 class _HomeExplodingPhotoWidgetState extends State<HomeExplodingPhotoWidget>
     with SingleTickerProviderStateMixin {
+  static const Duration _kExplosionDuration = Duration(milliseconds: 2600);
+
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
@@ -236,7 +238,7 @@ class _HomeExplodingPhotoWidgetState extends State<HomeExplodingPhotoWidget>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: _kExplosionDuration,
     );
 
     _scaleAnimation = TweenSequence<double>([
@@ -401,6 +403,7 @@ class _MainHomeHeroCountdownCircleState
   int _dailyExplosionCount = 0;
   bool _showFirstTimeHint = false;
   Timer? _hintDismissTimer;
+  DateTime? _lastExplosionAt;
 
   late AnimationController _countController;
   late Animation<double> _countAnimation;
@@ -610,6 +613,15 @@ class _MainHomeHeroCountdownCircleState
   }
 
   void _triggerExplosion(Offset localPos) async {
+    final now = DateTime.now();
+    final lastExplosionAt = _lastExplosionAt;
+    if (lastExplosionAt != null &&
+        now.difference(lastExplosionAt) <
+            _HomeExplodingPhotoWidgetState._kExplosionDuration) {
+      return;
+    }
+    _lastExplosionAt = now;
+
     final prefs = await SharedPreferences.getInstance();
     final today = DateTime.now().toIso8601String().substring(0, 10);
     if (prefs.getString('explosion_date') != today) {
@@ -631,7 +643,7 @@ class _MainHomeHeroCountdownCircleState
     }
 
     final random = Random();
-    final int count = 4 + random.nextInt(3); // Burst 4, 5, or 6 photos at once!
+    final int count = 3 + random.nextInt(2);
     final List<HomeExplodingPhoto> newPhotos = [];
 
     for (int i = 0; i < count; i++) {
@@ -662,7 +674,7 @@ class _MainHomeHeroCountdownCircleState
       _activeExplosions.addAll(newPhotos);
     });
 
-    Future.delayed(const Duration(milliseconds: 1500), () {
+    Future.delayed(_HomeExplodingPhotoWidgetState._kExplosionDuration, () {
       if (mounted) {
         setState(() {
           final ids = newPhotos.map((p) => p.id).toSet();

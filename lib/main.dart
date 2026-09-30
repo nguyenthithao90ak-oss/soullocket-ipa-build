@@ -24,9 +24,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:soullocket_app/utils/services/admob_service.dart';
+import 'core/third_party_licenses.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/material.dart';
+import 'utils/services/market_service.dart';
+import 'utils/services/soul_event_reminder_service.dart';
 import 'package:soullocket_app/utils/services/infrastructure/storage_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/scheduler.dart';
@@ -162,7 +165,7 @@ void main() {
       }
       _configureRenderingDefaults();
       await _configureSystemUiForEdgeToEdge();
-      GoogleFonts.config.allowRuntimeFetching = true;
+      GoogleFonts.config.allowRuntimeFetching = false;
 
       // Giữ dọc trên mobile; riêng macOS không khóa để cho phép xoay/ngang.
       if (!kIsWeb && defaultTargetPlatform != TargetPlatform.macOS) {
@@ -283,14 +286,18 @@ void main() {
       }
 
       try {
+        registerSoulLocketLicenses();
         await UiPrefs.ensureLoaded();
         await L10nService().init();
 
         // Firebase khởi tạo với timeout để không bao giờ treo màn hình Splash
         try {
-          await initializeFirebaseBootstrap().timeout(
-            const Duration(seconds: 3),
-          );
+          await initializeFirebaseBootstrap()
+              .then((_) {
+                MarketService.instance.attachAuthListener();
+                SoulEventReminderService.instance.start();
+              })
+              .timeout(const Duration(seconds: 3));
         } catch (e) {
           debugPrint('Firebase bootstrap timeout or error: $e');
         }
@@ -305,6 +312,8 @@ void main() {
           }
         }
 
+        await MarketService.instance.init();
+        SoulEventReminderService.instance.start();
         runApp(const MyApp());
         _scheduleDeferredBootstrap();
 

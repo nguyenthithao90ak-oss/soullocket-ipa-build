@@ -1,5 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'l10n_service.dart';
+import 'market_service.dart';
+import '../../core/constants/market_catalog.dart';
 
 /// Đại diện cho một ngày lễ định nghĩa sẵn trong hệ thống
 class PresetHoliday {
@@ -151,14 +153,14 @@ class HolidayService {
       stickerKey: 'holiday_vietnamese_women',
     ),
 
-    // ── 3. HÀN QUỐC (KR / KO) ────────────────────────────────────────────
+    // ── 3. HÀN QUỐC (KR) ────────────────────────────────────────────
     PresetHoliday(
       id: 'kr_rose_day',
       month: 5,
       day: 14,
       i18nKey: 'holiday_kr_rose_day',
       defaultName: 'Rose Day (Ngày Hoa Hồng) 🌹',
-      countries: ['KR', 'KO'],
+      countries: ['KR'],
       stickerKey: 'holiday_kr_rose_day',
     ),
     PresetHoliday(
@@ -167,7 +169,7 @@ class HolidayService {
       day: 14,
       i18nKey: 'holiday_kr_kiss_day',
       defaultName: 'Kiss Day (Ngày Trao Nụ Hôn) 💋',
-      countries: ['KR', 'KO'],
+      countries: ['KR'],
       stickerKey: 'holiday_kr_kiss_day',
     ),
     PresetHoliday(
@@ -176,7 +178,7 @@ class HolidayService {
       day: 14,
       i18nKey: 'holiday_kr_silver_day',
       defaultName: 'Silver Day (Ngày Nhẫn Bạc) 💍',
-      countries: ['KR', 'KO'],
+      countries: ['KR'],
       stickerKey: 'holiday_kr_silver_day',
     ),
     PresetHoliday(
@@ -185,7 +187,7 @@ class HolidayService {
       day: 14,
       i18nKey: 'holiday_kr_wine_day',
       defaultName: 'Wine Day (Ngày Rượu Vang Hẹn Hò) 🍷',
-      countries: ['KR', 'KO'],
+      countries: ['KR'],
       stickerKey: 'holiday_kr_wine_day',
     ),
     PresetHoliday(
@@ -194,7 +196,7 @@ class HolidayService {
       day: 11,
       i18nKey: 'holiday_kr_pepero_day',
       defaultName: 'Pepero Day (Ngày Bánh Pepero) 🍫',
-      countries: ['KR', 'KO'],
+      countries: ['KR'],
       stickerKey: 'holiday_kr_pepero_day',
     ),
     PresetHoliday(
@@ -203,18 +205,18 @@ class HolidayService {
       day: 14,
       i18nKey: 'holiday_kr_hug_day',
       defaultName: 'Hug Day (Ngày Ôm Nhau Ấm Áp) 🤗',
-      countries: ['KR', 'KO'],
+      countries: ['KR'],
       stickerKey: 'holiday_kr_hug_day',
     ),
 
-    // ── 4. NHẬT BẢN (JP / JA) ────────────────────────────────────────────
+    // ── 4. NHẬT BẢN (JP) ────────────────────────────────────────────
     PresetHoliday(
       id: 'jp_tanabata',
       month: 7,
       day: 7,
       i18nKey: 'holiday_jp_tanabata',
       defaultName: 'Lễ Thất Tịch Tanabata 🎋✨',
-      countries: ['JP', 'JA'],
+      countries: ['JP'],
       stickerKey: 'holiday_jp_tanabata',
     ),
     PresetHoliday(
@@ -223,18 +225,18 @@ class HolidayService {
       day: 22,
       i18nKey: 'holiday_jp_good_couples_day',
       defaultName: 'Ngày Vợ Chồng Hạnh Phúc (Ii Fufu no Hi) 💑',
-      countries: ['JP', 'JA'],
+      countries: ['JP'],
       stickerKey: 'holiday_jp_good_couples_day',
     ),
 
-    // ── 5. TRUNG QUỐC & ĐÀI LOAN (CN / TW / ZH) ──────────────────────────
+    // ── 5. TRUNG QUỐC & ĐÀI LOAN (CN / TW) ──────────────────────────
     PresetHoliday(
       id: 'cn_520_love_day',
       month: 5,
       day: 20,
       i18nKey: 'holiday_cn_520_love_day',
       defaultName: 'Ngày Tình Nhân 520 (Anh Yêu Em) 💖',
-      countries: ['CN', 'TW', 'ZH'],
+      countries: ['CN', 'TW'],
       stickerKey: 'holiday_cn_520_love_day',
     ),
     PresetHoliday(
@@ -243,7 +245,7 @@ class HolidayService {
       day: 19,
       i18nKey: 'holiday_cn_qixi',
       defaultName: 'Lễ Thất Tịch (Valentine Phương Đông) 🌌🎋',
-      countries: ['CN', 'TW', 'ZH'],
+      countries: ['CN', 'TW'],
       stickerKey: 'holiday_cn_qixi',
       // HKO: ngày 7 tháng 7 âm lịch, bảng chuyển đổi 2025–2030.
       // https://www.hko.gov.hk/en/gts/time/conversion1_text.htm
@@ -282,14 +284,14 @@ class HolidayService {
       stickerKey: 'holiday_es_sant_jordi',
     ),
 
-    // ── 8. BRAZIL (BR / PT) ─────────────────────────────────────────────
+    // ── 8. BRAZIL (BR) ─────────────────────────────────────────────
     PresetHoliday(
       id: 'br_namorados',
       month: 6,
       day: 12,
       i18nKey: 'holiday_br_namorados',
       defaultName: 'Ngày Tình Nhân Brazil (Dia dos Namorados) 💘',
-      countries: ['BR', 'PT'],
+      countries: ['BR'],
       stickerKey: 'holiday_br_namorados',
     ),
 
@@ -313,55 +315,37 @@ class HolidayService {
     return lang == 'vi';
   }
 
-  /// Lọc danh sách ngày lễ cặp đôi áp dụng phù hợp với ngôn ngữ & quốc gia của người dùng
-  static List<PresetHoliday> getApplicableHolidays({Locale? currentLocale}) {
-    final isVn = isVietnamUser(currentLocale: currentLocale);
-    final lang =
+  /// Gói người dùng chọn có ưu tiên; ngôn ngữ không đại diện cho quốc gia.
+  static List<PresetHoliday> getApplicableHolidays({
+    Locale? currentLocale,
+    String? marketCode,
+    Iterable<String>? holidayPackCodes,
+  }) {
+    final language =
         (currentLocale?.languageCode ?? L10nService().locale.languageCode)
             .toLowerCase();
-    final countryCode =
-        (currentLocale?.countryCode ??
-                WidgetsBinding.instance.platformDispatcher.locale.countryCode ??
-                '')
-            .toUpperCase();
-
-    return allHolidays.where((h) {
-      // 1. Ngày lễ Quốc tế: Luôn hiển thị
-      if (h.isInternational) return true;
-      // Quốc gia thiết bị không được vượt qua điều kiện ngôn ngữ tiếng Việt.
-      if (h.isVietnamOnly) return isVn;
-
-      // 2. Kiểm tra danh sách quốc gia áp dụng
-      for (final raw in h.countries) {
-        final c = raw.toUpperCase();
-        if (c == 'VN' && isVn) return true;
-        if (c == lang.toUpperCase()) return true;
-        if (countryCode.isNotEmpty && c == countryCode) return true;
-
-        // Khớp thông minh theo mã ngôn ngữ & mã quốc gia
-        if ((c == 'KR' || c == 'KO') && (lang == 'ko' || countryCode == 'KR')) {
-          return true;
-        }
-        if ((c == 'JP' || c == 'JA') && (lang == 'ja' || countryCode == 'JP')) {
-          return true;
-        }
-        if ((c == 'CN' || c == 'TW' || c == 'ZH') &&
-            (lang.startsWith('zh') ||
-                countryCode == 'CN' ||
-                countryCode == 'TW')) {
-          return true;
-        }
-        if (c == 'TH' && (lang == 'th' || countryCode == 'TH')) return true;
-        if (c == 'ES' && (lang == 'es' || countryCode == 'ES')) return true;
-        if ((c == 'BR' || c == 'PT') &&
-            (lang == 'pt' || countryCode == 'BR' || countryCode == 'PT')) {
-          return true;
-        }
-        if (c == 'RU' && (lang == 'ru' || countryCode == 'RU')) return true;
-      }
-
-      return false;
-    }).toList();
+    Set<String> packs;
+    if (holidayPackCodes != null) {
+      packs = holidayPackCodes.map((code) => code.toUpperCase()).toSet();
+    } else if (marketCode != null) {
+      packs = MarketCatalog.defaultHolidayPacks(
+        marketCode.toUpperCase(),
+      ).toSet();
+    } else if (currentLocale != null) {
+      packs = MarketCatalog.defaultHolidayPacks(
+        currentLocale.countryCode?.toUpperCase() ?? 'ALL',
+      ).toSet();
+      // Tương thích lời gọi locale cũ; chọn gói rõ ràng có thể đổi quy tắc này.
+      packs.remove('VN');
+      if (language == 'vi') packs.add('VN');
+    } else {
+      packs = MarketService.instance
+          .holidayPacks(languageCode: language)
+          .toSet();
+    }
+    return allHolidays
+        .where((holiday) => holiday.countries.any(packs.contains))
+        .toList(growable: false);
   }
 
   /// Lấy tên hiển thị theo ngôn ngữ hiện tại

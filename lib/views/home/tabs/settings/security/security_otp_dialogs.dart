@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../../../core/sl_theme.dart';
@@ -116,6 +117,9 @@ Future<bool> showSettingsEmailOtpDialog({
                         controller: otpCtrl,
                         enabled: canConfirm,
                         keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
                         maxLength: 6,
                         textAlign: TextAlign.center,
                         onChanged: (_) {
@@ -272,6 +276,9 @@ Future<bool> showSettingsPasswordResetOtpDialog({
                         controller: otpCtrl,
                         enabled: canConfirm,
                         keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
                         maxLength: 6,
                         decoration: InputDecoration(
                           labelText: context.tr('home_mxcnhn_ef70d2'),

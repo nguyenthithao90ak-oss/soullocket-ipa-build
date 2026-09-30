@@ -1,0 +1,111 @@
+<!DOCTYPE html><html lang="ms" dir="ltr"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Cara SoulLocket mengendalikan data akaun, ruang kongsi, kandungan peribadi dan perkhidmatan bersepadu. Baca bahagian perkongsian dan pemadaman sebelum memasangkan atau memuat naik kandungan sensitif.">
+<meta name="soullocket-document-version" content="2026-09-28">
+<title>Dasar Privasi SoulLocket</title>
+<style>
+:root{color-scheme:light;--ink:#30292d;--muted:#6d6067;--accent:#a13e5c;--line:#eadde2;--paper:#fff;--bg:#faf6f7}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 system-ui,-apple-system,"Segoe UI",sans-serif;overflow-wrap:anywhere}
+.page{max-width:880px;margin:auto;padding:28px 24px 56px}
+header,section,footer{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;margin:0 0 18px}
+.brand{font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:750;color:var(--accent)}
+h1{font-size:clamp(26px,5vw,36px);line-height:1.25;margin:12px 0 16px;letter-spacing:-.025em}
+h2{font-size:21px;line-height:1.4;margin:0 0 14px}h3{font-size:17px;margin:22px 0 10px}
+p{margin:0 0 14px}p:last-child,ul:last-child,ol:last-child{margin-bottom:0}
+.meta,.small{font-size:14px;color:var(--muted)}ul,ol{padding-left:24px;margin:10px 0 16px}li{margin:7px 0}
+a{color:var(--accent);text-underline-offset:3px}a:hover{text-decoration-thickness:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #7943ab;outline-offset:4px}
+nav{display:flex;flex-wrap:wrap;gap:10px 20px;margin:20px 0 0}nav a{font-size:14px}
+.note,.warning{padding:16px 18px;border-radius:10px;margin:16px 0;border-left:4px solid var(--accent);background:#fcf0f4}
+.warning{border-color:#a7641a;background:#fff6e8}.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}
+th{background:#faf5f7}button,.button{display:inline-block;padding:12px 18px;background:var(--accent);color:white;border:0;border-radius:10px;font:inherit;font-weight:650;cursor:pointer;text-decoration:none}
+button:disabled{opacity:.6;cursor:wait}label{display:block;font-weight:650;margin:16px 0 6px}
+input:not([type=checkbox]),textarea{width:100%;padding:12px;font:inherit;color:inherit;background:white;border:1px solid #a99aa2;border-radius:8px}
+textarea{resize:vertical;min-height:110px}.checkbox{display:flex;gap:12px;align-items:flex-start;margin:20px 0}
+.checkbox input{flex-shrink:0;width:20px;height:20px;margin-top:5px}.checkbox label{font-weight:400;margin:0}
+.status{display:none;padding:16px;margin-top:16px;border-radius:10px}.status.success{display:block;background:#eaf7ef;color:#245635}.status.error{display:block;background:#fff0f0;color:#96323c}
+.skip{position:absolute;top:-100px;left:16px;background:white;padding:12px;z-index:10}.skip:focus{top:10px}
+@media(max-width:560px){.page{padding:16px 12px 32px}header,section,footer{padding:20px 18px;border-radius:14px}th,td{padding:10px 8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{body{background:white}.page{max-width:none;padding:0}header,section,footer{border:0;padding:12px 0}nav,.skip,form{display:none}h2,h3{break-after:avoid}}
+</style>
+</head>
+<body>
+<a class="skip" href="#noi-dung-chinh">Langkau ke kandungan utama</a>
+<main class="page" id="noi-dung-chinh">
+<header><div class="brand">SoulLocket · Dokumen dan sokongan</div><h1>Dasar Privasi SoulLocket</h1><p>Cara SoulLocket mengendalikan data akaun, ruang kongsi, kandungan peribadi dan perkhidmatan bersepadu. Baca bahagian perkongsian dan pemadaman sebelum memasangkan atau memuat naik kandungan sensitif.</p><p class="meta">Kandungan dikemas kini: <time datetime="2026-09-28">28 September 2026</time> · Dokumen versi 2026-09-28</p><nav aria-label="Bahasa dokumen"><a href="privacy.html" lang="vi" hreflang="vi">Tiếng Việt</a><a href="privacy-en.html" lang="en" hreflang="en">English</a><a href="privacy-de.html" lang="de" hreflang="de">Deutsch</a><a href="privacy-fr.html" lang="fr" hreflang="fr">Français</a><a href="privacy-es.html" lang="es" hreflang="es">Español</a><a href="privacy-it.html" lang="it" hreflang="it">Italiano</a><a href="privacy-pt.html" lang="pt" hreflang="pt">Português</a><a href="privacy-ru.html" lang="ru" hreflang="ru">Русский</a><a href="privacy-ja.html" lang="ja" hreflang="ja">日本語</a><a href="privacy-ko.html" lang="ko" hreflang="ko">한국어</a><a href="privacy-zh.html" lang="zh" hreflang="zh">简体中文</a><a href="privacy-zh-TW.html" lang="zh-TW" hreflang="zh-TW">繁體中文</a><a href="privacy-th.html" lang="th" hreflang="th">ไทย</a><a href="privacy-id.html" lang="id" hreflang="id">Bahasa Indonesia</a><span lang="ms" aria-current="page">Bahasa Melayu</span><a href="privacy-ar.html" lang="ar" hreflang="ar">العربية</a><a href="privacy-hi.html" lang="hi" hreflang="hi">हिन्दी</a><a href="privacy-nl.html" lang="nl" hreflang="nl">Nederlands</a><a href="privacy-pl.html" lang="pl" hreflang="pl">Polski</a><a href="privacy-tr.html" lang="tr" hreflang="tr">Türkçe</a><a href="privacy-tl.html" lang="tl" hreflang="tl">Filipino</a></nav><p class="small">Terjemahan dokumen versi 2026-09-28. Hubungi sokongan jika mana-mana perkataan tidak jelas atau berbeza antara bahasa.</p><nav aria-label="kandungan"><a href="#tom-tat">Ringkasan bahasa biasa</a><a href="#pham-vi">1. Skop dan pengendali</a>
+<a href="#thu-thap">2. Data dan tujuan</a>
+<a href="#chia-se">3. Siapa yang boleh menerima atau melihat data</a>
+<a href="#co-so">4. Kawasan, pilihan dan lokasi pemprosesan</a>
+<a href="#luu-giu">5. Pengekalan, pemadaman dan baki data</a>
+<a href="#bao-mat">6. Keselamatan dan had</a>
+<a href="#quyen">7. Hak dan permintaan anda</a>
+<a href="#tre-em">8. Kanak-kanak dan keselamatan diri</a>
+<a href="#cap-nhat">9. Kemas kini dan dokumen berkaitan</a></nav></header>
+
+<section id="tom-tat"><h2>Apa yang perlu diketahui sebelum menggunakan SoulLocket</h2><ul>
+<li><strong>Orang yang bertanggungjawab untuk operasi SoulLocket:</strong> Trương Việt Hoàng.</li>
+<li><strong>Nama tersenarai kedai:</strong> nama pembangun yang ditunjukkan di Google Play ialah NGUYỄN THỊ THẠO; App Store menunjukkan THAO NGUYEN THI. Dokumen ini tidak menerbitkan nama syarikat berdaftar atau nombor pendaftaran; nama apl sahaja bukan bukti syarikat yang disahkan.</li>
+<li><strong>Perkongsian data:</strong> sesetengah data pergi ke Google/Firebase, Cloudflare, pengiklanan, pemetaan, pembayaran atau perkhidmatan AI apabila ciri yang berkaitan beroperasi. Rakan kongsi Rumah anda dan penerima pautan kongsi juga boleh melihat kandungan yang anda kongsi. Lihat <a href="#chia-se">penerima dan skop</a>.</li>
+<li><strong>Penyulitan:</strong> apl itu tidak menjanjikan penyulitan hujung ke hujung (E2EE) untuk diari, sembang atau foto. PIN dan biometrik melindungi akses pada peranti; mereka tidak menghalang sepenuhnya pemprosesan bahagian pelayan. Elakkan memuat naik bahan yang sangat sensitif jika anda memerlukan E2EE.</li>
+<li><strong>Foto dan diari:</strong> kandungan yang disegerakkan mungkin disimpan pada Firebase atau Cloudflare R2, bukan hanya peranti anda.</li>
+<li><strong>Pemadaman:</strong> menyahpasang atau melog keluar tidak memadamkan data pelayan. <a href="delete-account-ms.html">Permintaan pemadaman akaun</a> mempunyai tempoh menunggu dan pada masa ini tidak menjamin pemadaman automatik setiap fail R2, rekod Rumah kongsi atau salinan yang disimpan oleh orang lain.</li>
+</ul><p class="small">Kenyataan ini menerangkan batasan semasa; ia bukan keputusan bebas bahawa apl itu benar-benar selamat atau tidak selamat.</p></section>
+<section id="pham-vi"><h2>1. Skop dan pengendali</h2><p><strong>Orang yang bertanggungjawab untuk operasi SoulLocket:</strong> Trương Việt Hoàng.</p>
+<p>Dasar ini digunakan pada apl SoulLocket, tapak web projek dan saluran sokongan yang berkaitan. “Kami” bermaksud pasukan pengendalian SoulLocket. Nama pembangun tersenarai kedai terdapat dalam ringkasan di atas; dasar ini sendiri tidak mengesahkan status korporat. Hubungi untuk permintaan data: <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a>.</p>
+<p>Ciri mungkin berbeza mengikut platform, keluaran dan konfigurasi. Data teknikal untuk log masuk, keselamatan, diagnostik atau SDK mungkin dijana semasa apl berjalan; tidak semua pengumpulan data menunggu anda untuk menekan butang muat naik.</p></section>
+<section id="thu-thap"><h2>2. Data dan tujuan</h2>
+<h3>Perlindungan akaun dan akses</h3><p>E-mel, ID akaun (UID), nama profil dan foto, kaedah log masuk, sesi pengesahan, maklumat peranti dan token pemberitahuan digunakan untuk log masuk, pemulihan akaun, pemberitahuan dan pengurusan akses. Log masuk pihak ketiga seperti Google atau Facebook hanya terpakai apabila ditawarkan dan anda memilih untuk menggunakannya.</p>
+<p>Sistem mungkin memproses alamat IP, maklumat penyemak imbas/sistem pengendalian, pengecam peranti aplikasi, status pengesahan peranti dan isyarat anti-penyalahgunaan. Tetapan isyarat perlindungan peranti apl tidak mengalih keluar rangkaian pelayan penting, pengesahan atau log keselamatan.</p>
+<h3>Ruang peribadi dan kongsi (Rumah)</h3><p>Nama, avatar, peranan ahli, tarikh berpasangan, ulang tahun, kehadiran dan tetapan disimpan untuk paparan, penyegerakan dan kawalan akses. Memilih mod antara muka "Pasangan" dengan sendirinya tidak menetapkan bahawa dua akaun dipasangkan.</p>
+<h3>Kandungan dan lampiran anda</h3><p>Diari, pantulan peribadi, foto, video, mesej, reaksi, siaran komuniti, nota, kalendar, surat, rakaman audio dan kandungan utiliti diproses untuk menyimpan, memaparkan, menghantar dan menyegerakkannya mengikut keperluan ciri. Kandungan dalam peti besi peribadi mungkin mengandungi maklumat sensitif; kunci PIN tidak bermakna penyulitan hujung ke hujung.</p>
+<p>Foto/fail boleh disimpan dalam <strong>Cloudflare R2</strong>, infrastruktur Firebase atau storan setempat, bergantung pada aliran dan masa muat naik. Apl menggunakan URL akses, rujukan fail dan cache untuk memuatkan kandungan sekali lagi.</p>
+<h3>Lokasi, kesihatan dan aktiviti</h3><p>Jika anda mendayakan perkongsian lokasi dan memberikan kebenaran yang berkaitan, apl akan memproses koordinat, sejarah lokasi dan tempat untuk peta, daftar masuk atau berkongsi lokasi anda dengan rakan kongsi Rumah anda. Dengan kebenaran lokasi latar belakang, kemas kini boleh diteruskan semasa apl tidak berada di latar depan. Anda boleh berhenti berkongsi dalam ciri atau membatalkan kebenaran dalam tetapan sistem pengendalian anda; ini tidak memadamkan sejarah yang disimpan secara automatik.</p>
+<p>Utiliti kesihatan/kitaran atau penjejakan tidur mungkin memproses maklumat yang anda masukkan, isyarat skrin/aktiviti dan data tidur yang dibenarkan daripada platform kesihatan peranti. Status atau sejarah tidur mungkin disegerakkan ke Rumah. Maklumat ini adalah untuk rujukan, bukan kesimpulan perubatan.</p>
+<h3>Kamera, mikrofon dan biometrik</h3><p>Kamera/mikrofon digunakan untuk foto, kod imbasan, rakaman atau ciri komunikasi yang tersedia. Pengesahan biometrik dilakukan oleh sistem pengendalian: SoulLocket menerima hasil pengesahan, bukan cap jari atau templat muka sistem pengendalian.</p>
+<h3>Pembayaran, pengiklanan dan pengukuran</h3><p>Maklumat produk, ID transaksi, token pengesahan, kelayakan VIP dan sejarah mata digunakan untuk memberikan/memulihkan faedah dan mencegah penipuan. Butiran pembayaran sensitif dikendalikan oleh platform pembayaran yang berkaitan; jangan hantar butiran kad kepada sokongan.</p>
+<p>Iklan Mudah Alih Google/AdMob boleh memproses pengecam pengiklanan, alamat IP, maklumat peranti, tera dan interaksi. Analitis Firebase mungkin merekodkan peristiwa/navigasi; Crashlytics memproses ralat, kesan teknikal dan pengecam yang dilampirkan untuk diagnostik. Dalam penyepaduan baharu, "Essential" melumpuhkan pengumpulan Analitis/Crashlytics dan menyekat pemuatan iklan melalui apl; “Semua” tidak menggantikan Google UMP atau kebenaran sistem pengendalian. Tukar ini di bawah Tetapan → Pilihan privasi. Versi apl lama mungkin tidak termasuk kawalan ini. Lihat <a href="cookie-policy-ms.html">Dasar Kuki</a>.</p>
+<h3>Kecerdasan buatan (AI)</h3><p>Apabila anda menggunakan AI, permintaan anda, konteks perbualan dan data yang anda pilih untuk disertakan mungkin melalui pelayan/Pekerja SoulLocket ke perkhidmatan AI yang dikonfigurasikan. Kod tersebut menyepadukan Google Gemini dan laluan API serasi OpenAI melalui pelayan perantara; “Serasi OpenAI” tidak bermakna setiap permintaan diproses secara langsung oleh OpenAI.</p>
+<p>Jangan hantar kata laluan, kod sekali sahaja, butiran kad atau data peribadi orang lain kepada AI. Laporan jawapan mungkin termasuk soalan, jawapan dan sebab untuk semakan sokongan. Jangan menganggap semua kandungan AI diproses hanya pada peranti anda.</p>
+<h3>Permintaan sokongan dan pemadaman</h3><p>E-mel akaun, nama/ID Rumah jika disediakan, butiran permintaan, alamat IP dan maklumat penyemak imbas mungkin direkodkan untuk mengesahkan pemilikan akaun, menghalang permintaan pendua dan memberikan sokongan. Anda tidak perlu memberikan kata laluan, PIN atau kod sekali sahaja melalui e-mel atau melalui borang awam.</p></section>
+<section id="chia-se"><h2>3. Siapa yang boleh menerima atau melihat data</h2>
+<ul><li><strong>Rakan kongsi Rumah anda:</strong> boleh melihat data kongsi seperti yang dibenarkan oleh setiap ciri. Berpasangan memberikan akses kepada ruang kongsi; ia bukan sekadar menambah avatar.</li>
+<li><strong>Penonton kandungan yang anda kongsi:</strong> siaran komuniti, profil awam, pautan memori atau kad boleh dilihat dalam skop perkongsian ciri. Sesiapa sahaja yang memegang pautan kongsi boleh memajukannya atau menyimpan salinan; jangan terbitkan kod jemputan atau pautan peribadi.</li>
+<li><strong>Penyedia infrastruktur:</strong> Google/Firebase (pengesahan, pangkalan data, pemberitahuan, storan, pengukuran/diagnostik), Cloudflare (R2, Pekerja dan penghantaran kandungan), dan perkhidmatan log masuk, pengiklanan dan pembayaran yang anda gunakan.</li>
+<li><strong>Peta dan kandungan luaran:</strong> Peta Google/jubin peta, OpenStreetMap/Nominatim dan OSRM mungkin menerima alamat IP, pertanyaan tempat atau koordinat yang diperlukan untuk carian/halaan. Fail luaran, fon, pemain atau halaman terbenam boleh bersambung terus kepada pembekal mereka apabila dimuatkan.</li>
+<li><strong>perkhidmatan AI:</strong> menerima data yang diperlukan untuk permintaan AI seperti yang diterangkan dalam bahagian 2. Pembekal sebenar, kawasan pemprosesan dan syarat pengekalan bergantung pada konfigurasi perkhidmatan; anda boleh meminta kenalan privasi sebelum menyerahkan maklumat sensitif.</li>
+<li><strong>Kakitangan yang diberi kuasa/pihak berkuasa yang berwibawa:</strong> sebagaimana yang diperlukan untuk sokongan, pengendalian pelanggaran, perlindungan sistem atau permintaan yang sah di bawah undang-undang yang berkenaan.</li></ul>
+<p>SoulLocket tidak menjual data peribadi. Pemprosesan oleh pembekal perkhidmatan untuk mengendalikan perkhidmatan tidak membenarkan mereka menggunakan data secara bebas di luar tujuan yang didedahkan.</p>
+<div class="warning"><strong>Sebelum berpasangan:</strong> orang yang memasukkan kod berpindah ke Rumah pencipta kod. Data daripada House lama tidak digabungkan secara automatik dan House lama tanpa ahli yang tinggal boleh dibersihkan. Eksport/simpan apa sahaja yang anda perlukan sebelum mengesahkan. Lihat <a href="huong_dan-ms.html#account">jemputan dan panduan QR</a>.</div></section>
+<section id="co-so"><h2>4. Kawasan, pilihan dan lokasi pemprosesan</h2>
+<p>Data diproses untuk menyediakan perkhidmatan yang anda minta, melaksanakan pilihan perkongsian anda, melindungi keselamatan dan memenuhi kewajipan undang-undang yang berkenaan. Pemprosesan yang memerlukan persetujuan atau kebenaran sistem pengendalian mesti didahului oleh notis dan pilihan yang berkaitan; membaca dasar ini tidak menggantikan semua persetujuan yang berasingan.</p>
+<p>Google, Cloudflare dan perkhidmatan bersepadu boleh memproses atau menyimpan data di luar Vietnam. Jangan anggap semua data disimpan di Vietnam. Anda boleh menghubungi kami tentang penerima, lokasi pemprosesan dan data yang terlibat dalam permintaan anda.</p></section>
+<section id="luu-giu"><h2>5. Pengekalan, pemadaman dan baki data</h2>
+<p>Akaun, profil dan kandungan dikekalkan untuk menyediakan perkhidmatan semasa penggunaan, sehingga dipadamkan melalui ciri atau permintaan yang diproses. Tiada tarikh akhir pemadaman automatik tunggal untuk setiap jenis data.</p>
+<ul><li>Memori perbualan Sembang Mesra direka bentuk sekitar tetingkap lebih kurang <strong>3 hari</strong>. Ini bukan had pengekalan untuk semua laporan, log atau data AI yang dipegang oleh penyedia AI; kerja pembersihan mungkin dijalankan selepas data tamat tempoh.</li>
+<li>Media mungkin melalui folder sampah atau baris gilir pembersihan yang berasingan. Mendaftar keluar, menyahpasang apl atau membatalkan kebenaran tidak memadamkan data pelayan.</li>
+<li><strong>Pemadaman akaun</strong> dan <strong>Pemadaman data Perpecahan / Rumah</strong> adalah proses yang berbeza. Garis masa dan skop mereka dijelaskan pada <a href="delete-account-ms.html">halaman pemadaman akaun dan data</a>.</li>
+<li>Kandungan yang dikongsi, salinan yang disimpan oleh orang lain, eksport peranti dan cache mungkin tidak hilang pada masa yang sama sebagai akaun. Pemadaman automatik semasa tidak menjamin penyingkiran semua media R2 dan setiap rekod berkaitan House; nyatakan sebarang baki data peribadi yang anda mahu padamkan apabila menghubungi sokongan.</li>
+<li>Data yang disimpan untuk kewajipan undang-undang, pengendalian penipuan atau pertikaian mestilah terhad kepada tujuan dan tempoh yang diperlukan. Hubungi sokongan untuk jenis data, sebab dan tempoh yang berkenaan dengan kes anda; dasar ini tidak membenarkan pengekalan tanpa had.</li></ul></section>
+<section id="bao-mat"><h2>6. Keselamatan dan had</h2>
+<p>SoulLocket menggunakan pengesahan, kawalan akses pangkalan data, semakan akses pelayan, pengurusan peranti dan kunci khusus ciri. Tiada sistem yang benar-benar selamat; dokumen ini tidak menjanjikan penyulitan hujung ke hujung untuk semua diari, sembang atau foto.</p>
+<p>Jangan kongsi sesi log masuk, PIN, kod sekali atau kod QR log masuk. Kunci apl melindungi membuka antara muka pada peranti; ia sendiri tidak mengubah kebenaran rakan kongsi Rumah anda atau membatalkan salinan kongsi.</p></section>
+<section id="quyen"><h2>7. Hak dan permintaan anda</h2>
+<p>Bergantung pada undang-undang yang terpakai, anda boleh meminta maklumat tentang dan akses kepada data, pembetulan, salinan/eksport, pemadaman, sekatan atau bantahan terhadap pemprosesan, penarikan balik kebenaran dan pengendalian aduan. Beberapa tindakan tersedia dalam apl; menghantar permintaan lain untuk menyokong atau menggunakan <a href="delete-account-ms.html#public-form">borang pemadaman akaun</a>.</p>
+<p>Nyatakan e-mel/UID anda dan skop yang diminta. Kami perlu mengesahkan kuasa anda sebelum memberikan atau memadam data; kata laluan atau kod sekali sahaja tidak diperlukan. Menarik balik kebenaran boleh menghentikan ciri yang berkaitan daripada berfungsi dan tidak membatalkan pemprosesan awal yang dilakukan secara sah.</p>
+<p>Anda boleh membatalkan kebenaran kamera, mikrofon, lokasi, pemberitahuan dan kesihatan dalam sistem pengendalian anda. Jika sokongan tidak dapat menyelesaikan isu tersebut, anda boleh menghubungi pihak berkuasa yang berwibawa di bawah undang-undang yang berkenaan.</p></section>
+<section id="tre-em"><h2>8. Kanak-kanak dan keselamatan diri</h2>
+<p>SoulLocket tidak direka bentuk sebagai perkhidmatan khusus untuk kanak-kanak kecil. Pengguna mesti memenuhi keperluan umur, kapasiti dan kebenaran ibu bapa/penjaga yang berkenaan. Jangan simpulkan had umur perkhidmatan daripada label "18+" yang menerangkan kandungan yang dilarang.</p>
+<p>Ibu bapa/penjaga yang menemui pemprosesan data kanak-kanak yang tidak sesuai boleh menghubungi kenalan privasi untuk meminta semakan dan tindakan. Jangan gunakan aplikasi untuk penjejakan rahsia atau untuk menekan seseorang supaya berkongsi lokasi mereka.</p></section>
+<section id="cap-nhat"><h2>9. Kemas kini dan dokumen berkaitan</h2><p>Tarikh kemas kini di bahagian atas mengenal pasti versi dokumen. Perubahan kepada tujuan pemprosesan atau skop memerlukan notis dan kebenaran yang diperbaharui jika dikehendaki oleh undang-undang; senyap atau penggunaan berterusan tidak boleh dianggap sebagai persetujuan untuk setiap tujuan baharu.</p>
+<p>Baca ini dengan <a href="terms-ms.html">Syarat Penggunaan</a>, <a href="cookie-policy-ms.html">Dasar Kuki</a> dan <a href="delete-account-ms.html">Panduan Pemadaman Akaun</a>.</p></section>
+<footer><h2>SoulLocket dokumen</h2><nav aria-label="Dokumen berkaitan"><a href="about-ms.html">Tentang</a><a href="huong_dan-ms.html">Panduan pengguna</a><a href="huong_dan_cai_dat_lan_dau-ms.html">Persediaan pertama</a><a href="privacy-ms.html">Privasi</a><a href="terms-ms.html">Syarat penggunaan</a><a href="cookie-policy-ms.html">Kuki</a><a href="delete-account-ms.html">Padam akaun</a><a href="support-ms.html">Sokongan</a></nav><p class="small">Privasi dan sokongan: <a href="mailto:hotroviethoangdev.lo.ve@gmail.com">hotroviethoangdev.lo.ve@gmail.com</a></p></footer>
+</main>
+
+
+</body></html>

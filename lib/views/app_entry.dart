@@ -274,21 +274,10 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
       _configureAccessResolution(user);
     });
 
-    final prefs = OfflineCacheService.getPrefsSync();
-    final cachedHouseId = prefs?.getString('il_house_id');
-    if (cachedHouseId != null && cachedHouseId.isNotEmpty) {
-      try {
-        FirebaseDatabase.instance
-            .ref('houses/$cachedHouseId/settings')
-            .keepSynced(true);
-        FirebaseDatabase.instance
-            .ref('houses/$cachedHouseId/members')
-            .keepSynced(true);
-        FirebaseDatabase.instance.ref('users/${user.uid}').keepSynced(true);
-      } catch (e) {
-        debugPrint('keepSynced error: $e');
-      }
-    }
+    // Listener của màn hình đang mở tự đồng bộ dữ liệu và Firebase giữ cache đĩa.
+    // Không ghim cả nhánh user/House ở đây: keepSynced tiếp tục tải dù màn hình
+    // đã đóng và nhánh cũ không được tháo khi người dùng đổi House/tài khoản.
+
   }
 
   void _showRootSnackBar(

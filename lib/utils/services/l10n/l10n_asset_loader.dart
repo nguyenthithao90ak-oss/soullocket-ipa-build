@@ -3,45 +3,8 @@ part of '../l10n_service.dart';
 class _L10nAssetLoader {
   const _L10nAssetLoader();
 
-  static const List<String> supportedLocales = [
-    'vi',
-    'en',
-    'zh',
-    'zh-TW',
-    'ja',
-    'ko',
-    'th',
-    'id',
-    'es',
-    'pt',
-    'fr',
-    'de',
-    'it',
-    'ru',
-    'hi',
-    'tr',
-    'ar',
-  ];
-
-  static const Map<String, Locale> supportedLocaleMap = {
-    'vi': Locale('vi', 'VN'),
-    'en': Locale('en', 'US'),
-    'zh': Locale('zh', 'CN'),
-    'zh-TW': Locale('zh', 'TW'),
-    'ja': Locale('ja', 'JP'),
-    'ko': Locale('ko', 'KR'),
-    'th': Locale('th', 'TH'),
-    'id': Locale('id', 'ID'),
-    'es': Locale('es', 'ES'),
-    'pt': Locale('pt', 'PT'),
-    'fr': Locale('fr', 'FR'),
-    'de': Locale('de', 'DE'),
-    'it': Locale('it', 'IT'),
-    'ru': Locale('ru', 'RU'),
-    'hi': Locale('hi', 'IN'),
-    'tr': Locale('tr', 'TR'),
-    'ar': Locale('ar', 'SA'),
-  };
+  static List<String> get supportedLocales => AppLocaleRegistry.codes;
+  static const supportedLocaleMap = AppLocaleRegistry.localeMap;
 
   Future<void> ensureLoaded(_L10nLocaleState state, String localeCode) async {
     // Tiếng Việt dùng cho tra ngược câu cũ; tiếng Anh là fallback chung.

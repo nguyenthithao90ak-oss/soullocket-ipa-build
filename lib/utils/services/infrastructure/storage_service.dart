@@ -139,16 +139,21 @@ class StorageService {
     required bool Function() scopeIsCurrent,
   }) async {
     final client = http.Client();
+    final urlService = PrivateMediaUrlService();
     try {
       return await const PrivateMemoryDownloadHelper().download(
-        resolve: () => PrivateMediaUrlService().resolve(
-          houseId: houseId, mediaId: memoryId, kind: 'memory_image'),
+        resolve: () => urlService.resolve(
+          houseId: houseId,
+          mediaId: memoryId,
+          kind: 'memory_image',
+        ),
         client: client,
         currentUid: () => _auth.currentUser?.uid,
         authChanges: _auth.authStateChanges().map((user) => user?.uid),
         scopeIsCurrent: scopeIsCurrent,
       );
     } finally {
+      urlService.dispose();
       client.close();
     }
   }
@@ -170,7 +175,7 @@ class StorageService {
   }
 
   Future<void> purgeStaleCache({
-    Duration staleThreshold = const Duration(days: 3),
+    Duration staleThreshold = StorageDownloadCacheHelper.diskRetention,
   }) {
     return _downloadCacheHelper.purgeStaleCache(staleThreshold: staleThreshold);
   }
@@ -694,10 +699,12 @@ class StorageService {
         invokeCallable: (functionName, data) => _callWithAppCheckRetry(() {
           checkScope();
           return _functions
-              .httpsCallable(functionName,
-                  options: HttpsCallableOptions(
-                    timeout: const Duration(seconds: 120),
-                  ))
+              .httpsCallable(
+                functionName,
+                options: HttpsCallableOptions(
+                  timeout: const Duration(seconds: 120),
+                ),
+              )
               .call(data);
         }),
         functionName: name,
@@ -1288,10 +1295,14 @@ class StorageService {
         scopeIsCurrent: scopeIsCurrent,
         invoke: (name, payload) async {
           final result = await _callWithAppCheckRetry(
-            () => _functions.httpsCallable(
-              name,
-              options: HttpsCallableOptions(timeout: const Duration(seconds: 120)),
-            ).call<Map<String, dynamic>>(payload),
+            () => _functions
+                .httpsCallable(
+                  name,
+                  options: HttpsCallableOptions(
+                    timeout: const Duration(seconds: 120),
+                  ),
+                )
+                .call<Map<String, dynamic>>(payload),
           );
           return result.data;
         },
@@ -1302,19 +1313,31 @@ class StorageService {
         prepareFile: () async {
           final name = file.name.isNotEmpty ? file.name : file.path;
           final contentType = detectContentType(name);
-          _rejectVideoUpload(storagePath: name, resolvedContentType: contentType,
-            originalFileName: name);
-          if (!kIsWeb && file.path.isNotEmpty && contentType.startsWith('image/') &&
+          _rejectVideoUpload(
+            storagePath: name,
+            resolvedContentType: contentType,
+            originalFileName: name,
+          );
+          if (!kIsWeb &&
+              file.path.isNotEmpty &&
+              contentType.startsWith('image/') &&
               contentType != 'image/gif') {
             try {
               final temp = await getTemporaryDirectory();
-              compressedPath = p.join(temp.path,
-                'private_memory_${requestId}_${DateTime.now().microsecondsSinceEpoch}.webp');
-              final compressed = await FlutterImageCompress.compressAndGetFile(
-                file.path, compressedPath!, minWidth: 1080, minHeight: 1920,
-                quality: quality.clamp(70, 100), format: CompressFormat.webp,
+              compressedPath = p.join(
+                temp.path,
+                'private_memory_${requestId}_${DateTime.now().microsecondsSinceEpoch}.webp',
               );
-              if (compressed != null) return (file: compressed, contentType: 'image/webp');
+              final compressed = await FlutterImageCompress.compressAndGetFile(
+                file.path,
+                compressedPath!,
+                minWidth: 1080,
+                minHeight: 1920,
+                quality: quality.clamp(70, 100),
+                format: CompressFormat.webp,
+              );
+              if (compressed != null)
+                return (file: compressed, contentType: 'image/webp');
             } catch (_) {
               // File gốc vẫn được kiểm tra MIME/kích thước và checksum bởi server.
             }

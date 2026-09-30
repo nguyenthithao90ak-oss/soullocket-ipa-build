@@ -1,14 +1,8 @@
 import 'package:soullocket_app/core/constants/app_config.dart';
 
-enum QRPayloadKind {
-  login,
-  house,
-  community,
-  unknown,
-}
+enum QRPayloadKind { house, community, unknown }
 
 class QRPayloadCodec {
-  static const String loginPrefix = 'SOULLOCKET:LOGIN:';
   static const String housePrefix = 'SOULLOCKET:HOUSE:';
   static const String communityPrefix = 'SOULLOCKET:COMMUNITY:';
   static const int _maxPayloadLength = 2048;
@@ -28,13 +22,6 @@ class QRPayloadCodec {
     'target',
   ];
 
-  static String encodeLoginToken(String token) {
-    final normalizedToken = _sanitizeToken(token);
-    return normalizedToken.isEmpty
-        ? loginPrefix
-        : '$loginPrefix$normalizedToken';
-  }
-
   static String encodeHouseId(String houseId) {
     final normalizedHouseId = _sanitize(houseId);
     return normalizedHouseId.isEmpty
@@ -49,9 +36,6 @@ class QRPayloadCodec {
     }
 
     final upper = value.toUpperCase();
-    if (upper.startsWith(loginPrefix)) {
-      return QRPayloadKind.login;
-    }
     if (upper.startsWith(housePrefix)) {
       return QRPayloadKind.house;
     }
@@ -61,23 +45,10 @@ class QRPayloadCodec {
     return QRPayloadKind.unknown;
   }
 
-  static bool isLoginPayload(String raw) {
-    return extractLoginToken(raw) != null;
-  }
-
-  static String? extractLoginToken(String raw) {
-    final value = raw.trim();
-    if (value.isEmpty || value.length > _maxPayloadLength) return null;
-    if (!value.toUpperCase().startsWith(loginPrefix)) return null;
-
-    final token = _sanitizeToken(value.substring(loginPrefix.length));
-    return token.isEmpty ? null : token;
-  }
-
   static String? extractHouseId(String raw) {
     final value = _sanitize(raw);
     if (value.isEmpty || value.length > _maxPayloadLength) return null;
-    if (isLoginPayload(value)) return null;
+    if (value.toUpperCase().startsWith('SOULLOCKET:LOGIN:')) return null;
 
     final kind = detectKind(value);
     if (kind == QRPayloadKind.house) {
@@ -107,6 +78,7 @@ class QRPayloadCodec {
     final knownWebHosts = <String>{
       if (AppConfig.webHost.isNotEmpty) AppConfig.webHost,
       'soullockket.web.app',
+      'soullocket.pro.vn',
       'soullocket.com',
     };
     final lowerValue = value.toLowerCase();
@@ -169,14 +141,5 @@ class QRPayloadCodec {
     final candidate = _sanitize(value);
     if (candidate.isEmpty || candidate.length > _maxIdLength) return null;
     return candidate;
-  }
-
-  static String _sanitizeToken(String? value) {
-    if (value == null) return '';
-    return value
-        .trim()
-        .replaceAll('"', '')
-        .replaceAll("'", '')
-        .replaceAll('/', '');
   }
 }

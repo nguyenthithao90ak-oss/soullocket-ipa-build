@@ -1,10 +1,58 @@
-part of '../../love_insights_screen.dart';
+part of '../../love_insights_view.dart';
 
-extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
+extension _InsightSharedWidgetsExt on LoveInsightsView {
   // ── Palette chung ──
 
-  static const _textDark = Color(0xFF332C35);
-  static const _textGrey = Color(0xFF8D8490);
+  static const _textDark = Color(0xFF492E3A);
+  static const _textGrey = Color(0xFF806C73);
+
+  String _displayName(LoveInsightData insight, {required bool isFirst}) {
+    final current = (isFirst ? nameU1 : nameU2).trim();
+    final cached = (isFirst ? insight.nameU1 : insight.nameU2).trim();
+    if (current.isNotEmpty) return current;
+    if (cached.isNotEmpty) return cached;
+    return L10nService().translate(
+      isFirst ? 'home_bn_1fd75b' : 'home_ngiy_5bab37',
+    );
+  }
+
+  Widget _buildProfileAvatar({
+    required String name,
+    required String avatarUrl,
+    required double size,
+    Color accent = const Color(0xFF99516B),
+    Key? avatarKey,
+  }) {
+    return InsightProfileAvatar(
+      key: avatarKey,
+      name: name,
+      avatarUrl: avatarUrl,
+      size: size,
+      accent: accent,
+    );
+  }
+
+  Widget _buildAdaptivePair({required Widget first, required Widget second}) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 230 ||
+            MediaQuery.textScalerOf(context).scale(14) > 20) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [first, const SizedBox(height: 12), second],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: first),
+            const SizedBox(width: 12),
+            Expanded(child: second),
+          ],
+        );
+      },
+    );
+  }
 
   Widget _buildInfoChip({
     required IconData icon,
@@ -13,7 +61,7 @@ extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
     required Color background,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(20),
@@ -24,12 +72,14 @@ extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
         children: [
           Icon(icon, size: 15, color: color),
           const SizedBox(width: 6),
-          Text(
-            text,
-            style: SLTheme.quicksand(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: color,
+          Flexible(
+            child: Text(
+              text,
+              style: SLTheme.quicksand(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
             ),
           ),
         ],
@@ -41,19 +91,19 @@ extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
     required IconData icon,
     required String title,
     required String subtitle,
-    Color accent = const Color(0xFFFF4F87),
+    Color accent = const Color(0xFF99516B),
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 38,
-          height: 38,
+          width: 42,
+          height: 42,
           decoration: BoxDecoration(
             color: accent.withValues(alpha: 0.10),
-            shape: BoxShape.circle,
+            borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(icon, size: 19, color: accent),
+          child: Icon(icon, size: 21, color: accent),
         ),
         SLSpacing.w12,
         Expanded(
@@ -63,21 +113,23 @@ extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
               Text(
                 title,
                 style: SLTheme.quicksand(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
                   color: _textDark,
                 ),
               ),
-              SLSpacing.h4,
-              Text(
-                subtitle,
-                style: SLTheme.quicksand(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  height: 1.4,
-                  color: _textGrey,
+              if (subtitle.isNotEmpty) ...[
+                SLSpacing.h4,
+                Text(
+                  subtitle,
+                  style: SLTheme.quicksand(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    height: 1.5,
+                    color: _textGrey,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),

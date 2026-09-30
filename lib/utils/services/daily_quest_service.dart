@@ -2,11 +2,12 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
-import 'package:intl/intl.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'admob_service.dart';
 
 import 'notification_service.dart';
+import 'l10n_service.dart';
+import '../../models/reward_missions.dart';
 
 class DailyQuestService {
   static final DailyQuestService _instance = DailyQuestService._internal();
@@ -22,35 +23,35 @@ class DailyQuestService {
     'partner_interaction': {
       'target': 3,
       'points': 10,
-      'title': 'Gửi tín hiệu tình yêu',
-      'desc': 'Gửi tương tác (3 lần)',
-      'icon': '💌'
+      'title': 'companion_journey_quest_partner_interaction',
+      'desc': 'reward_store_partner_hint',
+      'icon': '💌',
     },
     'map_checkin': {
       'target': 1,
       'points': 25,
-      'title': 'Check-in cùng nhau',
-      'desc': 'Lưu 1 vị trí mới',
-      'icon': '📍'
+      'title': 'companion_journey_quest_map_checkin',
+      'desc': 'reward_store_map_hint',
+      'icon': '📍',
     },
     'diary_entry': {
       'target': 1,
       'points': 20,
-      'title': 'Nhật ký chung',
-      'desc': 'Đăng 1 ảnh / Ghi chú',
-      'icon': '📸'
+      'title': 'companion_journey_quest_diary_entry',
+      'desc': 'reward_store_diary_hint',
+      'icon': '📸',
     },
     'simultaneous_online': {
       'target': 1,
       'points': 25,
-      'title': 'Tương tác đồng thời',
-      'desc': 'Cả hai cùng online',
-      'icon': '✨'
+      'title': 'companion_journey_quest_simultaneous_online',
+      'desc': 'reward_store_online_hint',
+      'icon': '✨',
     },
   };
 
   String _getTodayKey() {
-    return DateFormat('yyyy-MM-dd').format(DateTime.now());
+    return rewardDayKey();
   }
 
   DatabaseReference? _getTodayQuestRef() {
@@ -81,24 +82,25 @@ class DailyQuestService {
     if (config == null) return;
 
     try {
-      final title = config['title'] as String;
+      final title = L10nService().translate(config['title'] as String);
       final result = await _adMob.recordDailyQuestProgress(normalizedQuestId);
       final granted = (result?['granted'] as num?)?.toInt() ?? 0;
       if (granted > 0) {
         _onQuestCompleted(granted, title);
       }
     } catch (e) {
-      debugPrint('Daily quest progress error: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể ghi tiến độ nhiệm vụ ngày.',
-      ).message}');
+      debugPrint(
+        'Daily quest progress error: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể ghi tiến độ nhiệm vụ ngày.').message}',
+      );
     }
   }
 
   void _onQuestCompleted(int points, String title) {
     _notification.showLocalNotification(
-      title: 'Nhiệm vụ hoàn thành! 🎉',
-      body: 'Bạn đã hoàn thành "$title" và nhận được +$points điểm.',
+      title: '${L10nService().translate('reward_store_completed')} · $title',
+      body: L10nService()
+          .translate('ad_reward_points_received')
+          .replaceAll('{points}', '$points'),
       data: {'screen': 'reward_store'},
       dedupeKey: 'quest_${DateTime.now().millisecondsSinceEpoch}',
     );

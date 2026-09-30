@@ -188,11 +188,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
       if (nextH == null) continue;
       final displayName = HolidayService.getLocalizedName(h);
       upcomingEvents.add(
-        HomeUpcomingEvent(
-          title: displayName,
-          date: nextH,
-          type: 'holiday',
-        ),
+        HomeUpcomingEvent(title: displayName, date: nextH, type: 'holiday'),
       );
     }
 
@@ -909,36 +905,10 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     required bool isSingle,
     required String nameU1,
     required String nameU2,
-    required bool enableMotion,
+    required String avatarU1,
+    required String avatarU2,
     Widget? dragHandle,
   }) {
-    final insight = _insightData;
-    final metrics = insight == null
-        ? const <_InsightBubbleSpec>[]
-        : [
-            if (!isSingle)
-              _InsightBubbleSpec(
-                label: nameU1.trim(),
-                value: insight.loveU1,
-                color: SLColors.secondary,
-                phase: 0.2,
-              ),
-            _InsightBubbleSpec(
-              label: isSingle ? 'LEVEL' : 'LOVE',
-              value: insight.loveScore,
-              color: SLColors.primary,
-              phase: 1.4,
-              emphasize: true,
-            ),
-            if (!isSingle)
-              _InsightBubbleSpec(
-                label: nameU2.trim(),
-                value: insight.loveU2,
-                color: const Color(0xFF7B7FF6),
-                phase: 2.5,
-              ),
-          ];
-
     return _buildHomeCardFirstTapWrapper(
       showHint: _showInsightCardFirstTapHint,
       onTap: _handleInsightCardTap,
@@ -947,119 +917,19 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
         accentColor: SLColors.accentPurple,
         adornment: _HomeCardAdornment.heartPin,
         visualStyle: _HomeCardVisualStyle.insight,
-        padding: SLSpacing.all20,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: SoulLocketAnimatedSticker(
-                    sticker: SoulLocketStickerCatalog.find('heart_heartbeat')!,
-                    size: 24,
-                    semanticLabel: context.tr('Trái tim nhịp đập'),
-                  ),
-                ),
-                SLSpacing.w8,
-                Flexible(
-                  child: Text(
-                    isSingle
-                        ? context.tr('home_tngquanhmn_0e1b6b')
-                        : context.tr('home_hnhtrnhiqu_cbcf59'),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.dancingScript(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 21,
-                      height: 1.05,
-                      color: SLColors.textPrimary,
-                    ),
-                  ),
-                ),
-                SLSpacing.w8,
-                Icon(
-                  Icons.insights_rounded,
-                  size: 16,
-                  color: SLColors.accent.withValues(alpha: 0.5),
-                ),
-                if (dragHandle != null) ...[const Spacer(), dragHandle],
-              ],
-            ),
-            SLSpacing.h20,
-            if (insight == null)
-              Text(
-                context.tr('home_anggomthmc_0715ce'),
-                style: SLTheme.quicksand(
-                  fontSize: 12,
-                  color: SLColors.textTertiary,
-                ),
-              )
-            else ...[
-              _buildInsightBubbleWrap(
-                metrics,
-                compact: false,
-                enableMotion: enableMotion,
-              ),
-              SLSpacing.h20,
-              Container(
-                padding: const EdgeInsets.fromLTRB(14, 13, 14, 14),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.white.withValues(alpha: 0.86),
-                      const Color(0xFFFFF4F8).withValues(alpha: 0.92),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: SLRadius.lgAll,
-                  border: null,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFF9BBC).withValues(alpha: 0.08),
-                      blurRadius: 18,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.tr('home_linhndudng_83e5d9'),
-                      style: SLTheme.quicksand(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5,
-                        color: SLColors.accent.withValues(alpha: 0.76),
-                      ),
-                    ),
-                    SLSpacing.h4,
-                    Text(
-                      _formatInsightUpdatedAtText(insight.updatedAt),
-                      style: SLTheme.quicksand(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: SLColors.textTertiary,
-                      ),
-                    ),
-                    SLSpacing.h8,
-                    Text(
-                      insight.suggestion,
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        color: SLColors.textSecondary,
-                        height: 1.6,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
+        padding: EdgeInsets.zero,
+        child: HomeInsightCard(
+          data: _insightData,
+          isSingle: isSingle,
+          nameU1: nameU1,
+          nameU2: nameU2,
+          avatarU1: avatarU1,
+          avatarU2: avatarU2,
+          updatedAtText: _insightData == null
+              ? ''
+              : _formatInsightUpdatedAtText(_insightData!.updatedAt),
+          onTap: _handleInsightCardTap,
+          dragHandle: dragHandle,
         ),
       ),
     );

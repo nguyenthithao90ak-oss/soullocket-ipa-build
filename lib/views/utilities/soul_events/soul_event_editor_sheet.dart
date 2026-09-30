@@ -1,8 +1,15 @@
+import 'dart:async';
+
+import '../../../utils/calendar/lunar_calendar.dart';
+import '../../../utils/services/market_service.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart' as app_permission;
+import '../../../utils/services/notification_service.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/models/soul_event.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/soul_event_service.dart';
+import 'package:soullocket_app/utils/services/soul_event_reminder_service.dart';
 
 class SoulEventEditorSheet extends StatefulWidget {
   final String houseId;
@@ -23,8 +30,14 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
   DateTime _selectedDate = DateTime.now();
   String _selectedColor = '#FF4D94';
   bool _isLunar = false;
+  bool _repeatSolar = false;
+  bool _lunarConfirmed = false;
+  int _lunarOffset = 7;
   bool _showTitleError = false;
   bool _isSaving = false;
+  bool _reminderPermissionBusy = false;
+  bool _reminderEnabled = false;
+  int _reminderMinutes = 540;
 
   static const List<String> _colors = <String>[
     '#FF4D94',
@@ -40,13 +53,34 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
   @override
   void initState() {
     super.initState();
+    SoulEventReminderService.instance.start();
+    unawaited(SoulEventReminderService.instance.refresh());
     _titleCtrl = TextEditingController(text: widget.initialEvent?.title ?? '');
+    _lunarOffset =
+        const [
+          'CN',
+          'TW',
+          'HK',
+          'MO',
+        ].contains(MarketService.instance.marketCode)
+        ? 8
+        : 7;
     if (widget.initialEvent != null) {
-      _selectedDate = DateTime.fromMillisecondsSinceEpoch(
-        widget.initialEvent!.dateMs,
-      );
+      _selectedDate = widget.initialEvent!.originalDate;
+      _repeatSolar = widget.initialEvent!.isAnniversary;
+      if (const [7, 8].contains(widget.initialEvent!.lunarOffsetHours)) {
+        _lunarOffset = widget.initialEvent!.lunarOffsetHours;
+      }
+      final derived = _lunarDate;
+      _lunarConfirmed =
+          widget.initialEvent!.hasConfirmedLunarDate &&
+          derived?.month == widget.initialEvent!.lunarMonth &&
+          derived?.day == widget.initialEvent!.lunarDay &&
+          derived?.isLeapMonth == widget.initialEvent!.lunarLeapMonth;
       _selectedColor = widget.initialEvent!.colorHex;
       _isLunar = widget.initialEvent!.isLunar;
+      _reminderEnabled = widget.initialEvent!.reminderEnabled;
+      _reminderMinutes = widget.initialEvent!.reminderMinutes.clamp(0, 1439);
     }
   }
 
@@ -54,6 +88,40 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
   void dispose() {
     _titleCtrl.dispose();
     super.dispose();
+  }
+
+  LunarDate? get _lunarDate =>
+      LunarCalendar.fromSolar(_selectedDate, offsetHours: _lunarOffset);
+
+  DateTime? get _nextOccurrence {
+    final now = DateTime.now();
+    if (_isLunar) {
+      final lunar = _lunarDate;
+      if (lunar == null) return null;
+      final today = DateTime(now.year, now.month, now.day);
+      final seed = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+      );
+      return LunarCalendar.nextOccurrence(
+        month: lunar.month,
+        day: lunar.day,
+        leapMonth: lunar.isLeapMonth,
+        offsetHours: _lunarOffset,
+        from: seed.isAfter(today) ? seed : today,
+      );
+    }
+    return SoulEvent(
+      id: '',
+      title: '',
+      dateMs: _selectedDate.millisecondsSinceEpoch,
+      category: 'all',
+      colorHex: _selectedColor,
+      createdAt: 0,
+      civilDate: SoulEvent.dateKey(_selectedDate),
+      isAnniversary: _repeatSolar,
+    ).calculateNextOccurrence(now);
   }
 
   Future<void> _pickDate() async {
@@ -76,8 +144,76 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
       },
     );
     if (date != null && mounted) {
-      setState(() => _selectedDate = date);
+      setState(() {
+        _selectedDate = date;
+        _lunarConfirmed = false;
+      });
     }
+  }
+
+  Future<void> _requestReminderPermission() async {
+    if (_reminderPermissionBusy) return;
+    setState(() => _reminderPermissionBusy = true);
+    try {
+      final granted = await NotificationService().requestPermissionAndInit();
+      if (!mounted) return;
+      if (!granted) await app_permission.openAppSettings();
+      await SoulEventReminderService.instance.refresh();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr('event_reminder_failed'))),
+      );
+    } finally {
+      if (mounted) setState(() => _reminderPermissionBusy = false);
+    }
+  }
+
+  Widget _buildReminderStatus(BuildContext context) {
+    return ListenableBuilder(
+      listenable: SoulEventReminderService.instance,
+      builder: (context, _) {
+        final status = SoulEventReminderService.supported
+            ? SoulEventReminderService.instance.status
+            : SoulEventReminderStatus.unsupported;
+        final key = switch (status) {
+          SoulEventReminderStatus.ready => null,
+          SoulEventReminderStatus.permissionDenied =>
+            'event_reminder_permission',
+          SoulEventReminderStatus.disabled => 'event_reminder_disabled',
+          SoulEventReminderStatus.unsupported => 'event_reminder_unsupported',
+          SoulEventReminderStatus.limited => 'event_reminder_limited',
+          SoulEventReminderStatus.failed => 'event_reminder_failed',
+        };
+        if (key == null) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                context.tr(key),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              if (status == SoulEventReminderStatus.permissionDenied)
+                TextButton(
+                  onPressed: _isSaving || _reminderPermissionBusy
+                      ? null
+                      : _requestReminderPermission,
+                  child: Text(context.tr('event_reminder_settings')),
+                ),
+              if (status == SoulEventReminderStatus.failed)
+                TextButton(
+                  onPressed: _isSaving
+                      ? null
+                      : SoulEventReminderService.instance.refresh,
+                  child: Text(context.tr('core_retry')),
+                ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _save() async {
@@ -93,6 +229,7 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
       return;
     }
     if (_isSaving) return;
+    if (_isLunar && (!_lunarConfirmed || _lunarDate == null)) return;
 
     setState(() => _isSaving = true);
     final newEvent = SoulEvent(
@@ -100,11 +237,20 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
       title: title,
       dateMs: _selectedDate.millisecondsSinceEpoch,
       isLunar: _isLunar,
-      category: 'all',
+      civilDate: SoulEvent.dateKey(_selectedDate),
+      isAnniversary: _isLunar || _repeatSolar,
+      isPinned: widget.initialEvent?.isPinned ?? false,
+      lunarMonth: _isLunar ? _lunarDate?.month : null,
+      lunarDay: _isLunar ? _lunarDate?.day : null,
+      lunarLeapMonth: _isLunar && (_lunarDate?.isLeapMonth ?? false),
+      lunarOffsetHours: _lunarOffset,
+      category: widget.initialEvent?.category ?? 'all',
       colorHex: _selectedColor,
       createdAt:
           widget.initialEvent?.createdAt ??
           DateTime.now().millisecondsSinceEpoch,
+      reminderEnabled: _reminderEnabled,
+      reminderMinutes: _reminderMinutes,
     );
 
     try {
@@ -393,7 +539,10 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
                     value: _isLunar,
                     onChanged: _isSaving
                         ? null
-                        : (value) => setState(() => _isLunar = value),
+                        : (value) => setState(() {
+                            _isLunar = value;
+                            _lunarConfirmed = false;
+                          }),
                     activeTrackColor: SLColors.primary.withValues(alpha: 0.58),
                     activeThumbColor: SLColors.primary,
                     title: Text(
@@ -410,12 +559,153 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
                       ),
                     ),
                   ),
+                  if (!_isLunar)
+                    SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(context.tr('event_repeat_solar')),
+                      value: _repeatSolar,
+                      onChanged: _isSaving
+                          ? null
+                          : (value) => setState(() => _repeatSolar = value),
+                    ),
+                  if (_isLunar) ...[
+                    DropdownButtonFormField<int>(
+                      initialValue: _lunarOffset,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        labelText: context.tr('event_lunar_calendar'),
+                      ),
+                      items: [
+                        DropdownMenuItem(
+                          value: 7,
+                          child: Text(
+                            context.tr('event_lunar_vn'),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: 8,
+                          child: Text(
+                            context.tr('event_lunar_east_asia'),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                      onChanged: _isSaving
+                          ? null
+                          : (value) => setState(() {
+                              _lunarOffset = value ?? 7;
+                              _lunarConfirmed = false;
+                            }),
+                    ),
+                    const SizedBox(height: 12),
+                    if (_lunarDate == null)
+                      Text(context.tr('event_lunar_range'))
+                    else ...[
+                      Text(
+                        L10nScope.of(context).format('event_lunar_date', {
+                          'day': _lunarDate!.day,
+                          'month': _lunarDate!.month,
+                          'year': _lunarDate!.year,
+                          'leap': _lunarDate!.isLeapMonth
+                              ? context.tr('event_lunar_leap')
+                              : '',
+                        }),
+                      ),
+                      if (widget.initialEvent?.isLunar == true &&
+                          widget.initialEvent?.hasConfirmedLunarDate != true)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(context.tr('event_lunar_legacy')),
+                        ),
+                      CheckboxListTile(
+                        contentPadding: EdgeInsets.zero,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        title: Text(context.tr('event_lunar_confirm')),
+                        value: _lunarConfirmed,
+                        onChanged: _isSaving
+                            ? null
+                            : (value) => setState(
+                                () => _lunarConfirmed = value ?? false,
+                              ),
+                      ),
+                      Text(
+                        context.tr('event_lunar_rules'),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ],
+                  if (_isLunar || _repeatSolar) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      _nextOccurrence == null
+                          ? context.tr('event_no_next_date')
+                          : L10nScope.of(context).format('event_next_date', {
+                              'date': MaterialLocalizations.of(
+                                context,
+                              ).formatMediumDate(_nextOccurrence!),
+                            }),
+                    ),
+                  ],
+                  const SizedBox(height: 14),
+                  SwitchListTile.adaptive(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(context.tr('event_reminder_enable')),
+                    subtitle: Text(context.tr('event_reminder_hint')),
+                    value: _reminderEnabled,
+                    onChanged: _isSaving || !SoulEventReminderService.supported
+                        ? null
+                        : (value) => setState(() => _reminderEnabled = value),
+                  ),
+                  if (_reminderEnabled)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.alarm_rounded),
+                      title: Text(
+                        context
+                            .tr('event_reminder_time')
+                            .replaceAll(
+                              '{time}',
+                              MaterialLocalizations.of(context).formatTimeOfDay(
+                                TimeOfDay(
+                                  hour: _reminderMinutes ~/ 60,
+                                  minute: _reminderMinutes % 60,
+                                ),
+                              ),
+                            ),
+                      ),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: _isSaving || !SoulEventReminderService.supported
+                          ? null
+                          : () async {
+                              final picked = await showTimePicker(
+                                context: context,
+                                initialTime: TimeOfDay(
+                                  hour: _reminderMinutes ~/ 60,
+                                  minute: _reminderMinutes % 60,
+                                ),
+                              );
+                              if (picked != null && mounted) {
+                                setState(
+                                  () => _reminderMinutes =
+                                      picked.hour * 60 + picked.minute,
+                                );
+                              }
+                            },
+                    ),
+                  if (_reminderEnabled || !SoulEventReminderService.supported)
+                    _buildReminderStatus(context),
                   const SizedBox(height: 22),
                   SizedBox(
                     width: double.infinity,
                     height: 52,
                     child: FilledButton(
-                      onPressed: _isSaving ? null : _save,
+                      onPressed:
+                          _isSaving ||
+                              (_isLunar &&
+                                  (!_lunarConfirmed || _lunarDate == null))
+                          ? null
+                          : _save,
                       style: FilledButton.styleFrom(
                         backgroundColor: SLColors.primary,
                         foregroundColor: Colors.white,
