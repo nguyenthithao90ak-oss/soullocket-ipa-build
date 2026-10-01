@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'storage/private_image_disk_cache.dart';
 
 class OfflineCacheService {
   static final OfflineCacheService instance = OfflineCacheService._internal();
@@ -176,7 +177,9 @@ class OfflineCacheService {
   static Future<void> clearAllCache() {
     _cacheGeneration++;
     clearAllMemoryCache();
+    final privateImages = PrivateImageDiskCache.clearIfInitialized();
     return _serializeCache(() async {
+      await privateImages;
       await initialize();
       await _hiveBox?.clear();
       final prefs = _cachedPrefs!;

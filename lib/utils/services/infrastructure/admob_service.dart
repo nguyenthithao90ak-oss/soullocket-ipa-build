@@ -88,6 +88,18 @@ class RewardClaimResult {
       error == 'invalid_auth_header';
 }
 
+enum SoulGameRewardedAdResult {
+  rewarded,
+  pro,
+  unsupported,
+  privacyDisabled,
+  cooldown,
+  unavailable,
+  dismissed,
+  busy,
+  cancelled,
+}
+
 class AdMobService {
   static final AdMobService _instance = AdMobService._internal();
   factory AdMobService() => _instance;
@@ -185,6 +197,9 @@ class AdMobService {
   bool _isRewardedAdLoading = false;
   RewardedAd? _soulGameRewardedAd;
   bool _isSoulGameRewardedAdLoading = false;
+  int _soulGameRewardedLoadId = 0;
+  Timer? _soulGameRewardedLoadTimer;
+  DateTime? _soulGameRewardedLoadedAt;
   AppOpenAd? _appOpenAd;
   DateTime? _appOpenLoadedAt;
   bool _isAppOpenLoading = false;
@@ -211,6 +226,10 @@ class AdMobService {
       ConsentService.optionalCollectionAllowed.value;
   bool isBannerUsable(BannerAd ad) => _canUseAds && _banners.contains(ad);
   bool get canRequestAds => _canUseAds;
+  bool get supportsSoulGameRewardedAds =>
+      !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+  bool get soulGameAdsDisabledByPrivacy =>
+      !ConsentService.optionalCollectionAllowed.value;
 
   void disposeBanner(BannerAd? banner) {
     if (banner != null && _banners.remove(banner)) {
@@ -231,6 +250,10 @@ class AdMobService {
     _requestConfigurationReady = false;
     _isRewardedAdLoading = false;
     _isSoulGameRewardedAdLoading = false;
+    _soulGameRewardedLoadId++;
+    _soulGameRewardedLoadTimer?.cancel();
+    _soulGameRewardedLoadTimer = null;
+    _soulGameRewardedLoadedAt = null;
     _isAppOpenLoading = false;
     _isInterstitialLoading = false;
     _umpAllowsAds = false;
@@ -611,40 +634,80 @@ class AdMobService {
   }
 
   void _loadSoulGameRewardedAd() {
-    if (kIsWeb) return;
+    if (!supportsSoulGameRewardedAds) return;
     if (!_canUseAds) return;
+    final loadedAt = _soulGameRewardedLoadedAt;
+    if (_soulGameRewardedAd != null &&
+        (loadedAt == null ||
+            DateTime.now().difference(loadedAt) >=
+                const Duration(minutes: 55))) {
+      _soulGameRewardedAd?.dispose();
+      _soulGameRewardedAd = null;
+      _soulGameRewardedLoadedAt = null;
+    }
     if (_isSoulGameRewardedAdLoading || _soulGameRewardedAd != null) return;
     _isSoulGameRewardedAdLoading = true;
     final epoch = _privacyEpoch;
+    final loadId = ++_soulGameRewardedLoadId;
 
-    RewardedAd.load(
-      adUnitId: rewardedSoulGameId,
-      request: const AdRequest(),
-      rewardedAdLoadCallback: RewardedAdLoadCallback(
-        onAdLoaded: (ad) {
-          if (!_canUseAds || epoch != _privacyEpoch) {
-            ad.dispose();
-            if (epoch == _privacyEpoch) _isSoulGameRewardedAdLoading = false;
-            return;
-          }
-          debugPrint('AdMobService: rewarded soul game loaded.');
-          _soulGameRewardedAd = ad;
-          _isSoulGameRewardedAdLoading = false;
-        },
-        onAdFailedToLoad: (error) {
-          if (epoch != _privacyEpoch) return;
-          final errorInfo = AppErrorMapper.resolve(
-            error,
-            fallbackMessage: 'Quảng cáo thưởng Soul Game chưa tải được.',
-          );
-          debugPrint(
-            'AdMobService: rewarded soul game failed to load: ${errorInfo.message}',
-          );
-          _soulGameRewardedAd = null;
-          _isSoulGameRewardedAdLoading = false;
-        },
-      ),
-    );
+    bool isCurrentLoad() =>
+        epoch == _privacyEpoch && loadId == _soulGameRewardedLoadId;
+
+    void finishLoading() {
+      _soulGameRewardedLoadTimer?.cancel();
+      _soulGameRewardedLoadTimer = null;
+      _isSoulGameRewardedAdLoading = false;
+    }
+
+    // SDK có thể không trả callback khi mạng đứt. Mở lại lần tải mới và bỏ
+    // callback cũ để một yêu cầu bị treo không khóa hồi sinh cả phiên.
+    _soulGameRewardedLoadTimer?.cancel();
+    _soulGameRewardedLoadTimer = Timer(const Duration(seconds: 15), () {
+      if (!isCurrentLoad()) return;
+      finishLoading();
+      _soulGameRewardedLoadId++;
+    });
+
+    Future<void> load() async {
+      try {
+        await RewardedAd.load(
+          adUnitId: rewardedSoulGameId,
+          request: const AdRequest(),
+          rewardedAdLoadCallback: RewardedAdLoadCallback(
+            onAdLoaded: (ad) {
+              if (!isCurrentLoad() || !_canUseAds) {
+                ad.dispose();
+                if (isCurrentLoad()) finishLoading();
+                return;
+              }
+              finishLoading();
+              _soulGameRewardedAd = ad;
+              _soulGameRewardedLoadedAt = DateTime.now();
+              debugPrint('AdMobService: rewarded soul game loaded.');
+            },
+            onAdFailedToLoad: (error) {
+              if (!isCurrentLoad()) return;
+              finishLoading();
+              _soulGameRewardedLoadId++;
+              debugPrint(
+                'AdMobService: rewarded soul game failed to load: '
+                '${AppErrorMapper.resolve(error).message}',
+              );
+            },
+          ),
+        );
+      } catch (error) {
+        if (!isCurrentLoad() || !_isSoulGameRewardedAdLoading) return;
+        finishLoading();
+        _soulGameRewardedLoadId++;
+        debugPrint(
+          'AdMobService: rewarded soul game load exception: '
+          '${AppErrorMapper.resolve(error).message}',
+        );
+      }
+    }
+
+    unawaited(load());
   }
 
   void preloadRewardedAd() {
@@ -935,6 +998,17 @@ class AdMobService {
   int _lastSoulGameRewardedShownMs = 0;
   static const int _rewardedCooldownMs = 45000; // 45 seconds
 
+  Duration get soulGameRewardedCooldownRemaining {
+    if (_lastSoulGameRewardedShownMs <= 0) return Duration.zero;
+    return Duration(
+      milliseconds:
+          (_rewardedCooldownMs -
+                  (DateTime.now().millisecondsSinceEpoch -
+                      _lastSoulGameRewardedShownMs))
+              .clamp(0, _rewardedCooldownMs),
+    );
+  }
+
   /// Hiển thị quảng cáo rewarded. Trả về true nếu user xem đủ.
   Future<bool> showRewardedAd({
     bool ignoreCooldown = false,
@@ -1124,40 +1198,91 @@ class AdMobService {
     );
   }
 
-  Future<bool> showSoulGameRewardedAd() =>
-      _withFullscreenLock(_showSoulGameRewardedAd);
-
-  Future<bool> _showSoulGameRewardedAd() async {
-    if (kIsWeb) return false;
-    if (await isProUser()) return false;
-
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-    if (nowMs - _lastSoulGameRewardedShownMs < _rewardedCooldownMs) {
+  /// Hiển thị quảng cáo hồi sinh và trả về lý do chính xác khi không thể dùng.
+  /// PRO được coi là đã nhận phần thưởng mà không mở quảng cáo.
+  Future<SoulGameRewardedAdResult> showSoulGameRewardedAdResult() async {
+    if (_isShowingFullscreenAd || _nativeFullscreenVisible) {
+      return SoulGameRewardedAdResult.busy;
+    }
+    _isShowingFullscreenAd = true;
+    try {
+      return await _showSoulGameRewardedAdResult();
+    } catch (error) {
       debugPrint(
-        'AdMobService: Xem quảng cáo quá nhanh (Soul Game), đang chờ cooldown.',
+        'AdMobService: Soul Game rewarded flow failed: '
+        '${AppErrorMapper.resolve(error).message}',
       );
-      return false; // Chưa qua cooldown
+      return SoulGameRewardedAdResult.cancelled;
+    } finally {
+      _isShowingFullscreenAd = false;
+      if (!_nativeFullscreenVisible) AppLifecyclePresenceGuard.settle();
+    }
+  }
+
+  Future<bool> showSoulGameRewardedAd() async {
+    final result = await showSoulGameRewardedAdResult();
+    return result == SoulGameRewardedAdResult.rewarded ||
+        result == SoulGameRewardedAdResult.pro;
+  }
+
+  Future<SoulGameRewardedAdResult> _showSoulGameRewardedAdResult() async {
+    if (!supportsSoulGameRewardedAds) {
+      return SoulGameRewardedAdResult.unsupported;
+    }
+    if (await isProUser()) {
+      return SoulGameRewardedAdResult.pro;
+    }
+    if (soulGameAdsDisabledByPrivacy) {
+      return SoulGameRewardedAdResult.privacyDisabled;
+    }
+
+    final cooldown = soulGameRewardedCooldownRemaining;
+    if (cooldown > Duration.zero) {
+      debugPrint(
+        'AdMobService: Soul Game rewarded cooldown remaining '
+        '${cooldown.inSeconds}s.',
+      );
+      return SoulGameRewardedAdResult.cooldown;
     }
 
     await initialize();
-    if (!_canUseAds) return false;
+    if (!_canUseAds) {
+      return soulGameAdsDisabledByPrivacy
+          ? SoulGameRewardedAdResult.privacyDisabled
+          : SoulGameRewardedAdResult.unavailable;
+    }
+    // Kiểm tra tuổi thọ ngay trước khi hiển thị. App có thể nằm nền lâu hơn
+    // thời gian hợp lệ của một rewarded đã preload; không đưa quảng cáo cũ
+    // vào luồng hồi sinh rồi mới chờ SDK báo lỗi.
+    _loadSoulGameRewardedAd();
     if (_soulGameRewardedAd == null) {
-      _loadSoulGameRewardedAd();
-      for (var i = 0; i < 8 && _soulGameRewardedAd == null; i++) {
+      final loadEpoch = _privacyEpoch;
+      // Mạng chậm cần thêm thời gian tải; dừng ngay khi SDK báo lỗi hoặc
+      // quyền riêng tư thay đổi. Không chặn luồng vẽ trong lúc chờ.
+      final deadline = DateTime.now().add(const Duration(seconds: 10));
+      while (_soulGameRewardedAd == null &&
+          _isSoulGameRewardedAdLoading &&
+          _canUseAds &&
+          loadEpoch == _privacyEpoch &&
+          DateTime.now().isBefore(deadline)) {
         await Future<void>.delayed(const Duration(milliseconds: 250));
       }
-      if (_soulGameRewardedAd == null) {
-        return false;
+      if (_soulGameRewardedAd == null ||
+          !_canUseAds ||
+          loadEpoch != _privacyEpoch) {
+        return soulGameAdsDisabledByPrivacy
+            ? SoulGameRewardedAdResult.privacyDisabled
+            : SoulGameRewardedAdResult.unavailable;
       }
     }
 
     final showEpoch = _privacyEpoch;
-    final completer = Completer<bool>();
+    final completer = Completer<SoulGameRewardedAdResult>();
     var didEarnReward = false;
     AppLifecyclePresenceGuard.arm();
     if (!_canUseAds || _soulGameRewardedAd == null) {
       AppLifecyclePresenceGuard.settle();
-      return false;
+      return SoulGameRewardedAdResult.cancelled;
     }
     _soulGameRewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
@@ -1170,19 +1295,29 @@ class AdMobService {
         _nativeFullscreenVisible = false;
         ad.dispose();
         _soulGameRewardedAd = null;
+        _soulGameRewardedLoadedAt = null;
         _loadSoulGameRewardedAd();
         AppLifecyclePresenceGuard.settle();
-        // Delay to ensure that if onUserEarnedReward is scheduled slightly after dismissal, it has time to register.
+        // Reward callback có thể đến ngay sau callback đóng trên một số SDK.
         await Future<void>.delayed(const Duration(milliseconds: 150));
-        if (!completer.isCompleted) completer.complete(didEarnReward);
+        if (!completer.isCompleted) {
+          completer.complete(
+            didEarnReward
+                ? SoulGameRewardedAdResult.rewarded
+                : SoulGameRewardedAdResult.dismissed,
+          );
+        }
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         _nativeFullscreenVisible = false;
         ad.dispose();
         _soulGameRewardedAd = null;
+        _soulGameRewardedLoadedAt = null;
         _loadSoulGameRewardedAd();
         AppLifecyclePresenceGuard.settle();
-        if (!completer.isCompleted) completer.complete(false);
+        if (!completer.isCompleted) {
+          completer.complete(SoulGameRewardedAdResult.unavailable);
+        }
       },
     );
 
@@ -1191,22 +1326,28 @@ class AdMobService {
       if (!_canUseAds ||
           showEpoch != _privacyEpoch ||
           _soulGameRewardedAd == null) {
-        return false;
+        AppLifecyclePresenceGuard.settle();
+        return SoulGameRewardedAdResult.cancelled;
       }
       await _soulGameRewardedAd!.show(
         onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
           didEarnReward = true;
         },
       );
-    } catch (e) {
-      // FIXME: Soul Game rewarded show failed
-      debugPrint('AdMobService: Soul Game rewarded show failed: $e');
+    } catch (error) {
+      debugPrint(
+        'AdMobService: Soul Game rewarded show failed: '
+        '${AppErrorMapper.resolve(error).message}',
+      );
       _nativeFullscreenVisible = false;
       _soulGameRewardedAd?.dispose();
       _soulGameRewardedAd = null;
+      _soulGameRewardedLoadedAt = null;
       _loadSoulGameRewardedAd();
       AppLifecyclePresenceGuard.settle();
-      if (!completer.isCompleted) completer.complete(false);
+      if (!completer.isCompleted) {
+        completer.complete(SoulGameRewardedAdResult.unavailable);
+      }
     }
 
     return completer.future.timeout(
@@ -1214,7 +1355,7 @@ class AdMobService {
       onTimeout: () {
         if (_nativeFullscreenVisible) return completer.future;
         AppLifecyclePresenceGuard.settle();
-        return false;
+        return SoulGameRewardedAdResult.unavailable;
       },
     );
   }
@@ -1864,8 +2005,9 @@ class AdMobService {
   Future<RewardClaimResult> companionAdReward({bool showIfNone = false}) async {
     const purpose = 'companion_points';
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null)
+    if (uid == null) {
       return const RewardClaimResult(ok: false, error: 'unauthenticated');
+    }
     final prefs = await SharedPreferences.getInstance();
     if (FirebaseAuth.instance.currentUser?.uid != uid) {
       return const RewardClaimResult(ok: false, error: 'unauthenticated');
@@ -1885,8 +2027,9 @@ class AdMobService {
       }
       return RewardClaimResult.fromResponse(receipt);
     }
-    if (!showIfNone)
+    if (!showIfNone) {
       return const RewardClaimResult(ok: false, error: 'missing_proof');
+    }
     final watched = await showRewardedAd(verifiedPurpose: purpose);
     if (FirebaseAuth.instance.currentUser?.uid != uid) {
       return const RewardClaimResult(ok: false, error: 'unauthenticated');
@@ -1931,8 +2074,9 @@ class AdMobService {
           await prefs.remove('ad_pending_nonce_$uid');
           await prefs.remove('ad_pending_purpose_$uid');
           await prefs.remove('ad_pending_started_$uid');
-          if (purpose == 'points' || purpose == 'companion_points')
+          if (purpose == 'points' || purpose == 'companion_points') {
             await _incrementDailyRewardedAdCount();
+          }
         }
         return FirebaseAuth.instance.currentUser?.uid == uid ? response : null;
       }

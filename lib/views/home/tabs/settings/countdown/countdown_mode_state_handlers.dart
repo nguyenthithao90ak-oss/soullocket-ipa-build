@@ -928,8 +928,9 @@ extension _CountdownModeIndependentScreenStatePart
           _avatarUrl2 = url.trim();
         }
       });
-      await _saveLocalSettings();
-      await PendingUploadService.instance.clear(pendingKey);
+      if (await _saveLocalSettings()) {
+        await PendingUploadService.instance.clear(pendingKey);
+      }
     } catch (e) {
       _showMessage(
         avatarChangeFailedTemplate.replaceAll(

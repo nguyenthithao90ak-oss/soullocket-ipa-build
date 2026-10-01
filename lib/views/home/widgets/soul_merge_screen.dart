@@ -344,7 +344,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
       final houseId = _houseId ?? '';
       final uploadResult = await StorageService.instance.uploadPublicImage(
         houseId,
-        'soul_merge_chat',
+        'soul_merge',
         XFile(image.path),
         quality: 50,
       );

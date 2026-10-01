@@ -467,13 +467,30 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          context.tr('soul_block_score'),
-          textAlign: TextAlign.center,
-          style: SLTheme.quicksand(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: _kSoulMuted,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                context.tr('soul_block_score'),
+                style: SLTheme.quicksand(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: _kSoulMuted,
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Giữ chỗ cho nhãn chuỗi để bàn không nhảy kích thước khi
+              // vừa xóa hàng hoặc mất chuỗi giữa lúc kéo mảnh.
+              Visibility(
+                visible: _combo > 0,
+                maintainSize: true,
+                maintainAnimation: true,
+                maintainState: true,
+                child: _buildRefinedComboStatus(ultraCompact: ultraCompact),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 2),
@@ -490,6 +507,49 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildRefinedComboStatus({required bool ultraCompact}) {
+    final accent = _comboMisses >= 2 ? _kSoulWarm : _kSoulChrome;
+    return Tooltip(
+      message: L10nService().format('soul_block_combo_grace', {
+        'misses': _comboMisses,
+      }),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: accent.withValues(alpha: .12),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: accent.withValues(alpha: .25)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              L10nService().format('soul_block_combo', {'level': _combo}),
+              style: SLTheme.quicksand(
+                fontSize: ultraCompact ? 8 : 9,
+                fontWeight: FontWeight.w900,
+                color: accent,
+              ),
+            ),
+            const SizedBox(width: 3),
+            for (var index = 0; index < 3; index++)
+              Container(
+                margin: const EdgeInsetsDirectional.only(start: 3),
+                width: 4,
+                height: 4,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: index < 3 - _comboMisses
+                      ? accent
+                      : Colors.white.withValues(alpha: .16),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

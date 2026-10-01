@@ -8,6 +8,7 @@ import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_enter_co
 import 'pairing_connection_widgets.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 import 'package:soullocket_app/core/constants/app_firebase_paths.dart';
@@ -626,22 +627,33 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   }
 
   Future<void> _updateAvatar(String role) async {
-    if (_myHouseId == null) return;
+    if (_myHouseId == null || _isLoading) return;
+    final houseId = _myHouseId!;
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
     final picker = StoragePickerService();
     final xFile = await picker.pickImage();
-    if (xFile == null) return;
+    if (xFile == null ||
+        !mounted ||
+        _myHouseId != houseId ||
+        FirebaseAuth.instance.currentUser?.uid != ownerUid) {
+      return;
+    }
 
     if (mounted) setState(() => _isLoading = true);
     try {
       final url = await StorageService.instance.uploadImage(
-        _myHouseId!,
+        houseId,
         'avatars',
         xFile,
       );
-      if (url != null) {
+      if (url != null &&
+          mounted &&
+          _myHouseId == houseId &&
+          ownerUid != null &&
+          FirebaseAuth.instance.currentUser?.uid == ownerUid) {
         final key = role == 'user1' ? 'avatarU1' : 'avatarU2';
         await FirebaseDatabase.instance
-            .ref(AppFirebasePaths.houseSettings(_myHouseId!))
+            .ref(AppFirebasePaths.houseSettings(houseId))
             .child(key)
             .set(url);
       }

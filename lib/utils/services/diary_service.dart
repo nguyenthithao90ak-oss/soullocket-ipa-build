@@ -68,6 +68,7 @@ class DiaryService {
     String authorEmail = '',
     String authorRole = '',
     String imageUrl = '',
+    String? customMoodUrl,
   }) async {
     if (content.trim().isEmpty) throw 'Nội dung không được để trống.';
     if (content.trim().length > 5000) {
@@ -78,6 +79,8 @@ class DiaryService {
     final postData = {
       'content': _sanitize(content),
       'mood': mood,
+      if (customMoodUrl != null && customMoodUrl.trim().isNotEmpty)
+        'customMoodUrl': customMoodUrl.trim(),
       'authorId': authorId,
       'authorName': authorName,
       if (authorEmail.trim().isNotEmpty) 'authorEmail': authorEmail.trim(),

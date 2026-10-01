@@ -1,15 +1,11 @@
-import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/core/constants/app_firebase_paths.dart';
 import 'package:soullocket_app/models/chat_message.dart';
 import 'package:soullocket_app/utils/rapid_action_feedback_policy.dart';
@@ -22,6 +18,7 @@ import '../seeded_live_stream.dart';
 import 'offline_cache_service.dart';
 import 'package:soullocket_app/utils/services/role_utils.dart';
 import 'storage/storage_service.dart';
+import 'core/cloud_functions_helper.dart';
 import 'package:soullocket_app/utils/services/storage/storage_upload_result.dart';
 
 class ChatRoomMeta {
@@ -949,15 +946,22 @@ class ChatService {
   }) async {
     final roomId = _getRoomId(myHouseId, targetHouseId);
     if (!await _ensureViewerRoomIndex(myHouseId, roomId)) {
-      throw FirebaseException(plugin: 'cloud_firestore', code: 'permission-denied');
+      throw FirebaseException(
+        plugin: 'cloud_firestore',
+        code: 'permission-denied',
+      );
     }
 
     final messages = FirebaseFirestore.instance
         .collection('chats')
         .doc(roomId)
         .collection('messages');
-    final query = ChatMessageQuery.page(messages, limit: limit,
-        beforeTs: beforeTs, beforeId: beforeId);
+    final query = ChatMessageQuery.page(
+      messages,
+      limit: limit,
+      beforeTs: beforeTs,
+      beforeId: beforeId,
+    );
 
     final snap = await query.get().timeout(const Duration(seconds: 10));
     return snap.docs
@@ -990,8 +994,12 @@ class ChatService {
       _ensureViewerRoomIndex(myHouseId, roomId),
     ).asyncExpand((allowed) {
       if (!allowed) {
-        return Stream<ChatMessage>.error(FirebaseException(
-            plugin: 'cloud_firestore', code: 'permission-denied'));
+        return Stream<ChatMessage>.error(
+          FirebaseException(
+            plugin: 'cloud_firestore',
+            code: 'permission-denied',
+          ),
+        );
       }
       final messages = FirebaseFirestore.instance
           .collection('chats')
@@ -999,23 +1007,24 @@ class ChatService {
           .collection('messages');
       return seededLiveStream<ChatMessage>(
         afterTs: afterTs,
-        seed: () => ChatMessageQuery.page(messages, limit: 25)
-            .snapshots().map((snapshot) => snapshot.docs
-                .map(ChatMessageQuery.readDocument)
-                .whereType<ChatMessage>().toList()),
+        seed: () => ChatMessageQuery.page(messages, limit: 25).snapshots().map(
+          (snapshot) => snapshot.docs
+              .map(ChatMessageQuery.readDocument)
+              .whereType<ChatMessage>()
+              .toList(),
+        ),
         timestampOf: (message) => message.timestamp.millisecondsSinceEpoch,
-        live: (cursor) => ChatMessageQuery.live(messages, cursor)
-          .snapshots()
-          .expand(
-            (snapshot) => snapshot.docChanges
-                .where(
-                  (change) =>
-                      change.type == DocumentChangeType.added ||
-                      change.type == DocumentChangeType.modified,
-                )
-                .map((change) => ChatMessageQuery.readDocument(change.doc))
-                .whereType<ChatMessage>(),
-          ),
+        live: (cursor) =>
+            ChatMessageQuery.live(messages, cursor).snapshots().expand(
+              (snapshot) => snapshot.docChanges
+                  .where(
+                    (change) =>
+                        change.type == DocumentChangeType.added ||
+                        change.type == DocumentChangeType.modified,
+                  )
+                  .map((change) => ChatMessageQuery.readDocument(change.doc))
+                  .whereType<ChatMessage>(),
+            ),
       );
     });
   }
@@ -1024,10 +1033,7 @@ class ChatService {
     String houseId, {
     int? afterTs,
   }) {
-    return InternalChatService().streamNewMessages(
-      houseId,
-      afterTs: afterTs,
-    );
+    return InternalChatService().streamNewMessages(houseId, afterTs: afterTs);
   }
 
   String _readMetaString(Object? raw) => raw?.toString() ?? '';
@@ -1075,7 +1081,8 @@ class ChatService {
             ? null
             : Map<String, dynamic>.from(lastMessage!),
       );
-      if ((emittedInitialSnapshot && current.sameAs(next)) || controller.isClosed) {
+      if ((emittedInitialSnapshot && current.sameAs(next)) ||
+          controller.isClosed) {
         return;
       }
       emittedInitialSnapshot = true;
@@ -1407,31 +1414,27 @@ class ChatService {
     final normalizedStoragePath = storagePath.trim();
     if (normalizedStoragePath.isEmpty) return;
 
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
-      final idToken = await user.getIdToken() ?? '';
-      final response = await http.post(
-        Uri.parse(
-          '${AppConfig.cloudflareWorkerUrl}/api/deleteChatBackgroundAsset',
-        ),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        },
-        body: jsonEncode({
-          'houseId': myHouseId.trim(),
-          'scope': isInternal ? 'internal' : 'direct',
-          'storagePath': normalizedStoragePath,
-          if (!isInternal && (targetHouseId ?? '').trim().isNotEmpty)
-            'targetHouseId': targetHouseId!.trim(),
-        }),
-      );
-      if (response.statusCode == 200 || response.statusCode == 404) return;
-      // Fallback: client-side delete
-      await _storageService.deleteImageByUrl(normalizedStoragePath);
-    } catch (_) {
-      await _storageService.deleteImageByUrl(normalizedStoragePath);
+    if (normalizedStoragePath.startsWith('users/')) {
+      if (!await _storageService.deleteFileByPath(normalizedStoragePath)) {
+        throw StateError('Chat background deletion was not confirmed');
+      }
+      return;
+    }
+    final response =
+        await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
+          'deleteChatBackgroundAsset',
+          requireAppCheck: true,
+          throwOriginalException: true,
+          payload: {
+            'houseId': myHouseId.trim(),
+            'scope': isInternal ? 'internal' : 'direct',
+            'storagePath': normalizedStoragePath,
+            if (!isInternal && (targetHouseId ?? '').trim().isNotEmpty)
+              'targetHouseId': targetHouseId!.trim(),
+          },
+        );
+    if (response.data['success'] != true) {
+      throw StateError('Chat background deletion was not confirmed');
     }
   }
 }

@@ -10,8 +10,9 @@ import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:video_compress/video_compress.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
-import 'package:soullocket_app/core/constants/app_config.dart';
+import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 import 'package:soullocket_app/utils/services/infrastructure/r2_upload_policy.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
 
 class CloudflareR2Service {
   static final CloudflareR2Service instance = CloudflareR2Service._internal();
@@ -41,28 +42,36 @@ class CloudflareR2Service {
     return rawUrl;
   }
 
-  Future<http.Response> _sendBytes(
-    String method,
-    Uri uri, {
-    required Map<String, String> headers,
-    required List<int> bytes,
-    Duration timeout = const Duration(minutes: 2),
+  Future<Map<String, dynamic>> _createUploadSession({
+    required String fileName,
+    required String folder,
+    required String contentType,
+    required int fileSize,
   }) async {
-    R2UploadPolicy.requireHttps(uri.toString());
-    // Không theo redirect: tránh chuyển token hoặc nội dung riêng tư sang host khác.
-    final request = http.Request(method, uri)
-      ..followRedirects = false
-      ..headers.addAll(headers)
-      ..bodyBytes = bytes;
-    final client = http.Client();
-    try {
-      return await client
-          .send(request)
-          .then(http.Response.fromStream)
-          .timeout(timeout);
-    } finally {
-      client.close();
-    }
+    final result = await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
+      'generateUploadUrl',
+      payload: <String, dynamic>{
+        'folder': folder,
+        'fileName': fileName,
+        'contentType': contentType,
+        'fileSize': fileSize,
+      },
+      timeout: const Duration(seconds: 30),
+      requireAppCheck: true,
+      throwOriginalException: true,
+    );
+    return result.data;
+  }
+
+  Future<Map<String, dynamic>> _finalizeUpload(String uploadId) async {
+    final result = await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
+      'finalizeR2Upload',
+      payload: <String, dynamic>{'uploadId': uploadId},
+      timeout: const Duration(seconds: 30),
+      requireAppCheck: true,
+      throwOriginalException: true,
+    );
+    return result.data;
   }
 
   /// Uploads base64 image data to Cloudflare R2
@@ -82,66 +91,13 @@ class CloudflareR2Service {
 
       final bytes = base64Decode(cleanBase64);
 
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return null;
-      final idToken = await user.getIdToken();
-      if (idToken == null || idToken.isEmpty) return null;
-
-      final url = R2UploadPolicy.requireHttps(
-        '${AppConfig.cloudflareWorkerUrl}/api/getSignedUploadUrl',
-      );
-      final response = await _sendBytes(
-        'POST',
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        },
-        bytes: utf8.encode(
-          jsonEncode({
-            'fileName': fileName,
-            'contentType': contentType,
-            'folderPath': folderPath,
-            'fileSize': bytes.length,
-          }),
-        ),
-        timeout: const Duration(seconds: 30),
-      );
-
-      if (response.statusCode != 200) {
-        debugPrint(
-          '[CloudflareR2] Worker returned error: ${response.statusCode}',
-        );
-        return null;
-      }
-
-      final resData = jsonDecode(response.body)['result'] as Map;
-      final uploadUri = R2UploadPolicy.requireHttps(
-        resData['uploadUrl'] as String,
-      );
-      final publicUrl = resData['publicUrl'] as String;
-      final headers = R2UploadPolicy.uploadHeaders(
-        workerUri: url,
-        uploadUri: uploadUri,
-        idToken: idToken,
+      final result = await uploadMedia(
+        XFile.fromData(bytes, name: fileName, mimeType: contentType),
+        folderPath: folderPath,
+        storagePathOverride: '$folderPath/$fileName',
         contentType: contentType,
-        providedHeaders: resData['headers'],
       );
-
-      // Tiến hành upload nhị phân trực tiếp bằng HTTP PUT qua proxy Worker hoặc R2
-      final putResponse = await _sendBytes(
-        'PUT',
-        uploadUri,
-        headers: headers,
-        bytes: bytes,
-      );
-
-      if (putResponse.statusCode == 200 || putResponse.statusCode == 201) {
-        return publicUrl;
-      } else {
-        debugPrint('[CloudflareR2] PUT failed: ${putResponse.statusCode}');
-        return null;
-      }
+      return result.downloadUrl;
     } catch (e) {
       debugPrint('[CloudflareR2] Upload Base64 failed: ${e.runtimeType}');
       return null;
@@ -156,12 +112,14 @@ class CloudflareR2Service {
     File file, {
     required String folderPath,
     String? storagePathOverride,
+    String? contentType,
   }) async {
     try {
       final result = await uploadMedia(
         XFile(file.path),
         folderPath: folderPath,
         storagePathOverride: storagePathOverride,
+        contentType: contentType,
       );
       return result.downloadUrl;
     } catch (error) {
@@ -178,6 +136,15 @@ class CloudflareR2Service {
     Future<void> Function(int bytes)? beforeUpload,
     ValueChanged<double>? onProgress,
   }) async {
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    void guard() {
+      if (ownerUid == null ||
+          FirebaseAuth.instance.currentUser?.uid != ownerUid) {
+        throw FirebaseAuthException(code: 'user-token-expired');
+      }
+    }
+
+    guard();
     var prepared = file;
     var mime = contentType ?? R2UploadPolicy.mimeTypeForPath(file.name);
     String? compressedPath;
@@ -219,25 +186,39 @@ class CloudflareR2Service {
           if (prepared.path != file.path) compressedPath = prepared.path;
           mime = R2UploadPolicy.mimeTypeForPath(prepared.name);
         }
-        final user = FirebaseAuth.instance.currentUser;
-        final token = await user?.getIdToken();
-        if (token == null || token.isEmpty) {
-          throw StateError('Authentication required');
-        }
+        guard();
         final extension = R2UploadPolicy.extensionForMimeType(mime);
         final originalPath =
             storagePathOverride ??
             '$folderPath/${DateTime.now().microsecondsSinceEpoch}_${_uploadSequence++}$extension';
-        // Chỉ đổi đuôi khi bytes thực sự đã chuyển định dạng.
         final targetPath = path.withoutExtension(originalPath) + extension;
         return await const R2MediaTransport().upload(
           file: prepared,
           contentType: mime,
           storagePath: targetPath.replaceAll('\\', '/'),
-          workerUri: Uri.parse(
-            '${AppConfig.cloudflareWorkerUrl}/api/getSignedUploadUrl',
-          ),
-          idToken: token,
+          createUploadSession:
+              ({
+                required fileName,
+                required folder,
+                required contentType,
+                required fileSize,
+              }) async {
+                guard();
+                final session = await _createUploadSession(
+                  fileName: fileName,
+                  folder: folder,
+                  contentType: contentType,
+                  fileSize: fileSize,
+                );
+                guard();
+                return session;
+              },
+          finalizeUpload: (uploadId) async {
+            guard();
+            final result = await _finalizeUpload(uploadId);
+            guard();
+            return result;
+          },
           client: client,
           beforeUpload: beforeUpload,
           onProgress: onProgress,
@@ -264,62 +245,36 @@ class CloudflareR2Service {
 
   /// Xoá object trên R2 từ public URL
   Future<bool> deleteFile(String url) async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return false;
-      final idToken = await user.getIdToken();
-      if (idToken == null || idToken.isEmpty) return false;
-
-      final apiUrl = R2UploadPolicy.requireHttps(
-        '${AppConfig.cloudflareWorkerUrl}/api/deleteR2Object',
-      );
-      final response = await _sendBytes(
-        'POST',
-        apiUrl,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        },
-        bytes: utf8.encode(jsonEncode({'objectUrl': url})),
-        timeout: const Duration(seconds: 30),
-      );
-
-      if (response.statusCode != 200) return false;
-      final resData = jsonDecode(response.body)['result'] as Map;
-      return resData['success'] as bool? ?? false;
-    } catch (e) {
-      debugPrint('[CloudflareR2] Lỗi xoá file: ${e.runtimeType}');
+    final normalizedUrl = url.trim();
+    final domain = publicDomain.trim().replaceFirst(RegExp(r'/+$'), '');
+    if (domain.isEmpty || !normalizedUrl.startsWith('$domain/')) {
       return false;
     }
+    final objectKey = normalizedUrl
+        .substring(domain.length + 1)
+        .split('?')
+        .first;
+    if (objectKey.isEmpty) return false;
+    return deleteByPath(objectKey);
   }
 
   /// Xoá object trên R2 trực tiếp từ storage path
   Future<bool> deleteByPath(String objectName) async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return false;
-      final idToken = await user.getIdToken();
-      if (idToken == null || idToken.isEmpty) return false;
-
-      final apiUrl = R2UploadPolicy.requireHttps(
-        '${AppConfig.cloudflareWorkerUrl}/api/deleteR2Object',
-      );
-      final response = await _sendBytes(
-        'POST',
-        apiUrl,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        },
-        bytes: utf8.encode(jsonEncode({'objectPath': objectName})),
-        timeout: const Duration(seconds: 30),
-      );
-
-      if (response.statusCode != 200) return false;
-      final resData = jsonDecode(response.body)['result'] as Map;
-      return resData['success'] as bool? ?? false;
+      final normalizedPath = objectName.trim();
+      if (normalizedPath.isEmpty) return false;
+      final result =
+          await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
+            'deleteR2Object',
+            payload: <String, dynamic>{'objectKey': normalizedPath},
+            timeout: const Duration(seconds: 30),
+            requireAppCheck: true,
+            throwOriginalException: true,
+          );
+      final data = result.data;
+      return data['success'] == true;
     } catch (e) {
-      debugPrint('[CloudflareR2] Lỗi xoá theo path: ${e.runtimeType}');
+      debugPrint('[CloudflareR2] Lỗi xoá file: ${e.runtimeType}');
       return false;
     }
   }

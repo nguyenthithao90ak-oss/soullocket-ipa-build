@@ -9,7 +9,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -24,6 +23,8 @@ import 'package:soullocket_app/utils/services/error_logger_service.dart';
 import 'package:soullocket_app/utils/services/private_media_url_service.dart';
 import 'package:soullocket_app/utils/services/activity_history_service.dart';
 import 'package:soullocket_app/utils/services/sound_service.dart';
+import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
+import 'package:soullocket_app/utils/services/storage/storage_signed_audio_upload.dart';
 
 class VoiceScreen extends StatefulWidget {
   final String houseId;
@@ -120,7 +121,22 @@ class _VoiceScreenState extends State<VoiceScreen>
 
   static const Duration _maxVoiceStorageDuration = Duration(minutes: 5);
   static const int _maxPickedVoiceBytes = 6 * 1024 * 1024;
-  static const String _pendingUploadPrefsKey = 'voice_pending_upload_v1';
+  late final String? _uploadOwnerUid;
+  late final String _uploadHouseId;
+  String get _pendingUploadPrefsKey =>
+      'voice_pending_upload_v2_${_uploadOwnerUid}_$_uploadHouseId';
+  bool get _uploadScopeIsCurrent =>
+      mounted &&
+      _uploadOwnerUid != null &&
+      FirebaseAuth.instance.currentUser?.uid == _uploadOwnerUid &&
+      widget.houseId.trim() == _uploadHouseId;
+
+  void _requireUploadScope() {
+    if (!_uploadScopeIsCurrent) {
+      throw FirebaseAuthException(code: 'user-token-expired');
+    }
+  }
+
   bool _isUploading = false;
   bool _isRecording = false;
   bool _isRestoringUpload = false;
@@ -141,6 +157,8 @@ class _VoiceScreenState extends State<VoiceScreen>
   @override
   void initState() {
     super.initState();
+    _uploadOwnerUid = FirebaseAuth.instance.currentUser?.uid;
+    _uploadHouseId = widget.houseId.trim();
     _bounceController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
@@ -543,38 +561,21 @@ class _VoiceScreenState extends State<VoiceScreen>
     required String mimeType,
     required int durationMs,
   }) async {
-    final errNoSession = context.tr('util_chatocphin_2b4d32');
-
+    _requireUploadScope();
     final session = await _createVoiceUploadSession(
       fileName: fileName,
       contentType: mimeType,
     );
-    final uploadUrl = session['uploadUrl']?.toString().trim() ?? '';
+    _requireUploadScope();
     final sessionId = session['sessionId']?.toString().trim() ?? '';
-    final headers = Map<String, String>.from(
-      ((session['headers'] as Map?) ?? const <String, dynamic>{}).map(
-        (key, value) => MapEntry(key.toString(), value.toString()),
-      ),
-    );
-    if (uploadUrl.isEmpty || sessionId.isEmpty) {
-      throw Exception(errNoSession);
-    }
-    headers.putIfAbsent('Content-Type', () => mimeType);
-
-    debugPrint('[VoiceScreen] Uploading voice bytes to R2.');
-
+    final client = http.Client();
     try {
-      final uploadResponse = await http
-          .put(Uri.parse(uploadUrl), headers: headers, body: bytes)
-          .timeout(const Duration(seconds: 20));
-      debugPrint(
-        '[VoiceScreen] R2 response status: ${uploadResponse.statusCode}',
+      await StorageSignedAudioUpload.put(
+        session: session,
+        bytes: bytes,
+        contentType: mimeType,
+        client: client,
       );
-      if (uploadResponse.statusCode < 200 || uploadResponse.statusCode >= 300) {
-        throw http.ClientException(
-          'Voice upload HTTP ${uploadResponse.statusCode}',
-        );
-      }
     } catch (e, stackTrace) {
       // ClientException có thể chứa URL ký; chỉ chuyển lỗi đã bỏ thông tin nhạy cảm.
       final safeError = e is TimeoutException
@@ -589,11 +590,10 @@ class _VoiceScreenState extends State<VoiceScreen>
         ),
       );
       Error.throwWithStackTrace(safeError, stackTrace);
+    } finally {
+      client.close();
     }
-
-    // Đợi 500ms để Cloudflare R2 đồng bộ file hoàn chỉnh
-    await Future.delayed(const Duration(milliseconds: 500));
-
+    _requireUploadScope();
     await _finalizeVoiceUpload(
       sessionId: sessionId,
       fileName: fileName,
@@ -607,38 +607,20 @@ class _VoiceScreenState extends State<VoiceScreen>
     required String fileName,
     required String contentType,
   }) async {
-    final errCreateSession = context.tr('util_khngthtoph_d7489b');
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) throw Exception('Vui lòng đăng nhập lại.');
-      final idToken = await user.getIdToken() ?? '';
-
-      final response = await http
-          .post(
-            Uri.parse(
-              '${AppConfig.cloudflareWorkerUrl}/api/createVoiceUploadSession',
-            ),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $idToken',
-            },
-            body: jsonEncode({
+      final response =
+          await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
+            'createVoiceUploadSession',
+            payload: <String, dynamic>{
               'houseId': widget.houseId.trim(),
               'fileName': fileName.trim(),
               'contentType': contentType.trim(),
-            }),
-          )
-          .timeout(const Duration(seconds: 15));
-
-      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-      if (response.statusCode != 200) {
-        throw Exception(
-          (decoded['error'] as Map?)?['message'] ?? errCreateSession,
-        );
-      }
-      final data = decoded['result'];
-      if (data is! Map) throw Exception('Voice upload session is invalid.');
-      return Map<String, dynamic>.from(data);
+            },
+            timeout: const Duration(seconds: 15),
+            requireAppCheck: true,
+            throwOriginalException: true,
+          );
+      return response.data;
     } catch (error, stackTrace) {
       debugPrint('[VoiceScreen] createVoiceUploadSession error: $error');
       unawaited(
@@ -659,22 +641,11 @@ class _VoiceScreenState extends State<VoiceScreen>
     required int durationMs,
     required int size,
   }) async {
-    final errFinalize = context.tr('util_khngthhont_91a9c4');
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) throw Exception('Vui lòng đăng nhập lại.');
-      final idToken = await user.getIdToken() ?? '';
-
-      final response = await http
-          .post(
-            Uri.parse(
-              '${AppConfig.cloudflareWorkerUrl}/api/finalizeVoiceUpload',
-            ),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $idToken',
-            },
-            body: jsonEncode({
+      final result =
+          await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
+            'finalizeVoiceUpload',
+            payload: <String, dynamic>{
               'houseId': widget.houseId.trim(),
               'sessionId': sessionId.trim(),
               'authorName': widget.myName.trim(),
@@ -682,13 +653,13 @@ class _VoiceScreenState extends State<VoiceScreen>
               'mimeType': mimeType.trim(),
               'durationMs': durationMs,
               'size': size,
-            }),
-          )
-          .timeout(const Duration(seconds: 15));
-
-      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-      if (response.statusCode != 200) {
-        throw Exception((decoded['error'] as Map?)?['message'] ?? errFinalize);
+            },
+            timeout: const Duration(seconds: 15),
+            requireAppCheck: true,
+            throwOriginalException: true,
+          );
+      if (result.data['ok'] != true) {
+        throw StateError('Voice upload finalize was not confirmed');
       }
     } catch (error, stackTrace) {
       debugPrint('[VoiceScreen] finalizeVoiceUpload error: $error');
@@ -939,11 +910,21 @@ class _VoiceScreenState extends State<VoiceScreen>
 
   Future<void> _savePendingUpload(Map<String, dynamic> payload) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_pendingUploadPrefsKey, jsonEncode(payload));
+    _requireUploadScope();
+    final saved = await prefs.setString(
+      _pendingUploadPrefsKey,
+      jsonEncode({
+        ...payload,
+        'ownerUid': _uploadOwnerUid,
+        'houseId': _uploadHouseId,
+      }),
+    );
+    if (!saved) throw StateError('Cannot persist pending voice upload');
   }
 
   Future<void> _clearPendingUpload({bool deleteLocalFile = false}) async {
     final prefs = await SharedPreferences.getInstance();
+    if (!_uploadScopeIsCurrent) return;
     final raw = prefs.getString(_pendingUploadPrefsKey);
     if (deleteLocalFile && raw != null && raw.isNotEmpty) {
       try {
@@ -966,6 +947,7 @@ class _VoiceScreenState extends State<VoiceScreen>
 
   Future<void> _restorePendingUploadStateIfNeeded() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!_uploadScopeIsCurrent) return;
     final raw = prefs.getString(_pendingUploadPrefsKey);
     if (raw == null || raw.isEmpty) {
       if (!mounted || _pendingRetryUpload == null) {
@@ -980,12 +962,16 @@ class _VoiceScreenState extends State<VoiceScreen>
         await _clearPendingUpload();
         return;
       }
+      if (decoded['ownerUid'] != _uploadOwnerUid ||
+          decoded['houseId'] != _uploadHouseId) {
+        return;
+      }
       final localPath = decoded['localPath']?.toString() ?? '';
       if (localPath.isEmpty || !await File(localPath).exists()) {
         await _clearPendingUpload();
         return;
       }
-      if (!mounted) {
+      if (!_uploadScopeIsCurrent) {
         return;
       }
       setState(() {
@@ -998,7 +984,11 @@ class _VoiceScreenState extends State<VoiceScreen>
 
   Future<void> _retryPendingUpload() async {
     final payload = _pendingRetryUpload;
-    if (payload == null || _isUploading) {
+    if (payload == null ||
+        _isUploading ||
+        !_uploadScopeIsCurrent ||
+        payload['ownerUid'] != _uploadOwnerUid ||
+        payload['houseId'] != _uploadHouseId) {
       return;
     }
     final localPath = payload['localPath']?.toString() ?? '';
@@ -1052,6 +1042,7 @@ class _VoiceScreenState extends State<VoiceScreen>
     required String mimeType,
     required int durationMs,
   }) async {
+    _requireUploadScope();
     if (mounted) {
       setState(() {
         _isUploading = true;

@@ -1,17 +1,19 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../utils/private_media_load_queue.dart';
 import '../../../../../utils/services/l10n_service.dart';
 import '../../../../../utils/services/private_media_url_service.dart';
+import '../../../../../utils/services/storage/private_image_disk_cache.dart';
+import '../../../../../utils/services/storage/private_image_download.dart';
 import 'private_diary_image_scope.dart';
+import 'diary_image_loading.dart';
 
 /// Ảnh House dùng cache đĩa riêng theo tài khoản/nhà/kỷ niệm.
-/// Không dùng URL ký làm khóa nên có thể mở lại khi mất mạng trong 7 ngày.
+/// Không dùng URL ký làm khóa nên có thể mở lại khi mất mạng trong 14 ngày.
 class PrivateDiaryImage extends StatefulWidget {
   const PrivateDiaryImage({
     super.key,
@@ -24,6 +26,7 @@ class PrivateDiaryImage extends StatefulWidget {
     this.currentUid,
     this.imageProviderFactory,
     this.loadQueue,
+    this.diskCache,
   });
 
   final String houseId;
@@ -35,6 +38,7 @@ class PrivateDiaryImage extends StatefulWidget {
   final String? Function()? currentUid;
   final ImageProvider<Object> Function(String)? imageProviderFactory;
   final PrivateMediaLoadQueue? loadQueue;
+  final PrivateImageDiskCache? diskCache;
 
   @override
   State<PrivateDiaryImage> createState() => _PrivateDiaryImageState();
@@ -43,6 +47,7 @@ class PrivateDiaryImage extends StatefulWidget {
 class _PrivateDiaryImageState extends State<PrivateDiaryImage>
     with WidgetsBindingObserver {
   static final _loadQueue = PrivateMediaLoadQueue();
+  static final _downloadQueue = PrivateMediaLoadQueue();
   late final _urlService = PrivateMediaUrlService(
     currentUid: widget.currentUid,
     authChanges: widget.authChanges == null ? null : () => widget.authChanges!,
@@ -87,7 +92,10 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
                   _uid = uid;
                   _urlService.clear();
                   _cache?.clear();
-                  unawaited(PrivateDiaryDiskCache.clear());
+                  unawaited(
+                    widget.diskCache?.clear() ??
+                        PrivateImageDiskCache.clearIfInitialized(),
+                  );
                   _clear();
                   // Không tải lại ảnh của House cũ bằng phiên đăng nhập mới.
                   if (mounted) setState(() => _failed = true);
@@ -96,6 +104,10 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
               onError: (Object _) {
                 _urlService.clear();
                 _cache?.clear();
+                unawaited(
+                  widget.diskCache?.clear() ??
+                      PrivateImageDiskCache.clearIfInitialized(),
+                );
                 _clear();
                 if (mounted) setState(() => _failed = true);
               },
@@ -165,28 +177,33 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
         if (kDebugMode) debugPrint('[PrivateDiaryImage] RAM cache hit');
         return;
       }
-      final diskKey = PrivateDiaryDiskCache.key(
-        uid: uid,
-        houseId: widget.houseId,
-        memoryId: widget.memoryId,
-        width: widget.cacheWidth,
+      final diskKey = PrivateImageDiskCache.key(
+        uid,
+        widget.houseId,
+        widget.memoryId,
+        widget.cacheWidth,
       );
-      if (widget.imageProviderFactory == null &&
-          await PrivateDiaryDiskCache.hasFresh(diskKey)) {
-        final entry = PrivateDiaryImageCacheEntry(
-          CachedNetworkImageProvider(
-            'https://private-cache.invalid/$diskKey',
-            cacheKey: diskKey,
-            cacheManager: PrivateDiaryDiskCache.manager,
-            maxWidth: widget.cacheWidth,
-          ),
-          DateTime.now().millisecondsSinceEpoch +
-              PrivateDiaryDiskCache.ttl.inMilliseconds,
-        );
-        _cache?.put(key, entry);
-        _show(entry);
-        if (kDebugMode) debugPrint('[PrivateDiaryImage] disk cache hit');
-        return;
+      final diskCache =
+          widget.diskCache ??
+          (widget.imageProviderFactory == null && !kIsWeb
+              ? PrivateImageDiskCache.instance
+              : null);
+      if (widget.imageProviderFactory == null) {
+        final bytes = await diskCache?.read(uid, diskKey);
+        if (!current()) return;
+        if (bytes != null) {
+          final entry = PrivateDiaryImageCacheEntry(
+            MemoryImage(bytes),
+            DateTime.now().millisecondsSinceEpoch +
+                PrivateImageDiskCache.ttl.inMilliseconds,
+          );
+          _cache?.put(key, entry);
+          _show(entry);
+          if (kDebugMode) {
+            debugPrint('[PrivateDiaryImage] encrypted disk cache hit');
+          }
+          return;
+        }
       }
       final result = await (widget.loadQueue ?? _loadQueue)
           .run<PrivateMediaUrlResult>(
@@ -223,17 +240,30 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
             120000,
           );
       if (lifetime <= 5000) throw StateError('Expired media authorization');
-      final provider =
-          widget.imageProviderFactory?.call(result.url) ??
-          CachedNetworkImageProvider(
+      ImageProvider<Object>? provider = widget.imageProviderFactory?.call(
+        result.url,
+      );
+      if (provider == null) {
+        final bytes = await _downloadQueue.run<Uint8List>(
+          isCurrent: current,
+          action: () => downloadPrivateImage(
             result.url,
-            cacheKey: diskKey,
-            cacheManager: PrivateDiaryDiskCache.manager,
-            maxWidth: widget.cacheWidth,
-          );
+            width: widget.cacheWidth,
+            isCurrent: current,
+          ),
+        );
+        if (!current() || bytes == null) return;
+        final cacheWrite = diskCache?.write(uid, diskKey, bytes, current);
+        if (cacheWrite != null) unawaited(cacheWrite);
+        if (!current()) return;
+        provider = MemoryImage(bytes);
+      }
+      if (!current()) return;
       final entry = PrivateDiaryImageCacheEntry(
         provider,
-        DateTime.now().millisecondsSinceEpoch + lifetime - 5000,
+        widget.imageProviderFactory == null
+            ? DateTime.now().millisecondsSinceEpoch + 115000
+            : DateTime.now().millisecondsSinceEpoch + lifetime - 5000,
       );
       _cache?.put(key, entry);
       _show(entry);
@@ -283,7 +313,7 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
       unawaited(_load());
     } else {
       _urlService.clear();
-      _cache?.clearMemory();
+      _cache?.clear();
       _clear();
       if (mounted) setState(() {});
     }
@@ -301,7 +331,21 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
   Widget _retry() => Center(
     child: IconButton(
       tooltip: L10nService().translate('core_retry'),
-      onPressed: () => unawaited(_load(refresh: true)),
+      onPressed: () async {
+        final uid = currentUid;
+        if (uid != null && widget.imageProviderFactory == null && !kIsWeb) {
+          await PrivateImageDiskCache.instance.remove(
+            uid,
+            PrivateImageDiskCache.key(
+              uid,
+              widget.houseId,
+              widget.memoryId,
+              widget.cacheWidth,
+            ),
+          );
+        }
+        if (mounted) unawaited(_load(refresh: true));
+      },
       icon: const Icon(Icons.refresh_rounded),
     ),
   );
@@ -311,7 +355,7 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
     if (_failed) return _retry();
     final provider = _provider;
     if (provider == null) {
-      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+      return const DiaryImageLoading();
     }
     return Image(
       image: provider,
@@ -319,6 +363,10 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
       width: double.infinity,
       height: double.infinity,
       gaplessPlayback: false,
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) =>
+          wasSynchronouslyLoaded || frame != null
+          ? child
+          : const DiaryImageLoading(),
       errorBuilder: (_, error, stack) {
         if (kDebugMode) {
           final code = error is NetworkImageLoadException

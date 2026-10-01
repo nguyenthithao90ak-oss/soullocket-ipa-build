@@ -9,6 +9,7 @@ class DiaryPost {
   final String authorName;
   final DateTime timestamp;
   final String mood;
+  final String? customMoodUrl;
   final int? editedAt;
   final bool pinned;
   final int? pinnedAt;
@@ -24,6 +25,7 @@ class DiaryPost {
     required this.authorName,
     required this.timestamp,
     this.mood = '😊',
+    this.customMoodUrl,
     this.editedAt,
     this.pinned = false,
     this.pinnedAt,
@@ -69,6 +71,9 @@ class DiaryPost {
               L10nService().translate('core_partner'))
           .toString(),
       mood: (json['mood'] ?? '😊').toString(),
+      customMoodUrl: json['customMoodUrl']?.toString().trim().isNotEmpty == true
+          ? json['customMoodUrl'].toString().trim()
+          : null,
       timestamp: ts,
       editedAt: json['editedAt'] is int
           ? json['editedAt'] as int
@@ -94,6 +99,8 @@ class DiaryPost {
         'role': authorRole.isNotEmpty ? authorRole : authorId,
         'authorName': authorName,
         'mood': mood,
+        if (customMoodUrl != null && customMoodUrl!.isNotEmpty)
+          'customMoodUrl': customMoodUrl,
         'ts': timestamp.millisecondsSinceEpoch,
         'timestamp': timestamp.millisecondsSinceEpoch,
         'pinned': pinned,

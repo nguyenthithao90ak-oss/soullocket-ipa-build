@@ -1,3 +1,4 @@
+import '../../../utils/services/custom_mood_sticker_service.dart';
 import 'diary/widgets/diary_memory_video_player.dart';
 import 'diary/widgets/private_diary_image.dart';
 import 'diary/utils/private_memory_link_policy.dart';
@@ -126,6 +127,9 @@ class _DiaryTabState extends State<DiaryTab>
 
   void _handleFeedControllerChange() {
     _syncMemoryControllerHouse();
+    if (_houseId != null) {
+      CustomMoodStickerService.instance.startSync(_houseId!);
+    }
     _throttledRebuild();
   }
 
@@ -224,7 +228,7 @@ class _DiaryTabState extends State<DiaryTab>
     if (!mounted) return;
     if (photos.length > maxItems) {
       _showDiarySnackBar(
-        'Mỗi liên kết chỉ hỗ trợ tối đa $maxItems ảnh đối với tài khoản ${isProUser ? 'PRO' : 'thường'}. Hãy bỏ chọn bớt ảnh nhé.',
+        context.tr('memory_share_max_items').replaceAll('{count}', maxItems.toString()),
         backgroundColor: const Color(0xFFE53935),
       );
       return;
@@ -247,7 +251,7 @@ class _DiaryTabState extends State<DiaryTab>
       );
       if (!watched) {
         _showDiarySnackBar(
-          'Bạn cần xem hết quảng cáo để tạo liên kết chia sẻ kỷ niệm.',
+          context.tr('memory_share_ad_required'),
           backgroundColor: const Color(0xFFE53935),
         );
         return;
@@ -315,7 +319,10 @@ class _DiaryTabState extends State<DiaryTab>
         context: context,
         myHouseId: houseId,
         contentToShare:
-            'Mình vừa gửi bạn album kỷ niệm trên SoulLocket gồm ${result.photoCount} ảnh. Link hết hạn ngày $expiryLabel.',
+            context
+                .tr('memory_share_created_message')
+                .replaceAll('{count}', result.photoCount.toString())
+                .replaceAll('{date}', expiryLabel),
         shareUrl: result.url,
         loadInAppTargets: false,
       );
@@ -345,12 +352,12 @@ class _DiaryTabState extends State<DiaryTab>
     final houseId = _houseId?.trim() ?? '';
     SLNotice.showConfirmDialog(
       context,
-      title: 'Đạt giới hạn liên kết',
+      title: context.tr('memory_share_limit_title'),
       message: isPro
-          ? 'Tài khoản PRO đã đạt giới hạn tối đa 20 liên kết chia sẻ kỷ niệm đang hoạt động cùng lúc. Vui lòng vào Cài đặt để xóa bớt liên kết cũ.'
-          : 'Tài khoản thường chỉ được tạo tối đa 5 liên kết chia sẻ kỷ niệm đang hoạt động cùng lúc. Vui lòng vào Cài đặt để xóa bớt liên kết cũ, hoặc nâng cấp lên PRO để tăng giới hạn lên 20 liên kết.',
-      confirmText: 'Đi tới Cài đặt',
-      cancelText: 'Đóng',
+          ? context.tr('memory_share_pro_limit_message')
+          : context.tr('memory_share_free_limit_message'),
+      confirmText: context.tr('memory_share_go_settings'),
+      cancelText: context.tr('core_close'),
     ).then((confirmed) {
       if (confirmed == true && mounted) {
         Navigator.of(context).push(
@@ -474,7 +481,7 @@ class _DiaryTabState extends State<DiaryTab>
           ),
           backgroundColor: Colors.white,
           title: Text(
-            'Mật khẩu bảo vệ (Tùy chọn)',
+            context.tr('memory_share_password_title'),
             style: SLTheme.quicksand(
               fontWeight: FontWeight.w900,
               color: const Color(0xFF243041),
@@ -486,7 +493,7 @@ class _DiaryTabState extends State<DiaryTab>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Nhập mật khẩu nếu bạn muốn người nhận phải nhập đúng mật khẩu mới xem được album.',
+                context.tr('memory_share_password_note'),
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF66758A),
@@ -505,12 +512,12 @@ class _DiaryTabState extends State<DiaryTab>
                   color: const Color(0xFF243041),
                 ),
                 decoration: InputDecoration(
-                  labelText: 'Mật khẩu',
+                  labelText: context.tr('memory_share_password_label'),
                   labelStyle: SLTheme.quicksand(
                     color: const Color(0xFF66758A),
                     fontWeight: FontWeight.w700,
                   ),
-                  hintText: 'Để trống nếu không khóa',
+                  hintText: context.tr('memory_share_password_hint'),
                   counterText: '',
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -575,8 +582,8 @@ class _DiaryTabState extends State<DiaryTab>
               ),
               child: Text(
                 controller.text.trim().isEmpty
-                    ? 'Bỏ qua (Không khóa)'
-                    : 'Xác nhận đặt',
+                    ? context.tr('memory_share_password_skip')
+                    : context.tr('memory_share_password_confirm'),
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w800,
                   color: Colors.white,

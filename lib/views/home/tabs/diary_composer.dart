@@ -1,6 +1,8 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/sl_theme.dart';
+import '../../../utils/services/custom_mood_sticker_service.dart';
 import '../../../utils/services/l10n_service.dart';
 import '../../../widgets/r2_sticker_image.dart';
 
@@ -11,6 +13,7 @@ const Color _diaryCream = Color(0xFFFFFCF4);
 const Color _diaryButter = Color(0xFFFFF2C7);
 
 class DiaryComposer extends StatefulWidget {
+  final String houseId;
   final List<Map<String, dynamic>> moods;
   final String selectedMood;
   final ValueChanged<String> onMoodChanged;
@@ -20,6 +23,7 @@ class DiaryComposer extends StatefulWidget {
 
   const DiaryComposer({
     super.key,
+    required this.houseId,
     required this.moods,
     required this.selectedMood,
     required this.onMoodChanged,
@@ -59,6 +63,93 @@ class _DiaryComposerState extends State<DiaryComposer> {
       if (mood['icon'] == widget.selectedMood) return mood;
     }
     return widget.moods.isEmpty ? null : widget.moods.first;
+  }
+
+  void _showCustomStickerOptionsSheet(
+    BuildContext context,
+    Map<String, dynamic> mood,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (bottomSheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 10, bottom: 4),
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_rounded, color: _diaryMint),
+              title: Text(
+                L10nService().translate('diary_custom_sticker_replace'),
+                style: SLTheme.quicksand(fontWeight: FontWeight.w700),
+              ),
+              onTap: () async {
+                Navigator.pop(bottomSheetContext);
+                try {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        L10nService().translate(
+                          'diary_custom_sticker_uploading',
+                        ),
+                      ),
+                    ),
+                  );
+                  await CustomMoodStickerService.instance.pickAndUploadSticker(
+                    widget.houseId,
+                  );
+                  if (!context.mounted) return;
+                  widget.onMoodChanged(mood['icon'] as String);
+                } catch (e) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        '${L10nService().translate('diary_custom_sticker_upload_failed')}: $e',
+                      ),
+                    ),
+                  );
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+              title: Text(
+                L10nService().translate('diary_custom_sticker_remove'),
+                style: SLTheme.quicksand(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              onTap: () async {
+                Navigator.pop(bottomSheetContext);
+                await CustomMoodStickerService.instance.removeSticker(
+                  widget.houseId,
+                );
+                if (widget.selectedMood == mood['icon']) {
+                  final fallback = widget.moods.firstWhere(
+                    (m) => m['isCustom'] != true,
+                    orElse: () => widget.moods.first,
+                  );
+                  widget.onMoodChanged(fallback['icon'] as String);
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -217,6 +308,87 @@ class _DiaryComposerState extends State<DiaryComposer> {
           final mood = widget.moods[index];
           final active = widget.selectedMood == mood['icon'];
           final moodColor = mood['color'] as Color;
+          final isCustom = mood['isCustom'] == true;
+          final customUrl = mood['customUrl'] as String?;
+
+          Widget content;
+          if (isCustom) {
+            if (customUrl != null && customUrl.isNotEmpty) {
+              content = Stack(
+                alignment: Alignment.center,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(15),
+                    child: CachedNetworkImage(
+                      imageUrl: customUrl,
+                      width: active ? 52 : 46,
+                      height: active ? 52 : 46,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(_diaryMint),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => const Icon(
+                        Icons.broken_image_rounded,
+                        color: Colors.grey,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                  if (active)
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(2.5),
+                        decoration: BoxDecoration(
+                          color: _diaryMint,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1.5),
+                        ),
+                        child: const Icon(
+                          Icons.edit,
+                          size: 8,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            } else {
+              content = Center(
+                child: Container(
+                  width: active ? 38 : 34,
+                  height: active ? 38 : 34,
+                  decoration: BoxDecoration(
+                    color: _diaryMint.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.add_rounded,
+                    color: _diaryMint,
+                    size: active ? 26 : 22,
+                  ),
+                ),
+              );
+            }
+          } else {
+            content = R2StickerImage(
+              mood['asset'] as String,
+              width: active ? 53 : 47,
+              height: active ? 53 : 47,
+              fit: BoxFit.contain,
+              animateLocalSticker: true,
+              errorWidget: Text(
+                mood['icon'] as String,
+                style: TextStyle(fontSize: active ? 34 : 30),
+              ),
+            );
+          }
 
           return Semantics(
             button: true,
@@ -224,7 +396,33 @@ class _DiaryComposerState extends State<DiaryComposer> {
             label: mood['label'] as String,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () => widget.onMoodChanged(mood['icon'] as String),
+              onTap: () async {
+                if (isCustom && (customUrl == null || customUrl.isEmpty)) {
+                  try {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(L10nService().translate('diary_custom_sticker_uploading'))),
+                    );
+                    await CustomMoodStickerService.instance.pickAndUploadSticker(widget.houseId);
+                    if (!context.mounted) return;
+                    widget.onMoodChanged(mood['icon'] as String);
+                  } catch (e) {
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('${L10nService().translate('diary_custom_sticker_upload_failed')}: $e')),
+                    );
+                  }
+                } else if (isCustom && active && customUrl != null && customUrl.isNotEmpty) {
+                  _showCustomStickerOptionsSheet(context, mood);
+                } else {
+                  if (!context.mounted) return;
+                  widget.onMoodChanged(mood['icon'] as String);
+                }
+              },
+              onLongPress: () {
+                if (isCustom && customUrl != null && customUrl.isNotEmpty) {
+                  _showCustomStickerOptionsSheet(context, mood);
+                }
+              },
               child: AnimatedScale(
                 scale: active ? 1.05 : 1,
                 duration: const Duration(milliseconds: 190),
@@ -238,7 +436,9 @@ class _DiaryComposerState extends State<DiaryComposer> {
                     border: Border.all(
                       color: active
                           ? moodColor.withValues(alpha: 0.8)
-                          : Colors.white,
+                          : ((isCustom && (customUrl == null || customUrl.isEmpty)) 
+                              ? Colors.grey.withValues(alpha: 0.4) 
+                              : Colors.white),
                       width: active ? 2 : 1,
                     ),
                     boxShadow: active
@@ -254,17 +454,7 @@ class _DiaryComposerState extends State<DiaryComposer> {
                   child: Center(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(17),
-                      child: R2StickerImage(
-                        mood['asset'] as String,
-                        width: active ? 53 : 47,
-                        height: active ? 53 : 47,
-                        fit: BoxFit.contain,
-                        animateLocalSticker: true,
-                        errorWidget: Text(
-                          mood['icon'] as String,
-                          style: TextStyle(fontSize: active ? 34 : 30),
-                        ),
-                      ),
+                      child: content,
                     ),
                   ),
                 ),

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:video_player/video_player.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../models/diary_post.dart';
@@ -14,6 +15,7 @@ import '../../../widgets/soullocket_animated_sticker.dart';
 
 class DiaryItem extends StatelessWidget {
   final DiaryPost post;
+  final String? houseId;
   final String activeRoleKey;
   final String nameU1;
   final String nameU2;
@@ -23,6 +25,7 @@ class DiaryItem extends StatelessWidget {
 
   const DiaryItem({
     super.key,
+    this.houseId,
     required this.post,
     required this.activeRoleKey,
     required this.nameU1,
@@ -271,10 +274,15 @@ class DiaryItem extends StatelessWidget {
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(17),
                               child: R2StickerImage(
-                                _getMoodAsset(post.mood),
+                                _getMoodAsset(
+                                  post.mood,
+                                  customMoodUrl: post.customMoodUrl,
+                                  houseId: houseId,
+                                  authorId: post.authorId,
+                                ),
                                 width: moodSize,
                                 height: moodSize,
-                                fit: BoxFit.contain,
+                                fit: post.mood == '📷' ? BoxFit.cover : BoxFit.contain,
                                 animateLocalSticker: true,
                                 errorWidget: Text(
                                   post.mood,
@@ -518,8 +526,21 @@ class _DiaryItemVideoWidgetState extends State<_DiaryItemVideoWidget> {
   }
 }
 
-String _getMoodAsset(String moodEmoji) {
+String _getMoodAsset(
+  String moodEmoji, {
+  String? customMoodUrl,
+  String? houseId,
+  String? authorId,
+}) {
   switch (moodEmoji) {
+    case '📷':
+      if (customMoodUrl != null && customMoodUrl.isNotEmpty) {
+        return customMoodUrl;
+      }
+      if (houseId != null && authorId != null) {
+        return '${AppConfig.r2PublicDomain}/houses/$houseId/custom_stickers/$authorId.jpg';
+      }
+      return SoulLocketStickerCatalog.originalReferenceFor('diary_reflective');
     case '😍':
       return SoulLocketStickerCatalog.originalReferenceFor('diary_playful');
     case '💖':
@@ -555,6 +576,8 @@ String _getMoodAsset(String moodEmoji) {
 
 Color _getMoodColor(String moodEmoji) {
   switch (moodEmoji) {
+    case '📷':
+      return const Color(0xFF78909C);
     case '📝':
       return const Color(0xFF9B806E);
     case '🙈':

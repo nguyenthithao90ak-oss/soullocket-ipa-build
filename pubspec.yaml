@@ -305,7 +305,7 @@ flutter:
     - assets/images/sticker_import/cutout/sheet_04/sticker_12.webp
     - assets/images/sticker_import/cutout/sheet_04/sticker_13.webp
     - assets/images/sticker_import/cutout/sheet_04/sticker_14.webp
-    - assets/audio/soul_block/soul_block_bgm.mp3
+    - assets/audio/soul_block/original_v1/
     - assets/music/
 
   # An image asset can refer to one or more resolution-specific "variants", see

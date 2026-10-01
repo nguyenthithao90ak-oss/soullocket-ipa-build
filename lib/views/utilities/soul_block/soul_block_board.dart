@@ -544,12 +544,12 @@ class _GameOverOverlayContent extends StatelessWidget {
         !state._isRestarting &&
         !state._isResolvingGameOver &&
         !state._isShowingFullscreenAd &&
-        state._reviveAdsUsed < state._maxReviveAdsPerRun;
+        state._reviveAdsUsed < state.maxReviveAdsPerRun;
     final String reviveCount = L10nService().format(
       'soul_block_revive_count',
       <String, Object?>{
         'used': state._reviveAdsUsed,
-        'limit': state._maxReviveAdsPerRun,
+        'limit': state.maxReviveAdsPerRun,
       },
     );
     return Positioned.fill(
@@ -641,7 +641,7 @@ class _GameOverOverlayContent extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 10),
-                          if (state._reviveAdsUsed >= state._maxReviveAdsPerRun)
+                          if (state._reviveAdsUsed >= state.maxReviveAdsPerRun)
                             Text(
                               context.tr('soul_block_revive_limit'),
                               textAlign: TextAlign.center,
@@ -689,6 +689,8 @@ class _GameOverOverlayContent extends StatelessWidget {
                               label: Text(
                                 state._isReviving
                                     ? context.tr('p7_ad_loading')
+                                    : state._isPremiumUser
+                                    ? context.tr('util_cquynprohi_0db3f1')
                                     : context.tr('watch_ad'),
                                 textAlign: TextAlign.center,
                                 style: SLTheme.quicksand(
@@ -704,7 +706,10 @@ class _GameOverOverlayContent extends StatelessWidget {
                   const SizedBox(height: 18),
                   FilledButton.icon(
                     onPressed:
-                        state._isRestarting || state._isShowingFullscreenAd
+                        state._isRestarting ||
+                            state._isReviving ||
+                            state._isResolvingGameOver ||
+                            state._isShowingFullscreenAd
                         ? null
                         : state._restartAfterGameOver,
                     style: FilledButton.styleFrom(

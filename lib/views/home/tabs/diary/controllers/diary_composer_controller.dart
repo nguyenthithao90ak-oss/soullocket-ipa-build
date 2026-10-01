@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../../../../utils/app_error_mapper.dart';
 import '../../../../../utils/services/activity_history_service.dart';
+import '../../../../../utils/services/custom_mood_sticker_service.dart';
 import '../../../../../utils/services/diary_service.dart';
 import '../../../../../utils/services/l10n_service.dart';
 import '../../../../../utils/services/notification_service.dart';
@@ -16,64 +17,80 @@ class DiaryComposerController {
   final ValueNotifier<bool> isPostingVN = ValueNotifier<bool>(false);
   final ValueNotifier<String> selectedMoodVN = ValueNotifier<String>('📝');
 
-  List<Map<String, dynamic>> get moods => <Map<String, dynamic>>[
-    {
-      'icon': '📝',
-      'asset': SoulLocketStickerCatalog.originalReferenceFor(
-        'diary_reflective',
-      ),
-      'label': L10nService().translate('home_bnhyn_325c26'),
-      'color': const Color(0xFF8D6E63),
-    },
-    {
-      'icon': '🙈',
-      'asset': SoulLocketStickerCatalog.originalReferenceFor('diary_shy'),
-      'label': L10nService().translate('community_mood_gentle'),
-      'color': const Color(0xFFF06292),
-    },
-    {
-      'icon': '💌',
-      'asset': SoulLocketStickerCatalog.originalReferenceFor('diary_missing'),
-      'label': L10nService().translate('home_nh_dbe2a3'),
-      'color': const Color(0xFFE91E63),
-    },
-    {
-      'icon': '⭐',
-      'asset': SoulLocketStickerCatalog.originalReferenceFor('diary_proud'),
-      'label': L10nService().translate('home_tho_ebaeb2'),
-      'color': const Color(0xFFFFB300),
-    },
-    {
-      'icon': '🌙',
-      'asset': SoulLocketStickerCatalog.originalReferenceFor('diary_sleepy'),
-      'label': L10nService().translate('community_mood_tired'),
-      'color': const Color(0xFF7E57C2),
-    },
-    {
-      'icon': '🥺',
-      'asset': SoulLocketStickerCatalog.originalReferenceFor('diary_anxious'),
-      'label': L10nService().translate('home_cmtchicman_356344'),
-      'color': const Color(0xFF9575CD),
-    },
-    {
-      'icon': '😤',
-      'asset': SoulLocketStickerCatalog.originalReferenceFor('diary_grumpy'),
-      'label': L10nService().translate('home_hidibnmtxu_6797cf'),
-      'color': const Color(0xFFEF5350),
-    },
-    {
-      'icon': '😉',
-      'asset': SoulLocketStickerCatalog.originalReferenceFor('diary_playful'),
-      'label': L10nService().translate('util_tinhqui_51118a'),
-      'color': const Color(0xFF42A5F5),
-    },
-    {
-      'icon': '❤️‍🩹',
-      'asset': SoulLocketStickerCatalog.originalReferenceFor('diary_healing'),
-      'label': L10nService().translate('home_timchalnh_0adb4b'),
-      'color': const Color(0xFF66BB6A),
-    },
-  ];
+  List<Map<String, dynamic>> getMoodsWithCustom(String? customUrl) {
+    final defaultMoods = <Map<String, dynamic>>[
+      {
+        'icon': '📝',
+        'asset': SoulLocketStickerCatalog.originalReferenceFor(
+          'diary_reflective',
+        ),
+        'label': L10nService().translate('home_bnhyn_325c26'),
+        'color': const Color(0xFF8D6E63),
+      },
+      {
+        'icon': '🙈',
+        'asset': SoulLocketStickerCatalog.originalReferenceFor('diary_shy'),
+        'label': L10nService().translate('community_mood_gentle'),
+        'color': const Color(0xFFF06292),
+      },
+      {
+        'icon': '💌',
+        'asset': SoulLocketStickerCatalog.originalReferenceFor('diary_missing'),
+        'label': L10nService().translate('home_nh_dbe2a3'),
+        'color': const Color(0xFFE91E63),
+      },
+      {
+        'icon': '⭐',
+        'asset': SoulLocketStickerCatalog.originalReferenceFor('diary_proud'),
+        'label': L10nService().translate('home_tho_ebaeb2'),
+        'color': const Color(0xFFFFB300),
+      },
+      {
+        'icon': '🌙',
+        'asset': SoulLocketStickerCatalog.originalReferenceFor('diary_sleepy'),
+        'label': L10nService().translate('community_mood_tired'),
+        'color': const Color(0xFF7E57C2),
+      },
+      {
+        'icon': '🥺',
+        'asset': SoulLocketStickerCatalog.originalReferenceFor('diary_anxious'),
+        'label': L10nService().translate('home_cmtchicman_356344'),
+        'color': const Color(0xFF9575CD),
+      },
+      {
+        'icon': '😤',
+        'asset': SoulLocketStickerCatalog.originalReferenceFor('diary_grumpy'),
+        'label': L10nService().translate('home_hidibnmtxu_6797cf'),
+        'color': const Color(0xFFEF5350),
+      },
+      {
+        'icon': '😉',
+        'asset': SoulLocketStickerCatalog.originalReferenceFor('diary_playful'),
+        'label': L10nService().translate('util_tinhqui_51118a'),
+        'color': const Color(0xFF42A5F5),
+      },
+      {
+        'icon': '❤️‍🩹',
+        'asset': SoulLocketStickerCatalog.originalReferenceFor('diary_healing'),
+        'label': L10nService().translate('home_timchalnh_0adb4b'),
+        'color': const Color(0xFF66BB6A),
+      },
+    ];
+
+    return [
+      {
+        'icon': '📷',
+        'isCustom': true,
+        'asset': null,
+        'customUrl': customUrl,
+        'label': L10nService().translate('diary_custom_sticker_label'),
+        'color': const Color(0xFF78909C),
+      },
+      ...defaultMoods,
+    ];
+  }
+
+  List<Map<String, dynamic>> get moods => getMoodsWithCustom(null).sublist(1);
 
   void setMood(String mood) {
     selectedMoodVN.value = mood;
@@ -123,6 +140,7 @@ class DiaryComposerController {
 
       final authorName = await feedController.resolveCurrentAuthorName(user);
       final authorRole = feedController.currentAuthorRole;
+      final customUrl = CustomMoodStickerService.instance.customStickerUrlVN.value;
       final tempId = await DiaryService().addDiaryPost(
         houseId: houseId,
         content: content,
@@ -132,6 +150,7 @@ class DiaryComposerController {
         authorEmail: user.email?.trim().toLowerCase() ?? '',
         authorRole: authorRole,
         imageUrl: '',
+        customMoodUrl: selectedMoodVN.value == '📷' ? customUrl : null,
       );
 
       textController.clear();

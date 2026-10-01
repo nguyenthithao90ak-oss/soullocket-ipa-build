@@ -162,6 +162,7 @@ class _DiaryTabShell extends StatelessWidget {
                               buildDiaryEmptyState: () =>
                                   const DiaryPostsEmptyStateCard(),
                               buildPostCard: (post) => DiaryItem(
+                                houseId: state._houseId,
                                 post: post,
                                 activeRoleKey: state._activeRoleKey,
                                 nameU1: state._nameU1,

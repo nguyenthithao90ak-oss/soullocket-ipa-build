@@ -77,17 +77,8 @@ class _SettingsLinksManagerScreenState
       SLNotice.showInfo(context, context.tr('home_thuhilinkt_39edd6'));
     } catch (e) {
       debugPrint('Revoke API error: $e');
-      try {
-        await _db
-            .ref('houses/${widget.houseId}/memoryShares/${link.token}')
-            .update({'revoked': true, 'revokedAt': ServerValue.timestamp});
-        if (!mounted) return;
-        SLNotice.showInfo(context, context.tr('home_thuhilinkt_39edd6'));
-      } catch (fallbackErr) {
-        debugPrint('Revoke fallback error: $fallbackErr');
-        if (!mounted) return;
-        SLNotice.showError(context, context.tr('home_khngththuh_abe293'));
-      }
+      if (!mounted) return;
+      SLNotice.showError(context, context.tr('home_khngththuh_abe293'));
     }
   }
 

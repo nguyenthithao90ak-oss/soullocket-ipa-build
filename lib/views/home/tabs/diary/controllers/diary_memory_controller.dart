@@ -17,6 +17,7 @@ import 'package:video_compress/video_compress.dart';
 import '../../../../../core/constants/app_config.dart';
 import '../../../../../utils/services/storage/private_memory_lifecycle_policy.dart';
 import '../../../../../utils/services/private_media_url_service.dart';
+import '../../../../../utils/services/storage/private_image_disk_cache.dart';
 import '../utils/private_memory_link_policy.dart';
 import '../../../../../core/sl_theme.dart';
 import '../../../../../utils/services/map_pin_limit_service.dart';
@@ -70,7 +71,7 @@ class DiaryMemoryController extends ChangeNotifier {
 
   static const int _webMemoryCacheLimit = 120;
   static const int _appMemoryCacheLimit = 200;
-  static const Duration _memoryDownloadCacheTtl = Duration(days: 7);
+  static const Duration _memoryDownloadCacheTtl = PrivateImageDiskCache.ttl;
   static const String _pendingUploadPrefsKey = 'diary_memory_pending_upload_v1';
 
   final DatabaseReference _dbRef;
@@ -369,6 +370,9 @@ class DiaryMemoryController extends ChangeNotifier {
     if (_currentHouseId == normalized && _memoriesStream != null) {
       return;
     }
+    if (_currentHouseId != null && _currentHouseId != normalized) {
+      unawaited(PrivateImageDiskCache.clearIfInitialized());
+    }
     _currentHouseId = normalized;
     _mediaScopeGeneration++;
     _privateMediaUrlService.clear();
@@ -577,14 +581,15 @@ class DiaryMemoryController extends ChangeNotifier {
 
   /// Giải nén và kiểm tra TTL của memories cache.
   /// Cache lưu dưới dạng {_cachedAt: ms, items: [...]}.
-  /// Nếu quá _memoryDownloadCacheTtl (7 ngày) thì trả về null để app fetch lại.
+  /// Nếu quá _memoryDownloadCacheTtl (14 ngày) thì trả về null để app fetch lại.
   dynamic _extractMemoriesCacheList(dynamic raw) {
     if (raw == null) return null;
     // Format mới: {_cachedAt, items}
     if (raw is Map) {
       final cachedAt = (raw['_cachedAt'] as num?)?.toInt() ?? 0;
       final ttlMs = _memoryDownloadCacheTtl.inMilliseconds;
-      if (DateTime.now().millisecondsSinceEpoch - cachedAt > ttlMs) {
+      final age = DateTime.now().millisecondsSinceEpoch - cachedAt;
+      if (age < 0 || age >= ttlMs) {
         return null; // Cache hết hạn — app sẽ dùng live data
       }
       return _withoutCachedMemoryLinks(raw['items']);

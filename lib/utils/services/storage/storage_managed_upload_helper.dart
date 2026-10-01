@@ -9,17 +9,16 @@ import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'storage_upload_result.dart';
 
 typedef StorageCurrentUidProvider = String Function();
-typedef StorageContentTypeDetector = String Function(
-  String fileNameOrPath, {
-  String fallback,
-});
+typedef StorageContentTypeDetector =
+    String Function(String fileNameOrPath, {String fallback});
 typedef StorageWritePathNormalizer = String Function(String storagePath);
-typedef StorageFileUploader = Future<String> Function(
-  String storagePath,
-  XFile file, {
-  String? contentType,
-  ValueChanged<double>? onProgress,
-});
+typedef StorageFileUploader =
+    Future<StorageUploadResult> Function(
+      String storagePath,
+      XFile file, {
+      String? contentType,
+      ValueChanged<double>? onProgress,
+    });
 
 class StorageManagedUploadRequest {
   const StorageManagedUploadRequest({
@@ -52,8 +51,9 @@ class StorageManagedUploadHelper {
   }) async {
     try {
       final nowMs = DateTime.now().millisecondsSinceEpoch;
-      final originalFileName =
-          request.file.name.isNotEmpty ? request.file.name : request.file.path;
+      final originalFileName = request.file.name.isNotEmpty
+          ? request.file.name
+          : request.file.path;
       String fileExtension = p.extension(originalFileName).toLowerCase();
       XFile uploadFile = request.file;
       String? tempCompressedPath;
@@ -93,10 +93,9 @@ class StorageManagedUploadHelper {
             tempCompressedPath = null;
           }
         } catch (compressError) {
-          debugPrint('Lỗi khi nén ảnh WebP: ${AppErrorMapper.resolve(
-            compressError,
-            fallbackMessage: 'Không thể nén ảnh WebP.',
-          ).message}');
+          debugPrint(
+            'Lỗi khi nén ảnh WebP: ${AppErrorMapper.resolve(compressError, fallbackMessage: 'Không thể nén ảnh WebP.').message}',
+          );
           tempCompressedPath = null;
         }
       }
@@ -116,44 +115,40 @@ class StorageManagedUploadHelper {
       if (onProgress != null) onProgress(0.4); // Start network upload
 
       try {
-        final downloadUrl =
+        final uploadResult =
             tempCompressedPath != null && uploadFile.path == tempCompressedPath
-                ? await uploadFileToPath(
-                    path,
-                    XFile(tempCompressedPath),
-                    contentType: finalContentType,
-                    onProgress: onProgress != null
-                        ? (p) => onProgress(0.4 + (p * 0.6))
-                        : null,
-                  )
-                : await uploadFileToPath(
-                    path,
-                    uploadFile,
-                    contentType: finalContentType,
-                    onProgress: onProgress != null
-                        ? (p) => onProgress(0.4 + (p * 0.6))
-                        : null,
-                  );
+            ? await uploadFileToPath(
+                normalizedStoragePath,
+                XFile(tempCompressedPath),
+                contentType: finalContentType,
+                onProgress: onProgress != null
+                    ? (p) => onProgress(0.4 + (p * 0.6))
+                    : null,
+              )
+            : await uploadFileToPath(
+                normalizedStoragePath,
+                uploadFile,
+                contentType: finalContentType,
+                onProgress: onProgress != null
+                    ? (p) => onProgress(0.4 + (p * 0.6))
+                    : null,
+              );
 
         if (onProgress != null) onProgress(1.0); // Finished
 
-        return StorageUploadResult(
-          downloadUrl: downloadUrl,
-          storagePath: normalizedStoragePath,
-        );
+        return uploadResult;
       } finally {
         if (tempCompressedPath != null) {
-          final tempFile = File(tempCompressedPath);
-          if (await tempFile.exists()) {
-            await tempFile.delete();
-          }
+          try {
+            final tempFile = File(tempCompressedPath);
+            if (await tempFile.exists()) await tempFile.delete();
+          } catch (_) {}
         }
       }
     } catch (e) {
-      debugPrint('Lỗi khi upload ảnh: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không tải ảnh lên đám mây được.',
-      ).message}');
+      debugPrint(
+        'Lỗi khi upload ảnh: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không tải ảnh lên đám mây được.').message}',
+      );
       throw 'Không thể tải ảnh lên đám mây, vui lòng kiểm tra kết nối mạng.';
     }
   }

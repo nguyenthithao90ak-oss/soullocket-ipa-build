@@ -12,6 +12,7 @@ import '../../../../../core/sl_theme.dart';
 import '../../../../../utils/app_error_mapper.dart';
 import '../../../../../utils/services/cloudflare_r2_service.dart';
 import '../../../../../utils/services/l10n_service.dart';
+import 'diary_image_loading.dart';
 import '../../../../../widgets/skeleton_container.dart';
 
 import '../controllers/diary_memory_controller.dart';
@@ -300,11 +301,11 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
     final urls = <String>[
       for (final photo in photos.take(_thumbnailWarmupCount))
         if (!PrivateMemoryLinkPolicy.isPrivate(photo))
-        (isDiaryMemoryVideo(photo)
-                    ? resolveDiaryMemoryVideoThumbnailUrl(photo)
-                    : resolveDiaryMemoryMediaUrl(photo))
-                ?.trim() ??
-            '',
+          (isDiaryMemoryVideo(photo)
+                      ? resolveDiaryMemoryVideoThumbnailUrl(photo)
+                      : resolveDiaryMemoryMediaUrl(photo))
+                  ?.trim() ??
+              '',
     ]..removeWhere((url) => url.isEmpty);
     if (urls.isEmpty) {
       return;
@@ -1096,7 +1097,9 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
   }
 
   String _resolvePhotoUrl(Map<String, dynamic> photo) {
-    if (PrivateMemoryLinkPolicy.isPrivate(photo)) return photo['url']?.toString() ?? '';
+    if (PrivateMemoryLinkPolicy.isPrivate(photo)) {
+      return photo['url']?.toString() ?? '';
+    }
     final isVideo = isDiaryMemoryVideo(photo);
     final fallbackUrl = isVideo
         ? _stableFallbackVideoUrl(photo)
@@ -1112,11 +1115,17 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
 
   Widget _buildVideoThumbnail(Map<String, dynamic> photo, String videoUrl) {
     if (PrivateMemoryLinkPolicy.isPrivate(photo)) {
-      return IgnorePointer(child: DiaryMemoryVideoPlayer(
-        url: '', houseId: photo['houseId']?.toString() ?? photo['house_id']?.toString(),
-        memoryId: photo['id']?.toString(), requireFreshAuthorization: true,
-        previewOnly: true, isActive: false,
-      ));
+      return IgnorePointer(
+        child: DiaryMemoryVideoPlayer(
+          url: '',
+          houseId:
+              photo['houseId']?.toString() ?? photo['house_id']?.toString(),
+          memoryId: photo['id']?.toString(),
+          requireFreshAuthorization: true,
+          previewOnly: true,
+          isActive: false,
+        ),
+      );
     }
     return _DiaryMemoryVideoPreview(
       videoUrl: videoUrl,
@@ -1180,8 +1189,12 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
                   ? _buildVideoThumbnail(photo, photoUrl)
                   : PrivateMemoryLinkPolicy.isPrivate(photo)
                   ? PrivateDiaryImage(
-                      houseId: photo['houseId']?.toString() ?? photo['house_id']?.toString() ?? '',
-                      memoryId: photoId, cacheWidth: widget.thumbnailCacheWidth,
+                      houseId:
+                          photo['houseId']?.toString() ??
+                          photo['house_id']?.toString() ??
+                          '',
+                      memoryId: photoId,
+                      cacheWidth: widget.thumbnailCacheWidth,
                       fit: isStickerOrPng ? BoxFit.contain : BoxFit.cover,
                     )
                   : CachedNetworkImage(
@@ -1190,11 +1203,7 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
                       memCacheWidth: widget.thumbnailCacheWidth,
                       fit: isStickerOrPng ? BoxFit.contain : BoxFit.cover,
                       filterQuality: FilterQuality.low,
-                      placeholder: (context, url) => Container(
-                        color: isStickerOrPng
-                            ? Colors.transparent
-                            : const Color(0xFFF1F5F9),
-                      ),
+                      placeholder: (context, url) => const DiaryImageLoading(),
                       errorWidget: (context, url, error) {
                         if (_retryCount < 1 && _needsSignedRefresh(photo)) {
                           _retryCount++;
@@ -1484,11 +1493,7 @@ class _DiaryMemoryVideoPreviewState extends State<_DiaryMemoryVideoPreview> {
       ),
       child: Center(
         child: isLoading
-            ? const SizedBox(
-                width: 26,
-                height: 26,
-                child: CircularProgressIndicator(strokeWidth: 2.5),
-              )
+            ? const DiaryImageLoading()
             : const Icon(
                 Icons.movie_creation_outlined,
                 color: Color(0xFF6E88B0),

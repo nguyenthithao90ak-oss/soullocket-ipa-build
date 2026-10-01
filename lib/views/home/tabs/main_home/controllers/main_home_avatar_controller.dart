@@ -123,8 +123,9 @@ extension MainHomeAvatarController on _MainHomeTabState {
   }
 
   Future<void> _changeAvatar({required bool isUser1, XFile? presetFile}) async {
+    final uploadUid = FirebaseAuth.instance.currentUser?.uid;
     final houseId = _houseId ?? await _houseService.getCurrentHouseId();
-    if (!mounted || houseId == null) return;
+    if (!mounted || houseId == null || uploadUid == null) return;
     if (_uploadingAvatarRole != null) return;
 
     XFile? file;
@@ -160,6 +161,7 @@ extension MainHomeAvatarController on _MainHomeTabState {
         houseId,
         'home_avatar',
         file,
+        role: role,
         quality: 84,
         minWidth: 512,
         minHeight: 512,
@@ -175,25 +177,19 @@ extension MainHomeAvatarController on _MainHomeTabState {
       }
 
       final oldAvatarUrl = (_houseSettings?[field] ?? '').toString().trim();
-      await PendingUploadService.instance.clear(pendingKey);
+      await StorageMediaCommit.commit(
+        scopeIsCurrent: () =>
+            mounted &&
+            _houseId == houseId &&
+            FirebaseAuth.instance.currentUser?.uid == uploadUid,
+        persist: () =>
+            _dbRef.child('houses/$houseId/settings').update({field: url}),
+        clearPending: () => PendingUploadService.instance.clear(pendingKey),
+      );
 
-      try {
-        final hid = (_houseId ?? '').trim();
-        if (hid.isNotEmpty) {
-          await _dbRef
-              .child('houses/$hid/settings')
-              .update({field: url})
-              .catchError((error) {
-                debugPrint('[MainHome] Avatar settings sync failed: $error');
-              });
-        }
-      } catch (error) {
-        debugPrint('[MainHome] Avatar profile sync failed: $error');
-      }
-
-      if (oldAvatarUrl.isNotEmpty && oldAvatarUrl.startsWith('http')) {
+      if (oldAvatarUrl != url && oldAvatarUrl.startsWith('http')) {
         try {
-          _storageService.deleteImageByUrl(oldAvatarUrl);
+          await _storageService.deleteImageByUrl(oldAvatarUrl);
         } catch (error) {
           debugPrint('[MainHome] Old avatar cleanup failed: $error');
         }

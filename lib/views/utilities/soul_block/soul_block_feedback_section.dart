@@ -5,88 +5,122 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
   Future<void> _initAudio() async {
     final errorFallback = context.tr('util_khngthkhit_0ee520');
     try {
-      _tapSfxBytes = _buildWaveBytes(<_SoulSfxTone>[
-        _tone(57, 18, 0.90, noiseMix: 0.32),
-        _tone(64, 28, 0.46, noiseMix: 0.14),
-      ], masterGain: 0.54);
-      _liftSfxBytes =
-          await _loadAudioAssetBytes('assets/audio/soul_block/drag_lift.mp3') ??
-          _buildWaveBytes(<_SoulSfxTone>[
-            _tone(60, 24, 0.84, noiseMix: 0.22),
-            _tone(67, 38, 0.56, noiseMix: 0.08),
-            _tone(72, 42, 0.32, noiseMix: 0.04),
-          ], masterGain: 0.62);
-      _placeSfxBytes =
-          await _loadAudioAssetBytes(
-            'assets/audio/soul_block/big_win_place_first_half.mp3',
-          ) ??
-          _buildWaveBytes(<_SoulSfxTone>[
-            _tone(50, 26, 0.92, noiseMix: 0.34),
-            _tone(57, 46, 0.66, noiseMix: 0.14),
-            _tone(62, 32, 0.36, noiseMix: 0.06),
-          ], masterGain: 0.68);
-      _clearSfxBytes =
-          await _loadAudioAssetBytes(
-            'assets/audio/soul_block/clear_burst.mp3',
-          ) ??
-          _buildWaveBytes(<_SoulSfxTone>[
-            _tone(62, 24, 0.88, noiseMix: 0.16),
-            _tone(69, 30, 0.78, noiseMix: 0.12),
-            _tone(76, 54, 0.76, noiseMix: 0.06),
-            _tone(83, 84, 0.56, noiseMix: 0.03),
-          ], masterGain: 0.70);
-      _bombSfxBytes =
-          await _loadAudioAssetBytes(
-            'assets/audio/soul_block/bomb_explosion.mp3',
-          ) ??
-          _buildWaveBytes(<_SoulSfxTone>[
-            _tone(36, 120, 1.0, noiseMix: 0.94),
-            _tone(43, 90, 0.88, noiseMix: 0.86),
-            _tone(48, 70, 0.64, noiseMix: 0.72),
-          ], masterGain: 0.90);
+      // Dùng audio focus riêng cho hiệu ứng để tiếng nổ không làm ngắt nhạc nền.
+      try {
+        final sfxContext = AudioContext(
+          android: const AudioContextAndroid(
+            usageType: AndroidUsageType.game,
+            contentType: AndroidContentType.sonification,
+            audioFocus: AndroidAudioFocus.none,
+          ),
+          iOS: AudioContextIOS(
+            category: AVAudioSessionCategory.playback,
+            options: <AVAudioSessionOptions>{
+              AVAudioSessionOptions.mixWithOthers,
+            },
+          ),
+        );
+        await Future.wait(
+          _sfxPlayers.map((player) async {
+            if (_audioDisposed) return;
+            await player.setAudioContext(sfxContext);
+            if (_audioDisposed) return;
+            await player.setReleaseMode(ReleaseMode.stop);
+          }),
+        );
+      } catch (error) {
+        // Một số nền tảng web/desktop không hỗ trợ audio context; vẫn phát
+        // hiệu ứng bằng cấu hình mặc định của audioplayers.
+        debugPrint('Soul Block SFX context unavailable: $error');
+      }
+
+      final assetBytes = await Future.wait<Uint8List?>(<Future<Uint8List?>>[
+        _loadAudioAssetBytes('assets/audio/soul_block/original_v1/tap.wav'),
+        _loadAudioAssetBytes('assets/audio/soul_block/original_v1/lift.wav'),
+        _loadAudioAssetBytes('assets/audio/soul_block/original_v1/place.wav'),
+        _loadAudioAssetBytes('assets/audio/soul_block/original_v1/rotate.wav'),
+        _loadAudioAssetBytes('assets/audio/soul_block/original_v1/invalid.wav'),
+        _loadAudioAssetBytes('assets/audio/soul_block/original_v1/clear.wav'),
+        _loadAudioAssetBytes('assets/audio/soul_block/original_v1/bomb.wav'),
+        _loadAudioAssetBytes(
+          'assets/audio/soul_block/original_v1/combo_x2.wav',
+        ),
+        _loadAudioAssetBytes(
+          'assets/audio/soul_block/original_v1/combo_x3.wav',
+        ),
+        _loadAudioAssetBytes(
+          'assets/audio/soul_block/original_v1/combo_x4.wav',
+        ),
+        _loadAudioAssetBytes(
+          'assets/audio/soul_block/original_v1/combo_x5.wav',
+        ),
+        _loadAudioAssetBytes(
+          'assets/audio/soul_block/original_v1/streak_break.wav',
+        ),
+        _loadAudioAssetBytes('assets/audio/soul_block/original_v1/revive.wav'),
+        _loadAudioAssetBytes(
+          'assets/audio/soul_block/original_v1/game_over.wav',
+        ),
+        _loadAudioAssetBytes(
+          'assets/audio/soul_block/original_v1/best_score.wav',
+        ),
+      ]);
+      if (!mounted || _audioDisposed) return;
+      Uint8List fallback(int index, List<_SoulSfxTone> tones) =>
+          assetBytes[index] ?? _buildWaveBytes(tones);
+      _tapSfxBytes = fallback(0, <_SoulSfxTone>[_tone(76, 85, .3)]);
+      _liftSfxBytes = fallback(1, <_SoulSfxTone>[
+        _tone(60, 24, .84, noiseMix: .22),
+        _tone(67, 38, .56, noiseMix: .08),
+      ]);
+      _placeSfxBytes = fallback(2, <_SoulSfxTone>[
+        _tone(50, 26, .92, noiseMix: .34),
+        _tone(57, 46, .66, noiseMix: .14),
+      ]);
+      _rotateSfxBytes = fallback(3, <_SoulSfxTone>[
+        _tone(72, 70, .36),
+        _tone(79, 105, .28),
+      ]);
+      _invalidSfxBytes = fallback(4, <_SoulSfxTone>[
+        _tone(50, 90, .22),
+        _tone(49, 70, .14),
+      ]);
+      _clearSfxBytes = fallback(5, <_SoulSfxTone>[
+        _tone(62, 24, .88, noiseMix: .16),
+        _tone(69, 30, .78, noiseMix: .12),
+        _tone(76, 54, .76, noiseMix: .06),
+      ]);
+      _bombSfxBytes = fallback(6, <_SoulSfxTone>[
+        _tone(36, 120, 1, noiseMix: .94),
+        _tone(43, 90, .88, noiseMix: .86),
+      ]);
       _comboSfxLevels = <Uint8List>[
-        _buildWaveBytes(<_SoulSfxTone>[
-          _tone(64, 24, 0.88, noiseMix: 0.14),
-          _tone(71, 28, 0.78, noiseMix: 0.11),
-          _tone(78, 44, 0.66, noiseMix: 0.05),
-        ], masterGain: 0.70),
-        _buildWaveBytes(<_SoulSfxTone>[
-          _tone(67, 20, 0.90, noiseMix: 0.12),
-          _tone(74, 28, 0.84, noiseMix: 0.10),
-          _tone(79, 40, 0.80, noiseMix: 0.06),
-          _tone(84, 62, 0.58, noiseMix: 0.03),
-        ], masterGain: 0.74),
-        _buildWaveBytes(<_SoulSfxTone>[
-          _tone(69, 20, 0.90, noiseMix: 0.11),
-          _tone(76, 26, 0.86, noiseMix: 0.08),
-          _tone(81, 36, 0.82, noiseMix: 0.06),
-          _tone(86, 48, 0.72, noiseMix: 0.04),
-          _tone(91, 76, 0.60, noiseMix: 0.02),
-        ], masterGain: 0.78),
-        _buildWaveBytes(<_SoulSfxTone>[
-          _tone(71, 18, 0.92, noiseMix: 0.10),
-          _tone(78, 24, 0.90, noiseMix: 0.08),
-          _tone(83, 32, 0.86, noiseMix: 0.06),
-          _tone(88, 44, 0.82, noiseMix: 0.05),
-          _tone(91, 54, 0.74, noiseMix: 0.03),
-          _tone(95, 90, 0.64, noiseMix: 0.02),
-        ], masterGain: 0.82),
+        for (int index = 7; index <= 10; index++)
+          assetBytes[index] ??
+              _buildWaveBytes(<_SoulSfxTone>[
+                _tone(64 + (index - 7) * 2, 24, .88, noiseMix: .12),
+                _tone(71 + (index - 7) * 2, 42, .76, noiseMix: .06),
+              ]),
       ];
-      _streakSfxBytes = _buildWaveBytes(<_SoulSfxTone>[
-        _tone(64, 24, 0.84, noiseMix: 0.12),
-        _tone(71, 30, 0.78, noiseMix: 0.10),
-        _tone(78, 42, 0.70, noiseMix: 0.05),
-        _tone(83, 66, 0.58, noiseMix: 0.02),
-      ], masterGain: 0.70);
-      _bestScoreSfxBytes =
-          await _loadAudioAssetBytes('assets/audio/soul_block/big_win.mp3') ??
-          _buildWaveBytes(<_SoulSfxTone>[
-            _tone(67, 24, 0.86, noiseMix: 0.12),
-            _tone(74, 30, 0.84, noiseMix: 0.10),
-            _tone(81, 42, 0.80, noiseMix: 0.06),
-            _tone(86, 64, 0.76, noiseMix: 0.03),
-            _tone(91, 96, 0.64, noiseMix: 0.02),
-          ], masterGain: 0.76);
+      _streakBreakSfxBytes = fallback(11, <_SoulSfxTone>[
+        _tone(72, 120, .25),
+        _tone(67, 150, .18),
+      ]);
+      _reviveSfxBytes = fallback(12, <_SoulSfxTone>[
+        _tone(60, 120, .25),
+        _tone(67, 150, .25),
+        _tone(72, 180, .24),
+      ]);
+      _gameOverSfxBytes = fallback(13, <_SoulSfxTone>[
+        _tone(57, 260, .16),
+        _tone(60, 300, .12),
+        _tone(64, 420, .10),
+      ]);
+      _bestScoreSfxBytes = fallback(14, <_SoulSfxTone>[
+        _tone(72, 90, .25),
+        _tone(79, 120, .25),
+        _tone(84, 180, .24),
+      ]);
       if (!mounted) return;
       _audioReady = true;
       unawaited(_syncBgmWithSound());
@@ -99,19 +133,26 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
   }
 
   Future<Source> _getBgmSource() async {
-    // Bản nhạc Soul Block gốc được khôi phục từ lịch sử Git và đóng gói để chơi offline.
-    const bundledAsset = 'audio/soul_block/soul_block_bgm.mp3';
+    // Nhạc nền được sáng tác và đóng gói nội bộ, phát offline không cần tải.
+    const bundledAsset = 'audio/soul_block/original_v1/neon_memory.mp3';
     debugPrint('Soul Block: Using bundled BGM: $bundledAsset');
     return AssetSource(bundledAsset);
   }
 
   bool get _canPlayAudio =>
-      mounted && _soundEnabled && _appActive && !_isShowingFullscreenAd;
+      mounted &&
+      !_audioDisposed &&
+      _audioSettingsLoaded &&
+      _soundEnabled &&
+      _appActive &&
+      !_isShowingFullscreenAd;
 
   Future<void> _syncBgmWithSound() {
     // Tuần tự hóa lệnh: trở lại app tiếp tục bản nhạc đang phát.
     _bgmSyncQueue = _bgmSyncQueue.then((_) async {
-      if (!mounted || !_audioSettingsLoaded) return;
+      if (!mounted || _audioDisposed || !_audioSettingsLoaded || !_audioReady) {
+        return;
+      }
       try {
         if (!_canPlayAudio) {
           if (_bgmPlayer.state == PlayerState.playing) await _bgmPlayer.pause();
@@ -119,22 +160,34 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
         }
         if (!_bgmSourceReady) {
           final source = await _getBgmSource();
-          if (!mounted) return;
+          if (!mounted || _audioDisposed) return;
+          await _bgmPlayer.setAudioContext(
+            AudioContext(
+              android: const AudioContextAndroid(
+                usageType: AndroidUsageType.game,
+              ),
+              iOS: AudioContextIOS(
+                category: AVAudioSessionCategory.playback,
+                options: <AVAudioSessionOptions>{
+                  AVAudioSessionOptions.mixWithOthers,
+                },
+              ),
+            ),
+          );
+          if (!mounted || _audioDisposed) return;
           await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
-          if (!mounted) return;
-          await _bgmPlayer.setVolume(0.36);
-          if (!mounted) return;
+          if (!mounted || _audioDisposed) return;
+          await _bgmPlayer.setVolume(0.28);
+          if (!mounted || _audioDisposed) return;
           await _bgmPlayer.setSource(source);
           _bgmSourceReady = true;
         }
-        if (!mounted) return;
+        if (!mounted || _audioDisposed) return;
         if (!_canPlayAudio) {
           await _bgmPlayer.pause();
-        } else if (_bgmPlayer.state == PlayerState.stopped ||
-            _bgmPlayer.state == PlayerState.completed) {
-          await _bgmPlayer.play(await _getBgmSource(), volume: 0.36);
         } else if (_bgmPlayer.state != PlayerState.playing) {
           await _bgmPlayer.resume();
+          if (!_canPlayAudio) await _bgmPlayer.pause();
         }
       } catch (error) {
         // Web có thể chặn autoplay; thao tác chạm tiếp theo sẽ thử lại.
@@ -250,22 +303,11 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
       'util_khngthtihi_635113',
     );
     try {
-      if (!kIsWeb) {
-        try {
-          final localPath = await GameDownloadService().getLocalPath(
-            'soul_block',
-            p.basename(assetPath),
-          );
-          final localFile = File(localPath);
-          if (await localFile.exists()) return await localFile.readAsBytes();
-        } catch (_) {
-          // Nếu gói tải về không có, tiếp tục thử asset và âm thanh tạo sẵn.
-        }
-      }
-
+      // Luôn ưu tiên bộ âm thanh original_v1 đã đóng gói. Gói tải cũ có thể
+      // chứa nhạc/hiệu ứng trước đây và làm trải nghiệm giữa các máy khác nhau.
       debugPrint('Soul Block: Loading SFX from ASSET: $assetPath');
       final ByteData data = await rootBundle.load(assetPath);
-      return data.buffer.asUint8List();
+      return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
     } catch (e) {
       debugPrint(
         'Soul Block: Error loading SFX ($assetPath): ${AppErrorMapper.resolve(e, fallbackMessage: loadSfxErrorFallback).message}',
@@ -289,23 +331,69 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
         bytes[3] == 70 &&
         bytes[8] == 87 &&
         bytes[9] == 65;
-    try {
-      await player.stop();
-      if (!_canPlayAudio || request != _sfxRequests[index]) return;
-      await player.play(
-        BytesSource(bytes, mimeType: isWave ? 'audio/wav' : 'audio/mpeg'),
-        volume: volume.clamp(0.0, 1.0).toDouble(),
-      );
-    } catch (_) {
-      if (_canPlayAudio) unawaited(SystemSound.play(SystemSoundType.click));
+    bool isCurrent() => _canPlayAudio && request == _sfxRequests[index];
+    // Mỗi player chỉ nhận một lệnh tại một thời điểm. Lệnh cũ bị hủy khi
+    // tắt tiếng/vào quảng cáo, kể cả khi đang giải mã âm thanh.
+    _sfxQueues[index] = _sfxQueues[index].then((_) async {
+      if (!isCurrent()) return;
+      try {
+        await player.stop();
+        if (!isCurrent()) return;
+        await player.setSource(
+          BytesSource(bytes, mimeType: isWave ? 'audio/wav' : 'audio/mpeg'),
+        );
+        if (!isCurrent()) return;
+        await player.setVolume(volume.clamp(0.0, 1.0).toDouble());
+        if (!isCurrent()) return;
+        await player.resume();
+        if (!isCurrent()) await player.stop();
+      } catch (error) {
+        debugPrint('Soul Block SFX playback failed: $error');
+      }
+    });
+    await _sfxQueues[index];
+  }
+
+  Future<void> _stopSfx() async {
+    for (var index = 0; index < _sfxPlayers.length; index++) {
+      _sfxRequests[index]++;
+      final player = _sfxPlayers[index];
+      _sfxQueues[index] = _sfxQueues[index].then((_) async {
+        try {
+          await player.stop();
+        } catch (error) {
+          debugPrint('Soul Block SFX stop failed: $error');
+        }
+      });
     }
+    await Future.wait(_sfxQueues);
+  }
+
+  Future<void> _disposeAudio() async {
+    _audioDisposed = true;
+    _audioReady = false;
+    for (var index = 0; index < _sfxRequests.length; index++) {
+      _sfxRequests[index]++;
+    }
+    // Đợi các lệnh đang chạy kết thúc trước khi giải phóng player native.
+    await _audioInitFuture;
+    await Future.wait([..._sfxQueues, _bgmSyncQueue]);
+    await Future.wait(
+      [..._sfxPlayers, _bgmPlayer].map((player) async {
+        try {
+          await player.dispose();
+        } catch (error) {
+          debugPrint('Soul Block audio dispose failed: $error');
+        }
+      }),
+    );
   }
 
   void _emitClickFeedback() {
     if (_canPlayAudio && _bgmPlayer.state != PlayerState.playing) {
       unawaited(_syncBgmWithSound());
     }
-    if (!_soundEnabled) {
+    if (!_canPlayAudio) {
       return;
     }
     if (_audioReady) {
@@ -315,11 +403,32 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     }
   }
 
+  void _emitRotateFeedback() {
+    if (!_canPlayAudio) return;
+    if (_bgmPlayer.state != PlayerState.playing) {
+      unawaited(_syncBgmWithSound());
+    }
+    if (_audioReady) {
+      unawaited(_playSfx(_rotateSfxBytes ?? _tapSfxBytes, volume: 0.42));
+    } else {
+      unawaited(SystemSound.play(SystemSoundType.click));
+    }
+  }
+
+  void _emitInvalidFeedback() {
+    if (!_canPlayAudio) return;
+    if (_audioReady) {
+      unawaited(_playSfx(_invalidSfxBytes ?? _tapSfxBytes, volume: 0.44));
+    } else {
+      unawaited(SystemSound.play(SystemSoundType.alert));
+    }
+  }
+
   void _emitLiftFeedback() {
     if (_canPlayAudio && _bgmPlayer.state != PlayerState.playing) {
       unawaited(_syncBgmWithSound());
     }
-    if (_soundEnabled) {
+    if (_canPlayAudio) {
       if (_audioReady) {
         unawaited(_playSfx(_liftSfxBytes, volume: 0.52));
       } else {
@@ -332,7 +441,7 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
   }
 
   void _emitPlaceFeedback() {
-    if (_soundEnabled) {
+    if (_canPlayAudio) {
       if (_audioReady) {
         unawaited(_playSfx(_placeSfxBytes, volume: 0.50));
       } else {
@@ -345,7 +454,7 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
   }
 
   void _emitBombFeedback() {
-    if (_soundEnabled) {
+    if (_canPlayAudio) {
       if (_audioReady && _bombSfxBytes != null) {
         unawaited(_playSfx(_bombSfxBytes, volume: 0.90));
       } else {
@@ -361,23 +470,21 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     required int clearedCount,
     required int streakCount,
   }) {
-    if (_soundEnabled) {
+    if (_canPlayAudio) {
       if (_audioReady) {
         Uint8List? selectedBytes = _clearSfxBytes;
-        double volume = 0.54;
+        double volume = 0.54 + min(clearedCount - 1, 3) * 0.025;
 
-        if (clearedCount >= 2) {
+        // Tiếng x2/x3/x4 theo cùng chuỗi đang hiển thị, kể cả khi chỉ xóa
+        // một hàng sau hai lượt chưa xóa. Chuỗi cao hơn dùng tiếng x5.
+        final int comboLevel = min(5, max(2, streakCount));
+        if (_comboSfxLevels.isNotEmpty && streakCount >= 2) {
           final int comboIndex = min(
-            max(clearedCount + streakCount - 3, 0),
+            comboLevel - 2,
             _comboSfxLevels.length - 1,
           );
-          if (_comboSfxLevels.isNotEmpty) {
-            selectedBytes = _comboSfxLevels[comboIndex];
-            volume = 0.58 + min(streakCount, 4) * 0.01;
-          }
-        } else if (streakCount >= 2) {
-          selectedBytes = _streakSfxBytes ?? _clearSfxBytes;
-          volume = 0.50;
+          selectedBytes = _comboSfxLevels[comboIndex];
+          volume = 0.54 + min(comboLevel, 5) * 0.015;
         }
 
         unawaited(
@@ -392,30 +499,56 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     }
   }
 
+  void _emitStreakBreakFeedback() {
+    if (!_canPlayAudio) return;
+    if (_audioReady) {
+      unawaited(_playSfx(_streakBreakSfxBytes, volume: 0.42));
+    } else {
+      unawaited(SystemSound.play(SystemSoundType.alert));
+    }
+  }
+
+  void _emitReviveFeedback() {
+    if (!_canPlayAudio) return;
+    if (_audioReady) {
+      unawaited(_playSfx(_reviveSfxBytes ?? _clearSfxBytes, volume: 0.60));
+    } else {
+      unawaited(SystemSound.play(SystemSoundType.alert));
+    }
+  }
+
+  void _emitGameOverFeedback() {
+    if (!_canPlayAudio) return;
+    if (_audioReady) {
+      unawaited(_playSfx(_gameOverSfxBytes, volume: 0.56));
+    } else {
+      unawaited(SystemSound.play(SystemSoundType.alert));
+    }
+  }
+
   void _emitBestScoreFeedback() {
-    if (!_soundEnabled) {
+    if (!_canPlayAudio) {
       return;
     }
     if (_audioReady) {
-      unawaited(_playSfx(_bestScoreSfxBytes, volume: 0.60));
+      unawaited(_playSfx(_bestScoreSfxBytes, volume: 0.50));
       return;
     }
     unawaited(SystemSound.play(SystemSoundType.alert));
   }
 
-  void _showComboBurst(int clearedCount) {
-    if (clearedCount <= 0) {
+  void _showComboBurst(int comboLevel) {
+    if (comboLevel < 2) {
       return;
     }
-    final level = min(4, max(2, clearedCount));
     const colors = <Color>[
       Color(0xFF9DE7FF),
       Color(0xFFC3B6F6),
       Color(0xFFE9C9A2),
     ];
     _showFloatingMessage(
-      L10nService().format('soul_block_combo', {'level': level}),
-      color: colors[min(level - 2, colors.length - 1)],
+      L10nService().format('soul_block_combo', {'level': comboLevel}),
+      color: colors[min(comboLevel - 2, colors.length - 1)],
     );
   }
 

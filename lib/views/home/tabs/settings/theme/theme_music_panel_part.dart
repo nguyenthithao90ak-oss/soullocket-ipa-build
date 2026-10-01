@@ -30,6 +30,14 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
   }
 
   Future<void> _pickAndStoreMultipleMusicFilesLocally() async {
+    if (_isLoading) return;
+    final houseId = _houseId;
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    bool scopeIsCurrent() =>
+        mounted &&
+        _houseId == houseId &&
+        ownerUid != null &&
+        FirebaseAuth.instance.currentUser?.uid == ownerUid;
     if (_playlist.length >= 5) {
       _showToast(context.tr('p7_music_limit_reached'), success: false);
       return;
@@ -39,7 +47,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
     final pickedFiles = await _storageService.pickMultipleMusicFiles(
       maxFiles: maxAllowed,
     );
-    if (pickedFiles.isEmpty) {
+    if (pickedFiles.isEmpty || !scopeIsCurrent()) {
       return;
     }
 
@@ -47,6 +55,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
     try {
       bool anyCloudSynced = false;
       for (final picked in pickedFiles) {
+        if (!scopeIsCurrent()) throw StateError('Music upload scope changed');
         if (_playlist.length >= 5) break;
 
         final rawFileName = picked.name.isNotEmpty
@@ -58,25 +67,39 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
             ? rawFileName.trim()
             : _deriveMusicTitle(localPath);
 
-        final track = MusicTrack(url: localPath, title: title, type: type);
-        _playlist.add(track);
+        var track = MusicTrack(url: localPath, title: title, type: type);
 
-        if (_isVipActive) {
+        if (_isVipActive && (houseId ?? '').isNotEmpty) {
           try {
             final localFile = File(localPath);
             if (await localFile.exists()) {
               CloudflareR2Service.instance.init();
               final remoteUrl = await CloudflareR2Service.instance.uploadFile(
                 localFile,
-                folderPath: 'music/${_houseId ?? 'unknown'}',
+                folderPath: 'music/$houseId',
+                contentType: _storageService.detectContentType(
+                  rawFileName,
+                  fallback: 'application/octet-stream',
+                ),
               );
               if (remoteUrl != null) {
+                track = MusicTrack(url: remoteUrl, title: title, type: type);
                 anyCloudSynced = true;
               }
             }
           } catch (e) {
-            debugPrint('Music R2 upload failed: $e');
+            debugPrint('Music R2 upload failed: ${e.runtimeType}');
           }
+        }
+        if (!scopeIsCurrent()) throw StateError('Music upload scope changed');
+        _playlist.add(track);
+        final prefs = await SharedPreferences.getInstance();
+        if (!scopeIsCurrent()) throw StateError('Music upload scope changed');
+        if (!await prefs.setString(
+          'il_local_music_playlist',
+          jsonEncode(_playlist.map((entry) => entry.toJson()).toList()),
+        )) {
+          throw StateError('Music playlist save failed');
         }
       }
 
@@ -85,6 +108,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
         'il_local_music_playlist',
         jsonEncode(_playlist.map((e) => e.toJson()).toList()),
       );
+      if (!scopeIsCurrent()) throw StateError('Music upload scope changed');
       await _saveMusicSettingsToFirebase();
       await MusicService().reloadPlaylist();
 
@@ -116,10 +140,6 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
 
     _playlist.removeAt(index);
 
-    if (MusicService.isLocalAudioPath(track.url) && !track.isDefault) {
-      await _storageService.deleteLocalFile(track.url);
-    }
-
     if (_playlist.isEmpty) {
       _playlist = [MusicService.defaultTrack];
     }
@@ -130,6 +150,9 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
     );
 
     await _saveMusicSettingsToFirebase();
+    if (MusicService.isLocalAudioPath(track.url) && !track.isDefault) {
+      await _storageService.deleteLocalFile(track.url);
+    }
     await MusicService().reloadPlaylist();
 
     if (!mounted) return;
@@ -140,17 +163,30 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
   Future<void> _saveMusicSettingsToFirebase() async {
     final houseId = (_houseId ?? '').trim();
     if (houseId.isEmpty) return;
+    final sharedPlaylist = _playlist
+        .where(
+          (track) =>
+              track.isDefault || Uri.tryParse(track.url)?.scheme == 'https',
+        )
+        .toList();
 
     final updates = <String, dynamic>{
-      'musicPlaylist': jsonEncode(_playlist.map((e) => e.toJson()).toList()),
+      'musicPlaylist': jsonEncode(
+        sharedPlaylist.map((track) => track.toJson()).toList(),
+      ),
       'musicUpdatedAt': ServerValue.timestamp,
     };
 
-    if (_playlist.isNotEmpty) {
-      updates['musicUrl'] = _playlist.first.url;
-      updates['musicTitle'] = _playlist.first.title;
-      updates['musicType'] = _playlist.first.type;
-      updates['musicSyncMode'] = _isVipActive ? 'cloud' : 'local';
+    if (sharedPlaylist.isNotEmpty) {
+      updates['musicUrl'] = sharedPlaylist.first.url;
+      updates['musicTitle'] = sharedPlaylist.first.title;
+      updates['musicType'] = sharedPlaylist.first.type;
+      updates['musicSyncMode'] =
+          sharedPlaylist.any(
+            (track) => Uri.tryParse(track.url)?.scheme == 'https',
+          )
+          ? 'cloud'
+          : 'local';
     } else {
       updates['musicUrl'] = '';
       updates['musicTitle'] = '';
@@ -158,13 +194,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
       updates['musicSyncMode'] = 'local';
     }
 
-    await _dbRef.child('houses/$houseId/settings').update(updates).catchError((
-      error,
-    ) {
-      debugPrint(
-        '[SuppressedError] lib/views/home/tabs/settings/theme/theme_music_panel_part.dart: $error',
-      );
-    });
+    await _dbRef.child('houses/$houseId/settings').update(updates);
   }
 
   Widget _buildActiveTrackCard() {

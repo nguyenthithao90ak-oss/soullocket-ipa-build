@@ -60,6 +60,7 @@ import 'package:soullocket_app/utils/services/house_settings_service.dart';
 // import 'package:soullocket_app/utils/services/album_service.dart';
 import 'package:soullocket_app/utils/services/notification_service.dart';
 import 'package:soullocket_app/utils/services/storage/storage_service.dart';
+import 'package:soullocket_app/utils/services/storage/storage_media_commit.dart';
 import 'package:soullocket_app/utils/services/utilities/note_service.dart';
 import 'package:soullocket_app/utils/services/pending_upload_service.dart';
 import 'package:soullocket_app/utils/sl_notice.dart';

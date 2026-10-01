@@ -691,7 +691,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                   ),
                 ),
                 child: Text(
-                  'COMBO x$_combo',
+                  L10nService().format('soul_block_combo', {'level': _combo}),
                   style: SLTheme.quicksand(
                     fontSize: ultraCompact
                         ? 8.6

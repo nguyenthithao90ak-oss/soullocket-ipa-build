@@ -1,0 +1,120 @@
+{
+  "title": "Neon Memory",
+  "bpm": 102,
+  "source": "tools/generate_soul_block_audio.py",
+  "sampled_recordings": false,
+  "assets": [
+    {
+      "file": "neon_memory.mp3",
+      "duration": 75.29412698412699,
+      "peak_dbfs": -2.85,
+      "bytes": 1205916,
+      "sha256": "f2920ee6163c94dbb84dcdfccbe95e687b5c5aea96065c0bd1fac2f8523e6349"
+    },
+    {
+      "file": "tap.wav",
+      "duration": 0.08997732426303855,
+      "peak_dbfs": -13.84,
+      "bytes": 4012,
+      "sha256": "10f4e5fbfc1fc665f76230dc0574b40dc964569743e2959ce416f5ed70f2f036"
+    },
+    {
+      "file": "lift.wav",
+      "duration": 0.16,
+      "peak_dbfs": -10.15,
+      "bytes": 7100,
+      "sha256": "966ec2cc34497083ced1e530faf470cc47f5ef0e581a7b81de7dc7a76f993c65"
+    },
+    {
+      "file": "place.wav",
+      "duration": 0.18,
+      "peak_dbfs": -7.31,
+      "bytes": 7982,
+      "sha256": "7a2153c609c63688c35068596de3d21d5c4df07210f713bba1ecbb86b5e9ed15"
+    },
+    {
+      "file": "rotate.wav",
+      "duration": 0.2,
+      "peak_dbfs": -8.54,
+      "bytes": 8864,
+      "sha256": "f92f63f8da42cb59f44941f5803969473244fb9673bc92b48cdc676f7abc331e"
+    },
+    {
+      "file": "invalid.wav",
+      "duration": 0.16,
+      "peak_dbfs": -14.14,
+      "bytes": 7100,
+      "sha256": "926b3e954ffe3bfaf7b94179484b6e6a77aa32268ea0cb1603c19fbf5045faf3"
+    },
+    {
+      "file": "clear.wav",
+      "duration": 0.52,
+      "peak_dbfs": -5.37,
+      "bytes": 22976,
+      "sha256": "4227352630af947790ff1da78db0f349c23c9d87235559caf5b7ea060adcc63d"
+    },
+    {
+      "file": "bomb.wav",
+      "duration": 0.68,
+      "peak_dbfs": -5.19,
+      "bytes": 30032,
+      "sha256": "802e00441262cf2eb2bc5f5afe4d65c4abf5f96ed262603e6fb03142a7027b87"
+    },
+    {
+      "file": "combo_x2.wav",
+      "duration": 0.56,
+      "peak_dbfs": -5.19,
+      "bytes": 24740,
+      "sha256": "2eefb4f0b4f850040b5b199bc7de64031779f4a61f6ef2e41815d55bdfa10cd8"
+    },
+    {
+      "file": "combo_x3.wav",
+      "duration": 0.6499773242630386,
+      "peak_dbfs": -5.19,
+      "bytes": 28708,
+      "sha256": "59a32c67c42785b2aad8680d44124904d7fa0e8e717a702f7f4854a7faa74b70"
+    },
+    {
+      "file": "combo_x4.wav",
+      "duration": 0.76,
+      "peak_dbfs": -5.19,
+      "bytes": 33560,
+      "sha256": "0918bdefb52e7540862e9c7c944d631e8f516b1fb64a93ee4b4df3a11e77718a"
+    },
+    {
+      "file": "combo_x5.wav",
+      "duration": 0.86,
+      "peak_dbfs": -5.19,
+      "bytes": 37970,
+      "sha256": "c27eadc5b0e7388d02e6d742b262976c2c7376a3d1f7afc24497fb7c87939133"
+    },
+    {
+      "file": "streak_break.wav",
+      "duration": 0.32,
+      "peak_dbfs": -11.07,
+      "bytes": 14156,
+      "sha256": "e82d7b457d273ff8cf82790c370ea41546eaa1638b1fa79272103a4afcb01b07"
+    },
+    {
+      "file": "revive.wav",
+      "duration": 0.9500226757369614,
+      "peak_dbfs": -5.19,
+      "bytes": 41940,
+      "sha256": "79d936c89e9d525e5195e59c91a46fe107ed1860dd0043d799642ee1efc9f40b"
+    },
+    {
+      "file": "game_over.wav",
+      "duration": 1.0499773242630386,
+      "peak_dbfs": -7.57,
+      "bytes": 46348,
+      "sha256": "9d33103be88ea4e6a1e7a06902bf4662195255c3762545ce89b587aba2883d6b"
+    },
+    {
+      "file": "best_score.wav",
+      "duration": 1.0499773242630386,
+      "peak_dbfs": -5.19,
+      "bytes": 46348,
+      "sha256": "780f806e818e0b08b02a8da59a85f4a558c80d2db9eebfa0b296bbbb42c775e6"
+    }
+  ]
+}

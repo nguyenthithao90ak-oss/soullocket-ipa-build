@@ -1043,7 +1043,7 @@ class StorageService {
     );
   }
 
-  Future<String> uploadFileToPath(
+  Future<StorageUploadResult> uploadFileToPath(
     String storagePath,
     XFile file, {
     String? contentType,
@@ -1057,7 +1057,7 @@ class StorageService {
           originalFileName.isNotEmpty ? originalFileName : storagePath,
           fallback: 'application/octet-stream',
         );
-    return _rawUploadHelper.uploadFileToPath(
+    return _rawUploadHelper.uploadFileResult(
       storagePath: safeStoragePath,
       file: file,
       resolvedContentType: resolvedContentType,
@@ -1131,32 +1131,21 @@ class StorageService {
   }) async {
     _requireCurrentUid();
     try {
-      final nowMs = DateTime.now().millisecondsSinceEpoch;
-      const ext = '.png';
       final currentUid = _requireCurrentUid();
-      final path = 'uploads/$currentUid/collage/$nowMs$ext';
+      final path =
+          'uploads/$currentUid/collage/${DateTime.now().microsecondsSinceEpoch}_${_uploadSequence++}.png';
       final normalizedStoragePath = _normalizeStorageWritePath(path);
-
-      final tempDir = await getTemporaryDirectory();
-      final tempPath = p.join(tempDir.path, 'collage_${nowMs}_$fileName');
-      final tempFile = File(tempPath);
-      try {
-        await tempFile.writeAsBytes(bytes, flush: true);
-        CloudflareR2Service.instance.init();
-        final r2Url = await CloudflareR2Service.instance.uploadFile(
-          tempFile,
-          folderPath: 'uploads/$currentUid/collage',
-        );
-        if (r2Url == null || r2Url.isEmpty) {
-          throw Exception('R2 upload thất bại.');
-        }
-        return <String, dynamic>{
-          'downloadUrl': r2Url,
-          'storagePath': normalizedStoragePath,
-        };
-      } finally {
-        if (await tempFile.exists()) await tempFile.delete();
-      }
+      final result = await _rawUploadHelper.uploadFileResult(
+        storagePath: normalizedStoragePath,
+        file: XFile.fromData(bytes, name: 'collage.png', mimeType: 'image/png'),
+        resolvedContentType: 'image/png',
+        rejectVideoUpload: _rejectVideoUpload,
+        purgeLegacyCache: _purgeLegacyImgBBKeyCache,
+      );
+      return <String, dynamic>{
+        'downloadUrl': result.downloadUrl,
+        'storagePath': result.storagePath,
+      };
     } catch (e) {
       debugPrint('Collage R2 upload error: $e');
       throw Exception('Không thể tải ảnh ghép lên đám mây.');
@@ -1214,6 +1203,7 @@ class StorageService {
     String houseId,
     String target,
     XFile file, {
+    String role = '',
     int minWidth = 960,
     int minHeight = 960,
     int quality = 62,
@@ -1234,6 +1224,17 @@ class StorageService {
       tempPrefix: 'sl_public',
       errorLabel: 'Public image',
       mapResult: mapPublicStorageUploadResult,
+      finalizeSession: (session) async {
+        final result = await finalizePublicImageUpload(
+          houseId: houseId,
+          sessionId: session['sessionId']?.toString() ?? '',
+          target: target,
+          role: role,
+        );
+        if (result['ok'] != true) {
+          throw StateError('Public image finalize was not confirmed');
+        }
+      },
       errorMessage: 'Không thể tải ảnh công khai lên máy chủ.',
       onProgress: onProgress,
     );
@@ -1460,107 +1461,6 @@ class StorageService {
     );
   }
 
-  /// Upload ảnh trực tiếp lên R2 thay vì dùng Signed URL (Cloud Function).
-  /// Dùng cho tất cả các loại ảnh: public, chat, memory, album, gift, love card, secret vault.
-  Future<StorageUploadResult?> _uploadDirectToR2({
-    required XFile file,
-    required String folderName,
-    int minWidth = 960,
-    int minHeight = 960,
-    int quality = 62,
-    ValueChanged<double>? onProgress,
-    Future<void> Function(int bytes)? beforeUpload,
-  }) async {
-    try {
-      final nowMs = DateTime.now().millisecondsSinceEpoch;
-      final originalFileName = file.name.isNotEmpty ? file.name : file.path;
-      String fileExtension = p.extension(originalFileName).toLowerCase();
-      XFile uploadFile = file;
-      String? tempCompressedPath;
-
-      final contentType = detectContentType(originalFileName);
-      final isImage = contentType.startsWith('image/');
-
-      if (!kIsWeb &&
-          file.path.isNotEmpty &&
-          isImage &&
-          fileExtension != '.gif') {
-        try {
-          if (onProgress != null) onProgress(0.05);
-          final tempDir = await getTemporaryDirectory();
-          tempCompressedPath = p.join(
-            tempDir.path,
-            'r2_${nowMs}_${DateTime.now().microsecondsSinceEpoch}.webp',
-          );
-          if (onProgress != null) onProgress(0.1);
-          final targetWidth = minWidth < 1080 ? 1080 : minWidth;
-          final targetHeight = minHeight < 1920 ? 1920 : minHeight;
-          final targetQuality = quality < 70 ? 70 : quality;
-
-          final compressedFile = await FlutterImageCompress.compressAndGetFile(
-            file.path,
-            tempCompressedPath,
-            minWidth: targetWidth,
-            minHeight: targetHeight,
-            quality: targetQuality,
-            format: CompressFormat.webp,
-          );
-          if (onProgress != null) onProgress(0.35);
-          if (compressedFile != null) {
-            uploadFile = compressedFile;
-            fileExtension = '.webp';
-          } else {
-            tempCompressedPath = null;
-          }
-        } catch (error) {
-          debugPrint('[StorageService] Nén ảnh thất bại, dùng tệp gốc: $error');
-          tempCompressedPath = null;
-        }
-      }
-
-      if (fileExtension.isEmpty) {
-        fileExtension = p.extension(uploadFile.name).toLowerCase();
-      }
-      if (fileExtension.isEmpty) {
-        fileExtension = '.jpg';
-      }
-
-      final currentUid = _requireCurrentUid();
-      final path =
-          'uploads/$currentUid/$folderName/${DateTime.now().microsecondsSinceEpoch}_${_uploadSequence++}$fileExtension';
-
-      if (onProgress != null) onProgress(0.4);
-
-      final finalContentType = detectContentType(path);
-
-      try {
-        return await _rawUploadHelper.uploadFileResult(
-          storagePath: path,
-          file: uploadFile,
-          resolvedContentType: finalContentType,
-          rejectVideoUpload: _rejectVideoUpload,
-          purgeLegacyCache: _purgeLegacyImgBBKeyCache,
-          beforeUpload: beforeUpload,
-          onProgress: onProgress != null
-              ? (p) => onProgress(0.4 + p * 0.6)
-              : null,
-        );
-      } finally {
-        if (tempCompressedPath != null) {
-          try {
-            final f = File(tempCompressedPath);
-            if (await f.exists()) await f.delete();
-          } catch (_) {
-            // Lỗi dọn cache không được biến upload thành công thành thất bại.
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint('R2 upload error ($folderName): $e');
-      rethrow;
-    }
-  }
-
   Future<StorageUploadResult?> _uploadSignedImageWithCompression({
     required XFile file,
     required Future<Map<String, dynamic>> Function(
@@ -1575,20 +1475,146 @@ class StorageService {
     required String errorLabel,
     required StorageUploadResult Function(Map<String, dynamic> session)
     mapResult,
+    Future<void> Function(Map<String, dynamic> session)? finalizeSession,
     required String errorMessage,
     ValueChanged<double>? onProgress,
     Future<void> Function(int bytes)? beforeUpload,
-  }) {
-    // CHUYỂN SANG R2: bỏ qua Signed URL, upload trực tiếp qua R2
-    return _uploadDirectToR2(
-      file: file,
-      folderName: tempPrefix,
-      minWidth: minWidth,
-      minHeight: minHeight,
-      quality: quality,
-      onProgress: onProgress,
-      beforeUpload: beforeUpload,
-    );
+  }) async {
+    String? tempCompressedPath;
+    try {
+      final originalFileName = file.name.isNotEmpty ? file.name : file.path;
+      var fileExtension = p.extension(originalFileName).toLowerCase();
+      var contentType = detectContentType(
+        originalFileName,
+        fallback: 'image/jpeg',
+      );
+      XFile uploadFile = file;
+
+      if (!kIsWeb &&
+          file.path.isNotEmpty &&
+          contentType.startsWith('image/') &&
+          fileExtension != '.gif') {
+        try {
+          onProgress?.call(0.05);
+          final tempDir = await getTemporaryDirectory();
+          tempCompressedPath = p.join(
+            tempDir.path,
+            '${tempPrefix}_${DateTime.now().microsecondsSinceEpoch}.webp',
+          );
+          final compressed = await FlutterImageCompress.compressAndGetFile(
+            file.path,
+            tempCompressedPath,
+            minWidth: minWidth,
+            minHeight: minHeight,
+            quality: quality,
+            format: CompressFormat.webp,
+          );
+          if (compressed != null) {
+            uploadFile = compressed;
+            fileExtension = '.webp';
+            contentType = 'image/webp';
+          } else {
+            tempCompressedPath = null;
+          }
+        } catch (error) {
+          tempCompressedPath = null;
+          debugPrint(
+            '$errorLabel compression skipped: ${AppErrorMapper.resolve(error).message}',
+          );
+        }
+      }
+
+      if (fileExtension.isEmpty) {
+        fileExtension = p.extension(uploadFile.name).toLowerCase();
+      }
+      if (fileExtension.isEmpty) fileExtension = '.jpg';
+      final preferredFileName =
+          '${p.basenameWithoutExtension(originalFileName.isEmpty ? 'image' : originalFileName)}$fileExtension';
+      final bytes = await uploadFile.readAsBytes();
+      if (bytes.isEmpty) throw StateError('Empty upload file');
+      await beforeUpload?.call(bytes.length);
+      onProgress?.call(0.4);
+
+      final session = await sessionBuilder(contentType, preferredFileName);
+      final uploadUrl = session['uploadUrl']?.toString().trim() ?? '';
+      final rawHeaders = session['headers'];
+      if (uploadUrl.isEmpty || rawHeaders is! Map) {
+        throw StateError('Invalid upload session');
+      }
+      final uploadUri = Uri.tryParse(uploadUrl);
+      if (uploadUri == null ||
+          uploadUri.scheme != 'https' ||
+          uploadUri.port != 443 ||
+          uploadUri.userInfo.isNotEmpty ||
+          uploadUri.hasFragment ||
+          !(uploadUri.host == 'storage.googleapis.com' ||
+              uploadUri.host.endsWith('.storage.googleapis.com'))) {
+        throw StateError('Invalid upload destination');
+      }
+      final headers = <String, String>{};
+      for (final entry in rawHeaders.entries) {
+        if (entry.key is! String || entry.value is! String) {
+          throw StateError('Invalid upload headers');
+        }
+        final name = (entry.key as String).toLowerCase();
+        final value = entry.value as String;
+        if (RegExp(r'[\x00-\x1f\x7f]').hasMatch(name + value) ||
+            headers.containsKey(name)) {
+          throw StateError('Invalid upload headers');
+        }
+        if (name == 'content-type' || name.startsWith('x-goog-meta-')) {
+          headers[name] = value;
+        }
+      }
+      if (headers['content-type'] != contentType) {
+        throw StateError('Upload content type mismatch');
+      }
+
+      final request = http.Request('PUT', uploadUri)
+        ..followRedirects = false
+        ..headers.addAll(headers)
+        ..bodyBytes = bytes;
+      final client = http.Client();
+      try {
+        final response = await client
+            .send(request)
+            .then(http.Response.fromStream)
+            .timeout(const Duration(minutes: 2));
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          throw StateError('Upload failed (${response.statusCode})');
+        }
+      } finally {
+        client.close();
+      }
+
+      await finalizeSession?.call(session);
+      final mapped = mapResult(session);
+      onProgress?.call(1);
+      return StorageUploadResult(
+        downloadUrl: mapped.downloadUrl,
+        storagePath: mapped.storagePath,
+        sessionId: mapped.sessionId,
+        expiresAt: mapped.expiresAt,
+        dailyLimit: mapped.dailyLimit,
+        remainingToday: mapped.remainingToday,
+        blurHash: mapped.blurHash,
+        width: mapped.width,
+        height: mapped.height,
+        uploadedBytes: bytes.length,
+      );
+    } catch (error) {
+      debugPrint(
+        '$errorLabel upload failed: ${AppErrorMapper.resolve(error).message}',
+      );
+      throw Exception(errorMessage);
+    } finally {
+      if (tempCompressedPath != null) {
+        try {
+          final tempFile = File(tempCompressedPath);
+          if (await tempFile.exists()) await tempFile.delete();
+        } catch (_) {}
+      }
+    }
   }
 
   Future<StorageUploadResult?> uploadSecretVaultImage(

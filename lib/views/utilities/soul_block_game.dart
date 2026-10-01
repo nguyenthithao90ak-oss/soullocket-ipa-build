@@ -2,7 +2,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -15,7 +14,6 @@ import '../../core/service_locator.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_config.dart';
@@ -25,7 +23,6 @@ import 'package:soullocket_app/widgets/consent_ad_view.dart';
 import '../../utils/services/house_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../premium/premium_store_screen.dart';
-import '../../utils/services/games/game_download_service.dart';
 import '../../utils/services/games/soul_block_memory_service.dart';
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 
@@ -113,6 +110,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
   late final List<AudioPlayer> _sfxPlayers;
   late final AudioPlayer _bgmPlayer;
+  late final Future<void> _audioInitFuture;
   late final AnimationController _playPulseController;
   late final AnimationController _shakeController;
   late final AnimationController _flashController;
@@ -171,6 +169,9 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   @override
   int _combo = 0;
   int _streak = 0;
+  // Cho phép tối đa hai lượt đặt không xóa hàng/cột mà vẫn giữ chuỗi.
+  // Lượt thứ ba liên tiếp không xóa hàng/cột sẽ phá chuỗi.
+  int _comboMisses = 0;
   @override
   int _turn = 0;
   @override
@@ -181,6 +182,10 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   int _currentSessionId = 0;
   int _sfxPlayerIndex = 0;
   final List<int> _sfxRequests = List<int>.filled(4, 0);
+  final List<Future<void>> _sfxQueues = List<Future<void>>.generate(
+    4,
+    (_) => Future<void>.value(),
+  );
   int? _pausedAtMs;
   DateTime? _autoTrayShuffleNextAt;
 
@@ -190,13 +195,18 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   Uint8List? _tapSfxBytes;
   Uint8List? _liftSfxBytes;
   Uint8List? _placeSfxBytes;
+  Uint8List? _rotateSfxBytes;
+  Uint8List? _invalidSfxBytes;
   Uint8List? _clearSfxBytes;
   Uint8List? _bombSfxBytes;
-  Uint8List? _streakSfxBytes;
+  Uint8List? _streakBreakSfxBytes;
+  Uint8List? _reviveSfxBytes;
+  Uint8List? _gameOverSfxBytes;
   Uint8List? _bestScoreSfxBytes;
   List<Uint8List> _comboSfxLevels = <Uint8List>[];
 
   bool _audioReady = false;
+  bool _audioDisposed = false;
   bool _audioSettingsLoaded = false;
   bool _bgmSourceReady = false;
   Future<void> _bgmSyncQueue = Future<void>.value();
@@ -208,9 +218,13 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   bool _isGameOver = false;
   bool _isResolvingGameOver = false;
   int _reviveAdsUsed = 0;
+  // ignore: library_private_types_in_public_api
+  int get maxReviveAdsPerRun => _maxReviveAdsPerRun;
   bool _isReviving = false;
   bool _isRestarting = false;
   bool _isShowingFullscreenAd = false;
+  bool _gameOverSfxPlayed = false;
+  bool _bestScoreSfxPlayed = false;
   bool _isOpeningGameplay = false;
   bool _autoTrayShuffleEnabled = false;
   bool _isPremiumUser = false;
@@ -278,7 +292,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
           }
         });
 
-    unawaited(_initAudio());
+    _audioInitFuture = _initAudio();
     _adMob.adRevision.addListener(_onBannerPrivacyChanged);
     final photoUid = FirebaseAuth.instance.currentUser?.uid;
     _photoAuthSubscription = FirebaseAuth.instance.authStateChanges().listen((
@@ -305,10 +319,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     _floatingController.dispose();
     _explosionController.dispose();
     _memoryBurstController.dispose();
-    for (final AudioPlayer player in _sfxPlayers) {
-      player.dispose();
-    }
-    _bgmPlayer.dispose();
+    unawaited(_disposeAudio());
     _photoRequest++;
     unawaited(_photoAuthSubscription?.cancel());
     _boardPhoto?.dispose();
@@ -319,15 +330,14 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.hidden ||
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
       _appActive = false;
       _pausedAtMs = DateTime.now().millisecondsSinceEpoch;
       _autoTrayShuffleTimer?.cancel();
       unawaited(_syncBgmWithSound());
-      for (final player in _sfxPlayers) {
-        unawaited(player.pause());
-      }
+      unawaited(_stopSfx());
       return;
     }
 
@@ -362,7 +372,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     }
 
     _isShowingFullscreenAd = true;
-    await _syncBgmWithSound();
+    await Future.wait([_stopSfx(), _syncBgmWithSound()]);
     try {
       await _adMob.showInterstitialAd();
     } finally {
@@ -404,14 +414,9 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _soundEnabled = value;
     });
     final sync = _syncBgmWithSound();
-    if (!value) {
-      for (var i = 0; i < _sfxPlayers.length; i++) {
-        _sfxRequests[i]++;
-        unawaited(_sfxPlayers[i].stop());
-      }
-    }
+    final sfxSync = value ? Future<void>.value() : _stopSfx();
     await _persistSetting(_soundEnabledKey, value);
-    await sync;
+    await Future.wait([sync, sfxSync]);
     if (value) {
       _emitClickFeedback();
     }
@@ -584,6 +589,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   }
 
   void _returnToMenuFromSettings() {
+    if (_isShowingFullscreenAd || _isReviving || _isRestarting) return;
     _emitClickFeedback();
     setState(() {
       _clearDragVisualState(notify: false);
@@ -606,7 +612,10 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   }
 
   void _restartCurrentRunFromSettings() {
-    if (_isRestarting || _isOpeningGameplay) {
+    if (_isRestarting ||
+        _isOpeningGameplay ||
+        _isReviving ||
+        _isShowingFullscreenAd) {
       return;
     }
     _emitClickFeedback();
@@ -652,9 +661,11 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     final oldTurn = _turn;
     final oldCombo = _combo;
     final oldLines = _clearedLines;
+    final oldComboMisses = _comboMisses;
     try {
       _turn = 0;
       _combo = 0;
+      _comboMisses = 0;
       _clearedLines = 0;
       final nextBoard = _createOpeningBoard();
       final nextTray = _buildSmartBatch(nextBoard);
@@ -667,6 +678,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     } finally {
       _turn = oldTurn;
       _combo = oldCombo;
+      _comboMisses = oldComboMisses;
       _clearedLines = oldLines;
     }
   }
@@ -695,7 +707,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   }) {
     final _PreparedSoulRun nextRun = preparedRun ?? _prepareFreshRun();
     final int nextGamesSincePhotoChange = min(2, _newGamesSincePhotoChange + 1);
-    final bool shouldRotatePhoto = nextGamesSincePhotoChange >= 2;
+    final bool shouldRotatePhoto =
+        _photoNeedsNext || _newGamesSincePhotoChange >= 2;
     _memoryBurstController.stop();
     _explosionController.stop();
     _floatingController.stop();
@@ -711,6 +724,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _score = 0;
       _combo = 0;
       _streak = 0;
+      _comboMisses = 0;
       _turn = 0;
       _clearedLines = 0;
       _scorePulseTick = 0;
@@ -728,6 +742,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _isBusy = false;
       _isGameOver = nextRun.tray.isEmpty || nextRun.recommendedMove == null;
       _isResolvingGameOver = false;
+      _gameOverSfxPlayed = false;
+      _bestScoreSfxPlayed = false;
       _reviveAdsUsed = 0;
       _holdPiece = null;
       _draggingFromHold = false;
@@ -1169,7 +1185,10 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     Offset globalPosition, {
     bool fromHold = false,
   }) {
-    if (_isGameOver || _isBusy || _view != _SoulGameView.gameplay) {
+    if (_isGameOver ||
+        _isBusy ||
+        _isShowingFullscreenAd ||
+        _view != _SoulGameView.gameplay) {
       return;
     }
 
@@ -1285,6 +1304,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     final _SoulPieceOption? piece = _draggingPiece;
     _cancelDrag();
     if (piece != null && mounted) {
+      _emitInvalidFeedback();
       setState(() => _snapBackPieceId = piece.id);
       _markTrayVisualDirty();
       await Future<void>.delayed(const Duration(milliseconds: 170));
@@ -1386,12 +1406,13 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   }
 
   Future<void> _placePieceAt(_SoulPieceOption piece, int row, int col) async {
-    if (_isGameOver || _isBusy) {
+    if (_isGameOver || _isBusy || _isShowingFullscreenAd) {
       return;
     }
 
     final boardMask = _boardMask(_board);
     if (!_canPlace(boardMask, piece.template, row, col)) {
+      _emitInvalidFeedback();
       return;
     }
 
@@ -1465,8 +1486,23 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       gainedScore *= 2;
     }
     final nextScore = _score + gainedScore;
-    final nextCombo = clearedNow > 0 ? _combo + 1 : 0;
-    final nextStreak = clearedNow > 0 ? _streak + 1 : 0;
+    final nextComboMisses = clearedNow > 0 ? 0 : min(3, _comboMisses + 1);
+    final bool keepComboAfterMiss = nextComboMisses < 3;
+    final nextCombo = clearedNow > 0
+        ? _combo + 1
+        : keepComboAfterMiss
+        ? _combo
+        : 0;
+    final nextStreak = clearedNow > 0
+        ? _streak + 1
+        : keepComboAfterMiss
+        ? _streak
+        : 0;
+    final bool streakBrokenThisMove =
+        clearedNow == 0 &&
+        _comboMisses < 3 &&
+        nextComboMisses >= 3 &&
+        (_combo > 0 || _streak > 0);
     final bool beatBestThisMove =
         _score <= _bestScore && nextScore > _bestScore;
     final List<_SoulPieceOption> remainingTray;
@@ -1481,6 +1517,9 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _emitBombFeedback();
     } else {
       _emitPlaceFeedback();
+    }
+    if (streakBrokenThisMove) {
+      _emitStreakBreakFeedback();
     }
     if (piece.isBomb && bombClearedCells.isNotEmpty) {
       _showFloatingMessage(
@@ -1502,18 +1541,18 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     if (clearedNow > 0) {
       _emitClearFeedback(clearedCount: clearedNow, streakCount: nextStreak);
       _triggerScreenPulse();
-      if (clearedNow >= 2) {
-        _showComboBurst(clearedNow);
-      } else if (nextStreak >= 2) {
+      if (nextCombo >= 2) {
+        _showComboBurst(nextCombo);
+      } else if (clearedNow >= 2) {
         _showFloatingMessage(
-          L10nService().format('soul_block_chain', {'level': nextStreak}),
+          '${context.tr('soul_block_lines')}: $clearedNow',
           color: const Color(0xFF00C3FF),
         );
       }
     }
-    if (beatBestThisMove && clearedNow == 0 && !piece.isBomb) {
+    if (beatBestThisMove && !_bestScoreSfxPlayed) {
+      _bestScoreSfxPlayed = true;
       _emitBestScoreFeedback();
-      // Removed 'New Best!' floating message to reduce spam during gameplay.
     }
 
     setState(() {
@@ -1526,6 +1565,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _score = nextScore;
       _combo = nextCombo;
       _streak = nextStreak;
+      _comboMisses = nextComboMisses;
       _scorePulseTick += 1;
       _clearingRows = clearedRows.toSet();
       _clearingCols = clearedCols.toSet();
@@ -1633,10 +1673,15 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   }
 
   void _rotatePiece(_SoulPieceOption piece) {
-    if (_isGameOver || _isBusy || _draggingPiece != null) return;
+    if (_isGameOver ||
+        _isBusy ||
+        _isShowingFullscreenAd ||
+        _draggingPiece != null) {
+      return;
+    }
     final index = _tray.indexWhere((p) => p.id == piece.id);
     if (index < 0 && _holdPiece?.id != piece.id) return;
-    _emitClickFeedback();
+    _emitRotateFeedback();
     final rotated = _SoulPieceOption(
       id: piece.id,
       template: piece.template.rotate(),
@@ -1666,19 +1711,41 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   }
 
   Future<void> _handleGameOverTransition() async {
+    if (!mounted || !_isGameOver || _view != _SoulGameView.gameplay) return;
+    final sessionId = _currentSessionId;
+    bool isCurrent() =>
+        mounted &&
+        _currentSessionId == sessionId &&
+        _view == _SoulGameView.gameplay &&
+        _isGameOver;
     _cancelDrag();
-    _memoryBurstController.stop();
     _combo = 0;
     _streak = 0;
+    _comboMisses = 0;
     // Giữ nguyên trạng thái bàn trong lúc hiệu ứng nổ kết thúc để người chơi
     // nhìn thấy nút hồi sinh thay vì bị chuyển Game Over quá sớm.
-    if (mounted) {
-      setState(() {
-        _isResolvingGameOver = true;
-      });
+    setState(() {
+      _isResolvingGameOver = true;
+    });
+    final memoryDelay = _memoryBurstController.isAnimating
+        ? _memoryBurstController.duration ?? Duration.zero
+        : Duration.zero;
+    await Future<void>.delayed(
+      memoryDelay > _gameOverRevealDelay ? memoryDelay : _gameOverRevealDelay,
+    );
+    if (!isCurrent()) return;
+    if (!_gameOverSfxPlayed) {
+      _gameOverSfxPlayed = true;
+      _emitGameOverFeedback();
     }
-    await Future<void>.delayed(_gameOverRevealDelay);
-    await _persistCurrentRunScore();
+    try {
+      await _persistCurrentRunScore();
+    } catch (error) {
+      debugPrint(
+        'Soul Block score save failed: ${AppErrorMapper.resolve(error).message}',
+      );
+    }
+    if (!isCurrent()) return;
     _adMob.preloadSoulGameRewardedAd();
     if (_vibrationEnabled) {
       HapticFeedback.mediumImpact();
@@ -1692,6 +1759,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   }
 
   void _returnToMenuFromGameOver() {
+    if (_isShowingFullscreenAd || _isReviving || _isRestarting) return;
     _emitClickFeedback();
     unawaited(_clearSavedRun());
     setState(() {
@@ -1714,32 +1782,48 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   }
 
   Future<void> _restartAfterGameOver() async {
-    if (_isRestarting) {
+    if (!mounted ||
+        !_isGameOver ||
+        _view != _SoulGameView.gameplay ||
+        _isRestarting ||
+        _isReviving ||
+        _isResolvingGameOver ||
+        _isShowingFullscreenAd) {
       return;
     }
 
     _emitClickFeedback();
+    final sessionId = _currentSessionId;
     setState(() {
       _isRestarting = true;
+      _isShowingFullscreenAd = true;
     });
 
-    _isShowingFullscreenAd = true;
-    await _syncBgmWithSound();
     try {
+      await Future.wait([_stopSfx(), _syncBgmWithSound()]);
       await _adMob.showInterstitialAd();
+    } catch (error) {
+      debugPrint(
+        'Soul Block restart ad failed: ${AppErrorMapper.resolve(error).message}',
+      );
     } finally {
       _isShowingFullscreenAd = false;
       unawaited(_syncBgmWithSound());
     }
 
-    if (!mounted) {
+    if (!mounted ||
+        _currentSessionId != sessionId ||
+        _view != _SoulGameView.gameplay) {
       return;
     }
     _startNewGame(openGameplay: true);
   }
 
   Future<void> _reviveFromRewardedAd() async {
-    if (_isReviving ||
+    if (!mounted ||
+        !_isGameOver ||
+        _view != _SoulGameView.gameplay ||
+        _isReviving ||
         _isRestarting ||
         _isResolvingGameOver ||
         _isShowingFullscreenAd ||
@@ -1748,15 +1832,17 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     }
 
     _emitClickFeedback();
+    final int reviveSessionId = _currentSessionId;
     setState(() {
       _isReviving = true;
       _isShowingFullscreenAd = true;
     });
 
-    await _syncBgmWithSound();
-    bool rewarded = false;
+    SoulGameRewardedAdResult rewardResult =
+        SoulGameRewardedAdResult.unavailable;
     try {
-      rewarded = await _adMob.showSoulGameRewardedAd();
+      await Future.wait([_stopSfx(), _syncBgmWithSound()]);
+      rewardResult = await _adMob.showSoulGameRewardedAdResult();
     } catch (error) {
       debugPrint(
         'Soul Block rewarded revive failed: '
@@ -1776,11 +1862,44 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       return;
     }
 
+    // Không áp dụng phần thưởng vào một ván mới nếu người dùng rời màn hình
+    // hoặc trạng thái ván thay đổi trong lúc quảng cáo toàn màn hình mở.
+    if (_view != _SoulGameView.gameplay ||
+        _currentSessionId != reviveSessionId ||
+        _isRestarting) {
+      setState(() {
+        _isReviving = false;
+      });
+      return;
+    }
+
+    final bool rewarded =
+        rewardResult == SoulGameRewardedAdResult.rewarded ||
+        rewardResult == SoulGameRewardedAdResult.pro;
     if (!rewarded) {
       setState(() {
         _isReviving = false;
       });
-      _showSnackBar(context.tr('soul_block_revive_unavailable'));
+      final String message = switch (rewardResult) {
+        SoulGameRewardedAdResult.privacyDisabled => context.tr(
+          'privacy_ads_disabled',
+        ),
+        SoulGameRewardedAdResult.unsupported => context.tr(
+          'home_tinchnykhn_b04ead',
+        ),
+        SoulGameRewardedAdResult.cooldown => context.tr(
+          'soul_block_revive_cooldown',
+        ),
+        SoulGameRewardedAdResult.dismissed => context.tr(
+          'soul_block_revive_dismissed',
+        ),
+        SoulGameRewardedAdResult.busy => context.tr('soul_block_revive_busy'),
+        SoulGameRewardedAdResult.cancelled => context.tr(
+          'soul_block_revive_cancelled',
+        ),
+        _ => context.tr('soul_block_revive_unavailable'),
+      };
+      _showSnackBar(message);
       return;
     }
 
@@ -1805,36 +1924,49 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       }
     }
 
-    var nextTray = List<_SoulPieceOption>.from(_tray);
+    // Khay chỉ có ba ô. Mảnh cứu nguy phải nằm trong các ô đang hiển thị.
+    var nextTray = _tray.take(3).toList();
     var nextRecommended = _recommendMoveFor(nextBoard, [
       ...nextTray,
       ?_holdPiece,
     ]);
     if (nextRecommended == null) {
-      final rescuePieces = _buildSmartBatch(nextBoard);
-      if (rescuePieces.isNotEmpty) {
-        nextTray = List<_SoulPieceOption>.from(nextTray)
-          ..add(rescuePieces.first);
-      }
-      nextRecommended = _recommendMoveFor(nextBoard, nextTray);
+      nextTray = _buildSmartBatch(nextBoard).take(3).toList();
+      nextRecommended = _recommendMoveFor(nextBoard, [
+        ...nextTray,
+        ?_holdPiece,
+      ]);
     }
     if (nextRecommended == null) {
       final rescueTemplate = _kSoulBlockTemplates.firstWhere(
         (template) => template.id == 'single',
       );
-      nextTray = List<_SoulPieceOption>.from(nextTray)
-        ..add(_spawnPieceFromTemplate(rescueTemplate, forceBomb: true));
+      nextTray = [
+        _spawnPieceFromTemplate(rescueTemplate, forceBomb: true),
+        ...nextTray.take(2),
+      ];
       nextRecommended = _recommendMoveFor(nextBoard, nextTray);
     }
+
+    final burstSource = _board;
+    final revivedCells = <Point<int>>{
+      for (final row in revivedRows)
+        for (var col = 0; col < _boardSize; col++)
+          if (burstSource[row][col] != null) Point<int>(col, row),
+    };
 
     setState(() {
       _board = nextBoard;
       _tray = nextTray;
       _recommendedMove = nextRecommended;
-      _clearingRows = revivedRows;
+      _clearingRows = <int>{};
       _clearingCols = <int>{};
       _clearingCells = <Point<int>>{};
       _reviveAdsUsed += 1;
+      _combo = 0;
+      _streak = 0;
+      _comboMisses = 0;
+      _gameOverSfxPlayed = false;
       _isReviving = false;
       _isGameOver = nextRecommended == null;
       _isResolvingGameOver = false;
@@ -1849,19 +1981,13 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       L10nService().translate('soul_block_continue'),
       color: const Color(0xFF00FF66),
     );
-    _emitClearFeedback(
-      clearedCount: max(1, revivedRows.length),
-      streakCount: max(1, revivedRows.length),
-    );
+    _emitReviveFeedback();
 
-    await Future<void>.delayed(const Duration(milliseconds: 150));
-    if (!mounted) {
-      return;
-    }
-    setState(() {
-      _clearingRows = <int>{};
-      _clearingCells = <Point<int>>{};
-    });
+    _burstPhotoCells(
+      burstSource,
+      revivedCells,
+      clearedCount: revivedRows.length,
+    );
   }
 
   Future<void> _persistBestScore(int score) async {
@@ -2025,8 +2151,10 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       'sessionId': _currentSessionId,
       'score': _score,
       'bestScore': _bestScore,
+      'bestScoreCelebrated': _bestScoreSfxPlayed,
       'combo': _combo,
       'streak': _streak,
+      'comboMisses': _comboMisses,
       'turn': _turn,
       'clearedLines': _clearedLines,
       'reviveAdsUsed': _reviveAdsUsed,
@@ -2102,8 +2230,19 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       );
       _score = (json['score'] as num?)?.toInt() ?? 0;
       _bestScore = max(_bestScore, (json['bestScore'] as num?)?.toInt() ?? 0);
-      _combo = (json['combo'] as num?)?.toInt() ?? 0;
-      _streak = (json['streak'] as num?)?.toInt() ?? 0;
+      _bestScoreSfxPlayed =
+          json['bestScoreCelebrated'] as bool? ??
+          (_score > 0 && _score >= _bestScore);
+      _combo = max(0, (json['combo'] as num?)?.toInt() ?? 0);
+      _streak = _combo;
+      _comboMisses = min(
+        3,
+        max(0, (json['comboMisses'] as num?)?.toInt() ?? 0),
+      );
+      if (_comboMisses >= 3 || recommendedMove == null) {
+        _combo = 0;
+        _streak = 0;
+      }
       _turn = (json['turn'] as num?)?.toInt() ?? 0;
       _clearedLines = (json['clearedLines'] as num?)?.toInt() ?? 0;
       _reviveAdsUsed = min(

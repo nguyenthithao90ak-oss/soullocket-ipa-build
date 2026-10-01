@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -7,6 +5,17 @@ import 'package:path/path.dart' as p;
 
 import '../storage/storage_upload_result.dart';
 import 'r2_upload_policy.dart';
+
+typedef R2UploadSessionCreator =
+    Future<Map<String, dynamic>> Function({
+      required String fileName,
+      required String folder,
+      required String contentType,
+      required int fileSize,
+    });
+
+typedef R2UploadFinalizer =
+    Future<Map<String, dynamic>> Function(String uploadId);
 
 /// Gửi đúng tệp sau xử lý; Web dùng bytes, native dùng stream có giới hạn bộ nhớ.
 class R2MediaTransport {
@@ -16,51 +25,39 @@ class R2MediaTransport {
     required XFile file,
     required String contentType,
     required String storagePath,
-    required Uri workerUri,
-    required String idToken,
+    required R2UploadSessionCreator createUploadSession,
+    required R2UploadFinalizer finalizeUpload,
     required http.Client client,
     bool useBytes = kIsWeb,
     Future<void> Function(int bytes)? beforeUpload,
     ValueChanged<double>? onProgress,
   }) async {
     final bytes = await file.length();
-    if (bytes <= 0 ||
-        bytes > (contentType.startsWith('video/') ? 50 : 25) * 1024 * 1024) {
+    final maxBytes = R2UploadPolicy.maxUploadBytes(contentType);
+    final folder = R2UploadPolicy.publicFolderForPath(storagePath);
+    if (bytes <= 0 || bytes > maxBytes) {
       throw const FormatException('Invalid media upload size');
     }
     // Kiểm tra hạn mức trước cả bước tạo URL và PUT, không tạo object mồ côi.
     await beforeUpload?.call(bytes);
-    final endpoint = R2UploadPolicy.requireHttps(workerUri.toString());
-    final request = http.Request('POST', endpoint)
-      ..followRedirects = false
-      ..headers.addAll({
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $idToken',
-      })
-      ..body = jsonEncode({
-        'fileName': p.posix.basename(storagePath),
-        'contentType': contentType,
-        'folderPath': p.posix.dirname(storagePath),
-        'fileSize': bytes,
-        'exactPath': storagePath,
-      });
-    final response = await client
-        .send(request)
-        .then(http.Response.fromStream)
-        .timeout(const Duration(seconds: 30));
-    if (response.statusCode != 200) {
-      throw StateError('Upload session rejected (${response.statusCode})');
-    }
-    final data = jsonDecode(response.body)['result'] as Map;
-    final target = R2UploadPolicy.requireHttps(data['uploadUrl'] as String);
-    final downloadUrl = data['publicUrl'] as String;
-    R2UploadPolicy.requireHttps(downloadUrl);
-    final headers = R2UploadPolicy.uploadHeaders(
-      workerUri: endpoint,
-      uploadUri: target,
-      idToken: idToken,
+    final data = await createUploadSession(
+      fileName: p.posix.basename(storagePath),
+      folder: folder,
       contentType: contentType,
-      providedHeaders: data['headers'],
+      fileSize: bytes,
+    );
+    final uploadId = data['uploadId']?.toString().trim() ?? '';
+    final uploadUrl = data['url']?.toString().trim() ?? '';
+    final serverPath = data['path']?.toString().trim() ?? '';
+    if (uploadId.isEmpty || uploadUrl.isEmpty || serverPath.isEmpty) {
+      throw StateError('Upload session response is incomplete');
+    }
+    final target = R2UploadPolicy.requireHttps(uploadUrl);
+    final headers = R2UploadPolicy.signedUploadHeaders(
+      uploadUri: target,
+      contentType: contentType,
+      fileSize: bytes,
+      providedHeaders: data['requiredHeaders'],
     );
     onProgress?.call(0);
     Future<http.Response> send() async {
@@ -94,10 +91,19 @@ class R2MediaTransport {
     if (uploaded.statusCode != 200 && uploaded.statusCode != 201) {
       throw StateError('Upload failed (${uploaded.statusCode})');
     }
+    final finalized = await finalizeUpload(uploadId);
+    final downloadUrl = finalized['publicUrl']?.toString().trim() ?? '';
+    final finalizedPath = finalized['path']?.toString().trim() ?? '';
+    if (finalized['success'] != true ||
+        downloadUrl.isEmpty ||
+        finalizedPath != serverPath) {
+      throw StateError('Finalized upload response is incomplete');
+    }
+    R2UploadPolicy.requireHttps(downloadUrl);
     onProgress?.call(1);
     return StorageUploadResult(
       downloadUrl: downloadUrl,
-      storagePath: storagePath,
+      storagePath: finalizedPath,
       uploadedBytes: bytes,
     );
   }

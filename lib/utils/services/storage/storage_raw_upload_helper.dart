@@ -19,8 +19,20 @@ typedef StorageVideoUploadRejector =
 
 typedef StorageUploadCachePurger = Future<void> Function();
 
+typedef StorageRawMediaUploader =
+    Future<StorageUploadResult> Function(
+      XFile file, {
+      required String folderPath,
+      String? storagePathOverride,
+      String? contentType,
+      Future<void> Function(int bytes)? beforeUpload,
+      ValueChanged<double>? onProgress,
+    });
+
 class StorageRawUploadHelper {
-  const StorageRawUploadHelper();
+  const StorageRawUploadHelper({this.uploadMedia});
+
+  final StorageRawMediaUploader? uploadMedia;
 
   Future<String> uploadFileToPath({
     required String storagePath,
@@ -54,7 +66,7 @@ class StorageRawUploadHelper {
     );
     await purgeLegacyCache();
     // Ảnh đã được xử lý ở StorageService. Không nén lần hai hay đổi tên container.
-    return CloudflareR2Service.instance.uploadMedia(
+    return (uploadMedia ?? CloudflareR2Service.instance.uploadMedia)(
       file,
       folderPath: p.dirname(storagePath).replaceAll('\\', '/'),
       storagePathOverride: storagePath,
@@ -80,44 +92,22 @@ class StorageRawUploadHelper {
     }
 
     final fileSize = await file.length();
-    if (fileSize > storageMaxMusicUploadBytes) {
+    if (fileSize <= 0 || fileSize > storageMaxMusicUploadBytes) {
       throw Exception('File nhạc vượt quá 20MB. Hãy chọn file nhỏ hơn.');
     }
 
     await purgeLegacyCache();
 
     try {
-      CloudflareR2Service.instance.init();
-
-      final tempDir = await getTemporaryDirectory();
-      final tempPath = p.join(
-        tempDir.path,
-        'r2_music_upload_${DateTime.now().microsecondsSinceEpoch}.mp3',
+      final uploader = uploadMedia ?? CloudflareR2Service.instance.uploadMedia;
+      final result = await uploader(
+        file,
+        folderPath: p.dirname(storagePath).replaceAll('\\', '/'),
+        storagePathOverride: storagePath,
+        contentType: resolvedContentType,
       );
-      final tempFile = File(tempPath);
-
-      try {
-        if (!kIsWeb && file.path.isNotEmpty) {
-          await File(file.path).copy(tempPath);
-        } else {
-          final fileBytes = await file.readAsBytes();
-          await tempFile.writeAsBytes(fileBytes);
-        }
-
-        final r2Url = await CloudflareR2Service.instance.uploadFile(
-          tempFile,
-          folderPath: p.dirname(storagePath).replaceAll('\\', '/'),
-          storagePathOverride: storagePath,
-        );
-        if (r2Url == null || r2Url.isEmpty) {
-          throw Exception('R2 upload failed.');
-        }
-        return r2Url;
-      } finally {
-        if (await tempFile.exists()) {
-          await tempFile.delete();
-        }
-      }
+      if (result.downloadUrl.isEmpty) throw StateError('R2 upload failed');
+      return result.downloadUrl;
     } catch (e) {
       debugPrint(
         'Lỗi khi upload file nhạc $storagePath: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không tải file nhạc lên đám mây được.').message}',

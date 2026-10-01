@@ -1,10 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
-
-import 'package:crypto/crypto.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 import '../../../../../utils/services/private_media_url_service.dart';
 
@@ -14,47 +9,6 @@ typedef PrivateDiaryImageCacheKey = ({
   String memoryId,
   int? width,
 });
-
-class PrivateDiaryDiskCache {
-  PrivateDiaryDiskCache._();
-
-  static const ttl = Duration(days: 7);
-  static final manager = CacheManager(
-    Config(
-      'soullocket_private_diary_v1',
-      stalePeriod: ttl,
-      maxNrOfCacheObjects: 200,
-    ),
-  );
-
-  static String key({
-    required String uid,
-    required String houseId,
-    required String memoryId,
-    required int? width,
-  }) {
-    final source = '$uid\u0000$houseId\u0000$memoryId\u0000${width ?? 0}';
-    return 'private-diary-${sha256.convert(utf8.encode(source))}';
-  }
-
-  static Future<bool> hasFresh(String cacheKey) async {
-    if (kIsWeb) return false;
-    try {
-      final info = await manager.getFileFromCache(cacheKey);
-      return info != null && info.validTill.isAfter(DateTime.now());
-    } catch (_) {
-      return false;
-    }
-  }
-
-  static Future<void> clear() async {
-    try {
-      await manager.emptyCache();
-    } catch (_) {
-      // Cache dọn thất bại không được làm hỏng luồng album.
-    }
-  }
-}
 
 class PrivateDiaryImageCacheEntry {
   PrivateDiaryImageCacheEntry(this.provider, this.validUntil)
@@ -76,10 +30,14 @@ class PrivateDiaryImageCacheEntry {
 }
 
 class PrivateDiaryImageCache {
-  PrivateDiaryImageCache({this.maximumEntries = 90})
-    : assert(maximumEntries > 0);
+  PrivateDiaryImageCache({
+    this.maximumEntries = 90,
+    this.maximumBytes = 24 * 1024 * 1024,
+  }) : assert(maximumEntries > 0),
+       assert(maximumBytes > 0);
 
   final int maximumEntries;
+  final int maximumBytes;
   final urlService = PrivateMediaUrlService(
     batchRequests: true,
     cacheCompletedUrls: true,
@@ -116,7 +74,12 @@ class PrivateDiaryImageCache {
     if (previous != null) _evict(previous);
     _entries[key] = entry;
     entry._expiry = Timer(entry.remaining, () => remove(entry));
-    while (_entries.length > maximumEntries) {
+    int retainedBytes() => _entries.values.fold<int>(0, (total, cached) {
+      final provider = cached.provider;
+      return total +
+          (provider is MemoryImage ? provider.bytes.lengthInBytes : 0);
+    });
+    while (_entries.length > maximumEntries || retainedBytes() > maximumBytes) {
       _evict(_entries.remove(_entries.keys.first)!);
     }
   }
@@ -136,13 +99,6 @@ class PrivateDiaryImageCache {
 
   void clear() {
     urlService.clear();
-    for (final entry in _entries.values) {
-      _evict(entry);
-    }
-    _entries.clear();
-  }
-
-  void clearMemory() {
     for (final entry in _entries.values) {
       _evict(entry);
     }
@@ -197,7 +153,7 @@ class _PrivateDiaryImageScopeState extends State<PrivateDiaryImageScope>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed &&
         state != AppLifecycleState.inactive) {
-      _cache.clearMemory();
+      _cache.clear();
     }
   }
 

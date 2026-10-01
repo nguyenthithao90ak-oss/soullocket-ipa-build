@@ -1,5 +1,116 @@
 /// Quy tắc MIME và nơi nhận upload; không phụ thuộc Firebase/Flutter để dễ kiểm thử.
 abstract final class R2UploadPolicy {
+  static int maxUploadBytes(String contentType) {
+    if (const {
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'image/gif',
+    }.contains(contentType)) {
+      return 15 * 1024 * 1024;
+    }
+    if (const {
+      'audio/mpeg',
+      'audio/mp4',
+      'audio/aac',
+      'audio/flac',
+      'audio/ogg',
+      'audio/wav',
+    }.contains(contentType)) {
+      return 25 * 1024 * 1024;
+    }
+    if (const {
+      'video/mp4',
+      'video/quicktime',
+      'video/webm',
+      'video/x-m4v',
+      'video/3gpp',
+    }.contains(contentType)) {
+      return 50 * 1024 * 1024;
+    }
+    throw const FormatException('Unsupported media content type');
+  }
+
+  static String publicFolderForPath(String storagePath) {
+    final segments = storagePath.replaceAll('\\', '/').split('/');
+    if (segments.length < 2 ||
+        segments.any(
+          (segment) => segment.isEmpty || segment == '.' || segment == '..',
+        )) {
+      throw const FormatException('Invalid media path');
+    }
+    var folderIndex = 0;
+    if (segments.first == 'uploads' || segments.first == 'users') {
+      folderIndex = 2;
+      if (segments.length > 2 && segments[2] == 'houses') {
+        folderIndex = 4;
+      }
+    }
+    if (folderIndex >= segments.length - 1) {
+      throw const FormatException('Invalid media folder');
+    }
+    final folder = segments[folderIndex];
+    if (folder == 'diary' &&
+        segments.length > folderIndex + 2 &&
+        segments[folderIndex + 1] == 'custom_stickers') {
+      return 'images';
+    }
+    if (const {
+      'avatars',
+      'themes',
+      'collage',
+      'chat_backgrounds',
+      'images',
+      'public',
+    }.contains(folder)) {
+      return folder == 'avatars' ? 'avatars' : 'images';
+    }
+    if (folder == 'music') {
+      return 'uploads';
+    }
+    throw const FormatException('Media requires a dedicated upload session');
+  }
+
+  static Map<String, String> signedUploadHeaders({
+    required Uri uploadUri,
+    required String contentType,
+    required int fileSize,
+    required Object? providedHeaders,
+  }) {
+    requireHttps(uploadUri.toString());
+    if (!uploadUri.host.endsWith('.r2.cloudflarestorage.com') ||
+        uploadUri.port != 443 ||
+        uploadUri.queryParameters['X-Amz-Signature']?.isNotEmpty != true) {
+      throw const FormatException('Untrusted upload destination');
+    }
+    if (providedHeaders is! Map) {
+      throw const FormatException('Invalid upload headers');
+    }
+    final headers = <String, String>{};
+    for (final entry in providedHeaders.entries) {
+      if (entry.key is! String || entry.value is! String) {
+        throw const FormatException('Invalid upload header');
+      }
+      final name = (entry.key as String).toLowerCase();
+      final value = entry.value as String;
+      if (RegExp(r'[\x00-\x1f\x7f]').hasMatch(name + value) ||
+          headers.containsKey(name)) {
+        throw const FormatException('Invalid upload header');
+      }
+      if (name == 'content-length') {
+        if (int.tryParse(value) != fileSize) {
+          throw const FormatException('Upload size mismatch');
+        }
+        continue;
+      }
+      if (_storageHeaders.contains(name)) headers[name] = value;
+    }
+    if (headers['content-type'] != contentType) {
+      throw const FormatException('Upload content type mismatch');
+    }
+    return headers;
+  }
+
   static const _mimeTypes = {
     'jpg': 'image/jpeg',
     'jpeg': 'image/jpeg',

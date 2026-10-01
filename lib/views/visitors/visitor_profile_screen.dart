@@ -19,6 +19,7 @@ import '../../utils/services/house_settings_service.dart';
 import '../../utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/helpers/cloudflare_image_helper.dart';
 import '../../utils/services/storage/storage_service.dart';
+import '../../utils/services/storage/storage_media_commit.dart';
 import '../../utils/app_error_mapper.dart';
 import 'profile/dialogs/profile_appearance_sheet.dart';
 import 'profile/dialogs/profile_confirm_dialog.dart';
@@ -221,9 +222,11 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
     String? headerImageUrl,
     String? headerThemeKey,
     double? avatarSizePx,
+    bool propagateFailure = false,
   }) async {
     final houseId = _editableProfileHouseId;
     if (houseId == null || _isUpdatingProfileAppearance) {
+      if (propagateFailure) throw StateError('Profile is not writable');
       return;
     }
 
@@ -249,6 +252,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         );
       });
     } catch (e) {
+      if (propagateFailure) rethrow;
       if (!mounted) return;
       _showSnack(context.tr('p5_profile_update_failed'));
     } finally {
@@ -456,9 +460,17 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       if (url.isEmpty) {
         throw 'Ảnh nền chưa tải lên được.';
       }
-      await PendingUploadService.instance.clear(_pendingProfileHeaderUploadKey);
       final refreshedUrl = _withRefreshToken(url);
-      await _saveProfilePresentation(headerImageUrl: refreshedUrl);
+      await StorageMediaCommit.commit(
+        scopeIsCurrent: () => mounted && _editableProfileHouseId == houseId,
+        persist: () => _saveProfilePresentation(
+          headerImageUrl: refreshedUrl,
+          propagateFailure: true,
+        ),
+        clearPending: () =>
+            PendingUploadService.instance.clear(_pendingProfileHeaderUploadKey),
+      );
+      if (!mounted) return;
       _showSnack(L10nService().translate('p5_profile_header_updated'));
     } catch (e) {
       if (!mounted) return;
@@ -497,15 +509,19 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       if (url.isEmpty) {
         throw 'Avatar chưa tải lên được.';
       }
-      await PendingUploadService.instance.clear(_pendingHouseAvatarUploadKey);
       final refreshedUrl = _withRefreshToken(url);
       if (!mounted) return;
 
       setState(() => _isUpdatingProfileAppearance = true);
       try {
-        await _houseSettingsService.updateHouseAvatarOnly(
-          houseId: houseId,
-          avatarUrl: refreshedUrl,
+        await StorageMediaCommit.commit(
+          scopeIsCurrent: () => mounted && _editableProfileHouseId == houseId,
+          persist: () => _houseSettingsService.updateHouseAvatarOnly(
+            houseId: houseId,
+            avatarUrl: refreshedUrl,
+          ),
+          clearPending: () =>
+              PendingUploadService.instance.clear(_pendingHouseAvatarUploadKey),
         );
         if (!mounted) return;
         setState(() {
