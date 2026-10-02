@@ -64,6 +64,7 @@ class _FullscreenHomeBody extends StatelessWidget {
         followScroll: true,
         enabled: uiState.homeCompanionEnabled,
         soundEnabled: uiState.homeCompanionSoundEnabled,
+        maxVisibleCharacters: 2,
         audioSuppressed: SoundService().companionSuppressed,
         animate: effectProfile.animationEnabled && !state._deferHeavyHomeMotion,
         isActive: state.widget.isActiveListenable,
@@ -120,7 +121,6 @@ class _FullscreenHomeBody extends StatelessWidget {
                           state._buildGettingStartedChecklist(
                             isSingle: isSingle,
                           ),
-                          const HomeCompanionJourneyCard(),
                           TextButton.icon(
                             onPressed: state._showCountdownQuickCustomizeSheet,
                             icon: const Icon(Icons.tune_rounded, size: 18),

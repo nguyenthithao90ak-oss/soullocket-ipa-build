@@ -9,6 +9,8 @@ class SettingsWidgetDraft {
   final String widgetHeartColorKey;
   final String widgetPreviewSizeKey;
   final String widgetDiaryLayoutKey;
+  final String widgetStickerKey;
+  final String widgetPhotoFrameKey;
   final String widgetSeasonModeKey;
 
   const SettingsWidgetDraft({
@@ -20,6 +22,8 @@ class SettingsWidgetDraft {
     required this.widgetHeartColorKey,
     required this.widgetPreviewSizeKey,
     required this.widgetDiaryLayoutKey,
+    this.widgetStickerKey = 'none',
+    this.widgetPhotoFrameKey = 'rounded',
     required this.widgetSeasonModeKey,
   });
 }
@@ -43,7 +47,9 @@ class SettingsWidgetController {
     );
     await prefs.setString('il_widget_style_$accountKey', draft.widgetStyleKey);
     await prefs.setBool(
-        'il_widget_show_diary_$accountKey', draft.showDiaryOnWidget);
+      'il_widget_show_diary_$accountKey',
+      draft.showDiaryOnWidget,
+    );
     await prefs.setBool(
       'il_widget_heart_animated_$accountKey',
       draft.widgetHeartAnimated,
@@ -63,6 +69,14 @@ class SettingsWidgetController {
     await prefs.setString(
       'il_widget_diary_layout_$accountKey',
       draft.widgetDiaryLayoutKey,
+    );
+    await prefs.setString(
+      'il_widget_sticker_$accountKey',
+      draft.widgetStickerKey,
+    );
+    await prefs.setString(
+      'il_widget_photo_frame_$accountKey',
+      draft.widgetPhotoFrameKey,
     );
     await prefs.setString(
       'il_widget_season_mode_$accountKey',

@@ -1,7 +1,7 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../core/sl_theme.dart';
 import '../../../utils/services/l10n_service.dart';
+import 'soul_block_diary_cover.dart';
 
 /// Màn thư viện độc lập với nền ảnh chung, không tạo hoặc tải quảng cáo.
 class GameLibraryView extends StatelessWidget {
@@ -11,12 +11,14 @@ class GameLibraryView extends StatelessWidget {
     required this.onPlay,
     this.downloadProgress,
     this.onDelete,
+    this.cover,
   });
 
   final bool isDownloaded;
   final double? downloadProgress;
   final VoidCallback onPlay;
   final VoidCallback? onDelete;
+  final Widget? cover;
 
   @override
   Widget build(BuildContext context) {
@@ -133,7 +135,7 @@ class GameLibraryView extends StatelessWidget {
                               top: Radius.circular(27),
                             ),
                             child: Container(
-                              height: 204,
+                              height: 232,
                               width: double.infinity,
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
@@ -150,43 +152,7 @@ class GameLibraryView extends StatelessWidget {
                                   end: Alignment.bottomRight,
                                 ),
                               ),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  const Positioned.fill(
-                                    child: IgnorePointer(
-                                      child: CustomPaint(
-                                        painter: _GamePatternPainter(),
-                                      ),
-                                    ),
-                                  ),
-                                  Transform.rotate(
-                                    angle: -0.06,
-                                    child: Container(
-                                      width: 146,
-                                      height: 146,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(38),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: const Color(
-                                              0xFF655086,
-                                            ).withValues(alpha: 0.2),
-                                            blurRadius: 24,
-                                            offset: const Offset(0, 12),
-                                          ),
-                                        ],
-                                      ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(38),
-                                        child: const CustomPaint(
-                                          painter: _SoulBlockCardPainter(),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              child: cover ?? const SoulBlockPhotoArtwork(),
                             ),
                           ),
                           Padding(
@@ -367,178 +333,4 @@ class GameLibraryView extends StatelessWidget {
       ),
     );
   }
-}
-
-class _GamePatternPainter extends CustomPainter {
-  const _GamePatternPainter();
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFF82719C).withValues(alpha: 0.12)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-    for (final point in [
-      Offset(size.width * 0.12, 45),
-      Offset(size.width * 0.84, 138),
-    ]) {
-      canvas.save();
-      canvas.translate(point.dx, point.dy);
-      canvas.rotate(0.25);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          const Rect.fromLTWH(-20, -20, 40, 40),
-          const Radius.circular(10),
-        ),
-        paint,
-      );
-      canvas.restore();
-    }
-    canvas.drawCircle(Offset(size.width * 0.83, 42), 8, paint);
-    canvas.drawCircle(Offset(size.width * 0.18, 160), 5, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _GamePatternPainter oldDelegate) => false;
-}
-
-class _SoulBlockCardPainter extends CustomPainter {
-  const _SoulBlockCardPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(rect, Radius.circular(size.width * 0.34)),
-      Paint()
-        ..shader = const LinearGradient(
-          colors: [Color(0xFF10172E), Color(0xFF25164A), Color(0xFF4A183F)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ).createShader(rect),
-    );
-
-    final glowPaint = Paint()
-      ..shader =
-          RadialGradient(
-            colors: [
-              const Color(0xFFFFD166).withValues(alpha: 0.34),
-              Colors.transparent,
-            ],
-          ).createShader(
-            Rect.fromCircle(
-              center: Offset(size.width * 0.72, size.height * 0.18),
-              radius: size.width * 0.7,
-            ),
-          );
-    canvas.drawRect(rect, glowPaint);
-
-    final boardSize = math.min(size.width, size.height) * 0.78;
-    final cellSize = boardSize / 6.0;
-    final gap = cellSize * 0.14;
-    final gridSize = (cellSize * 5) + (gap * 4);
-    final startX = (size.width - gridSize) / 2;
-    final startY = size.height * 0.18;
-
-    final boardRect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(
-        startX - gap,
-        startY - gap,
-        gridSize + gap * 2,
-        gridSize + gap * 2,
-      ),
-      Radius.circular(cellSize * 0.55),
-    );
-    canvas.drawRRect(boardRect, Paint()..color = const Color(0x66061122));
-    canvas.drawRRect(
-      boardRect,
-      Paint()
-        ..color = const Color(0x33FFFFFF)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2,
-    );
-
-    final emptyCell = Paint()..color = const Color(0x18FFFFFF);
-    final emptyStroke = Paint()
-      ..color = const Color(0x16FFFFFF)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.8;
-    for (var row = 0; row < 5; row++) {
-      for (var col = 0; col < 5; col++) {
-        final cellRect = RRect.fromRectAndRadius(
-          Rect.fromLTWH(
-            startX + (col * (cellSize + gap)),
-            startY + (row * (cellSize + gap)),
-            cellSize,
-            cellSize,
-          ),
-          Radius.circular(cellSize * 0.24),
-        );
-        canvas.drawRRect(cellRect, emptyCell);
-        canvas.drawRRect(cellRect, emptyStroke);
-      }
-    }
-
-    void drawBlock(List<Offset> cells, Color color) {
-      final glow = Paint()
-        ..color = color.withValues(alpha: 0.28)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
-      final shine = Paint()
-        ..shader = LinearGradient(
-          colors: [Colors.white.withValues(alpha: 0.26), Colors.transparent],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ).createShader(rect);
-      final fill = Paint()
-        ..shader = LinearGradient(
-          colors: [color, Color.lerp(color, Colors.black, 0.28)!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ).createShader(rect);
-
-      for (final cell in cells) {
-        final rrect = RRect.fromRectAndRadius(
-          Rect.fromLTWH(
-            startX + (cell.dx * (cellSize + gap)),
-            startY + (cell.dy * (cellSize + gap)),
-            cellSize,
-            cellSize,
-          ),
-          Radius.circular(cellSize * 0.26),
-        );
-        canvas.drawRRect(rrect, glow);
-        canvas.drawRRect(rrect, fill);
-        canvas.drawRRect(rrect, shine);
-      }
-    }
-
-    drawBlock(const [
-      Offset(0, 0),
-      Offset(1, 0),
-      Offset(0, 1),
-    ], const Color(0xFFFF4D6D));
-    drawBlock(const [
-      Offset(3, 0),
-      Offset(4, 0),
-      Offset(4, 1),
-    ], const Color(0xFFFFD166));
-    drawBlock(const [
-      Offset(1, 2),
-      Offset(2, 2),
-      Offset(3, 2),
-    ], const Color(0xFF4D96FF));
-    drawBlock(const [
-      Offset(0, 3),
-      Offset(0, 4),
-      Offset(1, 4),
-    ], const Color(0xFF37E67F));
-    drawBlock(const [
-      Offset(3, 3),
-      Offset(4, 3),
-      Offset(3, 4),
-      Offset(4, 4),
-    ], const Color(0xFFC77DFF));
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

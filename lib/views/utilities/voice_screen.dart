@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -6,6 +8,7 @@ import 'dart:math' as math;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -59,12 +62,8 @@ class _VoiceScreenState extends State<VoiceScreen>
   void _showInfoDialog(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          'Ghi âm giọng nói',
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-        ),
+      builder: (context) => SLAlertDialog(
+        title: Text('Ghi âm giọng nói'),
         content: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,7 +87,9 @@ class _VoiceScreenState extends State<VoiceScreen>
           ),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(context),
             child: const Text('Đã hiểu'),
           ),
@@ -560,6 +561,7 @@ class _VoiceScreenState extends State<VoiceScreen>
     required String fileName,
     required String mimeType,
     required int durationMs,
+    required Future<void> Function(String sessionId, int size) onSession,
   }) async {
     _requireUploadScope();
     final session = await _createVoiceUploadSession(
@@ -568,6 +570,9 @@ class _VoiceScreenState extends State<VoiceScreen>
     );
     _requireUploadScope();
     final sessionId = session['sessionId']?.toString().trim() ?? '';
+    if (sessionId.isEmpty) throw StateError('Missing voice upload session');
+    await onSession(sessionId, bytes.length);
+    _requireUploadScope();
     final client = http.Client();
     try {
       await StorageSignedAudioUpload.put(
@@ -581,7 +586,7 @@ class _VoiceScreenState extends State<VoiceScreen>
       final safeError = e is TimeoutException
           ? TimeoutException('Voice upload timed out.', e.duration)
           : http.ClientException('Voice upload failed (${e.runtimeType}).');
-      debugPrint('[VoiceScreen] HTTP put to R2 error: $safeError');
+      debugPrint('[VoiceScreen] Signed audio upload failed: $safeError');
       unawaited(
         ErrorLoggerService.instance.logError(
           safeError,
@@ -713,7 +718,7 @@ class _VoiceScreenState extends State<VoiceScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ).showSnackBar(SLSnackBar(content: Text(message)));
   }
 
   bool _isSignedUrlExpired(Map<String, dynamic> item) {
@@ -807,15 +812,17 @@ class _VoiceScreenState extends State<VoiceScreen>
     final confirmed =
         await showDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
+          builder: (context) => SLAlertDialog(
             title: Text(title),
             content: Text(content),
             actions: [
-              TextButton(
+              SLDialogAction(
                 onPressed: () => Navigator.of(context).pop(false),
                 child: Text(cancel),
               ),
-              TextButton(
+              SLDialogAction(
+                primary: true,
+
                 onPressed: () => Navigator.of(context).pop(true),
                 child: const Text('OK'),
               ),
@@ -826,26 +833,35 @@ class _VoiceScreenState extends State<VoiceScreen>
     if (!confirmed) {
       return;
     }
+    _requireUploadScope();
     final snapshot = await _voiceRef.child(key).get();
+    _requireUploadScope();
+    final result = await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
+      'deleteVoiceMessage',
+      payload: {'houseId': _uploadHouseId, 'voiceId': key},
+      requireAppCheck: true,
+      throwOriginalException: true,
+    );
+    if (result.data['ok'] != true) {
+      throw StateError('Voice deletion was not confirmed');
+    }
+    _privateMediaUrlService.clear();
     if (snapshot.exists && snapshot.value is Map) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
-      await ActivityHistoryService.instance.add(
-        logText,
-        houseId: widget.houseId,
-        title: logTitle,
-        subtitle: data['name']?.toString() ?? data['a']?.toString() ?? '',
-        action: 'delete',
-        module: 'voice',
-        entityType: 'voice',
-        entityId: key,
-        sourceLabel: sourceLabel,
-        previewUrl: data['aud']?.toString() ?? '',
-        previewType: 'audio',
-        restorePath: 'houses/${widget.houseId}/voice/$key',
-        restorePayload: data,
-      );
+      try {
+        await ActivityHistoryService.instance.add(
+          logText,
+          houseId: widget.houseId,
+          title: logTitle,
+          subtitle: data['name']?.toString() ?? data['a']?.toString() ?? '',
+          action: 'delete',
+          module: 'voice',
+          entityType: 'voice',
+          entityId: key,
+          sourceLabel: sourceLabel,
+        );
+      } catch (_) {}
     }
-    await _voiceRef.child(key).remove();
     if (_playingKey == key) {
       await _player.stop();
       if (mounted) {
@@ -920,6 +936,11 @@ class _VoiceScreenState extends State<VoiceScreen>
       }),
     );
     if (!saved) throw StateError('Cannot persist pending voice upload');
+    _pendingRetryUpload = {
+      ...payload,
+      'ownerUid': _uploadOwnerUid,
+      'houseId': _uploadHouseId,
+    };
   }
 
   Future<void> _clearPendingUpload({bool deleteLocalFile = false}) async {
@@ -967,8 +988,8 @@ class _VoiceScreenState extends State<VoiceScreen>
         return;
       }
       final localPath = decoded['localPath']?.toString() ?? '';
-      if (localPath.isEmpty || !await File(localPath).exists()) {
-        await _clearPendingUpload();
+      if ((decoded['sessionId']?.toString().isEmpty ?? true) &&
+          (localPath.isEmpty || !await File(localPath).exists())) {
         return;
       }
       if (!_uploadScopeIsCurrent) {
@@ -996,11 +1017,8 @@ class _VoiceScreenState extends State<VoiceScreen>
     final successMsg = context.tr('util_gililinhnt_d1cbf0');
     final errRetryFailed = context.tr('util_khngththli_8551ac');
 
-    if (localPath.isEmpty || !await File(localPath).exists()) {
-      await _clearPendingUpload();
-      if (mounted) {
-        setState(() => _pendingRetryUpload = null);
-      }
+    if ((payload['sessionId']?.toString().isEmpty ?? true) &&
+        (localPath.isEmpty || !await File(localPath).exists())) {
       _showMessage(errNoFile);
       return;
     }
@@ -1018,6 +1036,7 @@ class _VoiceScreenState extends State<VoiceScreen>
         fileName: payload['fileName']?.toString() ?? p.basename(localPath),
         mimeType: payload['mimeType']?.toString() ?? _detectMimeType('m4a'),
         durationMs: (payload['durationMs'] as num?)?.toInt() ?? 0,
+        retryPayload: payload,
       );
       if (mounted) {
         setState(() => _pendingRetryUpload = null);
@@ -1041,21 +1060,49 @@ class _VoiceScreenState extends State<VoiceScreen>
     required String fileName,
     required String mimeType,
     required int durationMs,
+    Map<String, dynamic>? retryPayload,
   }) async {
     _requireUploadScope();
+    if (retryPayload == null && _pendingRetryUpload != null) {
+      throw StateError('Retry the pending voice upload first');
+    }
     if (mounted) {
       setState(() {
         _isUploading = true;
       });
     }
     try {
-      await _savePendingUpload(<String, dynamic>{
+      final payload = <String, dynamic>{
+        ...?retryPayload,
         'localPath': localPath,
         'extension': extension,
         'fileName': fileName,
         'mimeType': mimeType,
         'durationMs': durationMs,
-      });
+      };
+      await _savePendingUpload(payload);
+      final previousSessionId = payload['sessionId']?.toString() ?? '';
+      if (previousSessionId.isNotEmpty) {
+        try {
+          await _finalizeVoiceUpload(
+            sessionId: previousSessionId,
+            fileName: fileName,
+            mimeType: mimeType,
+            durationMs: durationMs,
+            size: (payload['size'] as num?)?.toInt() ?? 0,
+          );
+          await _clearPendingUpload(deleteLocalFile: true);
+          _pendingRetryUpload = null;
+          return;
+        } on FirebaseFunctionsException catch (error) {
+          if (error.code != 'failed-precondition' ||
+              error.details is! Map ||
+              error.details['reason'] != 'upload-not-found') {
+            rethrow;
+          }
+        }
+      }
+      _requireUploadScope();
       final bytes = await File(localPath).readAsBytes();
       await _uploadVoiceBytes(
         bytes: bytes,
@@ -1063,6 +1110,11 @@ class _VoiceScreenState extends State<VoiceScreen>
         fileName: fileName,
         mimeType: mimeType,
         durationMs: durationMs,
+        onSession: (sessionId, size) async {
+          payload['sessionId'] = sessionId;
+          payload['size'] = size;
+          await _savePendingUpload(payload);
+        },
       );
       await _clearPendingUpload(deleteLocalFile: true);
       _pendingRetryUpload = null;

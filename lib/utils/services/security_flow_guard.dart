@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -315,7 +317,7 @@ class SecurityFlowGuard {
         final messenger = ScaffoldMessenger.maybeOf(context);
         messenger?.hideCurrentSnackBar();
         messenger?.showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text(localTapDecision.message),
             duration: const Duration(seconds: 2),
           ),
@@ -657,46 +659,26 @@ class SecurityFlowGuard {
       useRootNavigator: true,
       barrierDismissible: !isBlocking,
       builder: (dialogContext) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
-          ),
+        return SLAlertDialog(
           title: Row(
             children: [
               Icon(icon, color: accent, size: 26),
               const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    color: accent,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 18,
-                  ),
-                ),
-              ),
+              Expanded(child: Text(title)),
             ],
           ),
-          content: Text(
-            message,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              height: 1.45,
-            ),
-          ),
+          content: Text(message),
           actions: [
             if (!isBlocking)
-              TextButton(
+              SLDialogAction(
                 onPressed: () => Navigator.of(dialogContext).pop(false),
                 child: const Text('Dừng lại'),
               ),
-            ElevatedButton(
+            SLDialogAction(
+              primary: true,
+
               onPressed: () => Navigator.of(dialogContext).pop(!isBlocking),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: accent,
-                foregroundColor: Colors.white,
-              ),
+
               child: Text(
                 isBlocking
                     ? 'Đã hiểu'

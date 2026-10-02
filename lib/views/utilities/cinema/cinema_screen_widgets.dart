@@ -4,12 +4,8 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
   void _showInfoDialog(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          context.tr('p8_cinema_dialog_title'),
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-        ),
+      builder: (context) => SLAlertDialog(
+        title: Text(context.tr('p8_cinema_dialog_title')),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -32,12 +28,11 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
           ),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              context.tr('p8_cinema_dialog_confirm'),
-              style: const TextStyle(color: SLColors.primary),
-            ),
+            child: Text(context.tr('p8_cinema_dialog_confirm')),
           ),
         ],
       ),

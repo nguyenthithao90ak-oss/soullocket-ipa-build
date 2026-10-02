@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_page_physics.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -232,7 +233,7 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
 
     if (_bannedWords.contains(word)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('admin_tnyctrongd_ef7bb5'))),
+        SLSnackBar(content: Text(context.tr('admin_tnyctrongd_ef7bb5'))),
       );
       return;
     }
@@ -246,7 +247,7 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('admin_thmtcm_c1fc50'))),
+        SLSnackBar(content: Text(context.tr('admin_thmtcm_c1fc50'))),
       );
     }
   }
@@ -260,7 +261,7 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('admin_xatcm_7d27ee'))),
+        SLSnackBar(content: Text(context.tr('admin_xatcm_7d27ee'))),
       );
     }
   }
@@ -333,7 +334,7 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(successText)),
+        SLSnackBar(content: Text(successText)),
       );
     } catch (e) {
       debugPrint('Abuse action failed: ${AppErrorMapper.resolve(
@@ -342,7 +343,7 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
       ).message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(errorFallback),
         ),
       );

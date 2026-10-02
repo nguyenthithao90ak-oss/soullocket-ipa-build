@@ -4,6 +4,8 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'keepsake_frame.dart';
 import '../views/ui_prefs.dart';
 import '../core/sl_theme.dart';
+import 'sl_feedback.dart';
+import 'sl_toast.dart';
 
 class LegacyWebUi {
   static const Color accentPink = SLColors.primary;
@@ -330,91 +332,20 @@ class LegacyWebUi {
     String? title,
     IconData? icon,
   }) {
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    if (messenger == null) return;
-
     final notice = _resolveNoticeStyleV2(
       message,
       success,
       title: title,
       icon: icon,
     );
-
-    messenger
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          margin: const EdgeInsets.fromLTRB(14, 0, 14, 20),
-          padding: EdgeInsets.zero,
-          duration: Duration(seconds: success ? 3 : 4),
-          content: Container(
-            padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
-            decoration:
-                softPanelDecoration(
-                  accent: notice.borderColor,
-                  radius: 24,
-                  colors: notice.gradient,
-                ).copyWith(
-                  border: Border.all(
-                    color: notice.borderColor.withValues(alpha: 0.30),
-                  ),
-                ),
-            child: Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        notice.iconTint.withValues(alpha: 0.16),
-                        Colors.white,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: SLRadius.lgAll,
-                    border: Border.all(
-                      color: notice.iconTint.withValues(alpha: 0.14),
-                    ),
-                  ),
-                  child: Icon(notice.icon, color: notice.iconTint, size: 20),
-                ),
-                SLSpacing.w10,
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        notice.title,
-                        style: SLTheme.quicksand(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w900,
-                          color: notice.titleColor,
-                        ),
-                      ),
-                      SLSpacing.gapH(2),
-                      Text(
-                        message,
-                        style: SLTheme.quicksand(
-                          fontSize: 12.4,
-                          fontWeight: FontWeight.w700,
-                          height: 1.4,
-                          color: notice.bodyColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
+    SLToast.show(
+      context,
+      message,
+      title: notice.title,
+      icon: notice.icon,
+      variant: success ? SLToastVariant.success : SLToastVariant.danger,
+      duration: Duration(seconds: success ? 3 : 4),
+    );
   }
 
   static void showNoticeWithAction(
@@ -439,97 +370,32 @@ class LegacyWebUi {
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          margin: const EdgeInsets.fromLTRB(14, 0, 14, 20),
-          padding: EdgeInsets.zero,
+        SLSnackBar(
+          backgroundColor: notice.iconTint,
+          icon: notice.icon,
           duration: Duration(seconds: success ? 3 : 8),
-          content: Container(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-            decoration:
-                softPanelDecoration(
-                  accent: notice.borderColor,
-                  radius: 24,
-                  colors: notice.gradient,
-                ).copyWith(
-                  border: Border.all(
-                    color: notice.borderColor.withValues(alpha: 0.30),
-                  ),
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                notice.title,
+                style: const TextStyle(
+                  color: SLFeedbackStyle.foreground,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
                 ),
-            child: Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        notice.iconTint.withValues(alpha: 0.16),
-                        Colors.white,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: SLRadius.lgAll,
-                    border: Border.all(
-                      color: notice.iconTint.withValues(alpha: 0.14),
-                    ),
-                  ),
-                  child: Icon(notice.icon, color: notice.iconTint, size: 20),
-                ),
-                SLSpacing.w10,
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        notice.title,
-                        style: SLTheme.quicksand(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w900,
-                          color: notice.titleColor,
-                        ),
-                      ),
-                      SLSpacing.gapH(2),
-                      Text(
-                        message,
-                        style: SLTheme.quicksand(
-                          fontSize: 12.4,
-                          fontWeight: FontWeight.w700,
-                          height: 1.4,
-                          color: notice.bodyColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SLSpacing.w8,
-                TextButton(
-                  onPressed: () {
-                    messenger.hideCurrentSnackBar();
-                    onAction();
-                  },
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    foregroundColor: notice.iconTint,
-                    textStyle: SLTheme.quicksand(fontWeight: FontWeight.w900),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: SLRadius.pillAll,
-                      side: BorderSide(
-                        color: notice.iconTint.withValues(alpha: 0.28),
-                      ),
-                    ),
-                  ),
-                  child: Text(actionLabel),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 2),
+              Text(message),
+            ],
+          ),
+          action: SnackBarAction(
+            label: actionLabel,
+            onPressed: () {
+              messenger.hideCurrentSnackBar();
+              onAction();
+            },
           ),
         ),
       );

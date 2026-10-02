@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -109,11 +111,13 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     await showDialog<void>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => SLAlertDialog(
         title: Text(L10nService().translate('⚠️ Đã đăng xuất')),
         content: Text(L10nService().translate(reason)),
         actions: [
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(L10nService().translate('Đóng')),
           ),
@@ -211,8 +215,8 @@ class _LoginScreenState extends State<LoginScreen> {
     if (shouldShowRapidActionWarningSeconds(cooldown)) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
+        SLSnackBar(
+          content: const Text(
             'Bạn thao tác hơi nhanh. Vui lòng chờ một lát rồi thử lại.',
           ),
           duration: Duration(seconds: 2),
@@ -807,7 +811,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (result == null || result.user == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text(SocialAuthActionHelper.cancelledMessage(provider)),
           ),
         );

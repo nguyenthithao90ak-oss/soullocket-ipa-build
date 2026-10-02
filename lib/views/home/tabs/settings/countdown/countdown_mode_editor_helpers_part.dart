@@ -6,7 +6,7 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+      SLSnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -221,14 +221,8 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
                 Navigator.of(dialogContext).pop(parsed);
               }
 
-              return AlertDialog(
-                title: Text(
-                  context.tr('home_chnngy_d2cce5'),
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFFD81B60),
-                  ),
-                ),
+              return SLAlertDialog(
+                title: Text(context.tr('home_chnngy_d2cce5')),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,19 +269,19 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
                   ],
                 ),
                 actions: [
-                  TextButton(
+                  SLDialogAction(
                     onPressed: () => Navigator.of(dialogContext).pop(),
                     child: Text(context.tr('home_hy_1e4050')),
                   ),
-                  TextButton(
+                  SLDialogAction(
                     onPressed: () => unawaited(pickFromCalendar()),
                     child: Text(context.tr('home_chnlch_e1fe3f')),
                   ),
-                  ElevatedButton(
+                  SLDialogAction(
+                    primary: true,
+
                     onPressed: submit,
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                    ),
+
                     child: Text(context.tr('ok')),
                   ),
                 ],

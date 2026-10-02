@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -197,7 +198,7 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(_t('pairing_ui_code_copied'))));
+    ).showSnackBar(SLSnackBar(content: Text(_t('pairing_ui_code_copied'))));
   }
 
   Future<void> _shareCode() async {

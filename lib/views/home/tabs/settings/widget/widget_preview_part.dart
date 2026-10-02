@@ -3,126 +3,77 @@ part of '../../settings_tab.dart';
 extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
   ({List<Color> colors, Color textColor, Color borderColor, bool premium})
   _widgetPreviewThemeSpec(String themeKey) {
-    switch (themeKey) {
-      case 'dark':
-        return (
-          colors: const [
-            Color(0xFF0F172A),
-            Color(0xFF1E1E38),
-            Color(0xFF0F172A),
-          ],
-          textColor: Colors.white,
-          borderColor: const Color(0xFF475569),
-          premium: false,
-        );
-      case 'white':
-        return (
-          colors: const [
-            Color(0xFFFFFFFF),
-            Color(0xFFF8FAFC),
-            Color(0xFFF1F5F9),
-          ],
-          textColor: const Color(0xFF1F2937),
-          borderColor: const Color(0xFFE2E8F0),
-          premium: false,
-        );
-      case 'blue':
-        return (
-          colors: const [
-            Color(0xFFE0F2FE),
-            Color(0xFFBAE6FD),
-            Color(0xFF7DD3FC),
-          ],
-          textColor: const Color(0xFF0F3D7A),
-          borderColor: const Color(0xFF93C5FD),
-          premium: false,
-        );
-      case 'orange':
-        return (
-          colors: const [
-            Color(0xFFFEF3C7),
-            Color(0xFFFDBA74),
-            Color(0xFFF97316),
-          ],
-          textColor: const Color(0xFF7C2D12),
-          borderColor: const Color(0xFFFDBA74),
-          premium: false,
-        );
-      case 'purple':
-        return (
-          colors: const [Color(0xFFCE93D8), Color(0xFF6A1B9A)],
-          textColor: Colors.white,
-          borderColor: const Color(0xFFCE93D8),
-          premium: false,
-        );
-      case 'green':
-        return (
-          colors: const [
-            Color(0xFFECFDF5),
-            Color(0xFFA7F3D0),
-            Color(0xFF6EE7B7),
-          ],
-          textColor: const Color(0xFF065F46),
-          borderColor: const Color(0xFF86EFAC),
-          premium: false,
-        );
-      case 'red':
-        return (
-          colors: const [
-            Color(0xFFFFF5F5),
-            Color(0xFFFED7D7),
-            Color(0xFFFB7185),
-          ],
-          textColor: const Color(0xFF9F1239),
-          borderColor: const Color(0xFFFCA5A5),
-          premium: false,
-        );
-      case 'premium':
-        return (
-          colors: const [
-            Color(0xFFFF5FA2),
-            Color(0xFFFFB86B),
-            Color(0xFF67E8F9),
-            Color(0xFF7C3AED),
-          ],
-          textColor: Colors.white,
-          borderColor: const Color(0xFFFFD166),
-          premium: true,
-        );
-      case 'cosmic':
-        return (
-          colors: const [
-            Color(0xFF0F0C20),
-            Color(0xFF15102A),
-            Color(0xFF1F1A3A),
-          ],
-          textColor: const Color(0xFFFFD700),
-          borderColor: const Color(0xFFFFD700),
-          premium: true,
-        );
-      case 'pink':
-      default:
-        return (
-          colors: const [Color(0xFFFFB6CA), Color(0xFFFF7098)],
-          textColor: Colors.white,
-          borderColor: const Color(0xFFFFB6CA),
-          premium: false,
-        );
-    }
+    final colors = switch (themeKey) {
+      'pink' => const [Color(0xFFFFF3E5), Color(0xFFFFDDE7), Color(0xFFDAD8FF)],
+      'white' => const [
+        Color(0xFFFFFFFF),
+        Color(0xFFF4F0FF),
+        Color(0xFFE2F0F6),
+      ],
+      'dark' => const [Color(0xFF202338), Color(0xFF35324F), Color(0xFF2B4754)],
+      'blue' => const [Color(0xFFF5FBFF), Color(0xFFD8EAFF), Color(0xFFDDDFFA)],
+      'orange' => const [
+        Color(0xFFFFF7DE),
+        Color(0xFFFFDFBF),
+        Color(0xFFF5D3DC),
+      ],
+      'purple' => const [
+        Color(0xFFFFF1FA),
+        Color(0xFFE8D8F7),
+        Color(0xFFD7E8FA),
+      ],
+      'green' => const [
+        Color(0xFFFFF9DF),
+        Color(0xFFDDF2DF),
+        Color(0xFFC8E8E2),
+      ],
+      'red' => const [Color(0xFFFFF1E5), Color(0xFFFFD3DC), Color(0xFFE6D3F4)],
+      'cosmic' => const [
+        Color(0xFF17142F),
+        Color(0xFF322952),
+        Color(0xFF514563),
+      ],
+      'premium' => const [
+        Color(0xFFFF5FA2),
+        Color(0xFFFFB86B),
+        Color(0xFF67E8F9),
+        Color(0xFF7C3AED),
+      ],
+      _ => const [Color(0xFFFFF3E5), Color(0xFFFFDDE7), Color(0xFFDAD8FF)],
+    };
+    final textColor = switch (themeKey) {
+      'pink' => const Color(0xFF333333),
+      'white' => const Color(0xFF333333),
+      'dark' => const Color(0xFFFFFFFF),
+      'blue' => const Color(0xFF0D47A1),
+      'orange' => const Color(0xFFE65100),
+      'purple' => const Color(0xFF6A1B9A),
+      'green' => const Color(0xFF1B5E20),
+      'red' => const Color(0xFFB71C1C),
+      'cosmic' => const Color(0xFFFFF0BD),
+      'premium' => Colors.white,
+      _ => const Color(0xFF333333),
+    };
+    return (
+      colors: colors,
+      textColor: textColor,
+      borderColor: Colors.white.withValues(alpha: .8),
+      premium: themeKey == 'premium',
+    );
   }
 
   List<Color> _widgetHeartPalette(String colorKey) {
     switch (colorKey) {
       case 'ruby':
-        return const [Color(0xFFFF5E7E), Color(0xFFFF85A1), Color(0xFFFFE3EA)];
+        return const [Color(0xFFE11D48), Color(0xFFFB7185), Color(0xFFFFE4E6)];
       case 'violet':
         return const [Color(0xFF8B5CF6), Color(0xFFC084FC), Color(0xFFF3E8FF)];
       case 'ocean':
         return const [Color(0xFF0EA5E9), Color(0xFF67E8F9), Color(0xFFE0F2FE)];
       case 'sunset':
-        return const [Color(0xFFF97316), Color(0xFFFBBF24), Color(0xFFFFEDD5)];
+        return const [Color(0xFFF97316), Color(0xFFFBBF24), Color(0xFFFFF7ED)];
       case 'gold':
-        return const [Color(0xFFEAB308), Color(0xFFFDE68A), Color(0xFFFFFBEB)];
+        return const [Color(0xFFEAB308), Color(0xFFFDE68A), Color(0xFFFFFBEA)];
       case 'rose':
       default:
         return const [Color(0xFFFF4D73), Color(0xFFFF8FB1), Color(0xFFFFE4EC)];
@@ -138,29 +89,10 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
       return const SizedBox.shrink();
     }
 
-    const outerRadius = 18.0;
     final houseId = _houseId?.trim();
 
     if (houseId == null || houseId.isEmpty) {
-      return Container(
-        width: width,
-        height: height,
-        decoration: BoxDecoration(
-          color: textColor.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(outerRadius),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.62),
-            width: 0.95,
-          ),
-        ),
-        child: Center(
-          child: Icon(
-            Icons.photo_library_rounded,
-            size: width * 0.4,
-            color: textColor.withValues(alpha: 0.45),
-          ),
-        ),
-      );
+      return _buildWidgetCenterVisual(textColor);
     }
 
     return _WidgetDiaryPreviewStream(
@@ -170,511 +102,115 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
       textColor: textColor,
       width: width,
       height: height,
+      revision: _widgetMediaRevision,
     );
   }
 
-  Widget _buildWidgetHeartStylePicker() {
-    final selectedKey = _normalizeWidgetHeartStyleKey(_widgetHeartStyleKey);
-    final visibleHeartStyles = _widgetHeartStyleKeys
-        .take(12)
-        .toList(growable: false);
-    final hiddenCount =
-        _widgetHeartStyleKeys.length - visibleHeartStyles.length;
+  Widget _buildWidgetCenterVisual(Color textColor) {
+    if (_widgetStickerKey == 'none') {
+      return _buildWidgetHeartPreview(textColor, size: 120);
+    }
+    final twinkle =
+        _widgetHeartAnimated &&
+        !MediaQuery.disableAnimationsOf(context) &&
+        _widgetPreviewTickNotifier.value.isOdd;
+    return WidgetStickerArtwork(
+      stickerKey: _widgetStickerKey,
+      twinkle: twinkle,
+    );
+  }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final crossAxisCount = constraints.maxWidth >= 560
-                ? 8
-                : constraints.maxWidth >= 400
-                ? 6
-                : 4;
-
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: visibleHeartStyles.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-                childAspectRatio: 1,
-              ),
-              itemBuilder: (context, index) {
-                final heart = visibleHeartStyles[index];
-                final isSelected = selectedKey == heart;
-                final optionLabel = context
-                    .tr('p7_heart_style_option')
-                    .replaceAll('{index}', '${index + 1}');
-
-                void selectHeart() {
-                  unawaited(_handleWidgetHeartStyleChanged(heart));
-                }
-
-                return Semantics(
-                  button: true,
-                  selected: isSelected,
-                  label: optionLabel,
-                  onTap: selectHeart,
-                  excludeSemantics: true,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(18),
-                      onTap: selectHeart,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOut,
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? const Color(0xFFFFEEF5)
-                              : const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(
-                            color: isSelected
-                                ? const Color(0xFFFF6B97)
-                                : const Color(0xFFE4EAF3),
-                            width: isSelected ? 1.6 : 1.1,
-                          ),
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color: const Color(
-                                      0xFFFF6B97,
-                                    ).withValues(alpha: 0.16),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ]
-                              : const [],
-                        ),
-                        child: Center(
-                          child: AnimatedScale(
-                            duration: const Duration(milliseconds: 220),
-                            scale: isSelected ? 1.08 : 1,
-                            child: ShaderMask(
-                              shaderCallback: (bounds) => const LinearGradient(
-                                colors: [
-                                  Color(0xFFFF4D8D),
-                                  Color(0xFFFFB86B),
-                                  Color(0xFF8B5CF6),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ).createShader(bounds),
-                              child: Text(
-                                heart,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 23,
-                                  height: 1,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            );
-          },
-        ),
-        if (hiddenCount > 0) ...[
-          const SizedBox(height: 10),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              onPressed: () {
-                showModalBottomSheet<void>(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (sheetContext) {
-                    return SafeArea(
-                      child: Container(
-                        margin: const EdgeInsets.all(12),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.12),
-                              blurRadius: 22,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    L10nService().translate(
-                                      'home_tat_ca_kieu_trai_tim',
-                                    ),
-                                    style: SLTheme.quicksand(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w900,
-                                      color: const Color(0xFF4A3640),
-                                    ),
-                                  ),
-                                ),
-                                IconButton(
-                                  onPressed: () => Navigator.pop(sheetContext),
-                                  tooltip: context.tr('p7_close'),
-                                  icon: const Icon(Icons.close_rounded),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Flexible(
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  final crossAxisCount =
-                                      constraints.maxWidth >= 640
-                                      ? 8
-                                      : constraints.maxWidth >= 440
-                                      ? 6
-                                      : 4;
-
-                                  return GridView.builder(
-                                    shrinkWrap: true,
-                                    physics: const ClampingScrollPhysics(),
-                                    itemCount: _widgetHeartStyleKeys.length,
-                                    gridDelegate:
-                                        SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: crossAxisCount,
-                                          crossAxisSpacing: 10,
-                                          mainAxisSpacing: 10,
-                                          childAspectRatio: 1,
-                                        ),
-                                    itemBuilder: (context, index) {
-                                      final heart =
-                                          _widgetHeartStyleKeys[index];
-                                      final isSelected = selectedKey == heart;
-                                      final optionLabel = context
-                                          .tr('p7_heart_style_option')
-                                          .replaceAll(
-                                            '{index}',
-                                            '${index + 1}',
-                                          );
-
-                                      Future<void> selectHeart() async {
-                                        await _handleWidgetHeartStyleChanged(
-                                          heart,
-                                        );
-                                        if (sheetContext.mounted) {
-                                          Navigator.pop(sheetContext);
-                                        }
-                                      }
-
-                                      return Semantics(
-                                        button: true,
-                                        selected: isSelected,
-                                        label: optionLabel,
-                                        onTap: selectHeart,
-                                        excludeSemantics: true,
-                                        child: Material(
-                                          color: Colors.transparent,
-                                          child: InkWell(
-                                            borderRadius: BorderRadius.circular(
-                                              18,
-                                            ),
-                                            onTap: selectHeart,
-                                            child: AnimatedContainer(
-                                              duration: const Duration(
-                                                milliseconds: 220,
-                                              ),
-                                              curve: Curves.easeOut,
-                                              decoration: BoxDecoration(
-                                                color: isSelected
-                                                    ? const Color(0xFFFFEEF5)
-                                                    : const Color(0xFFF8FAFC),
-                                                borderRadius:
-                                                    BorderRadius.circular(18),
-                                                border: Border.all(
-                                                  color: isSelected
-                                                      ? const Color(0xFFFF6B97)
-                                                      : const Color(0xFFE4EAF3),
-                                                  width: isSelected ? 1.6 : 1.1,
-                                                ),
-                                              ),
-                                              child: Center(
-                                                child: ShaderMask(
-                                                  shaderCallback: (bounds) =>
-                                                      const LinearGradient(
-                                                        colors: [
-                                                          Color(0xFFFF4D8D),
-                                                          Color(0xFFFFB86B),
-                                                          Color(0xFF8B5CF6),
-                                                        ],
-                                                        begin:
-                                                            Alignment.topLeft,
-                                                        end: Alignment
-                                                            .bottomRight,
-                                                      ).createShader(bounds),
-                                                  child: Text(
-                                                    heart,
-                                                    textAlign: TextAlign.center,
-                                                    style: const TextStyle(
-                                                      fontSize: 23,
-                                                      height: 1,
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-              icon: const Icon(Icons.more_horiz_rounded),
-              label: Text(
-                L10nService()
-                    .translate('home_xem_them')
-                    .replaceAll('{count}', hiddenCount.toString()),
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFFD81B60),
+  Widget _buildWidgetStickerPicker() => LayoutBuilder(
+    builder: (context, constraints) {
+      final columns = constraints.maxWidth >= 400 ? 3 : 2;
+      final width = (constraints.maxWidth - (columns - 1) * 10) / columns;
+      return Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: WidgetAppearance.stickerKeys
+            .where((key) => key != 'none')
+            .map(
+              (key) => SizedBox(
+                width: width,
+                child: WidgetVisualChoiceTile(
+                  key: ValueKey('widget-sticker-$key'),
+                  label: context.tr('widget_sticker_$key'),
+                  selected: _widgetStickerKey == key && !_showDiaryOnWidget,
+                  onTap: () => unawaited(_handleWidgetStickerChanged(key)),
+                  artwork: WidgetStickerArtwork(stickerKey: key),
                 ),
               ),
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFFD81B60),
+            )
+            .toList(growable: false),
+      );
+    },
+  );
+
+  Widget _buildWidgetHeartStylePicker() => LayoutBuilder(
+    builder: (context, constraints) {
+      final columns = constraints.maxWidth >= 400 ? 6 : 4;
+      final width = (constraints.maxWidth - (columns - 1) * 8) / columns;
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: _widgetHeartStyleKeys
+            .asMap()
+            .entries
+            .map(
+              (entry) => SizedBox(
+                width: width,
+                child: WidgetVisualChoiceTile(
+                  key: ValueKey('widget-heart-${entry.value}'),
+                  showLabel: false,
+                  label: context
+                      .tr('p7_heart_style_option')
+                      .replaceAll('{index}', (entry.key + 1).toString()),
+                  selected:
+                      _widgetHeartStyleKey == entry.value &&
+                      _widgetStickerKey == 'none' &&
+                      !_showDiaryOnWidget,
+                  onTap: () =>
+                      unawaited(_handleWidgetHeartStyleChanged(entry.value)),
+                  artwork: Center(
+                    child: Text(
+                      entry.value,
+                      style: const TextStyle(fontSize: 30),
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
+            )
+            .toList(growable: false),
+      );
+    },
+  );
 
-  String _resolvedWidgetSeasonKey() {
-    return WidgetService.resolveSeasonEffect(
-      seasonModeKey: _widgetSeasonModeKey,
-      loveDate: _loveDate,
-      birthday1: _dobU1,
-      birthday2: _dobU2,
-    );
-  }
-
-  List<Color> _widgetSeasonPalette(String seasonKey) {
-    switch (seasonKey) {
-      case 'valentine':
-        return const [Color(0xFFFF5B8A), Color(0xFFFFC4D6)];
-      case 'anniversary':
-        return const [Color(0xFFFFB84D), Color(0xFFFFE5A8)];
-      case 'birthday':
-        return const [Color(0xFF5B8CFF), Color(0xFF8FE8FF)];
-      case 'none':
-      default:
-        return const [Color(0xFFE2E8F0), Color(0xFFF8FAFC)];
-    }
-  }
-
-  double _widgetPreviewCardWidth(double maxWidth) {
-    if (maxWidth <= 0) {
-      return 0;
-    }
-    return maxWidth > 360 ? maxWidth - 4 : maxWidth;
-  }
-
-  Widget _buildWidgetHeartPreview(Color textColor, {double size = 72}) {
-    final tick = _widgetPreviewTickNotifier.value;
-    final styleKey = _normalizeWidgetHeartStyleKey(_widgetHeartStyleKey);
-
-    final styleSeed = styleKey.runes.fold<int>(0, (sum, rune) => sum + rune);
-    final colorSeed = _widgetHeartColorKey.runes.fold<int>(
-      0,
-      (sum, rune) => sum + rune,
-    );
-    final animatedStyleIndex =
-        (tick * 7 + styleSeed + colorSeed) % _widgetHeartStyleKeys.length;
-    final activeStyleKey = _widgetHeartAnimated
-        ? _widgetHeartStyleKeys[animatedStyleIndex]
-        : styleKey;
-    final phase = (tick + styleSeed) % 6;
-    final pulse = _widgetHeartAnimated
-        ? <double>[1.0, 1.08, 0.95, 1.06, 0.98, 1.03][phase]
-        : 1.0;
-    final floatY = _widgetHeartAnimated
-        ? <double>[0.0, -2.4, 1.0, -1.6, 0.7, -1.0][phase]
-        : 0.0;
-    final swayX = _widgetHeartAnimated
-        ? <double>[0.0, 2.2, -2.0, 1.2, -1.3, 0.8][phase]
-        : 0.0;
-    final emojiSize = size * 0.62;
-
-    if (_widgetHeartColorKey == 'none') {
-      return SizedBox(
+  Widget _buildWidgetHeartPreview(Color textColor, {double size = 72}) =>
+      SizedBox(
         width: size,
         height: size,
-        child: Center(
-          child: Transform.translate(
-            offset: Offset(swayX * 0.42, floatY),
-            child: Transform.scale(
-              scale: pulse,
-              child: Text(
-                activeStyleKey,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: emojiSize, height: 1),
-              ),
-            ),
-          ),
+        child: WidgetHeartArtwork(
+          styleKey: _normalizeWidgetHeartStyleKey(_widgetHeartStyleKey),
+          animated: _widgetHeartAnimated,
+          phase: _widgetPreviewTickNotifier.value,
         ),
       );
-    }
 
-    final palette = _widgetHeartPalette(_widgetHeartColorKey);
-    final primary = palette[0];
-    final secondary = palette[1];
-    final glow = palette[2];
+  String _resolvedWidgetSeasonKey() => WidgetService.resolveSeasonEffect(
+    seasonModeKey: _widgetSeasonModeKey,
+    loveDate: _loveDate,
+    birthday1: _dobU1,
+    birthday2: _dobU2,
+  );
 
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Center(
-        child: Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.center,
-          children: [
-            Container(
-              width: size * 0.9,
-              height: size * 0.9,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    glow.withValues(alpha: 0.92),
-                    primary.withValues(alpha: 0.20),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.54, 1.0],
-                ),
-              ),
-            ),
-            if (_widgetHeartAnimated)
-              Positioned(
-                top: size * 0.18 + (floatY * 0.35),
-                right: size * 0.14 - (swayX * 0.45),
-                child: Container(
-                  width: size * 0.14,
-                  height: size * 0.14,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: secondary.withValues(alpha: 0.34),
-                  ),
-                ),
-              ),
-            if (_widgetHeartAnimated)
-              Positioned(
-                left: size * 0.14 + (swayX * 0.24),
-                bottom: size * 0.16,
-                child: Container(
-                  width: size * 0.1,
-                  height: size * 0.1,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: glow.withValues(alpha: 0.86),
-                  ),
-                ),
-              ),
-            Transform.translate(
-              offset: Offset(swayX * 0.42, floatY),
-              child: Transform.scale(
-                scale: pulse,
-                child: ShaderMask(
-                  shaderCallback: (bounds) => LinearGradient(
-                    colors: [primary, secondary, glow],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ).createShader(bounds),
-                  child: Text(
-                    activeStyleKey,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: emojiSize,
-                      height: 1,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(
-                          color: primary.withValues(
-                            alpha: _widgetHeartAnimated ? 0.28 : 0.16,
-                          ),
-                          blurRadius: size * 0.18,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  List<Color> _widgetSeasonPalette(String key) => switch (key) {
+    'valentine' => const [Color(0xFFFF5B8A), Color(0xFFFFC4D6)],
+    'anniversary' => const [Color(0xFFFFB84D), Color(0xFFFFE5A8)],
+    'birthday' => const [Color(0xFF5B8CFF), Color(0xFF8FE8FF)],
+    _ => const [Color(0xFFE2E8F0), Color(0xFFF8FAFC)],
+  };
 
-  LinearGradient _widgetPreviewCardGradient(
-    String themeKey,
-    List<Color> colors,
-  ) {
-    if (themeKey != 'premium') {
-      return LinearGradient(
-        colors: colors,
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
-    }
-
-    const begins = <Alignment>[
-      Alignment(-1.0, -1.0),
-      Alignment(-0.4, -1.0),
-      Alignment(-0.9, -0.2),
-      Alignment(-0.3, -0.9),
-    ];
-    const ends = <Alignment>[
-      Alignment(1.0, 1.0),
-      Alignment(0.9, 1.0),
-      Alignment(1.0, 0.5),
-      Alignment(1.0, 1.0),
-    ];
-    const stopOffsets = <double>[0.0, 0.04, -0.03, 0.02];
-    final phase = _widgetPreviewTickNotifier.value % 4;
-
-    return LinearGradient(
-      colors: [
-        colors[0].withValues(alpha: 0.98),
-        colors[1].withValues(alpha: 0.96),
-        colors[2].withValues(alpha: 0.94),
-        colors[3].withValues(alpha: 0.98),
-      ],
-      stops: [0.0, (0.34 + stopOffsets[phase]).clamp(0.18, 0.46), 0.72, 1.0],
-      begin: begins[phase],
-      end: ends[phase],
-    );
-  }
+  double _widgetPreviewCardWidth(double width) => width;
 
   Widget _buildPremiumWidgetPreviewAurora(double cardWidth, double cardHeight) {
     final phase = _widgetPreviewTickNotifier.value % 4;
@@ -824,160 +360,6 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
     );
   }
 
-  Widget _buildWidgetPreviewDecorations(
-    String themeKey,
-    Color accentColor,
-    double width,
-    double height,
-  ) {
-    if (themeKey == 'premium') return const SizedBox.shrink();
-
-    final isDark = themeKey == 'dark';
-
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: Stack(
-          children: [
-            // Top Right glow circle
-            if (!isDark && themeKey != 'white')
-              Positioned(
-                top: -height * 0.2,
-                right: -width * 0.1,
-                child: Container(
-                  width: width * 0.44,
-                  height: width * 0.44,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        accentColor.withValues(alpha: 0.15),
-                        accentColor.withValues(alpha: 0.04),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            // Bottom Left glow circle
-            if (!isDark && themeKey != 'white')
-              Positioned(
-                bottom: -height * 0.22,
-                left: -width * 0.12,
-                child: Container(
-                  width: width * 0.36,
-                  height: width * 0.36,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        Colors.white.withValues(alpha: 0.4),
-                        Colors.white.withValues(alpha: 0.1),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            // Dark theme stars
-            if (isDark) ...[
-              Positioned(
-                top: height * 0.15,
-                right: width * 0.15,
-                child: Icon(
-                  Icons.auto_awesome_rounded,
-                  size: 10,
-                  color: Colors.white.withValues(alpha: 0.2),
-                ),
-              ),
-              Positioned(
-                bottom: height * 0.2,
-                left: width * 0.12,
-                child: Icon(
-                  Icons.star_rounded,
-                  size: 8,
-                  color: Colors.white.withValues(alpha: 0.15),
-                ),
-              ),
-            ],
-            // White theme soft blue blob
-            if (themeKey == 'white')
-              Positioned(
-                top: -height * 0.15,
-                right: -width * 0.05,
-                child: Container(
-                  width: width * 0.38,
-                  height: width * 0.38,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        const Color(0xFFE0F2FE).withValues(alpha: 0.5),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ignore: unused_element
-  Widget _buildWidgetDayLabel(
-    Color textColor,
-    int days, {
-    required bool compact,
-  }) {
-    return Text(
-      L10nService().format('home_days_count', {'days': days}),
-      style: SLTheme.quicksand(
-        color: textColor,
-        fontWeight: FontWeight.w900,
-        fontSize: compact ? 14.2 : 15.4,
-        letterSpacing: -0.2,
-        height: 1,
-      ),
-    );
-  }
-
-  Widget _buildWidgetDayStackedLabel(
-    Color textColor,
-    int days, {
-    required bool compact,
-  }) {
-    final countSize = compact ? 18.2 : 19.2;
-    final unitSize = compact ? 12.4 : 13.2;
-    return Text.rich(
-      TextSpan(
-        children: [
-          TextSpan(
-            text: '$days\n',
-            style: SLTheme.quicksand(
-              color: textColor,
-              fontWeight: FontWeight.w900,
-              fontSize: countSize,
-              letterSpacing: -0.3,
-              height: 0.96,
-            ),
-          ),
-          TextSpan(
-            text: context.tr('p7_day_lowercase'),
-            style: SLTheme.quicksand(
-              color: textColor,
-              fontWeight: FontWeight.w800,
-              fontSize: unitSize,
-              letterSpacing: -0.1,
-              height: 0.98,
-            ),
-          ),
-        ],
-      ),
-      textAlign: TextAlign.center,
-    );
-  }
-
   Widget _buildWidgetPreview() {
     return ValueListenableBuilder<int>(
       valueListenable: _widgetPreviewTickNotifier,
@@ -991,9 +373,26 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
         final accentColor = seasonKey == 'none'
             ? heartPalette.first
             : seasonPalette.first;
-        final daysColor = theme.premium || themeKey == 'dark'
-            ? Colors.white
-            : Color.alphaBlend(accentColor.withValues(alpha: 0.18), textColor);
+        final dark = const ['dark', 'premium', 'cosmic'].contains(themeKey);
+        final daysBase = switch (themeKey) {
+          'white' => const Color(0xFF9B335E),
+          'blue' => const Color(0xFF0F52BA),
+          'orange' => const Color(0xFFF97316),
+          'purple' => const Color(0xFF8B5CF6),
+          'green' => const Color(0xFF16A34A),
+          'red' => const Color(0xFFE11D48),
+          'dark' || 'premium' => Colors.white,
+          'cosmic' => const Color(0xFFFFE396),
+          _ => const Color(0xFFFF4D73),
+        };
+        final softAccent = seasonKey == 'none'
+            ? Color.lerp(heartPalette[1], Colors.white, .38)!
+            : seasonPalette[1];
+        final daysColor = Color.lerp(
+          daysBase,
+          dark ? softAccent : accentColor,
+          dark ? .28 : .36,
+        )!;
         final days = _loveDayCounter();
         final label1 = _nameU1.trim().isEmpty
             ? context.tr('role_male')
@@ -1003,15 +402,6 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
             : _nameU2.trim();
         final showDiaryPreview = _showDiaryOnWidget;
         final isCountdownStyle = _widgetStyleKey == 'countdown';
-        final loveDateLabel = _loveDate.trim().isEmpty
-            ? context.tr('p7_love_date_starts_today')
-            : context
-                  .tr('p7_love_date_since')
-                  .replaceAll(
-                    '{date}',
-                    DateInputUtils.normalizeForDisplay(_loveDate),
-                  );
-
         return LayoutBuilder(
           builder: (context, constraints) {
             final maxWidth =
@@ -1020,32 +410,6 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                 : 340.0;
             final cardWidth = _widgetPreviewCardWidth(maxWidth);
             final isCompact = cardWidth < 320;
-            final isLarge = cardWidth >= 370;
-            final cardHeight = showDiaryPreview
-                ? (cardWidth * (isCompact ? 0.68 : 0.60))
-                      .clamp(196.0, 286.0)
-                      .toDouble()
-                : (cardWidth * (isCompact ? 0.54 : 0.50))
-                      .clamp(168.0, 236.0)
-                      .toDouble();
-            final avatarRadius = isCompact ? 25.0 : (isLarge ? 31.0 : 28.0);
-            final avatarWidth = isCompact ? 82.0 : (isLarge ? 112.0 : 96.0);
-            final heartSize = showDiaryPreview
-                ? (isCompact ? 58.0 : (isLarge ? 70.0 : 64.0))
-                : (isCompact ? 66.0 : (isLarge ? 76.0 : 70.0));
-            final diaryPreviewWidth = isCompact
-                ? 58.0
-                : (isLarge ? 74.0 : 66.0);
-            final diaryPreviewHeight = isCompact
-                ? 84.0
-                : (isLarge ? 108.0 : 96.0);
-            final diaryBlockOffsetY = showDiaryPreview
-                ? (isCompact ? 4.0 : (isLarge ? 8.0 : 6.0))
-                : 0.0;
-            final diaryBlockGap = showDiaryPreview
-                ? (isCompact ? 4.0 : 6.0)
-                : 6.0;
-
             final isSoulEventStyle = _widgetPanelTabKey == 'soulevent';
             if (isSoulEventStyle) {
               final widgetHeight = (cardWidth * (isCompact ? 0.56 : 0.52))
@@ -1053,14 +417,22 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                   .toDouble();
 
               return StableFutureBuilder<Map<String, String>>(
-                requestKey: (_auth.currentUser?.uid, _houseId,
+                requestKey: (
+                  _auth.currentUser?.uid,
+                  _houseId,
                   Localizations.localeOf(context).toLanguageTag(),
-                  DateTime.now().year, DateTime.now().month, DateTime.now().day),
+                  DateTime.now().year,
+                  DateTime.now().month,
+                  DateTime.now().day,
+                ),
                 load: _loadSoulEventPreviewDataInternal,
                 builder: (context, snapshot) {
-                  if (!snapshot.hasData && snapshot.connectionState == ConnectionState.waiting) {
-                    return SizedBox(height: widgetHeight,
-                      child: const Center(child: CircularProgressIndicator()));
+                  if (!snapshot.hasData &&
+                      snapshot.connectionState == ConnectionState.waiting) {
+                    return SizedBox(
+                      height: widgetHeight,
+                      child: const Center(child: CircularProgressIndicator()),
+                    );
                   }
                   final data = snapshot.data ?? _emptySoulEventPreviewData();
 
@@ -1090,8 +462,16 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                       height: widgetHeight,
                       clipBehavior: Clip.antiAlias,
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(26),
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFFFFF7DA),
+                            Color(0xFFFFE0D2),
+                            Color(0xFFF4D6E7),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(24),
                         border: Border.all(
                           color: eventColor.withValues(alpha: 0.35),
                           width: 1.8,
@@ -1146,9 +526,12 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                                           ),
                                         ],
                                       ),
-                                      child: const Text(
-                                        '🎁',
-                                        style: TextStyle(fontSize: 20),
+                                      child: const SizedBox(
+                                        width: 40,
+                                        height: 34,
+                                        child: WidgetStickerArtwork(
+                                          stickerKey: 'gift',
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(width: 12),
@@ -1209,252 +592,44 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
               );
             }
 
-            if (isCountdownStyle) {
-              final countdownHeight = (cardWidth * (isCompact ? 0.56 : 0.52))
-                  .clamp(176.0, 228.0)
-                  .toDouble();
-              final topAvatarRadius = isCompact ? 20.0 : 24.0;
-
-              return Center(
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 850),
-                  curve: Curves.easeInOut,
-                  width: cardWidth,
-                  height: countdownHeight,
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
-                    gradient: _widgetPreviewCardGradient(
-                      themeKey,
-                      theme.colors,
-                    ),
-                    borderRadius: BorderRadius.circular(26),
-                    border: Border.all(
-                      color: themeKey == 'white'
-                          ? const Color(0xFFE2E8F0)
-                          : theme.borderColor.withValues(alpha: 0.35),
-                      width: 1.8,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.colors.first.withValues(alpha: 0.22),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    children: [
-                      if (theme.premium)
-                        Positioned.fill(
-                          child: _buildPremiumWidgetPreviewAurora(
-                            cardWidth,
-                            countdownHeight,
-                          ),
-                        )
-                      else
-                        _buildWidgetPreviewDecorations(
-                          themeKey,
-                          accentColor,
-                          cardWidth,
-                          countdownHeight,
-                        ),
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          isCompact ? 16 : 20,
-                          16,
-                          isCompact ? 16 : 20,
-                          16,
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                _buildWidgetPreviewPerson(
-                                  avatarUrl: _avatarUrl1,
-                                  label: label1,
-                                  textColor: textColor,
-                                  radius: topAvatarRadius,
-                                  width: isCompact ? 70 : 78,
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                  ),
-                                  child: Icon(
-                                    Icons.favorite_rounded,
-                                    color: accentColor,
-                                    size: isCompact ? 18 : 20,
-                                  ),
-                                ),
-                                _buildWidgetPreviewPerson(
-                                  avatarUrl: _avatarUrl2,
-                                  label: label2,
-                                  textColor: textColor,
-                                  radius: topAvatarRadius,
-                                  width: isCompact ? 70 : 78,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '$days',
-                              style: SLTheme.quicksand(
-                                color: daysColor,
-                                fontSize: isCompact ? 34 : 40,
-                                fontWeight: FontWeight.w900,
-                                height: 1,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              L10nService().translate('home_days_label'),
-                              style: SLTheme.quicksand(
-                                color: daysColor.withValues(alpha: 0.78),
-                                fontSize: isCompact ? 13 : 14,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              loveDateLabel,
-                              textAlign: TextAlign.center,
-                              style: SLTheme.quicksand(
-                                color: textColor.withValues(alpha: 0.82),
-                                fontSize: isCompact ? 11.8 : 12.6,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-
-            return Center(
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 850),
-                curve: Curves.easeInOut,
-                width: cardWidth,
-                height: cardHeight,
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  gradient: _widgetPreviewCardGradient(themeKey, theme.colors),
-                  borderRadius: BorderRadius.circular(26),
-                  border: Border.all(
-                    color: themeKey == 'white'
-                        ? const Color(0xFFE2E8F0)
-                        : theme.borderColor.withValues(alpha: 0.35),
-                    width: 1.8,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.colors.first.withValues(alpha: 0.22),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    if (theme.premium)
-                      Positioned.fill(
-                        child: _buildPremiumWidgetPreviewAurora(
-                          cardWidth,
-                          cardHeight,
-                        ),
-                      )
-                    else
-                      _buildWidgetPreviewDecorations(
-                        themeKey,
-                        accentColor,
-                        cardWidth,
-                        cardHeight,
-                      ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        isCompact ? 16 : 20,
-                        16,
-                        isCompact ? 16 : 20,
-                        16,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: _buildWidgetPreviewPerson(
-                                      avatarUrl: _avatarUrl1,
-                                      label: label1,
-                                      textColor: textColor,
-                                      radius: avatarRadius,
-                                      width: avatarWidth,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: isCompact ? 10 : 14),
-                                SizedBox(
-                                  width: isCompact ? 96 : (isLarge ? 118 : 106),
-                                  child: Transform.translate(
-                                    offset: Offset(0, diaryBlockOffsetY),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        _buildWidgetDayStackedLabel(
-                                          daysColor,
-                                          days,
-                                          compact: isCompact,
-                                        ),
-                                        SizedBox(height: diaryBlockGap),
-                                        if (!showDiaryPreview)
-                                          _buildWidgetHeartPreview(
-                                            textColor,
-                                            size: heartSize,
-                                          ),
-                                        if (showDiaryPreview) ...[
-                                          SizedBox(height: diaryBlockGap),
-                                          _buildWidgetDiaryPreview(
-                                            textColor,
-                                            width: diaryPreviewWidth,
-                                            height: diaryPreviewHeight,
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: isCompact ? 10 : 14),
-                                Expanded(
-                                  child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: _buildWidgetPreviewPerson(
-                                      avatarUrl: _avatarUrl2,
-                                      label: label2,
-                                      textColor: textColor,
-                                      radius: avatarRadius,
-                                      width: avatarWidth,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            return WidgetCouplePreview(
+              sizeKey: _widgetPreviewSizeKey,
+              colors: theme.colors,
+              textColor: textColor,
+              daysColor: daysColor,
+              heading: context.tr('countdown_couple_mode'),
+              days: '$days',
+              unit: _loveUnit.trim().isEmpty
+                  ? context.tr('p7_day_lowercase')
+                  : _loveUnit.trim(),
+              name1: label1,
+              name2: label2,
+              avatar1: _avatarUrl1,
+              avatar2: _avatarUrl2,
+              countdown: isCountdownStyle,
+              loveDate: _loveDate,
+              backgroundOverlay: theme.premium
+                  ? _buildPremiumWidgetPreviewAurora(
+                      _widgetPreviewSizeKey == 'small'
+                          ? 140
+                          : _widgetPreviewSizeKey == 'large'
+                          ? 320
+                          : 220,
+                      _widgetPreviewSizeKey == 'small'
+                          ? 120
+                          : _widgetPreviewSizeKey == 'large'
+                          ? 240
+                          : 160,
+                    )
+                  : null,
+              dark: const ['dark', 'premium', 'cosmic'].contains(themeKey),
+              center: showDiaryPreview && !isCountdownStyle
+                  ? _buildWidgetDiaryPreview(
+                      textColor,
+                      width: 120,
+                      height: 98.4,
+                    )
+                  : _buildWidgetCenterVisual(textColor),
             );
           },
         );
@@ -1539,70 +714,6 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
       'color': '#EC4899',
     };
   }
-
-  Widget _buildWidgetPreviewPerson({
-    required String avatarUrl,
-    required String label,
-    required Color textColor,
-    double radius = 34,
-    double width = 76,
-  }) {
-    final iconSize = radius * 0.78;
-    final fontSize = radius >= 30 ? 12.5 : 11.4;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(3.5),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.20),
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(1.5),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-            child: CircleAvatar(
-              radius: radius - 1.5,
-              backgroundColor: Colors.white.withValues(alpha: 0.85),
-              backgroundImage: avatarUrl.isNotEmpty
-                  ? CachedNetworkImageProvider(avatarUrl)
-                  : null,
-              child: avatarUrl.isEmpty
-                  ? Icon(
-                      Icons.person,
-                      color: textColor.withValues(alpha: 0.75),
-                      size: iconSize * 0.9,
-                    )
-                  : null,
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          width: width,
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: SLTheme.quicksand(
-              color: textColor,
-              fontWeight: FontWeight.w900,
-              fontSize: fontSize + 4.0,
-              height: 1.15,
-              letterSpacing: -0.1,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 class _WidgetDiaryPreviewStream extends StatefulWidget {
@@ -1613,6 +724,7 @@ class _WidgetDiaryPreviewStream extends StatefulWidget {
     required this.textColor,
     required this.width,
     required this.height,
+    required this.revision,
   });
 
   final _SettingsTabState state;
@@ -1621,6 +733,7 @@ class _WidgetDiaryPreviewStream extends StatefulWidget {
   final Color textColor;
   final double width;
   final double height;
+  final int revision;
 
   @override
   State<_WidgetDiaryPreviewStream> createState() =>
@@ -1637,15 +750,13 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
   void initState() {
     super.initState();
     _updateStream();
-    _rotationTimer = Timer.periodic(const Duration(minutes: 1), (_) {
-      if (mounted) setState(() {});
-    });
   }
 
   @override
   void didUpdateWidget(covariant _WidgetDiaryPreviewStream oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.houseId != widget.houseId) {
+    if (oldWidget.houseId != widget.houseId ||
+        oldWidget.revision != widget.revision) {
       _updateStream();
     }
   }
@@ -1657,203 +768,52 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
   }
 
   void _updateStream() {
-    _imageUrlsFuture = widget.state._loadWidgetDiaryUrls(limit: 24);
+    _imageUrlsFuture = _loadPreviewImages();
   }
 
-  Widget _buildEmptyPreview() {
-    return Container(
-      width: widget.width,
-      height: widget.height,
-      decoration: BoxDecoration(
-        color: widget.textColor.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(_outerRadius),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.62),
-          width: 0.95,
-        ),
-      ),
-      child: Center(
-        child: Icon(
-          Icons.photo_library_rounded,
-          size: widget.width * 0.4,
-          color: widget.textColor.withValues(alpha: 0.45),
-        ),
-      ),
-    );
+  Future<List<String>> _loadPreviewImages() async {
+    if (!kIsWeb && Platform.isAndroid) {
+      final raw = await HomeWidget.getWidgetData<String>(
+        'diaryImagePaths',
+        defaultValue: '[]',
+      );
+      final paths = (jsonDecode(raw ?? '[]') as List).whereType<String>();
+      return paths
+          .where((path) => File(path).existsSync())
+          .toList(growable: false);
+    }
+    return widget.state._loadWidgetDiaryUrls(limit: 12);
   }
 
-  Widget _buildTile({
-    String? imageUrl,
-    required double tileWidth,
-    required double tileHeight,
-    required BorderRadius borderRadius,
-  }) {
-    final iconSize = (tileWidth < tileHeight ? tileWidth : tileHeight) * 0.34;
-    return Container(
-      width: tileWidth,
-      height: tileHeight,
-      decoration: BoxDecoration(
-        color: widget.textColor.withValues(alpha: 0.07),
-        borderRadius: borderRadius,
-      ),
-      child: imageUrl == null
-          ? Icon(
-              Icons.photo_library_rounded,
-              size: iconSize,
-              color: widget.textColor.withValues(alpha: 0.45),
-            )
-          : ClipRRect(
-              borderRadius: borderRadius,
-              child: CachedNetworkImage(
-                imageUrl: imageUrl,
-                fit: BoxFit.cover,
-                filterQuality: FilterQuality.medium,
-                maxWidthDiskCache: tileWidth.ceil(),
-                maxHeightDiskCache: tileHeight.ceil(),
-                memCacheWidth: 400,
-                errorWidget: (_, _, _) {
-                  return Icon(
-                    Icons.broken_image_rounded,
-                    size: iconSize,
-                    color: widget.textColor.withValues(alpha: 0.45),
-                  );
-                },
-              ),
-            ),
-    );
-  }
+  Widget _buildEmptyPreview() =>
+      widget.state._buildWidgetCenterVisual(widget.textColor);
 
   @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<List<String>>(
-      future: _imageUrlsFuture,
-      builder: (context, snapshot) {
-        final imageUrls = snapshot.data ?? const <String>[];
-        if (imageUrls.isEmpty) {
-          return _buildEmptyPreview();
-        }
-
-        final timeOffset = (DateTime.now().millisecondsSinceEpoch ~/ 60000);
-        final filledUrls = switch (widget.layoutKey) {
-          'grid' => List<String?>.generate(
-            4,
-            (index) => imageUrls[(index + timeOffset) % imageUrls.length],
-          ),
-          'duo' => List<String?>.generate(
-            2,
-            (index) => imageUrls[(index + timeOffset) % imageUrls.length],
-          ),
-          _ => <String?>[imageUrls[timeOffset % imageUrls.length]],
-        };
-        final previewKey = '${widget.layoutKey}_${filledUrls.join('|')}';
-
-        return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 320),
-          switchInCurve: Curves.easeOut,
-          switchOutCurve: Curves.easeIn,
-          transitionBuilder: (child, animation) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-          child: Container(
-            key: ValueKey(previewKey),
-            width: widget.width,
-            height: widget.height,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(_outerRadius),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.68),
-                width: 0.95,
-              ),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(_outerRadius - 1),
-              child: Padding(
-                padding: const EdgeInsets.all(3),
-                child: switch (widget.layoutKey) {
-                  'grid' => Column(
-                    children: [
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: _buildTile(
-                                imageUrl: filledUrls[0],
-                                tileWidth: widget.width / 2,
-                                tileHeight: widget.height / 2,
-                                borderRadius: BorderRadius.circular(11),
-                              ),
-                            ),
-                            const SizedBox(width: 3),
-                            Expanded(
-                              child: _buildTile(
-                                imageUrl: filledUrls[1],
-                                tileWidth: widget.width / 2,
-                                tileHeight: widget.height / 2,
-                                borderRadius: BorderRadius.circular(11),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: _buildTile(
-                                imageUrl: filledUrls[2],
-                                tileWidth: widget.width / 2,
-                                tileHeight: widget.height / 2,
-                                borderRadius: BorderRadius.circular(11),
-                              ),
-                            ),
-                            const SizedBox(width: 3),
-                            Expanded(
-                              child: _buildTile(
-                                imageUrl: filledUrls[3],
-                                tileWidth: widget.width / 2,
-                                tileHeight: widget.height / 2,
-                                borderRadius: BorderRadius.circular(11),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  'duo' => Column(
-                    children: [
-                      Expanded(
-                        child: _buildTile(
-                          imageUrl: filledUrls[0],
-                          tileWidth: widget.width,
-                          tileHeight: widget.height / 2,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Expanded(
-                        child: _buildTile(
-                          imageUrl: filledUrls[1],
-                          tileWidth: widget.width,
-                          tileHeight: widget.height / 2,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ],
-                  ),
-                  _ => _buildTile(
-                    imageUrl: filledUrls.first,
-                    tileWidth: widget.width,
-                    tileHeight: widget.height,
-                    borderRadius: BorderRadius.circular(13),
-                  ),
-                },
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
+  Widget build(BuildContext context) => FutureBuilder<List<String>>(
+    future: _imageUrlsFuture,
+    builder: (context, snapshot) {
+      final paths = snapshot.data ?? const <String>[];
+      if (paths.isEmpty) return _buildEmptyPreview();
+      Widget image(String path) => !kIsWeb && Platform.isAndroid
+          ? Image.file(
+              File(path),
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => _buildEmptyPreview(),
+            )
+          : CachedNetworkImage(
+              imageUrl: path,
+              fit: BoxFit.cover,
+              errorWidget: (_, _, _) => _buildEmptyPreview(),
+            );
+      return WidgetPhotoCollage(
+        images: paths.take(4).map(image).toList(),
+        layoutKey: widget.layoutKey,
+        frameKey: widget.state._widgetPhotoFrameKey,
+        frameColor: widget.state._widgetHeartPalette(
+          widget.state._widgetHeartColorKey,
+        )[1],
+        stickerKey: widget.state._widgetStickerKey,
+      );
+    },
+  );
 }

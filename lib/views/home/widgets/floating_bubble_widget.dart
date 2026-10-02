@@ -162,7 +162,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
     _soulMessagesSub = FirebaseDatabase.instance
         .ref('houses/$hId/soul_merge/chat')
         .orderByChild('timestamp')
-        .limitToLast(50)
+        .limitToLast(20)
         .onValue
         .listen(
           (event) {

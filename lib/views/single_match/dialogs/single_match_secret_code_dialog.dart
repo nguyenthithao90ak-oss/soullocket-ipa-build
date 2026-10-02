@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
@@ -67,7 +68,7 @@ class _SingleMatchSecretCodeDialogState
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(AppErrorMapper.resolve(e).message),
           backgroundColor: SLColors.danger,
         ),

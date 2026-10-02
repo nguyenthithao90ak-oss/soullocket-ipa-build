@@ -130,7 +130,7 @@ class _CommentSheetState extends State<_CommentSheet> {
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ).showSnackBar(SLSnackBar(content: Text(message)));
   }
 
   @override
@@ -531,11 +531,8 @@ class _CommentSheetState extends State<_CommentSheet> {
                     context: context,
                     builder: (ctx) {
                       final rCtrl = TextEditingController();
-                      return AlertDialog(
-                        title: Text(
-                          context.tr('home_bocobnhlun_7e340e'),
-                          style: SLTheme.quicksand(fontWeight: FontWeight.bold),
-                        ),
+                      return SLAlertDialog(
+                        title: Text(context.tr('home_bocobnhlun_7e340e')),
                         content: TextField(
                           controller: rCtrl,
                           autofocus: true,
@@ -544,11 +541,13 @@ class _CommentSheetState extends State<_CommentSheet> {
                           ),
                         ),
                         actions: [
-                          TextButton(
+                          SLDialogAction(
                             onPressed: () => Navigator.pop(ctx),
                             child: Text(context.tr('home_hy_1e4050')),
                           ),
-                          TextButton(
+                          SLDialogAction(
+                            primary: true,
+
                             onPressed: () =>
                                 Navigator.pop(ctx, rCtrl.text.trim()),
                             child: Text(context.tr('home_gi_377294')),
@@ -587,26 +586,22 @@ class _CommentSheetState extends State<_CommentSheet> {
 
                     final ok = await showDialog<bool>(
                       context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: Text(
-                          context.tr('home_xcnhnchn_ae00a6'),
-                          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-                        ),
+                      builder: (ctx) => SLAlertDialog(
+                        title: Text(context.tr('home_xcnhnchn_ae00a6')),
                         content: Text(
                           context.tr('p9_comments_block_description'),
-                          style: SLTheme.quicksand(),
                         ),
                         actions: [
-                          TextButton(
+                          SLDialogAction(
                             onPressed: () => Navigator.pop(ctx, false),
                             child: Text(context.tr('home_hy_1e4050')),
                           ),
-                          TextButton(
+                          SLDialogAction(
+                            primary: true,
+                            destructive: true,
+
                             onPressed: () => Navigator.pop(ctx, true),
-                            child: Text(
-                              context.tr('home_chn_483b6f'),
-                              style: const TextStyle(color: Colors.red),
-                            ),
+                            child: Text(context.tr('home_chn_483b6f')),
                           ),
                         ],
                       ),

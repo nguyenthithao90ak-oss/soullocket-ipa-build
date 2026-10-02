@@ -1,6 +1,8 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 // TODO: [TECH-DEBT] File này có 1700+ lines - cần refactor thành các widgets nhỏ hơn
 // TODO: [TECH-DEBT] Xóa ignore_for_file sau khi đã dọn dẹp unused code
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
@@ -69,12 +71,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
   void _showInfoDialog(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          'Ghép ảnh nghệ thuật',
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-        ),
+      builder: (context) => SLAlertDialog(
+        title: Text('Ghép ảnh nghệ thuật'),
         content: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,9 +96,11 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
           ),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu', style: TextStyle(color: Colors.blue)),
+            child: const Text('Đã hiểu'),
           ),
         ],
       ),
@@ -701,7 +701,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
           if (_deviceFiles.length > 50) {
             _deviceFiles.removeRange(50, _deviceFiles.length);
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+              SLSnackBar(
                 content: Text(
                   L10nService().translate('util_chchntia50_7e8030'),
                 ),
@@ -714,7 +714,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text(
               AppErrorMapper.resolve(
                 e,
@@ -998,7 +998,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     urls = editablePhotos.map((item) => item.source).toList(growable: false);
     if (urls.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(L10nService().translate('util_chacnhghp_17d056')),
         ),
       );
@@ -1079,7 +1079,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     } catch (e) {
       if (mounted && requestId == _generationTicket) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text(
               AppErrorMapper.resolve(
                 e,
@@ -1134,7 +1134,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
           await CollageLimitService().consumeLimit();
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            SLSnackBar(
               content: Text(L10nService().translate('util_lunhthnhcn_feffae')),
             ),
           );
@@ -1150,7 +1150,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text(
               AppErrorMapper.resolve(
                 e,
@@ -1185,7 +1185,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text(
               AppErrorMapper.resolve(
                 e,

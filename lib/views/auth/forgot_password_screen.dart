@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -57,22 +59,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (!mounted) return;
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: _style.surface,
+      builder: (ctx) => SLAlertDialog(
         scrollable: true,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          context.tr('forgot_pwd_dialog_error_title'),
-          style: _style.text(size: 19, weight: FontWeight.w700),
-        ),
-        content: Text(msg, style: _style.text(color: _style.muted)),
+
+        title: Text(context.tr('forgot_pwd_dialog_error_title')),
+        content: Text(msg),
         actions: [
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(
-              context.tr('forgot_pwd_dialog_close'),
-              style: _style.text(color: _style.accent),
-            ),
+            child: Text(context.tr('forgot_pwd_dialog_close')),
           ),
         ],
       ),
@@ -419,35 +416,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           context: context,
           barrierDismissible: false,
           useRootNavigator: true,
-          builder: (ctx) => AlertDialog(
-            backgroundColor: _style.surface,
+          builder: (ctx) => SLAlertDialog(
             scrollable: true,
-            shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
-            title: Text(
-              context.tr('forgot_pwd_success_title'),
-              style: _style.text(size: 20, weight: FontWeight.w700),
-            ),
-            content: Text(
-              context.tr('forgot_pwd_success_message'),
-              style: _style.text(color: _style.muted),
-            ),
+
+            title: Text(context.tr('forgot_pwd_success_title')),
+            content: Text(context.tr('forgot_pwd_success_message')),
             actions: [
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _style.button,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: SLRadius.smAll),
-                ),
+              SLDialogAction(
+                primary: true,
+
                 onPressed: () {
                   Navigator.of(ctx).pop();
                   if (mounted) {
                     Navigator.of(context).pop();
                   }
                 },
-                child: Text(
-                  context.tr('forgot_pwd_btn_home'),
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
+                child: Text(context.tr('forgot_pwd_btn_home')),
               ),
             ],
           ),
@@ -644,10 +628,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       }
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
+                          SLSnackBar(
                             content: Text(
                               context.tr('forgot_pwd_snack_otp_resent'),
-                              style: SLTheme.quicksand(),
+                              
                             ),
                             backgroundColor: Colors.green,
                           ),

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -224,18 +225,21 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
     final msgFail = context.tr('util_chathchnth_5a7417');
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => SLAlertDialog(
         title: Text(context.tr('util_chnthitb_172ff3')),
         content: Text(context.tr('util_bncchcmunc_271400')),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(context.tr('util_hy_1e4050'))),
-          ElevatedButton(
+          SLDialogAction(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(context.tr('util_hy_1e4050')),
+          ),
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(context.tr('util_chn_483b6f'),
-                style: const TextStyle(color: Colors.white)),
+
+            child: Text(context.tr('util_chn_483b6f')),
           ),
         ],
       ),

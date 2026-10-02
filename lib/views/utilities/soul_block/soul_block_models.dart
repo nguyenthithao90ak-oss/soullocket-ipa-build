@@ -98,6 +98,7 @@ class _PlacementEval {
     required this.clearedLines,
     required this.heuristic,
     required this.boardAfter,
+    this.bombClearedCells = 0,
   });
 
   final int row;
@@ -105,6 +106,30 @@ class _PlacementEval {
   final int clearedLines;
   final double heuristic;
   final List<List<bool>> boardAfter;
+  final int bombClearedCells;
+}
+
+// Trạng thái chuỗi dùng chung cho ván thật và các nhánh dự đoán sinh mảnh.
+typedef _SoulComboState = ({int level, int misses, bool broken});
+
+class _SoulBatchPlan {
+  const _SoulBatchPlan({
+    required this.board,
+    required this.templates,
+    required this.comboLevel,
+    required this.comboMisses,
+    this.score = 0,
+    this.clearedLines = 0,
+    this.comboBreaks = 0,
+  });
+
+  final List<List<bool>> board;
+  final List<_SoulPieceTemplate> templates;
+  final int comboLevel;
+  final int comboMisses;
+  final double score;
+  final int clearedLines;
+  final int comboBreaks;
 }
 
 class _PlacementResolution {

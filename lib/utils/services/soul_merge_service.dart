@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'house_service.dart';
 import 'notification_service.dart';
 import 'widget_service.dart';
+import 'soul_message_history.dart';
+import 'soul_merge_role_stream.dart';
 import 'package:soullocket_app/utils/services/core/presence_service.dart';
 
 class SoulMergeService {
@@ -39,32 +41,13 @@ class SoulMergeService {
   /// Listen to the bump times of both partners (resolved by server time).
   /// Key trong map là role ('user1'/'user2').
   Stream<Map<String, int>> watchMergeTimes() {
-    return Stream.fromFuture(
-      _houseService.getCurrentHouseId(),
-    ).asyncExpand<Map<String, int>>((houseId) {
-      if (houseId == null || houseId.isEmpty) return const Stream.empty();
-      return _db
-          .ref('houses/$houseId/soul_merge')
+    return SoulMergeRoleStream.watch(
+      resolveHouseId: _houseService.getCurrentHouseId,
+      watchRole: (houseId, role) => _db
+          .ref('houses/$houseId/soul_merge/$role')
           .onValue
-          .asBroadcastStream()
-          .map((event) {
-            final data = event.snapshot.value as Map<dynamic, dynamic>?;
-            if (data == null) return const <String, int>{};
-
-            final map = <String, int>{};
-            data.forEach((key, value) {
-              final keyStr = key.toString();
-              // Chỉ nhận key hợp lệ là role
-              if (keyStr != 'user1' && keyStr != 'user2') return;
-              if (value is int) {
-                map[keyStr] = value;
-              } else if (value is num) {
-                map[keyStr] = value.toInt();
-              }
-            });
-            return map;
-          });
-    }).asBroadcastStream();
+          .map((event) => event.snapshot.value),
+    );
   }
 
   /// Clear the soul merge bump record của role hiện tại.
@@ -82,7 +65,7 @@ class SoulMergeService {
     }
   }
 
-  /// Send a temporary message to the partner during Soul Merge
+  /// Send a persistent message to the partner during Soul Merge
   Future<void> sendSoulMessage(String text, {String? imageUrl}) async {
     try {
       final user = _auth.currentUser;
@@ -138,68 +121,98 @@ class SoulMergeService {
         debugPrint('[SoulMergeService] Cannot resolve sender name: $error');
       }
 
-      NotificationService().sendPartnerNotification(
-        houseId: houseId,
-        title: 'Soul Merge',
-        body: body,
-        data: {'type': 'soul_merge', 'senderName': myName},
+      unawaited(
+        NotificationService()
+            .sendPartnerNotification(
+              houseId: houseId,
+              title: 'Soul Merge',
+              body: body,
+              data: {'type': 'soul_merge', 'senderName': myName},
+            )
+            .catchError((Object error) {
+              debugPrint(
+                '[SoulMergeService] Notification failed: ${error.runtimeType}',
+              );
+            }),
       );
-
-      // Prune chat messages to keep database lightweight
-      final snap = await ref.orderByChild('timestamp').get();
-      if (snap.exists && snap.value is Map) {
-        final messages = Map<dynamic, dynamic>.from(snap.value as Map);
-        if (messages.length > 50) {
-          final sortedKeys = messages.keys.toList()
-            ..sort((a, b) {
-              final t1 = messages[a]['timestamp'] as int? ?? 0;
-              final t2 = messages[b]['timestamp'] as int? ?? 0;
-              return t1.compareTo(t2);
-            });
-          final keysToDelete = sortedKeys.sublist(0, sortedKeys.length - 50);
-          for (final key in keysToDelete) {
-            await ref.child(key.toString()).remove();
-          }
-        }
-      }
     } catch (e) {
       debugPrint('[SoulMergeService] sendSoulMessage error: $e');
       rethrow;
     }
   }
 
-  /// Watch real-time temporary messages in Soul Merge
-  Stream<List<Map<String, dynamic>>> watchSoulMessages() {
+  /// Watch the latest page of persistent messages in Soul Merge
+  Stream<List<Map<String, dynamic>>> watchSoulMessages({String? houseId}) {
     return Stream.fromFuture(
-      _houseService.getCurrentHouseId(),
+      houseId == null
+          ? _houseService.getCurrentHouseId()
+          : Future.value(houseId),
     ).asyncExpand<List<Map<String, dynamic>>>((houseId) {
       if (houseId == null || houseId.isEmpty) return const Stream.empty();
-      return _db
-          .ref('houses/$houseId/soul_merge/chat')
-          .orderByChild('timestamp')
-          .limitToLast(50)
-          .onValue
-          .asBroadcastStream()
-          .map((event) {
-            final data = event.snapshot.value;
-            final list = <Map<String, dynamic>>[];
-            if (data is Map) {
-              data.forEach((key, val) {
-                if (val is Map) {
-                  final msg = Map<String, dynamic>.from(val);
-                  msg['id'] = key.toString();
-                  list.add(msg);
-                }
-              });
-              list.sort((a, b) {
-                final t1 = a['timestamp'] as int? ?? 0;
-                final t2 = b['timestamp'] as int? ?? 0;
-                return t1.compareTo(t2);
-              });
-            }
-            return list;
-          });
-    }).asBroadcastStream();
+      return SoulMessageHistory.page(
+        _db.ref('houses/$houseId/soul_merge/chat'),
+      ).onValue.map((event) => _readSoulMessages(event.snapshot));
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> loadOlderSoulMessages({
+    required String houseId,
+    required SoulMessageCursor before,
+  }) async {
+    final snapshot = await SoulMessageHistory.page(
+      _db.ref('houses/$houseId/soul_merge/chat'),
+      before: before,
+    ).get();
+    return _readSoulMessages(snapshot);
+  }
+
+  List<Map<String, dynamic>> _readSoulMessages(DataSnapshot snapshot) {
+    final messages = <Map<String, dynamic>>[];
+    for (final child in snapshot.children) {
+      if (child.value is Map && child.key != null) {
+        final message = Map<String, dynamic>.from(child.value as Map);
+        if (message['timestamp'] != null && message['timestamp'] is! num) {
+          continue;
+        }
+        message['id'] = child.key;
+        message['timestamp'] = (message['timestamp'] as num?)?.toInt() ?? 0;
+        messages.add(message);
+      }
+    }
+    return messages..sort(SoulMessageHistory.compareMessages);
+  }
+
+  Stream<Map<String, dynamic>> watchSoulBackground(String houseId) => _db
+      .ref('houses/$houseId/soul_merge/background')
+      .onValue
+      .map(
+        (event) => event.snapshot.value is Map
+            ? Map<String, dynamic>.from(event.snapshot.value as Map)
+            : <String, dynamic>{},
+      );
+
+  Future<void> saveSoulBackground(
+    String houseId, {
+    String? url,
+    String? storagePath,
+  }) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null ||
+        await getCurrentHouseId() != houseId ||
+        _auth.currentUser?.uid != uid) {
+      throw StateError('Soul Merge scope changed');
+    }
+    await _db
+        .ref('houses/$houseId/soul_merge/background')
+        .set(
+          url == null
+              ? null
+              : {
+                  'url': url,
+                  'storagePath': storagePath,
+                  'updatedAt': ServerValue.timestamp,
+                },
+        );
   }
 
   /// Clear all messages under the soul_merge/chat node (No-op now to preserve history)
@@ -309,8 +322,8 @@ class SoulMergeService {
           .ref('houses/$houseId/soul_merge/interactive_events')
           .orderByChild('timestamp')
           .startAt(now)
+          .limitToLast(20)
           .onChildAdded
-          .asBroadcastStream()
           .map((event) {
             final data = event.snapshot.value;
             if (data is Map) {
@@ -320,7 +333,7 @@ class SoulMergeService {
             }
             return <String, dynamic>{};
           });
-    }).asBroadcastStream();
+    });
   }
 
   /// Khởi chạy đồng bộ Widget Soul Merge chủ động

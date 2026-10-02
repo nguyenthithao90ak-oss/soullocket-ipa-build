@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/widgets/app_help_center.dart';
@@ -69,7 +70,7 @@ class _UpdateTabState extends State<UpdateTab>
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(context.tr(key))));
+    ).showSnackBar(SLSnackBar(content: Text(context.tr(key))));
   }
 
   Future<void> _openExternal(Uri uri, {String? fallback}) async {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:flutter/services.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
@@ -66,24 +67,19 @@ Future<bool> showSettingsEmailOtpDialog({
               (mediaQuery.size.height - mediaQuery.viewInsets.bottom - 48)
                   .clamp(240.0, mediaQuery.size.height)
                   .toDouble();
-          final maxContentHeight =
-              (maxDialogHeight - 180).clamp(120.0, 320.0).toDouble();
+          final maxContentHeight = (maxDialogHeight - 180)
+              .clamp(120.0, 320.0)
+              .toDouble();
 
           return SensitiveContentGuard(
-            child: AlertDialog(
-              insetPadding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: SLAlertDialog(
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 20,
+              ),
               scrollable: true,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              title: Text(
-                title,
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFFD81B60),
-                ),
-              ),
+
+              title: Text(title),
               content: ConstrainedBox(
                 constraints: BoxConstraints(
                   maxWidth: 420,
@@ -140,11 +136,13 @@ Future<bool> showSettingsEmailOtpDialog({
                 ),
               ),
               actions: [
-                TextButton(
+                SLDialogAction(
                   onPressed: () => Navigator.pop(ctx, false),
                   child: Text(context.tr('home_hy_1e4050')),
                 ),
-                ElevatedButton(
+                SLDialogAction(
+                  primary: true,
+
                   onPressed: canConfirm
                       ? () async {
                           final otp = otpCtrl.text.trim();
@@ -251,18 +249,18 @@ Future<bool> showSettingsPasswordResetOtpDialog({
               (mediaQuery.size.height - mediaQuery.viewInsets.bottom - 48)
                   .clamp(260.0, mediaQuery.size.height)
                   .toDouble();
-          final maxContentHeight =
-              (maxDialogHeight - 180).clamp(140.0, 360.0).toDouble();
+          final maxContentHeight = (maxDialogHeight - 180)
+              .clamp(140.0, 360.0)
+              .toDouble();
 
           return SensitiveContentGuard(
-            child: AlertDialog(
-              insetPadding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              scrollable: true,
-              title: Text(
-                context.tr('home_tlimtkhu_2896d3'),
-                style: SLTheme.quicksand(fontWeight: FontWeight.bold),
+            child: SLAlertDialog(
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 20,
               ),
+              scrollable: true,
+              title: Text(context.tr('home_tlimtkhu_2896d3')),
               content: ConstrainedBox(
                 constraints: BoxConstraints(
                   maxWidth: 420,
@@ -319,11 +317,13 @@ Future<bool> showSettingsPasswordResetOtpDialog({
                 ),
               ),
               actions: [
-                TextButton(
+                SLDialogAction(
                   onPressed: () => Navigator.pop(ctx, false),
                   child: Text(context.tr('home_hy_1e4050')),
                 ),
-                ElevatedButton(
+                SLDialogAction(
+                  primary: true,
+
                   onPressed: canConfirm
                       ? () async {
                           final otp = otpCtrl.text.trim();

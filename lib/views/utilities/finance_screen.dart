@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -154,29 +156,23 @@ class _FinanceScreenState extends State<FinanceScreen> {
   void _resetSavingsGoal() {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(
-          context.tr('util_xaqu_086ff0'),
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-        ),
-        content: Text(
-          context.tr('util_bncchcchnm_fd1095'),
-          style: SLTheme.quicksand(fontWeight: FontWeight.w600),
-        ),
+      builder: (ctx) => SLAlertDialog(
+        title: Text(context.tr('util_xaqu_086ff0')),
+        content: Text(context.tr('util_bncchcchnm_fd1095')),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
             child: Text(context.tr('util_hy_1e4050')),
           ),
-          TextButton(
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () {
               _dbRef.child('houses/${widget.houseId}/savings_goal').remove();
               Navigator.pop(ctx);
             },
-            child: Text(
-              L10nService().translate(context.tr('util_xa_4ed187')),
-              style: const TextStyle(color: Colors.red),
-            ),
+            child: Text(L10nService().translate(context.tr('util_xa_4ed187'))),
           ),
         ],
       ),
@@ -186,29 +182,23 @@ class _FinanceScreenState extends State<FinanceScreen> {
   void _resetBudgetPlan() {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(
-          context.tr('util_xakhoch_ba0a75'),
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-        ),
-        content: Text(
-          context.tr('util_bncchcchnm_ed97cc'),
-          style: SLTheme.quicksand(fontWeight: FontWeight.w600),
-        ),
+      builder: (ctx) => SLAlertDialog(
+        title: Text(context.tr('util_xakhoch_ba0a75')),
+        content: Text(context.tr('util_bncchcchnm_ed97cc')),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
             child: Text(context.tr('util_hy_1e4050')),
           ),
-          TextButton(
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () {
               _dbRef.child('houses/${widget.houseId}/finance_plan').remove();
               Navigator.pop(ctx);
             },
-            child: Text(
-              L10nService().translate(context.tr('util_xa_4ed187')),
-              style: const TextStyle(color: Colors.red),
-            ),
+            child: Text(L10nService().translate(context.tr('util_xa_4ed187'))),
           ),
         ],
       ),
@@ -231,7 +221,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
       if (currentMap.length >= 100) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text(context.tr('p8_finance_transaction_limit')),
             backgroundColor: SLColors.danger,
           ),
@@ -260,20 +250,23 @@ class _FinanceScreenState extends State<FinanceScreen> {
   void _deleteTransaction(String key) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => SLAlertDialog(
         title: Text(context.tr('p8_finance_delete_transaction_title')),
         content: Text(context.tr('p8_finance_delete_transaction_body')),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
             child: Text(context.tr('p8_finance_cancel')),
           ),
-          TextButton(
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () {
               Navigator.pop(ctx);
               _dbRef.child('houses/${widget.houseId}/budget/$key').remove();
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+
             child: Text(context.tr('p8_finance_delete')),
           ),
         ],
@@ -298,17 +291,13 @@ class _FinanceScreenState extends State<FinanceScreen> {
             final people = int.tryParse(_splitPeopleController.text) ?? 2;
             final splitResult = people > 0 ? amount / people : 0;
 
-            return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
+            return SLAlertDialog(
               insetPadding: const EdgeInsets.symmetric(
                 horizontal: 20,
                 vertical: 20,
               ),
               scrollable: true,
-              title: Text(
-                context.tr('util_chiatinspl_820857'),
-                style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-              ),
+              title: Text(context.tr('util_chiatinspl_820857')),
               content: ConstrainedBox(
                 constraints: BoxConstraints(
                   maxWidth: 360,
@@ -377,7 +366,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 ),
               ),
               actions: [
-                TextButton(
+                SLDialogAction(
+                  primary: true,
+
                   onPressed: () => Navigator.pop(ctx),
                   child: Text(context.tr('util_ng_f63d1e')),
                 ),
@@ -407,16 +398,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
   void _showInfoDialog(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: Colors.white,
-        title: Text(
-          context.tr('p8_finance_info_title'),
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.w900,
-            color: SLTheme.textMain,
-          ),
-        ),
+      builder: (context) => SLAlertDialog(
+        title: Text(context.tr('p8_finance_info_title')),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -451,12 +434,11 @@ class _FinanceScreenState extends State<FinanceScreen> {
           ),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              context.tr('p8_finance_info_dismiss'),
-              style: const TextStyle(color: SLColors.primary),
-            ),
+            child: Text(context.tr('p8_finance_info_dismiss')),
           ),
         ],
       ),
@@ -895,12 +877,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
   void _showSavingsGoalDialog() {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
-        title: Text(
-          context.tr('util_toqumi_e38258'),
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-        ),
+      builder: (ctx) => SLAlertDialog(
+        title: Text(context.tr('util_toqumi_e38258')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -925,23 +903,16 @@ class _FinanceScreenState extends State<FinanceScreen> {
           ],
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
             child: Text(context.tr('util_hy_1e4050')),
           ),
-          ElevatedButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: _saveSavingsGoal,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amber[700],
-              shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
-            ),
-            child: Text(
-              context.tr('util_luqu_163328'),
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+
+            child: Text(context.tr('util_luqu_163328')),
           ),
         ],
       ),
@@ -1103,12 +1074,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
   void _showPlanDialog() {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
-        title: Text(
-          context.tr('util_lpkhoch_eb08e6'),
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-        ),
+      builder: (ctx) => SLAlertDialog(
+        title: Text(context.tr('util_lpkhoch_eb08e6')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1134,20 +1101,16 @@ class _FinanceScreenState extends State<FinanceScreen> {
           ],
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
             child: Text(context.tr('util_hy_1e4050')),
           ),
-          ElevatedButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: _saveBudgetPlan,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: SLTheme.primary,
-              shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
-            ),
-            child: Text(
-              context.tr('util_lukhoch_f05771'),
-              style: const TextStyle(color: Colors.white),
-            ),
+
+            child: Text(context.tr('util_lukhoch_f05771')),
           ),
         ],
       ),

@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -545,7 +547,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     final nextName = await showDialog<String>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
+        return SLAlertDialog(
           title: Text(_tr('p9_group_chat_rename_title')),
           content: TextField(
             controller: controller,
@@ -556,11 +558,13 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             ),
           ),
           actions: [
-            TextButton(
+            SLDialogAction(
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: Text(_tr('p9_group_chat_cancel')),
             ),
-            ElevatedButton(
+            SLDialogAction(
+              primary: true,
+
               onPressed: () =>
                   Navigator.of(dialogContext).pop(controller.text.trim()),
               child: Text(_tr('p9_group_chat_save')),
@@ -593,7 +597,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (dialogContext, setDialogState) {
-            return AlertDialog(
+            return SLAlertDialog(
               title: Text(_tr('p9_group_chat_report_title')),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -640,11 +644,13 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                 ],
               ),
               actions: [
-                TextButton(
+                SLDialogAction(
                   onPressed: () => Navigator.of(dialogContext).pop(),
                   child: Text(_tr('p9_group_chat_cancel')),
                 ),
-                ElevatedButton(
+                SLDialogAction(
+                  primary: true,
+
                   onPressed: () {
                     final extra = reasonCtrl.text.trim();
                     Navigator.of(
@@ -895,7 +901,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      SLSnackBar(
         content: Text(message),
         backgroundColor: error ? const Color(0xFFD81B60) : null,
       ),

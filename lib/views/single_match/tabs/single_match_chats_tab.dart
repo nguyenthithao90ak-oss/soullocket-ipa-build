@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -122,7 +123,7 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      SLSnackBar(
         content: Text(msg),
         backgroundColor: isError ? const Color(0xFFD81B60) : null,
       ),

@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -106,7 +108,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       final filtered = _filteredHouses;
       if (filtered.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('admin_khngcdliux_0c15a9'))),
+          SLSnackBar(content: Text(context.tr('admin_khngcdliux_0c15a9'))),
         );
         return;
       }
@@ -167,7 +169,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       );
       debugPrint('Export users failed: ${errorInfo.message}');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(context.tr('admin_chathxutda_dc5b37')),
         ),
       );
@@ -183,14 +185,15 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: SLColors.darkNavy,
-        title: Text(title, style: const TextStyle(color: Colors.white)),
+      builder: (ctx) => SLAlertDialog(
+        title: Text(title),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('ID: ${house['id']}',
-                style: const TextStyle(color: Colors.grey)),
+            Text(
+              'ID: ${house['id']}',
+              style: const TextStyle(color: Colors.grey),
+            ),
             SLSpacing.h16,
             if (actionType == 'ban')
               TextField(
@@ -208,40 +211,40 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           ],
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(context.tr('admin_hy_1e4050'),
-                style: const TextStyle(color: Colors.grey)),
+            child: Text(context.tr('admin_hy_1e4050')),
           ),
           if (actionType == 'ban') ...[
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            SLDialogAction(
+              primary: true,
+              destructive: true,
+
               onPressed: () {
                 _executeAction('ban_perm', house['id'], reasonCtrl.text.trim());
                 Navigator.pop(ctx);
               },
-              child: Text(context.tr('admin_khavnhvin_1f9874'),
-                  style: const TextStyle(color: Colors.white)),
+              child: Text(context.tr('admin_khavnhvin_1f9874')),
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            SLDialogAction(
+              primary: true,
+
               onPressed: () {
                 _executeAction('unban', house['id'], '');
                 Navigator.pop(ctx);
               },
-              child: Text(context.tr('admin_mkha_b8cf89'),
-                  style: const TextStyle(color: Colors.white)),
+              child: Text(context.tr('admin_mkha_b8cf89')),
             ),
           ],
           if (actionType == 'vip')
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+            SLDialogAction(
+              primary: true,
+
               onPressed: () {
                 _executeAction('add_vip', house['id'], '');
                 Navigator.pop(ctx);
               },
-              child: Text(context.tr('admin_cppro_ece366'),
-                  style: const TextStyle(color: Colors.black)),
+              child: Text(context.tr('admin_cppro_ece366')),
             ),
         ],
       ),
@@ -284,7 +287,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('admin_thaotcthnh_1f60b3'))));
+          SLSnackBar(content: Text(context.tr('admin_thaotcthnh_1f60b3'))));
       _loadData(refresh: true);
     } catch (e) {
       final errorInfo = AppErrorMapper.resolve(
@@ -294,7 +297,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       debugPrint('Admin user action failed: ${errorInfo.message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(context.tr('admin_chathhontt_8d99bd')),
         ),
       );

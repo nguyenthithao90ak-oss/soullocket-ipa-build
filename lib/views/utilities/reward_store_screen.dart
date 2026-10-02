@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -295,7 +296,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
       final result = await _adMob.claimDailyCheckinReward();
       if (!mounted || _auth.currentUser?.uid != uid) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(
             result.alreadyClaimed
                 ? context.tr('util_hmnaybnimd_35fac7')
@@ -310,7 +311,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
     } catch (error) {
       if (!mounted || _auth.currentUser?.uid != uid) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(
             AppErrorMapper.resolve(
               error,
@@ -474,7 +475,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
       if (!mounted || _auth.currentUser?.uid != uid) return;
       if (!worked) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('util_khngticqun_ce9d80'))),
+          SLSnackBar(content: Text(context.tr('util_khngticqun_ce9d80'))),
         );
         return;
       }
@@ -482,7 +483,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
       final result = await _adMob.claimRewardedAdPoints();
       if (!mounted || _auth.currentUser?.uid != uid) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(
             result.ok
                 ? context
@@ -495,7 +496,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
     } catch (error) {
       if (!mounted || _auth.currentUser?.uid != uid) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(
             AppErrorMapper.resolve(
               error,
@@ -513,7 +514,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
     if (_isRedeeming) return;
     if (!AppConfig.isPurchaseEnabled) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('p5_premium_unavailable'))),
+        SLSnackBar(content: Text(context.tr('p5_premium_unavailable'))),
       );
       return;
     }
@@ -533,7 +534,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
       if (!mounted) return;
       if (latestPointsBeforeRedeem < plan.points) {
         scaffoldMessenger.showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text(
               _buildInsufficientRedeemMessage(plan, latestPointsBeforeRedeem),
             ),
@@ -559,7 +560,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
           if (!mounted) return;
         } else {
           scaffoldMessenger.showSnackBar(
-            SnackBar(
+            SLSnackBar(
               content: Text(
                 _buildInsufficientRedeemMessage(plan, latestPointsAfterFailure),
               ),
@@ -570,7 +571,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
       }
       if (result.ok) {
         scaffoldMessenger.showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text(
               '${context.tr('reward_store_completed')} · ${plan.title}',
             ),
@@ -581,7 +582,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
           'Redeem plan failed: plan=${plan.id}, error=${result.error}, status=${result.statusCode}',
         );
         scaffoldMessenger.showSnackBar(
-          SnackBar(content: Text(_redeemErrorMessage(plan, result))),
+          SLSnackBar(content: Text(_redeemErrorMessage(plan, result))),
         );
       }
     } finally {

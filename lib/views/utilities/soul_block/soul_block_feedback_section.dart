@@ -3,7 +3,8 @@ part of '../soul_block_game.dart';
 
 extension _SoulBlockFeedbackPart on _SoulBlockGameState {
   Future<void> _initAudio() async {
-    final errorFallback = context.tr('util_khngthkhit_0ee520');
+    // Hàm chạy từ initState, chưa được đăng ký phụ thuộc vào L10nScope.
+    final errorFallback = L10nService().translate('util_khngthkhit_0ee520');
     try {
       // Dùng audio focus riêng cho hiệu ứng để tiếng nổ không làm ngắt nhạc nền.
       try {
@@ -123,11 +124,15 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
       ]);
       if (!mounted) return;
       _audioReady = true;
+      debugPrint(
+        'Soul Block audio ready: ${assetBytes.whereType<Uint8List>().length}/15 bundled effects',
+      );
       unawaited(_syncBgmWithSound());
-    } catch (error) {
+    } catch (error, stackTrace) {
       debugPrint(
         'Soul Block audio init failed: ${AppErrorMapper.resolve(error, fallbackMessage: errorFallback).message}',
       );
+      debugPrintStack(stackTrace: stackTrace);
       _audioReady = false;
     }
   }
@@ -185,13 +190,17 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
         if (!mounted || _audioDisposed) return;
         if (!_canPlayAudio) {
           await _bgmPlayer.pause();
+        } else if (_bgmPlayer.state == PlayerState.stopped ||
+            _bgmPlayer.state == PlayerState.completed) {
+          await _bgmPlayer.play(await _getBgmSource(), volume: 0.28);
+          if (!_canPlayAudio) await _bgmPlayer.pause();
         } else if (_bgmPlayer.state != PlayerState.playing) {
           await _bgmPlayer.resume();
           if (!_canPlayAudio) await _bgmPlayer.pause();
         }
       } catch (error) {
         // Web có thể chặn autoplay; thao tác chạm tiếp theo sẽ thử lại.
-        debugPrint(AppErrorMapper.resolve(error).message);
+        debugPrint('Soul Block BGM failed: $error');
       }
     });
     return _bgmSyncQueue;
@@ -475,15 +484,17 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
         Uint8List? selectedBytes = _clearSfxBytes;
         double volume = 0.54 + min(clearedCount - 1, 3) * 0.025;
 
-        // Tiếng x2/x3/x4 theo cùng chuỗi đang hiển thị, kể cả khi chỉ xóa
-        // một hàng sau hai lượt chưa xóa. Chuỗi cao hơn dùng tiếng x5.
-        final int comboLevel = min(5, max(2, streakCount));
-        if (_comboSfxLevels.isNotEmpty && streakCount >= 2) {
-          final int comboIndex = min(
-            comboLevel - 2,
-            _comboSfxLevels.length - 1,
-          );
-          selectedBytes = _comboSfxLevels[comboIndex];
+        // Chuỗi lớn dùng giai điệu tổng hợp mới; bộ nhớ và âm lượng có trần,
+        // còn số combo hiển thị và thưởng điểm vẫn tiếp tục tăng.
+        final int comboLevel = max(2, streakCount);
+        if (_comboSfxLevels.isNotEmpty &&
+            (streakCount >= 2 || clearedCount >= 2)) {
+          selectedBytes = comboLevel > 5
+              ? _highComboSoundFor(comboLevel)
+              : _comboSfxLevels[min(
+                  comboLevel - 2,
+                  _comboSfxLevels.length - 1,
+                )];
           volume = 0.54 + min(comboLevel, 5) * 0.015;
         }
 
@@ -497,6 +508,22 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     if (_vibrationEnabled) {
       HapticFeedback.heavyImpact();
     }
+  }
+
+  Uint8List _highComboSoundFor(int comboLevel) {
+    // 12 biến thể tái sử dụng cho x6 trở lên, không tích lũy một WAV mỗi lần nổ.
+    final variant = (comboLevel - 6) % 12;
+    return _highComboSfxCache.putIfAbsent(variant, () {
+      const scale = <int>[0, 2, 4, 7, 9, 12];
+      final root = 69 + scale[variant % scale.length];
+      final sparkle = variant >= 6 ? 3 : 0;
+      return _buildWaveBytes(<_SoulSfxTone>[
+        _tone(root - 12, 32, .66, noiseMix: .08),
+        _tone(root, 44, .62),
+        _tone(root + 7, 48, .48),
+        _tone(root + 12 + sparkle, 84, .36),
+      ], masterGain: .74);
+    });
   }
 
   void _emitStreakBreakFeedback() {
@@ -537,18 +564,27 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     unawaited(SystemSound.play(SystemSoundType.alert));
   }
 
-  void _showComboBurst(int comboLevel) {
-    if (comboLevel < 2) {
+  void _showComboBurst(
+    int comboLevel, {
+    int gainedScore = 0,
+    bool allClear = false,
+  }) {
+    if (comboLevel < 1) {
       return;
     }
-    const colors = <Color>[
-      Color(0xFF9DE7FF),
-      Color(0xFFC3B6F6),
-      Color(0xFFE9C9A2),
-    ];
+    final color = comboLevel < 5
+        ? const Color(0xFF9DE7FF)
+        : comboLevel < 10
+        ? const Color(0xFFC3B6F6)
+        : comboLevel < 25
+        ? const Color(0xFFE9C9A2)
+        : const Color(0xFFFFD783);
     _showFloatingMessage(
-      L10nService().format('soul_block_combo', {'level': comboLevel}),
-      color: colors[min(comboLevel - 2, colors.length - 1)],
+      allClear
+          ? L10nService().translate('soul_block_all_clear')
+          : L10nService().format('soul_block_combo', {'level': comboLevel}),
+      color: color,
+      detail: gainedScore > 0 ? '+${_formatNumber(gainedScore)}' : null,
     );
   }
 
@@ -560,9 +596,14 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     _flashController.forward(from: 0);
   }
 
-  void _showFloatingMessage(String message, {required Color color}) {
+  void _showFloatingMessage(
+    String message, {
+    required Color color,
+    String? detail,
+  }) {
     setState(() {
       _floatingText = message;
+      _floatingScoreText = detail;
       _floatingTextColor = color;
     });
     _floatingController.forward(from: 0);
@@ -570,7 +611,7 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      SLSnackBar(
         content: Text(message),
         behavior: SnackBarBehavior.floating,
         backgroundColor: const Color(0xFF1F2937),
@@ -697,7 +738,9 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
       _memoryBurstSnapshot = _MemoryBurstSnapshot(
         image: image,
         label: context.tr('soul_block_photo_ready'),
-        subtitle: '×${max(clearedCount, streakCount)}',
+        subtitle: L10nService().format('soul_block_combo', {
+          'level': streakCount,
+        }),
         accent: const Color(0xFFCCDCF5),
       );
     });

@@ -75,6 +75,9 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
       if (storedAutoTrayShuffleEnabled && !autoTrayShuffleEnabled) {
         unawaited(_persistSetting(_autoTrayShuffleEnabledKey, false));
       }
+      if (savedRun != null && savedRun.recommendedMove == null) {
+        unawaited(_handleGameOverTransition());
+      }
       unawaited(_syncBgmWithSound());
       if (houseId != null && houseId.trim().isNotEmpty) {
         unawaited(_loadDiaryPhoto());

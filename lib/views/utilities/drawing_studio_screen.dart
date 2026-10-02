@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -240,7 +242,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(
-        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+        SLSnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
       );
   }
 
@@ -994,16 +996,8 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   void _showInfoDialog(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: Colors.white,
-        title: Text(
-          context.tr('p8_drawing_info_title'),
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.w900,
-            color: const Color(0xFFD81B60),
-          ),
-        ),
+      builder: (context) => SLAlertDialog(
+        title: Text(context.tr('p8_drawing_info_title')),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1038,12 +1032,11 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
           ),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              context.tr('p8_drawing_info_dismiss'),
-              style: const TextStyle(color: Color(0xFFD81B60)),
-            ),
+            child: Text(context.tr('p8_drawing_info_dismiss')),
           ),
         ],
       ),
@@ -2173,7 +2166,7 @@ class _DrawingStudioPreviewScreenState
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(
-        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+        SLSnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
       );
   }
 

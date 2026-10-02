@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../utils/calendar/soul_event_calendar_export.dart';
@@ -82,7 +84,7 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(context.tr('event_export_error'))));
+      ).showSnackBar(SLSnackBar(content: Text(context.tr('event_export_error'))));
     } finally {
       if (mounted) setState(() => _exporting = false);
     }
@@ -91,20 +93,20 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
   Future<void> _deleteEvent() async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => SLAlertDialog(
         title: Text(context.tr('p8_events_delete_title')),
         content: Text(context.tr('p8_events_delete_body')),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(context.tr('p8_events_cancel')),
           ),
-          TextButton(
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              context.tr('p8_events_delete'),
-              style: const TextStyle(color: Colors.red),
-            ),
+            child: Text(context.tr('p8_events_delete')),
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'dart:async';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -796,17 +797,12 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
-        return AlertDialog(
+        return SLAlertDialog(
           insetPadding: const EdgeInsets.symmetric(
             horizontal: 24,
             vertical: 24,
           ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
-          ),
-          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-          contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+
           title: Row(
             children: [
               Container(
@@ -822,12 +818,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Xác minh Gmail',
-                  style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-                ),
-              ),
+              Expanded(child: Text('Xác minh Gmail')),
             ],
           ),
           content: SingleChildScrollView(
@@ -881,29 +872,20 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
             ),
           ),
           actions: [
-            TextButton(
+            SLDialogAction(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(
-                'Để sau',
-                style: SLTheme.quicksand(fontWeight: FontWeight.w800),
-              ),
+              child: Text('Để sau'),
             ),
-            FilledButton(
+            SLDialogAction(
+              primary: true,
+
               onPressed: () {
                 if (otpValue.isNotEmpty) {
                   Navigator.of(dialogContext).pop(otpValue);
                 }
               },
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 14,
-                ),
-              ),
-              child: Text(
-                'Xác nhận',
-                style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-              ),
+
+              child: Text('Xác nhận'),
             ),
           ],
         );
@@ -1421,29 +1403,15 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
   void _showError(String message, {String? title}) {
     showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
-        title: Text(
-          title ?? _resolveErrorTitle(message),
-          style: SLTheme.quicksand(
-            color: const Color(0xFFD81B60),
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        content: Text(
-          message,
-          style: SLTheme.quicksand(height: 1.4, fontWeight: FontWeight.w700),
-        ),
+      builder: (ctx) => SLAlertDialog(
+        title: Text(title ?? _resolveErrorTitle(message)),
+        content: Text(message),
         actions: [
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(
-              L10nService().translate('Đóng'),
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFFD81B60),
-              ),
-            ),
+            child: Text(L10nService().translate('Đóng')),
           ),
         ],
       ),

@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -179,7 +180,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('admin_xabivit_92d4ec'))),
+        SLSnackBar(content: Text(context.tr('admin_xabivit_92d4ec'))),
       );
       _loadData(refresh: true);
     } catch (e) {
@@ -188,7 +189,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('admin_chathxabiv_72f417'))),
+        SLSnackBar(content: Text(context.tr('admin_chathxabiv_72f417'))),
       );
     }
   }
@@ -220,7 +221,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('admin_xabnhlun_f398ed'))),
+        SLSnackBar(content: Text(context.tr('admin_xabnhlun_f398ed'))),
       );
       _loadData(refresh: true);
     } catch (e) {
@@ -229,7 +230,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('admin_chathxabnh_44e3be'))),
+        SLSnackBar(content: Text(context.tr('admin_chathxabnh_44e3be'))),
       );
     }
   }
@@ -242,7 +243,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
           .delete();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('admin_bquaboco_cc6fa6'))),
+        SLSnackBar(content: Text(context.tr('admin_bquaboco_cc6fa6'))),
       );
       _loadData(refresh: true);
     } catch (e) {
@@ -251,7 +252,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('admin_chathbquab_36dbb8'))),
+        SLSnackBar(content: Text(context.tr('admin_chathbquab_36dbb8'))),
       );
     }
   }

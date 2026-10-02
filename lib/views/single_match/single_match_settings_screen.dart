@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
@@ -86,7 +87,7 @@ class _SingleMatchSettingsScreenState extends State<SingleMatchSettingsScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(L10nService().translate('core_success')),
           backgroundColor: SLColors.success,
         ),

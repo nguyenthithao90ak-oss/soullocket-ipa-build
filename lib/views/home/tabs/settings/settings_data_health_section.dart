@@ -378,17 +378,8 @@ extension _SettingsDataHealthSection on _SettingsTabState {
 
     return showDialog<void>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: Colors.white,
-        title: Text(
-          context.tr('settings_restore_details_dialog_title'),
-          style: SLTheme.quicksand(
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-            color: const Color(0xFF243041),
-          ),
-        ),
+      builder: (dialogContext) => SLAlertDialog(
+        title: Text(context.tr('settings_restore_details_dialog_title')),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -398,12 +389,11 @@ extension _SettingsDataHealthSection on _SettingsTabState {
           ),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(
-              context.tr('settings_restore_details_dialog_ok'),
-              style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-            ),
+            child: Text(context.tr('settings_restore_details_dialog_ok')),
           ),
         ],
       ),
@@ -784,14 +774,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
         String tempMode = currentMode;
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-              backgroundColor: Colors.white,
-              titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-              contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            return SLAlertDialog(
               title: Row(
                 children: [
                   Container(
@@ -807,16 +790,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      context.tr('settings_gps_mode_title'),
-                      style: SLTheme.quicksand(
-                        fontSize: 16.5,
-                        fontWeight: FontWeight.w800,
-                        color: SLColors.darkNavy,
-                      ),
-                    ),
-                  ),
+                  Expanded(child: Text(context.tr('settings_gps_mode_title'))),
                 ],
               ),
               content: SingleChildScrollView(
@@ -870,37 +844,15 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                 ),
               ),
               actions: [
-                TextButton(
+                SLDialogAction(
                   onPressed: () => Navigator.of(dialogCtx).pop(),
-                  child: Text(
-                    context.tr('cancel'),
-                    style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF64748B),
-                    ),
-                  ),
+                  child: Text(context.tr('cancel')),
                 ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFD81B60),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
-                    ),
-                  ),
+                SLDialogAction(
+                  primary: true,
+
                   onPressed: () => Navigator.of(dialogCtx).pop(tempMode),
-                  child: Text(
-                    context.tr('save'),
-                    style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 14,
-                    ),
-                  ),
+                  child: Text(context.tr('save')),
                 ),
               ],
             );
@@ -1169,17 +1121,8 @@ extension _SettingsDataHealthSection on _SettingsTabState {
     return showDialog<int>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: Colors.white,
-        title: Text(
-          context.tr('home_chnthigian_fc9fc3'),
-          style: SLTheme.quicksand(
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-            color: const Color(0xFF1565C0),
-          ),
-        ),
+      builder: (ctx) => SLAlertDialog(
+        title: Text(context.tr('home_chnthigian_fc9fc3')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1209,12 +1152,11 @@ extension _SettingsDataHealthSection on _SettingsTabState {
           ],
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              context.tr('cancel'),
-              style: SLTheme.quicksand(fontWeight: FontWeight.w800),
-            ),
+            child: Text(context.tr('cancel')),
           ),
         ],
       ),
@@ -1296,19 +1238,8 @@ extension _SettingsDataHealthSection on _SettingsTabState {
       final password = await showDialog<String>(
         context: context,
         barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          backgroundColor: Colors.white,
-          title: Text(
-            context.tr('home_xcminhmtkh_dc8bdc'),
-            style: SLTheme.quicksand(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF1565C0),
-            ),
-          ),
+        builder: (ctx) => SLAlertDialog(
+          title: Text(context.tr('home_xcminhmtkh_dc8bdc')),
           content: TextField(
             controller: passwordCtrl,
             obscureText: true,
@@ -1324,27 +1255,16 @@ extension _SettingsDataHealthSection on _SettingsTabState {
             onSubmitted: (value) => Navigator.pop(ctx, value.trim()),
           ),
           actions: [
-            TextButton(
+            SLDialogAction(
               onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                context.tr('cancel'),
-                style: SLTheme.quicksand(fontWeight: FontWeight.w800),
-              ),
+              child: Text(context.tr('cancel')),
             ),
-            ElevatedButton(
+            SLDialogAction(
+              primary: true,
+
               onPressed: () => Navigator.pop(ctx, passwordCtrl.text.trim()),
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              child: Text(
-                context.tr('home_xcminh_d20159'),
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                ),
-              ),
+
+              child: Text(context.tr('home_xcminh_d20159')),
             ),
           ],
         ),
@@ -1384,9 +1304,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
   Future<bool?> _showDataExportIntroDialog() {
     return showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: Colors.white,
+      builder: (ctx) => SLAlertDialog(
         title: Row(
           children: [
             Container(
@@ -1399,16 +1317,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
               child: const Icon(Icons.download_rounded, color: Colors.white),
             ),
             const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                context.tr('home_tidliucati_f2139a'),
-                style: SLTheme.quicksand(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF243041),
-                ),
-              ),
-            ),
+            Expanded(child: Text(context.tr('home_tidliucati_f2139a'))),
           ],
         ),
         content: SingleChildScrollView(
@@ -1423,27 +1332,16 @@ extension _SettingsDataHealthSection on _SettingsTabState {
           ),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              context.tr('cancel'),
-              style: SLTheme.quicksand(fontWeight: FontWeight.w800),
-            ),
+            child: Text(context.tr('cancel')),
           ),
-          ElevatedButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-            child: Text(
-              context.tr('home_tobntixung_5ae06c'),
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-              ),
-            ),
+
+            child: Text(context.tr('home_tobntixung_5ae06c')),
           ),
         ],
       ),
@@ -1456,17 +1354,8 @@ extension _SettingsDataHealthSection on _SettingsTabState {
   ) {
     return showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: Colors.white,
-        title: Text(
-          context.tr('home_bntixungsn_5e37cf'),
-          style: SLTheme.quicksand(
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-            color: const Color(0xFF1565C0),
-          ),
-        ),
+      builder: (ctx) => SLAlertDialog(
+        title: Text(context.tr('home_bntixungsn_5e37cf')),
         content: Text(
           context
               .tr('p6_data_export_ready_details')
@@ -1483,26 +1372,17 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                           )
                     : '',
               ),
-          style: SLTheme.quicksand(
-            fontSize: 13.5,
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF445064),
-            height: 1.45,
-          ),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () {
               Clipboard.setData(ClipboardData(text: result.downloadUrl));
               Navigator.pop(ctx);
               _showToast(context.tr('home_saochplink_823453'), success: true);
             },
-            child: Text(
-              context.tr('home_saochplink_f4412e'),
-              style: SLTheme.quicksand(fontWeight: FontWeight.w800),
-            ),
+            child: Text(context.tr('home_saochplink_f4412e')),
           ),
-          TextButton(
+          SLDialogAction(
             onPressed: () {
               Navigator.pop(ctx);
               SharePlus.instance.share(
@@ -1513,13 +1393,10 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                 ),
               );
             },
-            child: Text(
-              context.tr('home_chias_569031'),
-              style: SLTheme.quicksand(fontWeight: FontWeight.w800),
-            ),
+            child: Text(context.tr('home_chias_569031')),
           ),
           if (result.htmlUrl.trim().isNotEmpty)
-            TextButton(
+            SLDialogAction(
               onPressed: () {
                 Navigator.pop(ctx);
                 launchUrl(
@@ -1527,12 +1404,11 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                   mode: LaunchMode.externalApplication,
                 );
               },
-              child: Text(
-                context.tr('home_mhtmlxemnh_384dd5'),
-                style: SLTheme.quicksand(fontWeight: FontWeight.w800),
-              ),
+              child: Text(context.tr('home_mhtmlxemnh_384dd5')),
             ),
-          ElevatedButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () {
               Navigator.pop(ctx);
               launchUrl(
@@ -1540,18 +1416,8 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                 mode: LaunchMode.externalApplication,
               );
             },
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-            child: Text(
-              context.tr('home_tizip_31dcec'),
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-              ),
-            ),
+
+            child: Text(context.tr('home_tizip_31dcec')),
           ),
         ],
       ),

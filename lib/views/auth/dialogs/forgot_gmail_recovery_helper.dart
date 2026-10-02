@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,7 +23,7 @@ class ForgotGmailRecoveryHelper {
     if (!context.mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(L10nService().translate('Đang kiểm tra...'))),
+      SLSnackBar(content: Text(L10nService().translate('Đang kiểm tra...'))),
     );
 
     final secData = await authService.getHouseSecurityData(houseId);
@@ -87,15 +89,8 @@ class ForgotGmailRecoveryHelper {
     final houseIdController = TextEditingController();
     return showDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(
-          'QUÊN GMAIL',
-          style: SLTheme.quicksand(
-            color: SLColors.primaryActive,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
+      builder: (dialogContext) => SLAlertDialog(
+        title: Text('QUÊN GMAIL'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -118,20 +113,16 @@ class ForgotGmailRecoveryHelper {
           ),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              L10nService().translate('Hủy'),
-              style: SLTheme.quicksand(),
-            ),
+            child: Text(L10nService().translate('Hủy')),
           ),
-          ElevatedButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () =>
                 Navigator.pop(dialogContext, houseIdController.text.trim()),
-            child: Text(
-              L10nService().translate('Tiếp theo'),
-              style: SLTheme.quicksand(),
-            ),
+            child: Text(L10nService().translate('Tiếp theo')),
           ),
         ],
       ),
@@ -149,15 +140,8 @@ class ForgotGmailRecoveryHelper {
     final answerController = TextEditingController();
     return showDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(
-          'CÂU HỎI BẢO MẬT',
-          style: SLTheme.quicksand(
-            color: SLColors.primaryActive,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
+      builder: (dialogContext) => SLAlertDialog(
+        title: Text('CÂU HỎI BẢO MẬT'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -183,20 +167,16 @@ class ForgotGmailRecoveryHelper {
           ),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              L10nService().translate('Hủy'),
-              style: SLTheme.quicksand(),
-            ),
+            child: Text(L10nService().translate('Hủy')),
           ),
-          ElevatedButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () =>
                 Navigator.pop(dialogContext, answerController.text.trim()),
-            child: Text(
-              L10nService().translate('Xác Minh'),
-              style: SLTheme.quicksand(),
-            ),
+            child: Text(L10nService().translate('Xác Minh')),
           ),
         ],
       ),
@@ -232,15 +212,8 @@ class ForgotGmailRecoveryHelper {
     final inputController = TextEditingController();
     final result = await showDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(
-          L10nService().translate('auth_verify_email_title'),
-          style: SLTheme.quicksand(
-            color: SLColors.danger,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
+      builder: (dialogContext) => SLAlertDialog(
+        title: Text(L10nService().translate('auth_verify_email_title')),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -268,27 +241,20 @@ class ForgotGmailRecoveryHelper {
           ),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              L10nService().translate('Hủy'),
-              style: SLTheme.quicksand(),
-            ),
+            child: Text(L10nService().translate('Hủy')),
           ),
-          ElevatedButton(
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () => Navigator.pop(
               dialogContext,
               inputController.text.trim().toLowerCase(),
             ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: SLColors.danger,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: SLRadius.smAll),
-            ),
-            child: Text(
-              L10nService().translate('Xác nhận'),
-              style: SLTheme.quicksand(fontWeight: FontWeight.bold),
-            ),
+
+            child: Text(L10nService().translate('Xác nhận')),
           ),
         ],
       ),

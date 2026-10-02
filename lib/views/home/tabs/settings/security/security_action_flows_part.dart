@@ -430,26 +430,17 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
 
     final approved = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        title: Text(
-          context.tr('home_thitlpquyn_07f936'),
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-        ),
-        content: Text(
-          context.tr('home_ngdngslnlt_3d164a'),
-          style: SLTheme.quicksand(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            height: 1.5,
-          ),
-        ),
+      builder: (ctx) => SLAlertDialog(
+        title: Text(context.tr('home_thitlpquyn_07f936')),
+        content: Text(context.tr('home_ngdngslnlt_3d164a')),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(context.tr('home_sau_8a3721')),
           ),
-          ElevatedButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(context.tr('home_tiptc_555f1f')),
           ),
@@ -480,28 +471,21 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
     if (!mounted || permissions.isEmpty) return;
     final shouldOpen = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        title: Text(
-          context.tr('home_cnbttrongc_def85d'),
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-        ),
+      builder: (ctx) => SLAlertDialog(
+        title: Text(context.tr('home_cnbttrongc_def85d')),
         content: Text(
           L10nService().format('home_permissions_need_manual_enable', {
             'permissions': permissions.join(', '),
           }),
-          style: SLTheme.quicksand(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            height: 1.5,
-          ),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(context.tr('cancel')),
           ),
-          ElevatedButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(context.tr('home_mcit_a2573b')),
           ),
@@ -768,24 +752,17 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         await showDialog<bool>(
           context: context,
           barrierDismissible: false,
-          builder: (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(22),
-            ),
-            title: Text(
-              confirmStepUpLabel,
-              style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-            ),
-            content: Text(
-              logOutOthersMsg,
-              style: SLTheme.quicksand(height: 1.45),
-            ),
+          builder: (ctx) => SLAlertDialog(
+            title: Text(confirmStepUpLabel),
+            content: Text(logOutOthersMsg),
             actions: [
-              TextButton(
+              SLDialogAction(
                 onPressed: () => Navigator.of(ctx).pop(false),
                 child: Text(donNotRevokeMsg),
               ),
-              ElevatedButton(
+              SLDialogAction(
+                primary: true,
+
                 onPressed: () => Navigator.of(ctx).pop(true),
                 child: Text(context.tr('home_cngxutttct_a48045')),
               ),

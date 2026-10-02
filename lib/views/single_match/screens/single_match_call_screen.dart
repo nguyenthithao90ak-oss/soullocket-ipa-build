@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -125,7 +126,7 @@ class _SingleMatchCallScreenState extends State<SingleMatchCallScreen>
     setState(() => _hasLiked = true);
     _heartController.forward(from: 0.0);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      SLSnackBar(
         content: Text(L10nService().translate('call_liked')),
         backgroundColor: const Color(0xFFFF5E7E),
         duration: const Duration(seconds: 2),

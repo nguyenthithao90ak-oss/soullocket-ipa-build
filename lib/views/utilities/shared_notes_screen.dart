@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -192,8 +194,8 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
 
     if (_cachedNotes.length >= 50) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
+        SLSnackBar(
+          content: const Text(
             'Danh sách ghi chú đã đạt giới hạn (tối đa 50 ghi chú). Vui lòng xoá bớt trước khi thêm mới.',
           ),
           backgroundColor: SLColors.danger,
@@ -232,20 +234,23 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   void _deleteNote(String key) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => SLAlertDialog(
         title: const Text('Xoá ghi chú'),
         content: const Text('Bạn có chắc chắn muốn xoá ghi chú này?'),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Huỷ'),
           ),
-          TextButton(
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () {
               Navigator.pop(ctx);
               _doDeleteNote(key);
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+
             child: const Text('Xoá'),
           ),
         ],

@@ -466,10 +466,8 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
     final nextName = await showDialog<String>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(
-            repairMojibakeText('Đổi tên nhóm'),
-          ),
+        return SLAlertDialog(
+          title: Text(repairMojibakeText('Đổi tên nhóm')),
           content: TextField(
             controller: ctrl,
             maxLength: 36,
@@ -479,11 +477,13 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
             ),
           ),
           actions: [
-            TextButton(
+            SLDialogAction(
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: Text(repairMojibakeText('Hủy')),
             ),
-            TextButton(
+            SLDialogAction(
+              primary: true,
+
               onPressed: () =>
                   Navigator.of(dialogContext).pop(ctrl.text.trim()),
               child: Text(repairMojibakeText('Lưu')),
@@ -510,7 +510,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
+        return SLAlertDialog(
           title: Text(repairMojibakeText('Xóa nhóm?')),
           content: Text(
             repairMojibakeText(
@@ -518,11 +518,14 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
             ),
           ),
           actions: [
-            TextButton(
+            SLDialogAction(
               onPressed: () => Navigator.of(dialogContext).pop(false),
               child: Text(repairMojibakeText('Hủy')),
             ),
-            TextButton(
+            SLDialogAction(
+              primary: true,
+              destructive: true,
+
               onPressed: () => Navigator.of(dialogContext).pop(true),
               child: Text(repairMojibakeText('Xóa')),
             ),

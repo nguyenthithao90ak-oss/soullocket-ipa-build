@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 import 'dart:io' as io;
 
@@ -109,12 +111,8 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
   void _showInfoDialog(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          'Xuất nhật ký',
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-        ),
+      builder: (context) => SLAlertDialog(
+        title: Text('Xuất nhật ký'),
         content: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,12 +136,11 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
           ),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Đã hiểu',
-              style: TextStyle(color: SLColors.primary),
-            ),
+            child: const Text('Đã hiểu'),
           ),
         ],
       ),
@@ -168,7 +165,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
         setState(() {});
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text('Đã xuất HTML: ${filePath.split('/').last}'),
             behavior: SnackBarBehavior.floating,
             action: SnackBarAction(
@@ -181,7 +178,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(context.tr('util_chathxutdl_223d08')),
           behavior: SnackBarBehavior.floating,
         ),
@@ -220,7 +217,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
         setState(() {});
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text('Đã xuất ZIP: ${filePath.split('/').last}'),
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 4),
@@ -234,7 +231,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text('Lỗi: ${e.toString()}'),
           behavior: SnackBarBehavior.floating,
         ),
@@ -256,7 +253,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
       if (result.type != ResultType.done) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text('Không thể mở file: ${result.message}'),
             behavior: SnackBarBehavior.floating,
           ),
@@ -265,7 +262,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text('Không thể mở file: $e'),
           behavior: SnackBarBehavior.floating,
         ),
@@ -279,8 +276,8 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
       if (!await sourceFile.exists()) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('File không tồn tại'),
+          SLSnackBar(
+            content: const Text('File không tồn tại'),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -297,7 +294,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text('Đã lưu: $fileName'),
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 3),
@@ -306,7 +303,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text('Lỗi lưu file: $e'),
           behavior: SnackBarBehavior.floating,
         ),
@@ -326,7 +323,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text('Không thể chia sẻ: $e'),
           behavior: SnackBarBehavior.floating,
         ),
@@ -606,22 +603,23 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
                   () {
                     showDialog(
                       context: context,
-                      builder: (ctx) => AlertDialog(
+                      builder: (ctx) => SLAlertDialog(
                         title: const Text('Xoá file xuất'),
                         content: Text('Xoá "$fileName" khỏi thiết bị?'),
                         actions: [
-                          TextButton(
+                          SLDialogAction(
                             onPressed: () => Navigator.pop(ctx),
                             child: const Text('Huỷ'),
                           ),
-                          TextButton(
+                          SLDialogAction(
+                            primary: true,
+                            destructive: true,
+
                             onPressed: () {
                               Navigator.pop(ctx);
                               _removeFromHistory(index);
                             },
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.red,
-                            ),
+
                             child: const Text('Xoá'),
                           ),
                         ],

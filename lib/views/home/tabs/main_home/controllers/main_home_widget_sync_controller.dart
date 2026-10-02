@@ -98,6 +98,8 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       String heartStyleKey,
       String heartColorKey,
       String diaryLayoutKey,
+      String widgetStickerKey,
+      String photoFrameKey,
       String seasonModeKey,
     })
   >
@@ -108,8 +110,10 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
         prefs.getBool('il_widget_show_diary_$accountKey') ??
         prefs.getBool('il_widget_show_diary') ??
         true;
-    // Always pin heart style (no random animation) on app entry.
-    const heartAnimated = false;
+    final heartAnimated =
+        prefs.getBool('il_widget_heart_animated_$accountKey') ??
+        prefs.getBool('il_widget_heart_animated') ??
+        true;
     final displayMode = WidgetService.normalizeWidgetDisplayMode(
       showDiaryOnWidget: showDiaryOnWidget,
       heartAnimated: heartAnimated,
@@ -126,8 +130,16 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       ),
       showDiaryOnWidget: displayMode.showDiaryOnWidget,
       heartAnimated: displayMode.heartAnimated,
-      // Force fixed default heart style (5th item) on app entry.
-      heartStyleKey: '❤️',
+      heartStyleKey: WidgetService.normalizeHeartStyleKey(
+        prefs.getString('il_widget_heart_style_$accountKey') ??
+            prefs.getString('il_widget_heart_style'),
+      ),
+      widgetStickerKey: WidgetAppearance.normalizeSticker(
+        prefs.getString('il_widget_sticker_$accountKey'),
+      ),
+      photoFrameKey: WidgetAppearance.normalizePhotoFrame(
+        prefs.getString('il_widget_photo_frame_$accountKey'),
+      ),
       heartColorKey:
           prefs.getString('il_widget_heart_color_$accountKey') ??
           prefs.getString('il_widget_heart_color') ??
@@ -341,6 +353,8 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
         'heartStyleKey': appearance.heartStyleKey,
         'heartColorKey': appearance.heartColorKey,
         'diaryLayoutKey': appearance.diaryLayoutKey,
+        'widgetStickerKey': appearance.widgetStickerKey,
+        'photoFrameKey': appearance.photoFrameKey,
         'seasonModeKey': appearance.seasonModeKey,
         'diaryImageUrls': diaryImageUrls,
         'battery1': partnerBattery,
@@ -371,6 +385,8 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
         heartStyleKey: appearance.heartStyleKey,
         heartColorKey: appearance.heartColorKey,
         diaryLayoutKey: appearance.diaryLayoutKey,
+        widgetStickerKey: appearance.widgetStickerKey,
+        photoFrameKey: appearance.photoFrameKey,
         seasonModeKey: appearance.seasonModeKey,
         loveDate: startDate ?? '',
         birthday1: dobU1,
@@ -381,8 +397,6 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
         isCharging1: isCharging1,
         isCharging2: isCharging2,
       );
-      await WidgetService.syncCycleWidgetData(houseId: houseId);
-      await WidgetService.syncCalendarWidgetData(houseId: houseId);
       await WidgetService.syncSoulEventWidgetData(houseId: houseId);
       await SoulMergeService().syncSoulMergeWidgetNow();
       _lastLoveWidgetSignature = widgetSignature;

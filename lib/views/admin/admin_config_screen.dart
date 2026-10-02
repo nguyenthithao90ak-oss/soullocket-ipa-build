@@ -1,4 +1,5 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
@@ -120,7 +121,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       if (!mounted) return;
       setState(() => _isMaintenanceMode = value);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
             content: Text(value
                 ? context.tr('admin_btbotr_26d9dd')
                 : context.tr('admin_ttbotr_75a6e2'))),
@@ -133,7 +134,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       );
       debugPrint('Toggle maintenance failed: ${errorInfo.message}');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(context.tr('admin_chathcpnht_68b279')),
         ),
       );
@@ -154,7 +155,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       if (!mounted) return;
       setState(() => _isCommunityMaintenanceMode = value);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
             content: Text(value
                 ? context.tr('admin_btbotrcngn_0ee821')
                 : context.tr('admin_ttbotrcngn_668a0e'))),
@@ -167,7 +168,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       );
       debugPrint('Toggle community maintenance failed: ${errorInfo.message}');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(context.tr('admin_chathcpnht_df06b6')),
         ),
       );
@@ -194,7 +195,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('admin_luthngbobo_ffd83d'))),
+        SLSnackBar(content: Text(context.tr('admin_luthngbobo_ffd83d'))),
       );
     } catch (error) {
       if (!mounted) return;
@@ -206,7 +207,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
         'Save community maintenance settings failed: ${errorInfo.message}',
       );
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(context.tr('admin_chathluthn_ed6103')),
         ),
       );
@@ -225,7 +226,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
 
     if (title.isEmpty || body.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(inputErrorMsg)),
+        SLSnackBar(content: Text(inputErrorMsg)),
       );
       return;
     }
@@ -274,7 +275,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       _bodyCtrl.clear();
       _targetHouseIdCtrl.clear();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Đã gửi thông báo đến ${houseIds.length} nhà!')),
+        SLSnackBar(content: Text('Đã gửi thông báo đến ${houseIds.length} nhà!')),
       );
     } catch (e) {
       if (!mounted) return;
@@ -284,7 +285,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       );
       debugPrint('Send notification failed: ${errorInfo.message}');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(errorFallback),
         ),
       );

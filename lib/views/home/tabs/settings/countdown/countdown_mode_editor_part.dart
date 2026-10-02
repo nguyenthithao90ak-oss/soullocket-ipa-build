@@ -387,7 +387,7 @@ class _CountdownModeEditorScreenState
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(context.tr('home_lnuploadkh_b2b1ac')),
           action: SnackBarAction(
             label: context.tr('home_thli_4dffdf'),

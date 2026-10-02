@@ -184,7 +184,7 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
     messenger
       ?..hideCurrentSnackBar()
       ..showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(context.tr('util_bnhnykhibg_66c578')),
           action: SnackBarAction(
             label: context.tr('util_hontc_96ce27'),

@@ -1,5 +1,5 @@
-import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 
 /// ============================================================
 ///  TimeCapsuleService — Gra (Logic/Data)
@@ -16,78 +16,66 @@ class TimeCapsuleService {
   factory TimeCapsuleService() => _instance;
   TimeCapsuleService._internal();
 
-  final _db = FirebaseDatabase.instance;
   final _auth = FirebaseAuth.instance;
 
   /// Chôn một hộp thời gian mới xuống cát Firebase
-  Future<void> buryTimeCapsule({
+  Future<Map<String, dynamic>> buryTimeCapsule({
     required String houseId,
     required String title,
     required String message,
-    required String? imageUrl,
+    String? imageUploadSessionId,
+    String? capsuleId,
     required DateTime unlockDate,
   }) async {
     final uid = _auth.currentUser?.uid;
     final normalizedHouseId = houseId.trim();
-    final normalizedTitle = title.trim();
-    final normalizedMessage = message.trim();
     if (uid == null) throw Exception('Chưa đăng nhập!');
     if (normalizedHouseId.isEmpty) throw Exception('Thiếu mã nhà để chôn hòm.');
-    if (normalizedTitle.isEmpty || normalizedMessage.isEmpty) {
-      throw Exception('Hãy nhập tiêu đề và lời nhắn cho hòm thời gian.');
-    }
-    if (normalizedTitle.length > 150) {
-      throw Exception('Tiêu đề không được vượt quá 150 ký tự.');
-    }
-    if (normalizedMessage.length > 1500) {
-      throw Exception('Lời nhắn không được vượt quá 1500 ký tự.');
-    }
-
-    final capsulesSnap =
-        await _db.ref('houses/$normalizedHouseId/time_capsules').get();
-    if (capsulesSnap.exists && capsulesSnap.value is Map) {
-      final capsulesMap = capsulesSnap.value as Map;
-      if (capsulesMap.length >= 30) {
-        throw Exception(
-            'Hòm thời gian đã đạt giới hạn (tối đa 30 hòm). Vui lòng mở hoặc xoá bớt trước khi thêm mới.');
-      }
-    }
-
-    final capsuleRef =
-        _db.ref('houses/$normalizedHouseId/time_capsules').push();
-
-    // Dữ liệu được niêm phong
-    await capsuleRef.set({
-      'id': capsuleRef.key,
-      'sender_uid': uid,
-      'title': normalizedTitle,
-      'content': normalizedMessage,
-      'image_url': imageUrl?.trim(),
-      'buried_at': ServerValue.timestamp, // Bắt đầu chôn
-      'unlock_time_ms':
-          unlockDate.millisecondsSinceEpoch, // Chờ tới ngày này mới cho mở
-      'is_opened': false,
-    });
+    final response =
+        await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
+          'createTimeCapsule',
+          payload: {
+            'houseId': normalizedHouseId,
+            'title': title.trim(),
+            'content': message.trim(),
+            'unlockTimeMs': unlockDate.millisecondsSinceEpoch,
+            if (capsuleId != null && capsuleId.trim().isNotEmpty)
+              'capsuleId': capsuleId.trim(),
+            if (imageUploadSessionId != null &&
+                imageUploadSessionId.trim().isNotEmpty)
+              'imageUploadSessionId': imageUploadSessionId.trim(),
+          },
+          requireAppCheck: true,
+          throwOriginalException: true,
+        );
+    return response.data;
   }
 
   /// Trae chỉ việc móc Stream này ra để hiện Hộp chưa mở trên bãi biển
-  Stream<List<Map<String, dynamic>>> listenToCapsules(String houseId) {
+  Stream<List<Map<String, dynamic>>> listenToCapsules(String houseId) async* {
     final normalizedHouseId = houseId.trim();
     if (normalizedHouseId.isEmpty) {
-      return Stream<List<Map<String, dynamic>>>.value(const []);
+      yield const [];
+      return;
     }
-    return _db
-        .ref('houses/$normalizedHouseId/time_capsules')
-        .orderByChild('unlock_time_ms')
-        .onValue
-        .map((event) {
-      if (!event.snapshot.exists) return [];
-
-      final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
-      return data.entries
-          .map((e) => Map<String, dynamic>.from(e.value))
+    Future<List<Map<String, dynamic>>> load() async {
+      final response =
+          await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
+            'listTimeCapsules',
+            payload: {'houseId': normalizedHouseId},
+            requireAppCheck: true,
+            throwOriginalException: true,
+          );
+      final raw = response.data['capsules'];
+      if (raw is! List) return const [];
+      return raw
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
           .toList();
-    });
+    }
+
+    yield await load();
+    yield* Stream.periodic(const Duration(seconds: 30)).asyncMap((_) => load());
   }
 
   /// Lấy danh sách các rương chưa mở (Dùng cho check notification)
@@ -95,13 +83,18 @@ class TimeCapsuleService {
     final normalizedHouseId = houseId.trim();
     if (normalizedHouseId.isEmpty) return [];
     try {
-      final snap =
-          await _db.ref('houses/$normalizedHouseId/time_capsules').get();
-      if (!snap.exists) return [];
-
-      final data = Map<dynamic, dynamic>.from(snap.value as Map);
-      return data.entries
-          .map((e) => Map<String, dynamic>.from(e.value))
+      final response =
+          await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
+            'listTimeCapsules',
+            payload: {'houseId': normalizedHouseId},
+            requireAppCheck: true,
+            throwOriginalException: true,
+          );
+      final raw = response.data['capsules'];
+      if (raw is! List) return [];
+      return raw
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
           .where((c) => c['is_opened'] == false)
           .toList();
     } catch (e) {
@@ -111,35 +104,28 @@ class TimeCapsuleService {
 
   /// Khui rương (Logic check Time)
   Future<Map<String, dynamic>> openCapsule(
-      String houseId, Map<String, dynamic> capsule) async {
+    String houseId,
+    Map<String, dynamic> capsule,
+  ) async {
     final normalizedHouseId = houseId.trim();
     if (normalizedHouseId.isEmpty) {
       throw Exception('Thiếu mã nhà để mở hòm.');
     }
-    final int unlockTime = (capsule['unlock_time_ms'] as num?)?.toInt() ?? 0;
-    final bool isOpened = capsule['is_opened'] == true;
-    final int currentTime = DateTime.now().millisecondsSinceEpoch;
-
-    if (isOpened) return capsule; // Rương đã từng bị khui
-
-    if (currentTime < unlockTime) {
-      // Logic Backend kiểm định: Rương chưa "chín", đập hộp sẽ bị Server đá văng
-      throw Exception(
-          'Hòm Thời Gian chưa đến ngày mở. Bạn quay lại đúng ngày mở nhé.');
-    }
-
     // Gắn mộc "Đã Khui" lên Firebase
     final cid = capsule['id']?.toString().trim() ?? '';
     if (cid.isEmpty) {
       throw Exception('Thiếu mã hòm thời gian.');
     }
-    await _db.ref('houses/$normalizedHouseId/time_capsules/$cid').update({
-      'is_opened': true,
-      'opened_at': ServerValue.timestamp,
-    });
-
-    capsule['is_opened'] = true;
-    return capsule; // Trả về Nội dung Ký ức
+    final response =
+        await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
+          'openTimeCapsule',
+          payload: {'houseId': normalizedHouseId, 'capsuleId': cid},
+          requireAppCheck: true,
+          throwOriginalException: true,
+        );
+    final result = response.data['capsule'];
+    if (result is! Map) throw StateError('Time capsule open was not confirmed');
+    return Map<String, dynamic>.from(result);
   }
 
   /// Xóa một hòm thời gian khỏi Firebase
@@ -149,8 +135,11 @@ class TimeCapsuleService {
     if (normalizedHouseId.isEmpty || normalizedCapsuleId.isEmpty) {
       throw Exception('Thiếu mã nhà hoặc mã hòm để xóa.');
     }
-    await _db
-        .ref('houses/$normalizedHouseId/time_capsules/$normalizedCapsuleId')
-        .remove();
+    await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
+      'deleteTimeCapsule',
+      payload: {'houseId': normalizedHouseId, 'capsuleId': normalizedCapsuleId},
+      requireAppCheck: true,
+      throwOriginalException: true,
+    );
   }
 }

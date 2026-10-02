@@ -1,4 +1,7 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
+import 'dart:math';
 
 import 'package:soullocket_app/widgets/skeleton_container.dart';
 
@@ -7,6 +10,8 @@ import 'dart:ui' as ui;
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
@@ -55,7 +60,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
   StreamSubscription<List<Map<String, dynamic>>>? _capsulesSubscription;
   bool _didPromptPendingUploadRetry = false;
 
-  String get _pendingUploadKey => '$_pendingUploadKeyPrefix${widget.houseId}';
+  String get _pendingUploadKey =>
+      '$_pendingUploadKeyPrefix${FirebaseAuth.instance.currentUser?.uid ?? 'signed_out'}_${widget.houseId}';
 
   @override
   void initState() {
@@ -88,7 +94,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(context.tr('util_lnchnkhonh_9b7b2c')),
           action: SnackBarAction(
             label: context.tr('util_thli_4dffdf'),
@@ -108,7 +114,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
     }
     final imagePath = pending['imagePath']?.toString().trim() ?? '';
     XFile? imageFile;
-    if (imagePath.isNotEmpty) {
+    final imageSessionId = pending['imageUploadSessionId']?.toString() ?? '';
+    if (imagePath.isNotEmpty && imageSessionId.isEmpty) {
       try {
         imageFile = XFile(imagePath);
         if (await imageFile.length() <= 0) {
@@ -117,6 +124,14 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
       } catch (_) {
         imageFile = null;
       }
+    }
+    if (imagePath.isNotEmpty && imageSessionId.isEmpty && imageFile == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SLSnackBar(content: Text(context.tr('util_nhchnkhngc_321118'))),
+        );
+      }
+      return;
     }
     final unlockDateMs = (pending['unlockDateMs'] as num?)?.toInt();
     if (unlockDateMs == null) {
@@ -128,24 +143,32 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
       _unlockDate = DateTime.fromMillisecondsSinceEpoch(unlockDateMs);
       _selectedImage = imageFile;
     });
-    await _addCapsule();
+    await _addCapsule(retryDraft: pending);
   }
 
   void _loadCapsules() {
     _capsulesSubscription = TimeCapsuleService()
         .listenToCapsules(widget.houseId)
-        .listen((list) {
-          if (mounted) {
-            setState(() {
-              _capsules = list;
-              _capsules.sort(
-                (a, b) => (b['buried_at'] as int? ?? 0).compareTo(
-                  a['buried_at'] as int? ?? 0,
-                ),
-              );
-            });
-          }
-        });
+        .listen(
+          (list) {
+            if (mounted) {
+              setState(() {
+                _capsules = list;
+                _capsules.sort(
+                  (a, b) => (b['buried_at'] as int? ?? 0).compareTo(
+                    a['buried_at'] as int? ?? 0,
+                  ),
+                );
+              });
+            }
+          },
+          onError: (Object error) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SLSnackBar(content: Text(context.tr('util_chathlukho_774aa4'))),
+            );
+          },
+        );
   }
 
   Future<void> _pickImage() async {
@@ -157,65 +180,113 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
     }
   }
 
-  Future<void> _addCapsule() async {
+  Future<void> _addCapsule({Map<String, dynamic>? retryDraft}) async {
     if (_isUploading) return;
+
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    final houseId = widget.houseId;
+    final pendingKey = _pendingUploadKey;
+    final unlockDate = _unlockDate;
+    final selectedImage = _selectedImage;
+    void requireCurrentScope() {
+      if (FirebaseAuth.instance.currentUser?.uid != uid ||
+          widget.houseId != houseId) {
+        throw StateError('Time capsule upload scope changed');
+      }
+    }
 
     final content = _contentController.text.trim();
     final title = _titleController.text.trim();
 
     if (widget.houseId.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('util_chatmthynh_da24d0'))),
+        SLSnackBar(content: Text(context.tr('util_chatmthynh_da24d0'))),
       );
       return;
     }
 
-    if (content.isEmpty || _unlockDate == null) {
+    if (content.isEmpty || unlockDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('util_bnchnngymv_4173b0'))),
+        SLSnackBar(content: Text(context.tr('util_bnchnngymv_4173b0'))),
       );
       return;
     }
 
-    if (_selectedImage != null && !await File(_selectedImage!.path).exists()) {
+    if (selectedImage != null &&
+        !kIsWeb &&
+        !await File(selectedImage.path).exists()) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('util_nhchnkhngc_321118'))),
+        SLSnackBar(content: Text(context.tr('util_nhchnkhngc_321118'))),
       );
       return;
     }
+    if (!mounted) return;
 
     setState(() {
       _isUploading = true;
     });
 
     try {
-      await PendingUploadService.instance
-          .save(_pendingUploadKey, <String, dynamic>{
-            'title': title,
-            'content': content,
-            'unlockDateMs': _unlockDate!.millisecondsSinceEpoch,
-            'imagePath': _selectedImage?.path ?? '',
-          });
-      String? imageUrl;
-      if (_selectedImage != null) {
-        imageUrl = await _storageService.uploadImage(
-          widget.houseId,
-          'time_capsules',
-          _selectedImage!,
+      requireCurrentScope();
+      final draft = <String, dynamic>{
+        ...?retryDraft,
+        'uid': uid,
+        'houseId': houseId,
+        'title': title,
+        'content': content,
+        'unlockDateMs': unlockDate.millisecondsSinceEpoch,
+        'imagePath': selectedImage?.path ?? retryDraft?['imagePath'] ?? '',
+      };
+      var capsuleId = draft['capsuleId']?.toString() ?? '';
+      if (capsuleId.isEmpty) {
+        final random = Random.secure();
+        capsuleId =
+            '${DateTime.now().microsecondsSinceEpoch}_${random.nextInt(1 << 30)}_${random.nextInt(1 << 30)}';
+        draft['capsuleId'] = capsuleId;
+      }
+      await PendingUploadService.instance.save(pendingKey, draft);
+      String? imageStoragePath;
+      String? imageUploadSessionId = draft['imageUploadSessionId']?.toString();
+      if (selectedImage != null &&
+          (imageUploadSessionId == null || imageUploadSessionId.isEmpty)) {
+        requireCurrentScope();
+        final imageUpload = await _storageService.uploadTimeCapsuleImage(
+          houseId,
+          selectedImage,
           quality: 70,
         );
+        imageStoragePath = imageUpload?.storagePath;
+        imageUploadSessionId = imageUpload?.sessionId;
+        if (imageStoragePath == null || imageUploadSessionId == null) {
+          throw StateError('Time capsule image upload was not confirmed');
+        }
+        requireCurrentScope();
+        capsuleId = imageUploadSessionId;
+        draft['capsuleId'] = capsuleId;
+        draft['imageUploadSessionId'] = imageUploadSessionId;
+        draft['imageStoragePath'] = imageStoragePath;
+        await PendingUploadService.instance.save(pendingKey, draft);
       }
 
+      requireCurrentScope();
       await TimeCapsuleService().buryTimeCapsule(
-        houseId: widget.houseId,
+        houseId: houseId,
         title: title,
         message: content,
-        imageUrl: imageUrl,
-        unlockDate: _unlockDate!,
+        imageUploadSessionId: imageUploadSessionId,
+        capsuleId: capsuleId,
+        unlockDate: unlockDate,
       );
-      await PendingUploadService.instance.clear(_pendingUploadKey);
+      requireCurrentScope();
+      try {
+        await PendingUploadService.instance.clear(pendingKey);
+      } catch (_) {}
       if (!mounted) return;
+      await _capsulesSubscription?.cancel();
+      if (!mounted) return;
+      _loadCapsules();
 
       _titleController.clear();
       _contentController.clear();
@@ -226,7 +297,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
       FocusScope.of(context).unfocus();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('util_khahpthtng_4043ab'))),
+        SLSnackBar(content: Text(context.tr('util_khahpthtng_4043ab'))),
       );
     } catch (e) {
       if (mounted) {
@@ -236,7 +307,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
         );
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(errorInfo.message)));
+        ).showSnackBar(SLSnackBar(content: Text(errorInfo.message)));
       }
     } finally {
       if (mounted) {
@@ -577,7 +648,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
         );
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(errorInfo.message)));
+        ).showSnackBar(SLSnackBar(content: Text(errorInfo.message)));
       }
     }
   }
@@ -585,16 +656,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
   void _showInfoDialog(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: SLColors.paper,
-        title: Text(
-          context.tr('p3_capsule_help_title'),
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.w900,
-            color: SLColors.textPrimary,
-          ),
-        ),
+      builder: (context) => SLAlertDialog(
+        title: Text(context.tr('p3_capsule_help_title')),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -629,12 +692,11 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
           ),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              context.tr('p3_understood'),
-              style: const TextStyle(color: SLColors.primary),
-            ),
+            child: Text(context.tr('p3_understood')),
           ),
         ],
       ),
@@ -1513,45 +1575,20 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
     if (capsuleId.isEmpty) return false;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1035),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          context.tr('p3_capsule_delete_title'),
-          style: SLTheme.quicksand(
-            color: Colors.white,
-            fontWeight: FontWeight.w800,
-            fontSize: 17,
-          ),
-        ),
-        content: Text(
-          context.tr('p3_capsule_delete_message'),
-          style: SLTheme.quicksand(
-            color: Colors.white70,
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
-        ),
+      builder: (ctx) => SLAlertDialog(
+        title: Text(context.tr('p3_capsule_delete_title')),
+        content: Text(context.tr('p3_capsule_delete_message')),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              context.tr('p3_cancel'),
-              style: SLTheme.quicksand(
-                color: Colors.white54,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            child: Text(context.tr('p3_cancel')),
           ),
-          TextButton(
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              context.tr('p3_delete'),
-              style: SLTheme.quicksand(
-                color: const Color(0xFFEF4444),
-                fontWeight: FontWeight.w900,
-              ),
-            ),
+            child: Text(context.tr('p3_delete')),
           ),
         ],
       ),
@@ -1563,7 +1600,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text(
               L10nService().format('p3_capsule_delete_failed', {
                 'error': AppErrorMapper.resolve(e).message,

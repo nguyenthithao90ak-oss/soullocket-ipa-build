@@ -1,8 +1,9 @@
-import 'dart:ui';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
-import '../core/sl_theme.dart';
 import '../utils/services/l10n_service.dart';
+import 'sl_feedback.dart';
+import 'sl_dialog.dart';
 
 /// Các variant của toast/snackbar theo ngữ nghĩa.
 enum SLToastVariant {
@@ -23,61 +24,22 @@ enum SLToastVariant {
 }
 
 class SLToast {
-  /// Helper lấy palette màu theo variant (dùng cả cho snackbar & dialog).
-  static _Palette _palette(SLToastVariant variant, Brightness brightness) {
-    final isDark = brightness == Brightness.dark;
-    switch (variant) {
-      case SLToastVariant.success:
-        return _Palette(
-          accent: isDark ? const Color(0xFF69F0AE) : const Color(0xFF00C853),
-          accentSoft: isDark
-              ? const Color(0xFF1B5E20)
-              : const Color(0xFFE8F5E9),
-          icon: Icons.check_circle_rounded,
-          iconBg: const Color(0xFF00C853),
-        );
-      case SLToastVariant.warning:
-        return _Palette(
-          accent: isDark ? const Color(0xFFFFD740) : const Color(0xFFFFAB00),
-          accentSoft: isDark
-              ? const Color(0xFF5C4500)
-              : const Color(0xFFFFF8E1),
-          icon: Icons.warning_amber_rounded,
-          iconBg: const Color(0xFFFFAB00),
-        );
-      case SLToastVariant.danger:
-        return _Palette(
-          accent: isDark ? const Color(0xFFFF6E6E) : const Color(0xFFFF5252),
-          accentSoft: isDark
-              ? const Color(0xFF5C0F0F)
-              : const Color(0xFFFFEBEE),
-          icon: Icons.error_rounded,
-          iconBg: const Color(0xFFFF5252),
-        );
-      case SLToastVariant.info:
-        return _Palette(
-          accent: isDark ? const Color(0xFF82B1FF) : const Color(0xFF2979FF),
-          accentSoft: isDark
-              ? const Color(0xFF0D2D5C)
-              : const Color(0xFFE3F2FD),
-          icon: Icons.info_rounded,
-          iconBg: const Color(0xFF2979FF),
-        );
-      case SLToastVariant.primary:
-        return _Palette(
-          accent: SLColors.primary,
-          accentSoft: SLColors.primaryLight,
-          icon: Icons.favorite_rounded,
-          iconBg: SLColors.primary,
-        );
-    }
-  }
+  static OverlayEntry? _activeEntry;
+  static VoidCallback? _dismissActiveEntry;
+
+  static SLDialogTone _dialogTone(SLToastVariant variant) => switch (variant) {
+    SLToastVariant.success => SLDialogTone.success,
+    SLToastVariant.warning => SLDialogTone.warning,
+    SLToastVariant.danger => SLDialogTone.danger,
+    SLToastVariant.info => SLDialogTone.info,
+    SLToastVariant.primary => SLDialogTone.neutral,
+  };
 
   // ═══════════════════════════════════════════════════════════════════════
   // SNACKBAR — Thay thế Material SnackBar mặc định bằng UI đẹp hơn
   // ═══════════════════════════════════════════════════════════════════════
 
-  /// Hiển thị snackbar đ�p (top-positioned, glassmorphism, có icon + action).
+  /// Hiển thị thông báo gọn phía trên hoặc snackbar có hành động phía dưới.
   ///
   /// Example:
   /// ```dart
@@ -88,33 +50,90 @@ class SLToast {
     BuildContext context,
     String message, {
     SLToastVariant variant = SLToastVariant.primary,
+    String? title,
     String? actionLabel,
     VoidCallback? onAction,
     Duration duration = const Duration(seconds: 3),
     IconData? icon,
   }) {
+    if (!context.mounted || message.trim().isEmpty) return;
+
+    final accent = switch (variant) {
+      SLToastVariant.success => SLFeedbackStyle.success,
+      SLToastVariant.warning => SLFeedbackStyle.warning,
+      SLToastVariant.danger => SLFeedbackStyle.danger,
+      SLToastVariant.info => SLFeedbackStyle.info,
+      SLToastVariant.primary => SLFeedbackStyle.primary,
+    };
+    _dismissActiveEntry?.call();
+    _activeEntry = null;
+    _dismissActiveEntry = null;
+
+    if (actionLabel != null && onAction != null) {
+      final messenger = ScaffoldMessenger.maybeOf(context);
+      if (messenger != null) {
+        messenger
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SLSnackBar(
+              content: Text(message),
+              backgroundColor: accent,
+              icon: icon ?? SLFeedbackStyle.iconFor(accent),
+              action: SnackBarAction(label: actionLabel, onPressed: onAction),
+              duration: duration,
+            ),
+          );
+        return;
+      }
+    }
+
     final overlay = Overlay.of(context, rootOverlay: true);
-    final media = MediaQuery.of(context);
-    final palette = _palette(variant, Theme.of(context).brightness);
 
     late OverlayEntry entry;
+    var removed = false;
+    void dismissEntry() {
+      if (removed) return;
+      removed = true;
+      if (identical(_activeEntry, entry)) {
+        _activeEntry = null;
+        _dismissActiveEntry = null;
+      }
+      entry.remove();
+      entry.dispose();
+    }
+
     entry = OverlayEntry(
       builder: (ctx) => _SLToastEntry(
         message: message,
-        variant: variant,
-        palette: palette,
+        title: title,
+        accent: accent,
         actionLabel: actionLabel,
         onAction: () {
-          onAction?.call();
-          entry.remove();
+          try {
+            onAction?.call();
+          } finally {
+            dismissEntry();
+          }
         },
+        onDismiss: dismissEntry,
         duration: duration,
-        topPadding: media.padding.top,
         icon: icon,
       ),
     );
+    var wasMounted = false;
+    entry.addListener(() {
+      if (entry.mounted) {
+        wasMounted = true;
+      } else if (wasMounted && !removed) {
+        scheduleMicrotask(dismissEntry);
+      }
+    });
+    _activeEntry = entry;
+    _dismissActiveEntry = dismissEntry;
     overlay.insert(entry);
   }
+
+  static void dismiss() => _dismissActiveEntry?.call();
 
   /// Shortcut cho success.
   static void success(BuildContext context, String message) =>
@@ -157,36 +176,16 @@ class SLToast {
     SLToastVariant variant = SLToastVariant.warning,
     IconData? icon,
   }) async {
-    final result = await showGeneralDialog<bool>(
+    final result = await showDialog<bool>(
       context: context,
-      barrierDismissible: true,
-      barrierLabel: 'dismiss',
-      barrierColor: Colors.black.withValues(alpha: 0.55),
-      transitionDuration: const Duration(milliseconds: 280),
-      pageBuilder: (ctx, anim, secondaryAnim) {
-        final palette = _palette(variant, Theme.of(ctx).brightness);
-        return _SLDialogShell(
-          palette: palette,
-          variant: variant,
-          icon: icon,
-          title: title,
-          message: message,
-          confirmLabel:
-              confirmLabel ?? L10nService().translate('toast_confirm'),
-          cancelLabel: cancelLabel ?? L10nService().translate('toast_cancel'),
-        );
-      },
-      transitionBuilder: (ctx, anim, secondaryAnim, child) {
-        final scale = Tween<double>(
-          begin: 0.92,
-          end: 1.0,
-        ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic));
-        final fade = Tween<double>(begin: 0, end: 1).animate(anim);
-        return FadeTransition(
-          opacity: fade,
-          child: ScaleTransition(scale: scale, child: child),
-        );
-      },
+      builder: (context) => SLMessageDialog(
+        title: title,
+        message: message,
+        confirmLabel: confirmLabel ?? L10nService().translate('toast_confirm'),
+        cancelLabel: cancelLabel ?? L10nService().translate('toast_cancel'),
+        tone: _dialogTone(variant),
+        icon: icon,
+      ),
     );
     return result ?? false;
   }
@@ -200,33 +199,16 @@ class SLToast {
     SLToastVariant variant = SLToastVariant.info,
     IconData? icon,
   }) {
-    return showGeneralDialog<void>(
+    return showDialog<bool>(
       context: context,
-      barrierDismissible: true,
-      barrierLabel: 'dismiss',
-      barrierColor: Colors.black.withValues(alpha: 0.55),
-      transitionDuration: const Duration(milliseconds: 280),
-      pageBuilder: (ctx, anim, secondaryAnim) => _SLDialogShell(
-        palette: _palette(variant, Theme.of(ctx).brightness),
-        variant: variant,
-        icon: icon,
+      builder: (context) => SLMessageDialog(
         title: title,
         message: message,
         confirmLabel: okLabel ?? L10nService().translate('toast_ok'),
-        cancelLabel: null,
+        tone: _dialogTone(variant),
+        icon: icon,
       ),
-      transitionBuilder: (ctx, anim, secondaryAnim, child) {
-        final scale = Tween<double>(
-          begin: 0.92,
-          end: 1.0,
-        ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic));
-        final fade = Tween<double>(begin: 0, end: 1).animate(anim);
-        return FadeTransition(
-          opacity: fade,
-          child: ScaleTransition(scale: scale, child: child),
-        );
-      },
-    );
+    ).then<void>((_) {});
   }
 }
 
@@ -234,39 +216,25 @@ class SLToast {
 // INTERNAL WIDGETS
 // ════════════════════════════════════════════════════════════════════════
 
-class _Palette {
-  final Color accent;
-  final Color accentSoft;
-  final IconData icon;
-  final Color iconBg;
-
-  const _Palette({
-    required this.accent,
-    required this.accentSoft,
-    required this.icon,
-    required this.iconBg,
-  });
-}
-
 /// Toast entry — chạy slide-down animation + auto-dismiss.
 class _SLToastEntry extends StatefulWidget {
   final String message;
-  final SLToastVariant variant;
-  final _Palette palette;
+  final String? title;
+  final Color accent;
   final String? actionLabel;
   final VoidCallback onAction;
+  final VoidCallback onDismiss;
   final Duration duration;
-  final double topPadding;
   final IconData? icon;
 
   const _SLToastEntry({
     required this.message,
-    required this.variant,
-    required this.palette,
+    required this.title,
+    required this.accent,
     required this.actionLabel,
     required this.onAction,
+    required this.onDismiss,
     required this.duration,
-    required this.topPadding,
     required this.icon,
   });
 
@@ -276,9 +244,13 @@ class _SLToastEntry extends StatefulWidget {
 
 class _SLToastEntryState extends State<_SLToastEntry>
     with SingleTickerProviderStateMixin {
+  Timer? _dismissTimer;
+  var _isDismissing = false;
+  var _hasStarted = false;
+  var _hasActed = false;
   late final AnimationController _ctrl = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 320),
+    duration: const Duration(milliseconds: 240),
   );
   late final Animation<double> _slide = Tween<double>(
     begin: -1.0,
@@ -290,517 +262,158 @@ class _SLToastEntryState extends State<_SLToastEntry>
   ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
 
   @override
-  void initState() {
-    super.initState();
-    _ctrl.forward();
-    Future.delayed(widget.duration, _dismiss);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _ctrl.duration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 240);
+    if (!_hasStarted) {
+      _hasStarted = true;
+      _ctrl.forward();
+    }
+    _dismissTimer?.cancel();
+    if (!MediaQuery.accessibleNavigationOf(context) && !_isDismissing) {
+      _dismissTimer = Timer(widget.duration, _dismiss);
+    }
   }
 
   Future<void> _dismiss() async {
-    if (!mounted) return;
-    await _ctrl.reverse();
+    if (!mounted || _isDismissing) return;
+    _isDismissing = true;
+    _dismissTimer?.cancel();
+    try {
+      await _ctrl.reverse().orCancel;
+    } on TickerCanceled {
+      return;
+    }
     if (mounted) {
-      (context.findAncestorStateOfType<_SLToastEntryState>())?.mounted;
-      Navigator.of(context, rootNavigator: true).pop();
+      widget.onDismiss();
     }
   }
 
   @override
   void dispose() {
+    _dismissTimer?.cancel();
     _ctrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-    final isDark = brightness == Brightness.dark;
-    final iconData = widget.icon ?? widget.palette.icon;
+    final media = MediaQuery.of(context);
+    final title = widget.title?.trim();
+    final hasTitle = title != null && title.isNotEmpty;
+    final availableHeight =
+        (media.size.height -
+                media.padding.vertical -
+                media.viewInsets.bottom -
+                24)
+            .clamp(1.0, double.infinity);
 
     return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
+      top: media.padding.top + 12,
+      left: media.padding.left + 16,
+      right: media.padding.right + 16,
       child: AnimatedBuilder(
         animation: _ctrl,
-        builder: (_, __) {
-          final slideValue = _slide.value;
-          final fadeValue = _fade.value;
-          return Opacity(
-            opacity: fadeValue,
-            child: Transform.translate(
-              offset: Offset(0, -80 + (-80 * -slideValue)),
-              child: Padding(
-                padding: EdgeInsets.only(
-                  top: widget.topPadding + 12,
-                  left: 16,
-                  right: 16,
+        builder: (context, _) => Opacity(
+          opacity: _fade.value,
+          child: Transform.translate(
+            offset: Offset(0, 24 * _slide.value),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: SLFeedbackStyle.maxWidth,
+                  maxHeight: availableHeight,
                 ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 400),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? Colors.black.withValues(alpha: 0.55)
-                                  : Colors.white.withValues(alpha: 0.92),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: widget.palette.accent.withValues(
-                                  alpha: 0.35,
-                                ),
-                                width: 1,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: widget.palette.accent.withValues(
-                                    alpha: 0.18,
-                                  ),
-                                  blurRadius: 24,
-                                  spreadRadius: -2,
-                                  offset: const Offset(0, 8),
-                                ),
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.06),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                // Icon tròn có glow
-                                Container(
-                                  width: 38,
-                                  height: 38,
-                                  decoration: BoxDecoration(
-                                    color: widget.palette.iconBg.withValues(
-                                      alpha: 0.18,
-                                    ),
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: widget.palette.iconBg.withValues(
-                                        alpha: 0.35,
-                                      ),
-                                      width: 1.2,
-                                    ),
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Icon(
-                                    iconData,
-                                    size: 22,
-                                    color: widget.palette.accent,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                // Message
-                                Expanded(
-                                  child: Text(
-                                    widget.message,
-                                    style: TextStyle(
-                                      color: isDark
-                                          ? Colors.white.withValues(alpha: 0.95)
-                                          : SLColors.textPrimary,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 14,
-                                      height: 1.35,
-                                    ),
-                                  ),
-                                ),
-                                // Action button
-                                if (widget.actionLabel != null)
-                                  TextButton(
-                                    onPressed: widget.onAction,
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: widget.palette.accent,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 4,
-                                      ),
-                                      minimumSize: Size.zero,
-                                      tapTargetSize:
-                                          MaterialTapTargetSize.shrinkWrap,
-                                    ),
-                                    child: Text(
-                                      widget.actionLabel!,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w900,
-                                        fontSize: 13,
-                                        letterSpacing: 0.4,
-                                      ),
-                                    ),
-                                  ),
-                                // Close button
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.close_rounded,
-                                    size: 18,
-                                    color: isDark
-                                        ? Colors.white.withValues(alpha: 0.5)
-                                        : SLColors.textTertiary,
-                                  ),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(
-                                    minWidth: 32,
-                                    minHeight: 32,
-                                  ),
-                                  onPressed: _dismiss,
-                                ),
-                              ],
-                            ),
-                          ),
+                child: Semantics(
+                  container: true,
+                  liveRegion: true,
+                  child: Material(
+                    color: SLFeedbackStyle.surface,
+                    elevation: 6,
+                    shadowColor: Colors.black.withValues(alpha: 0.24),
+                    shape: SLFeedbackStyle.shape,
+                    clipBehavior: Clip.antiAlias,
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsetsDirectional.fromSTEB(
+                          14,
+                          10,
+                          6,
+                          10,
                         ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-/// Dialog shell — header gradient + icon + body + actions.
-class _SLDialogShell extends StatefulWidget {
-  final _Palette palette;
-  final SLToastVariant variant;
-  final IconData? icon;
-  final String title;
-  final String message;
-  final String confirmLabel;
-  final String? cancelLabel;
-
-  const _SLDialogShell({
-    required this.palette,
-    required this.variant,
-    required this.icon,
-    required this.title,
-    required this.message,
-    required this.confirmLabel,
-    required this.cancelLabel,
-  });
-
-  @override
-  State<_SLDialogShell> createState() => _SLDialogShellState();
-}
-
-class _SLDialogShellState extends State<_SLDialogShell> {
-  bool _isConfirming = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-    final isDark = brightness == Brightness.dark;
-    final iconData = widget.icon ?? widget.palette.icon;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 28),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Material(
-            color: Colors.transparent,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(28),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? const Color(0xFF2A2A3A).withValues(alpha: 0.92)
-                        : Colors.white.withValues(alpha: 0.96),
-                    borderRadius: BorderRadius.circular(28),
-                    border: Border.all(
-                      color: widget.palette.accent.withValues(alpha: 0.25),
-                      width: 1,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: widget.palette.accent.withValues(alpha: 0.18),
-                        blurRadius: 32,
-                        spreadRadius: -4,
-                        offset: const Offset(0, 16),
-                      ),
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.12),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // ─── Header gradient với icon ─────────────────
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              widget.palette.accent.withValues(alpha: 0.18),
-                              widget.palette.accent.withValues(alpha: 0.05),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                        child: Column(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Icon tròn lớn có glow
-                            Container(
-                              width: 72,
-                              height: 72,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    widget.palette.iconBg,
-                                    widget.palette.iconBg.withValues(
-                                      alpha: 0.7,
+                            Expanded(
+                              child: SLFeedbackContent(
+                                accent: widget.accent,
+                                icon: widget.icon,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (hasTitle)
+                                      Text(
+                                        title,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    if (hasTitle) const SizedBox(height: 3),
+                                    Text(
+                                      widget.message,
+                                      style: TextStyle(
+                                        color: hasTitle
+                                            ? SLFeedbackStyle.secondary
+                                            : SLFeedbackStyle.foreground,
+                                      ),
                                     ),
+                                    if (widget.actionLabel != null)
+                                      Align(
+                                        alignment:
+                                            AlignmentDirectional.centerStart,
+                                        child: TextButton(
+                                          onPressed: () {
+                                            if (_hasActed || _isDismissing) {
+                                              return;
+                                            }
+                                            _hasActed = true;
+                                            _dismissTimer?.cancel();
+                                            widget.onAction();
+                                          },
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: widget.accent,
+                                          ),
+                                          child: Text(widget.actionLabel!),
+                                        ),
+                                      ),
                                   ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
                                 ),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: widget.palette.iconBg.withValues(
-                                      alpha: 0.45,
-                                    ),
-                                    blurRadius: 22,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              alignment: Alignment.center,
-                              child: Icon(
-                                iconData,
-                                size: 36,
-                                color: Colors.white,
                               ),
                             ),
-                            const SizedBox(height: 14),
-                            Text(
-                              widget.title,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: isDark
-                                    ? Colors.white
-                                    : SLColors.textPrimary,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 18,
-                                letterSpacing: -0.2,
-                                height: 1.3,
+                            IconButton(
+                              tooltip: MaterialLocalizations.of(
+                                context,
+                              ).closeButtonTooltip,
+                              onPressed: _dismiss,
+                              color: SLFeedbackStyle.secondary,
+                              icon: const Icon(Icons.close_rounded, size: 18),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 40,
+                                minHeight: 40,
                               ),
                             ),
                           ],
                         ),
                       ),
-
-                      // ─── Body message ─────────────────────────────
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
-                        child: Text(
-                          widget.message,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: isDark
-                                ? Colors.white.withValues(alpha: 0.78)
-                                : SLColors.textSecond,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                            height: 1.55,
-                          ),
-                        ),
-                      ),
-
-                      // ─── Actions ─────────────────────────────────
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
-                        child: widget.cancelLabel != null
-                            ? Row(
-                                children: [
-                                  Expanded(
-                                    child: _SecondaryButton(
-                                      label: widget.cancelLabel!,
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(false),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: _PrimaryButton(
-                                      label: widget.confirmLabel,
-                                      color: widget.palette.accent,
-                                      isLoading: _isConfirming,
-                                      onPressed: () async {
-                                        setState(() => _isConfirming = true);
-                                        Navigator.of(context).pop(true);
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              )
-                            : SizedBox(
-                                width: double.infinity,
-                                child: _PrimaryButton(
-                                  label: widget.confirmLabel,
-                                  color: widget.palette.accent,
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(true),
-                                ),
-                              ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Nút hành động chính (gradient + shadow theo màu accent).
-class _PrimaryButton extends StatefulWidget {
-  final String label;
-  final Color color;
-  final VoidCallback onPressed;
-  final bool isLoading;
-
-  const _PrimaryButton({
-    required this.label,
-    required this.color,
-    required this.onPressed,
-    this.isLoading = false,
-  });
-
-  @override
-  State<_PrimaryButton> createState() => _PrimaryButtonState();
-}
-
-class _PrimaryButtonState extends State<_PrimaryButton>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 120),
-  );
-  late final Animation<double> _scale = Tween<double>(
-    begin: 1.0,
-    end: 0.96,
-  ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => _ctrl.forward(),
-      onTapUp: (_) => _ctrl.reverse(),
-      onTapCancel: () => _ctrl.reverse(),
-      onTap: widget.isLoading ? null : widget.onPressed,
-      child: ScaleTransition(
-        scale: _scale,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [widget.color, widget.color.withValues(alpha: 0.78)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: widget.color.withValues(alpha: 0.40),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: widget.isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : Text(
-                  widget.label,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 14.5,
-                    letterSpacing: 0.4,
-                  ),
-                ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Nút phụ (outline + background tint theo màu accent).
-class _SecondaryButton extends StatelessWidget {
-  final String label;
-  final VoidCallback onPressed;
-
-  const _SecondaryButton({required this.label, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-    final isDark = brightness == Brightness.dark;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.06)
-                : Colors.black.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.12)
-                  : Colors.black.withValues(alpha: 0.08),
-              width: 1,
-            ),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isDark ? Colors.white : SLColors.textPrimary,
-              fontWeight: FontWeight.w800,
-              fontSize: 14,
-              letterSpacing: 0.3,
             ),
           ),
         ),

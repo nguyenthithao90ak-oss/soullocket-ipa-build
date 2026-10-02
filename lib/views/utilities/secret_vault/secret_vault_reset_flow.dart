@@ -53,39 +53,21 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
 
     final shouldContinue = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: _vaultBg,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: _vaultBorder, width: 1)),
-        title: Text(
-          context.tr('util_resetkhonh_7d2128'),
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.bold,
-            color: _vaultAccent,
-          ),
-        ),
+      builder: (ctx) => SLAlertDialog(
+        title: Text(context.tr('util_resetkhonh_7d2128')),
         content: Text(
           'Yêu cầu này sẽ xóa toàn bộ ảnh mật, ghi chú mã hóa và khóa hiện tại sau 24 giờ.\n\nBạn phải xác nhận bằng OTP gửi về email chính. Trong thời gian chờ, cả hai người trong nhà đều có thể thu hồi yêu cầu này.',
-          style: SLTheme.quicksand(color: _vaultTextSecondary, height: 1.45),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              context.tr('util_hu_9daba0'),
-              style: SLTheme.quicksand(color: _vaultTextHint),
-            ),
+            child: Text(context.tr('util_hu_9daba0')),
           ),
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              context.tr('util_tiptc_555f1f'),
-              style: SLTheme.quicksand(
-                color: _vaultAccent,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: Text(context.tr('util_tiptc_555f1f')),
           ),
         ],
       ),
@@ -147,39 +129,19 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
 
     final shouldCancel = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: _vaultBg,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: _vaultBorder, width: 1)),
-        title: Text(
-          context.tr('util_thuhiyucur_7952bb'),
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.bold,
-            color: _vaultAccent,
-          ),
-        ),
-        content: Text(
-          context.tr('util_nuthuhibyg_628a41'),
-          style: SLTheme.quicksand(color: _vaultTextSecondary, height: 1.45),
-        ),
+      builder: (ctx) => SLAlertDialog(
+        title: Text(context.tr('util_thuhiyucur_7952bb')),
+        content: Text(context.tr('util_nuthuhibyg_628a41')),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              context.tr('util_ginguyn_1d08e7'),
-              style: SLTheme.quicksand(color: _vaultTextHint),
-            ),
+            child: Text(context.tr('util_ginguyn_1d08e7')),
           ),
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              context.tr('util_thuhi_b8c669'),
-              style: SLTheme.quicksand(
-                color: _vaultAccent,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: Text(context.tr('util_thuhi_b8c669')),
           ),
         ],
       ),

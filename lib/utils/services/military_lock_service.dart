@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
@@ -1077,18 +1079,12 @@ class MilitaryLockService {
         return StatefulBuilder(
           builder: (dialogContext, setDialogState) {
             return SensitiveContentGuard(
-              child: AlertDialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
+              child: SLAlertDialog(
                 title: const Text('Câu hỏi bảo mật'),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      question,
-                      textAlign: TextAlign.center,
-                    ),
+                    Text(question, textAlign: TextAlign.center),
                     const SizedBox(height: 16),
                     TextField(
                       controller: answerController,
@@ -1104,13 +1100,15 @@ class MilitaryLockService {
                   ],
                 ),
                 actions: [
-                  TextButton(
+                  SLDialogAction(
                     onPressed: isChecking
                         ? null
                         : () => Navigator.of(dialogContext).pop(false),
                     child: const Text('Hủy'),
                   ),
-                  ElevatedButton(
+                  SLDialogAction(
+                    primary: true,
+
                     onPressed: isChecking
                         ? null
                         : () async {
@@ -1214,10 +1212,7 @@ class MilitaryLockService {
 
             final canSubmit = !isSending && !isVerifying;
             return SensitiveContentGuard(
-              child: AlertDialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
+              child: SLAlertDialog(
                 title: const Text('Khôi phục mã PIN'),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -1247,19 +1242,21 @@ class MilitaryLockService {
                   ],
                 ),
                 actions: [
-                  TextButton(
+                  SLDialogAction(
                     onPressed: isVerifying
                         ? null
                         : () => Navigator.of(dialogContext).pop(false),
                     child: const Text('Hủy'),
                   ),
-                  TextButton(
+                  SLDialogAction(
                     onPressed: isVerifying
                         ? null
                         : () => sendCode(dialogContext, setDialogState),
                     child: const Text('Gửi lại'),
                   ),
-                  ElevatedButton(
+                  SLDialogAction(
+                    primary: true,
+
                     onPressed: canSubmit
                         ? () async {
                             final otp = otpController.text.trim();
@@ -1318,7 +1315,7 @@ class MilitaryLockService {
     final messenger = ScaffoldMessenger.maybeOf(context);
     if (messenger == null) return;
     messenger.showSnackBar(
-      SnackBar(
+      SLSnackBar(
         content: Text(message),
         backgroundColor:
             isError ? const Color(0xFFC62828) : const Color(0xFF2E7D32),

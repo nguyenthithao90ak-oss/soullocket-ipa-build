@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -406,7 +407,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
 
   void _showMessage(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      SLSnackBar(
         content: Text(message),
         backgroundColor: isError
             ? const Color(0xFFC62828)

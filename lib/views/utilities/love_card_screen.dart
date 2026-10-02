@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -373,7 +375,7 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(context.tr('util_lngithiptr_3fb76e')),
           action: SnackBarAction(
             label: context.tr('util_thli_4dffdf'),
@@ -599,7 +601,7 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(
             AppErrorMapper.resolve(
               e,
@@ -755,19 +757,14 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(
             errorInfo.message,
-            style: SLTheme.quicksand(
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
+            
           ),
           backgroundColor: Colors.red.shade800,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          
         ),
       );
     } finally {
@@ -794,7 +791,7 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
 
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(context.tr('util_thipcgii_431480'))));
+    ).showSnackBar(SLSnackBar(content: Text(context.tr('util_thipcgii_431480'))));
   }
 
   String _defaultSenderName() {
@@ -938,7 +935,7 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
     }
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(copiedSnackbarText)));
+    ).showSnackBar(SLSnackBar(content: Text(copiedSnackbarText)));
   }
 
   Future<void> _deleteLoveCardLink(Map<dynamic, dynamic> card) async {
@@ -971,7 +968,7 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
     }
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(deletedSnackbarText)));
+    ).showSnackBar(SLSnackBar(content: Text(deletedSnackbarText)));
   }
 
   final Map<String, List<Color>> _themeColorsCache = {};

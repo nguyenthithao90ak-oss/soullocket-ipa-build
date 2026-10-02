@@ -43,16 +43,9 @@ class _CountdownSpaceRenameDialogState
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: AppearancePanelStyle.paper,
+    return SLAlertDialog(
       scrollable: true,
-      title: Text(
-        context.tr('home_ttnkhnggia_9d2bdf'),
-        style: SLTheme.quicksand(
-          fontWeight: FontWeight.w900,
-          color: AppearancePanelStyle.ink,
-        ),
-      ),
+      title: Text(context.tr('home_ttnkhnggia_9d2bdf')),
       content: TextField(
         controller: _controller,
         autofocus: true,
@@ -69,11 +62,13 @@ class _CountdownSpaceRenameDialogState
         onSubmitted: (_) => _close(_controller.text.trim()),
       ),
       actions: [
-        TextButton(
+        SLDialogAction(
           onPressed: _close,
           child: Text(context.tr('home_hy_1e4050')),
         ),
-        ElevatedButton(
+        SLDialogAction(
+          primary: true,
+
           onPressed: () => _close(_controller.text.trim()),
           child: Text(context.tr('home_lu_49fac1')),
         ),
@@ -159,16 +154,9 @@ class _CountdownSpaceAddDialogState extends State<_CountdownSpaceAddDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: AppearancePanelStyle.paper,
+    return SLAlertDialog(
       scrollable: true,
-      title: Text(
-        context.tr('home_ghpnikhngg_860e28'),
-        style: SLTheme.quicksand(
-          fontWeight: FontWeight.w900,
-          color: AppearancePanelStyle.ink,
-        ),
-      ),
+      title: Text(context.tr('home_ghpnikhngg_860e28')),
       content: TextField(
         controller: _controller,
         autofocus: true,
@@ -204,11 +192,13 @@ class _CountdownSpaceAddDialogState extends State<_CountdownSpaceAddDialog> {
         onSubmitted: (_) => unawaited(_submit()),
       ),
       actions: [
-        TextButton(
+        SLDialogAction(
           onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
           child: Text(context.tr('home_hy_1e4050')),
         ),
-        ElevatedButton(
+        SLDialogAction(
+          primary: true,
+
           onPressed: _isSubmitting ? null : () => unawaited(_submit()),
           child: _isSubmitting
               ? const SizedBox(

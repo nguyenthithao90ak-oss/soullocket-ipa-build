@@ -15,6 +15,7 @@ import '../utils/services/group_chat_service.dart';
 import '../utils/services/social_service.dart';
 import '../core/sl_theme.dart';
 import '../utils/services/l10n_service.dart';
+import 'sl_feedback.dart';
 import 'package:soullocket_app/views/home/tabs/settings/settings_links_manager_screen.dart';
 
 class ShareBottomSheet extends StatefulWidget {
@@ -225,7 +226,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
     if (!mounted) return;
     if (channel != null && channel != 'System') {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(
             L10nService().format('share_choose_app', {'app': channel}),
           ),
@@ -302,7 +303,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(context.tr('share_send_failed'))));
+      ).showSnackBar(SLSnackBar(content: Text(context.tr('share_send_failed'))));
     }
   }
 
@@ -1487,48 +1488,10 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
     required IconData icon,
     required Color accentColor,
   }) {
-    return SnackBar(
-      behavior: SnackBarBehavior.floating,
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      content: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              accentColor.withValues(alpha: 0.96),
-              accentColor.withValues(alpha: 0.82),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: accentColor.withValues(alpha: 0.28),
-              blurRadius: 18,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.white),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                message,
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                  fontSize: 12.6,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return SLSnackBar(
+      backgroundColor: accentColor,
+      icon: icon,
+      content: Text(message),
     );
   }
 }

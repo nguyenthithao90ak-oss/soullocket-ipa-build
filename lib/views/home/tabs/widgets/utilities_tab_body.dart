@@ -112,6 +112,7 @@ class _UtilitiesTabBodyState extends State<UtilitiesTabBody> {
               _KeepAlivePage(
                 child: UtilitiesHubGrid(
                   apps: widget.commonApps,
+                  showCompanionJourney: true,
                   pinnedApps: widget.pinnedApps,
                   recentApps: widget.recentApps,
                   onShortcutTap: widget.onShortcutTap,

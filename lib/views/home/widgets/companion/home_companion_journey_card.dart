@@ -1,8 +1,10 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/core/service_locator.dart';
 import 'package:soullocket_app/utils/services/companion_journey_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/views/ui_prefs.dart';
 import 'package:soullocket_app/views/utilities/reward_store_screen.dart';
 import 'home_companion_motion.dart';
 import 'home_companion_painter.dart';
@@ -103,6 +105,22 @@ class _JourneySheetState extends State<_JourneySheet> {
   bool _checkinBusy = false;
   bool _checkinFailed = false;
   int? _checkinGeneration;
+  bool _petPreferenceBusy = false;
+
+  Future<void> _setHomePetsEnabled(bool enabled) async {
+    if (_petPreferenceBusy) return;
+    setState(() => _petPreferenceBusy = true);
+    try {
+      await UiPrefs.setHomeCompanionEnabled(enabled);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SLSnackBar(content: Text(context.tr('legacy_save_failed'))));
+    } finally {
+      if (mounted) setState(() => _petPreferenceBusy = false);
+    }
+  }
 
   Future<void> _checkIn() async {
     if (_checkinBusy) return;
@@ -207,6 +225,16 @@ class _JourneySheetState extends State<_JourneySheet> {
                     icon: const Icon(Icons.close),
                   ),
                 ],
+              ),
+              ValueListenableBuilder<UiPrefsState>(
+                valueListenable: UiPrefs.notifier,
+                builder: (context, prefs, _) => SwitchListTile.adaptive(
+                  key: const ValueKey('journey-home-pets-toggle'),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(context.tr('home_companion_setting_title')),
+                  value: prefs.homeCompanionEnabled,
+                  onChanged: _petPreferenceBusy ? null : _setHomePetsEnabled,
+                ),
               ),
               Text(
                 context

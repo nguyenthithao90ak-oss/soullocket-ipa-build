@@ -70,7 +70,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
           }
 
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            SLSnackBar(
               content: Text(displayMessage),
               backgroundColor: result.success ? Colors.green : Colors.red,
             ),
@@ -79,8 +79,8 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
           debugPrint('Error redeeming giftcode in chat: $e');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Có lỗi xảy ra khi kích hoạt Giftcode.'),
+              SLSnackBar(
+                content: const Text('Có lỗi xảy ra khi kích hoạt Giftcode.'),
                 backgroundColor: Colors.red,
               ),
             );
@@ -195,7 +195,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: const Text('Lần upload chat trước đã bị gián đoạn.'),
           action: SnackBarAction(
             label: 'Thử lại',
@@ -372,7 +372,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Không tìm thấy phòng gọi')));
+      ).showSnackBar(SLSnackBar(content: const Text('Không tìm thấy phòng gọi')));
       return;
     }
 
@@ -430,7 +430,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       fallbackMessage: 'Không thể gửi tin nhắn lúc này. Vui lòng thử lại sau.',
     ).message;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      SLSnackBar(
         content: Text(message.isEmpty ? 'Không thể gửi tin nhắn' : message),
       ),
     );
@@ -439,7 +439,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
   void _showNotice(String message, {bool error = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      SLSnackBar(
         content: Text(message),
         backgroundColor: error ? const Color(0xFFD81B60) : null,
       ),

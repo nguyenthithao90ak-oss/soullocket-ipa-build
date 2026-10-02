@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -353,7 +354,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(msgNoTicket)));
+      ).showSnackBar(SLSnackBar(content: Text(msgNoTicket)));
       return;
     }
 

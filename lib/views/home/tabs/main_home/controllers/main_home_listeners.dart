@@ -32,17 +32,25 @@ extension _MainHomeListeners on _MainHomeTabState {
         .endAt(endStr);
     _homeCalendarSubscription = calendarRef.onValue.listen(
       (event) {
-        if (!mounted || !_isTabActive) return;
+        if (!mounted || _houseId != houseId) return;
         if (event.snapshot.value == null) {
-          _safeSetState(() {
-            _homeCalendarEvents = [];
-          });
+          if (_isTabActive) {
+            _safeSetState(() {
+              _homeCalendarEvents = [];
+            });
+          }
+          if (!WidgetService.supportsAndroidWidgets) return;
           _calendarWidgetSyncDebounce?.cancel();
           _calendarWidgetSyncDebounce = Timer(
             const Duration(milliseconds: 500),
             () {
-              if (!mounted) return;
-              unawaited(WidgetService.syncCalendarWidgetData(houseId: houseId));
+              if (!mounted || _houseId != houseId) return;
+              unawaited(
+                WidgetService.syncCalendarWidgetData(
+                  houseId: houseId,
+                  calendarData: const <String, dynamic>{},
+                ),
+              );
             },
           );
           return;
@@ -69,16 +77,24 @@ extension _MainHomeListeners on _MainHomeTabState {
             });
           });
 
-          _safeSetState(() {
-            _homeCalendarEvents = parsedEvents;
-          });
+          if (_isTabActive) {
+            _safeSetState(() {
+              _homeCalendarEvents = parsedEvents;
+            });
+          }
+          if (!WidgetService.supportsAndroidWidgets) return;
           // Debounce 500ms trước khi sync calendar widget
           _calendarWidgetSyncDebounce?.cancel();
           _calendarWidgetSyncDebounce = Timer(
             const Duration(milliseconds: 500),
             () {
-              if (!mounted) return;
-              unawaited(WidgetService.syncCalendarWidgetData(houseId: houseId));
+              if (!mounted || _houseId != houseId) return;
+              unawaited(
+                WidgetService.syncCalendarWidgetData(
+                  houseId: houseId,
+                  calendarData: data,
+                ),
+              );
             },
           );
         } catch (e) {
@@ -93,17 +109,23 @@ extension _MainHomeListeners on _MainHomeTabState {
 
   void _listenHealthCycleForWidgetSync(String houseId) {
     _healthCycleSyncSubscription?.cancel();
+    _healthCycleSyncSubscription = null;
+    if (!WidgetService.supportsAndroidWidgets) return;
     final healthRef = _dbRef.child('houses/$houseId/health_cycle');
     _healthCycleSyncSubscription = healthRef.onValue.listen(
       (event) {
-        if (!mounted || !_isTabActive || !event.snapshot.exists) return;
+        if (!mounted || _houseId != houseId) return;
         // Debounce 500ms trước khi sync cycle widget
         _healthCycleWidgetSyncDebounce?.cancel();
         _healthCycleWidgetSyncDebounce = Timer(
           const Duration(milliseconds: 500),
           () {
-            if (!mounted) return;
-            unawaited(WidgetService.syncCycleWidgetData(houseId: houseId));
+            if (!mounted || _houseId != houseId) return;
+            unawaited(
+              WidgetService.updateCycleWidgetData(
+                cycleData: event.snapshot.value,
+              ),
+            );
           },
         );
       },

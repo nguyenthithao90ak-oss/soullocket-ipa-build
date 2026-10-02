@@ -13,6 +13,8 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
       widgetHeartColorKey: _widgetHeartColorKey,
       widgetPreviewSizeKey: _widgetPreviewSizeKey,
       widgetDiaryLayoutKey: _widgetDiaryLayoutKey,
+      widgetStickerKey: _widgetStickerKey,
+      widgetPhotoFrameKey: _widgetPhotoFrameKey,
       widgetSeasonModeKey: _widgetSeasonModeKey,
     );
     await _settingsWidgetController.persistWidgetPrefs(
@@ -26,11 +28,20 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
   Future<void> _persistAndSyncWidgetAppearance() async {
     await _persistWidgetPrefs();
     await _syncWidgetAppearanceDraft();
+    if (mounted) setState(() => _widgetMediaRevision++);
   }
 
   Future<void> _updateWidgetAppearanceDraft(VoidCallback updateFn) async {
     setState(updateFn);
-    await _persistAndSyncWidgetAppearance();
+    _widgetAppearanceSaveQueue = _widgetAppearanceSaveQueue
+        .then((_) async {
+          if (mounted) await _persistAndSyncWidgetAppearance();
+        })
+        .catchError((Object error) {
+          debugPrint('Widget appearance save failed: $error');
+          if (mounted) _showToast(context.tr('home_chathcpnht_1f5871'));
+        });
+    await _widgetAppearanceSaveQueue;
   }
 
   Future<void> _handleWidgetThemeChanged(String value) async {
@@ -47,9 +58,18 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
   }
 
   Future<void> _handleWidgetHeartStyleChanged(String value) async {
-    await _updateWidgetAppearanceDraft(
-      () => _widgetHeartStyleKey = _normalizeWidgetHeartStyleKey(value),
-    );
+    await _updateWidgetAppearanceDraft(() {
+      _widgetHeartStyleKey = _normalizeWidgetHeartStyleKey(value);
+      _widgetStickerKey = 'none';
+      _showDiaryOnWidget = false;
+    });
+  }
+
+  Future<void> _handleWidgetStickerChanged(String value) async {
+    await _updateWidgetAppearanceDraft(() {
+      _widgetStickerKey = WidgetAppearance.normalizeSticker(value);
+      _showDiaryOnWidget = false;
+    });
   }
 
   Future<void> _handleWidgetHeartColorChanged(String value) async {

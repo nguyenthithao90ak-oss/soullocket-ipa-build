@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -308,7 +309,7 @@ class _WheelScreenState extends State<WheelScreen>
         fallbackMessage: L10nService().translate('util_chathquayl_0d5dc0'),
       );
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(errorInfo.message),
           backgroundColor: Colors.redAccent,
         ),

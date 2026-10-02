@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -116,7 +117,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         : AppConfig.freeCallDurationMinutes;
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      SLSnackBar(
         content: Text(
           L10nService().format('p4_call_time_up', {'minutes': limitMin}),
         ),
@@ -237,7 +238,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       final msgErrorOccurred = context.tr('relationship_chathbtucu_cd4ee1');
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(msgErrorOccurred)));
+      ).showSnackBar(SLSnackBar(content: Text(msgErrorOccurred)));
       Navigator.pop(context);
     }
   }

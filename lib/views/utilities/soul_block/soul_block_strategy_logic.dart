@@ -3,6 +3,8 @@ part of '../soul_block_game.dart';
 mixin _SoulBlockStrategyLogic {
   Random get _random;
   int get _combo;
+  int get _comboMisses;
+  List<bool> get _recentClearOutcomes;
   int get _pieceSequence;
   set _pieceSequence(int value);
   int get _turn;
@@ -14,9 +16,44 @@ mixin _SoulBlockStrategyLogic {
     final double clearProgress = (_clearedLines / 28)
         .clamp(0.0, 1.0)
         .toDouble();
-    return ((turnProgress * 0.55) + (clearProgress * 0.45))
+    // Nhịp chín lượt gần nhất giúp bàn hồi phục khi người chơi đang khó xóa.
+    // Không dùng điểm số/chuỗi cao làm lý do sinh một bộ khối vô nghiệm.
+    final recentClearRate = _recentClearOutcomes.length < 6
+        ? 0.5
+        : _recentClearOutcomes.where((cleared) => cleared).length /
+              _recentClearOutcomes.length;
+    return ((turnProgress * 0.55 + clearProgress * 0.45) *
+            (0.65 + recentClearRate * 0.70))
         .clamp(0.0, 1.0)
         .toDouble();
+  }
+
+  _SoulComboState _nextComboState({
+    required int level,
+    required int misses,
+    required int clearedLines,
+  }) {
+    if (clearedLines > 0) {
+      return (level: max(0, level) + 1, misses: 0, broken: false);
+    }
+    final nextMisses = min(3, max(0, misses) + 1);
+    final nextLevel = nextMisses < 3 ? max(0, level) : 0;
+    return (
+      level: nextLevel,
+      misses: nextMisses,
+      broken: level > 0 && nextLevel == 0,
+    );
+  }
+
+  double _comboTimingValue(int level, int misses, int clearedLines) {
+    if (level <= 0) return clearedLines > 0 ? 24 : 0;
+    // Điểm xếp hạng tăng chậm để ưu tiên giữ chuỗi mà vẫn bảo vệ khoảng trống.
+    // Trần này chỉ giới hạn trọng số tìm kiếm, không giới hạn combo hay điểm.
+    final chainWeight = min(120.0, log(level + 1) * 26.0);
+    if (clearedLines > 0) {
+      return 80 + chainWeight + (misses == 0 ? 30 : misses * 35);
+    }
+    return misses >= 2 ? -180 - chainWeight : 0;
   }
 
   double _tierWeightForProgress(int tier, double progress) {
@@ -312,6 +349,37 @@ mixin _SoulBlockStrategyLogic {
         pool.add(candidate.template);
       }
     }
+    // Có thể đưa mảnh chưa vừa bàn hiện tại nếu một nước xóa trước đó mở
+    // được chỗ. Chỉ xét hai bàn trung gian, tránh tăng chi phí tìm kiếm vô hạn.
+    if (progress >= 0.32) {
+      final openingBoards = <List<List<bool>>>[];
+      final initialIds = fittingCandidates
+          .map((item) => item.template.id)
+          .toSet();
+      for (final candidate in fittingCandidates.take(4)) {
+        for (final placement in _topPlacements(
+          placementsFor(boardMask, candidate.template),
+          2,
+        )) {
+          if (placement.clearedLines > 0 && openingBoards.length < 2) {
+            openingBoards.add(placement.boardAfter);
+          }
+        }
+      }
+      var unlockedCount = 0;
+      for (final template in _kSoulBlockTemplates) {
+        if (unlockedCount >= 2 || pool.length >= 10) break;
+        if (initialIds.contains(template.id) || template.cellCount < 4)
+          continue;
+        if (openingBoards.any(
+          (mask) => placementsFor(mask, template).isNotEmpty,
+        )) {
+          pooledTemplateIds.add(template.id);
+          pool.add(template);
+          unlockedCount++;
+        }
+      }
+    }
     for (final template in _stageBagTemplates(
       fittingCandidates,
       progress,
@@ -354,41 +422,51 @@ mixin _SoulBlockStrategyLogic {
 
     // Giữ tối đa 10 mẫu để có đủ khối hồi phục nhưng vẫn giới hạn số nhánh.
     final shortlist = pool.take(10).toList(growable: false);
-    final beamWidth = boardStress >= 0.62 ? 4 : 3;
-    var beam =
-        <
-          ({
-            List<List<bool>> board,
-            List<_SoulPieceTemplate> templates,
-            double score,
-            int clearedLines,
-          })
-        >[
-          (
-            board: boardMask,
-            templates: <_SoulPieceTemplate>[],
-            score: 0,
-            clearedLines: 0,
-          ),
-        ];
+    final beamWidth = boardStress >= 0.62 || (_combo > 0 && _comboMisses >= 2)
+        ? 4
+        : 3;
+    // Chốt bom trước khi tìm đường đi. Gắn bom ngẫu nhiên sau khi chọn bộ
+    // có thể phá mất hàng dự kiến xóa và làm mảnh tiếp theo không còn vừa.
+    final firstPieceIsBomb =
+        _random.nextInt(100) < (boardStress >= 0.65 ? 85 : 22);
+    var beam = <_SoulBatchPlan>[
+      _SoulBatchPlan(
+        board: boardMask,
+        templates: <_SoulPieceTemplate>[],
+        comboLevel: _combo,
+        comboMisses: _comboMisses,
+      ),
+    ];
+
+    List<_PlacementEval> batchPlacements(List<_PlacementEval> placements) {
+      final best = _topPlacements(placements, 2);
+      _PlacementEval? bestClear;
+      for (final placement in placements) {
+        if (placement.clearedLines > 0 &&
+            (bestClear == null ||
+                placement.clearedLines > bestClear.clearedLines ||
+                (placement.clearedLines == bestClear.clearedLines &&
+                    placement.heuristic > bestClear.heuristic))) {
+          bestClear = placement;
+        }
+      }
+      if (bestClear != null && !best.contains(bestClear)) best.add(bestClear);
+      return best;
+    }
 
     for (var depth = 0; depth < 3; depth++) {
-      final next =
-          <
-            ({
-              List<List<bool>> board,
-              List<_SoulPieceTemplate> templates,
-              double score,
-              int clearedLines,
-            })
-          >[];
+      final next = <_SoulBatchPlan>[];
       for (final plan in beam) {
         for (final template in shortlist) {
-          final placements = placementsFor(plan.board, template);
+          final placements = placementsFor(
+            plan.board,
+            template,
+            bomb: depth == 0 && firstPieceIsBomb,
+          );
           if (placements.isEmpty) {
             continue;
           }
-          for (final placement in _topPlacements(placements, 2)) {
+          for (final placement in batchPlacements(placements)) {
             final templates = <_SoulPieceTemplate>[...plan.templates, template];
             final repeated = plan.templates.any(
               (item) => item.id == template.id,
@@ -404,19 +482,34 @@ mixin _SoulBlockStrategyLogic {
             final bias = depth == 2
                 ? _difficultyBiasForCombo(boardMask, templates, progress)
                 : 0.0;
-            next.add((
-              board: placement.boardAfter,
-              templates: templates,
-              score:
-                  plan.score +
-                  placement.heuristic +
-                  clearBonus +
-                  mobilityBonus +
-                  bias +
-                  (repeated ? -18.0 : 9.0) -
-                  deadlockPenalty,
-              clearedLines: plan.clearedLines + placement.clearedLines,
-            ));
+            final comboState = _nextComboState(
+              level: plan.comboLevel,
+              misses: plan.comboMisses,
+              clearedLines: placement.clearedLines,
+            );
+            next.add(
+              _SoulBatchPlan(
+                board: placement.boardAfter,
+                templates: templates,
+                score:
+                    plan.score +
+                    placement.heuristic +
+                    clearBonus +
+                    mobilityBonus +
+                    _comboTimingValue(
+                      plan.comboLevel,
+                      plan.comboMisses,
+                      placement.clearedLines,
+                    ) +
+                    bias +
+                    (repeated ? -18.0 : 9.0) -
+                    deadlockPenalty,
+                clearedLines: plan.clearedLines + placement.clearedLines,
+                comboLevel: comboState.level,
+                comboMisses: comboState.misses,
+                comboBreaks: plan.comboBreaks + (comboState.broken ? 1 : 0),
+              ),
+            );
           }
         }
       }
@@ -424,6 +517,9 @@ mixin _SoulBlockStrategyLogic {
         break;
       }
       next.sort((a, b) {
+        if (_combo > 0 && a.comboBreaks != b.comboBreaks) {
+          return a.comboBreaks.compareTo(b.comboBreaks);
+        }
         final clearCompare = b.clearedLines.compareTo(a.clearedLines);
         if (depth == 2 &&
             clearCompare != 0 &&
@@ -437,7 +533,8 @@ mixin _SoulBlockStrategyLogic {
           .where(
             (plan) => signatures.add(
               plan.templates.map((template) => template.id).join('|') +
-                  _serializeBoard(plan.board),
+                  _serializeBoard(plan.board) +
+                  '|${plan.comboLevel}|${plan.comboMisses}',
             ),
           )
           .take(beamWidth)
@@ -466,6 +563,9 @@ mixin _SoulBlockStrategyLogic {
       var fallbackBoard = boardMask;
       var fallbackScore = 0.0;
       var fallbackClearedLines = 0;
+      var fallbackCombo = _combo;
+      var fallbackMisses = _comboMisses;
+      var fallbackBreaks = 0;
       final fallbackTemplates = <_SoulPieceTemplate>[];
       for (var depth = 0; depth < 3; depth++) {
         final choices =
@@ -477,7 +577,11 @@ mixin _SoulBlockStrategyLogic {
               })
             >[];
         for (final template in sequencePool) {
-          final placements = placementsFor(fallbackBoard, template);
+          final placements = placementsFor(
+            fallbackBoard,
+            template,
+            bomb: depth == 0 && firstPieceIsBomb,
+          );
           for (final placement in _topPlacements(placements, 3)) {
             final mobility = _countPlayableTemplates(
               placement.boardAfter,
@@ -489,6 +593,11 @@ mixin _SoulBlockStrategyLogic {
               score:
                   placement.heuristic +
                   (placement.clearedLines * 92.0) +
+                  _comboTimingValue(
+                    fallbackCombo,
+                    fallbackMisses,
+                    placement.clearedLines,
+                  ) +
                   (mobility * 10.0) -
                   (mobility == 0 ? 160.0 : 0.0),
             ));
@@ -503,33 +612,28 @@ mixin _SoulBlockStrategyLogic {
         fallbackBoard = choice.placement.boardAfter;
         fallbackScore += choice.score;
         fallbackClearedLines += choice.placement.clearedLines;
+        final comboState = _nextComboState(
+          level: fallbackCombo,
+          misses: fallbackMisses,
+          clearedLines: choice.placement.clearedLines,
+        );
+        fallbackCombo = comboState.level;
+        fallbackMisses = comboState.misses;
+        fallbackBreaks += comboState.broken ? 1 : 0;
       }
-      completePlans =
-          <
-            ({
-              List<List<bool>> board,
-              List<_SoulPieceTemplate> templates,
-              double score,
-              int clearedLines,
-            })
-          >[];
+      completePlans = <_SoulBatchPlan>[];
       if (fallbackTemplates.isNotEmpty) {
-        completePlans =
-            <
-              ({
-                List<List<bool>> board,
-                List<_SoulPieceTemplate> templates,
-                double score,
-                int clearedLines,
-              })
-            >[
-              (
-                board: fallbackBoard,
-                templates: fallbackTemplates,
-                score: fallbackScore,
-                clearedLines: fallbackClearedLines,
-              ),
-            ];
+        completePlans = <_SoulBatchPlan>[
+          _SoulBatchPlan(
+            board: fallbackBoard,
+            templates: fallbackTemplates,
+            score: fallbackScore,
+            clearedLines: fallbackClearedLines,
+            comboLevel: fallbackCombo,
+            comboMisses: fallbackMisses,
+            comboBreaks: fallbackBreaks,
+          ),
+        ];
       }
     }
 
@@ -541,6 +645,9 @@ mixin _SoulBlockStrategyLogic {
     }
     final hasClearPlan = completePlans.any((plan) => plan.clearedLines > 0);
     completePlans.sort((a, b) {
+      if (_combo > 0 && a.comboBreaks != b.comboBreaks) {
+        return a.comboBreaks.compareTo(b.comboBreaks);
+      }
       if (hasClearPlan) {
         final aHasClear = a.clearedLines > 0 ? 1 : 0;
         final bHasClear = b.clearedLines > 0 ? 1 : 0;
@@ -548,39 +655,42 @@ mixin _SoulBlockStrategyLogic {
           return bHasClear.compareTo(aHasClear);
         }
       }
-      final clearCompare = b.clearedLines.compareTo(a.clearedLines);
-      if (clearCompare != 0) {
-        return clearCompare;
-      }
       return b.score.compareTo(a.score);
     });
-    final winnerCount = min(2, completePlans.length);
-    final chosenPlan = completePlans[_random.nextInt(winnerCount)];
+    final bestPlan = completePlans.first;
+    final closePlans = completePlans
+        .where(
+          (plan) =>
+              plan.comboBreaks == bestPlan.comboBreaks &&
+              (plan.clearedLines > 0) == (bestPlan.clearedLines > 0) &&
+              plan.score >= bestPlan.score - 50,
+        )
+        .take(2)
+        .toList(growable: false);
+    final winnerCount = closePlans.length;
+    final chosenPlan = closePlans[_random.nextInt(winnerCount)];
     final chosenTemplates = chosenPlan.templates;
 
-    final shouldRescue = boardStress >= 0.65;
-    var gaveBomb = false;
-    return chosenTemplates
-        .map((template) {
-          var makeBomb = false;
-          if (!gaveBomb && shouldRescue && _random.nextInt(100) < 85) {
-            makeBomb = true;
-            gaveBomb = true;
-          }
-          return _spawnPieceFromTemplate(template, forceBomb: makeBomb);
-        })
-        .toList(growable: false);
+    return <_SoulPieceOption>[
+      for (var index = 0; index < chosenTemplates.length; index++)
+        _spawnPieceFromTemplate(
+          chosenTemplates[index],
+          forceBomb: index == 0 && firstPieceIsBomb,
+          allowRandomBomb: false,
+        ),
+    ];
   }
 
   _SoulPieceOption _spawnPieceFromTemplate(
     _SoulPieceTemplate template, {
     bool forceBomb = false,
+    bool allowRandomBomb = true,
   }) {
     _pieceSequence += 1;
     final int roll = _random.nextInt(100);
     final bool isGold = !forceBomb && roll < 15; // 15% (buffed from 12)
     final bool isBomb =
-        forceBomb || (!isGold && (roll >= 15 && roll < 25)); // 10% or forced
+        forceBomb || (allowRandomBomb && !isGold && (roll >= 15 && roll < 25));
     return _SoulPieceOption(
       id: _pieceSequence,
       template: template,
@@ -592,6 +702,7 @@ mixin _SoulBlockStrategyLogic {
 
   String? _moveCacheBoard;
   int? _moveCacheCombo;
+  int? _moveCacheComboMisses;
   final Map<(int, String, int, bool, bool), _RecommendedMove?> _moveCache = {};
 
   _RecommendedMove? _recommendMoveFor(
@@ -600,10 +711,13 @@ mixin _SoulBlockStrategyLogic {
   ) {
     final boardMask = _boardMask(boardTiles);
     final boardKey = _serializeBoard(boardMask);
-    if (_moveCacheBoard != boardKey || _moveCacheCombo != _combo) {
+    if (_moveCacheBoard != boardKey ||
+        _moveCacheCombo != _combo ||
+        _moveCacheComboMisses != _comboMisses) {
       _moveCache.clear();
       _moveCacheBoard = boardKey;
       _moveCacheCombo = _combo;
+      _moveCacheComboMisses = _comboMisses;
     }
     if (_moveCache.length > 32) _moveCache.clear();
     _RecommendedMove? bestMove;
@@ -624,14 +738,27 @@ mixin _SoulBlockStrategyLogic {
         if (placements.isEmpty) {
           _moveCache[key] = null;
         } else {
-          final best = _bestPlacement(placements);
+          double rankedValue(_PlacementEval placement) =>
+              placement.heuristic +
+              _comboTimingValue(_combo, _comboMisses, placement.clearedLines);
+          var best = placements.first;
+          for (final placement in placements.skip(1)) {
+            if (rankedValue(placement) > rankedValue(best)) best = placement;
+          }
           _moveCache[key] = _RecommendedMove(
             pieceId: piece.id,
             row: best.row,
             col: best.col,
-            heuristic: best.heuristic,
+            heuristic: rankedValue(best),
             expectedGain:
-                _scoreGainFor(piece.template, best.clearedLines, _combo) *
+                _scoreGainFor(
+                  piece.template,
+                  best.clearedLines,
+                  _combo,
+                  bombClearedCells: best.bombClearedCells,
+                  allClear: _filledCount(best.boardAfter) == 0,
+                  consecutiveClear: _combo > 0 && _comboMisses == 0,
+                ) *
                 (piece.isGold ? 2 : 1),
             clearCount: best.clearedLines,
           );
@@ -908,7 +1035,8 @@ mixin _SoulBlockStrategyLogic {
         (adjacency * 1.6) -
         (tightHoles * 18) -
         (occupancy > 0.74 ? occupancy * 72 : occupancy * 28) -
-        centerBias;
+        centerBias +
+        _openSpaceValue(nextBoard);
 
     return _PlacementEval(
       row: startRow,
@@ -916,6 +1044,7 @@ mixin _SoulBlockStrategyLogic {
       clearedLines: clearedLines,
       heuristic: heuristic,
       boardAfter: nextBoard,
+      bombClearedCells: bombCells,
     );
   }
 
@@ -1001,6 +1130,31 @@ mixin _SoulBlockStrategyLogic {
     return _countTightHoles(boardMask);
   }
 
+  double _openSpaceValue(List<List<bool>> boardMask) {
+    var squares2 = 0;
+    var squares3 = 0;
+    for (var row = 0; row < _strategyBoardSize - 1; row++) {
+      for (var col = 0; col < _strategyBoardSize - 1; col++) {
+        if (boardMask[row][col] ||
+            boardMask[row][col + 1] ||
+            boardMask[row + 1][col] ||
+            boardMask[row + 1][col + 1])
+          continue;
+        squares2++;
+        if (row < _strategyBoardSize - 2 &&
+            col < _strategyBoardSize - 2 &&
+            !boardMask[row][col + 2] &&
+            !boardMask[row + 1][col + 2] &&
+            !boardMask[row + 2][col] &&
+            !boardMask[row + 2][col + 1] &&
+            !boardMask[row + 2][col + 2])
+          squares3++;
+      }
+    }
+    // Ưu tiên giữ chỗ cho khối vuông lớn, thay vì chỉ đếm số ô trống rời rạc.
+    return min(24, squares2) * .8 + min(4, squares3) * 6;
+  }
+
   int _countTightHoles(List<List<bool>> boardMask) {
     var holes = 0;
     for (var row = 0; row < _strategyBoardSize; row++) {
@@ -1066,7 +1220,7 @@ mixin _SoulBlockStrategyLogic {
     final distance =
         (pieceCenterRow - boardCenter).abs() +
         (pieceCenterCol - boardCenter).abs();
-    return distance * 2.4;
+    return max(0.0, boardCenter * 2 - distance) * 1.2;
   }
 
   String _serializeBoard(List<List<bool>> boardMask) {
@@ -1082,16 +1236,34 @@ mixin _SoulBlockStrategyLogic {
   int _scoreGainFor(
     _SoulPieceTemplate template,
     int clearedLines,
-    int currentCombo,
-  ) {
+    int currentCombo, {
+    int bombClearedCells = 0,
+    bool allClear = false,
+    bool consecutiveClear = false,
+  }) {
     final base = _basePiecePoints(template);
+    final bombBonus = max(0, bombClearedCells) * 10;
     if (clearedLines == 0) {
-      return base;
+      return base + bombBonus + (allClear ? _allClearBonus(1) : 0);
     }
-    final comboMult = 1.0 + (currentCombo * 0.25).clamp(0.0, 2.0);
+    // xN là hệ số thật của thưởng xóa hàng/cột; không còn trần x5/x8.
+    // Điểm đặt mảnh, bom và thưởng liền lượt được cộng riêng để dễ cân bằng.
+    final comboLevel = max(0, currentCombo) + 1;
     final lineBonus = clearedLines * _strategyBoardSize * 10;
-    return base + (lineBonus * comboMult).round();
+    final multiLineBonus =
+        _strategyBoardSize * 5 * clearedLines * (clearedLines - 1);
+    final consecutiveBonus = consecutiveClear
+        ? max(0, currentCombo) * clearedLines * 10
+        : 0;
+    return base +
+        bombBonus +
+        (lineBonus + multiLineBonus) * comboLevel +
+        consecutiveBonus +
+        (allClear ? _allClearBonus(comboLevel) : 0);
   }
+
+  int _allClearBonus(int comboLevel) =>
+      _strategyBoardSize * _strategyBoardSize * 5 * max(1, comboLevel);
 
   int _basePiecePoints(_SoulPieceTemplate template) {
     return template.cellCount * 5 + template.tier * 8;

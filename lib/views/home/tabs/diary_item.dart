@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:video_player/video_player.dart';
-import 'package:soullocket_app/core/constants/app_config.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../models/diary_post.dart';
@@ -101,9 +100,9 @@ class DiaryItem extends StatelessWidget {
 
     final displayName = rawName;
     final authorColor = authorRole == 'user1'
-        ? const Color(0xFF349F91)
+        ? const Color(0xFFB65C86)
         : authorRole == 'user2'
-        ? const Color(0xFF766FD0)
+        ? const Color(0xFF8873BD)
         : const Color(0xFFE28C6D);
     final moodColor = _getMoodColor(post.mood);
     final isShortText = post.content.trim().length < 30;
@@ -115,10 +114,10 @@ class DiaryItem extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              const Color(0xFFFFFDF8),
+              const Color(0xFFFFFAFC),
               Color.alphaBlend(
                 moodColor.withValues(alpha: 0.09),
-                const Color(0xFFF8FBFA),
+                const Color(0xFFF8F4FD),
               ),
             ],
             begin: Alignment.topLeft,
@@ -151,15 +150,15 @@ class DiaryItem extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 0,
-                top: 22,
-                bottom: 22,
+                left: 30,
+                top: 0,
                 child: Container(
-                  width: 5,
+                  width: 46,
+                  height: 7,
                   decoration: BoxDecoration(
-                    color: moodColor,
-                    borderRadius: const BorderRadius.horizontal(
-                      right: Radius.circular(8),
+                    color: moodColor.withValues(alpha: 0.3),
+                    borderRadius: const BorderRadius.vertical(
+                      bottom: Radius.circular(5),
                     ),
                   ),
                 ),
@@ -200,14 +199,20 @@ class DiaryItem extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          DateFormat(
-                            'dd/MM/yyyy • HH:mm',
-                          ).format(post.timestamp),
-                          style: SLTheme.quicksand(
-                            color: const Color(0xFF85899A),
-                            fontSize: 11.3,
-                            fontWeight: FontWeight.w700,
+                        Flexible(
+                          flex: 2,
+                          child: Text(
+                            DateFormat(
+                              'dd/MM/yyyy • HH:mm',
+                            ).format(post.timestamp),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.end,
+                            style: SLTheme.quicksand(
+                              color: const Color(0xFF8E8198),
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                         if (isMyPost) ...[
@@ -216,8 +221,8 @@ class DiaryItem extends StatelessWidget {
                             behavior: HitTestBehavior.opaque,
                             onTap: () => onConfirmDelete(post),
                             child: Container(
-                              width: 30,
-                              height: 30,
+                              width: 44,
+                              height: 44,
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFFF3EF),
                                 borderRadius: BorderRadius.circular(10),
@@ -282,7 +287,9 @@ class DiaryItem extends StatelessWidget {
                                 ),
                                 width: moodSize,
                                 height: moodSize,
-                                fit: post.mood == '📷' ? BoxFit.cover : BoxFit.contain,
+                                fit: post.mood == '📷'
+                                    ? BoxFit.cover
+                                    : BoxFit.contain,
                                 animateLocalSticker: true,
                                 errorWidget: Text(
                                   post.mood,
@@ -536,9 +543,6 @@ String _getMoodAsset(
     case '📷':
       if (customMoodUrl != null && customMoodUrl.isNotEmpty) {
         return customMoodUrl;
-      }
-      if (houseId != null && authorId != null) {
-        return '${AppConfig.r2PublicDomain}/houses/$houseId/custom_stickers/$authorId.jpg';
       }
       return SoulLocketStickerCatalog.originalReferenceFor('diary_reflective');
     case '😍':

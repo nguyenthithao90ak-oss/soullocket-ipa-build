@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -338,7 +339,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
             return;
           }
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            SLSnackBar(
               content: Text(context.tr('p5_profile_header_retry_message')),
               action: SnackBarAction(
                 label: context.tr('p5_retry'),
@@ -362,7 +363,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
             return;
           }
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            SLSnackBar(
               content: Text(context.tr('p5_profile_avatar_retry_message')),
               action: SnackBarAction(
                 label: context.tr('p5_retry'),
@@ -1425,13 +1426,13 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
   void _showSnack(String msg) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      SLSnackBar(
         content: Text(
           msg,
-          style: SLTheme.quicksand(fontWeight: FontWeight.w700),
+          
         ),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
+        
         backgroundColor: SLColors.textPrimary,
       ),
     );

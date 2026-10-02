@@ -11,6 +11,8 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/core/app_router.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
 import 'package:soullocket_app/widgets/sound_effects_scope.dart';
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 
@@ -63,7 +65,9 @@ class MyApp extends StatelessWidget {
                     return false; // let the notification bubble up further if needed
                   },
                   child: SoundEffectsScope(
-                    child: child ?? const SizedBox.shrink(),
+                    child: SLFeedbackTheme(
+                      child: child ?? const SizedBox.shrink(),
+                    ),
                   ),
                 ),
               ),
@@ -204,9 +208,11 @@ class MyApp extends StatelessWidget {
               thickness: 1,
               space: 1,
             ),
-            dialogTheme: DialogThemeData(
-              backgroundColor: SLColors.bgElevated,
-              shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
+            dialogTheme: SLDialogStyle.theme(
+              SLTheme.textThemeForKey(
+                UiPrefs.notifier.value.fontKey,
+                baseTextTheme,
+              ),
             ),
             bottomSheetTheme: const BottomSheetThemeData(
               backgroundColor: SLColors.bgElevated,
@@ -312,15 +318,7 @@ class MyApp extends StatelessWidget {
                 );
               }),
             ),
-            snackBarTheme: SnackBarThemeData(
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
-              backgroundColor: SLColors.textPrimary,
-              contentTextStyle: SLTheme.quicksand(
-                color: SLColors.textInverse,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            snackBarTheme: SLFeedbackStyle.snackBarTheme(),
           ),
           debugShowCheckedModeBanner: false,
         );

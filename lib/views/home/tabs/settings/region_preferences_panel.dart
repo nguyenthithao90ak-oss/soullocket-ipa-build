@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/market_catalog.dart';
 import '../../../../utils/services/l10n_service.dart';
@@ -70,7 +72,7 @@ class _RegionPreferencesPanelState extends State<RegionPreferencesPanel> {
                         context.tr(choice.key).toLowerCase().contains(query),
                   )
                   .toList();
-          return AlertDialog(
+          return SLAlertDialog(
             title: Text(context.tr('region_choose')),
             content: SizedBox(
               width: 420,
@@ -109,7 +111,9 @@ class _RegionPreferencesPanelState extends State<RegionPreferencesPanel> {
               ),
             ),
             actions: [
-              TextButton(
+              SLDialogAction(
+                primary: true,
+
                 onPressed: () => Navigator.pop(dialogContext),
                 child: Text(
                   MaterialLocalizations.of(context).cancelButtonLabel,
@@ -146,12 +150,12 @@ class _RegionPreferencesPanelState extends State<RegionPreferencesPanel> {
       setState(_load);
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(context.tr('region_saved'))));
+      ).showSnackBar(SLSnackBar(content: Text(context.tr('region_saved'))));
     } catch (_) {
       if (!mounted || scope != _service.accountScope) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(context.tr('region_save_error'))));
+      ).showSnackBar(SLSnackBar(content: Text(context.tr('region_save_error'))));
     } finally {
       if (mounted) setState(() => _saving = false);
     }

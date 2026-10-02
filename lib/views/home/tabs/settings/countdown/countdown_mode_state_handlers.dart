@@ -678,14 +678,8 @@ extension _CountdownModeIndependentScreenStatePart
                 Navigator.of(dialogContext).pop(parsed);
               }
 
-              return AlertDialog(
-                title: Text(
-                  context.tr('home_chnngy_d2cce5'),
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFFD81B60),
-                  ),
-                ),
+              return SLAlertDialog(
+                title: Text(context.tr('home_chnngy_d2cce5')),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -732,19 +726,19 @@ extension _CountdownModeIndependentScreenStatePart
                   ],
                 ),
                 actions: [
-                  TextButton(
+                  SLDialogAction(
                     onPressed: () => Navigator.of(dialogContext).pop(),
                     child: Text(context.tr('home_hy_1e4050')),
                   ),
-                  TextButton(
+                  SLDialogAction(
                     onPressed: () => unawaited(pickFromCalendar()),
                     child: Text(context.tr('home_chnlch_e1fe3f')),
                   ),
-                  ElevatedButton(
+                  SLDialogAction(
+                    primary: true,
+
                     onPressed: submit,
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                    ),
+
                     child: Text(context.tr('ok')),
                   ),
                 ],
@@ -764,7 +758,7 @@ extension _CountdownModeIndependentScreenStatePart
     );
     final nextValue = await showDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => SLAlertDialog(
         title: Text(
           editTopLabel
               ? context.tr('home_sachtrn_a2d51f')
@@ -779,11 +773,13 @@ extension _CountdownModeIndependentScreenStatePart
           onSubmitted: (value) => Navigator.of(dialogContext).pop(value.trim()),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: Text(context.tr('home_hy_1e4050')),
           ),
-          ElevatedButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () =>
                 Navigator.of(dialogContext).pop(controller.text.trim()),
             child: Text(context.tr('home_lu_49fac1')),
@@ -829,7 +825,7 @@ extension _CountdownModeIndependentScreenStatePart
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(context.tr('home_lnuploadav_949b24')),
           action: SnackBarAction(
             label: context.tr('home_thli_4dffdf'),
@@ -1237,7 +1233,7 @@ extension _CountdownModeIndependentScreenStatePart
   void _showMessage(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+      SLSnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -1256,7 +1252,7 @@ extension _CountdownModeIndependentScreenStatePart
         : request.fromHouseId;
     final accepted = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => SLAlertDialog(
         title: Text(context.tr('home_yucughpni_6a3807')),
         content: Text(
           context
@@ -1266,11 +1262,13 @@ extension _CountdownModeIndependentScreenStatePart
               .replaceAll('{note}', context.tr('home_nuchpnhnha_5e7057')),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text(context.tr('home_tchi_2119d8')),
           ),
-          FilledButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.of(dialogContext).pop(true),
             child: Text(context.tr('home_chpnhn_6ca558')),
           ),
@@ -1343,7 +1341,7 @@ extension _CountdownModeIndependentScreenStatePart
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => SLAlertDialog(
         title: Text(context.tr('home_giyucuxa_d2e564')),
         content: Text(
           context
@@ -1352,11 +1350,13 @@ extension _CountdownModeIndependentScreenStatePart
               .replaceAll('{note}', context.tr('home_nubnkiaxcn_9458c0')),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text(context.tr('home_hy_1e4050')),
           ),
-          FilledButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.of(dialogContext).pop(true),
             child: Text(context.tr('home_giyucu_576885')),
           ),
@@ -1387,7 +1387,7 @@ extension _CountdownModeIndependentScreenStatePart
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => SLAlertDialog(
         title: Text(context.tr('home_xcnhnxakhn_2ac5a7')),
         content: Text(
           context
@@ -1396,13 +1396,16 @@ extension _CountdownModeIndependentScreenStatePart
               .replaceAll('{note}', context.tr('home_nubnchamun_57d743')),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text(context.tr('home_sau_8a3721')),
           ),
-          FilledButton(
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: FilledButton.styleFrom(),
+
             child: Text(context.tr('home_xangay_dc07fa')),
           ),
         ],

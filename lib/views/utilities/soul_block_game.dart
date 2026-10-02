@@ -1,4 +1,5 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
@@ -134,6 +135,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   String? _houseId;
   String? _loadError;
   String? _floatingText;
+  String? _floatingScoreText;
 
   Set<int> _clearingRows = <int>{};
   Set<int> _clearingCols = <int>{};
@@ -171,7 +173,10 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   int _streak = 0;
   // Cho phép tối đa hai lượt đặt không xóa hàng/cột mà vẫn giữ chuỗi.
   // Lượt thứ ba liên tiếp không xóa hàng/cột sẽ phá chuỗi.
+  @override
   int _comboMisses = 0;
+  @override
+  final List<bool> _recentClearOutcomes = <bool>[];
   @override
   int _turn = 0;
   @override
@@ -204,6 +209,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   Uint8List? _gameOverSfxBytes;
   Uint8List? _bestScoreSfxBytes;
   List<Uint8List> _comboSfxLevels = <Uint8List>[];
+  final Map<int, Uint8List> _highComboSfxCache = <int, Uint8List>{};
 
   bool _audioReady = false;
   bool _audioDisposed = false;
@@ -238,11 +244,9 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     WidgetsBinding.instance.addObserver(this);
     _prefsFuture = SharedPreferences.getInstance();
     _board = _createEmptyBoard();
-    _sfxPlayers = List<AudioPlayer>.generate(
-      4,
-      (int index) => AudioPlayer(playerId: 'soul_block_sfx_$index'),
-    );
-    _bgmPlayer = AudioPlayer(playerId: 'soul_block_bgm');
+    _sfxPlayers = List<AudioPlayer>.generate(4, (int index) => AudioPlayer());
+    // Mỗi màn chơi có ID riêng, tránh dispose màn cũ đóng player màn mới.
+    _bgmPlayer = AudioPlayer();
 
     _playPulseController = AnimationController(
       vsync: this,
@@ -662,10 +666,12 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     final oldCombo = _combo;
     final oldLines = _clearedLines;
     final oldComboMisses = _comboMisses;
+    final oldRecentClears = List<bool>.from(_recentClearOutcomes);
     try {
       _turn = 0;
       _combo = 0;
       _comboMisses = 0;
+      _recentClearOutcomes.clear();
       _clearedLines = 0;
       final nextBoard = _createOpeningBoard();
       final nextTray = _buildSmartBatch(nextBoard);
@@ -679,6 +685,9 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _turn = oldTurn;
       _combo = oldCombo;
       _comboMisses = oldComboMisses;
+      _recentClearOutcomes
+        ..clear()
+        ..addAll(oldRecentClears);
       _clearedLines = oldLines;
     }
   }
@@ -725,6 +734,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _combo = 0;
       _streak = 0;
       _comboMisses = 0;
+      _recentClearOutcomes.clear();
       _turn = 0;
       _clearedLines = 0;
       _scorePulseTick = 0;
@@ -1478,31 +1488,37 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     }
 
     final clearedNow = clearedRows.length + clearedCols.length;
-    int gainedScore = _scoreGainFor(piece.template, clearedNow, _combo);
-    if (piece.isBomb) {
-      gainedScore += bombClearedCells.length * 10;
-    }
+    final comboState = _nextComboState(
+      level: _combo,
+      misses: _comboMisses,
+      clearedLines: clearedNow,
+    );
+    final allClear =
+        (clearedNow > 0 || bombClearedCells.isNotEmpty) &&
+        List.generate(_boardSize, (r) => r).every(
+          (r) => List.generate(_boardSize, (c) => c).every(
+            (c) =>
+                placedBoard[r][c] == null ||
+                clearedRows.contains(r) ||
+                clearedCols.contains(c),
+          ),
+        );
+    int gainedScore = _scoreGainFor(
+      piece.template,
+      clearedNow,
+      _combo,
+      bombClearedCells: bombClearedCells.length,
+      allClear: allClear,
+      consecutiveClear: _combo > 0 && _comboMisses == 0,
+    );
     if (piece.isGold) {
       gainedScore *= 2;
     }
     final nextScore = _score + gainedScore;
-    final nextComboMisses = clearedNow > 0 ? 0 : min(3, _comboMisses + 1);
-    final bool keepComboAfterMiss = nextComboMisses < 3;
-    final nextCombo = clearedNow > 0
-        ? _combo + 1
-        : keepComboAfterMiss
-        ? _combo
-        : 0;
-    final nextStreak = clearedNow > 0
-        ? _streak + 1
-        : keepComboAfterMiss
-        ? _streak
-        : 0;
-    final bool streakBrokenThisMove =
-        clearedNow == 0 &&
-        _comboMisses < 3 &&
-        nextComboMisses >= 3 &&
-        (_combo > 0 || _streak > 0);
+    final nextComboMisses = comboState.misses;
+    final nextCombo = comboState.level;
+    final nextStreak = nextCombo;
+    final bool streakBrokenThisMove = comboState.broken;
     final bool beatBestThisMove =
         _score <= _bestScore && nextScore > _bestScore;
     final List<_SoulPieceOption> remainingTray;
@@ -1541,14 +1557,9 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     if (clearedNow > 0) {
       _emitClearFeedback(clearedCount: clearedNow, streakCount: nextStreak);
       _triggerScreenPulse();
-      if (nextCombo >= 2) {
-        _showComboBurst(nextCombo);
-      } else if (clearedNow >= 2) {
-        _showFloatingMessage(
-          '${context.tr('soul_block_lines')}: $clearedNow',
-          color: const Color(0xFF00C3FF),
-        );
-      }
+      _showComboBurst(nextCombo, gainedScore: gainedScore, allClear: allClear);
+    } else if (allClear) {
+      _showComboBurst(1, gainedScore: gainedScore, allClear: true);
     }
     if (beatBestThisMove && !_bestScoreSfxPlayed) {
       _bestScoreSfxPlayed = true;
@@ -1566,6 +1577,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _combo = nextCombo;
       _streak = nextStreak;
       _comboMisses = nextComboMisses;
+      _recentClearOutcomes.add(clearedNow > 0);
+      if (_recentClearOutcomes.length > 9) _recentClearOutcomes.removeAt(0);
       _scorePulseTick += 1;
       _clearingRows = clearedRows.toSet();
       _clearingCols = clearedCols.toSet();
@@ -1966,6 +1979,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _combo = 0;
       _streak = 0;
       _comboMisses = 0;
+      _recentClearOutcomes.clear();
       _gameOverSfxPlayed = false;
       _isReviving = false;
       _isGameOver = nextRecommended == null;
@@ -2155,6 +2169,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       'combo': _combo,
       'streak': _streak,
       'comboMisses': _comboMisses,
+      'recentClearOutcomes': List<bool>.from(_recentClearOutcomes),
       'turn': _turn,
       'clearedLines': _clearedLines,
       'reviveAdsUsed': _reviveAdsUsed,
@@ -2239,6 +2254,12 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         3,
         max(0, (json['comboMisses'] as num?)?.toInt() ?? 0),
       );
+      final recentClears = ((json['recentClearOutcomes'] as List?) ?? <bool>[])
+          .whereType<bool>()
+          .toList();
+      _recentClearOutcomes
+        ..clear()
+        ..addAll(recentClears.skip(max(0, recentClears.length - 9)));
       if (_comboMisses >= 3 || recommendedMove == null) {
         _combo = 0;
         _streak = 0;

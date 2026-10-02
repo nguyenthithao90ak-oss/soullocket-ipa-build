@@ -1,4 +1,6 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'widgets/utilities_tab_body.dart';
 import 'dart:async';
 import 'dart:math';
@@ -201,37 +203,20 @@ class _UtilitiesTabState extends State<UtilitiesTab>
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
-          title: Text(
-            context.tr('utilities_reset_layout_title'),
-            style: SLTheme.quicksand(
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFFD81B60),
-            ),
-          ),
-          content: Text(
-            context.tr('home_bncchcmuna_5043aa'),
-            style: SLTheme.quicksand(fontWeight: FontWeight.w700, height: 1.5),
-          ),
+        return SLAlertDialog(
+          title: Text(context.tr('utilities_reset_layout_title')),
+          content: Text(context.tr('home_bncchcmuna_5043aa')),
           actions: [
-            TextButton(
+            SLDialogAction(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(
-                context.tr('home_hy_1e4050'),
-                style: SLTheme.quicksand(fontWeight: FontWeight.w800),
-              ),
+              child: Text(context.tr('home_hy_1e4050')),
             ),
-            FilledButton(
+            SLDialogAction(
+              primary: true,
+
               onPressed: () => Navigator.of(ctx).pop(true),
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFD81B60),
-                foregroundColor: Colors.white,
-              ),
-              child: Text(
-                context.tr('home_tli_ffd7c4'),
-                style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-              ),
+
+              child: Text(context.tr('home_tli_ffd7c4')),
             ),
           ],
         );
@@ -653,7 +638,7 @@ class _UtilitiesTabState extends State<UtilitiesTab>
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('home_tinchnyang_612f3d'))),
+        SLSnackBar(content: Text(context.tr('home_tinchnyang_612f3d'))),
       );
     }
   }

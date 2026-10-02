@@ -1,3 +1,6 @@
+import '../../../models/widget_appearance.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import '../../../utils/services/market_service.dart';
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'package:lottie/lottie.dart';
@@ -41,6 +44,7 @@ import 'package:soullocket_app/views/single_match/single_match_hub_screen.dart';
 import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart';
 import 'package:soullocket_app/views/home/screens/interaction_sticker_editor_screen.dart';
 import 'package:soullocket_app/widgets/animated_rabbit_sticker.dart';
+import 'package:soullocket_app/widgets/sl_toast.dart';
 import 'package:soullocket_app/utils/services/soul_merge_service.dart';
 import 'package:soullocket_app/views/home/widgets/seasonal_particle_overlay.dart';
 import 'dart:async';
@@ -124,7 +128,6 @@ import 'package:soullocket_app/utils/home_image_policy.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/hero/balanced_countdown_style.dart';
 import 'package:soullocket_app/views/home/widgets/companion/home_companion_motion.dart';
 import 'package:soullocket_app/views/home/widgets/companion/home_companion_scene.dart';
-import 'package:soullocket_app/views/home/widgets/companion/home_companion_journey_card.dart';
 import 'package:soullocket_app/widgets/home_interaction_stickers.dart';
 import 'package:soullocket_app/views/home/widgets/home_sticker_motion.dart';
 import 'package:soullocket_app/widgets/soul_merge_mascot.dart';
@@ -229,8 +232,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(
-            content: Text(
+          SLSnackBar(
+            content: const Text(
               'Đã làm mờ nút cài đặt. Bạn vẫn có thể nhấn vào góc này để mở cài đặt, hoặc nhấn giữ để hiện lại.',
             ),
             behavior: SnackBarBehavior.floating,
@@ -871,7 +874,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     messenger
       ..clearSnackBars()
       ..removeCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message), duration: duration));
+      ..showSnackBar(SLSnackBar(content: Text(message), duration: duration));
   }
 
   String _presenceRoleUiSignature(Map<String, dynamic>? data) {
@@ -1012,6 +1015,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       String heartStyleKey,
       String heartColorKey,
       String diaryLayoutKey,
+      String widgetStickerKey,
+      String photoFrameKey,
       String seasonModeKey,
       String widgetStyleKey,
     })

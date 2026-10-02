@@ -81,6 +81,7 @@ class _ModernHomeBody extends StatelessWidget {
       followScroll: true,
       enabled: uiState.homeCompanionEnabled,
       soundEnabled: uiState.homeCompanionSoundEnabled,
+      maxVisibleCharacters: 2,
       audioSuppressed: SoundService().companionSuppressed,
       animate: effectProfile.animationEnabled && !state._deferHeavyHomeMotion,
       isActive: state.widget.isActiveListenable,
@@ -228,7 +229,6 @@ class _ModernHomeBody extends StatelessWidget {
                           state._buildGettingStartedChecklist(
                             isSingle: isSingle,
                           ),
-                          const HomeCompanionJourneyCard(),
                           state.widget.isSwipingListenable == null
                               ? buildCountdown(false)
                               : ValueListenableBuilder<bool>(

@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
@@ -119,7 +120,7 @@ class _SecurityProtectionRolloutPanelState
         _config = nextConfig;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(context.tr('admin_lurollouts_951d13')),
         ),
       );
@@ -133,7 +134,7 @@ class _SecurityProtectionRolloutPanelState
         _errorText = message;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(message),
         ),
       );

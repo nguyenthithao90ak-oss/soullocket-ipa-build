@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -263,8 +264,8 @@ class _SingleMatchPostCallDialogState extends State<SingleMatchPostCallDialog> {
                             widget.onSubmitFeedback
                                 ?.call(_selectedTags.toList());
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Đã gửi lời mời kết bạn! 💌'),
+                              SLSnackBar(
+                                content: const Text('Đã gửi lời mời kết bạn! 💌'),
                                 backgroundColor: Color(0xFFFF5E7E),
                               ),
                             );

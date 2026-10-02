@@ -31,6 +31,7 @@ class HomeCompanionScene extends StatefulWidget {
     this.isSwiping,
     this.captureMode,
     this.soundEnabled = false,
+    this.maxVisibleCharacters = 4,
     this.pinToViewport = false,
     this.followScroll = false,
     this.audioSuppressed,
@@ -51,6 +52,9 @@ class HomeCompanionScene extends StatefulWidget {
   final bool enabled;
   final bool animate;
   final bool soundEnabled;
+
+  /// Giới hạn số pet được vẽ trong scene; tủ đồ vẫn giữ đủ nhân vật đã mở.
+  final int maxVisibleCharacters;
 
   /// Ghim bé tại góc an toàn của màn hình, không chạy theo layout/cuộn.
   final bool pinToViewport;
@@ -97,8 +101,19 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   double _guestPlayDeadline = 0;
   late HomeCompanionTraffic _traffic;
   CompanionJourneyService? _journey;
-  Set<HomeCompanionCharacter> _characters = HomeCompanionCharacter.values
-      .toSet();
+  Set<HomeCompanionCharacter> _characters = <HomeCompanionCharacter>{};
+
+  int get _visibleCharacterLimit {
+    if (widget.maxVisibleCharacters < 0) return 0;
+    if (widget.maxVisibleCharacters > HomeCompanionCharacter.values.length) {
+      return HomeCompanionCharacter.values.length;
+    }
+    return widget.maxVisibleCharacters;
+  }
+
+  Set<HomeCompanionCharacter> _limitCharacters(
+    Iterable<HomeCompanionCharacter> characters,
+  ) => characters.take(_visibleCharacterLimit).toSet();
   HomeCompanionOutfit _outfitFor(
     HomeCompanionCharacter character,
     Map<HomeCompanionCharacter, HomeCompanionOutfit> local,
@@ -110,7 +125,11 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   void _journeyChanged() {
     if (!mounted) return;
     _cancelPetHold();
-    final next = _journey?.state?.unlocked ?? <HomeCompanionCharacter>{};
+    final next = _limitCharacters(
+      _journey == null
+          ? HomeCompanionCharacter.values
+          : _journey!.state?.unlocked ?? const <HomeCompanionCharacter>{},
+    );
     if (!setEquals(next, _characters)) {
       _characters = Set.of(next);
       _traffic.dispose();
@@ -205,9 +224,9 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   void initState() {
     super.initState();
     _motion = widget.motion ?? HomeCompanionMotion();
+    _characters = _limitCharacters(HomeCompanionCharacter.values);
     _traffic = HomeCompanionTraffic({
-      for (final character in HomeCompanionCharacter.values)
-        character: _motionFor(character),
+      for (final character in _characters) character: _motionFor(character),
     });
     _audio = widget.audio ?? HomeCompanionAudio();
     _ticker = createTicker(_tick);
@@ -273,6 +292,9 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
       _audio.setEnabled(false);
       if (oldWidget.audio == null) _audio.dispose();
       _audio = widget.audio ?? HomeCompanionAudio();
+    }
+    if (oldWidget.maxVisibleCharacters != widget.maxVisibleCharacters) {
+      _journeyChanged();
     }
     _sync();
     _scheduleMeasure();

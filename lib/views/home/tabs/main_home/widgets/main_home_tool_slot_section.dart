@@ -141,7 +141,7 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
     if (apps.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('home_hinchactin_ec5a16'))),
+        SLSnackBar(content: Text(context.tr('home_hinchactin_ec5a16'))),
       );
       return;
     }

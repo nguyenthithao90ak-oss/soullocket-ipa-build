@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' show Random;
@@ -19,7 +21,6 @@ import '../../../../../utils/services/storage/private_memory_lifecycle_policy.da
 import '../../../../../utils/services/private_media_url_service.dart';
 import '../../../../../utils/services/storage/private_image_disk_cache.dart';
 import '../utils/private_memory_link_policy.dart';
-import '../../../../../core/sl_theme.dart';
 import '../../../../../utils/services/map_pin_limit_service.dart';
 import '../../../../../utils/services/activity_history_service.dart';
 import '../../../../../utils/helpers/date_highlight_helper.dart';
@@ -1050,22 +1051,19 @@ class DiaryMemoryController extends ChangeNotifier {
 
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
+      builder: (ctx) => SLAlertDialog(
         title: Text(
           L10nService().format('diary_delete_selected_title', {
             'count': _selectedMemories.length,
           }),
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
         content: Text(
           L10nService().translate(
             L10nService().translate('home_bncchcmunx_09bf02'),
           ),
-          style: SLTheme.quicksand(),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
               L10nService().translate(
@@ -1073,12 +1071,12 @@ class DiaryMemoryController extends ChangeNotifier {
               ),
             ),
           ),
-          ElevatedButton(
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
+
             child: Text(
               L10nService().translate(
                 L10nService().translate('home_xa_4ed187'),
@@ -1382,31 +1380,28 @@ class DiaryMemoryController extends ChangeNotifier {
   }) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
+      builder: (ctx) => SLAlertDialog(
         title: Text(
           L10nService().translate(
             L10nService().translate('home_xaknim_bdb86a'),
           ),
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
         content: Text(
           L10nService().translate(
             L10nService().translate('home_bncchcmunc_c47262'),
           ),
-          style: SLTheme.quicksand(),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(L10nService().translate('home_hy_1e4050')),
           ),
-          ElevatedButton(
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
+
             child: Text(
               L10nService().translate(
                 L10nService().translate('home_xa_4ed187'),
@@ -2079,7 +2074,7 @@ class DiaryMemoryController extends ChangeNotifier {
           return;
         }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             duration: Duration(seconds: failedCount > 0 ? 5 : 3),
             content: Text(
               failedCount == 0
@@ -2104,7 +2099,7 @@ class DiaryMemoryController extends ChangeNotifier {
           }
           final resolved = AppErrorMapper.resolve(e);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            SLSnackBar(
               content: Text(resolved.message),
               backgroundColor: const Color(0xFFE53935),
             ),

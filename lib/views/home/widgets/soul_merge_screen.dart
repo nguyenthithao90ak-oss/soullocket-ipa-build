@@ -1,10 +1,14 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:soullocket_app/widgets/soul_merge_mascot.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:soullocket_app/utils/services/soul_message_history.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -26,6 +30,8 @@ import 'package:soullocket_app/utils/sl_notice.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
 import 'package:soullocket_app/views/relationship/video_call_screen.dart';
 import 'soul_merge/soul_merge_chat_bar.dart';
+import 'soul_merge/soul_merge_interaction_strip.dart';
+import 'soul_merge/soul_merge_options_sheet.dart';
 import 'soul_merge/sticker_bottom_sheet.dart';
 
 part 'soul_merge/exploding_photo_part.dart';
@@ -82,6 +88,15 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
   bool _hasProcessedFirstMessages = false;
   String _myRole = 'user1';
   List<Map<String, dynamic>> _chatHistory = [];
+  final SoulMessageHistory _messageHistory = SoulMessageHistory();
+  bool _isLoadingOlderMessages = false;
+  bool _historyLoadFailed = false;
+  bool _latestMessagesFailed = false;
+  bool _hasLoadedMessages = false;
+  StreamSubscription<Map<String, dynamic>>? _backgroundSub;
+  String _backgroundUrl = '';
+  String? _screenOwnerUid;
+  bool _isUploadingBackground = false;
   final ScrollController _chatScrollController = ScrollController();
   bool _overlayEnabled = false;
   StreamSubscription<dynamic>? _overlayListenerSub;
@@ -101,6 +116,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
   @override
   void initState() {
     super.initState();
+    _screenOwnerUid = FirebaseAuth.instance.currentUser?.uid;
+    _chatScrollController.addListener(_onChatScroll);
     _bumpDetector = BumpDetector(
       threshold: 3.5, // Sensitive enough for a gentle bump
       onBump: _handleLocalBump,
@@ -117,6 +134,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
       }
     });
     _initUserInfo().then((_) {
+      if (!mounted || !_scopeIsCurrent) return;
+      _listenBackground();
       _listenSoulMessages();
       _listenInteractiveEvents();
       _fetchMemoriesData().then((data) {
@@ -198,6 +217,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
   Future<void> _initUserInfo() async {
     try {
       _houseId = await _mergeService.getCurrentHouseId();
+      if (!mounted || !_scopeIsCurrent) return;
       if (_houseId != null && _houseId!.isNotEmpty) {
         final prefs = await SharedPreferences.getInstance();
         final myRole = prefs.getString('il_role') ?? 'user1';
@@ -223,6 +243,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
         // }
 
         final showNotif = prefs.getBool('soul_merge_show_heart_notif') ?? false;
+        if (!mounted || !_scopeIsCurrent) return;
 
         setState(() {
           _myRole = myRole;
@@ -235,6 +256,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
         });
 
         final settings = await HouseService().getHouseSettings(_houseId!);
+        if (!mounted || !_scopeIsCurrent) return;
         if (settings != null) {
           final myNameKey = myRole == 'user2' ? 'nameU2' : 'nameU1';
           final myCustomName = settings[myNameKey]?.toString().trim() ?? '';
@@ -284,16 +306,13 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(
             L10nService().format('p4_soul_nudge_sent', {'name': _partnerName}),
-            style: SLTheme.quicksand(fontWeight: FontWeight.bold),
           ),
           backgroundColor: const Color(0xFFFF4F93),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+
           duration: const Duration(seconds: 2),
         ),
       );
@@ -351,7 +370,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
 
       final url = uploadResult?.downloadUrl;
       if (url != null && url.isNotEmpty) {
-        _mergeService.sendSoulMessage('', imageUrl: url);
+        await _mergeService.sendSoulMessage('', imageUrl: url);
         await prefs.setInt('il_sm_photo_count', currentCount + 1);
       }
     } catch (e) {
@@ -604,9 +623,14 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
         specificItem ?? _memoriesData[_random.nextInt(_memoriesData.length)];
 
     final size = MediaQuery.of(context).size;
-    final double x = 30 + _random.nextDouble() * (size.width - 200);
-    final double y = 140 + _random.nextDouble() * (size.height - 380);
-    final position = specificPosition ?? Offset(x, y);
+    final double x = 20 + _random.nextDouble() * math.max(1, size.width - 120);
+    final double y = MediaQuery.paddingOf(context).top + 60;
+    final position = Offset(
+      (specificPosition?.dx ?? x)
+          .clamp(12, math.max(12, size.width - 110))
+          .toDouble(),
+      y,
+    );
 
     final photo = ExplodingPhoto(
       url: randomItem['url'] ?? '',
@@ -616,7 +640,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
       dateStr: randomItem['dateStr'] ?? '',
       position: position,
       angle: (_random.nextDouble() - 0.5) * 0.4, // Slight rotation
-      targetScale: 0.8 + _random.nextDouble() * 0.4,
+      targetScale: 0.48 + _random.nextDouble() * 0.12,
     );
 
     final particleId = UniqueKey();
@@ -649,7 +673,10 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
   void dispose() {
     _vipSub?.cancel();
     _customMsgController.dispose();
+    _chatScrollController.removeListener(_onChatScroll);
     _chatScrollController.dispose();
+    _backgroundSub?.cancel();
+    _interactiveScaleNotifier.dispose();
     _messagesSub?.cancel();
     _interactiveEventsSub?.cancel();
     _continuousHeartsTimer?.cancel();
@@ -752,6 +779,20 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
             ),
           ),
 
+          if (_backgroundUrl.isNotEmpty)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: CachedNetworkImage(
+                  imageUrl: _backgroundUrl,
+                  fit: BoxFit.cover,
+                  memCacheWidth: 1440,
+                  errorWidget: (_, _, _) => const SizedBox.shrink(),
+                  color: Colors.white.withValues(alpha: 0.76),
+                  colorBlendMode: BlendMode.lighten,
+                ),
+              ),
+            ),
+
           // Isolated tap hearts particle overlay
           TapHeartsOverlay(key: _heartsOverlayKey, style: _activeStyle),
 
@@ -759,144 +800,78 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
           for (final msg in _floatingMessages)
             FloatingMessageWidget(key: msg.id, message: msg),
 
-          for (int i = 0; i < latestPhotos.length; i++)
-            PersistentFloatingPhotoWidget(
-              key: ValueKey(
-                latestPhotos[i]['id']?.toString() ??
-                    latestPhotos[i]['timestamp'].toString(),
-              ),
-              url: latestPhotos[i]['imageUrl'].toString(),
-              index: i,
-            ),
-
-          if (!_isMerged)
-            Align(
-              alignment: const Alignment(0, -0.70),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Listener(
-                    behavior: HitTestBehavior.opaque,
-                    onPointerDown: (event) {
-                      _onTapDown(event.position);
-                    },
-                    onPointerMove: (event) {
-                      _lastTapPosition = event.position;
-                      final lastPos = _lastSpawnedPosition;
-                      if (lastPos == null ||
-                          (event.position - lastPos).distance > 18.0) {
-                        _lastSpawnedPosition = event.position;
-                        _heartsOverlayKey.currentState?.spawnFlyingToExplosion(
-                          event.position,
-                          Offset(
-                            MediaQuery.sizeOf(context).width / 2,
-                            MediaQuery.sizeOf(context).height * 0.15,
-                          ),
-                          count: 2,
-                        );
-                      }
-                    },
-                    onPointerUp: (event) {
-                      _onTapUp();
-                    },
-                    onPointerCancel: (event) {
-                      _onTapCancel();
-                    },
-                    child: RepaintBoundary(
-                      child: ValueListenableBuilder<double>(
-                        valueListenable: _interactiveScaleNotifier,
-                        builder: (context, scale, child) {
-                          return AnimatedScale(
-                            scale: scale,
-                            duration: const Duration(milliseconds: 100),
-                            curve: Curves.easeOut,
-                            child: child,
-                          );
-                        },
-                        child: const SizedBox.square(
-                          dimension: 160,
-                          child: Center(
-                            child: SoulMergeMascot(size: 146, framed: true),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 40),
-                    child: Column(
+          Positioned.fill(
+            top: MediaQuery.paddingOf(context).top + 76,
+            bottom: MediaQuery.paddingOf(context).bottom + 10,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 860),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final showInteraction =
+                        constraints.maxHeight >= 300 &&
+                        MediaQuery.viewInsetsOf(context).bottom == 0;
+                    return Column(
                       children: [
-                        SizedBox(height: 24),
-                        // Connection status line removed as per user request
-                        // Nudge button removed, integrated into cat tap
-                        // Removed toggle card from bottom as it is now in the AppBar
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else ...[
-            // 1. Particle explosions (behind photos)
-            for (final explosion in _activeParticleExplosions)
-              ParticleExplosionWidget(
-                key: explosion.id,
-                position: explosion.position,
-              ),
-
-            // 2. Popping Polaroids (foreground)
-            for (final photo in _activePhotos)
-              ExplodingPhotoWidget(key: photo.id, photo: photo),
-
-            // 3. Merged Header Text
-            Positioned(
-              top: 100,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Column(
-                  children: [
-                    Text(
-                      context.tr('p4_soul_connected_title'),
-                      style: SLTheme.quicksand(
-                        color: const Color(0xFFFF4F93),
-                        fontSize: 34,
-                        fontWeight: FontWeight.w900,
-                        shadows: [
-                          Shadow(
-                            color: const Color(
-                              0xFFFF4F93,
-                            ).withValues(alpha: 0.5),
-                            blurRadius: 15,
+                        if (showInteraction) ...[
+                          SoulMergeInteractionStrip(
+                            scale: _interactiveScaleNotifier,
+                            isMerged: _isMerged,
+                            photoUrls: latestPhotos
+                                .map((photo) => photo['imageUrl'].toString())
+                                .toList(growable: false),
+                            onPointerDown: (event) =>
+                                _onTapDown(event.position),
+                            onPointerMove: (event) {
+                              _lastTapPosition = event.position;
+                              final lastPosition = _lastSpawnedPosition;
+                              if (lastPosition == null ||
+                                  (event.position - lastPosition).distance >
+                                      18) {
+                                _lastSpawnedPosition = event.position;
+                                _heartsOverlayKey.currentState
+                                    ?.spawnFlyingToExplosion(
+                                      event.position,
+                                      Offset(
+                                        MediaQuery.sizeOf(context).width / 2,
+                                        MediaQuery.paddingOf(context).top + 120,
+                                      ),
+                                      count: 2,
+                                    );
+                              }
+                            },
+                            onPointerUp: (_) => _onTapUp(),
+                            onPointerCancel: (_) => _onTapCancel(),
                           ),
+                          const SizedBox(height: 10),
                         ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      context.tr('p4_soul_connected_subtitle'),
-                      style: SLTheme.quicksand(
-                        color: const Color(0xFF7E365B),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                        Expanded(child: _buildChatInputBar()),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
-          ],
+          ),
 
-          // Message / Preset Chat Input Bar at the bottom
           Positioned(
-            bottom: MediaQuery.of(context).padding.bottom + 16,
+            top: 0,
             left: 0,
             right: 0,
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 760),
-                child: _buildChatInputBar(),
+            height: MediaQuery.paddingOf(context).top + 176,
+            child: IgnorePointer(
+              child: ClipRect(
+                child: Stack(
+                  children: [
+                    for (final explosion in _activeParticleExplosions)
+                      ParticleExplosionWidget(
+                        key: explosion.id,
+                        position: explosion.position,
+                      ),
+                    for (final photo in _activePhotos)
+                      ExplodingPhotoWidget(key: photo.id, photo: photo),
+                  ],
+                ),
               ),
             ),
           ),
@@ -995,6 +970,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
                                 children: [
                                   Text(
                                     context.tr('p4_soul_title'),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       fontSize: 17,
                                       fontWeight: FontWeight.w800,
@@ -1055,79 +1032,13 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
                             ),
                             const SizedBox(width: 8),
 
-                            // ═══ NÚT HIỆU ỨNG ═══
-                            Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: _showHeartStyleSheet,
-                                borderRadius: BorderRadius.circular(20),
-                                child: Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.white.withValues(alpha: 0.5),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(
-                                          0xFFFF6B9D,
-                                        ).withValues(alpha: 0.2),
-                                        blurRadius: 8,
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Icon(
-                                    Icons.auto_awesome_rounded,
-                                    size: 18,
-                                    color: Color(0xFFFF6B9D),
-                                  ),
-                                ),
-                              ),
+                            IconButton(
+                              key: const ValueKey('soul-merge-options'),
+                              tooltip: context.tr('settings'),
+                              onPressed: _showSoulOptions,
+                              icon: const Icon(Icons.menu_rounded),
+                              color: const Color(0xFFE9577D),
                             ),
-
-                            // ═══ BONG BÓNG NỔI (Android only) ═══
-                            if (!isCompactHeader &&
-                                !kIsWeb &&
-                                defaultTargetPlatform ==
-                                    TargetPlatform.android) ...[
-                              const SizedBox(width: 6),
-                              Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: _toggleOverlaySetting,
-                                  borderRadius: BorderRadius.circular(20),
-                                  child: Container(
-                                    width: 36,
-                                    height: 36,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.white.withValues(
-                                        alpha: 0.5,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color:
-                                              (_overlayEnabled
-                                                      ? const Color(0xFFFF4F93)
-                                                      : Colors.pink)
-                                                  .withValues(alpha: 0.2),
-                                          blurRadius: 8,
-                                        ),
-                                      ],
-                                    ),
-                                    child: Icon(
-                                      _overlayEnabled
-                                          ? Icons.chat_bubble_rounded
-                                          : Icons.chat_bubble_outline_rounded,
-                                      size: 16,
-                                      color: _overlayEnabled
-                                          ? const Color(0xFFFF4F93)
-                                          : Colors.pink.shade700,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
                           ],
                         ),
                       ),
@@ -1197,109 +1108,305 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
   }
 
   void _listenSoulMessages() {
-    _messagesSub = _mergeService.watchSoulMessages().listen((list) {
-      if (!mounted) return;
+    _messagesSub?.cancel();
+    _messagesSub = _mergeService
+        .watchSoulMessages(houseId: _houseId)
+        .listen(
+          (list) {
+            if (!mounted || !_scopeIsCurrent) return;
+            final wasNearBottom =
+                !_chatScrollController.hasClients ||
+                _chatScrollController.offset < 48;
+            _messageHistory.applyLatest(list);
+            final visibleHistory = _messageHistory.messages;
 
-      if (list.isNotEmpty) {
-        int highestT = 0;
-        for (final msg in list) {
-          final t = msg['timestamp'] as int? ?? 0;
-          if (t > highestT) highestT = t;
-        }
-        if (highestT != _lastAnyMsgTimestamp) {
-          setState(() => _lastAnyMsgTimestamp = highestT);
-        }
-      }
-
-      final isFirstLoad = !_hasProcessedFirstMessages;
-      int maxTimestamp = _lastMsgTimestamp;
-
-      if (isFirstLoad && list.isNotEmpty) {
-        _hasProcessedFirstMessages = true;
-        final unreadMsgs = list.where((msg) {
-          final t = msg['timestamp'] as int? ?? 0;
-          final sender = (msg['sender'] ?? '').toString().trim();
-          final isSelf = (sender == _myRole);
-          return t > _lastSeenMsgTimestamp && !isSelf;
-        }).toList();
-
-        for (int i = 0; i < unreadMsgs.length; i++) {
-          final msg = unreadMsgs[i];
-          final text = (msg['text'] ?? '').toString().trim();
-          if (text.isNotEmpty) {
-            final delayMs = i * 800; // Staggered by 800ms
-            Future.delayed(Duration(milliseconds: delayMs), () {
-              if (mounted) {
-                _spawnFloatingMessage(text, false);
+            if (list.isNotEmpty) {
+              int highestT = 0;
+              for (final msg in list) {
+                final t = msg['timestamp'] as int? ?? 0;
+                if (t > highestT) highestT = t;
               }
-            });
-          }
-        }
+              if (highestT != _lastAnyMsgTimestamp) {
+                setState(() => _lastAnyMsgTimestamp = highestT);
+              }
+            }
 
-        for (final msg in list) {
-          final t = msg['timestamp'] as int? ?? 0;
-          if (t > maxTimestamp) maxTimestamp = t;
-        }
-      }
+            final isFirstLoad = !_hasProcessedFirstMessages;
+            int maxTimestamp = _lastMsgTimestamp;
 
-      for (final msg in list) {
-        final t = msg['timestamp'] as int? ?? 0;
-        if (t > _lastMsgTimestamp) {
-          if (t > maxTimestamp) maxTimestamp = t;
-          if (!isFirstLoad) {
-            final text = (msg['text'] ?? '').toString().trim();
-            final sender = (msg['sender'] ?? '').toString().trim();
-            if (text.isNotEmpty && sender.isNotEmpty) {
-              final isSelf = (sender == _myRole);
-              if (!isSelf) {
-                _spawnFloatingMessage(text, false);
+            if (isFirstLoad) {
+              _hasProcessedFirstMessages = true;
+              final unreadMsgs = list.where((msg) {
+                final t = msg['timestamp'] as int? ?? 0;
+                final sender = (msg['sender'] ?? '').toString().trim();
+                final isSelf = (sender == _myRole);
+                return t > _lastSeenMsgTimestamp && !isSelf;
+              }).toList();
 
-                if (!kIsWeb &&
-                    defaultTargetPlatform == TargetPlatform.android) {
-                  FlutterOverlayWindow.isActive().then((active) {
-                    if (active) {
-                      final payload = jsonEncode({
-                        'type': 'new_msg_preview',
-                        'text': text,
-                      });
-                      FlutterOverlayWindow.shareData(payload);
+              for (int i = 0; i < unreadMsgs.length; i++) {
+                final msg = unreadMsgs[i];
+                final text = (msg['text'] ?? '').toString().trim();
+                if (text.isNotEmpty) {
+                  final delayMs = i * 800; // Staggered by 800ms
+                  Future.delayed(Duration(milliseconds: delayMs), () {
+                    if (mounted) {
+                      _spawnFloatingMessage(text, false);
                     }
                   });
                 }
               }
+
+              for (final msg in list) {
+                final t = msg['timestamp'] as int? ?? 0;
+                if (t > maxTimestamp) maxTimestamp = t;
+              }
             }
-          }
-        }
-      }
 
-      final oldSeenMs = _lastSeenMsgTimestamp;
-      setState(() {
-        _chatHistory = list;
-        _lastMsgTimestamp = maxTimestamp;
-        _lastSeenMsgTimestamp = maxTimestamp;
-      });
+            for (final msg in list) {
+              final t = msg['timestamp'] as int? ?? 0;
+              if (t > _lastMsgTimestamp) {
+                if (t > maxTimestamp) maxTimestamp = t;
+                if (!isFirstLoad) {
+                  final text = (msg['text'] ?? '').toString().trim();
+                  final sender = (msg['sender'] ?? '').toString().trim();
+                  if (text.isNotEmpty && sender.isNotEmpty) {
+                    final isSelf = (sender == _myRole);
+                    if (!isSelf) {
+                      _spawnFloatingMessage(text, false);
 
-      if (maxTimestamp > oldSeenMs) {
-        unawaited(_mergeService.updateLastSeenTimestamp(maxTimestamp));
-        SharedPreferences.getInstance().then((prefs) {
-          prefs.setInt('soul_merge_last_seen_msg_ts', maxTimestamp);
-        });
-      }
+                      if (!kIsWeb &&
+                          defaultTargetPlatform == TargetPlatform.android) {
+                        FlutterOverlayWindow.isActive().then((active) {
+                          if (active) {
+                            final payload = jsonEncode({
+                              'type': 'new_msg_preview',
+                              'text': text,
+                            });
+                            FlutterOverlayWindow.shareData(payload);
+                          }
+                        });
+                      }
+                    }
+                  }
+                }
+              }
+            }
 
-      _sendOverlaySyncPayload();
-
-      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-        FlutterOverlayWindow.isActive().then((active) {
-          if (mounted && _overlayEnabled != active) {
+            final oldSeenMs = _lastSeenMsgTimestamp;
             setState(() {
-              _overlayEnabled = active;
+              _chatHistory = visibleHistory;
+              _hasLoadedMessages = true;
+              _latestMessagesFailed = false;
+              _lastMsgTimestamp = maxTimestamp;
+              _lastSeenMsgTimestamp = maxTimestamp;
             });
-          }
-        });
-      }
 
-      _scrollChatToBottom();
+            if (maxTimestamp > oldSeenMs) {
+              unawaited(_mergeService.updateLastSeenTimestamp(maxTimestamp));
+              SharedPreferences.getInstance().then((prefs) {
+                prefs.setInt('soul_merge_last_seen_msg_ts', maxTimestamp);
+              });
+            }
+
+            _sendOverlaySyncPayload();
+
+            if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+              FlutterOverlayWindow.isActive().then((active) {
+                if (mounted && _overlayEnabled != active) {
+                  setState(() {
+                    _overlayEnabled = active;
+                  });
+                }
+              });
+            }
+
+            if (wasNearBottom) _scrollChatToBottom();
+          },
+          onError: (Object error) {
+            if (!mounted || !_scopeIsCurrent) return;
+            setState(() => _latestMessagesFailed = true);
+            debugPrint(
+              '[SoulMergeScreen] Chat load failed: ${error.runtimeType}',
+            );
+          },
+        );
+  }
+
+  bool get _scopeIsCurrent =>
+      _screenOwnerUid != null &&
+      FirebaseAuth.instance.currentUser?.uid == _screenOwnerUid;
+
+  void _onChatScroll() {
+    if (!_chatScrollController.hasClients ||
+        !_hasLoadedMessages ||
+        _historyLoadFailed ||
+        _chatScrollController.position.userScrollDirection ==
+            ScrollDirection.idle) {
+      return;
+    }
+    if (_chatScrollController.position.extentAfter < 100) {
+      unawaited(_loadOlderMessages());
+    }
+  }
+
+  void _retryHistory() {
+    if (_latestMessagesFailed) {
+      setState(() => _latestMessagesFailed = false);
+      _listenSoulMessages();
+    } else {
+      unawaited(_loadOlderMessages());
+    }
+  }
+
+  Future<void> _loadOlderMessages() async {
+    final before = _messageHistory.before;
+    final houseId = _houseId;
+    if (_isLoadingOlderMessages ||
+        !_messageHistory.hasOlder ||
+        before == null ||
+        houseId == null ||
+        !_scopeIsCurrent) {
+      return;
+    }
+    setState(() {
+      _isLoadingOlderMessages = true;
+      _historyLoadFailed = false;
     });
+    try {
+      final page = await _mergeService.loadOlderSoulMessages(
+        houseId: houseId,
+        before: before,
+      );
+      if (!mounted || !_scopeIsCurrent || _houseId != houseId) return;
+      _messageHistory.applyOlder(page, requestedBefore: before);
+      setState(() => _chatHistory = _messageHistory.messages);
+    } catch (error) {
+      if (!mounted || !_scopeIsCurrent) return;
+      setState(() => _historyLoadFailed = true);
+      debugPrint('[SoulMergeScreen] History load failed: ${error.runtimeType}');
+    } finally {
+      if (mounted) setState(() => _isLoadingOlderMessages = false);
+    }
+  }
+
+  void _listenBackground() {
+    final houseId = _houseId;
+    if (houseId == null) return;
+    _backgroundSub?.cancel();
+    _backgroundSub = _mergeService
+        .watchSoulBackground(houseId)
+        .listen(
+          (background) {
+            if (!mounted || !_scopeIsCurrent || _houseId != houseId) return;
+            final url = background['url']?.toString() ?? '';
+            final uri = Uri.tryParse(url);
+            setState(
+              () => _backgroundUrl =
+                  uri?.scheme == 'https' &&
+                      uri!.host.isNotEmpty &&
+                      uri.userInfo.isEmpty
+                  ? url
+                  : '',
+            );
+          },
+          onError: (Object error) {
+            debugPrint(
+              '[SoulMergeScreen] Background load failed: ${error.runtimeType}',
+            );
+          },
+        );
+  }
+
+  Future<void> _showSoulOptions() async {
+    final option = await showModalBottomSheet<SoulMergeOption>(
+      context: context,
+      backgroundColor: const Color(0xFFFFF8FA),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+      ),
+      builder: (_) => SoulMergeOptionsSheet(
+        hasBackground: _backgroundUrl.isNotEmpty,
+        overlayEnabled: _overlayEnabled,
+        isUploadingBackground: _isUploadingBackground,
+      ),
+    );
+    if (!mounted || !_scopeIsCurrent) return;
+    switch (option) {
+      case SoulMergeOption.background:
+        await _pickSoulBackground();
+      case SoulMergeOption.removeBackground:
+        await _removeSoulBackground();
+      case SoulMergeOption.overlay:
+        await _toggleOverlaySetting();
+      case SoulMergeOption.heartStyle:
+        _showHeartStyleSheet();
+      case null:
+        break;
+    }
+  }
+
+  Future<void> _pickSoulBackground() async {
+    final houseId = _houseId;
+    if (_isUploadingBackground || houseId == null || !_scopeIsCurrent) return;
+    setState(() => _isUploadingBackground = true);
+    try {
+      final image = await StorageService.instance.pickImage();
+      if (image == null ||
+          !mounted ||
+          !_scopeIsCurrent ||
+          _houseId != houseId) {
+        return;
+      }
+      final upload = await StorageService.instance.uploadManagedImage(
+        houseId,
+        'chat_backgrounds',
+        image,
+        minWidth: 1080,
+        minHeight: 1600,
+        quality: 82,
+      );
+      if (upload == null ||
+          upload.downloadUrl.isEmpty ||
+          !mounted ||
+          !_scopeIsCurrent ||
+          _houseId != houseId) {
+        throw StateError('Soul Merge background upload not confirmed');
+      }
+      await _mergeService.saveSoulBackground(
+        houseId,
+        url: upload.downloadUrl,
+        storagePath: upload.storagePath,
+      );
+      if (!mounted || !_scopeIsCurrent) return;
+      setState(() => _backgroundUrl = upload.downloadUrl);
+      SLNotice.showSuccess(context, context.tr('theme_success_bg_saved'));
+    } catch (error) {
+      if (mounted && _scopeIsCurrent) {
+        SLNotice.showError(context, context.tr('err_upload_background'));
+      }
+      debugPrint(
+        '[SoulMergeScreen] Background upload failed: ${error.runtimeType}',
+      );
+    } finally {
+      if (mounted) setState(() => _isUploadingBackground = false);
+    }
+  }
+
+  Future<void> _removeSoulBackground() async {
+    final houseId = _houseId;
+    if (_isUploadingBackground || houseId == null || !_scopeIsCurrent) return;
+    setState(() => _isUploadingBackground = true);
+    try {
+      await _mergeService.saveSoulBackground(houseId);
+      if (mounted && _scopeIsCurrent) setState(() => _backgroundUrl = '');
+    } catch (error) {
+      if (mounted && _scopeIsCurrent) {
+        SLNotice.showError(context, context.tr('err_upload_background'));
+      }
+    } finally {
+      if (mounted) setState(() => _isUploadingBackground = false);
+    }
   }
 
   void _scrollChatToBottom() {
@@ -1524,7 +1631,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
             }
 
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+              SLSnackBar(
                 content: Text(displayMessage),
                 backgroundColor: result.success ? Colors.green : Colors.red,
               ),
@@ -1533,7 +1640,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
             debugPrint('Error redeeming giftcode in soul merge chat: $e');
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
+                SLSnackBar(
                   content: Text(context.tr('p4_soul_giftcode_error')),
                   backgroundColor: Colors.red,
                 ),
@@ -1569,6 +1676,12 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
       isUploadingPhoto: _isUploadingPhoto,
       lastAnyMsgTimestamp: _lastAnyMsgTimestamp,
       isMerged: _isMerged,
+      isLoadingHistory:
+          _isLoadingOlderMessages ||
+          (!_hasLoadedMessages && !_latestMessagesFailed),
+      historyLoadFailed: _historyLoadFailed || _latestMessagesFailed,
+      onRetryHistory: _retryHistory,
+      onLoadOlder: () => unawaited(_loadOlderMessages()),
       onSendCustomMessage: _sendCustomMessage,
       onPickImage: _pickAndSendChatImage,
       onShowSticker: _showStickerBottomSheet,
@@ -1591,7 +1704,11 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
 
         final chatPayload = jsonEncode({
           'type': 'update_chat',
-          'history': _chatHistory,
+          'history': _chatHistory.reversed
+              .take(SoulMessageHistory.pageSize)
+              .toList()
+              .reversed
+              .toList(),
           'myRole': _myRole,
           'partnerName': _partnerName,
         });
@@ -1622,16 +1739,10 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
         if (reqResult != true) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  context.tr('p4_soul_overlay_permission'),
-                  style: SLTheme.quicksand(fontWeight: FontWeight.bold),
-                ),
+              SLSnackBar(
+                content: Text(context.tr('p4_soul_overlay_permission')),
                 backgroundColor: Colors.redAccent,
                 behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
               ),
             );
           }
@@ -1653,16 +1764,10 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
           _overlayEnabled = true;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              context.tr('p4_soul_overlay_enabled'),
-              style: SLTheme.quicksand(fontWeight: FontWeight.bold),
-            ),
+          SLSnackBar(
+            content: Text(context.tr('p4_soul_overlay_enabled')),
             backgroundColor: const Color(0xFFFF4F93),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
           ),
         );
       }
@@ -1673,16 +1778,10 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
           _overlayEnabled = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              context.tr('p4_soul_overlay_disabled'),
-              style: SLTheme.quicksand(fontWeight: FontWeight.bold),
-            ),
+          SLSnackBar(
+            content: Text(context.tr('p4_soul_overlay_disabled')),
             backgroundColor: Colors.grey.shade800,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
           ),
         );
       }

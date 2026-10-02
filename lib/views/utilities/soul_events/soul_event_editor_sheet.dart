@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 
 import '../../../utils/calendar/lunar_calendar.dart';
@@ -162,7 +163,7 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('event_reminder_failed'))),
+        SLSnackBar(content: Text(context.tr('event_reminder_failed'))),
       );
     } finally {
       if (mounted) setState(() => _reminderPermissionBusy = false);
@@ -221,7 +222,7 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
     if (title.isEmpty) {
       setState(() => _showTitleError = true);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(context.tr('p8_events_title_required')),
           backgroundColor: SLColors.danger,
         ),
@@ -259,7 +260,7 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(context.tr('p8_events_save_error')),
           backgroundColor: SLColors.danger,
         ),

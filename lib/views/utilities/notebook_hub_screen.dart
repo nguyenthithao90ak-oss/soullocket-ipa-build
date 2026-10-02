@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -18,7 +19,7 @@ class NotebookHubScreen extends StatelessWidget {
 
   void _showExportUnavailable(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      SLSnackBar(
         content: Text(context.tr('p8_notebook_export_unavailable')),
         backgroundColor: SLColors.textSecond,
       ),

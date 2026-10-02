@@ -70,30 +70,22 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: Text(
-          context.tr('home_cnhbohthng_21e9b4'),
-          style: SLTheme.quicksand(
-            color: SLColors.danger,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+      builder: (ctx) => SLAlertDialog(
+        title: Text(context.tr('home_cnhbohthng_21e9b4')),
         content: Text(
           L10nService().format(deletion.messageKey(isMine: isMe), {
             'date': dateStr,
           }),
-          style: SLTheme.quicksand(height: 1.4),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(
-              context.tr('home_hiu_93c4c0'),
-              style: SLTheme.quicksand(),
-            ),
+            child: Text(context.tr('home_hiu_93c4c0')),
           ),
           if (isMe && deletion.canCancel)
-            ElevatedButton(
+            SLDialogAction(
+              primary: true,
+
               onPressed: () async {
                 Navigator.of(ctx).pop();
                 try {
@@ -118,14 +110,8 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
                   );
                 }
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: SLColors.primaryActive,
-                foregroundColor: Colors.white,
-              ),
-              child: Text(
-                context.tr('home_hontcngay_811434'),
-                style: SLTheme.quicksand(fontWeight: FontWeight.bold),
-              ),
+
+              child: Text(context.tr('home_hontcngay_811434')),
             ),
         ],
       ),

@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -44,13 +46,8 @@ class _BucketListScreenState extends State<BucketListScreen>
   void _showInfoDialog(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: SLColors.paper,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          context.tr('p3_bucket_help_title'),
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-        ),
+      builder: (context) => SLAlertDialog(
+        title: Text(context.tr('p3_bucket_help_title')),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,12 +70,11 @@ class _BucketListScreenState extends State<BucketListScreen>
           ),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              context.tr('p3_understood'),
-              style: const TextStyle(color: SLColors.primary),
-            ),
+            child: Text(context.tr('p3_understood')),
           ),
         ],
       ),
@@ -168,7 +164,7 @@ class _BucketListScreenState extends State<BucketListScreen>
       if (currentMap.length >= 50) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text(context.tr('p3_bucket_limit_reached')),
             backgroundColor: SLColors.danger,
           ),
@@ -210,22 +206,23 @@ class _BucketListScreenState extends State<BucketListScreen>
   void _deleteItem(String key) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: SLColors.paper,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      builder: (ctx) => SLAlertDialog(
         title: Text(context.tr('p3_bucket_delete_title')),
         content: Text(context.tr('p3_bucket_delete_message')),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
             child: Text(context.tr('p3_cancel')),
           ),
-          TextButton(
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () {
               Navigator.pop(ctx);
               _doDeleteItem(key);
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+
             child: Text(context.tr('p3_delete')),
           ),
         ],

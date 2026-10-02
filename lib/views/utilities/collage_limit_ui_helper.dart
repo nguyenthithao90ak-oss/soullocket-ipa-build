@@ -1,5 +1,6 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/collage_limit_service.dart';
 
 class CollageLimitUiHelper {
@@ -9,30 +10,21 @@ class CollageLimitUiHelper {
         if (!context.mounted) return false;
         return await showDialog<bool>(
               context: context,
-              builder: (context) => AlertDialog(
-                shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
-                title: Text('Hết lượt tạo ảnh',
-                    style: SLTheme.quicksand(
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFFD81B60))),
+              builder: (context) => SLAlertDialog(
+                title: const Text('Hết lượt tạo ảnh'),
                 content: Text(
                   'Bạn đã hết lượt tạo ảnh hôm nay ($currentLimit lượt).\nHãy xem 1 quảng cáo để nhận thêm $dailyLimit lượt tạo ảnh nữa nhé!',
-                  style: SLTheme.quicksand(fontWeight: FontWeight.w600),
                 ),
                 actions: [
-                  TextButton(
+                  SLDialogAction(
                     onPressed: () => Navigator.pop(context, false),
-                    child: Text('Hủy',
-                        style: SLTheme.quicksand(
-                            color: Colors.grey, fontWeight: FontWeight.bold)),
+                    child: const Text('Hủy'),
                   ),
-                  FilledButton.icon(
+                  SLDialogAction.icon(
+                    primary: true,
                     onPressed: () => Navigator.pop(context, true),
                     icon: const Icon(Icons.play_circle_fill),
-                    label: Text('Nhận $dailyLimit lượt',
-                        style: SLTheme.quicksand(fontWeight: FontWeight.bold)),
-                    style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFD81B60)),
+                    label: Text('Nhận $dailyLimit lượt'),
                   ),
                 ],
               ),
@@ -42,9 +34,9 @@ class CollageLimitUiHelper {
       onShowMessage: (message, {bool isError = false}) {
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text(message,
-                style: SLTheme.quicksand(fontWeight: FontWeight.w800)),
+                ),
             behavior: SnackBarBehavior.floating,
             backgroundColor: isError ? null : const Color(0xFFD81B60),
           ),

@@ -551,7 +551,7 @@ extension _MapLocationLogicExt on _MapScreenState {
 
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
-      SnackBar(
+      SLSnackBar(
         content: Text(body),
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 4),

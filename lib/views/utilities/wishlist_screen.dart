@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -32,12 +34,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
   void _showInfoDialog(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          'Danh sách Ước nguyện',
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-        ),
+      builder: (context) => SLAlertDialog(
+        title: Text('Danh sách Ước nguyện'),
         content: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,21 +44,26 @@ class _WishlistScreenState extends State<WishlistScreen> {
               Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
               Text(
-                  '- Lưu lại những món quà hoặc những nơi bạn muốn đi để người ấy biết.\n- Tạo bất ngờ bằng cách âm thầm đánh dấu "Đã mua tặng".'),
+                '- Lưu lại những món quà hoặc những nơi bạn muốn đi để người ấy biết.\n- Tạo bất ngờ bằng cách âm thầm đánh dấu "Đã mua tặng".',
+              ),
               SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                'Cách sử dụng:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               SizedBox(height: 4),
               Text(
-                  '- Bấm Thêm điều ước, nhập tên món quà, đính kèm hình ảnh và link mua hàng.\n- Nửa kia có thể vào xem và bấm nút Thực hiện điều ước để tặng bạn một sự bất ngờ.'),
+                '- Bấm Thêm điều ước, nhập tên món quà, đính kèm hình ảnh và link mua hàng.\n- Nửa kia có thể vào xem và bấm nút Thực hiện điều ước để tặng bạn một sự bất ngờ.',
+              ),
             ],
           ),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu',
-                style: TextStyle(color: SLColors.primary)),
+            child: const Text('Đã hiểu'),
           ),
         ],
       ),
@@ -144,8 +147,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
     if (text.isEmpty) return;
 
     if (_data != null && _data!.length >= 50) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text(
+      ScaffoldMessenger.of(context).showSnackBar(SLSnackBar(
+        content: const Text(
             'Danh sách điều ước đã đạt giới hạn (tối đa 50 mục). Vui lòng xoá bớt trước khi thêm mới.'),
         backgroundColor: SLColors.danger,
       ));
@@ -187,18 +190,23 @@ class _WishlistScreenState extends State<WishlistScreen> {
   void _deleteWish(String key) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => SLAlertDialog(
         title: const Text('Xoá điều ước'),
         content: const Text('Bạn có chắc chắn muốn xoá điều ước này?'),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
-          TextButton(
+          SLDialogAction(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Huỷ'),
+          ),
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () {
               Navigator.pop(ctx);
               _dbRef.child('houses/${widget.houseId}/wishlist/$key').remove();
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+
             child: const Text('Xoá'),
           ),
         ],

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -716,20 +717,10 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             ),
           ),
           child: StatefulBuilder(
-            builder: (ctx, setLocalState) => AlertDialog(
+            builder: (ctx, setLocalState) => SLAlertDialog(
               scrollable: true,
-              backgroundColor: _vaultBg,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: const BorderSide(color: _vaultBorder, width: 1),
-              ),
-              title: Text(
-                context.tr('util_thmghichty_5651be'),
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w800,
-                  color: _vaultTextPrimary,
-                ),
-              ),
+
+              title: Text(context.tr('util_thmghichty_5651be')),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -788,7 +779,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                           child: Text(
                             context.tr('util_khnghilitr_e3bf9f'),
                             style: SLTheme.quicksand(
-                              color: _vaultTextSecondary,
+                              color: SLDialogStyle.secondary,
                               fontSize: 13,
                             ),
                           ),
@@ -799,7 +790,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                 ],
               ),
               actions: [
-                TextButton(
+                SLDialogAction(
                   onPressed: () {
                     if (dontAskAgain) {
                       prefs.setInt(
@@ -810,12 +801,11 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     }
                     Navigator.pop(ctx, '');
                   },
-                  child: Text(
-                    context.tr('util_bqua_874b71'),
-                    style: SLTheme.quicksand(color: _vaultTextHint),
-                  ),
+                  child: Text(context.tr('util_bqua_874b71')),
                 ),
-                TextButton(
+                SLDialogAction(
+                  primary: true,
+
                   onPressed: () {
                     if (dontAskAgain) {
                       prefs.setInt(
@@ -826,13 +816,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     }
                     Navigator.pop(ctx, captionCtrl.text.trim());
                   },
-                  child: Text(
-                    context.tr('util_thm_56ef2c'),
-                    style: SLTheme.quicksand(
-                      color: _vaultAccent,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
+                  child: Text(context.tr('util_thm_56ef2c')),
                 ),
               ],
             ),
@@ -1012,25 +996,17 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           ),
         ),
         child: StatefulBuilder(
-          builder: (ctx, setLocalState) => AlertDialog(
-            backgroundColor: _vaultBg,
+          builder: (ctx, setLocalState) => SLAlertDialog(
             insetPadding: const EdgeInsets.symmetric(
               horizontal: 24,
               vertical: 16,
             ),
             scrollable: true,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: const BorderSide(color: _vaultBorder, width: 1),
-            ),
+
             title: Text(
               hasSetup
                   ? context.tr('util_mkhakhomt_421171')
                   : context.tr('util_thitlpkhom_792656'),
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w800,
-                color: _vaultTextPrimary,
-              ),
             ),
             content: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
@@ -1043,7 +1019,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     hasSetup
                         ? context.tr('util_nhpmtkhukh_e4639a')
                         : context.tr('util_tomtkhukho_e3de4f'),
-                    style: SLTheme.quicksand(color: _vaultTextSecondary),
+                    style: SLTheme.quicksand(color: SLDialogStyle.secondary),
                   ),
                   const SizedBox(height: 16),
                   TextField(
@@ -1135,21 +1111,17 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             ),
             actions: [
               if (hasSetup)
-                TextButton(
+                SLDialogAction(
                   onPressed: () => Navigator.pop(ctx, _recoveryAction),
-                  child: Text(
-                    context.tr('util_dngmkhiphc_698038'),
-                    style: SLTheme.quicksand(color: _vaultAccent),
-                  ),
+                  child: Text(context.tr('util_dngmkhiphc_698038')),
                 ),
-              TextButton(
+              SLDialogAction(
                 onPressed: () => Navigator.pop(ctx),
-                child: Text(
-                  context.tr('util_ng_aecc61'),
-                  style: SLTheme.quicksand(color: _vaultTextHint),
-                ),
+                child: Text(context.tr('util_ng_aecc61')),
               ),
-              TextButton(
+              SLDialogAction(
+                primary: true,
+
                 onPressed: () {
                   final passphrase = passphraseCtrl.text.trim();
                   final confirm = confirmCtrl.text.trim();
@@ -1173,10 +1145,6 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   hasSetup
                       ? context.tr('util_mkha_e16936')
                       : context.tr('util_thitlp_486746'),
-                  style: SLTheme.quicksand(
-                    color: _vaultAccent,
-                    fontWeight: FontWeight.w800,
-                  ),
                 ),
               ),
             ],
@@ -1212,19 +1180,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             ),
           ),
         ),
-        child: AlertDialog(
-          backgroundColor: _vaultBg,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: _vaultBorder, width: 1),
-          ),
-          title: Text(
-            context.tr('util_nhpmkhiphc_44a271'),
-            style: SLTheme.quicksand(
-              fontWeight: FontWeight.w800,
-              color: _vaultTextPrimary,
-            ),
-          ),
+        child: SLAlertDialog(
+          title: Text(context.tr('util_nhpmkhiphc_44a271')),
           content: TextField(
             controller: controller,
             textCapitalization: TextCapitalization.characters,
@@ -1245,22 +1202,15 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             ),
           ),
           actions: [
-            TextButton(
+            SLDialogAction(
               onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                context.tr('util_ng_f63d1e'),
-                style: SLTheme.quicksand(color: _vaultTextHint),
-              ),
+              child: Text(context.tr('util_ng_f63d1e')),
             ),
-            TextButton(
+            SLDialogAction(
+              primary: true,
+
               onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-              child: Text(
-                context.tr('util_mkho_68a790'),
-                style: SLTheme.quicksand(
-                  color: _vaultAccent,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
+              child: Text(context.tr('util_mkho_68a790')),
             ),
           ],
         ),
@@ -1277,24 +1227,16 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: _vaultBg,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: _vaultBorder, width: 1),
-        ),
-        title: Text(
-          title,
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.w800,
-            color: _vaultTextPrimary,
-          ),
-        ),
+      builder: (ctx) => SLAlertDialog(
+        title: Text(title),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(message, style: SLTheme.quicksand(color: _vaultTextSecondary)),
+            Text(
+              message,
+              style: SLTheme.quicksand(color: SLDialogStyle.secondary),
+            ),
             const SizedBox(height: 16),
             Container(
               width: double.infinity,
@@ -1318,26 +1260,19 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           ],
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: recoveryCode));
               if (!mounted) return;
               SLToast.success(context, context.tr('util_saochpmkhi_b1f0e5'));
             },
-            child: Text(
-              context.tr('util_saochp_cbfba9'),
-              style: SLTheme.quicksand(color: _vaultTextSecondary),
-            ),
+            child: Text(context.tr('util_saochp_cbfba9')),
           ),
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              context.tr('util_tilu_7a1601'),
-              style: SLTheme.quicksand(
-                color: _vaultAccent,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
+            child: Text(context.tr('util_tilu_7a1601')),
           ),
         ],
       ),
@@ -1634,24 +1569,14 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           ),
         ),
         child: StatefulBuilder(
-          builder: (ctx, setLocalState) => AlertDialog(
-            backgroundColor: _vaultBg,
+          builder: (ctx, setLocalState) => SLAlertDialog(
             insetPadding: const EdgeInsets.symmetric(
               horizontal: 24,
               vertical: 16,
             ),
             scrollable: true,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: const BorderSide(color: _vaultBorder, width: 1),
-            ),
-            title: Text(
-              context.tr('util_imtkhu_ff6fe7'),
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w800,
-                color: _vaultTextPrimary,
-              ),
-            ),
+
+            title: Text(context.tr('util_imtkhu_ff6fe7')),
             content: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Column(
@@ -1756,14 +1681,13 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
               ),
             ),
             actions: [
-              TextButton(
+              SLDialogAction(
                 onPressed: () => Navigator.pop(ctx),
-                child: Text(
-                  context.tr('util_hy_1e4050'),
-                  style: SLTheme.quicksand(color: _vaultTextHint),
-                ),
+                child: Text(context.tr('util_hy_1e4050')),
               ),
-              TextButton(
+              SLDialogAction(
+                primary: true,
+
                 onPressed: () async {
                   final oldPass = oldPassCtrl.text.trim();
                   final newPass = newPassCtrl.text.trim();
@@ -1825,13 +1749,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     }
                   }
                 },
-                child: Text(
-                  context.tr('util_imtkhu_82844c'),
-                  style: SLTheme.quicksand(
-                    color: _vaultAccent,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+                child: Text(context.tr('util_imtkhu_82844c')),
               ),
             ],
           ),
@@ -1843,20 +1761,11 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
   void _showVaultResetInfoDialog(bool isWithin12Hours) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: _vaultBg,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: _vaultBorder, width: 1),
-        ),
+      builder: (ctx) => SLAlertDialog(
         title: Text(
           _hasPendingReset
               ? context.tr('util_yucureseta_74986f')
               : context.tr('util_resetkhonh_c48d2d'),
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.bold,
-            color: _hasPendingReset ? SLColors.warning : _vaultAccent,
-          ),
         ),
         content: Text(
           _hasPendingReset
@@ -1867,17 +1776,15 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   'after': context.tr('util_trongthigi_6645aa'),
                 })
               : '${context.tr('util_resetkhonh_d0b294')}${context.tr('util_bnphixcnhn_b3fe0e')}${isWithin12Hours ? '\n\nDù bạn vừa đ�i mật khẩu gần đây, hệ thống vẫn áp dụng thời gian chờ đủ 1 ngày trước khi xoá dữ liệu.' : ''}',
-          style: SLTheme.quicksand(color: _vaultTextSecondary, height: 1.45),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              context.tr('util_hu_9daba0'),
-              style: SLTheme.quicksand(color: _vaultTextHint),
-            ),
+            child: Text(context.tr('util_hu_9daba0')),
           ),
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () {
               Navigator.pop(ctx);
               if (_hasPendingReset) {
@@ -1890,10 +1797,6 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
               _hasPendingReset
                   ? context.tr('util_thuhiyucu_cc5144')
                   : context.tr('util_xcnhnquaem_645252'),
-              style: SLTheme.quicksand(
-                color: _hasPendingReset ? SLColors.warning : _vaultAccent,
-                fontWeight: FontWeight.bold,
-              ),
             ),
           ),
         ],
@@ -1905,34 +1808,22 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
   void _showForgotPassphraseDialog(bool isWithin12Hours) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: _vaultBg,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: _vaultBorder, width: 1),
-        ),
-        title: Text(
-          context.tr('util_khiphckhom_4fc524'),
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.bold,
-            color: _vaultAccent,
-          ),
-        ),
+      builder: (ctx) => SLAlertDialog(
+        title: Text(context.tr('util_khiphckhom_4fc524')),
         content: Text(
           isWithin12Hours
               ? context.tr('util_vbnthitlpm_b25608')
               : L10nService().translate('vault_reset_warning'),
-          style: SLTheme.quicksand(color: _vaultTextSecondary),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              context.tr('util_hy_1e4050'),
-              style: SLTheme.quicksand(color: _vaultTextHint),
-            ),
+            child: Text(context.tr('util_hy_1e4050')),
           ),
-          TextButton(
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () async {
               Navigator.pop(ctx);
               _safeSetState(() {
@@ -1982,10 +1873,6 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
               isWithin12Hours
                   ? context.tr('util_tiptc_555f1f')
                   : context.tr('util_xavtoli_90b1ee'),
-              style: SLTheme.quicksand(
-                color: SLColors.danger,
-                fontWeight: FontWeight.bold,
-              ),
             ),
           ),
         ],

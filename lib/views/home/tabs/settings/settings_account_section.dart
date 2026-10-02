@@ -122,14 +122,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               Navigator.of(dialogContext).pop(normalized);
             }
 
-            return AlertDialog(
-              title: Text(
-                title,
-                style: SLTextStyles.quicksand(
-                  fontWeight: FontWeight.w900,
-                  color: _settingsAccountAccentColor,
-                ),
-              ),
+            return SLAlertDialog(
+              title: Text(title),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,20 +166,19 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 ],
               ),
               actions: [
-                TextButton(
+                SLDialogAction(
                   onPressed: () => Navigator.of(dialogContext).pop(),
                   child: Text(context.tr('home_hy_db69db')),
                 ),
-                TextButton(
+                SLDialogAction(
                   onPressed: pickCalendar,
                   child: Text(context.tr('home_chnlch_fdb0dc')),
                 ),
-                ElevatedButton(
+                SLDialogAction(
+                  primary: true,
+
                   onPressed: submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _settingsAccountAccentColor,
-                    foregroundColor: Colors.white,
-                  ),
+
                   child: Text(context.tr('save')),
                 ),
               ],
@@ -1455,12 +1448,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               showDialog(
                 context: dialogContext,
                 builder: (context) {
-                  return AlertDialog(
-                    backgroundColor: Colors.white,
-                    surfaceTintColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
+                  return SLAlertDialog(
                     title: Row(
                       children: [
                         const Icon(
@@ -1469,56 +1457,28 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                           size: 28,
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          context.tr('p6_house_id_confirm_title'),
-                          style: SLTextStyles.quicksand(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF2C1B22),
-                          ),
-                        ),
+                        Text(context.tr('p6_house_id_confirm_title')),
                       ],
                     ),
                     content: Text(
                       context
                           .tr('p6_house_id_confirm_body')
                           .replaceAll('{houseId}', customId),
-                      style: SLTextStyles.quicksand(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF5C4F56),
-                        height: 1.4,
-                      ),
                     ),
                     actions: [
-                      TextButton(
+                      SLDialogAction(
                         onPressed: () => Navigator.of(context).pop(),
-                        child: Text(
-                          context.tr('cancel'),
-                          style: SLTextStyles.quicksand(
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF8C7381),
-                          ),
-                        ),
+                        child: Text(context.tr('cancel')),
                       ),
-                      ElevatedButton(
+                      SLDialogAction(
+                        primary: true,
+
                         onPressed: () {
                           Navigator.of(context).pop();
                           submitChange();
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFD81B60),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          context.tr('p6_house_id_change_now'),
-                          style: SLTextStyles.quicksand(
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
+
+                        child: Text(context.tr('p6_house_id_change_now')),
                       ),
                     ],
                   );

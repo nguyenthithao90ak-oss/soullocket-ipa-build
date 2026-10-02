@@ -4,6 +4,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../../../core/sl_theme.dart';
 import 'package:soullocket_app/widgets/consent_ad_view.dart';
 import '../../../../utils/services/utility_service.dart';
+import '../../widgets/companion/home_companion_journey_card.dart';
 import 'utilities_hub_item.dart';
 import 'utilities_hub_shortcuts.dart';
 
@@ -20,6 +21,7 @@ class UtilitiesHubGrid extends StatelessWidget {
     required this.onAppTap,
     required this.onReorder,
     required this.onEditModeChanged,
+    this.showCompanionJourney = false,
   });
 
   final List<UtilityApp> apps;
@@ -32,6 +34,7 @@ class UtilitiesHubGrid extends StatelessWidget {
   final ValueChanged<String> onAppTap;
   final void Function(String fromId, String toId) onReorder;
   final ValueChanged<bool> onEditModeChanged;
+  final bool showCompanionJourney;
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +61,13 @@ class UtilitiesHubGrid extends StatelessWidget {
         return CustomScrollView(
           physics: SLResponsive.scrollPhysicsForPlatform(),
           slivers: [
+            if (showCompanionJourney)
+              SliverPadding(
+                padding: EdgeInsets.symmetric(horizontal: horizontalInset),
+                sliver: const SliverToBoxAdapter(
+                  child: HomeCompanionJourneyCard(),
+                ),
+              ),
             if (pinnedApps.isNotEmpty || recentApps.isNotEmpty)
               SliverPadding(
                 padding: EdgeInsets.fromLTRB(

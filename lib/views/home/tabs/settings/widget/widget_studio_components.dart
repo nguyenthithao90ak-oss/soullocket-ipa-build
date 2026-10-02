@@ -476,7 +476,9 @@ class WidgetStudioThemePicker extends StatelessWidget {
           children: options
               .map((option) {
                 final selected = option.id == selectedId;
-                final isLight = option.id == 'white';
+                final isLight =
+                    ThemeData.estimateBrightnessForColor(option.colors.first) ==
+                    Brightness.light;
                 return SizedBox(
                   width: itemWidth,
                   child: Semantics(
@@ -501,7 +503,7 @@ class WidgetStudioThemePicker extends StatelessWidget {
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: selected
-                                  ? option.colors.last.withValues(alpha: 0.9)
+                                  ? const Color(0xFFD65D84)
                                   : const Color(0xFFE9E2E5),
                               width: selected ? 1.7 : 1,
                             ),
@@ -551,10 +553,10 @@ class WidgetStudioThemePicker extends StatelessWidget {
                                               color: Colors.white,
                                               shape: BoxShape.circle,
                                             ),
-                                            child: Icon(
+                                            child: const Icon(
                                               Icons.check_rounded,
                                               size: 14,
-                                              color: option.colors.last,
+                                              color: Color(0xFFD65D84),
                                             ),
                                           ),
                                         ),

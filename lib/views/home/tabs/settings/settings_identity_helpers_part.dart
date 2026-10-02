@@ -111,6 +111,10 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
             prefs.getString('il_widget_heart_style') ??
             _defaultWidgetHeartStyleKey,
       );
+      _widgetStickerKey = WidgetAppearance.normalizeSticker(
+        prefs.getString('il_widget_sticker_$accountKey') ?? prefs.getString('il_widget_sticker'));
+      _widgetPhotoFrameKey = WidgetAppearance.normalizePhotoFrame(
+        prefs.getString('il_widget_photo_frame_$accountKey') ?? prefs.getString('il_widget_photo_frame'));
       _widgetHeartColorKey =
           prefs.getString('il_widget_heart_color_$accountKey') ??
           prefs.getString('il_widget_heart_color') ??

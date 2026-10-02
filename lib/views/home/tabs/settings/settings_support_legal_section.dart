@@ -202,11 +202,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
     try {
       confirm = await showDialog<bool>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          backgroundColor: Colors.white,
+        builder: (ctx) => SLAlertDialog(
           title: Row(
             children: [
               Container(
@@ -223,51 +219,21 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
                 ),
               ),
               const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  context.tr('logout_confirm_btn'),
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w900,
-                    color: logoutAccent,
-                  ),
-                ),
-              ),
+              Expanded(child: Text(context.tr('logout_confirm_btn'))),
             ],
           ),
-          content: Text(
-            context.tr('confirm_logout'),
-            style: SLTheme.quicksand(
-              fontWeight: FontWeight.w700,
-              fontSize: 15,
-              color: Colors.black87,
-            ),
-          ),
+          content: Text(context.tr('confirm_logout')),
           actions: [
-            TextButton(
+            SLDialogAction(
               onPressed: () => Navigator.pop(ctx, false),
-              child: Text(
-                context.tr('cancel'),
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade600,
-                ),
-              ),
+              child: Text(context.tr('cancel')),
             ),
-            ElevatedButton(
+            SLDialogAction(
+              primary: true,
+
               onPressed: () => Navigator.pop(ctx, true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: logoutAccent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                context.tr('logout'),
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
+
+              child: Text(context.tr('logout')),
             ),
           ],
         ),
@@ -340,15 +306,17 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
     try {
       final confirmed = await showDialog<bool>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
+        builder: (dialogContext) => SLAlertDialog(
           title: Text(context.tr('account_deletion_approve')),
           content: Text(context.tr('account_deletion_approve_warning')),
           actions: [
-            TextButton(
+            SLDialogAction(
               onPressed: () => Navigator.pop(dialogContext, false),
               child: Text(context.tr('cancel')),
             ),
-            TextButton(
+            SLDialogAction(
+              primary: true,
+
               onPressed: () => Navigator.pop(dialogContext, true),
               child: Text(context.tr('account_deletion_approve')),
             ),
@@ -447,11 +415,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
     try {
       confirm = await showDialog<bool>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          backgroundColor: Colors.white,
+        builder: (ctx) => SLAlertDialog(
           scrollable: true,
           title: Row(
             children: [
@@ -461,16 +425,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
                 size: 32,
               ),
               const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  context.tr('home_giyucuxati_78b195'),
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w900,
-                    color: Colors.red.shade700,
-                    fontSize: 18,
-                  ),
-                ),
-              ),
+              Expanded(child: Text(context.tr('home_giyucuxati_78b195'))),
             ],
           ),
           content: Column(
@@ -505,31 +460,17 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
             ],
           ),
           actions: [
-            TextButton(
+            SLDialogAction(
               onPressed: () => Navigator.pop(ctx, false),
-              child: Text(
-                context.tr('cancel'),
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade600,
-                ),
-              ),
+              child: Text(context.tr('cancel')),
             ),
-            ElevatedButton(
+            SLDialogAction(
+              primary: true,
+              destructive: true,
+
               onPressed: () => Navigator.pop(ctx, true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade600,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                context.tr('home_giyucuxa_d2e564'),
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
+
+              child: Text(context.tr('home_giyucuxa_d2e564')),
             ),
           ],
         ),
@@ -551,11 +492,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
       try {
         finalConfirm = await showDialog<bool>(
           context: context,
-          builder: (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            backgroundColor: Colors.red.shade50,
+          builder: (ctx) => SLAlertDialog(
             title: Row(
               children: [
                 const Icon(
@@ -564,52 +501,22 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
                   size: 32,
                 ),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    context.tr('home_xcnhnlncui_cc8537'),
-                    style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w900,
-                      color: Colors.red.shade900,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
+                Expanded(child: Text(context.tr('home_xcnhnlncui_cc8537'))),
               ],
             ),
-            content: Text(
-              context.tr('home_saukhixcnh_25a02e'),
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w800,
-                fontSize: 15,
-                color: Colors.red.shade900,
-              ),
-            ),
+            content: Text(context.tr('home_saukhixcnh_25a02e')),
             actions: [
-              TextButton(
+              SLDialogAction(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: Text(
-                  context.tr('cancel'),
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red.shade400,
-                  ),
-                ),
+                child: Text(context.tr('cancel')),
               ),
-              ElevatedButton(
+              SLDialogAction(
+                primary: true,
+                destructive: true,
+
                 onPressed: () => Navigator.pop(ctx, true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red.shade800,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  context.tr('home_xcnhngiyuc_81446c'),
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+
+                child: Text(context.tr('home_xcnhngiyuc_81446c')),
               ),
             ],
           ),

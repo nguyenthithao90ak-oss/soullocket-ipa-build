@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 import 'dart:async';
 import 'dart:io';

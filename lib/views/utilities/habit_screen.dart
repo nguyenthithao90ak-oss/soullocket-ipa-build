@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -81,7 +83,7 @@ class _HabitScreenState extends State<HabitScreen> {
       if (habitMap.length >= 25) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text(context.tr('p3_habit_limit_reached')),
             backgroundColor: SLColors.danger,
           ),
@@ -133,17 +135,18 @@ class _HabitScreenState extends State<HabitScreen> {
   void _deleteHabit(String key) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: SLColors.paper,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      builder: (ctx) => SLAlertDialog(
         title: Text(context.tr('p3_habit_delete_title')),
         content: Text(context.tr('p3_habit_delete_message')),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
             child: Text(context.tr('p3_cancel')),
           ),
-          TextButton(
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () {
               Navigator.pop(ctx);
               final path = 'houses/${widget.houseId}/habits/$key';
@@ -152,7 +155,7 @@ class _HabitScreenState extends State<HabitScreen> {
               }
               _dbRef.child(path).remove();
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+
             child: Text(context.tr('p3_delete')),
           ),
         ],
@@ -220,18 +223,13 @@ class _HabitScreenState extends State<HabitScreen> {
   void _showHabitInfo() {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          context.tr('util_theodithiq_5cf852'),
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-        ),
-        content: Text(
-          context.tr('util_habit_help_body'),
-          style: SLTheme.quicksand(height: 1.45),
-        ),
+      builder: (context) => SLAlertDialog(
+        title: Text(context.tr('util_theodithiq_5cf852')),
+        content: Text(context.tr('util_habit_help_body')),
         actions: [
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(context),
             child: Text(context.tr('util_hiu_93c4c0')),
           ),

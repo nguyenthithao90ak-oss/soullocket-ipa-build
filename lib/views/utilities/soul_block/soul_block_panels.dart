@@ -1232,13 +1232,27 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                     Flexible(
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
-                        child: Text(
-                          _floatingText ?? '',
-                          style: SLTheme.quicksand(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            color: _floatingTextColor,
-                          ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _floatingText ?? '',
+                              style: SLTheme.quicksand(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: _floatingTextColor,
+                              ),
+                            ),
+                            if (_floatingScoreText != null)
+                              Text(
+                                _floatingScoreText!,
+                                style: SLTheme.quicksand(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                  color: _kSoulIvory,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ),

@@ -94,17 +94,8 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
           final isBusy = isSending || isVerifying;
           final canConfirm = !isBusy && sendError == null;
 
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: Text(
-              title,
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFFD81B60),
-              ),
-            ),
+          return SLAlertDialog(
+            title: Text(title),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -166,34 +157,18 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
               ],
             ),
             actions: [
-              TextButton(
+              SLDialogAction(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: Text(
-                  context.tr('home_hy_1e4050'),
-                  style: SLTheme.quicksand(
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: Text(context.tr('home_hy_1e4050')),
               ),
               if (sendError != null || verifyError != null)
-                TextButton(
+                SLDialogAction(
                   onPressed: () => startSend(ctx, setDialogState),
-                  child: Text(
-                    context.tr('home_gili_11a40e'),
-                    style: SLTheme.quicksand(
-                      color: const Color(0xFFD81B60),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: Text(context.tr('home_gili_11a40e')),
                 ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  disabledBackgroundColor: Colors.grey.shade300,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+              SLDialogAction(
+                primary: true,
+
                 onPressed: canConfirm
                     ? () async {
                         final verifyTimeoutMsg = context.tr(
@@ -205,7 +180,7 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
                         final otp = otpCtrl.text.trim();
                         if (otp.length != 6) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(invalidOtpMsg)),
+                            SLSnackBar(content: Text(invalidOtpMsg)),
                           );
                           return;
                         }
@@ -237,10 +212,6 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
                       : isVerifying
                       ? context.tr('home_angkimtra_92e8dd')
                       : context.tr('home_xcnhn_1e2eb2'),
-                  style: SLTheme.quicksand(
-                    color: canConfirm ? Colors.white : Colors.black54,
-                    fontWeight: FontWeight.bold,
-                  ),
                 ),
               ),
             ],
@@ -316,17 +287,8 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
           final isBusy = isSending || isVerifying;
           final canConfirm = !isBusy && sendError == null;
 
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: Text(
-              context.tr('home_tlimtkhubn_b840ab'),
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFFD81B60),
-              ),
-            ),
+          return SLAlertDialog(
+            title: Text(context.tr('home_tlimtkhubn_b840ab')),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -419,34 +381,18 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
               ),
             ),
             actions: [
-              TextButton(
+              SLDialogAction(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: Text(
-                  context.tr('home_hy_1e4050'),
-                  style: SLTheme.quicksand(
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: Text(context.tr('home_hy_1e4050')),
               ),
               if (sendError != null || verifyError != null)
-                TextButton(
+                SLDialogAction(
                   onPressed: () => startSend(ctx, setDialogState),
-                  child: Text(
-                    context.tr('home_gili_11a40e'),
-                    style: SLTheme.quicksand(
-                      color: const Color(0xFFD81B60),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: Text(context.tr('home_gili_11a40e')),
                 ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  disabledBackgroundColor: Colors.grey.shade300,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+              SLDialogAction(
+                primary: true,
+
                 onPressed: canConfirm
                     ? () async {
                         final invalidOtpMsg = context.tr(
@@ -462,13 +408,13 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                         final newPassword = newPasswordCtrl.text;
                         if (otp.length != 6) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(invalidOtpMsg)),
+                            SLSnackBar(content: Text(invalidOtpMsg)),
                           );
                           return;
                         }
                         if (newPassword.length < 6) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(invalidPasswordMsg)),
+                            SLSnackBar(content: Text(invalidPasswordMsg)),
                           );
                           return;
                         }
@@ -500,10 +446,6 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                       : isVerifying
                       ? context.tr('home_angkimtra_92e8dd')
                       : context.tr('home_imtkhu_ff6fe7'),
-                  style: SLTheme.quicksand(
-                    color: canConfirm ? Colors.white : Colors.black54,
-                    fontWeight: FontWeight.bold,
-                  ),
                 ),
               ),
             ],

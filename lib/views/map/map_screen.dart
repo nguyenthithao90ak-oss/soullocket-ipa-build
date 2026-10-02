@@ -1,4 +1,5 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
@@ -644,7 +645,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     if (!mounted) return;
     if (!opened) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('map_refresh_settings_unavailable'))),
+        SLSnackBar(content: Text(context.tr('map_refresh_settings_unavailable'))),
       );
     }
   }
@@ -664,7 +665,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       if (!mounted) return;
       if (!opened) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text(context.tr('map_refresh_settings_unavailable')),
           ),
         );
@@ -1426,7 +1427,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       messenger
         ?..hideCurrentSnackBar()
         ..showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text(context.tr('map_bncthghimv_4c0adc')),
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 3),
@@ -1453,7 +1454,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     if (!mounted) return;
     final messenger = ScaffoldMessenger.maybeOf(context);
     messenger?.showSnackBar(
-      SnackBar(
+      SLSnackBar(
         content: Text(context.tr('map_anglychia_d19a1e')),
         duration: const Duration(seconds: 1),
       ),

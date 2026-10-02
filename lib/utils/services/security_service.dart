@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
+import 'l10n_service.dart';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -638,12 +640,7 @@ class SecurityService {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-        contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      builder: (context) => SLAlertDialog(
         title: Row(
           children: [
             Container(
@@ -659,17 +656,7 @@ class SecurityService {
               ),
             ),
             SLSpacing.w12,
-            const Expanded(
-              child: Text(
-                'PHÁT HIỆN RỦI RO',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: SLColors.textPrimary,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
+            const Expanded(child: Text('PHÁT HIỆN RỦI RO')),
           ],
         ),
         content: Column(
@@ -686,9 +673,10 @@ class SecurityService {
               ),
             ),
             SLSpacing.h24,
-            SLTheme.primaryButton(
-              text: 'ĐÃ HIỂU',
+            SLDialogAction(
+              primary: true,
               onPressed: () => Navigator.pop(context),
+              child: Text(L10nService().translate('toast_ok')),
             ),
           ],
         ),

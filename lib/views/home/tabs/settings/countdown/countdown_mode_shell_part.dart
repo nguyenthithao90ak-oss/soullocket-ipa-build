@@ -770,7 +770,7 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
 
   void _showHint(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+      SLSnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 

@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
@@ -135,7 +136,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
       if (!mounted) return;
       setState(() => _isMaintenanceMode = value);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(
             value
                 ? context.tr('admin_btchbotrto_981636')
@@ -150,7 +151,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
       ).message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(context.tr('admin_chathcpnht_68b279')),
         ),
       );
@@ -163,7 +164,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
       if (!mounted) return;
       setState(() => _isCommunityMaintenanceMode = value);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(
             value
                 ? context.tr('admin_btbotrcngn_270bad')
@@ -178,7 +179,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
       ).message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(context.tr('admin_chathcpnht_df06b6')),
         ),
       );

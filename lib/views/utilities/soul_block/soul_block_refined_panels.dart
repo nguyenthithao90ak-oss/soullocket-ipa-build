@@ -513,9 +513,8 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
   Widget _buildRefinedComboStatus({required bool ultraCompact}) {
     final accent = _comboMisses >= 2 ? _kSoulWarm : _kSoulChrome;
     return Tooltip(
-      message: L10nService().format('soul_block_combo_grace', {
-        'misses': _comboMisses,
-      }),
+      message:
+          '${L10nService().format('soul_block_combo_grace', {'misses': _comboMisses})}\n${L10nService().translate('soul_block_combo_rules')}',
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(

@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
@@ -94,20 +96,21 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
   }
 
   void _showAdjustPointsDialog(Map<String, dynamic> user) {
-    final pointsCtrl =
-        TextEditingController(text: user['points']?.toString() ?? '0');
+    final pointsCtrl = TextEditingController(
+      text: user['points']?.toString() ?? '0',
+    );
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: SLColors.darkNavy,
-        title: Text(context.tr('admin_chnhsaimth_98fea8'),
-            style: const TextStyle(color: Colors.white)),
+      builder: (ctx) => SLAlertDialog(
+        title: Text(context.tr('admin_chnhsaimth_98fea8')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('UID: ${user['uid']}',
-                style: const TextStyle(color: Colors.grey)),
+            Text(
+              'UID: ${user['uid']}',
+              style: const TextStyle(color: Colors.grey),
+            ),
             SLSpacing.h16,
             TextField(
               controller: pointsCtrl,
@@ -125,14 +128,13 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
           ],
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(context.tr('admin_hy_1e4050'),
-                style: const TextStyle(color: Colors.grey)),
+            child: Text(context.tr('admin_hy_1e4050')),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: SLColors.brandPink),
+          SLDialogAction(
+            primary: true,
+
             onPressed: () async {
               final newPoints = int.tryParse(pointsCtrl.text.trim());
               if (newPoints != null) {
@@ -161,15 +163,14 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
                   ).message}');
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    SLSnackBar(
                       content: Text(context.tr('admin_chathcpnht_cc7c27')),
                     ),
                   );
                 }
               }
             },
-            child: Text(context.tr('admin_lu_49fac1'),
-                style: const TextStyle(color: Colors.white)),
+            child: Text(context.tr('admin_lu_49fac1')),
           ),
         ],
       ),

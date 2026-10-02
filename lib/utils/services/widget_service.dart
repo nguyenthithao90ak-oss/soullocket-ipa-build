@@ -1,3 +1,4 @@
+import '../../models/widget_appearance.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -12,6 +13,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../core/constants/app_config.dart';
 import '../../utils/app_error_mapper.dart';
+import '../calendar_widget_snapshot.dart';
 import 'storage/storage_service.dart';
 import 'package:soullocket_app/utils/flexible_date_input.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -26,6 +28,8 @@ import 'soul_event_service.dart';
 import 'package:soullocket_app/models/soul_event.dart';
 
 class WidgetService {
+  static bool get supportsAndroidWidgets => !kIsWeb && Platform.isAndroid;
+
   static const String appGroupId = AppConfig.iOSAppGroupId;
   static const String iOSWidgetName = 'WidgetCoupleProvider';
   static const String androidWidgetName = 'WidgetCoupleProvider';
@@ -45,23 +49,6 @@ class WidgetService {
       'com.soullocket.app.WidgetSleepProvider';
   static const String defaultWidgetStyleKey = 'classic';
   static const String defaultHeartStyleKey = '❤️';
-  static const Set<String> _supportedHeartStyleKeys = <String>{
-    '🤍',
-    '🤎',
-    '♥️',
-    '❣️',
-    '❤️',
-    '💞',
-    '🖤',
-    '💟',
-    '❤️‍🔥',
-    '🩷',
-    '🩶',
-    '🩵',
-    '💘',
-    '❤️‍🩹',
-    '💓',
-  };
   static const Set<String> _supportedWidgetStyleKeys = <String>{
     defaultWidgetStyleKey,
     'countdown',
@@ -214,7 +201,7 @@ class WidgetService {
     required bool showDiaryOnWidget,
     required bool heartAnimated,
   }) {
-    return (showDiaryOnWidget: showDiaryOnWidget, heartAnimated: true);
+    return (showDiaryOnWidget: showDiaryOnWidget, heartAnimated: heartAnimated);
   }
 
   static String normalizeWidgetStyleKey(String? value) {
@@ -307,6 +294,8 @@ class WidgetService {
     // Keep widget heart fixed (no random animation) by default.
     await _saveIfMissing<bool>('heartAnimated', false);
     await _saveIfMissing<String>('heartStyleKey', defaultHeartStyleKey);
+    await _saveIfMissing<String>('widgetStickerKey', 'none');
+    await _saveIfMissing<String>('photoFrameKey', 'rounded');
     await _saveIfMissing<String>('heartColorKey', 'rose');
     await _saveIfMissing<String>('diaryLayoutKey', 'single');
     await _saveIfMissing<String>('seasonModeKey', 'auto');
@@ -329,13 +318,8 @@ class WidgetService {
     await _saveIfMissing<String>('calendar_events_text', '');
   }
 
-  static String normalizeHeartStyleKey(String? value) {
-    final trimmed = value?.trim() ?? '';
-    if (_supportedHeartStyleKeys.contains(trimmed)) {
-      return trimmed;
-    }
-    return defaultHeartStyleKey;
-  }
+  static String normalizeHeartStyleKey(String? value) =>
+      WidgetAppearance.normalizeHeart(value);
 
   static Future<void> _normalizeStoredWidgetData() async {
     final storedHeartStyleKey = await HomeWidget.getWidgetData<String>(
@@ -511,6 +495,8 @@ class WidgetService {
     String heartStyleKey = defaultHeartStyleKey,
     String heartColorKey = 'rose',
     String diaryLayoutKey = 'single',
+    String widgetStickerKey = 'none',
+    String photoFrameKey = 'rounded',
     String seasonModeKey = 'auto',
     String loveDate = '',
     String birthday1 = '',
@@ -559,6 +545,14 @@ class WidgetService {
       );
       await _saveWidgetDataIfChanged<String>('heartColorKey', heartColorKey);
       await _saveWidgetDataIfChanged<String>('diaryLayoutKey', diaryLayoutKey);
+      await _saveWidgetDataIfChanged<String>(
+        'widgetStickerKey',
+        WidgetAppearance.normalizeSticker(widgetStickerKey),
+      );
+      await _saveWidgetDataIfChanged<String>(
+        'photoFrameKey',
+        WidgetAppearance.normalizePhotoFrame(photoFrameKey),
+      );
       await _saveWidgetDataIfChanged<String>('seasonModeKey', seasonModeKey);
       await _saveWidgetDataIfChanged<String>(
         'seasonResolvedKey',
@@ -689,6 +683,8 @@ class WidgetService {
     required String heartStyleKey,
     required String heartColorKey,
     String diaryLayoutKey = 'single',
+    String widgetStickerKey = 'none',
+    String photoFrameKey = 'rounded',
     String seasonModeKey = 'auto',
     String loveDate = '',
     String birthday1 = '',
@@ -722,6 +718,14 @@ class WidgetService {
       );
       await _saveWidgetDataIfChanged<String>('heartColorKey', heartColorKey);
       await _saveWidgetDataIfChanged<String>('diaryLayoutKey', diaryLayoutKey);
+      await _saveWidgetDataIfChanged<String>(
+        'widgetStickerKey',
+        WidgetAppearance.normalizeSticker(widgetStickerKey),
+      );
+      await _saveWidgetDataIfChanged<String>(
+        'photoFrameKey',
+        WidgetAppearance.normalizePhotoFrame(photoFrameKey),
+      );
       await _saveWidgetDataIfChanged<String>('seasonModeKey', seasonModeKey);
       await _saveWidgetDataIfChanged<String>(
         'seasonResolvedKey',
@@ -1061,8 +1065,22 @@ class WidgetService {
     }
   }
 
-  static Future<void> syncCycleWidgetData({required String houseId}) async {
-    if (kIsWeb || !Platform.isAndroid) return;
+  static Future<void> syncCycleWidgetData({required String houseId}) =>
+      _syncCycleWidgetData(
+        () => HealthCycleService().getCycleSettings(houseId),
+      );
+
+  static Future<void> updateCycleWidgetData({required Object? cycleData}) =>
+      _syncCycleWidgetData(() async {
+        return cycleData is Map
+            ? CycleSettings.fromMap(Map<String, dynamic>.from(cycleData))
+            : null;
+      });
+
+  static Future<void> _syncCycleWidgetData(
+    Future<CycleSettings?> Function() loadSettings,
+  ) async {
+    if (!supportsAndroidWidgets) return;
     try {
       final hasConsent = await SharedPreferences.getInstance().then(
         (prefs) => prefs.getBool('il_health_consent') ?? false,
@@ -1076,7 +1094,7 @@ class WidgetService {
         return;
       }
 
-      final settings = await HealthCycleService().getCycleSettings(houseId);
+      final settings = await loadSettings();
       if (settings == null) {
         await _saveWidgetDataIfChanged<bool>('cycle_enabled', false);
         await HomeWidget.updateWidget(
@@ -1129,69 +1147,32 @@ class WidgetService {
     return full ? strings.formatFullDate(date) : strings.formatMediumDate(date);
   }
 
-  static Future<void> syncCalendarWidgetData({required String houseId}) async {
-    if (kIsWeb || !Platform.isAndroid) return;
+  static Future<void> syncCalendarWidgetData({
+    required String houseId,
+    Object? calendarData,
+  }) async {
+    if (!supportsAndroidWidgets) return;
     try {
-      final snap = await FirebaseDatabase.instance
-          .ref('houses/$houseId/calendar')
-          .get();
-      if (!snap.exists || snap.value is! Map) {
-        await _saveWidgetDataIfChanged<bool>('calendar_enabled', false);
-        await HomeWidget.updateWidget(
-          androidName: androidWidgetCalendarName,
-          qualifiedAndroidName: qualifiedAndroidWidgetCalendarName,
-        );
-        return;
-      }
-
-      final data = Map<String, dynamic>.from(
-        Map<dynamic, dynamic>.from(snap.value as Map),
-      );
       final today = DateTime.now();
       final todayMidnight = DateTime(today.year, today.month, today.day);
+      final nextEvent = await CalendarWidgetSnapshot.resolve(
+        now: today,
+        calendarData: calendarData,
+        loadPage: (afterKey, limit) async {
+          final query = FirebaseDatabase.instance
+              .ref('houses/$houseId/calendar')
+              .orderByKey();
+          final pageQuery = afterKey == null
+              ? query.startAt(CalendarWidgetSnapshot.dateKeyFor(today))
+              : query.startAfter(afterKey);
+          final snap = await pageQuery.limitToFirst(limit).get();
+          return snap.value is Map
+              ? Map<String, dynamic>.from(snap.value as Map)
+              : <String, dynamic>{};
+        },
+      );
 
-      DateTime? nearestDate;
-      List<String> nearestEvents = [];
-
-      data.forEach((dateKeyStr, dateEventsRaw) {
-        if (dateEventsRaw is! Map) return;
-        final parts = dateKeyStr.split('-');
-        if (parts.length != 3) return;
-        final year = int.tryParse(parts[0]);
-        final month = int.tryParse(parts[1]);
-        final day = int.tryParse(parts[2]);
-        if (year == null || month == null || day == null) return;
-
-        final eventDate = DateTime(year, month, day);
-        if (eventDate.isBefore(todayMidnight)) return;
-
-        final eventsMap = Map<String, dynamic>.from(
-          Map<dynamic, dynamic>.from(dateEventsRaw),
-        );
-        final sortedList = eventsMap.entries.map((e) {
-          final val = Map<String, dynamic>.from(
-            Map<dynamic, dynamic>.from(e.value as Map),
-          );
-          return {
-            'title': val['title']?.toString() ?? '',
-            'ts': val['ts'] as int? ?? 0,
-          };
-        }).toList()..sort((a, b) => (a['ts'] as int).compareTo(b['ts'] as int));
-
-        final titles = sortedList
-            .map((item) => item['title'] as String)
-            .where((t) => t.isNotEmpty)
-            .toList();
-
-        if (titles.isEmpty) return;
-
-        if (nearestDate == null || eventDate.isBefore(nearestDate!)) {
-          nearestDate = eventDate;
-          nearestEvents = titles;
-        }
-      });
-
-      if (nearestDate == null || nearestEvents.isEmpty) {
+      if (nextEvent == null) {
         await _saveWidgetDataIfChanged<bool>('calendar_enabled', false);
         await HomeWidget.updateWidget(
           androidName: androidWidgetCalendarName,
@@ -1200,7 +1181,7 @@ class WidgetService {
         return;
       }
 
-      final diffDays = SoulEvent.daysBetween(nearestDate!, todayMidnight);
+      final diffDays = SoulEvent.daysBetween(nextEvent.date, todayMidnight);
       String countdownText = '';
       if (diffDays == 0) {
         countdownText = L10nService().translate('milestone_today');
@@ -1212,9 +1193,9 @@ class WidgetService {
         });
       }
 
-      final dateLabel = await _formatCalendarDate(nearestDate!, full: true);
+      final dateLabel = await _formatCalendarDate(nextEvent.date, full: true);
 
-      final eventsText = nearestEvents.map((title) => '• $title').join('\n');
+      final eventsText = nextEvent.titles.map((title) => '• $title').join('\n');
 
       await _saveWidgetDataIfChanged<bool>('calendar_enabled', true);
       await _saveWidgetDataIfChanged<String>(

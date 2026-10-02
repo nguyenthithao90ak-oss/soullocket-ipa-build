@@ -3,16 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/sl_theme.dart';
+import '../../widgets/sl_dialog.dart';
 import '../../utils/services/security_protection_analytics_service.dart';
 import '../../utils/services/security_protection_service.dart';
 import 'security_protection_copy.dart';
 import 'security_protection_help_screen.dart';
 
-enum SecurityProtectionDialogAction {
-  retry,
-  openHelp,
-  dismiss,
-}
+enum SecurityProtectionDialogAction { retry, openHelp, dismiss }
 
 Future<SecurityProtectionDialogAction> showSecurityProtectionDialog(
   BuildContext context, {
@@ -35,16 +32,16 @@ Future<SecurityProtectionDialogAction> showSecurityProtectionDialog(
     ),
   );
 
-  final action = await showModalBottomSheet<SecurityProtectionDialogAction>(
+  final action =
+      await showModalBottomSheet<SecurityProtectionDialogAction>(
         context: context,
         isScrollControlled: true,
         useSafeArea: true,
         isDismissible: isDismissible,
         enableDrag: isDismissible,
         backgroundColor: Colors.transparent,
-        builder: (sheetContext) => _SecurityProtectionDialogSheet(
-          verdict: verdict,
-        ),
+        builder: (sheetContext) =>
+            _SecurityProtectionDialogSheet(verdict: verdict),
       ) ??
       SecurityProtectionDialogAction.dismiss;
 
@@ -70,9 +67,7 @@ Future<SecurityProtectionDialogAction> showSecurityProtectionDialog(
 }
 
 class _SecurityProtectionDialogSheet extends StatelessWidget {
-  const _SecurityProtectionDialogSheet({
-    required this.verdict,
-  });
+  const _SecurityProtectionDialogSheet({required this.verdict});
 
   final SecurityProtectionVerdict verdict;
 
@@ -80,8 +75,9 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final copy = resolveSecurityProtectionCopy(context, verdict);
     final isBlocked = verdict.shouldBlock;
-    final accent =
-        isBlocked ? const Color(0xFFD32F2F) : const Color(0xFFF57C00);
+    final accent = SLDialogStyle.accent(
+      isBlocked ? SLDialogTone.danger : SLDialogTone.warning,
+    );
 
     return Padding(
       padding: EdgeInsets.only(
@@ -91,8 +87,9 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFFFFBFE),
-          borderRadius: BorderRadius.circular(30),
+          color: SLDialogStyle.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: SLDialogStyle.border),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.14),
@@ -114,15 +111,17 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
                     width: 52,
                     height: 5,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFD7DCE8),
+                      color: SLDialogStyle.border,
                       borderRadius: BorderRadius.circular(999),
                     ),
                   ),
                 ),
                 const SizedBox(height: 18),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
                   decoration: BoxDecoration(
                     color: accent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(999),
@@ -140,7 +139,7 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
                 Text(
                   copy.title,
                   style: SLTheme.quicksand(
-                    color: const Color(0xFF14213D),
+                    color: SLColors.ink,
                     fontWeight: FontWeight.w900,
                     fontSize: 21,
                     height: 1.2,
@@ -179,7 +178,7 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: SLColors.paper,
                     borderRadius: BorderRadius.circular(22),
                     border: Border.all(color: accent.withValues(alpha: 0.16)),
                   ),
@@ -189,7 +188,7 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
                       Text(
                         'Cần làm gì ngay',
                         style: SLTheme.quicksand(
-                          color: const Color(0xFF1F2A44),
+                          color: SLColors.ink,
                           fontWeight: FontWeight.w900,
                           fontSize: 15,
                         ),
@@ -225,7 +224,7 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
                                 child: Text(
                                   copy.steps[index],
                                   style: SLTheme.quicksand(
-                                    color: const Color(0xFF344054),
+                                    color: SLDialogStyle.secondary,
                                     fontWeight: FontWeight.w700,
                                     fontSize: 13.5,
                                     height: 1.5,
@@ -242,54 +241,30 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton(
+                      child: SLDialogAction(
                         onPressed: () {
-                          Navigator.of(context)
-                              .pop(SecurityProtectionDialogAction.openHelp);
+                          Navigator.of(
+                            context,
+                          ).pop(SecurityProtectionDialogAction.openHelp);
                         },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: accent,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          side:
-                              BorderSide(color: accent.withValues(alpha: 0.28)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
                         child: Text(
                           copy.secondaryActionLabel,
                           textAlign: TextAlign.center,
-                          style: SLTheme.quicksand(
-                            color: accent,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 13,
-                          ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: ElevatedButton(
+                      child: SLDialogAction(
+                        primary: true,
                         onPressed: () {
-                          Navigator.of(context)
-                              .pop(SecurityProtectionDialogAction.retry);
+                          Navigator.of(
+                            context,
+                          ).pop(SecurityProtectionDialogAction.retry);
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: accent,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
                         child: Text(
                           copy.primaryActionLabel,
                           textAlign: TextAlign.center,
-                          style: SLTheme.quicksand(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 13,
-                          ),
                         ),
                       ),
                     ),
@@ -300,8 +275,9 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
                   width: double.infinity,
                   child: TextButton(
                     onPressed: () {
-                      Navigator.of(context)
-                          .pop(SecurityProtectionDialogAction.dismiss);
+                      Navigator.of(
+                        context,
+                      ).pop(SecurityProtectionDialogAction.dismiss);
                     },
                     child: Text(
                       copy.dismissLabel,
@@ -322,10 +298,7 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
 }
 
 class _MetaChip extends StatelessWidget {
-  const _MetaChip({
-    required this.label,
-    required this.accent,
-  });
+  const _MetaChip({required this.label, required this.accent});
 
   final String label;
   final Color accent;

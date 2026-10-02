@@ -683,7 +683,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
           }
           if (shouldShow && mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+              SLSnackBar(
                 content: Text(context.tr('home_vtrttnhitm_906e2c')),
                 behavior: SnackBarBehavior.floating,
                 action: SnackBarAction(

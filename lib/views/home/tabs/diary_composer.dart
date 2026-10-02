@@ -2,15 +2,15 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/sl_theme.dart';
+import '../../../utils/app_error_mapper.dart';
 import '../../../utils/services/custom_mood_sticker_service.dart';
 import '../../../utils/services/l10n_service.dart';
 import '../../../widgets/r2_sticker_image.dart';
+import '../../../widgets/sl_feedback.dart';
 
-const Color _diaryMint = Color(0xFF4FAF9E);
-const Color _diaryPeriwinkle = Color(0xFF7184DD);
-const Color _diaryInk = Color(0xFF39445A);
-const Color _diaryCream = Color(0xFFFFFCF4);
-const Color _diaryButter = Color(0xFFFFF2C7);
+const _diaryRose = Color(0xFFB65C86);
+const _diaryLilac = Color(0xFF8873BD);
+const _diaryInk = Color(0xFF51455D);
 
 class DiaryComposer extends StatefulWidget {
   final String houseId;
@@ -20,6 +20,7 @@ class DiaryComposer extends StatefulWidget {
   final TextEditingController composerController;
   final bool isPostingDiary;
   final VoidCallback onSubmit;
+  final CustomMoodStickerService? stickerService;
 
   const DiaryComposer({
     super.key,
@@ -30,6 +31,7 @@ class DiaryComposer extends StatefulWidget {
     required this.composerController,
     required this.isPostingDiary,
     required this.onSubmit,
+    this.stickerService,
   });
 
   @override
@@ -37,115 +39,110 @@ class DiaryComposer extends StatefulWidget {
 }
 
 class _DiaryComposerState extends State<DiaryComposer> {
-  final FocusNode _focusNode = FocusNode();
-  bool _isFocused = false;
-  bool _isButtonPressed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _focusNode.addListener(_onFocusChange);
-  }
+  final _focusNode = FocusNode();
+  CustomMoodStickerService get _stickers =>
+      widget.stickerService ?? CustomMoodStickerService.instance;
 
   @override
   void dispose() {
-    _focusNode.removeListener(_onFocusChange);
     _focusNode.dispose();
     super.dispose();
   }
 
-  void _onFocusChange() {
-    if (mounted) setState(() => _isFocused = _focusNode.hasFocus);
-  }
-
-  Map<String, dynamic>? get _selectedMoodData {
+  Map<String, dynamic>? get _selectedMood {
     for (final mood in widget.moods) {
       if (mood['icon'] == widget.selectedMood) return mood;
     }
-    return widget.moods.isEmpty ? null : widget.moods.first;
+    return null;
   }
 
-  void _showCustomStickerOptionsSheet(
-    BuildContext context,
-    Map<String, dynamic> mood,
-  ) {
-    showModalBottomSheet(
+  void _showError(Object error) {
+    if (!mounted) return;
+    final message =
+        error is FormatException && error.message == 'image-too-large'
+        ? context.tr('diary_custom_sticker_too_large')
+        : error is StateError && error.message.startsWith('Upload failed')
+        ? context.tr('diary_custom_sticker_upload_failed')
+        : AppErrorMapper.resolve(
+            error,
+            fallbackMessage: context.tr('diary_custom_sticker_upload_failed'),
+          ).message;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SLSnackBar(content: Text(message)));
+  }
+
+  Future<void> _pickSticker() async {
+    if (_stickers.isBusyVN.value || widget.isPostingDiary) return;
+    final houseId = widget.houseId;
+    try {
+      final url = await _stickers.pickAndUploadSticker(houseId);
+      if (!mounted || houseId != widget.houseId || url == null) return;
+      widget.onMoodChanged('📷');
+    } catch (error) {
+      _showError(error);
+    }
+  }
+
+  Future<void> _removeSticker() async {
+    if (_stickers.isBusyVN.value || widget.isPostingDiary) return;
+    final houseId = widget.houseId;
+    try {
+      await _stickers.removeSticker(houseId);
+      if (!mounted || houseId != widget.houseId) return;
+      if (widget.selectedMood == '📷') {
+        final fallback = widget.moods
+            .where((mood) => mood['isCustom'] != true)
+            .firstOrNull;
+        if (fallback != null) widget.onMoodChanged(fallback['icon'] as String);
+      }
+    } catch (error) {
+      _showError(error);
+    }
+  }
+
+  void _showStickerOptions() {
+    if (_stickers.isBusyVN.value || widget.isPostingDiary) return;
+    showModalBottomSheet<void>(
       context: context,
+      backgroundColor: const Color(0xFFFFF8FB),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (bottomSheetContext) => SafeArea(
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              margin: const EdgeInsets.only(top: 10, bottom: 4),
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
             ListTile(
-              leading: const Icon(Icons.photo_library_rounded, color: _diaryMint),
+              leading: const Icon(
+                Icons.add_photo_alternate_rounded,
+                color: _diaryLilac,
+              ),
               title: Text(
-                L10nService().translate('diary_custom_sticker_replace'),
+                context.tr('diary_custom_sticker_replace'),
                 style: SLTheme.quicksand(fontWeight: FontWeight.w700),
               ),
-              onTap: () async {
-                Navigator.pop(bottomSheetContext);
-                try {
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        L10nService().translate(
-                          'diary_custom_sticker_uploading',
-                        ),
-                      ),
-                    ),
-                  );
-                  await CustomMoodStickerService.instance.pickAndUploadSticker(
-                    widget.houseId,
-                  );
-                  if (!context.mounted) return;
-                  widget.onMoodChanged(mood['icon'] as String);
-                } catch (e) {
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        '${L10nService().translate('diary_custom_sticker_upload_failed')}: $e',
-                      ),
-                    ),
-                  );
-                }
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _pickSticker();
               },
             ),
             ListTile(
-              leading: const Icon(Icons.delete_outline_rounded, color: Colors.red),
-              title: Text(
-                L10nService().translate('diary_custom_sticker_remove'),
-                style: SLTheme.quicksand(
-                  color: Colors.red,
-                  fontWeight: FontWeight.w700,
-                ),
+              leading: const Icon(
+                Icons.delete_outline_rounded,
+                color: _diaryRose,
               ),
-              onTap: () async {
-                Navigator.pop(bottomSheetContext);
-                await CustomMoodStickerService.instance.removeSticker(
-                  widget.houseId,
-                );
-                if (widget.selectedMood == mood['icon']) {
-                  final fallback = widget.moods.firstWhere(
-                    (m) => m['isCustom'] != true,
-                    orElse: () => widget.moods.first,
-                  );
-                  widget.onMoodChanged(fallback['icon'] as String);
-                }
+              title: Text(
+                context.tr('diary_custom_sticker_remove'),
+                style: SLTheme.quicksand(fontWeight: FontWeight.w700),
+              ),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _removeSticker();
               },
             ),
+            const SizedBox(height: 12),
           ],
         ),
       ),
@@ -154,99 +151,101 @@ class _DiaryComposerState extends State<DiaryComposer> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedMood = _selectedMoodData;
-    final selectedColor = selectedMood?['color'] as Color? ?? _diaryMint;
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 2, 16, 18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [_diaryCream, Color(0xFFF4FAFC)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.white, width: 1.8),
-        boxShadow: [
-          BoxShadow(
-            color: _diaryMint.withValues(alpha: 0.15),
-            blurRadius: 28,
-            offset: const Offset(0, 12),
-          ),
-          BoxShadow(
-            color: _diaryPeriwinkle.withValues(alpha: 0.08),
-            blurRadius: 18,
-            offset: const Offset(-8, 5),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: Stack(
-          children: [
-            const Positioned(
-              right: -24,
-              top: -28,
-              child: _ComposerBubble(size: 92, color: Color(0x38FFD46B)),
-            ),
-            const Positioned(
-              left: -18,
-              bottom: 78,
-              child: _ComposerBubble(size: 58, color: Color(0x247184DD)),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 17, 18, 18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildComposerHeading(context, selectedMood, selectedColor),
-                  const SizedBox(height: 12),
-                  _buildMoodShelf(),
-                  const SizedBox(height: 14),
-                  _buildNoteField(context),
-                  const SizedBox(height: 14),
-                  _buildSubmitButton(context),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildComposerHeading(
-    BuildContext context,
-    Map<String, dynamic>? selectedMood,
-    Color selectedColor,
-  ) {
-    return Row(
-      children: [
-        Container(
-          width: 42,
-          height: 42,
+    return AnimatedBuilder(
+      animation: Listenable.merge([
+        _stickers.isBusyVN,
+        _stickers.isUploadingVN,
+        _focusNode,
+      ]),
+      builder: (context, child) {
+        final locked = _stickers.isBusyVN.value || widget.isPostingDiary;
+        return Container(
+          margin: const EdgeInsets.fromLTRB(16, 4, 16, 20),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [_diaryMint, _diaryPeriwinkle],
+              colors: [Color(0xFFFFFAF5), Color(0xFFFFF4F9), Color(0xFFF6F2FF)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: Colors.white, width: 2),
+            boxShadow: const [
               BoxShadow(
-                color: _diaryMint.withValues(alpha: 0.22),
-                blurRadius: 12,
-                offset: const Offset(0, 5),
+                color: Color(0x1FBF83A5),
+                blurRadius: 24,
+                offset: Offset(0, 10),
               ),
             ],
           ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeading(context),
+                const SizedBox(height: 16),
+                _buildMoodShelf(context, locked),
+                const SizedBox(height: 10),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(top: 2),
+                      child: Icon(
+                        Icons.photo_outlined,
+                        size: 14,
+                        color: _diaryLilac,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        context.tr(
+                          _stickers.isUploadingVN.value
+                              ? 'diary_custom_sticker_uploading'
+                              : 'diary_custom_sticker_hint',
+                        ),
+                        style: SLTheme.quicksand(
+                          fontSize: 11,
+                          color: const Color(0xFF796C85),
+                          fontWeight: FontWeight.w600,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                _buildNoteField(context),
+                const SizedBox(height: 14),
+                _buildSubmitButton(context, locked),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeading(BuildContext context) {
+    final selectedMood = _selectedMood;
+    return Row(
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8DFE9),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white, width: 2),
+          ),
           child: const Icon(
-            Icons.edit_note_rounded,
-            color: Colors.white,
+            Icons.favorite_border_rounded,
+            color: _diaryRose,
             size: 25,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,377 +253,381 @@ class _DiaryComposerState extends State<DiaryComposer> {
               Text(
                 context.tr('home_tms_f029b6'),
                 style: SLTheme.quicksand(
-                  color: _diaryInk,
+                  fontSize: 17,
                   fontWeight: FontWeight.w900,
-                  fontSize: 16.5,
-                  letterSpacing: 0.15,
+                  color: _diaryInk,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 3),
               Text(
-                selectedMood?['label'] as String? ?? '',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                context.tr('diary_composer_caption'),
                 style: SLTheme.quicksand(
-                  color: selectedColor,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 12,
+                  fontSize: 11.5,
+                  height: 1.4,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF867287),
                 ),
               ),
             ],
           ),
         ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-          decoration: BoxDecoration(
-            color: _diaryButter,
-            borderRadius: BorderRadius.circular(14),
+        const SizedBox(width: 8),
+        if (selectedMood != null)
+          Transform.rotate(
+            angle: 0.07,
+            child: Container(
+              width: 50,
+              height: 50,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.85),
+                borderRadius: BorderRadius.circular(17),
+                border: Border.all(color: const Color(0xFFEADDF4)),
+              ),
+              child: _moodImage(selectedMood, size: 40),
+            ),
           ),
-          child: Icon(
-            Icons.auto_awesome_rounded,
-            size: 17,
-            color: selectedColor,
-          ),
-        ),
       ],
     );
   }
 
-  Widget _buildMoodShelf() {
-    return Container(
-      height: 82,
-      decoration: BoxDecoration(
-        color: const Color(0xFFEAF6F3),
-        borderRadius: BorderRadius.circular(23),
-        border: Border.all(color: const Color(0xFFD3EBE6), width: 1.2),
+  Widget _moodImage(Map<String, dynamic> mood, {required double size}) {
+    if (mood['isCustom'] == true) {
+      final url = mood['customUrl'] as String?;
+      if (url == null || url.isEmpty) {
+        return const Icon(Icons.add_rounded, color: _diaryLilac, size: 28);
+      }
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(13),
+        child: CachedNetworkImage(
+          imageUrl: url,
+          width: size,
+          height: size,
+          memCacheWidth: 160,
+          fit: BoxFit.cover,
+          fadeInDuration: Duration.zero,
+          placeholder: (_, _) =>
+              const Icon(Icons.photo_outlined, color: _diaryLilac),
+          errorWidget: (_, _, _) => const Icon(
+            Icons.image_not_supported_outlined,
+            color: _diaryLilac,
+          ),
+        ),
+      );
+    }
+    return R2StickerImage(
+      mood['asset'] as String,
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      animateLocalSticker: true,
+      errorWidget: Center(
+        child: Text(
+          mood['icon'] as String,
+          style: TextStyle(fontSize: size * 0.65),
+        ),
       ),
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-        itemCount: widget.moods.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 7),
-        itemBuilder: (context, index) {
-          final mood = widget.moods[index];
-          final active = widget.selectedMood == mood['icon'];
-          final moodColor = mood['color'] as Color;
-          final isCustom = mood['isCustom'] == true;
-          final customUrl = mood['customUrl'] as String?;
+    );
+  }
 
-          Widget content;
-          if (isCustom) {
-            if (customUrl != null && customUrl.isNotEmpty) {
-              content = Stack(
-                alignment: Alignment.center,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(15),
-                    child: CachedNetworkImage(
-                      imageUrl: customUrl,
-                      width: active ? 52 : 46,
-                      height: active ? 52 : 46,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(_diaryMint),
-                        ),
-                      ),
-                      errorWidget: (context, url, error) => const Icon(
-                        Icons.broken_image_rounded,
-                        color: Colors.grey,
-                        size: 24,
-                      ),
-                    ),
-                  ),
-                  if (active)
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(2.5),
-                        decoration: BoxDecoration(
-                          color: _diaryMint,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 1.5),
-                        ),
-                        child: const Icon(
-                          Icons.edit,
-                          size: 8,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            } else {
-              content = Center(
-                child: Container(
-                  width: active ? 38 : 34,
-                  height: active ? 38 : 34,
-                  decoration: BoxDecoration(
-                    color: _diaryMint.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.add_rounded,
-                    color: _diaryMint,
-                    size: active ? 26 : 22,
-                  ),
-                ),
-              );
-            }
-          } else {
-            content = R2StickerImage(
-              mood['asset'] as String,
-              width: active ? 53 : 47,
-              height: active ? 53 : 47,
-              fit: BoxFit.contain,
-              animateLocalSticker: true,
-              errorWidget: Text(
-                mood['icon'] as String,
-                style: TextStyle(fontSize: active ? 34 : 30),
+  Widget _buildMoodShelf(BuildContext context, bool locked) {
+    return Container(
+      padding: const EdgeInsets.all(7),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(23),
+        border: Border.all(color: const Color(0xFFEDE0F1)),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (widget.moods.isEmpty) return const SizedBox.shrink();
+          const spacing = 8.0;
+          final textScaler = MediaQuery.textScalerOf(context);
+          final scale = textScaler.scale(11) / 11;
+          final minWidth = 72.0 + (scale - 1).clamp(0, 4) * 44;
+          final columns =
+              ((constraints.maxWidth + spacing) / (minWidth + spacing))
+                  .floor()
+                  .clamp(1, 5);
+          final tileWidth =
+              (constraints.maxWidth - spacing * (columns - 1)) / columns;
+          var labelHeight = 0.0;
+          for (final mood in widget.moods) {
+            final painter = TextPainter(
+              text: TextSpan(
+                text: _moodLabel(context, mood),
+                style: _moodLabelStyle(false),
               ),
-            );
+              textDirection: Directionality.of(context),
+              textScaler: textScaler,
+            )..layout(maxWidth: tileWidth - 16);
+            if (painter.height > labelHeight) labelHeight = painter.height;
+            painter.dispose();
           }
-
-          return Semantics(
-            button: true,
-            selected: active,
-            label: mood['label'] as String,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () async {
-                if (isCustom && (customUrl == null || customUrl.isEmpty)) {
-                  try {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(L10nService().translate('diary_custom_sticker_uploading'))),
-                    );
-                    await CustomMoodStickerService.instance.pickAndUploadSticker(widget.houseId);
-                    if (!context.mounted) return;
-                    widget.onMoodChanged(mood['icon'] as String);
-                  } catch (e) {
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${L10nService().translate('diary_custom_sticker_upload_failed')}: $e')),
-                    );
-                  }
-                } else if (isCustom && active && customUrl != null && customUrl.isNotEmpty) {
-                  _showCustomStickerOptionsSheet(context, mood);
-                } else {
-                  if (!context.mounted) return;
-                  widget.onMoodChanged(mood['icon'] as String);
-                }
-              },
-              onLongPress: () {
-                if (isCustom && customUrl != null && customUrl.isNotEmpty) {
-                  _showCustomStickerOptionsSheet(context, mood);
-                }
-              },
-              child: AnimatedScale(
-                scale: active ? 1.05 : 1,
-                duration: const Duration(milliseconds: 190),
-                curve: Curves.easeOutBack,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
-                  width: 62,
-                  decoration: BoxDecoration(
-                    color: active ? Colors.white : const Color(0xFFF5FAF9),
-                    borderRadius: BorderRadius.circular(active ? 21 : 18),
-                    border: Border.all(
-                      color: active
-                          ? moodColor.withValues(alpha: 0.8)
-                          : ((isCustom && (customUrl == null || customUrl.isEmpty)) 
-                              ? Colors.grey.withValues(alpha: 0.4) 
-                              : Colors.white),
-                      width: active ? 2 : 1,
-                    ),
-                    boxShadow: active
-                        ? [
-                            BoxShadow(
-                              color: moodColor.withValues(alpha: 0.22),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ]
-                        : null,
-                  ),
-                  child: Center(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(17),
-                      child: content,
-                    ),
-                  ),
+          final tileHeight = (43 + 6 + 16 + 4 + labelHeight).ceilToDouble();
+          return Wrap(
+            alignment: WrapAlignment.center,
+            spacing: spacing,
+            runSpacing: spacing,
+            children: [
+              for (final mood in widget.moods)
+                _moodTile(
+                  context,
+                  mood,
+                  locked,
+                  width: tileWidth,
+                  height: tileHeight,
                 ),
-              ),
-            ),
+            ],
           );
         },
       ),
     );
   }
 
-  Widget _buildNoteField(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF8E8),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: _isFocused
-              ? _diaryPeriwinkle.withValues(alpha: 0.72)
-              : const Color(0xFFF0DFB8),
-          width: _isFocused ? 1.8 : 1.1,
+  String _moodLabel(BuildContext context, Map<String, dynamic> mood) {
+    final url = mood['customUrl'] as String?;
+    return mood['isCustom'] == true && (url == null || url.isEmpty)
+        ? context.tr('diary_custom_sticker_add')
+        : mood['label'] as String;
+  }
+
+  TextStyle _moodLabelStyle(bool active) => SLTheme.quicksand(
+    fontSize: 11,
+    fontWeight: FontWeight.w800,
+    height: 1.3,
+    color: active ? _diaryRose : const Color(0xFF80728B),
+  );
+
+  Widget _moodTile(
+    BuildContext context,
+    Map<String, dynamic> mood,
+    bool locked, {
+    required double width,
+    required double height,
+  }) {
+    final isCustom = mood['isCustom'] == true;
+    final url = mood['customUrl'] as String?;
+    final hasImage = url != null && url.isNotEmpty;
+    final active =
+        widget.selectedMood == mood['icon'] && (!isCustom || hasImage);
+    final label = _moodLabel(context, mood);
+    return Tooltip(
+      message: label,
+      child: Semantics(
+        button: true,
+        selected: active,
+        enabled: !locked,
+        label: label,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            key: ValueKey('diary-mood-${mood['icon']}'),
+            borderRadius: BorderRadius.circular(18),
+            onTap: locked
+                ? null
+                : () {
+                    if (isCustom && !hasImage) {
+                      _pickSticker();
+                    } else if (isCustom && active) {
+                      _showStickerOptions();
+                    } else {
+                      widget.onMoodChanged(mood['icon'] as String);
+                    }
+                  },
+            onLongPress: isCustom && hasImage && !locked
+                ? _showStickerOptions
+                : null,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: width,
+              height: height,
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+              decoration: BoxDecoration(
+                color: active
+                    ? const Color(0xFFFFEDF4)
+                    : isCustom
+                    ? const Color(0xFFF1EAFB)
+                    : const Color(0xFFFFFCFD),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: active ? const Color(0xFFD69AB6) : Colors.white,
+                  width: active ? 1.8 : 1,
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    height: 43,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        if (isCustom && _stickers.isBusyVN.value)
+                          const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: _diaryLilac,
+                            ),
+                          )
+                        else
+                          _moodImage(mood, size: 43),
+                        if (active)
+                          const Positioned(
+                            right: 0,
+                            bottom: 0,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: _diaryRose,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Padding(
+                                padding: EdgeInsets.all(2),
+                                child: Icon(
+                                  Icons.check_rounded,
+                                  size: 10,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    softWrap: true,
+                    style: _moodLabelStyle(active),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-        boxShadow: _isFocused
-            ? [
-                BoxShadow(
-                  color: _diaryPeriwinkle.withValues(alpha: 0.11),
-                  blurRadius: 15,
-                  offset: const Offset(0, 6),
-                ),
-              ]
-            : null,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 6,
-            height: 74,
-            decoration: BoxDecoration(
-              color: _isFocused ? _diaryPeriwinkle : const Color(0xFFFFD46B),
-              borderRadius: const BorderRadius.horizontal(
-                right: Radius.circular(8),
-              ),
-            ),
-          ),
-          Expanded(
-            child: TextField(
-              focusNode: _focusNode,
-              controller: widget.composerController,
-              minLines: 3,
-              maxLines: 6,
-              maxLength: 5000,
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w700,
-                fontSize: 14.5,
-                height: 1.45,
-                color: _diaryInk,
-              ),
-              decoration: InputDecoration(
-                hintText: context.tr('home_hmnaythnog_0c01f7'),
-                hintStyle: SLTheme.quicksand(
-                  color: const Color(0xFFA18E7E),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
-                contentPadding: const EdgeInsets.fromLTRB(14, 15, 15, 8),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                counterStyle: SLTheme.quicksand(
-                  color: const Color(0xFF8A7E75),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
 
-  Widget _buildSubmitButton(BuildContext context) {
-    return AnimatedScale(
-      scale: _isButtonPressed ? 0.975 : 1,
-      duration: const Duration(milliseconds: 130),
+  Widget _buildNoteField(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFDF7),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: _focusNode.hasFocus
+              ? const Color(0xFFC5ACDF)
+              : const Color(0xFFEEDDCD),
+          width: 1.3,
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(14, 5, 14, 10),
+      child: TextField(
+        focusNode: _focusNode,
+        controller: widget.composerController,
+        minLines: 3,
+        maxLines: 6,
+        maxLength: 5000,
+        style: SLTheme.quicksand(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          height: 1.6,
+          color: _diaryInk,
+        ),
+        decoration: InputDecoration(
+          hintText: context.tr('home_hmnaythnog_0c01f7'),
+          hintStyle: SLTheme.quicksand(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF9B8692),
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          counterStyle: SLTheme.quicksand(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF978B94),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton(BuildContext context, bool locked) {
+    return Opacity(
+      opacity: locked && !widget.isPostingDiary ? 0.55 : 1,
       child: Container(
         width: double.infinity,
-        height: 52,
+        constraints: const BoxConstraints(minHeight: 52),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [_diaryMint, _diaryPeriwinkle],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
+          gradient: const LinearGradient(colors: [_diaryRose, _diaryLilac]),
           borderRadius: BorderRadius.circular(18),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
-              color: _diaryMint.withValues(alpha: 0.27),
-              blurRadius: 16,
-              offset: const Offset(0, 7),
+              color: Color(0x26B65C86),
+              blurRadius: 14,
+              offset: Offset(0, 6),
             ),
           ],
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
+            key: const ValueKey('diary-submit'),
             borderRadius: BorderRadius.circular(18),
-            onTapDown: (_) => setState(() => _isButtonPressed = true),
-            onTapUp: (_) => setState(() => _isButtonPressed = false),
-            onTapCancel: () => setState(() => _isButtonPressed = false),
-            onTap: widget.isPostingDiary ? null : widget.onSubmit,
-            child: Center(
+            onTap: locked ? null : widget.onSubmit,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
               child: widget.isPostingDiary
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ? const Center(
+                      child: SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       ),
                     )
-                  : Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.near_me_rounded,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              context.tr('home_lutms_b4b0f3'),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: SLTheme.quicksand(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.35,
-                              ),
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.favorite_rounded,
+                          size: 18,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            context.tr('home_lutms_b4b0f3'),
+                            maxLines: 2,
+                            textAlign: TextAlign.center,
+                            style: SLTheme.quicksand(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 17,
+                          color: Colors.white,
+                        ),
+                      ],
                     ),
             ),
           ),
         ),
       ),
-    );
-  }
-}
-
-class _ComposerBubble extends StatelessWidget {
-  final double size;
-  final Color color;
-
-  const _ComposerBubble({required this.size, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }

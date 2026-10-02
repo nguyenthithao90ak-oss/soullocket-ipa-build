@@ -561,17 +561,8 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
               onTap: () {
                 showDialog(
                   context: context,
-                  builder: (context) => AlertDialog(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    title: Text(
-                      context.tr('p7_music_guide_title'),
-                      style: SLTextStyles.quicksand(
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF6A1B4D),
-                      ),
-                    ),
+                  builder: (context) => SLAlertDialog(
+                    title: Text(context.tr('p7_music_guide_title')),
                     content: SingleChildScrollView(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -642,15 +633,11 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                       ),
                     ),
                     actions: [
-                      TextButton(
+                      SLDialogAction(
+                        primary: true,
+
                         onPressed: () => Navigator.of(context).pop(),
-                        child: Text(
-                          context.tr('p7_understood'),
-                          style: SLTextStyles.quicksand(
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFFD81B60),
-                          ),
-                        ),
+                        child: Text(context.tr('p7_understood')),
                       ),
                     ],
                   ),

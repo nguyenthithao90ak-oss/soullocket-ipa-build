@@ -21,6 +21,10 @@ class SoulMergeChatBar extends StatelessWidget {
     required this.onShowSticker,
     required this.onSendPreset,
     required this.formatTime,
+    this.isLoadingHistory = false,
+    this.historyLoadFailed = false,
+    this.onRetryHistory,
+    this.onLoadOlder,
   });
 
   final List<Map<String, dynamic>> chatHistory;
@@ -37,6 +41,10 @@ class SoulMergeChatBar extends StatelessWidget {
   final VoidCallback onShowSticker;
   final ValueChanged<String> onSendPreset;
   final String Function(int? timestamp) formatTime;
+  final bool isLoadingHistory;
+  final bool historyLoadFailed;
+  final VoidCallback? onRetryHistory;
+  final VoidCallback? onLoadOlder;
 
   @override
   Widget build(BuildContext context) {
@@ -59,34 +67,50 @@ class SoulMergeChatBar extends StatelessWidget {
         : (elapsedHours >= 24 ? checkInPresets : const <String>[]);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (spamWarning != null) ...[
-            _MergeWarning(message: spamWarning!),
-            const SizedBox(height: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: NotificationListener<OverscrollNotification>(
+        onNotification: (notification) {
+          if (!isLoadingHistory &&
+              !historyLoadFailed &&
+              notification.metrics.axisDirection == AxisDirection.up &&
+              notification.metrics.extentAfter < 1 &&
+              notification.overscroll > 0) {
+            onLoadOlder?.call();
+          }
+          return false;
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (spamWarning != null) ...[
+              _MergeWarning(message: spamWarning!),
+              const SizedBox(height: 8),
+            ],
+            Expanded(
+              child: _MergeChatHistory(
+                history: chatHistory,
+                myRole: myRole,
+                controller: scrollController,
+                formatTime: formatTime,
+                isLoading: isLoadingHistory,
+                loadFailed: historyLoadFailed,
+                onRetry: onRetryHistory,
+              ),
+            ),
+            if (presets.isNotEmpty) ...[
+              const SizedBox(height: 9),
+              _MergePresetRow(presets: presets, onSelected: onSendPreset),
+            ],
+            const SizedBox(height: 10),
+            _MergeComposer(
+              controller: textController,
+              isUploadingPhoto: isUploadingPhoto,
+              onPickImage: onPickImage,
+              onShowSticker: onShowSticker,
+              onSend: onSendCustomMessage,
+            ),
           ],
-          _MergeChatHistory(
-            history: chatHistory,
-            myRole: myRole,
-            controller: scrollController,
-            formatTime: formatTime,
-          ),
-          if (presets.isNotEmpty) ...[
-            const SizedBox(height: 9),
-            _MergePresetRow(presets: presets, onSelected: onSendPreset),
-          ],
-          const SizedBox(height: 10),
-          _MergeComposer(
-            controller: textController,
-            isUploadingPhoto: isUploadingPhoto,
-            onPickImage: onPickImage,
-            onShowSticker: onShowSticker,
-            onSend: onSendCustomMessage,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -138,12 +162,18 @@ class _MergeChatHistory extends StatelessWidget {
     required this.myRole,
     required this.controller,
     required this.formatTime,
+    required this.isLoading,
+    required this.loadFailed,
+    required this.onRetry,
   });
 
   final List<Map<String, dynamic>> history;
   final String myRole;
   final ScrollController controller;
   final String Function(int? timestamp) formatTime;
+  final bool isLoading;
+  final bool loadFailed;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -162,57 +192,77 @@ class _MergeChatHistory extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(23),
-        child: history.isEmpty
-            ? SizedBox(
-                height: 94,
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFFFE6ED),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.favorite_border_rounded,
-                          size: 18,
-                          color: Color(0xFFE9577D),
-                        ),
+        child: history.isEmpty && !isLoading && !loadFailed
+            ? Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFFE6ED),
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        context.tr('p4_soul_chat_empty'),
-                        style: SLTheme.quicksand(
-                          color: const Color(0xFF8D7A82),
-                          fontSize: 11.4,
-                          fontWeight: FontWeight.w700,
-                        ),
+                      child: const Icon(
+                        Icons.favorite_border_rounded,
+                        size: 18,
+                        color: Color(0xFFE9577D),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      context.tr('p4_soul_chat_empty'),
+                      style: SLTheme.quicksand(
+                        color: const Color(0xFF8D7A82),
+                        fontSize: 11.4,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
               )
-            : ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 300),
-                child: RepaintBoundary(
-                  child: ListView.builder(
-                    controller: controller,
-                    reverse: true,
-                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
-                    itemCount: history.length,
-                    itemBuilder: (context, index) {
-                      final message = history.reversed.elementAt(index);
-                      return _MergeMessageBubble(
-                        isSelf: message['sender']?.toString() == myRole,
-                        text: message['text']?.toString() ?? '',
-                        imageUrl: message['imageUrl']?.toString() ?? '',
-                        time: formatTime(message['timestamp'] as int?),
+            : RepaintBoundary(
+                child: ListView.builder(
+                  controller: controller,
+                  reverse: true,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+                  itemCount: history.length + (isLoading || loadFailed ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == history.length) {
+                      return Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Center(
+                          child: isLoading
+                              ? Semantics(
+                                  label: context.tr(
+                                    'p9_group_chat_loading_older_messages',
+                                  ),
+                                  child: const SizedBox.square(
+                                    dimension: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                )
+                              : IconButton(
+                                  tooltip: context.tr('calendar_retry_load'),
+                                  onPressed: onRetry,
+                                  icon: const Icon(Icons.refresh_rounded),
+                                ),
+                        ),
                       );
-                    },
-                  ),
+                    }
+                    final message = history[history.length - 1 - index];
+                    return _MergeMessageBubble(
+                      key: ValueKey(message['id']),
+                      isSelf: message['sender']?.toString() == myRole,
+                      text: message['text']?.toString() ?? '',
+                      imageUrl: message['imageUrl']?.toString() ?? '',
+                      time: formatTime((message['timestamp'] as num?)?.toInt()),
+                    );
+                  },
                 ),
               ),
       ),
@@ -222,6 +272,7 @@ class _MergeChatHistory extends StatelessWidget {
 
 class _MergeMessageBubble extends StatelessWidget {
   const _MergeMessageBubble({
+    super.key,
     required this.isSelf,
     required this.text,
     required this.imageUrl,
@@ -339,10 +390,10 @@ class _MergeMessageMedia extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (localSticker != null) {
-      return SoulLocketAnimatedSticker(sticker: localSticker!, size: 146);
+      return SoulLocketAnimatedSticker(sticker: localSticker!, size: 104);
     }
     if (legacySticker) {
-      return Image.asset(imageUrl, fit: BoxFit.contain, width: 146);
+      return Image.asset(imageUrl, fit: BoxFit.contain, width: 104);
     }
     return ClipRRect(
       borderRadius: BorderRadius.circular(13),
@@ -482,12 +533,16 @@ class _MergeComposer extends StatelessWidget {
               child: TextField(
                 controller: controller,
                 textCapitalization: TextCapitalization.sentences,
+                minLines: 1,
+                maxLines: 4,
+                maxLength: 2000,
                 style: SLTheme.quicksand(
                   color: const Color(0xFF43363D),
                   fontSize: 13.5,
                   fontWeight: FontWeight.w700,
                 ),
                 decoration: InputDecoration(
+                  counterText: '',
                   hintText: context.tr('p4_soul_message_hint'),
                   hintStyle: SLTheme.quicksand(
                     color: const Color(0xFFAA99A0),

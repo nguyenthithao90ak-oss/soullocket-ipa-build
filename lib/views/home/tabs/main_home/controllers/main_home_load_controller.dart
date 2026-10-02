@@ -162,7 +162,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
     messenger
       ..clearSnackBars()
       ..removeCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message), duration: duration));
+      ..showSnackBar(SLSnackBar(content: Text(message), duration: duration));
   }
 
   String _presenceRoleUiSignatureImpl(String role, Map<String, dynamic>? data) {

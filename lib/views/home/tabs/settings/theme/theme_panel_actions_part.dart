@@ -334,7 +334,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(context.tr('upload_background_interrupted')),
           action: SnackBarAction(
             label: context.tr('p7_retry'),

@@ -630,43 +630,23 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
   void _confirmDelete(Map<String, dynamic> photo) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: _vaultBg,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: _vaultBorder, width: 1),
-        ),
-        title: Text(
-          context.tr('util_xanhmt_9adda3'),
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.bold,
-            color: _vaultTextPrimary,
-          ),
-        ),
-        content: Text(
-          context.tr('util_nhnysbxakh_78fc2c'),
-          style: SLTheme.quicksand(color: _vaultTextSecondary),
-        ),
+      builder: (ctx) => SLAlertDialog(
+        title: Text(context.tr('util_xanhmt_9adda3')),
+        content: Text(context.tr('util_nhnysbxakh_78fc2c')),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              context.tr('util_hy_1e4050'),
-              style: SLTheme.quicksand(color: _vaultTextHint),
-            ),
+            child: Text(context.tr('util_hy_1e4050')),
           ),
-          TextButton(
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () {
               Navigator.pop(ctx);
               _deletePhoto(photo);
             },
-            child: Text(
-              context.tr('util_xa_4ed187'),
-              style: SLTheme.quicksand(
-                color: SLColors.danger,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: Text(context.tr('util_xa_4ed187')),
           ),
         ],
       ),

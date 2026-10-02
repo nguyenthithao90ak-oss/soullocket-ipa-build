@@ -388,26 +388,22 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
 
                     final ok = await showDialog<bool>(
                       context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: Text(
-                          context.tr('home_xcnhnchn_ae00a6'),
-                          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-                        ),
+                      builder: (ctx) => SLAlertDialog(
+                        title: Text(context.tr('home_xcnhnchn_ae00a6')),
                         content: Text(
                           'Bạn có chắc muốn chặn người này không?\nHọ sẽ không thể xem nhà bạn nữa.',
-                          style: SLTheme.quicksand(),
                         ),
                         actions: [
-                          TextButton(
+                          SLDialogAction(
                             onPressed: () => Navigator.pop(ctx, false),
                             child: Text(context.tr('home_hy_1e4050')),
                           ),
-                          TextButton(
+                          SLDialogAction(
+                            primary: true,
+                            destructive: true,
+
                             onPressed: () => Navigator.pop(ctx, true),
-                            child: Text(
-                              context.tr('home_chn_483b6f'),
-                              style: const TextStyle(color: Colors.red),
-                            ),
+                            child: Text(context.tr('home_chn_483b6f')),
                           ),
                         ],
                       ),

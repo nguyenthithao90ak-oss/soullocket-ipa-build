@@ -1,4 +1,5 @@
 import '../../../utils/services/custom_mood_sticker_service.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'diary/widgets/diary_memory_video_player.dart';
 import 'diary/widgets/private_diary_image.dart';
 import 'diary/utils/private_memory_link_policy.dart';
@@ -129,6 +130,8 @@ class _DiaryTabState extends State<DiaryTab>
     _syncMemoryControllerHouse();
     if (_houseId != null) {
       CustomMoodStickerService.instance.startSync(_houseId!);
+    } else {
+      CustomMoodStickerService.instance.stopSync();
     }
     _throttledRebuild();
   }
@@ -475,19 +478,8 @@ class _DiaryTabState extends State<DiaryTab>
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          backgroundColor: Colors.white,
-          title: Text(
-            context.tr('memory_share_password_title'),
-            style: SLTheme.quicksand(
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF243041),
-              fontSize: 18,
-            ),
-          ),
+        builder: (context, setState) => SLAlertDialog(
+          title: Text(context.tr('memory_share_password_title')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -551,43 +543,23 @@ class _DiaryTabState extends State<DiaryTab>
               ),
             ],
           ),
-          actionsPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
+
           actions: [
-            TextButton(
+            SLDialogAction(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(
-                'Hủy',
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF66758A),
-                ),
-              ),
+              child: Text('Hủy'),
             ),
-            FilledButton(
+            SLDialogAction(
+              primary: true,
+
               onPressed: () {
                 Navigator.of(dialogContext).pop(controller.text);
               },
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFD81B60),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-              ),
+
               child: Text(
                 controller.text.trim().isEmpty
                     ? context.tr('memory_share_password_skip')
                     : context.tr('memory_share_password_confirm'),
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
               ),
             ),
           ],
@@ -756,6 +728,7 @@ class _DiaryTabState extends State<DiaryTab>
   @override
   void dispose() {
     _stopDiaryActiveTimer();
+    CustomMoodStickerService.instance.stopSync();
     AdMobService().disposeBanner(_bottomBannerAd);
     widget.onSelectionOverlayChanged?.call(false);
     widget.isActiveListenable.removeListener(_onActiveChanged);
@@ -986,20 +959,22 @@ class _DiaryTabState extends State<DiaryTab>
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      builder: (dialogContext) => SLAlertDialog(
         title: Text(L10nService().translate(context.tr('home_xcnhnxa_f4ccd7'))),
         content: Text(
           L10nService().translate(context.tr('home_bncchcmunx_483a7a')),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text(L10nService().translate(context.tr('home_hy_1e4050'))),
           ),
-          FilledButton(
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+
             child: Text(L10nService().translate('OK')),
           ),
         ],

@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -36,18 +38,15 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
   void _showInfoDialog(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          'Nhập mã Quà tặng',
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-        ),
+      builder: (context) => SLAlertDialog(
+        title: Text('Nhập mã Quà tặng'),
         content: Text(
           'Nhập mã Giftcode để nhận được những phần quà đặc biệt từ các sự kiện của SoulLocket.',
-          style: SLTheme.quicksand(height: 1.45),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(context),
             child: const Text('Đã hiểu'),
           ),
@@ -64,7 +63,7 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
     final code = _codeController.text.trim().toUpperCase();
     if (code.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('util_vuilngnhpm_473b65'))),
+        SLSnackBar(content: Text(context.tr('util_vuilngnhpm_473b65'))),
       );
       return;
     }
@@ -86,7 +85,7 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(result.message),
           backgroundColor: result.success ? Colors.green : Colors.red,
         ),
@@ -98,8 +97,8 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
       debugPrint('Error redeeming giftcode: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Có lỗi xảy ra, vui lòng thử lại.'),
+          SLSnackBar(
+            content: const Text('Có lỗi xảy ra, vui lòng thử lại.'),
             backgroundColor: Colors.red,
           ),
         );

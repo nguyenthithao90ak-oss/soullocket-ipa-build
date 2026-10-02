@@ -291,70 +291,19 @@ class _CountdownQuickCustomizeSheetContentState
         HapticFeedback.mediumImpact();
         showDialog(
           context: context,
-          builder: (dialogContext) => Dialog(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
+          builder: (dialogContext) => SLAlertDialog(
+            title: SLDialogHeading(
+              title: context.tr('p6_upgrade_vip'),
+              icon: Icons.diamond_outlined,
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(22),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.diamond_rounded, size: 36, color: accent),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    'Đặc quyền VIP 💎',
-                    style: SLTheme.quicksand(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF2D1B24),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Giao diện "${option.label}" là đặc quyền dành riêng cho tài khoản VIP.\nVui lòng nâng cấp VIP để trải nghiệm tính năng này 💕',
-                    textAlign: TextAlign.center,
-                    style: SLTheme.quicksand(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF7A6472),
-                      height: 1.45,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(dialogContext),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: accent,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      child: Text(
-                        'Đã hiểu',
-                        style: SLTheme.quicksand(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+            content: Text(L10nService().format('dialog_vip_feature', {'feature': option.label})),
+            actions: [
+              SLDialogAction(
+                primary: true,
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(context.tr('toast_ok')),
               ),
-            ),
+            ],
           ),
         );
       },
@@ -877,38 +826,21 @@ class _CountdownQuickCustomizeSheetContentState
                         onPressed: () {
                           showDialog(
                             context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: Text(
-                                'Xóa ảnh nền?',
-                                style: SLTheme.quicksand(
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
+                            builder: (ctx) => SLAlertDialog(
+                              title: Text('Xóa ảnh nền?'),
                               content: Text(
                                 'Bạn có chắc chắn muốn xóa ảnh nền trang chủ không?',
-                                style: SLTheme.quicksand(
-                                  fontWeight: FontWeight.w700,
-                                ),
                               ),
                               actions: [
-                                TextButton(
-                                  child: Text(
-                                    'Hủy',
-                                    style: SLTheme.quicksand(
-                                      fontWeight: FontWeight.w800,
-                                      color: const Color(0xFF8E6F7E),
-                                    ),
-                                  ),
+                                SLDialogAction(
+                                  child: Text('Hủy'),
                                   onPressed: () => Navigator.pop(ctx),
                                 ),
-                                TextButton(
-                                  child: Text(
-                                    'Xóa',
-                                    style: SLTheme.quicksand(
-                                      fontWeight: FontWeight.w900,
-                                      color: const Color(0xFFD81B60),
-                                    ),
-                                  ),
+                                SLDialogAction(
+                                  primary: true,
+                                  destructive: true,
+
+                                  child: Text('Xóa'),
                                   onPressed: () {
                                     Navigator.pop(ctx);
                                     _clearBgImage();
@@ -1372,38 +1304,21 @@ class _CountdownQuickCustomizeSheetContentState
                       onPressed: () {
                         showDialog(
                           context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: Text(
-                              'Xóa ảnh nền?',
-                              style: SLTheme.quicksand(
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
+                          builder: (ctx) => SLAlertDialog(
+                            title: Text('Xóa ảnh nền?'),
                             content: Text(
                               'Bạn có chắc chắn muốn xóa ảnh nền trang chủ không?',
-                              style: SLTheme.quicksand(
-                                fontWeight: FontWeight.w700,
-                              ),
                             ),
                             actions: [
-                              TextButton(
-                                child: Text(
-                                  'Hủy',
-                                  style: SLTheme.quicksand(
-                                    fontWeight: FontWeight.w800,
-                                    color: const Color(0xFF8E6F7E),
-                                  ),
-                                ),
+                              SLDialogAction(
+                                child: Text('Hủy'),
                                 onPressed: () => Navigator.pop(ctx),
                               ),
-                              TextButton(
-                                child: Text(
-                                  'Xóa',
-                                  style: SLTheme.quicksand(
-                                    fontWeight: FontWeight.w900,
-                                    color: const Color(0xFFD81B60),
-                                  ),
-                                ),
+                              SLDialogAction(
+                                primary: true,
+                                destructive: true,
+
+                                child: Text('Xóa'),
                                 onPressed: () {
                                   Navigator.pop(ctx);
                                   _clearBgImage();

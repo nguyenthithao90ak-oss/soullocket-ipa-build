@@ -68,7 +68,7 @@ extension MainHomeAvatarController on _MainHomeTabState {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: const Text(
             'Lần đổi avatar trang chủ trước đã bị gián đoạn.',
           ),
@@ -111,8 +111,8 @@ extension MainHomeAvatarController on _MainHomeTabState {
       await PendingUploadService.instance.clear(pendingKey);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Không tìm thấy ảnh avatar cũ để thử lại.'),
+          SLSnackBar(
+            content: const Text('Không tìm thấy ảnh avatar cũ để thử lại.'),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -203,7 +203,7 @@ extension MainHomeAvatarController on _MainHomeTabState {
         _avatarUploadProgressNotifier.value = 1.0;
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text(
               isUser1
                   ? 'Đã cập nhật avatar cho bạn nam.'
@@ -216,8 +216,8 @@ extension MainHomeAvatarController on _MainHomeTabState {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
+          SLSnackBar(
+            content: const Text(
               'Chưa thể đổi ảnh đại diện lúc này. Vui lòng thử lại.',
             ),
             behavior: SnackBarBehavior.floating,

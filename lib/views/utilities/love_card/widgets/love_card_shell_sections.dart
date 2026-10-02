@@ -108,9 +108,7 @@ class _LoveCardHeaderSection extends StatelessWidget {
   Future<void> _showInfoDialog(BuildContext context) async {
     await showDialog<void>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: const Color(0xFFFFFBF4),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      builder: (dialogContext) => SLAlertDialog(
         title: Row(
           children: [
             Container(
@@ -123,15 +121,7 @@ class _LoveCardHeaderSection extends StatelessWidget {
               child: Icon(Icons.mark_email_read_rounded, color: colors.first),
             ),
             const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                context.tr('love_card_info_title'),
-                style: SLTheme.quicksand(
-                  color: const Color(0xFF26324A),
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
+            Expanded(child: Text(context.tr('love_card_info_title'))),
           ],
         ),
         content: Column(
@@ -157,12 +147,11 @@ class _LoveCardHeaderSection extends StatelessWidget {
           ],
         ),
         actions: [
-          FilledButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.of(dialogContext).pop(),
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF26324A),
-              foregroundColor: Colors.white,
-            ),
+
             child: Text(context.tr('love_card_info_done')),
           ),
         ],

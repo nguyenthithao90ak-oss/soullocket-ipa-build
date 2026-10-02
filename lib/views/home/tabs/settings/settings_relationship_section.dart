@@ -99,17 +99,19 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
   }) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => SLAlertDialog(
         title: Text(title),
         content: Text(message),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text(context.tr('home_hy_1e4050')),
           ),
-          ElevatedButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: ElevatedButton.styleFrom(foregroundColor: Colors.white),
+
             child: Text(confirmLabel),
           ),
         ],

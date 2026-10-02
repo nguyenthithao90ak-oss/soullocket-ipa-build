@@ -189,6 +189,7 @@ flutter:
 
     - assets/i18n/
     - assets/icon.png
+    - assets/images/widget_stickers/
     - assets/images/avatar_male.jpg
     - assets/images/avatar_female.jpg
     - assets/images/female_avatar_sticker.json

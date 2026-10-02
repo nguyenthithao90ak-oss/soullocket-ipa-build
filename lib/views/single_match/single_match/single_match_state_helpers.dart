@@ -44,7 +44,7 @@ void _singleMatchShowSnack(
   required bool isError,
 }) {
   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
+    SLSnackBar(
       content: Text(message),
       backgroundColor: isError ? const Color(0xFFB3261E) : null,
     ),

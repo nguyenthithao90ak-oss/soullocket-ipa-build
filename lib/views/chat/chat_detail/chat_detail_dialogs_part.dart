@@ -703,26 +703,25 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
     final nextNickname = await showDialog<String>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(
-            'Biệt danh trong chat',
-            style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-          ),
+        return SLAlertDialog(
+          title: Text('Biệt danh trong chat'),
           content: TextField(
             controller: ctrl,
             maxLength: 28,
             decoration: const InputDecoration(hintText: 'Nhập biệt danh...'),
           ),
           actions: [
-            TextButton(
+            SLDialogAction(
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Hủy'),
             ),
-            TextButton(
+            SLDialogAction(
               onPressed: () => Navigator.of(dialogContext).pop(''),
               child: const Text('Bỏ biệt danh'),
             ),
-            ElevatedButton(
+            SLDialogAction(
+              primary: true,
+
               onPressed: () =>
                   Navigator.of(dialogContext).pop(ctrl.text.trim()),
               child: const Text('Lưu'),
@@ -1094,17 +1093,20 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
+        return SLAlertDialog(
           title: const Text('Chặn người dùng'),
           content: Text(
             'Bạn có chắc muốn chặn ${widget.targetName}? Sau khi chặn, hai bên sẽ không thể nhắn tin.',
           ),
           actions: [
-            TextButton(
+            SLDialogAction(
               onPressed: () => Navigator.of(dialogContext).pop(false),
               child: const Text('Hủy'),
             ),
-            ElevatedButton(
+            SLDialogAction(
+              primary: true,
+              destructive: true,
+
               onPressed: () => Navigator.of(dialogContext).pop(true),
               child: const Text('Chặn'),
             ),
@@ -1140,7 +1142,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
+        return SLAlertDialog(
           title: const Text('Xóa đoạn chat'),
           content: Text(
             _isInternal
@@ -1148,11 +1150,14 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                 : 'Xóa toàn bộ lịch sử tin nhắn của đoạn chat này?',
           ),
           actions: [
-            TextButton(
+            SLDialogAction(
               onPressed: () => Navigator.of(dialogContext).pop(false),
               child: const Text('Hủy'),
             ),
-            ElevatedButton(
+            SLDialogAction(
+              primary: true,
+              destructive: true,
+
               onPressed: () => Navigator.of(dialogContext).pop(true),
               child: const Text('Xóa'),
             ),
@@ -1198,7 +1203,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (dialogContext, setDialogState) {
-            return AlertDialog(
+            return SLAlertDialog(
               title: const Text('Báo cáo người dùng'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1233,11 +1238,13 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                 ],
               ),
               actions: [
-                TextButton(
+                SLDialogAction(
                   onPressed: () => Navigator.of(dialogContext).pop(),
                   child: const Text('Hủy'),
                 ),
-                ElevatedButton(
+                SLDialogAction(
+                  primary: true,
+
                   onPressed: () {
                     final extra = reasonCtrl.text.trim();
                     Navigator.of(

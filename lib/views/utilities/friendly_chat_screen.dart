@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'widgets/ai_task_status_banner.dart';
@@ -432,7 +434,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      SLSnackBar(
         content: Text(
           ok
               ? context.tr('util_gibococutr_6abf91')
@@ -448,7 +450,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.tr('util_saochptinn_259ed4'))),
+      SLSnackBar(content: Text(context.tr('util_saochptinn_259ed4'))),
     );
   }
 
@@ -644,7 +646,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
     setState(() => _isCheckingAiResult = false);
     if (!outcome.memorySaved) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(L10nService().translate('ai_task_memory_unsaved')),
         ),
       );
@@ -786,36 +788,19 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
     }
     final bool? confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          L10nService().translate('friendly_chat_reset_title'),
-          style: SLTheme.quicksand(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        content: Text(
-          L10nService().translate('friendly_chat_reset_message'),
-          style: SLTheme.quicksand(fontWeight: FontWeight.w600, fontSize: 15),
-        ),
+      builder: (context) => SLAlertDialog(
+        title: Text(L10nService().translate('friendly_chat_reset_title')),
+        content: Text(L10nService().translate('friendly_chat_reset_message')),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              'Hủy',
-              style: SLTheme.quicksand(
-                color: Colors.grey,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: Text('Hủy'),
           ),
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              L10nService().translate('friendly_chat_reset_confirm'),
-              style: SLTheme.quicksand(
-                color: const Color(0xFFD81B60),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: Text(L10nService().translate('friendly_chat_reset_confirm')),
           ),
         ],
       ),
@@ -853,7 +838,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
     if (!cleared) {
       setState(() => _isSending = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(L10nService().translate('ai_task_clear_error'))),
+        SLSnackBar(content: Text(L10nService().translate('ai_task_clear_error'))),
       );
       return;
     }
@@ -1116,7 +1101,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
                 _persona = value;
               });
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
+                SLSnackBar(
                   content: Text(
                     'Đã chuyển sang tính cách: ${value == 'funny'
                         ? 'Hài hước 😆'

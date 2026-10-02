@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 
 import 'package:firebase_database/firebase_database.dart';
@@ -344,17 +346,20 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
     if (target != null && _isLocked(target)) return false;
     return await showDialog<bool>(
           context: context,
-          builder: (ctx) => AlertDialog(
+          builder: (ctx) => SLAlertDialog(
             title: Text(context.tr('p5_notif_delete_one_title')),
             content: Text(context.tr('p5_notif_delete_one_message')),
             actions: [
-              TextButton(
+              SLDialogAction(
                 onPressed: () => Navigator.pop(ctx, false),
                 child: Text(context.tr('p5_cancel')),
               ),
-              TextButton(
+              SLDialogAction(
+                primary: true,
+                destructive: true,
+
                 onPressed: () => Navigator.pop(ctx, true),
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
+
                 child: Text(context.tr('p5_delete')),
               ),
             ],
@@ -388,7 +393,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (_) => SLAlertDialog(
         title: Text(
           L10nService().format('notif_delete_title', {'category': catName}),
         ),
@@ -398,12 +403,14 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
           }),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(context, false),
             child: Text(L10nService().translate('core_cancel')),
           ),
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () => Navigator.pop(context, true),
             child: Text(L10nService().translate('notif_delete_all')),
           ),

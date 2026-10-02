@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
@@ -75,36 +77,21 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
   Future<void> _manualRefund(String paymentId, String uid) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF141C30),
-        title: Text(
-          'Xác nhận hoàn tiền',
-          style: SLTheme.quicksand(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+      builder: (context) => SLAlertDialog(
+        title: Text('Xác nhận hoàn tiền'),
         content: Text(
           'Bạn có chắc chắn muốn hoàn tiền thủ công cho giao dịch này không? Hành động này sẽ được ghi vào Audit Log.',
-          style: SLTheme.quicksand(color: SLColors.textMuted),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              'Hủy',
-              style: SLTheme.quicksand(color: SLColors.textMuted),
-            ),
+            child: Text('Hủy'),
           ),
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              'Hoàn tiền',
-              style: SLTheme.quicksand(
-                color: SLColors.brandPink,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: Text('Hoàn tiền'),
           ),
         ],
       ),
@@ -131,15 +118,15 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Hoàn tiền thành công')),
+        SLSnackBar(content: const Text('Hoàn tiền thành công')),
       );
       _loadData();
     } catch (e) {
       debugPrint('Manual refund failed: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Chưa thể hoàn tiền lúc này. Vui lòng thử lại.'),
+        SLSnackBar(
+          content: const Text('Chưa thể hoàn tiền lúc này. Vui lòng thử lại.'),
         ),
       );
     }

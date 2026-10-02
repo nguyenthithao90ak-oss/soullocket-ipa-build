@@ -147,7 +147,7 @@ extension _CinemaReelPlayerDialogsPart on _CinemaReelPlayerScreenState {
     try {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text(message),
             backgroundColor: backgroundColor,
             behavior: SnackBarBehavior.floating,

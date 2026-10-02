@@ -899,6 +899,6 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
 
   void _snack(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context).showSnackBar(SLSnackBar(content: Text(msg)));
   }
 }

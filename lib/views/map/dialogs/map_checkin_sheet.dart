@@ -8,7 +8,7 @@ extension _MapCheckinSheetExt on _MapScreenState {
     final activePoint = selectedPoint ?? _myLiveLocation;
     if (activePoint == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(context.tr('map_chacvtrhin_ccf9e7')),
           behavior: SnackBarBehavior.floating,
         ),
@@ -126,7 +126,7 @@ extension _MapCheckinSheetExt on _MapScreenState {
                                   !isCurrentPlaceAlreadyPinned) {
                                 if (!ctx.mounted) return;
                                 ScaffoldMessenger.of(ctx).showSnackBar(
-                                  SnackBar(
+                                  SLSnackBar(
                                     content: Text(msgLimitFull),
                                     behavior: SnackBarBehavior.floating,
                                   ),
@@ -173,7 +173,7 @@ extension _MapCheckinSheetExt on _MapScreenState {
                             } catch (e) {
                               if (!ctx.mounted) return;
                               ScaffoldMessenger.of(ctx).showSnackBar(
-                                SnackBar(
+                                SLSnackBar(
                                   content: Text(
                                     L10nService()
                                         .format('p9_map_checkin_failed', {
@@ -181,7 +181,7 @@ extension _MapCheckinSheetExt on _MapScreenState {
                                             e,
                                           ).message,
                                         }),
-                                    style: const TextStyle(color: Colors.white),
+                                    
                                   ),
                                   backgroundColor: _kMapPinkDeep,
                                 ),

@@ -276,15 +276,18 @@ class _LoveCardHistoryItem extends StatelessWidget {
           final bool? shouldDelete = await showDialog<bool>(
             context: context,
             builder: (BuildContext dialogContext) {
-              return AlertDialog(
+              return SLAlertDialog(
                 title: Text(context.tr('util_xalinktthi_8b9f9b')),
                 content: Text(context.tr('util_linktnysbg_b62df1')),
                 actions: <Widget>[
-                  TextButton(
+                  SLDialogAction(
                     onPressed: () => Navigator.of(dialogContext).pop(false),
                     child: Text(context.tr('util_hy_1e4050')),
                   ),
-                  FilledButton(
+                  SLDialogAction(
+                    primary: true,
+                    destructive: true,
+
                     onPressed: () => Navigator.of(dialogContext).pop(true),
                     child: Text(context.tr('util_xa_4ed187')),
                   ),

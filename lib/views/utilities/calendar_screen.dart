@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -386,7 +387,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       if (mounted) {
         FocusScope.of(context).unfocus();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text(
               'Đã thêm kế hoạch cho ${_formatShortDate(selectedDay)}',
             ),
@@ -397,7 +398,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Không thể lưu kế hoạch: $e')));
+        ).showSnackBar(SLSnackBar(content: Text('Không thể lưu kế hoạch: $e')));
       }
     } finally {
       if (mounted) {
@@ -424,7 +425,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       );
       if (added && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text('Đã thêm kế hoạch cho ${_formatShortDate(day)}'),
           ),
         );
@@ -820,8 +821,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
               final scaffoldMessenger = ScaffoldMessenger.of(context);
               scaffoldMessenger.hideCurrentSnackBar();
               scaffoldMessenger.showSnackBar(
-                const SnackBar(
-                  content: Text(
+                SLSnackBar(
+                  content: const Text(
                     'Đang gửi yêu cầu... Nếu không thấy phản hồi, vui lòng nhấn giữ màn hình chính để tự thêm thủ công nhé! ✨',
                   ),
                   duration: Duration(seconds: 5),

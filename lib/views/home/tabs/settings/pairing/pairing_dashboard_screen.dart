@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/widgets/getting_started_guide.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
@@ -235,7 +236,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           ? 'pairing_ui_request_accept_error'
           : 'pairing_ui_request_reject_error';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(
             AppErrorMapper.resolve(
               error,

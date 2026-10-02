@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -77,14 +79,9 @@ class PasswordResetOtpDialog {
             final canConfirm = !isBusy && sendError == null;
 
             return SensitiveContentGuard(
-              child: AlertDialog(
-                shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
+              child: SLAlertDialog(
                 title: Text(
                   L10nService().translate('auth_reset_password_by_code'),
-                  style: SLTheme.quicksand(
-                    color: SLColors.primaryActive,
-                    fontWeight: FontWeight.bold,
-                  ),
                 ),
                 content: SingleChildScrollView(
                   child: Column(
@@ -185,38 +182,26 @@ class PasswordResetOtpDialog {
                   ),
                 ),
                 actions: [
-                  TextButton(
+                  SLDialogAction(
                     onPressed: () => Navigator.pop(dialogContext, false),
-                    child: Text('Hủy', style: SLTheme.quicksand()),
+                    child: Text('Hủy'),
                   ),
                   if (sendError != null || verifyError != null)
-                    TextButton(
+                    SLDialogAction(
                       onPressed: () => startSend(dialogContext, setDialogState),
-                      child: Text(
-                        'Gửi lại',
-                        style: SLTheme.quicksand(
-                          color: SLColors.primaryActive,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: Text('Gửi lại'),
                     ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: SLColors.primaryActive,
-                      foregroundColor: Colors.white,
-                      disabledBackgroundColor: Colors.grey.shade300,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: SLRadius.smAll,
-                      ),
-                    ),
+                  SLDialogAction(
+                    primary: true,
+
                     onPressed: canConfirm
                         ? () async {
                             final otp = otpController.text.trim();
                             final newPassword = newPasswordController.text;
                             if (otp.length != 6) {
                               ScaffoldMessenger.of(dialogContext).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
+                                SLSnackBar(
+                                  content: const Text(
                                     'Vui lòng nhập đủ 6 số mã xác nhận.',
                                   ),
                                 ),
@@ -225,8 +210,8 @@ class PasswordResetOtpDialog {
                             }
                             if (newPassword.length < 6) {
                               ScaffoldMessenger.of(dialogContext).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
+                                SLSnackBar(
+                                  content: const Text(
                                     'Mật khẩu mới phải có ít nhất 6 ký tự.',
                                   ),
                                 ),
@@ -257,9 +242,8 @@ class PasswordResetOtpDialog {
                       isSending
                           ? 'Đang gửi...'
                           : isVerifying
-                              ? 'Đang kiểm tra...'
-                              : 'Đổi mật khẩu',
-                      style: SLTheme.quicksand(fontWeight: FontWeight.bold),
+                          ? 'Đang kiểm tra...'
+                          : 'Đổi mật khẩu',
                     ),
                   ),
                 ],

@@ -21,6 +21,7 @@ import '../utils/services/settings_sync_service.dart';
 import 'auth/house_choice_screen.dart';
 import '../utils/services/role_utils.dart';
 import '../utils/app_error_mapper.dart';
+import '../widgets/sl_toast.dart';
 import 'app_entry/app_entry_access_resolver.dart';
 import 'app_entry/app_entry_home_asset_preparer.dart';
 import 'app_entry/app_entry_controller.dart';
@@ -44,8 +45,9 @@ class AppEntry extends StatefulWidget {
 }
 
 class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
-  static const Duration _webAuthStreamGracePeriod =
-      Duration(milliseconds: 1200);
+  static const Duration _webAuthStreamGracePeriod = Duration(
+    milliseconds: 1200,
+  );
 
   final _authService = AuthService();
   final _houseService = HouseService();
@@ -147,8 +149,10 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           try {
-            Navigator.of(context, rootNavigator: true)
-                .popUntil((route) => route.isFirst);
+            Navigator.of(
+              context,
+              rootNavigator: true,
+            ).popUntil((route) => route.isFirst);
           } catch (e) {
             debugPrint('[AppEntry] Cached navigation pop failed: $e');
           }
@@ -184,40 +188,47 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     _maintenanceSub = FirebaseDatabase.instance
         .ref('sys_settings/is_maintenance')
         .onValue
-        .listen((event) async {
-      if (!mounted) return;
-      final isMaintenance = event.snapshot.value == true;
-      // Save to cache để offline vẫn block được
-      unawaited(
-        SharedPreferences.getInstance().then(
-          (p) => p.setBool(_kMaintenanceCacheKey, isMaintenance),
-        ),
-      );
-      if (!mounted) return;
-      setState(() {
-        _isMaintenance = isMaintenance;
-      });
-      if (isMaintenance) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            try {
-              Navigator.of(context, rootNavigator: true)
-                  .popUntil((route) => route.isFirst);
-            } catch (e) {
-              debugPrint('[AppEntry] Maintenance navigation pop failed: $e');
+        .listen(
+          (event) async {
+            if (!mounted) return;
+            final isMaintenance = event.snapshot.value == true;
+            // Save to cache để offline vẫn block được
+            unawaited(
+              SharedPreferences.getInstance().then(
+                (p) => p.setBool(_kMaintenanceCacheKey, isMaintenance),
+              ),
+            );
+            if (!mounted) return;
+            setState(() {
+              _isMaintenance = isMaintenance;
+            });
+            if (isMaintenance) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  try {
+                    Navigator.of(
+                      context,
+                      rootNavigator: true,
+                    ).popUntil((route) => route.isFirst);
+                  } catch (e) {
+                    debugPrint(
+                      '[AppEntry] Maintenance navigation pop failed: $e',
+                    );
+                  }
+                }
+              });
             }
-          }
-        });
-      }
-    }, onError: (Object error, StackTrace stackTrace) {
-      debugPrint(
-        '[AppEntry] Maintenance listener error: ${AppErrorMapper.resolve(error).message}',
-      );
-      // Re-subscribe sau lỗi để không bỏ lỡ cập nhật bảo trì
-      Future.delayed(const Duration(seconds: 5), () {
-        if (mounted) _listenToMaintenance();
-      });
-    });
+          },
+          onError: (Object error, StackTrace stackTrace) {
+            debugPrint(
+              '[AppEntry] Maintenance listener error: ${AppErrorMapper.resolve(error).message}',
+            );
+            // Re-subscribe sau lỗi để không bỏ lỡ cập nhật bảo trì
+            Future.delayed(const Duration(seconds: 5), () {
+              if (mounted) _listenToMaintenance();
+            });
+          },
+        );
   }
 
   void _applyAuthState(AppEntryAuthState state) {
@@ -277,26 +288,16 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     // Listener của màn hình đang mở tự đồng bộ dữ liệu và Firebase giữ cache đĩa.
     // Không ghim cả nhánh user/House ở đây: keepSynced tiếp tục tải dù màn hình
     // đã đóng và nhánh cũ không được tháo khi người dùng đổi House/tài khoản.
-
   }
 
-  void _showRootSnackBar(
-    String message, {
-    bool isSuccess = false,
-  }) {
+  void _showRootSnackBar(String message, {bool isSuccess = false}) {
     if (!mounted) return;
     try {
-      final messenger = ScaffoldMessenger.maybeOf(context);
-      messenger
-        ?..clearSnackBars()
-        ..removeCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor:
-                isSuccess ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
-          ),
-        );
+      SLToast.show(
+        context,
+        message,
+        variant: isSuccess ? SLToastVariant.success : SLToastVariant.danger,
+      );
     } catch (e) {
       // Context may not be valid after widget disposal
     }
@@ -325,8 +326,8 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(() async {
         try {
-          final shouldShow =
-              await SettingsSyncService().consumePendingRestoreNotice(uid);
+          final shouldShow = await SettingsSyncService()
+              .consumePendingRestoreNotice(uid);
           if (!mounted || !shouldShow) return;
 
           // await showDialog<void>(
@@ -372,12 +373,12 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
             debugPrint(
               '[AppEntry] prepareSignedInHouseSession start: $houseId',
             );
-            final sessionResult =
-                await _appEntryController.prepareSignedInHouseSession(
-              context: context,
-              houseId: houseId,
-              hasTriggeredInitialAppOpenAd: _hasTriggeredInitialAppOpenAd,
-            );
+            final sessionResult = await _appEntryController
+                .prepareSignedInHouseSession(
+                  context: context,
+                  houseId: houseId,
+                  hasTriggeredInitialAppOpenAd: _hasTriggeredInitialAppOpenAd,
+                );
             if (sessionResult.didScheduleInitialAppOpenAd) {
               _hasTriggeredInitialAppOpenAd = true;
             }
@@ -406,9 +407,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   }
 
   Future<void> _handleAppResumed() async {
-    final result = await _appEntryController.handleAppResumed(
-      context: context,
-    );
+    final result = await _appEntryController.handleAppResumed(context: context);
     if (!mounted) return;
 
     final authState = result.authState;
@@ -419,9 +418,10 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     if (!result.shouldResetToHome) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      Navigator.of(context, rootNavigator: true).popUntil(
-        (route) => route.isFirst,
-      );
+      Navigator.of(
+        context,
+        rootNavigator: true,
+      ).popUntil((route) => route.isFirst);
     });
   }
 
@@ -639,9 +639,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                 onAppeal: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => const LockAppealScreen(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const LockAppealScreen()),
                   );
                 },
               );

@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -168,35 +170,17 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
       _reasonCtrl.clear();
       await showDialog<void>(
         context: context,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: SLRadius.xlAll,
-          ),
-          title: Text(
-            'Đã gửi kháng nghị',
-            style: SLTheme.quicksand(
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFFD81B60),
-            ),
-          ),
+        builder: (context) => SLAlertDialog(
+          title: Text('Đã gửi kháng nghị'),
           content: Text(
             'Yêu cầu của bạn đã được chuyển tới quản trị viên. Bạn có thể theo dõi trạng thái ở phần lịch sử phía dưới.',
-            style: SLTheme.quicksand(
-              fontSize: 14,
-              height: 1.55,
-              color: const Color(0xFF4B5563),
-            ),
           ),
           actions: [
-            TextButton(
+            SLDialogAction(
+              primary: true,
+
               onPressed: () => Navigator.pop(context),
-              child: Text(
-                'Đã rõ',
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFFD81B60),
-                ),
-              ),
+              child: Text('Đã rõ'),
             ),
           ],
         ),
@@ -212,7 +196,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
 
   void _showSnack(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+      SLSnackBar(content: Text(message)),
     );
   }
 

@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -38,12 +40,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
   void _showInfoDialog(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          'Lịch sử hoạt động',
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-        ),
+      builder: (context) => SLAlertDialog(
+        title: Text('Lịch sử hoạt động'),
         content: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,21 +50,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
               Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
               Text(
-                  '- Ghi lại toàn bộ dấu chân tương tác của hai người: ngày bắt đầu yêu, lần đầu thêm ảnh, khi thay đổi hình nền, v.v.\n- Giúp dễ dàng theo dõi dòng thời gian phát triển tình cảm.'),
+                '- Ghi lại toàn bộ dấu chân tương tác của hai người: ngày bắt đầu yêu, lần đầu thêm ảnh, khi thay đổi hình nền, v.v.\n- Giúp dễ dàng theo dõi dòng thời gian phát triển tình cảm.',
+              ),
               SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                'Cách sử dụng:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               SizedBox(height: 4),
               Text(
-                  '- Hệ thống tự động lưu các sự kiện quan trọng vào lịch sử.\n- Bạn có thể xem lại để thấy nhà chung của mình đã thay đổi thế nào qua thời gian.'),
+                '- Hệ thống tự động lưu các sự kiện quan trọng vào lịch sử.\n- Bạn có thể xem lại để thấy nhà chung của mình đã thay đổi thế nào qua thời gian.',
+              ),
             ],
           ),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu',
-                style: TextStyle(color: SLColors.primary)),
+            child: const Text('Đã hiểu'),
           ),
         ],
       ),
@@ -99,37 +102,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Future<void> _clearHistory() async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF111827),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          context.tr('util_xalchs_4e0e74'),
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        content: Text(
-          context.tr('util_bnmunxaton_12ff7d'),
-          style: SLTheme.quicksand(color: Colors.white70),
-        ),
+      builder: (context) => SLAlertDialog(
+        title: Text(context.tr('util_xalchs_4e0e74')),
+        content: Text(context.tr('util_bnmunxaton_12ff7d')),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              context.tr('util_hy_1e4050'),
-              style: SLTheme.quicksand(color: Colors.white38),
-            ),
+            child: Text(context.tr('util_hy_1e4050')),
           ),
-          TextButton(
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              context.tr('util_xa_4ed187'),
-              style: SLTheme.quicksand(
-                color: Colors.redAccent,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: Text(context.tr('util_xa_4ed187')),
           ),
         ],
       ),
@@ -158,7 +144,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       _restoringEntryId = null;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      SLSnackBar(
         content: Text(
           ok
               ? context.tr('util_khiphcmcny_df4b8a')

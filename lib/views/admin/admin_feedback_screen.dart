@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
@@ -24,13 +26,13 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
       await _dbRef.child(id).remove();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã xoá đóng góp ý kiến.')),
+          SLSnackBar(content: const Text('Đã xoá đóng góp ý kiến.')),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text(
               AppErrorMapper.resolve(e,
                       fallbackMessage: 'Không thể xoá đóng góp ý kiến.')
@@ -220,46 +222,33 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                                     const SizedBox(width: 16),
                                     IconButton(
                                       icon: const Icon(
-                                          Icons.delete_outline_rounded,
-                                          color: Colors.redAccent,
-                                          size: 22),
+                                        Icons.delete_outline_rounded,
+                                        color: Colors.redAccent,
+                                        size: 22,
+                                      ),
                                       onPressed: () {
                                         showDialog(
                                           context: context,
-                                          builder: (ctx) => AlertDialog(
-                                            backgroundColor:
-                                                const Color(0xFF10182A),
-                                            title: Text(
-                                              'Xoá ý kiến?',
-                                              style: SLTheme.quicksand(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold),
-                                            ),
+                                          builder: (ctx) => SLAlertDialog(
+                                            title: Text('Xoá ý kiến?'),
                                             content: Text(
                                               'Bạn có chắc chắn muốn xoá đóng góp ý kiến này không?',
-                                              style: SLTheme.quicksand(
-                                                  color:
-                                                      SLColors.textMuted),
                                             ),
                                             actions: [
-                                              TextButton(
+                                              SLDialogAction(
                                                 onPressed: () =>
                                                     Navigator.pop(ctx),
-                                                child: Text('Huỷ',
-                                                    style: SLTheme.quicksand(
-                                                        color: const Color(
-                                                            0xFF64748B))),
+                                                child: Text('Huỷ'),
                                               ),
-                                              TextButton(
+                                              SLDialogAction(
+                                                primary: true,
+                                                destructive: true,
+
                                                 onPressed: () {
                                                   Navigator.pop(ctx);
                                                   _deleteFeedback(item.id);
                                                 },
-                                                child: Text('Xoá',
-                                                    style: SLTheme.quicksand(
-                                                        color: Colors.redAccent,
-                                                        fontWeight:
-                                                            FontWeight.bold)),
+                                                child: Text('Xoá'),
                                               ),
                                             ],
                                           ),

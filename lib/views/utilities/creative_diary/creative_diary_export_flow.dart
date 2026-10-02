@@ -12,10 +12,10 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(
             message,
-            style: SLTheme.quicksand(fontWeight: FontWeight.w800),
+            
           ),
           backgroundColor: backgroundColor,
           behavior: SnackBarBehavior.floating,
@@ -67,48 +67,23 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
       return false;
     }
 
-    final shouldWatchAd = await showDialog<bool>(
+    final shouldWatchAd =
+        await showDialog<bool>(
           context: context,
           builder: (dialogContext) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
-              title: Text(
-                title,
-                style: SLTheme.quicksand(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: SLColors.textPrimary,
-                ),
-              ),
-              content: Text(
-                message,
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w700,
-                  color: SLColors.textSecondary,
-                ),
-              ),
+            return SLAlertDialog(
+              title: Text(title),
+              content: Text(message),
               actions: [
-                TextButton(
+                SLDialogAction(
                   onPressed: () => Navigator.of(dialogContext).pop(false),
-                  child: Text(
-                    context.tr('util_sau_8a3721'),
-                    style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w800,
-                      color: SLColors.textSecondary,
-                    ),
-                  ),
+                  child: Text(context.tr('util_sau_8a3721')),
                 ),
-                FilledButton.icon(
+                SLDialogAction.icon(
+                  primary: true,
                   onPressed: () => Navigator.of(dialogContext).pop(true),
                   icon: const Icon(Icons.play_circle_fill_rounded),
-                  label: Text(
-                    context.tr('util_xemqungco_3eab07'),
-                    style: SLTheme.quicksand(fontWeight: FontWeight.w800),
-                  ),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: SLColors.primaryActive,
-                    foregroundColor: Colors.white,
-                  ),
+                  label: Text(context.tr('util_xemqungco_3eab07')),
                 ),
               ],
             );

@@ -9,18 +9,13 @@ extension _SettingsTabWidgetPersistence on _SettingsTabState {
     return 0;
   }
 
-  List<String> _extractWidgetDiaryUrls(
-    dynamic raw, {
-    int limit = 5,
-  }) {
+  List<String> _extractWidgetDiaryUrls(dynamic raw, {int limit = 5}) {
     if (raw is! Map) return const <String>[];
 
     final items = <MapEntry<int, String>>[];
     raw.forEach((_, value) {
       if (value is! Map) return;
-      final map = value.map(
-        (key, item) => MapEntry(key.toString(), item),
-      );
+      final map = value.map((key, item) => MapEntry(key.toString(), item));
       final imageUrl = (map['url'] ?? map['imageUrl'] ?? map['thumbUrl'] ?? '')
           .toString()
           .trim();
@@ -46,9 +41,25 @@ extension _SettingsTabWidgetPersistence on _SettingsTabState {
       return const <String>[];
     }
     try {
-      final snapshot =
-          await _dbRef.child('houses/$houseId/memories').limitToLast(12).get();
-      return _extractWidgetDiaryUrls(snapshot.value, limit: limit);
+      final snapshots = await Future.wait([
+        _dbRef
+            .child('houses/$houseId/memories')
+            .limitToLast(24)
+            .get()
+            .timeout(const Duration(seconds: 4)),
+        _dbRef
+            .child('houses/$houseId/diary')
+            .limitToLast(24)
+            .get()
+            .timeout(const Duration(seconds: 4)),
+      ]);
+      // Gộp cùng hai nguồn với Home để thay khung không làm mất ảnh nhật ký.
+      final merged = <String, dynamic>{};
+      for (var i = 0; i < snapshots.length; i++) {
+        final raw = snapshots[i].value;
+        if (raw is Map) raw.forEach((key, value) => merged['$i/$key'] = value);
+      }
+      return _extractWidgetDiaryUrls(merged, limit: limit);
     } catch (_) {
       return const <String>[];
     }
@@ -57,8 +68,9 @@ extension _SettingsTabWidgetPersistence on _SettingsTabState {
   Future<void> _syncWidgetAppearanceDraft() async {
     if (kIsWeb) return;
     final widgetThemeKey = _draftWidgetThemeKey ?? 'pink';
-    final diaryImageUrls =
-        _showDiaryOnWidget ? await _loadWidgetDiaryUrls() : const <String>[];
+    final diaryImageUrls = _showDiaryOnWidget
+        ? await _loadWidgetDiaryUrls()
+        : const <String>[];
     await WidgetService.updateWidgetAppearance(
       bgTheme: widgetThemeKey,
       widgetStyleKey: _widgetStyleKey,
@@ -67,6 +79,8 @@ extension _SettingsTabWidgetPersistence on _SettingsTabState {
       heartStyleKey: _widgetHeartStyleKey,
       heartColorKey: _widgetHeartColorKey,
       diaryLayoutKey: _widgetDiaryLayoutKey,
+      widgetStickerKey: _widgetStickerKey,
+      photoFrameKey: _widgetPhotoFrameKey,
       seasonModeKey: _widgetSeasonModeKey,
       loveDate: _loveDate,
       birthday1: _dobU1,
@@ -82,22 +96,36 @@ extension _SettingsTabWidgetPersistence on _SettingsTabState {
     final accountKey = '${currentUid}_$houseIdKey';
 
     await prefs.setBool(
-        'il_widget_use_custom_event_$accountKey', _useCustomWidgetEvent);
-    await prefs.setString('il_widget_custom_event_title_$accountKey',
-        _customWidgetEventTitleCtrl.text);
-    await prefs.setString('il_widget_custom_event_date_$accountKey',
-        _customWidgetEventDateCtrl.text);
+      'il_widget_use_custom_event_$accountKey',
+      _useCustomWidgetEvent,
+    );
     await prefs.setString(
-        'il_widget_custom_event_color_$accountKey', _customWidgetEventColorHex);
+      'il_widget_custom_event_title_$accountKey',
+      _customWidgetEventTitleCtrl.text,
+    );
+    await prefs.setString(
+      'il_widget_custom_event_date_$accountKey',
+      _customWidgetEventDateCtrl.text,
+    );
+    await prefs.setString(
+      'il_widget_custom_event_color_$accountKey',
+      _customWidgetEventColorHex,
+    );
 
     // Also save under non-account specific keys for WidgetService to read directly
     await prefs.setBool('widget_use_custom_event', _useCustomWidgetEvent);
     await prefs.setString(
-        'widget_custom_event_title', _customWidgetEventTitleCtrl.text);
+      'widget_custom_event_title',
+      _customWidgetEventTitleCtrl.text,
+    );
     await prefs.setString(
-        'widget_custom_event_date', _customWidgetEventDateCtrl.text);
+      'widget_custom_event_date',
+      _customWidgetEventDateCtrl.text,
+    );
     await prefs.setString(
-        'widget_custom_event_color', _customWidgetEventColorHex);
+      'widget_custom_event_color',
+      _customWidgetEventColorHex,
+    );
 
     // Trigger widget preview tick to rebuild preview
     _widgetPreviewTickNotifier.value = _widgetPreviewTickNotifier.value + 1;

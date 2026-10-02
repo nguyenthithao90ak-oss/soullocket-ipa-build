@@ -1224,17 +1224,25 @@ class StorageService {
       tempPrefix: 'sl_public',
       errorLabel: 'Public image',
       mapResult: mapPublicStorageUploadResult,
-      finalizeSession: (session) async {
-        final result = await finalizePublicImageUpload(
-          houseId: houseId,
-          sessionId: session['sessionId']?.toString() ?? '',
-          target: target,
-          role: role,
-        );
-        if (result['ok'] != true) {
-          throw StateError('Public image finalize was not confirmed');
-        }
-      },
+      finalizeSession:
+          const {
+            'home_avatar',
+            'house_avatar',
+            'profile_header',
+            'soul_merge',
+          }.contains(target)
+          ? (session) async {
+              final result = await finalizePublicImageUpload(
+                houseId: houseId,
+                sessionId: session['sessionId']?.toString() ?? '',
+                target: target,
+                role: role,
+              );
+              if (result['ok'] != true) {
+                throw StateError('Public image finalize was not confirmed');
+              }
+            }
+          : null,
       errorMessage: 'Không thể tải ảnh công khai lên máy chủ.',
       onProgress: onProgress,
     );
@@ -1386,6 +1394,54 @@ class StorageService {
     );
   }
 
+  Future<StorageUploadResult?> uploadTimeCapsuleImage(
+    String houseId,
+    XFile file, {
+    int minWidth = 960,
+    int minHeight = 960,
+    int quality = 62,
+  }) {
+    return _uploadSignedImageWithCompression(
+      file: file,
+      sessionBuilder: (contentType, preferredFileName) =>
+          _uploadSessionHelper.createUploadSession(
+            invokeCallable: (name, payload) => _callWithAppCheckRetry(
+              () => _functions.httpsCallable(name).call(payload),
+              allowUnauthenticatedWithoutMarkers: true,
+            ),
+            functionName: 'createTimeCapsuleImageUploadSession',
+            payload: <String, dynamic>{
+              'houseId': houseId.trim(),
+              'contentType': contentType.trim(),
+              'fileName': preferredFileName.trim(),
+            },
+            label: 'Time capsule image upload session',
+            requireSessionId: true,
+            requireDownloadUrl: false,
+          ),
+      minWidth: minWidth,
+      minHeight: minHeight,
+      quality: quality,
+      tempPrefix: 'sl_time_capsule',
+      errorLabel: 'Time capsule image',
+      mapResult: mapBasicStorageUploadResult,
+      finalizeSession: (session) async {
+        final response = await _callWithAppCheckRetry(
+          () =>
+              _functions.httpsCallable('finalizeTimeCapsuleImageUpload').call({
+                'houseId': houseId.trim(),
+                'sessionId': session['sessionId']?.toString().trim() ?? '',
+              }),
+          allowUnauthenticatedWithoutMarkers: true,
+        );
+        if (response.data is! Map || response.data['ok'] != true) {
+          throw StateError('Time capsule image finalize was not confirmed');
+        }
+      },
+      errorMessage: 'Không thể tải ảnh hòm thời gian lên máy chủ.',
+    );
+  }
+
   Future<StorageUploadResult?> uploadAlbumImage(
     String houseId,
     XFile file, {
@@ -1481,6 +1537,13 @@ class StorageService {
     Future<void> Function(int bytes)? beforeUpload,
   }) async {
     String? tempCompressedPath;
+    final uploadUid = _requireCurrentUid();
+    void requireUploadOwner() {
+      if (_auth.currentUser?.uid != uploadUid) {
+        throw FirebaseAuthException(code: 'user-token-expired');
+      }
+    }
+
     try {
       final originalFileName = file.name.isNotEmpty ? file.name : file.path;
       var fileExtension = p.extension(originalFileName).toLowerCase();
@@ -1533,9 +1596,11 @@ class StorageService {
       final bytes = await uploadFile.readAsBytes();
       if (bytes.isEmpty) throw StateError('Empty upload file');
       await beforeUpload?.call(bytes.length);
+      requireUploadOwner();
       onProgress?.call(0.4);
 
       final session = await sessionBuilder(contentType, preferredFileName);
+      requireUploadOwner();
       final uploadUrl = session['uploadUrl']?.toString().trim() ?? '';
       final rawHeaders = session['headers'];
       if (uploadUrl.isEmpty || rawHeaders is! Map) {
@@ -1587,7 +1652,9 @@ class StorageService {
         client.close();
       }
 
+      requireUploadOwner();
       await finalizeSession?.call(session);
+      requireUploadOwner();
       final mapped = mapResult(session);
       onProgress?.call(1);
       return StorageUploadResult(
@@ -1603,9 +1670,7 @@ class StorageService {
         uploadedBytes: bytes.length,
       );
     } catch (error) {
-      debugPrint(
-        '$errorLabel upload failed: ${AppErrorMapper.resolve(error).message}',
-      );
+      debugPrint('$errorLabel upload failed (${error.runtimeType})');
       throw Exception(errorMessage);
     } finally {
       if (tempCompressedPath != null) {

@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 import 'dart:convert';
 import '../../utils/app_cache_manager.dart';
@@ -541,7 +542,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
   void _showSnack(String text, {bool isError = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      SLSnackBar(
         content: Text(text),
         backgroundColor: isError
             ? const Color(0xFFD81B60)

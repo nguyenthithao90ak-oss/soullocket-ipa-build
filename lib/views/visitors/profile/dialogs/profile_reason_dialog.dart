@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 
 import '../../../../core/sl_theme.dart';
 import '../../../../utils/services/l10n_service.dart';
@@ -10,12 +11,8 @@ Future<String?> showVisitorProfileReasonDialog({
   final controller = TextEditingController();
   return showDialog<String>(
     context: context,
-    builder: (_) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
-      title: Text(
-        context.tr('p5_profile_report'),
-        style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-      ),
+    builder: (_) => SLAlertDialog(
+      title: Text(context.tr('p5_profile_report')),
       content: TextField(
         controller: controller,
         decoration: InputDecoration(
@@ -25,26 +22,15 @@ Future<String?> showVisitorProfileReasonDialog({
         ),
       ),
       actions: [
-        TextButton(
+        SLDialogAction(
           onPressed: () => Navigator.pop(context, null),
-          child: Text(
-            context.tr('p5_cancel'),
-            style: SLTheme.quicksand(color: SLColors.textSecond),
-          ),
+          child: Text(context.tr('p5_cancel')),
         ),
-        FilledButton(
-          style: FilledButton.styleFrom(
-            backgroundColor: SLColors.primary,
-            shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
-          ),
+        SLDialogAction(
+          primary: true,
+
           onPressed: () => Navigator.pop(context, controller.text),
-          child: Text(
-            context.tr('p5_send'),
-            style: SLTheme.quicksand(
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-            ),
-          ),
+          child: Text(context.tr('p5_send')),
         ),
       ],
     ),

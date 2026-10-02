@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
-import '../core/sl_theme.dart';
 import 'services/app_lifecycle_presence_guard.dart';
 
 class PermissionHelper {
@@ -149,40 +149,21 @@ class PermissionHelper {
     return showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => SLAlertDialog(
         scrollable: true,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          title,
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF5E35B1),
-          ),
-        ),
-        content: Text(
-          disclosure,
-          style: SLTheme.quicksand(fontWeight: FontWeight.w600, height: 1.5),
-        ),
+
+        title: Text(title),
+        content: Text(disclosure),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(ctx.tr('map_refresh_not_now')),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5E35B1),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              ctx.tr('map_refresh_continue'),
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
+            child: Text(ctx.tr('map_refresh_continue')),
           ),
         ],
       ),

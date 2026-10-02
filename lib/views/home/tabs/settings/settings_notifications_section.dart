@@ -127,40 +127,17 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
     showDialog<void>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          title: Text(
-            context.tr('home_qunlthngbo_b1fc20'),
-            style: SLTheme.quicksand(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF1A1A2E),
-            ),
-          ),
-          content: Text(
-            context.tr('home_thngbopush_e7d672'),
-            style: SLTheme.quicksand(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w700,
-              height: 1.45,
-              color: SLColors.textMedium,
-            ),
-          ),
+        return SLAlertDialog(
+          title: Text(context.tr('home_qunlthngbo_b1fc20')),
+          content: Text(context.tr('home_thngbopush_e7d672')),
           actions: [
-            TextButton(
+            SLDialogAction(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(
-                context.tr('home_sau_8a3721'),
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF64748B),
-                ),
-              ),
+              child: Text(context.tr('home_sau_8a3721')),
             ),
-            FilledButton(
-              style: FilledButton.styleFrom(foregroundColor: Colors.white),
+            SLDialogAction(
+              primary: true,
+
               onPressed: () {
                 Navigator.of(dialogContext).pop();
                 unawaited(
@@ -169,10 +146,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                   ),
                 );
               },
-              child: Text(
-                context.tr('home_mcit_a2573b'),
-                style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-              ),
+              child: Text(context.tr('home_mcit_a2573b')),
             ),
           ],
         );

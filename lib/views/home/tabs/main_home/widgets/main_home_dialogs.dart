@@ -39,16 +39,8 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           builder: (context, setDialogState) {
             final step = guideSteps[stepIndex];
             final isLastStep = stepIndex == guideSteps.length - 1;
-            return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
-              title: Text(
-                step.title,
-                textAlign: TextAlign.center,
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w900,
-                  color: SLTheme.primary,
-                ),
-              ),
+            return SLAlertDialog(
+              title: Text(step.title, textAlign: TextAlign.center),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,7 +108,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                 ],
               ),
               actions: [
-                TextButton(
+                SLDialogAction(
                   onPressed: () async {
                     final navigator = Navigator.of(dialogContext);
                     await _markFirstSetupGuideSeen(houseId);
@@ -124,13 +116,12 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                       navigator.pop();
                     }
                   },
-                  child: Text(
-                    context.tr('home_bqua_a3b533'),
-                    style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-                  ),
+                  child: Text(context.tr('home_bqua_a3b533')),
                 ),
                 if (stepIndex == 2)
-                  FilledButton(
+                  SLDialogAction(
+                    primary: true,
+
                     onPressed: () async {
                       final navigator = Navigator.of(dialogContext);
                       await _markFirstSetupGuideSeen(houseId);
@@ -141,13 +132,12 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                         _showCountdownQuickCustomizeSheet();
                       }
                     },
-                    child: Text(
-                      context.tr('home_thchnh_5c36f2'),
-                      style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-                    ),
+                    child: Text(context.tr('home_thchnh_5c36f2')),
                   )
                 else
-                  FilledButton(
+                  SLDialogAction(
+                    primary: true,
+
                     onPressed: () async {
                       if (isLastStep) {
                         final navigator = Navigator.of(dialogContext);
@@ -161,7 +151,6 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                     },
                     child: Text(
                       isLastStep ? 'Xong' : context.tr('home_tiptc_555f1f'),
-                      style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                     ),
                   ),
               ],
@@ -194,15 +183,10 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
   void _showUpcomingDatingFeatureLegacy() {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
+      builder: (ctx) => SLAlertDialog(
         title: Text(
           context.tr('home_tnhnngangp_4c4164'),
           textAlign: TextAlign.center,
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.w900,
-            color: SLTheme.primary,
-          ),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -238,21 +222,12 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
         ),
         actions: [
           Center(
-            child: ElevatedButton(
+            child: SLDialogAction(
+              primary: true,
+
               onPressed: () => Navigator.pop(ctx),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: SLTheme.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-              ),
-              child: Text(
-                context.tr('home_hiu_93c4c0'),
-                style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-              ),
+
+              child: Text(context.tr('home_hiu_93c4c0')),
             ),
           ),
         ],
@@ -674,104 +649,14 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
     required String partnerName,
     required bool partnerOnline,
   }) {
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    if (messenger == null) return;
-    final preset = _presetForInteractionType(interactionType);
-    messenger
-      ..clearSnackBars()
-      ..removeCurrentSnackBar()
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          elevation: 0,
-          duration: const Duration(milliseconds: 2200),
-          backgroundColor: Colors.transparent,
-          margin: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            bottom:
-                MediaQuery.sizeOf(context).height -
-                (MediaQuery.paddingOf(context).top + 168),
-          ),
-          content: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white,
-                  preset.gradient.last.withValues(alpha: 0.18),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: [
-                BoxShadow(
-                  color: preset.accent.withValues(alpha: 0.18),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: preset.accent.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Padding(
-                    padding: const EdgeInsets.all(7),
-                    child: _buildInteractionVisual(
-                      visual: preset.emoji,
-                      assetPath: preset.assetPath,
-                      size: 24,
-                      emojiSize: 22,
-                      preferAsset: true,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: SLTheme.quicksand(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                          color: preset.accent,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        partnerOnline
-                            ? '$partnerName sẽ thấy ngay'
-                            : 'Đã gửi cho $partnerName',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: SLTheme.quicksand(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF6B7280),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
+    SLToast.show(
+      context,
+      body,
+      title: title,
+      variant: SLToastVariant.primary,
+      icon: Icons.favorite_rounded,
+      duration: const Duration(milliseconds: 2200),
+    );
   }
 
   void _showMissYouScreen(_MissYouAlertPayload payload) async {
@@ -877,7 +762,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           final message = unlockAt == null
               ? msgDatingCooldown
               : 'Bạn cần chờ đến ${unlockAt.day}/${unlockAt.month}/${unlockAt.year} mới có thể đổi ngày yêu tiếp.';
-          scaffoldMessenger?.showSnackBar(SnackBar(content: Text(message)));
+          scaffoldMessenger?.showSnackBar(SLSnackBar(content: Text(message)));
           return;
         }
 
@@ -887,15 +772,17 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           final confirmed =
               await showDialog<bool>(
                 context: context,
-                builder: (ctx) => AlertDialog(
+                builder: (ctx) => SLAlertDialog(
                   title: Text(msgConfirmTitle),
                   content: Text(msgConfirmBody),
                   actions: [
-                    TextButton(
+                    SLDialogAction(
                       onPressed: () => Navigator.of(ctx).pop(false),
                       child: Text(msgCancel),
                     ),
-                    TextButton(
+                    SLDialogAction(
+                      primary: true,
+
                       onPressed: () => Navigator.of(ctx).pop(true),
                       child: Text(msgContinue),
                     ),
@@ -920,11 +807,11 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           }
         });
 
-        scaffoldMessenger?.showSnackBar(SnackBar(content: Text(msgUpdated)));
+        scaffoldMessenger?.showSnackBar(SLSnackBar(content: Text(msgUpdated)));
       } catch (e) {
         if (!mounted) return;
         final message = _shortErrorMessage(e, msgUpdateFailed);
-        scaffoldMessenger?.showSnackBar(SnackBar(content: Text(message)));
+        scaffoldMessenger?.showSnackBar(SLSnackBar(content: Text(message)));
       }
     }
   }
@@ -945,16 +832,8 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
 
     showDialog<String>(
           context: context,
-          builder: (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
-            title: Text(
-              dialogTitle,
-              textAlign: TextAlign.center,
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w900,
-                color: SLTheme.primary,
-              ),
-            ),
+          builder: (ctx) => SLAlertDialog(
+            title: Text(dialogTitle, textAlign: TextAlign.center),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1000,32 +879,19 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
               ),
             ),
             actions: [
-              TextButton(
+              SLDialogAction(
                 onPressed: () => Navigator.pop(ctx),
-                child: Text(
-                  ctx.tr('home_hy_1e4050'),
-                  style: SLTheme.quicksand(
-                    color: Colors.grey,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                child: Text(ctx.tr('home_hy_1e4050')),
               ),
-              ElevatedButton(
+              SLDialogAction(
+                primary: true,
+
                 onPressed: () {
                   final newLabel = controller.text.trim();
                   Navigator.pop(ctx, newLabel);
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: SLTheme.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  ctx.tr('home_lu_49fac1'),
-                  style: SLTheme.quicksand(fontWeight: FontWeight.w800),
-                ),
+
+                child: Text(ctx.tr('home_lu_49fac1')),
               ),
             ],
           ),
@@ -1062,7 +928,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
             );
             ScaffoldMessenger.of(
               context,
-            ).showSnackBar(SnackBar(content: Text(message)));
+            ).showSnackBar(SLSnackBar(content: Text(message)));
           }
         })
         .whenComplete(controller.dispose);
@@ -1076,15 +942,10 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
     final controller = TextEditingController(text: currentName);
     showDialog<String>(
           context: context,
-          builder: (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
+          builder: (ctx) => SLAlertDialog(
             title: Text(
               ctx.tr('home_ibitdanh_345585'),
               textAlign: TextAlign.center,
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w900,
-                color: SLTheme.primary,
-              ),
             ),
             content: TextField(
               controller: controller,
@@ -1109,32 +970,19 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
               ),
             ),
             actions: [
-              TextButton(
+              SLDialogAction(
                 onPressed: () => Navigator.pop(ctx),
-                child: Text(
-                  ctx.tr('home_hy_1e4050'),
-                  style: SLTheme.quicksand(
-                    color: Colors.grey,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                child: Text(ctx.tr('home_hy_1e4050')),
               ),
-              ElevatedButton(
+              SLDialogAction(
+                primary: true,
+
                 onPressed: () {
                   final newName = controller.text.trim();
                   Navigator.pop(ctx, newName);
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: SLTheme.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  ctx.tr('home_lu_49fac1'),
-                  style: SLTheme.quicksand(fontWeight: FontWeight.w800),
-                ),
+
+                child: Text(ctx.tr('home_lu_49fac1')),
               ),
             ],
           ),

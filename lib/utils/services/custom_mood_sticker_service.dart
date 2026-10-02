@@ -1,153 +1,202 @@
 import 'dart:async';
-import 'dart:io';
+
+import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
-import 'package:soullocket_app/utils/services/infrastructure/cloudflare_r2_service.dart';
-import 'package:soullocket_app/utils/services/storage/storage_picker_service.dart';
+
+import 'custom_mood_sticker_image.dart';
+import 'infrastructure/cloudflare_r2_service.dart';
+import 'storage/storage_picker_service.dart';
 
 class CustomMoodStickerService {
-  static final CustomMoodStickerService instance = CustomMoodStickerService._();
+  static final instance = CustomMoodStickerService._();
   factory CustomMoodStickerService() => instance;
-  CustomMoodStickerService._();
 
-  static const int maxImageSize = 512;
-  static const int imageQuality = 80;
-  static const int maxFileSizeBytes = 500 * 1024; // 500KB
+  CustomMoodStickerService._()
+    : _currentUid = (() => FirebaseAuth.instance.currentUser?.uid),
+      _authChanges = (() =>
+          FirebaseAuth.instance.authStateChanges().map((user) => user?.uid)),
+      _watchUrl = ((houseId, uid) => FirebaseDatabase.instance
+          .ref(_path(houseId, uid))
+          .onValue
+          .map((event) => event.snapshot.value)),
+      _saveUrl = ((houseId, uid, url) =>
+          FirebaseDatabase.instance.ref(_path(houseId, uid)).set(url)),
+      _pickImage = (() => StoragePickerService().pickImage()),
+      _uploadImage = _upload;
 
-  final ValueNotifier<String?> customStickerUrlVN = ValueNotifier<String?>(null);
-  
-  StreamSubscription? _syncSubscription;
+  @visibleForTesting
+  CustomMoodStickerService.forTesting({
+    required String? Function() currentUid,
+    required Stream<Object?> Function(String houseId, String uid) watchUrl,
+    required Future<void> Function(String houseId, String uid, String? url)
+    saveUrl,
+    required Future<XFile?> Function() pickImage,
+    required Future<String> Function(CustomMoodStickerImage image, String uid)
+    uploadImage,
+    Stream<String?> Function()? authChanges,
+  }) : this._withCallbacks(
+         currentUid,
+         watchUrl,
+         saveUrl,
+         pickImage,
+         uploadImage,
+         authChanges ?? (() => const Stream<String?>.empty()),
+       );
+
+  CustomMoodStickerService._withCallbacks(
+    this._currentUid,
+    this._watchUrl,
+    this._saveUrl,
+    this._pickImage,
+    this._uploadImage,
+    this._authChanges,
+  );
+
+  final String? Function() _currentUid;
+  final Stream<String?> Function() _authChanges;
+  final Stream<Object?> Function(String houseId, String uid) _watchUrl;
+  final Future<void> Function(String houseId, String uid, String? url) _saveUrl;
+  final Future<XFile?> Function() _pickImage;
+  final Future<String> Function(CustomMoodStickerImage image, String uid)
+  _uploadImage;
+
+  static const maxImageSize = CustomMoodStickerImage.maxDimension;
+  static const maxFileSizeBytes = CustomMoodStickerImage.maxBytes;
+  final customStickerUrlVN = ValueNotifier<String?>(null);
+  final isBusyVN = ValueNotifier(false);
+  final isUploadingVN = ValueNotifier(false);
+
+  StreamSubscription<Object?>? _syncSubscription;
+  StreamSubscription<String?>? _authSubscription;
   String? _currentHouseId;
+  String? _syncedUid;
+  int _scope = 0;
+  bool _disposed = false;
 
-  /// Start listening to Firebase RTDB for cross-device sync
+  static String _path(String houseId, String uid) =>
+      'houses/$houseId/custom_mood_stickers/$uid';
+
+  static Future<String> _upload(
+    CustomMoodStickerImage image,
+    String uid,
+  ) async {
+    final result = await CloudflareR2Service.instance.uploadMedia(
+      XFile.fromData(
+        image.bytes,
+        name: 'mood.${image.extension}',
+        mimeType: image.contentType,
+      ),
+      folderPath: 'diary/custom_stickers/$uid',
+      contentType: image.contentType,
+    );
+    return result.downloadUrl;
+  }
+
   void startSync(String houseId) {
-    if (_currentHouseId == houseId && _syncSubscription != null) return;
+    if (_disposed) return;
+    final normalizedHouseId = houseId.trim();
+    final uid = _currentUid();
+    if (_currentHouseId == normalizedHouseId &&
+        _syncedUid == uid &&
+        _syncSubscription != null) {
+      return;
+    }
     stopSync();
-    _currentHouseId = houseId;
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null || houseId.isEmpty) return;
-    
-    final ref = FirebaseDatabase.instance
-        .ref('houses/$houseId/members/$uid/custom_mood_sticker');
-    _syncSubscription = ref.onValue.listen((event) {
-      final url = event.snapshot.value as String?;
-      customStickerUrlVN.value = (url != null && url.trim().isNotEmpty) ? url.trim() : null;
+    if (uid == null || normalizedHouseId.isEmpty) return;
+    _currentHouseId = normalizedHouseId;
+    _syncedUid = uid;
+    final scope = _scope;
+    _syncSubscription = _watchUrl(normalizedHouseId, uid).listen(
+      (value) {
+        if (_disposed || scope != _scope || _currentUid() != uid) return;
+        final url = value is String ? value.trim() : null;
+        customStickerUrlVN.value = url != null && url.isNotEmpty ? url : null;
+      },
+      onError: (Object error) {
+        if (!_disposed && scope == _scope) customStickerUrlVN.value = null;
+      },
+    );
+    _authSubscription = _authChanges().listen((authUid) {
+      if (authUid != _syncedUid) stopSync();
     });
   }
 
   void stopSync() {
+    _scope++;
     _syncSubscription?.cancel();
+    _authSubscription?.cancel();
     _syncSubscription = null;
+    _authSubscription = null;
     _currentHouseId = null;
+    _syncedUid = null;
+    if (!_disposed) customStickerUrlVN.value = null;
   }
 
-  /// Pick image from gallery, compress, upload to R2, save URL to RTDB
-  Future<String?> pickAndUploadSticker(String houseId) async {
-    if (houseId.trim().isEmpty) throw StateError('House ID is required');
-
-    final picker = StoragePickerService();
-    final file = await picker.pickImage();
-    if (file == null) return null;
-
-    final tempDir = await getTemporaryDirectory();
-    final targetPath = p.join(
-      tempDir.path,
-      'custom_mood_${DateTime.now().millisecondsSinceEpoch}.jpg',
-    );
-
-    try {
-      // Compress the image
-      final compressed = await FlutterImageCompress.compressAndGetFile(
-        file.path,
-        targetPath,
-        minWidth: maxImageSize,
-        minHeight: maxImageSize,
-        quality: imageQuality,
-        format: CompressFormat.jpeg,
-      );
-
-      if (compressed == null) throw StateError('Image compression failed');
-
-      // Check file size
-      final fileSize = await compressed.length();
-      if (fileSize > maxFileSizeBytes) {
-        // Re-compress with lower quality
-        final recompressed = await FlutterImageCompress.compressAndGetFile(
-          file.path,
-          targetPath,
-          minWidth: maxImageSize,
-          minHeight: maxImageSize,
-          quality: 50,
-          format: CompressFormat.jpeg,
-        );
-        if (recompressed == null ||
-            await recompressed.length() > maxFileSizeBytes) {
-          throw StateError('Image too large even after compression');
-        }
-      }
-
-      // Upload to R2
-      final uid = FirebaseAuth.instance.currentUser?.uid;
-      if (uid == null) throw StateError('Authentication required');
-
-      final oldUrl = customStickerUrlVN.value;
-
-      final url = await CloudflareR2Service.instance.uploadFile(
-        File(compressed.path),
-        folderPath: 'diary/custom_stickers/$uid',
-        contentType: 'image/jpeg',
-      );
-
-      if (url == null || url.isEmpty) throw StateError('Upload failed');
-
-      // Save URL to Firebase RTDB for cross-device sync
-      await FirebaseDatabase.instance
-          .ref('houses/$houseId/members/$uid/custom_mood_sticker')
-          .set(url);
-
-      customStickerUrlVN.value = url;
-
-      // Clean up previous image on R2 if replaced
-      if (oldUrl != null && oldUrl.isNotEmpty && oldUrl != url) {
-        CloudflareR2Service.instance.deleteFile(oldUrl).ignore();
-      }
-
-      return url;
-    } finally {
-      // Clean up temp file
-      try {
-        final f = File(targetPath);
-        if (f.existsSync()) await f.delete();
-      } catch (_) {}
+  void _checkScope(String uid, int scope) {
+    if (_disposed || _currentUid() != uid || _scope != scope) {
+      throw StateError('unauthenticated');
     }
   }
 
-  /// Remove custom sticker
+  Future<String?> pickAndUploadSticker(String houseId) async {
+    if (_disposed || isBusyVN.value) return null;
+    final uid = _currentUid();
+    if (uid == null) throw StateError('unauthenticated');
+    if (houseId.trim().isEmpty) throw StateError('House ID is required');
+    startSync(houseId);
+    final scope = _scope;
+    isBusyVN.value = true;
+    try {
+      final file = await _pickImage();
+      _checkScope(uid, scope);
+      if (file == null) return null;
+      isUploadingVN.value = true;
+      if (await file.length() > CustomMoodStickerImage.maxInputBytes) {
+        throw const FormatException('image-too-large');
+      }
+      final bytes = await file.readAsBytes();
+      final image = await compute(CustomMoodStickerImage.encode, bytes);
+      _checkScope(uid, scope);
+      final url = await _uploadImage(image, uid);
+      _checkScope(uid, scope);
+      if (url.trim().isEmpty) throw StateError('Upload failed');
+      await _saveUrl(houseId.trim(), uid, url);
+      _checkScope(uid, scope);
+      customStickerUrlVN.value = url;
+      return url;
+    } finally {
+      if (!_disposed) {
+        isBusyVN.value = false;
+        isUploadingVN.value = false;
+      }
+    }
+  }
+
   Future<void> removeSticker(String houseId) async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-    
-    final oldUrl = customStickerUrlVN.value;
-    
-    // Remove from RTDB
-    await FirebaseDatabase.instance
-        .ref('houses/$houseId/members/$uid/custom_mood_sticker')
-        .remove();
-    
-    customStickerUrlVN.value = null;
-    
-    // Try to delete from R2
-    if (oldUrl != null && oldUrl.isNotEmpty) {
-      CloudflareR2Service.instance.deleteFile(oldUrl).ignore();
+    if (_disposed || isBusyVN.value) return;
+    final uid = _currentUid();
+    if (uid == null) throw StateError('unauthenticated');
+    if (houseId.trim().isEmpty) throw StateError('House ID is required');
+    startSync(houseId);
+    final scope = _scope;
+    isBusyVN.value = true;
+    try {
+      await _saveUrl(houseId.trim(), uid, null);
+      _checkScope(uid, scope);
+      customStickerUrlVN.value = null;
+    } finally {
+      if (!_disposed) isBusyVN.value = false;
     }
   }
 
   void dispose() {
+    if (_disposed) return;
     stopSync();
+    _disposed = true;
     customStickerUrlVN.dispose();
+    isBusyVN.dispose();
+    isUploadingVN.dispose();
   }
 }

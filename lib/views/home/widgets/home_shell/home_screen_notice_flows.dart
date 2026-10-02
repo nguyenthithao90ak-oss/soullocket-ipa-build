@@ -227,19 +227,13 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
       builder: (context) {
         final screenWidth = MediaQuery.sizeOf(context).width;
         final dialogWidth = (screenWidth - 20).clamp(280.0, 430.0);
-        return AlertDialog(
+        return SLAlertDialog(
           insetPadding: const EdgeInsets.symmetric(
             horizontal: 10,
             vertical: 18,
           ),
           clipBehavior: Clip.antiAlias,
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          titlePadding: const EdgeInsets.fromLTRB(16, 18, 16, 6),
-          contentPadding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+
           title: SizedBox(
             width: dialogWidth,
             child: Row(
@@ -257,17 +251,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
                   ),
                 ),
                 SLSpacing.w8,
-                Expanded(
-                  child: Text(
-                    context.tr('home_chomngbnnv_b93a5d'),
-                    style: SLTheme.quicksand(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      color: SLColors.textPrimary,
-                      letterSpacing: 0.25,
-                    ),
-                  ),
-                ),
+                Expanded(child: Text(context.tr('home_chomngbnnv_b93a5d'))),
               ],
             ),
           ),
@@ -306,10 +290,10 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
                 SLSpacing.h16,
                 SizedBox(
                   width: double.infinity,
-                  child: SLTheme.primaryButton(
-                    text: context.tr('home_mnhhiu_c4d94c'),
+                  child: SLDialogAction(
+                    primary: true,
                     onPressed: () => Navigator.pop(context),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Text(context.tr('toast_ok')),
                   ),
                 ),
               ],
@@ -382,14 +366,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     try {
       await showDialog<void>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
-          ),
-          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-          contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        builder: (ctx) => SLAlertDialog(
           title: Row(
             children: [
               Container(
@@ -407,16 +384,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
                 ),
               ),
               SLSpacing.w12,
-              Expanded(
-                child: Text(
-                  title,
-                  style: SLTheme.quicksand(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w900,
-                    color: SLColors.textPrimary,
-                  ),
-                ),
-              ),
+              Expanded(child: Text(title)),
             ],
           ),
           content: SingleChildScrollView(
@@ -460,14 +428,14 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
                     ),
                     SLSpacing.w12,
                     Expanded(
-                      child: SLTheme.primaryButton(
-                        text: context.tr('home_mcit_8f1f98'),
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          _openSettings();
-                        },
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
+                      child: SLDialogAction(
+                      primary: true,
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _openSettings();
+                      },
+                      child: Text(context.tr('home_mcit_8f1f98')),
+                    ),
                     ),
                   ],
                 ),
@@ -506,7 +474,8 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
       title: context.tr('home_xcnhnthot_1aac22'),
       message: context.tr('home_bncchcchnm_4da412'),
       confirmText: context.tr('home_thot_8df314'),
-      cancelText: context.tr('home_hy_1e4050'),
+      cancelText: context.tr('dialog_stay'),
+      icon: Icons.logout_rounded,
     );
 
     if (shouldExit == true) {
@@ -620,8 +589,7 @@ class _InactivityCountdownDialogState
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    return SLAlertDialog(
       title: Row(
         children: [
           const Icon(Icons.timer_outlined, color: SLColors.brandPink),
@@ -631,10 +599,6 @@ class _InactivityCountdownDialogState
               context.tr('home_khonghd_inactivity') != 'home_khonghd_inactivity'
                   ? context.tr('home_khonghd_inactivity')
                   : 'Không có hoạt động',
-              style: SLTheme.quicksand(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
             ),
           ),
         ],
@@ -643,35 +607,20 @@ class _InactivityCountdownDialogState
         L10nService().format('home_autoclose_countdown', {
           'seconds': _remaining,
         }),
-        style: SLTheme.quicksand(fontSize: 14),
       ),
       actions: [
-        TextButton(
+        SLDialogAction(
           onPressed: () => Navigator.of(context).pop(false),
-          child: Text(
-            L10nService().translate('home_thoat_inactivity'),
-            style: SLTheme.quicksand(
-              color: Colors.grey,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          child: Text(L10nService().translate('home_thoat_inactivity')),
         ),
-        FilledButton(
-          style: FilledButton.styleFrom(
-            backgroundColor: SLColors.brandPink,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
+        SLDialogAction(
+          primary: true,
+
           onPressed: () => Navigator.of(context).pop(true),
           child: Text(
             L10nService().format('home_tieptuc_inactivity', {
               'seconds': _remaining,
             }),
-            style: SLTheme.quicksand(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-            ),
           ),
         ),
       ],
@@ -821,10 +770,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      builder: (ctx) => SLAlertDialog(
         title: Row(
           children: [
             Container(
@@ -840,45 +786,20 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
               ),
             ),
             const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Gói PRO đã hết hạn',
-                style: SLTheme.quicksand(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: SLColors.textPrimary,
-                ),
-              ),
-            ),
+            Expanded(child: Text('Gói PRO đã hết hạn')),
           ],
         ),
         content: Text(
           'Tài khoản PRO của bạn đã hết hạn. Bạn hiện đang có $activeCount liên kết album hoạt động (tối đa 5 đối với tài khoản thường).\n\nVui lòng chọn giữ lại tối đa 5 liên kết trong vòng $daysRemaining ngày nữa, nếu không hệ thống sẽ tự động khóa các liên kết cũ.',
-          style: SLTheme.quicksand(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: SLColors.textSecondary,
-            height: 1.5,
-          ),
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Để sau',
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w700,
-                color: Colors.grey[600],
-              ),
-            ),
+            child: Text('Để sau'),
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: SLColors.brandPink,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+          SLDialogAction(
+            primary: true,
+
             onPressed: () {
               Navigator.pop(ctx);
               Navigator.push(
@@ -888,13 +809,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
                 ),
               );
             },
-            child: Text(
-              'Chọn ngay',
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-              ),
-            ),
+            child: Text('Chọn ngay'),
           ),
         ],
       ),
@@ -905,10 +820,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
     showDialog<void>(
       context: context,
       barrierDismissible: true,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      builder: (ctx) => SLAlertDialog(
         title: Row(
           children: [
             Container(
@@ -924,43 +836,18 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
               ),
             ),
             const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Tự động khóa liên kết',
-                style: SLTheme.quicksand(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: SLColors.textPrimary,
-                ),
-              ),
-            ),
+            Expanded(child: Text('Tự động khóa liên kết')),
           ],
         ),
         content: Text(
           'Đã quá 1 ngày kể từ khi hết hạn PRO, hệ thống đã tự động khóa các liên kết cũ và giữ lại 5 liên kết Memory Share mới nhất của bạn để đảm bảo giới hạn tài khoản thường.',
-          style: SLTheme.quicksand(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: SLColors.textSecondary,
-            height: 1.5,
-          ),
         ),
         actions: [
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF00C853),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Đồng ý',
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-              ),
-            ),
+            child: Text('Đồng ý'),
           ),
         ],
       ),

@@ -1,4 +1,6 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'dart:io';
@@ -691,7 +693,7 @@ class _HomeScreenState extends State<HomeScreen>
         ? L10nService().translate('Nữ')
         : L10nService().translate('Nam');
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      SLSnackBar(
         content: Text(
           '⚠️ ${L10nService().translate('Bạn đang trùng vai')} $roleLabel — ${L10nService().translate('một thiết bị khác cũng đang đăng nhập cùng vai.')}',
         ),
@@ -866,7 +868,7 @@ class _HomeScreenState extends State<HomeScreen>
     final accepted = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
+      builder: (context) => SLAlertDialog(
         title: Text(context.tr('home_cucgin_eff0b9')),
         content: Text(
           L10nService().format('home_incoming_call_from', {
@@ -876,11 +878,13 @@ class _HomeScreenState extends State<HomeScreen>
           }),
         ),
         actions: <Widget>[
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(context, false),
             child: Text(context.tr('home_tchi_2119d8')),
           ),
-          FilledButton(
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(context, true),
             child: Text(context.tr('home_nghemy_e08606')),
           ),

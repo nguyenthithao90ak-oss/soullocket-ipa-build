@@ -215,7 +215,41 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
           WidgetStudioPreviewStage(
             title: context.tr('home_xemtrcwidg_189f43'),
             themeName: config.smartThemeLabel,
-            child: _buildWidgetPreview(),
+            child: Column(
+              children: [
+                _buildWidgetPreview(),
+                const SizedBox(height: 14),
+                WidgetStudioSegmentedControl(
+                  selectedId: _widgetPreviewSizeKey,
+                  onChanged: (key) {
+                    setState(() => _widgetPreviewSizeKey = key);
+                    unawaited(_persistWidgetPrefs());
+                  },
+                  items: config.previewSizeOptions
+                      .map(
+                        (item) => WidgetStudioTab(
+                          id: item.$2,
+                          label: item.$1,
+                          icon: item.$2 == 'small'
+                              ? Icons.crop_square
+                              : item.$2 == 'large'
+                              ? Icons.fullscreen
+                              : Icons.aspect_ratio,
+                        ),
+                      )
+                      .toList(),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  context.tr('widget_preview_resize_hint'),
+                  textAlign: TextAlign.center,
+                  style: SLTheme.quicksand(
+                    fontSize: 11,
+                    color: const Color(0xFF8E6A76),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
           if (Theme.of(context).platform != TargetPlatform.iOS) ...[
@@ -250,7 +284,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               child: _buildWidgetThemeSwatchGrid(config),
             ),
           ],
-          if (_widgetPanelTabKey == WidgetService.defaultWidgetStyleKey) ...[
+          if (_widgetPanelTabKey != 'soulevent') ...[
             const SizedBox(height: 14),
             _buildWidgetSectionCard(
               icon: Icons.favorite_rounded,
@@ -270,6 +304,14 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   ),
                   const SizedBox(height: 8),
                   _buildWidgetHeartStylePicker(),
+                  const SizedBox(height: 12),
+                  Text(
+                    context.tr('widget_center_selection_hint'),
+                    style: SLTheme.quicksand(
+                      fontSize: 11.5,
+                      color: const Color(0xFF8E6A76),
+                    ),
+                  ),
                   const SizedBox(height: 14),
                   Text(
                     context.tr('home_mutritim_6406c9'),
@@ -289,16 +331,85 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   const SizedBox(height: 14),
                   const Divider(height: 1, color: Color(0xFFE5ECF4)),
                   const SizedBox(height: 14),
+                  if (_widgetPanelTabKey != 'countdown')
+                    _buildWidgetToggleTile(
+                      icon: Icons.photo_library_outlined,
+                      title: context.tr('widget_show_diary_photos'),
+                      subtitle: null,
+                      value: _showDiaryOnWidget,
+                      accentColor: const Color(0xFF0EA5C6),
+                      onChanged: _handleWidgetDiaryVisibilityChanged,
+                    ),
+                  if (_showDiaryOnWidget &&
+                      _widgetPanelTabKey != 'countdown') ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      context.tr('widget_photo_layout'),
+                      style: SLTheme.quicksand(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 6),
+                    _buildThemeDropdownField(
+                      value: _widgetDiaryLayoutKey,
+                      options: config.diaryLayoutOptions,
+                      onChanged: (key) => _updateWidgetAppearanceDraft(
+                        () => _widgetDiaryLayoutKey = key,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (Theme.of(context).platform != TargetPlatform.iOS)
+                      Text(
+                        context.tr('widget_photo_frame'),
+                        style: SLTheme.quicksand(fontWeight: FontWeight.w800),
+                      ),
+                    const SizedBox(height: 6),
+                    if (Theme.of(context).platform != TargetPlatform.iOS)
+                      WidgetPhotoFramePicker(
+                        selectedKey: _widgetPhotoFrameKey,
+                        labels: {
+                          for (final key in WidgetAppearance.photoFrameKeys)
+                            key: context.tr('widget_frame_$key'),
+                        },
+                        onChanged: (key) => unawaited(
+                          _updateWidgetAppearanceDraft(
+                            () => _widgetPhotoFrameKey = key,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    Text(
+                      context.tr('widget_photo_sync_hint'),
+                      style: SLTheme.quicksand(
+                        fontSize: 11,
+                        color: const Color(0xFF8E6A76),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
                   _buildWidgetToggleTile(
-                    icon: Icons.photo_library_outlined,
-                    title: context.tr('widget_show_diary_photos'),
-                    subtitle: null,
-                    value: _showDiaryOnWidget,
-                    accentColor: const Color(0xFF0EA5C6),
-                    onChanged: _handleWidgetDiaryVisibilityChanged,
+                    icon: Icons.auto_awesome_rounded,
+                    title: context.tr('widget_gentle_motion'),
+                    subtitle: context.tr('widget_motion_keeps_choice'),
+                    value: _widgetHeartAnimated,
+                    accentColor: const Color(0xFF9A79C6),
+                    onChanged: (value) => unawaited(
+                      _updateWidgetAppearanceDraft(
+                        () => _widgetHeartAnimated = value,
+                      ),
+                    ),
                   ),
                 ],
               ),
+            ),
+          ],
+          if (_widgetPanelTabKey != 'soulevent' &&
+              Theme.of(context).platform != TargetPlatform.iOS) ...[
+            const SizedBox(height: 14),
+            _buildWidgetSectionCard(
+              icon: Icons.auto_awesome_rounded,
+              title: context.tr('widget_sticker_collection'),
+              subtitle: context.tr('widget_sticker_choice_hint'),
+              iconGradient: const [Color(0xFFAB8BD1), Color(0xFFF1A9B7)],
+              child: _buildWidgetStickerPicker(),
             ),
           ],
           if (_widgetPanelTabKey == 'countdown') ...[
@@ -482,126 +593,16 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
 
   /// Color swatch grid for widget background theme selection.
   Widget _buildWidgetThemeSwatchGrid(_WidgetPanelConfig config) {
-    // Map themeKey -> (gradient colors, label)
-    final swatches = <(String, List<Color>, String)>[
-      (
-        'pink',
-        [const Color(0xFFFFB6CA), const Color(0xFFFF7098)],
-        config.themeOptions
-            .firstWhere(
-              (o) => o.$2 == 'pink',
-              orElse: () => (context.tr('p7_color_pink'), 'pink'),
-            )
-            .$1,
-      ),
-      (
-        'white',
-        [const Color(0xFFF8F8F8), const Color(0xFFE8EDF5)],
-        config.themeOptions
-            .firstWhere(
-              (o) => o.$2 == 'white',
-              orElse: () => (context.tr('p7_color_white'), 'white'),
-            )
-            .$1,
-      ),
-      (
-        'dark',
-        [const Color(0xFF3A3A4A), const Color(0xFF1C1C2E)],
-        config.themeOptions
-            .firstWhere(
-              (o) => o.$2 == 'dark',
-              orElse: () => (context.tr('p7_color_dark'), 'dark'),
-            )
-            .$1,
-      ),
-      (
-        'blue',
-        [const Color(0xFF90CAF9), const Color(0xFF1565C0)],
-        config.themeOptions
-            .firstWhere(
-              (o) => o.$2 == 'blue',
-              orElse: () => (context.tr('p7_color_blue'), 'blue'),
-            )
-            .$1,
-      ),
-      (
-        'orange',
-        [const Color(0xFFFFCC80), const Color(0xFFEF6C00)],
-        config.themeOptions
-            .firstWhere(
-              (o) => o.$2 == 'orange',
-              orElse: () => (context.tr('p7_color_orange'), 'orange'),
-            )
-            .$1,
-      ),
-      (
-        'purple',
-        [const Color(0xFFCE93D8), const Color(0xFF6A1B9A)],
-        config.themeOptions
-            .firstWhere(
-              (o) => o.$2 == 'purple',
-              orElse: () => (context.tr('p7_color_purple'), 'purple'),
-            )
-            .$1,
-      ),
-      (
-        'green',
-        [const Color(0xFFA5D6A7), const Color(0xFF2E7D32)],
-        config.themeOptions
-            .firstWhere(
-              (o) => o.$2 == 'green',
-              orElse: () => (context.tr('p7_color_green'), 'green'),
-            )
-            .$1,
-      ),
-      (
-        'red',
-        [const Color(0xFFEF9A9A), const Color(0xFFB71C1C)],
-        config.themeOptions
-            .firstWhere(
-              (o) => o.$2 == 'red',
-              orElse: () => (context.tr('p7_color_red'), 'red'),
-            )
-            .$1,
-      ),
-      if (AppConfig.isPurchaseEnabled) ...[
-        (
-          'premium',
-          [const Color(0xFFFBC2EB), const Color(0xFFA6C1EE)],
-          config.themeOptions
-              .firstWhere(
-                (o) => o.$2 == 'premium',
-                orElse: () => (context.tr('p7_theme_aurora'), 'premium'),
-              )
-              .$1,
-        ),
-        (
-          'cosmic',
-          [const Color(0xFF0F0C20), const Color(0xFFFFD700)],
-          config.themeOptions
-              .firstWhere(
-                (o) => o.$2 == 'cosmic',
-                orElse: () => (context.tr('p7_theme_cosmic'), 'cosmic'),
-              )
-              .$1,
-        ),
-      ],
-    ];
-
-    final currentKey = _draftWidgetThemeKey ?? 'pink';
-
     return WidgetStudioThemePicker(
-      selectedId: currentKey,
-      onChanged: (themeKey) {
-        unawaited(_handleWidgetThemeChanged(themeKey));
-      },
-      options: swatches
+      selectedId: _draftWidgetThemeKey ?? 'pink',
+      onChanged: (key) => unawaited(_handleWidgetThemeChanged(key)),
+      options: config.themeOptions
           .map(
-            (swatch) => WidgetStudioThemeOption(
-              id: swatch.$1,
-              label: swatch.$3,
-              colors: swatch.$2,
-              icon: _widgetThemeSwatchIcon(swatch.$1),
+            (item) => WidgetStudioThemeOption(
+              id: item.$2,
+              label: item.$1,
+              colors: _widgetPreviewThemeSpec(item.$2).colors,
+              icon: _widgetThemeSwatchIcon(item.$2),
             ),
           )
           .toList(growable: false),

@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -121,7 +123,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     await prefs.setBool(_noticePrefsKey, true);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      SLSnackBar(
         content: Text(context.tr('local_album_notice')),
         duration: const Duration(seconds: 5),
         behavior: SnackBarBehavior.floating,
@@ -440,7 +442,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
           ? 'Đã lưu $saved ảnh, $failed ảnh lỗi'
           : 'Đã lưu $saved ảnh vào thiết bị';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(msg), duration: const Duration(seconds: 2)),
+        SLSnackBar(content: Text(msg), duration: const Duration(seconds: 2)),
       );
     }
   }
@@ -449,17 +451,20 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     if (_selectedIds.isEmpty) return;
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => SLAlertDialog(
         title: const Text('Xoá mục đã chọn'),
         content: Text(
           'Bạn có chắc chắn muốn xoá ${_selectedIds.length} mục đã chọn? Hành động này không thể hoàn tác.',
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Huỷ'),
           ),
-          TextButton(
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () {
               Navigator.pop(ctx);
               for (final item in _items.toList()) {
@@ -474,7 +479,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
               _applyFilters();
               setState(() {});
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+
             child: const Text('Xoá'),
           ),
         ],
@@ -484,7 +489,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
 
   void _showMsg(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context).showSnackBar(SLSnackBar(content: Text(msg)));
   }
 
   void _showMonthPicker() {
@@ -749,7 +754,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
             icon: const Icon(Icons.info_outline_rounded),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
+                SLSnackBar(
                   content: Text(context.tr('local_album_notice')),
                   duration: const Duration(seconds: 5),
                   behavior: SnackBarBehavior.floating,
@@ -1306,17 +1311,20 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
     if (widget.items.isEmpty) return;
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => SLAlertDialog(
         title: const Text('Xoá mục này'),
         content: const Text(
           'Bạn có chắc chắn muốn xoá mục này? Hành động này không thể hoàn tác.',
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Huỷ'),
           ),
-          TextButton(
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+
             onPressed: () {
               Navigator.pop(ctx);
               final id = widget.items[_currentIndex].id;
@@ -1333,7 +1341,7 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
                 }
               });
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+
             child: const Text('Xoá'),
           ),
         ],
@@ -1348,8 +1356,8 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
     if (!await file.exists()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Không tìm thấy file để chia sẻ'),
+          SLSnackBar(
+            content: const Text('Không tìm thấy file để chia sẻ'),
             duration: Duration(seconds: 2),
           ),
         );
@@ -1361,7 +1369,7 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text('Lỗi chia sẻ: $e'),
             duration: const Duration(seconds: 2),
           ),
@@ -1375,8 +1383,8 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
     if (item.type != 'image') {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Chỉ hỗ trợ lưu ảnh'),
+          SLSnackBar(
+            content: const Text('Chỉ hỗ trợ lưu ảnh'),
             duration: Duration(seconds: 2),
           ),
         );
@@ -1389,7 +1397,7 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('File không tồn tại')));
+          ).showSnackBar(SLSnackBar(content: const Text('File không tồn tại')));
         }
         return;
       }
@@ -1398,8 +1406,8 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
       await VisionGallerySaver.saveImage(bytes, quality: 95, name: name);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã lưu ảnh vào thiết bị'),
+          SLSnackBar(
+            content: const Text('Đã lưu ảnh vào thiết bị'),
             duration: Duration(seconds: 2),
           ),
         );
@@ -1407,7 +1415,7 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          SLSnackBar(
             content: Text('Lỗi lưu ảnh: $e'),
             duration: const Duration(seconds: 2),
           ),

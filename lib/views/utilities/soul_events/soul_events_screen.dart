@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/models/soul_event.dart';
@@ -128,7 +129,7 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
       await WidgetService.requestPinSoulEventWidget();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(context.tr('p8_events_pin_success')),
           backgroundColor: SLColors.success,
         ),
@@ -136,7 +137,7 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SLSnackBar(
           content: Text(context.tr('p8_events_pin_error')),
           backgroundColor: SLColors.danger,
         ),

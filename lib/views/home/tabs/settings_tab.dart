@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'settings/region_preferences_panel.dart';
 import '../../../core/constants/app_locale_registry.dart';
 import 'settings/countdown/widgets/private_space_widgets.dart';
@@ -35,6 +37,9 @@ import '../../ui_prefs.dart';
 import '../../../core/sl_theme.dart';
 import 'settings/theme/theme_preview_builder.dart';
 import 'settings/widget/widget_studio_components.dart';
+import '../../../models/widget_appearance.dart';
+import 'settings/widget/widget_couple_preview.dart';
+import 'settings/widget/widget_photo_collage.dart';
 import 'settings/settings_initial_identity.dart';
 import 'settings/settings_initial_content.dart';
 import '../../../widgets/stable_future_builder.dart';
@@ -198,36 +203,7 @@ const Color _kSettingsBgTop = SLColors.paperCanvas;
 const Color _kSettingsHeaderSurface = SLColors.paper;
 const Color _kSettingsHeaderBorder = SLColors.border;
 const Color _kSettingsActionTileText = SLColors.ink;
-const List<String> _widgetHeartStyleKeys = <String>[
-  '❤️',
-  '🧡',
-  '💛',
-  '💚',
-  '💙',
-  '💜',
-  '🖤',
-  '🤍',
-  '🤎',
-  '♥️',
-  '❣️',
-  '💕',
-  '💞',
-  '💓',
-  '💗',
-  '💖',
-  '💘',
-  '💝',
-  '💟',
-  '❤️‍🔥',
-  '❤️‍🩹',
-  '💌',
-  '💋',
-  '🫶',
-  '🫀',
-  '💫💗',
-  '✧♥︎',
-  '❥∞',
-];
+const List<String> _widgetHeartStyleKeys = WidgetAppearance.heartStyles;
 const String _defaultWidgetHeartStyleKey = '❤️';
 
 const List<String> _widgetPreviewSizeKeys = <String>[
@@ -244,22 +220,7 @@ const List<String> _widgetSeasonModeKeys = <String>[
   'birthday',
 ];
 
-String _normalizeWidgetHeartStyleKey(String? value) {
-  final normalized = (value ?? '').trim();
-  if (_widgetHeartStyleKeys.contains(normalized)) {
-    return normalized;
-  }
-
-  switch (normalized) {
-    case 'classic':
-    case 'duo':
-    case 'sparkle':
-    case 'orbit':
-    case 'wing':
-    default:
-      return _defaultWidgetHeartStyleKey;
-  }
-}
+String _normalizeWidgetHeartStyleKey(String? value) => WidgetAppearance.normalizeHeart(value);
 
 String _widgetPreviewSizeLabel(String key) {
   switch (key) {
@@ -491,6 +452,10 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _widgetHeartAnimated = true;
   String _widgetHeartStyleKey = _defaultWidgetHeartStyleKey;
   String _widgetHeartColorKey = 'rose';
+  String _widgetStickerKey = 'none';
+  String _widgetPhotoFrameKey = 'rounded';
+  int _widgetMediaRevision = 0;
+  Future<void> _widgetAppearanceSaveQueue = Future<void>.value();
   String _widgetPreviewSizeKey = 'medium';
   String _widgetDiaryLayoutKey = 'single';
   String _widgetSeasonModeKey = 'auto';
@@ -1242,8 +1207,7 @@ class _PromptEmailDialogWidgetState extends State<_PromptEmailDialogWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    return SLAlertDialog(
       title: Text(
         widget.title,
         style: SLTheme.quicksand(fontWeight: FontWeight.w900),
@@ -1258,16 +1222,13 @@ class _PromptEmailDialogWidgetState extends State<_PromptEmailDialogWidget> {
         ),
       ),
       actions: [
-        TextButton(
+        SLDialogAction(
           onPressed: () => Navigator.pop(context),
           child: Text(L10nService().translate('cancel')),
         ),
-        ElevatedButton(
+        SLDialogAction(
+          primary: true,
           onPressed: () => Navigator.pop(context, _controller.text.trim()),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFD81B60),
-            foregroundColor: Colors.white,
-          ),
           child: Text(L10nService().translate('continue_action')),
         ),
       ],

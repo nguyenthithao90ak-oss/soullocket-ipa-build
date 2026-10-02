@@ -1,3 +1,5 @@
+import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
@@ -49,36 +51,15 @@ class _HealthScreenState extends State<HealthScreen> {
     final result = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: SLColors.paper,
-        title: Text(
-          context.tr('p3_health_consent_title'),
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFFE91E63),
-          ),
-        ),
-        content: Text(
-          context.tr('p3_health_consent_body'),
-          style: SLTheme.quicksand(fontWeight: FontWeight.w600, height: 1.5),
-        ),
+      builder: (ctx) => SLAlertDialog(
+        title: Text(context.tr('p3_health_consent_title')),
+        content: Text(context.tr('p3_health_consent_body')),
         actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE91E63),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+          SLDialogAction(
+            primary: true,
+
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              context.tr('p3_continue'),
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
+            child: Text(context.tr('p3_continue')),
           ),
         ],
       ),
@@ -189,7 +170,7 @@ class _HealthScreenState extends State<HealthScreen> {
       });
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(context.tr('p3_health_saved'))));
+      ).showSnackBar(SLSnackBar(content: Text(context.tr('p3_health_saved'))));
     }
   }
 
@@ -756,15 +737,8 @@ class _HealthScreenState extends State<HealthScreen> {
     String currentValue = initialValue;
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          title,
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFFD81B60),
-          ),
-        ),
+      builder: (ctx) => SLAlertDialog(
+        title: Text(title),
         content: TextField(
           controller: TextEditingController(text: initialValue),
           keyboardType: TextInputType.number,
@@ -772,31 +746,18 @@ class _HealthScreenState extends State<HealthScreen> {
           onChanged: (val) => currentValue = val,
         ),
         actions: [
-          TextButton(
+          SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              context.tr('p3_cancel'),
-              style: SLTheme.quicksand(color: Colors.grey),
-            ),
+            child: Text(context.tr('p3_cancel')),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFD81B60),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
+          SLDialogAction(
+            primary: true,
+
             onPressed: () {
               onSave(currentValue);
               Navigator.pop(ctx);
             },
-            child: Text(
-              context.tr('p3_save'),
-              style: SLTheme.quicksand(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: Text(context.tr('p3_save')),
           ),
         ],
       ),
