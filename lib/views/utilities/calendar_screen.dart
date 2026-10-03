@@ -12,6 +12,8 @@ import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/core/constants/market_calendar_profiles.dart';
 import 'package:soullocket_app/utils/calendar/calendar_display_format.dart';
 import 'package:soullocket_app/utils/calendar/calendar_reminder_times.dart';
+import 'package:soullocket_app/utils/calendar/calendar_time_zone.dart';
+import 'package:soullocket_app/utils/calendar/calendar_secondary_date.dart';
 import 'package:soullocket_app/utils/calendar/holiday_occurrence_resolver.dart';
 import 'package:soullocket_app/utils/services/holiday_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -94,8 +96,23 @@ class _CalendarScreenState extends State<CalendarScreen> {
     if (mounted) setState(() {});
   }
 
-  MarketCalendarProfile get _calendarProfile =>
-      MarketCalendarProfiles.forMarket(MarketService.instance.marketCode);
+  MarketCalendarProfile get _calendarProfile {
+    final base = MarketCalendarProfiles.forMarket(
+      MarketService.instance.marketCode,
+    );
+    final override = MarketService.instance.preferences.firstWeekday;
+    if (override == null) return base;
+    final firstWeekday = switch (override) {
+      DateTime.monday => StartingDayOfWeek.monday,
+      DateTime.saturday => StartingDayOfWeek.saturday,
+      _ => StartingDayOfWeek.sunday,
+    };
+    return MarketCalendarProfile(
+      marketCode: base.marketCode,
+      firstWeekday: firstWeekday,
+      weekendDays: base.weekendDays,
+    );
+  }
 
   CalendarDisplayFormat get _displayFormat => CalendarDisplayFormat.forLocale(
     L10nService().locale,
@@ -261,8 +278,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
       return L10nService().translate('sleep_state_unknown');
     }
     return _displayFormat.time(
-      DateTime.fromMillisecondsSinceEpoch(timestamp),
-      alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
+      CalendarTimeZone.fromMilliseconds(
+        timestamp,
+        MarketService.instance.preferences.timeZoneId,
+      ),
+      alwaysUse24HourFormat:
+          MediaQuery.alwaysUse24HourFormatOf(context),
+      use24HourFormat: MarketService.instance.preferences.use24HourFormat,
     );
   }
 
@@ -415,7 +437,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
     required CalendarNotificationIds notificationIds,
   }) async {
     final now = DateTime.now();
-    final reminderTimes = CalendarReminderTimes.forDate(eventDate);
+    final reminderTimes = CalendarReminderTimes.forDate(
+      eventDate,
+      timeZone: CalendarTimeZone.locationFor(
+        MarketService.instance.preferences.timeZoneId,
+      ),
+    );
     final scheduleTime = reminderTimes.onEventDay;
 
     // Nếu ngày sự kiện là hôm nay và chưa qua 9h sáng
@@ -641,6 +668,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final horizontalInset = _horizontalInsetForWidth(mediaSize.width);
     final compact = _useCompactLayout(mediaSize);
     final selectedDay = _selectedDay;
+    final secondaryCalendar =
+        MarketService.instance.preferences.secondaryCalendar;
     final eventCount = selectedDay == null
         ? 0
         : _eventsForDay(selectedDay).length;
@@ -659,7 +688,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
       holidaysByDate.putIfAbsent(
         _normalizeDate(selectedDay),
         () => HolidayOccurrenceResolver.occurrencesBetween(
-          applicableHolidays, start: selectedDay, end: selectedDay,
+          applicableHolidays,
+          start: selectedDay,
+          end: selectedDay,
         ),
       );
     }
@@ -812,6 +843,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         shortDateLabel: _formatShortDate(selectedDay),
                         eventCount: eventCount,
                         holidayCount: holidaysForDay(selectedDay).length,
+                        secondaryDateLabel: secondaryCalendar == null ? null :
+                          '${context.tr(secondaryCalendar == 'buddhist' ? 'region_buddhist' : 'region_islamic_civil')}: '
+                          '${CalendarSecondaryDate.format(selectedDay, secondaryCalendar)}',
                       ),
                       CalendarHolidayListSection(
                         occurrences: holidaysForDay(selectedDay),

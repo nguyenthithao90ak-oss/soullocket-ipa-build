@@ -583,8 +583,8 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
 
       _showToast(
         deniedPermissions.isEmpty
-            ? 'Đã cấp đủ ${statuses.length}/${statuses.length} quyền cần thiết.'
-            : 'Đã cấp $grantedCount/${statuses.length} quyền. Còn thiếu: ${deniedPermissions.join(', ')}.',
+            ? L10nScope.of(context).format('ui_home_all_necessary_permissions_have_been_granted_to_284262', {'value1': statuses.length, 'value2': statuses.length})
+            : L10nScope.of(context).format('ui_home_granted_value1_value2_permissions_missing_value3_8874fa', {'value1': grantedCount, 'value2': statuses.length, 'value3': deniedPermissions.join(', ')}),
         success: grantedCount > 0,
       );
       await _promptOpenAppSettings(settingsLockedPermissions);

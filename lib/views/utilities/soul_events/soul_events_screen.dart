@@ -337,7 +337,9 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isCompact = constraints.maxWidth < 390;
+        final isCompact =
+            constraints.maxWidth < 420 ||
+            MediaQuery.textScalerOf(context).scale(14) > 17;
         final info = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -383,7 +385,10 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
                   ),
                 ),
                 if (event.isLunar)
-                  _buildLunarChip(context, color: Colors.amber.shade800),
+                  _buildLunarChip(
+                    context,
+                    color: KeepsakeStyle.accent(context),
+                  ),
                 if (event.isLunar && !event.hasConfirmedLunarDate)
                   Text(
                     context.tr('event_lunar_legacy'),
@@ -436,7 +441,7 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
                             ),
                             const SizedBox(height: 12),
                             Align(
-                              alignment: Alignment.centerRight,
+                              alignment: AlignmentDirectional.centerEnd,
                               child: _buildDDayBadge(
                                 context,
                                 diff,
@@ -490,9 +495,11 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
           const SizedBox(width: 4),
           Text(
             context.tr('p8_events_lunar'),
-            style: SLTypography.labelSmall.copyWith(
+            style: KeepsakeStyle.text(
+              context,
+              size: 11,
               color: color,
-              fontWeight: FontWeight.w600,
+              weight: FontWeight.w600,
             ),
           ),
         ],

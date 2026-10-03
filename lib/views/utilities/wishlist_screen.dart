@@ -81,17 +81,17 @@ class _WishlistScreenState extends State<WishlistScreen> {
   String _selectedCategory = 'gift';
   String _selectedPriority = 'normal';
 
-  final Map<String, String> _categoryLabels = const {
-    'gift': 'Quà tặng',
-    'date': 'Hẹn hò',
+  Map<String, String> get _categoryLabels => {
+    'gift': L10nService().translate('ui_utilities_qu_t_ng_76b9a1'),
+    'date': L10nService().translate('ui_utilities_h_n_h_4e1f88'),
     'home': 'Nhà chung',
-    'dream': 'Ước mơ',
+    'dream': L10nService().translate('ui_utilities_c_m_97b826'),
   };
 
-  final Map<String, String> _priorityLabels = const {
-    'urgent': 'Ưu tiên cao',
-    'normal': 'Vừa',
-    'someday': 'Để sau',
+  Map<String, String> get _priorityLabels => {
+    'urgent': L10nService().translate('ui_utilities_u_ti_n_cao_830ad8'),
+    'normal': L10nService().translate('home_va_74ffe0'),
+    'someday': L10nService().translate('p5_later'),
   };
 
   @override

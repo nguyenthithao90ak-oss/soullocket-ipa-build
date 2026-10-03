@@ -306,8 +306,13 @@ class AuthSignInService {
 
     bool? accountExistsHint;
     try {
-      final precheckFuture = _precheckServerLoginGuard(normalizedEmail);
-      final authFuture = _auth
+      // Cổng kiểm tra phải hoàn tất trước khi tạo phiên Auth mới.
+      final precheck = await _precheckServerLoginGuard(normalizedEmail);
+      accountExistsHint = precheck.accountExists;
+      if (!precheck.allowed) {
+        throw precheck.message;
+      }
+      final userCredential = await _auth
           .signInWithEmailAndPassword(
             email: normalizedEmail,
             password: password.trim(),
@@ -318,17 +323,6 @@ class AuthSignInService {
                 throw 'Lỗi kết nối máy chủ! Vui lòng kiểm tra lại mạng.',
           );
 
-      final results = await Future.wait([precheckFuture, authFuture]);
-      final precheck = results[0] as _ServerLoginGuardPrecheck;
-      final userCredential = results[1] as firebase_auth.UserCredential;
-
-      accountExistsHint = precheck.accountExists;
-      if (!precheck.allowed) {
-        if (userCredential.user != null) {
-          await signOut();
-        }
-        throw precheck.message;
-      }
       if (accountExistsHint == false) {
         await _recordServerLoginFailure(
           normalizedEmail,
@@ -508,7 +502,12 @@ class AuthSignInService {
         if (decoded is Map) {
           final payload = Map<String, dynamic>.from(decoded);
           if (payload['enforcement'] == 'block') {
-            await _cacheSecurityVerdictFromPayload(payload);
+            try {
+              await _cacheSecurityVerdictFromPayload(payload);
+            } catch (_) {
+              // Lỗi cache local không được biến quyết định chặn thành cho phép.
+            }
+            return <String, dynamic>{...payload, 'allowed': false};
           }
         }
         return null;

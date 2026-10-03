@@ -804,7 +804,7 @@ extension _MapLocationLogicExt on _MapScreenState {
                 _checkins = items;
                 _checkinSummary = items.isEmpty
                     ? context.tr('map_chacchecki_51b108')
-                    : '${items.length} check-in gần đây';
+                    : L10nService().format('ui_map_value1_recent_check_in_4323c6', {'value1': items.length});
                 _checkinSummary = _buildCheckinSummaryLabel(items.length);
               });
               _rebuildStaticMarkersCached(
@@ -1320,9 +1320,9 @@ extension _MapLocationLogicExt on _MapScreenState {
       DateTime.fromMillisecondsSinceEpoch(ts),
     );
     if (age.inSeconds < 45) return context.tr('map_vacpnht_e8745a');
-    if (age.inMinutes < 60) return '${age.inMinutes} phút trước';
-    if (age.inHours < 24) return '${age.inHours} giờ trước';
-    return '${age.inDays} ngày trước';
+    if (age.inMinutes < 60) return L10nService().format('ui_map_value1_minutes_ago_58721d', {'value1': age.inMinutes});
+    if (age.inHours < 24) return L10nService().format('ui_map_value1_hours_ago_7d1c09', {'value1': age.inHours});
+    return L10nService().format('ui_map_value1_days_ago_488126', {'value1': age.inDays});
   }
 
   void _refreshLiveDataSmart() {
@@ -1399,20 +1399,20 @@ extension _MapLocationLogicExt on _MapScreenState {
 
       if (myLive && partnerLive) {
         mapInsightText = hasExactRoute
-            ? 'Quãng đường hiện tại là $routeDistanceText, thời gian dự kiến $etaText.'
+            ? L10nService().format('ui_map_current_distance_is_value1_estimated_time_value2_57e9c9', {'value1': routeDistanceText, 'value2': etaText})
             : context.tr('map_chaiangbtv_4c3308');
       } else if (!myLive && !partnerLive) {
         mapInsightText = hasExactRoute
-            ? 'Đang dùng vị trí cuối cùng đã lưu của cả hai. Quãng đường khoảng $routeDistanceText.'
+            ? L10nService().format('ui_map_using_the_last_saved_location_of_both_e7e8dd', {'value1': routeDistanceText})
             : context.tr('map_angdngvtrc_e2f616');
         mapAlert = context.tr('map_gpscachaia_8a5ecd');
       } else if (!partnerLive) {
         mapInsightText =
-            '${widget.partnerName} đang ở vị trí cuối cùng đã lưu. Khoảng cách vẫn được giữ để bạn tiện theo dõi.';
-        mapAlert = 'Đang dùng vị trí cuối của ${widget.partnerName}.';
+            L10nService().format('ui_map_value1_is_at_the_last_saved_location_71f0ac', {'value1': widget.partnerName});
+        mapAlert = L10nService().format('ui_map_using_end_position_of_value1_b5b7bb', {'value1': widget.partnerName});
       } else {
         mapInsightText =
-            'Bản đồ đang dùng vị trí cuối cùng đã lưu của bạn để tính khoảng cách với ${widget.partnerName}.';
+            L10nService().format('ui_map_maps_is_using_your_last_saved_location_43f413', {'value1': widget.partnerName});
         mapAlert = context.tr('map_gpscabnang_a6da92');
       }
 
@@ -1420,7 +1420,7 @@ extension _MapLocationLogicExt on _MapScreenState {
         mapAlert = context.tr('map_haibnangrt_0b7f41');
       } else if (directMeters <= 1500) {
         mapAlert =
-            'Hai bạn chỉ cách nhau ${_formatDistanceMeters(directMeters)}.';
+            L10nService().format('ui_map_the_two_of_you_are_only_value1_b37896', {'value1': _formatDistanceMeters(directMeters)});
       } else {
         mapAlert ??= myLive && partnerLive
             ? context.tr('map_qungngtrnb_5fc7ae')
@@ -1543,7 +1543,7 @@ extension _MapLocationLogicExt on _MapScreenState {
         (myPoint.lng + partnerPoint.lng) / 2,
       );
       final togetherLabel = distanceMeters < 30
-          ? 'Đang bên nhau 💕'
+          ? L10nService().translate('ui_map_together_18bd95')
           : 'Cách nhau ${distanceMeters.round()}m 💕';
 
       liveMarkerSpecs.add(

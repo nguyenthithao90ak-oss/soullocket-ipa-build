@@ -675,6 +675,14 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   void _onRegionPreferencesChanged() {
     if (!mounted) return;
     _lastLoveWidgetSignature = '';
+    final houseId = _houseId;
+    if (houseId != null && houseId.trim().isNotEmpty && WidgetService.supportsMobileWidgets) {
+      _calendarWidgetSyncDebounce?.cancel();
+      _calendarWidgetSyncDebounce = Timer(const Duration(milliseconds: 250), () {
+        if (!mounted || _houseId != houseId) return;
+        unawaited(WidgetService.syncCalendarWidgetData(houseId: houseId));
+      });
+    }
     setState(() {});
   }
 

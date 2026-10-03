@@ -278,7 +278,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
       final remainingMin = (remainingMs / 60000).ceil();
       setState(() {
         _spamWarning =
-            'Thao tác quá nhanh! Bị chặn trong $remainingMin phút nữa.';
+            L10nService().format('ui_home_action_too_fast_blocked_in_value1_minutes_900f32', {'value1': remainingMin});
       });
       Timer(const Duration(seconds: 3), () {
         if (mounted) setState(() => _spamWarning = null);
@@ -290,7 +290,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
     if (_tempBlockSecondsLeft > 0) {
       setState(() {
         _spamWarning =
-            'Thao tác quá nhanh! Vui lòng đợi $_tempBlockSecondsLeft giây đếm ngược.';
+            L10nService().format('ui_home_action_too_fast_please_wait_for_value1_d70da2', {'value1': _tempBlockSecondsLeft});
       });
       return true;
     }
@@ -303,7 +303,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
 
       setState(() {
         _spamWarning =
-            'Thao tác quá nhanh! Đang đếm ngược $_tempBlockSecondsLeft giây.';
+            L10nService().format('ui_home_action_too_fast_counting_down_value1_seconds_e39a14', {'value1': _tempBlockSecondsLeft});
       });
 
       _tempBlockTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -315,7 +315,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
               timer.cancel();
             } else {
               _spamWarning =
-                  'Thao tác quá nhanh! Đang đếm ngược $_tempBlockSecondsLeft giây.';
+                  L10nService().format('ui_home_action_too_fast_counting_down_value1_seconds_e39a14', {'value1': _tempBlockSecondsLeft});
             }
           });
         } else {
@@ -335,7 +335,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
           debugPrint('[SpamCheck] Error writing prefs: $e');
         }
         setState(() {
-          _spamWarning = 'Thao tác quá nhanh! Bị chặn nhắn tin trong 1 giờ.';
+          _spamWarning = L10nService().translate('ui_home_action_too_fast_blocked_texting_for_1_351b49');
           _tempBlockSecondsLeft = 0;
           _tempBlockTimer?.cancel();
         });

@@ -523,7 +523,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
           .toList(growable: false);
       if (sharedTags.isNotEmpty) {
         score += min(18, sharedTags.length * 6).toDouble();
-        reasons.add('Trùng sở thích: ${sharedTags.take(2).join(', ')}');
+        reasons.add(L10nService().format('ui_single_similar_interests_value1_679dc4', {'value1': sharedTags.take(2).join(', ')}));
       }
 
       if (candidate.intro.trim().isNotEmpty) {
@@ -924,7 +924,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
   Widget _buildHeaderCard() {
     final ageText = _myAge == null
         ? L10nService().translate('match_chactui_a686b2')
-        : '$_myAge tuổi';
+        : L10nService().format('ui_single_value1_age_750f44', {'value1': _myAge});
     final goalText = _choiceLabel(_goalOptions, _currentPreferences.goal);
     return _SingleMatchHeaderCard(
       avatarUrl: _avatarUrl,

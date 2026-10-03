@@ -127,6 +127,7 @@ import '../../../utils/services/secure_storage_service.dart';
 import 'settings/controllers/settings_security_controller.dart';
 import 'settings/settings_links_manager_screen.dart';
 import 'settings/security/security_otp_dialogs.dart';
+import 'settings/security/security_recovery_widgets.dart';
 import '../../../widgets/first_setup_spotlight_guide.dart';
 import '../../../widgets/legacy_web_ui.dart';
 import '../../../widgets/keepsake_frame.dart';

@@ -25,6 +25,8 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/notification_service.dart';
 import '../consent_service.dart';
 import 'app_open_ad_presentation.dart';
+import 'reward_request_scope.dart';
+import 'ad_reward_receipt_store.dart';
 
 /// ============================================================
 ///  AdMobService — GRA (Phase Production)
@@ -1028,6 +1030,8 @@ class AdMobService {
     String? verifiedPurpose,
   }) async {
     if (kIsWeb) return false;
+    if (verifiedPurpose != null && await pendingAdRewardPurpose() != null)
+      return false;
     if (await isProUser()) {
       debugPrint('AdMobService: rewarded skipped because user is Pro.');
       return false;
@@ -1129,9 +1133,7 @@ class AdMobService {
         AppLifecyclePresenceGuard.settle();
         // Delay to ensure that if onUserEarnedReward is scheduled slightly after dismissal, it has time to register.
         await Future<void>.delayed(const Duration(milliseconds: 150));
-        if (!didEarnReward &&
-            verifiedPurpose == 'companion_points' &&
-            rewardUid != null) {
+        if (!didEarnReward && verifiedPurpose != null && rewardUid != null) {
           final prefs = await SharedPreferences.getInstance();
           if (prefs.getString('ad_pending_nonce_$rewardUid') == rewardNonce) {
             await prefs.remove('ad_pending_nonce_$rewardUid');
@@ -1154,6 +1156,9 @@ class AdMobService {
         _rewardedAd = null;
         _loadRewardedAd();
         AppLifecyclePresenceGuard.settle();
+        if (rewardUid != null && rewardNonce != null) {
+          unawaited(_clearPendingReward(rewardUid, rewardNonce));
+        }
         if (!completer.isCompleted) completer.complete(false);
       },
     );
@@ -1184,6 +1189,9 @@ class AdMobService {
       _rewardedAd = null;
       _loadRewardedAd();
       AppLifecyclePresenceGuard.settle();
+      if (rewardUid != null && rewardNonce != null && !didEarnReward) {
+        await _clearPendingReward(rewardUid, rewardNonce);
+      }
       if (!completer.isCompleted) completer.complete(false);
     }
 
@@ -1696,7 +1704,13 @@ class AdMobService {
   Future<int> getUserPoints() async {
     final userRef = _currentUserRef;
     if (userRef == null) return 0;
-    final snap = await userRef.child('points').get();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final snap = await userRef
+        .child('points')
+        .get()
+        .timeout(const Duration(seconds: 10));
+    if (FirebaseAuth.instance.currentUser?.uid != uid)
+      throw RewardScopeChanged('unauthenticated');
     return (snap.value as num?)?.toInt() ?? 0;
   }
 
@@ -1713,26 +1727,15 @@ class AdMobService {
     if (!access.isVip) {
       return 0;
     }
-    return access.expiresAtMs ??
-        DateTime.now().add(const Duration(days: 36500)).millisecondsSinceEpoch;
+    return access.expiresAtMs ?? DateTime.utc(9999).millisecondsSinceEpoch;
   }
 
-  Stream<int> streamCurrentProUntil() async* {
-    if (!AppConfig.isPurchaseEnabled) {
-      yield 0;
-      return;
-    }
-
-    final houseId = await _houseService.getCurrentHouseId();
-    if (houseId == null || houseId.isEmpty) {
-      yield 0;
-      return;
-    }
-    yield* FirebaseDatabase.instance
-        .ref('houses/$houseId/proUntil')
-        .onValue
-        .map((event) => (event.snapshot.value as num?)?.toInt() ?? 0);
-  }
+  Stream<int> streamCurrentProUntil() =>
+      PurchaseService().vipAccessStream().map(
+        (access) => access.isVip
+            ? access.expiresAtMs ?? DateTime.utc(9999).millisecondsSinceEpoch
+            : 0,
+      );
 
   Future<bool> isProUser() async {
     final access = await PurchaseService().getVipAccessInfo();
@@ -1743,14 +1746,26 @@ class AdMobService {
     String endpoint,
     Map<String, dynamic> body, {
     bool requireAppCheck = true,
+    String? expectedUid,
+    String? expectedHouseId,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
+    if (user == null || (expectedUid != null && user.uid != expectedUid)) {
       return {'ok': false, 'error': 'unauthenticated'};
     }
     if (endpoint.trim().isEmpty) {
       return {'ok': false, 'error': 'endpoint_not_configured'};
     }
+    final scope = RewardRequestScope(
+      uid: user.uid,
+      currentUid: () => FirebaseAuth.instance.currentUser?.uid,
+      houseId: expectedHouseId,
+      currentHouseId: expectedHouseId == null
+          ? null
+          : () => _houseService
+                .getCurrentHouseId(preferFresh: true)
+                .timeout(const Duration(seconds: 10)),
+    );
     final endpointKey = endpoint.trim();
     final retryAfter = _rewardEndpointRetryAfter[endpointKey];
     if (retryAfter != null && DateTime.now().isBefore(retryAfter)) {
@@ -1774,19 +1789,20 @@ class AdMobService {
       // SDK tự làm mới token hết hạn. Không ép attestation lại mỗi lần poll.
       // Timeout gồm cả lấy App Check, không chỉ phần HTTP phía sau.
       return appCheckHeaders({
-            'Content-Type': 'application/json; charset=utf-8',
-            'Authorization': 'Bearer $idToken',
-          }, forceRefresh: false)
-          .timeout(const Duration(seconds: 10))
-          .then(
-            (headers) => http
-                .post(
-                  Uri.parse(endpoint.trim()),
-                  headers: headers,
-                  body: jsonEncode(body),
-                )
-                .timeout(const Duration(seconds: 20)),
-          );
+        'Content-Type': 'application/json; charset=utf-8',
+        'Authorization': 'Bearer $idToken',
+      }, forceRefresh: false).timeout(const Duration(seconds: 10)).then((
+        headers,
+      ) async {
+        await scope.ensureCurrent();
+        return http
+            .post(
+              Uri.parse(endpoint.trim()),
+              headers: headers,
+              body: jsonEncode(body),
+            )
+            .timeout(const Duration(seconds: 20));
+      });
     }
 
     String idToken;
@@ -1810,6 +1826,8 @@ class AdMobService {
     try {
       response = await postWithToken(idToken);
     } on StateError catch (error) {
+      if (error is RewardScopeChanged)
+        return {'ok': false, 'error': error.code};
       final errorInfo = AppErrorMapper.resolve(
         error,
         fallbackMessage: 'Thiếu token App Check để gửi yêu cầu thưởng.',
@@ -1843,6 +1861,8 @@ class AdMobService {
         try {
           response = await postWithToken(idToken);
         } on StateError catch (retryAppCheckError) {
+          if (retryAppCheckError is RewardScopeChanged)
+            return {'ok': false, 'error': retryAppCheckError.code};
           debugPrint(
             'Reward server retry blocked due to missing App Check token: $retryAppCheckError',
           );
@@ -1902,6 +1922,9 @@ class AdMobService {
       debugPrint('AdMobService: JSON decode failed: $e');
       decodedMap = null;
     }
+
+    if (FirebaseAuth.instance.currentUser?.uid != user.uid)
+      return {'ok': false, 'error': 'unauthenticated'};
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final error =
@@ -1965,6 +1988,7 @@ class AdMobService {
   Future<Map<String, dynamic>?> _claimRewardFromServer({
     required String source,
     String? questId,
+    String? expectedUid,
   }) async {
     final payload = <String, dynamic>{
       'source': source,
@@ -1977,7 +2001,8 @@ class AdMobService {
     final res = await _postAuthenticatedJson(
       AppConfig.rewardGrantUrl,
       payload,
-      requireAppCheck: source != 'daily_checkin',
+      requireAppCheck: true,
+      expectedUid: expectedUid,
     );
 
     return res;
@@ -1995,6 +2020,40 @@ class AdMobService {
 
   String? _lastVerifiedRewardNonce;
   String? _lastVerifiedRewardUid;
+
+  Future<String?> pendingAdRewardPurpose() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return null;
+    final store = AdRewardReceiptStore(await SharedPreferences.getInstance());
+    if (FirebaseAuth.instance.currentUser?.uid != uid) return null;
+    return store.read(uid)?.purpose;
+  }
+
+  Future<void> _clearPendingReward(String uid, String nonce) async {
+    await AdRewardReceiptStore(
+      await SharedPreferences.getInstance(),
+    ).clearMatching(uid, nonce);
+    if (_lastVerifiedRewardUid == uid && _lastVerifiedRewardNonce == nonce) {
+      _lastVerifiedRewardNonce = null;
+      _lastVerifiedRewardUid = null;
+    }
+  }
+
+  Future<RewardClaimResult?> recoverPendingAdReward() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return null;
+    final store = AdRewardReceiptStore(await SharedPreferences.getInstance());
+    if (FirebaseAuth.instance.currentUser?.uid != uid) return null;
+    final pending = store.read(uid);
+    if (pending == null) return null;
+    final response = await _waitForVerifiedReward(pending.purpose);
+    if (FirebaseAuth.instance.currentUser?.uid != uid) return null;
+    if (response?['error'] == 'reward_pending' &&
+        pending.expired(DateTime.now().millisecondsSinceEpoch)) {
+      await _clearPendingReward(uid, pending.nonce);
+    }
+    return RewardClaimResult.fromResponse(response);
+  }
 
   Future<RewardClaimResult> claimRewardedAdPoints() async {
     final receipt = await _waitForVerifiedReward('points');
@@ -2071,9 +2130,7 @@ class AdMobService {
           return {'ok': false, 'error': 'invalid_proof'};
         }
         if (prefs.getString('ad_pending_nonce_$uid') == pending) {
-          await prefs.remove('ad_pending_nonce_$uid');
-          await prefs.remove('ad_pending_purpose_$uid');
-          await prefs.remove('ad_pending_started_$uid');
+          await _clearPendingReward(uid, pending);
           if (purpose == 'points' || purpose == 'companion_points') {
             await _incrementDailyRewardedAdCount();
           }
@@ -2114,10 +2171,16 @@ class AdMobService {
   }
 
   Future<RewardClaimResult> claimDailyCheckinReward() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null)
+      return const RewardClaimResult(ok: false, error: 'unauthenticated');
     // Lần thử đầu tiên
     Map<String, dynamic>? response;
     try {
-      response = await _claimRewardFromServer(source: 'daily_checkin');
+      response = await _claimRewardFromServer(
+        source: 'daily_checkin',
+        expectedUid: uid,
+      );
     } catch (e) {
       // FIXME: Lỗi claim daily checkin lần đầu
       debugPrint('AdMobService: Daily checkin initial claim failed: $e');
@@ -2134,9 +2197,14 @@ class AdMobService {
     if (firstResult.networkIssue) {
       debugPrint('Daily checkin: network issue, retrying in 1.5s...');
       await Future<void>.delayed(const Duration(milliseconds: 1500));
+      if (FirebaseAuth.instance.currentUser?.uid != uid)
+        return const RewardClaimResult(ok: false, error: 'unauthenticated');
       Map<String, dynamic>? retryResponse;
       try {
-        retryResponse = await _claimRewardFromServer(source: 'daily_checkin');
+        retryResponse = await _claimRewardFromServer(
+          source: 'daily_checkin',
+          expectedUid: uid,
+        );
       } catch (e) {
         // FIXME: Lỗi retry claim daily checkin
         debugPrint('AdMobService: Daily checkin retry claim failed: $e');
@@ -2160,23 +2228,49 @@ class AdMobService {
     return false;
   }
 
-  Future<RewardClaimResult> redeemProPlan({required String planId}) async {
-    if (!AppConfig.isPurchaseEnabled) {
+  Future<RewardClaimResult> redeemProPlan({
+    required String planId,
+    String? expectedUid,
+  }) async {
+    if (!AppConfig.isPurchaseEnabled)
       return const RewardClaimResult(ok: false, error: 'purchase_disabled');
-    }
-    if (planId.trim().isEmpty) {
+    if (planId.trim().isEmpty)
       return const RewardClaimResult(ok: false, error: 'invalid_plan');
+    final uid = expectedUid ?? FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || FirebaseAuth.instance.currentUser?.uid != uid) {
+      return const RewardClaimResult(ok: false, error: 'unauthenticated');
     }
-    final houseId = await _houseService.getCurrentHouseId(preferFresh: true);
-    if (houseId == null || houseId.isEmpty) {
-      return const RewardClaimResult(ok: false, error: 'house_not_found');
+    try {
+      final houseId = await _houseService
+          .getCurrentHouseId(preferFresh: true)
+          .timeout(const Duration(seconds: 10));
+      if (FirebaseAuth.instance.currentUser?.uid != uid)
+        return const RewardClaimResult(ok: false, error: 'unauthenticated');
+      if (houseId == null || houseId.isEmpty)
+        return const RewardClaimResult(ok: false, error: 'house_not_found');
+      final response = await _postAuthenticatedJson(
+        AppConfig.rewardRedeemProUrl,
+        {'houseId': houseId, 'planId': planId},
+        expectedUid: uid,
+        expectedHouseId: houseId,
+      );
+      final result = RewardClaimResult.fromResponse(response);
+      if (result.ok && FirebaseAuth.instance.currentUser?.uid == uid) {
+        try {
+          await PurchaseService().getVipAccessInfo(forceRefresh: true);
+        } catch (_) {
+          // Server đã cấp quyền: lỗi refresh UI không biến giao dịch thành thất bại.
+          debugPrint(
+            'AdMobService: PRO granted; entitlement refresh will retry on stream.',
+          );
+        }
+      }
+      return result;
+    } on TimeoutException {
+      return const RewardClaimResult(ok: false, error: 'network_timeout');
+    } catch (_) {
+      return const RewardClaimResult(ok: false, error: 'network_error');
     }
-
-    final response = await _postAuthenticatedJson(
-      AppConfig.rewardRedeemProUrl,
-      {'houseId': houseId, 'planId': planId},
-    );
-    return RewardClaimResult.fromResponse(response);
   }
 
   // ─── AD IMPRESSION PING ────────────────────────────────────────

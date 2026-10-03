@@ -539,8 +539,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
     _showFloatingMessage(
       automatic
-          ? 'T\u1ef1 \u0111\u1ed9ng \u0111\u1ed5i $replacementCount kh\u1ed1i'
-          : '\u0110\u00e3 \u0111\u1ed5i $replacementCount kh\u1ed1i',
+          ? L10nScope.of(context).format('ui_utilities_automatically_convert_value1_block_b6e0e4', {'value1': replacementCount})
+          : L10nScope.of(context).format('ui_utilities_changed_value1_block_2f374a', {'value1': replacementCount}),
       color: automatic ? const Color(0xFF7AE7FF) : const Color(0xFFFFD166),
     );
     return true;

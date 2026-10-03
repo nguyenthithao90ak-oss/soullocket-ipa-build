@@ -314,7 +314,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
 
     if (!RegExp(r'^[A-Z0-9_]{3,20}$').hasMatch(clean)) {
       setState(() {
-        _idErrorReason = 'Mã chỉ gồm chữ, số, dấu gạch dưới (3-20 ký tự).';
+        _idErrorReason = L10nService().translate('ui_auth_code_includes_only_letters_numbers_and_underscores_0ba89e');
       });
       return;
     }
@@ -344,7 +344,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         if (!mounted || _customId != clean) return;
         setState(() {
           _isIdChecking = false;
-          _idErrorReason = 'Lỗi kết nối máy chủ.';
+          _idErrorReason = L10nService().translate('Lỗi kết nối máy chủ.');
         });
       }
     });
@@ -702,29 +702,29 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     if (normalized.contains('unauthenticated') ||
         normalized.contains('chưa đăng nhập') ||
         normalized.contains('đăng nhập')) {
-      return 'Phiên đăng nhập đang đồng bộ. App sẽ tự thử lại, bạn không cần đăng xuất.';
+      return L10nService().translate('ui_auth_the_login_session_is_synchronizing_the_app_d14805');
     }
     if (normalized.contains('permission-denied') ||
         normalized.contains('app check') ||
         normalized.contains('debug token') ||
         normalized.contains('play integrity')) {
-      return 'Thiết bị đang được xác thực bảo mật. Vui lòng chờ vài giây rồi thử lại.';
+      return L10nService().translate('ui_auth_the_device_is_being_authenticated_for_security_6e0332');
     }
     if (_needsEmailVerification(error, message)) {
-      return 'Cần xác minh Gmail để tiếp tục tạo nhà.';
+      return L10nService().translate('ui_auth_gmail_verification_is_required_to_continue_creating_982f13');
     }
     if (normalized.contains('dữ liệu nhà') ||
         normalized.contains('đã có nhà') ||
         normalized.contains('đề lên') ||
         normalized.contains('mất dữ liệu')) {
-      return 'Tài khoản của bạn đã có dữ liệu ngôi nhà. Đang đồng bộ lại dữ liệu, vui lòng bấm Thử lại.';
+      return L10nService().translate('ui_auth_your_account_already_has_house_data_resynchronizing_ea46f8');
     }
     if (normalized.contains('timeout') ||
         normalized.contains('network') ||
         normalized.contains('deadline') ||
         normalized.contains('mạng') ||
         normalized.contains('kết nối')) {
-      return 'Mạng hoặc server phản hồi chậm. App sẽ cho thử lại mà không đăng xuất tài khoản.';
+      return L10nService().translate('ui_auth_the_connection_or_server_is_responding_slowly_0d6850');
     }
     return message;
   }
@@ -737,7 +737,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       final email = (user?.email ?? '').trim();
       if (user == null || email.isEmpty) {
         throw Exception(
-          'Phiên đăng nhập đang đồng bộ. Vui lòng thử lại sau vài giây.',
+          L10nService().translate('ui_auth_the_login_session_is_synchronizing_please_try_a6cb29'),
         );
       }
 
@@ -1382,22 +1382,22 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     if (normalized.contains('giới hạn') ||
         normalized.contains('quá nhiều') ||
         normalized.contains('thử lại sau khoảng')) {
-      return 'Đã đạt giới hạn';
+      return L10nService().translate('ui_auth_limit_reached_1c4604');
     }
     if (normalized.contains('app check') ||
         normalized.contains('debug token') ||
         normalized.contains('play integrity')) {
-      return 'Cấu hình bản debug chưa đủ';
+      return L10nService().translate('ui_auth_configuring_the_debug_version_is_not_enough_f4d2ac');
     }
     if (normalized.contains('đăng xuất')) {
-      return 'Không thể đăng xuất';
+      return L10nService().translate('ui_auth_cannot_log_out_04f311');
     }
     if (normalized.contains('bảo mật') ||
         normalized.contains('câu hỏi') ||
         normalized.contains('câu trả lời')) {
-      return 'Thiếu thông tin';
+      return L10nService().translate('ui_auth_missing_information_70b9b0');
     }
-    return 'Không thể tạo nhà';
+    return L10nService().translate('ui_auth_cannot_create_house_0c1d70');
   }
 
   void _showError(String message, {String? title}) {

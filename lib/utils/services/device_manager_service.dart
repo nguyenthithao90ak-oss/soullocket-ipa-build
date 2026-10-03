@@ -1,6 +1,5 @@
 // ignore_for_file: unused_field, unused_element
 import 'dart:async';
-import 'dart:convert';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -13,7 +12,6 @@ import 'core/cloud_functions_helper.dart';
 import 'offline_cache_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'secure_storage_service.dart';
-import '../resilient_http.dart';
 
 class DeviceTrustState {
   static const Duration autoTrustDelay = Duration(hours: 12);
@@ -117,8 +115,9 @@ class DeviceManagerService {
   Future<DeviceTrustState> getCurrentDeviceTrustState({
     bool autoApprove = true,
   }) async {
-    // DISABLED: Always return a trusted state for the current device so that
-    // logging in on a new device is never blocked by the device-trust flow.
+    // Device trust is intentionally advisory until the native sign-out flow
+    // is verified on Android and iOS. The manager screen enforces server-side
+    // permissions independently when changing another device.
     final uid = _auth.currentUser?.uid.trim() ?? '';
     if (uid.isEmpty) {
       return _unknownTrustState;
@@ -132,52 +131,6 @@ class DeviceManagerService {
       exists: true,
       isAdmin: true,
     );
-    /*
-
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final cachedState = _cachedTrustState;
-    if (cachedState != null &&
-        _cachedTrustStateUid == uid &&
-        _isCacheFresh(_cachedTrustStateAtMs, _trustStateCacheTtl) &&
-        !_shouldRefreshPendingTrustState(cachedState, autoApprove, now)) {
-      return cachedState;
-    }
-
-    final pendingFuture = _currentTrustStateFuture;
-    if (pendingFuture != null && _currentTrustStateFutureUid == uid) {
-      return pendingFuture;
-    }
-
-    final future =
-        _loadCurrentDeviceTrustState(autoApprove: autoApprove, uid: uid);
-    _currentTrustStateFuture = future;
-    _currentTrustStateFutureUid = uid;
-    try {
-      final trustState = await future;
-      if (trustState.status == 'unknown' &&
-          cachedState != null &&
-          _cachedTrustStateUid == uid) {
-        return cachedState;
-      }
-      if (trustState.status != 'unknown') {
-        _rememberTrustState(trustState, uid: uid);
-      }
-      return trustState;
-    } catch (e) {
-      debugPrint('getCurrentDeviceTrustState ignored: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể kiểm tra trạng thái thiết bị.',
-      ).message}');
-      return _cachedTrustStateUid == uid
-          ? _cachedTrustState ?? _unknownTrustState
-          : _unknownTrustState;
-    } finally {
-      if (identical(_currentTrustStateFuture, future)) {
-        _currentTrustStateFuture = null;
-        _currentTrustStateFutureUid = null;
-      }
-    }
-    */
   }
 
   Future<DeviceTrustState> _loadCurrentDeviceTrustState({
@@ -272,273 +225,22 @@ class DeviceManagerService {
 
   /// Ghi thông tin thiết bị hiện tại vào Firebase khi đăng nhập
   Future<void> registerCurrentDevice() async {
-    // DISABLED: Always treat the current device as approved so that
-    // new-device logins are never blocked. Skip the heavy registration
-    // and realtime kick-out logic entirely.
-    return;
-    /*
     if (!await isSecurityDeviceSignalsAllowed()) {
       return;
     }
 
-    if (await _registerCurrentDeviceWithFunction()) {
-      startRealtimeTracking();
-      return;
-    }
-
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) return;
-
-    final houseSnap = await _db.ref('users/$uid/houseId').get();
-    final houseId = houseSnap.value?.toString().trim();
-    if (houseId == null || houseId.isEmpty) return;
-
-    final deviceInfo = await _getDeviceInfo();
-    final deviceId = deviceInfo['deviceId'] as String;
-
-    String ip = 'unknown';
-    String location = 'unknown';
-    String ipSource = 'unknown';
-    Map<String, dynamic> ipData = {};
-
-    Future<Map<String, dynamic>?> fetchIpData(
-        String url, String sourceName) async {
-      try {
-        final response =
-            await ResilientHttp.get(Uri.parse(url));
-        if (response.statusCode == 200) {
-          final data = json.decode(response.body);
-          data['source'] = sourceName;
-          return data;
-        }
-      } catch (e) {
-        debugPrint('fetchIpData error: ${AppErrorMapper.resolve(
-          e,
-          fallbackMessage: 'Không thể lấy dữ liệu mạng thiết bị.',
-        ).message}');
-      }
-      return null;
-    }
-
     try {
-      // Thử các nguồn IP khác nhau
-      final sources = [
-        {'url': 'https://get.geojs.io/v1/ip/geo.json', 'name': 'geojs'},
-        {'url': 'https://ipapi.co/json/', 'name': 'ipapi'},
-        {'url': 'https://ip-api.com/json/', 'name': 'ip-api'},
-      ];
-
-      for (var s in sources) {
-        final data = await fetchIpData(s['url']!, s['name']!);
-        if (data != null && (data['ip'] != null || data['query'] != null)) {
-          ipData = data;
-          ip = (data['ip'] ?? data['query']).toString();
-          ipSource = s['name']!;
-          break;
-        }
-      }
-
-      // Nếu vẫn không được, thử ipify
-      if (ip == 'unknown') {
-        final data =
-            await fetchIpData('https://api.ipify.org?format=json', 'ipify');
-        if (data != null && data['ip'] != null) {
-          ipData = data;
-          ip = data['ip'].toString();
-          ipSource = 'ipify';
-        }
-      }
-
-      if (ip != 'unknown' && ipData.isNotEmpty) {
-        // Chuẩn hóa dữ liệu location từ các nguồn khác nhau
-        final city = ipData['city']?.toString() ?? '';
-        final region =
-            (ipData['region'] ?? ipData['regionName'])?.toString() ?? '';
-        final country =
-            (ipData['country'] ?? ipData['country_name'])?.toString() ?? '';
-
-        final locParts =
-            [city, region, country].where((e) => e.isNotEmpty).toList();
-        if (locParts.isNotEmpty) {
-          location = locParts.join(', ');
-        }
-      }
+      await _registerCurrentDeviceWithFunction();
     } catch (e) {
       debugPrint(
-          'registerCurrentDevice IP fetch error: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể lấy dữ liệu mạng thiết bị.',
-      ).message}');
+        'registerCurrentDevice ignored: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể đăng ký thiết bị hiện tại.').message}',
+      );
     }
-
-    try {
-      // Kiểm tra xem thiết bị này đã tồn tại chưa
-      final ref = _db.ref('houses/$houseId/security/devices/$deviceId');
-      final snap = await ref.get();
-
-      // Mặc định là mới nếu chưa có hoặc đã bị xóa
-      final existingStatus = snap.child('status').value?.toString();
-      bool isNew = !snap.exists || existingStatus == 'deleted';
-      bool isSuspiciousSpoof = false;
-
-      // Nếu mã máy (deviceId) đã tồn tại, kiểm tra xem có bị giả mạo không
-      if (snap.exists && snap.child('status').value != 'deleted') {
-        final oldModel = snap.child('model').value?.toString();
-        final oldPlatform = snap.child('platform').value?.toString();
-        // Nếu cùng 1 mã deviceId nhưng tự nhiên đổi tên Model hoặc nền tảng (Platform) -> Cực kỳ đáng ngờ !
-        if (oldModel != null && oldPlatform != null) {
-          if (oldModel != deviceInfo['model'] ||
-              oldPlatform != deviceInfo['platform']) {
-            isSuspiciousSpoof = true;
-            isNew = true; // Bắt phải duyệt lại từ đầu
-          }
-        }
-      }
-
-      List<Map<String, dynamic>> existingDevices = const [];
-      int trustedDeviceCount = 0;
-      final shouldCheckAutoTrustedLimit = isNew || existingStatus == 'pending';
-      if (shouldCheckAutoTrustedLimit) {
-        final devicesSnap =
-            await _db.ref('houses/$houseId/security/devices').limitToFirst(20).get();
-        existingDevices = _snapshotDeviceRecords(devicesSnap);
-        trustedDeviceCount = _countTrustedActiveDevices(existingDevices);
-      }
-      // Ba thiết bị tin cậy đầu tiên được dùng ngay, không cần chờ duyệt.
-      final shouldAutoApproveByLimit = !isSuspiciousSpoof &&
-          shouldCheckAutoTrustedLimit &&
-          trustedDeviceCount < autoTrustedDeviceLimit;
-
-      final updateData = {
-        'deviceId': deviceId,
-        'model': deviceInfo['model'],
-        'os': deviceInfo['os'],
-        'platform': deviceInfo['platform'],
-        'ip': ip,
-        'location': location,
-        'city': ipData['city']?.toString() ?? '',
-        'region': (ipData['region'] ?? ipData['regionName'])?.toString() ?? '',
-        'country':
-            (ipData['country'] ?? ipData['country_name'])?.toString() ?? '',
-        'timezone': ipData['timezone']?.toString() ?? '',
-        'latitude': (ipData['latitude'] ?? ipData['lat'])?.toString() ?? '',
-        'longitude': (ipData['longitude'] ?? ipData['lon'])?.toString() ?? '',
-        'org': (ipData['organization_name'] ?? ipData['org'] ?? ipData['isp'])
-                ?.toString() ??
-            '',
-        'ipSource': ipSource,
-        'last_seen': ServerValue.timestamp,
-        'first_seen': snap.exists && !isSuspiciousSpoof
-            ? snap.child('first_seen').value
-            : ServerValue.timestamp,
-        'auto_approve_at': snap.exists && !isSuspiciousSpoof
-            ? snap.child('auto_approve_at').value
-            : DateTime.now().millisecondsSinceEpoch +
-                pendingAutoTrustDelay.inMilliseconds,
-        'status': snap.exists && !isSuspiciousSpoof
-            ? (snap.child('status').value ?? 'approved')
-            : 'approved', // Default, we override this properly below
-        'uid': uid,
-        'is_admin': snap.exists && !isSuspiciousSpoof
-            ? (snap.child('is_admin').value ?? false)
-            : shouldAutoApproveByLimit,
-      };
-
-      // Khôi phục logic pending cho thiết bị mới hoặc thiết bị đáng ngờ
-      if (isNew) {
-        // --- SMART DETECTION: NHẬN DIỆN MÁY CŨ CÀI LẠI APP ---
-        // Khi xoá app cài lại hoặc nâng cấp OS, ID thiết bị có thể bị đổi.
-        // Nếu trùng model + platform với một máy TỪNG ĐƯỢC DUYỆT trong ngôi nhà này -> Tự duyệt luôn.
-        bool looksLikeKnownDevice = false;
-        String matchedDeviceId = '';
-
-        for (final dev in existingDevices) {
-          final isApproved = dev['status']?.toString() == 'approved';
-          final modelMatches = dev['model'] == deviceInfo['model'];
-          final platformMatches = dev['platform'] == deviceInfo['platform'];
-
-          // Ưu tiên khớp cả OS, nhưng nếu OS khác (do update) mà Model+Platform khớp thì vẫn tin cậy
-          if (isApproved && modelMatches && platformMatches) {
-            looksLikeKnownDevice = true;
-            matchedDeviceId = dev['deviceId']?.toString() ?? '';
-            break;
-          }
-        }
-
-        if (looksLikeKnownDevice) {
-          // Máy quen (cùng loại đã từng được duyệt), cho vào luôn không cần chờ 12h
-          updateData['status'] = 'approved';
-          updateData['is_admin'] =
-              false; // Mặc định không cho quyền admin ngay, nhưng cho vào app
-          updateData['approved_reason'] = 'smart_match_known_model';
-          debugPrint(
-              'Smart Detection: Device matched with previously approved device $matchedDeviceId');
-        } else if (isSuspiciousSpoof) {
-          // Bất kể là thiết bị thứ 1 hay thứ 10, nếu đáng ngờ thì khóa chờ duyệt ngay lập tức
-          updateData['status'] = 'pending';
-          updateData['is_admin'] = false;
-        } else if (shouldAutoApproveByLimit) {
-          // Ba thiết bị đầu tiên của căn nhà được xem là thiết bị quen.
-          updateData['status'] = 'approved';
-          updateData['is_admin'] = true;
-        } else {
-          // Máy hoàn toàn mới lạ -> pending
-          updateData['status'] = 'pending';
-          updateData['is_admin'] = false;
-        }
-      } else if (shouldAutoApproveByLimit && existingStatus == 'pending') {
-        updateData['status'] = 'approved';
-        updateData['is_admin'] = true;
-      }
-
-      final resolvedStatus = updateData['status']?.toString() ?? 'approved';
-      if (resolvedStatus == 'approved') {
-        updateData['approved_at'] = snap.exists && !isNew && !isSuspiciousSpoof
-            ? (snap.child('approved_at').value ?? ServerValue.timestamp)
-            : ServerValue.timestamp;
-        updateData['approved_reason'] = shouldAutoApproveByLimit
-            ? 'auto_first_three_devices'
-            : (isNew
-                ? 'auto_reinstalled_match'
-                : (snap.child('approved_reason').value ?? 'existing_trusted'));
-      } else {
-        updateData['approved_at'] = null;
-        updateData['approved_reason'] = null;
-      }
-
-      await ref.update(updateData);
-
-      // Nếu là thiết bị mới thì gửi cảnh báo
-      if (isNew && trustedDeviceCount >= 1) {
-        await PushNotificationHelper.systemEvent(
-          toHouseId: houseId,
-          type: 'new_device',
-          title: 'Đăng nhập thiết bị mới',
-          content:
-              'Thiết bị ${deviceInfo['model']} (${deviceInfo['os']}) vừa đăng nhập. Nền tảng: ${deviceInfo['platform']}.',
-          extra: {
-            'deviceModel': deviceInfo['model'],
-            'deviceOs': deviceInfo['os'],
-            'devicePlatform': deviceInfo['platform'],
-          },
-        );
-      }
-
-      // Start realtime tracking to auto logout if blocked or deleted
-      startRealtimeTracking();
-    } catch (e) {
-      debugPrint('registerCurrentDevice ignored: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể đăng ký thiết bị hiện tại.',
-      ).message}');
-    }
-    */
   }
 
   Future<bool> _registerCurrentDeviceWithFunction() async {
     try {
       final deviceInfo = await _getDeviceInfo();
-      final ipPayload = await _resolveDeviceIpPayload();
       await CloudFunctionsHelper.callSecure<dynamic>(
         'registerCurrentDeviceSecure',
         payload: {
@@ -546,7 +248,6 @@ class DeviceManagerService {
           'model': deviceInfo['model'],
           'os': deviceInfo['os'],
           'platform': deviceInfo['platform'],
-          ...ipPayload,
         },
         timeout: const Duration(seconds: 15),
         throwOriginalException: true,
@@ -563,93 +264,6 @@ class DeviceManagerService {
       );
       return false;
     }
-  }
-
-  Future<Map<String, dynamic>> _resolveDeviceIpPayload() async {
-    String ip = 'unknown';
-    String location = 'unknown';
-    String ipSource = 'unknown';
-    Map<String, dynamic> ipData = {};
-
-    Future<Map<String, dynamic>?> fetchIpData(
-      String url,
-      String sourceName,
-    ) async {
-      try {
-        final response = await ResilientHttp.get(Uri.parse(url));
-        if (response.statusCode == 200) {
-          final data = json.decode(response.body);
-          data['source'] = sourceName;
-          return data;
-        }
-      } catch (e) {
-        debugPrint(
-          'fetchIpData error: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể lấy dữ liệu mạng thiết bị.').message}',
-        );
-      }
-      return null;
-    }
-
-    final sources = [
-      {'url': 'https://get.geojs.io/v1/ip/geo.json', 'name': 'geojs'},
-      {'url': 'https://ipapi.co/json/', 'name': 'ipapi'},
-      {'url': 'https://ip-api.com/json/', 'name': 'ip-api'},
-    ];
-
-    for (var s in sources) {
-      final data = await fetchIpData(s['url']!, s['name']!);
-      if (data != null && (data['ip'] != null || data['query'] != null)) {
-        ipData = data;
-        ip = (data['ip'] ?? data['query']).toString();
-        ipSource = s['name']!;
-        break;
-      }
-    }
-
-    if (ip == 'unknown') {
-      final data = await fetchIpData(
-        'https://api.ipify.org?format=json',
-        'ipify',
-      );
-      if (data != null && data['ip'] != null) {
-        ipData = data;
-        ip = data['ip'].toString();
-        ipSource = 'ipify';
-      }
-    }
-
-    if (ip != 'unknown' && ipData.isNotEmpty) {
-      final city = ipData['city']?.toString() ?? '';
-      final region =
-          (ipData['region'] ?? ipData['regionName'])?.toString() ?? '';
-      final country =
-          (ipData['country'] ?? ipData['country_name'])?.toString() ?? '';
-      final locParts = [
-        city,
-        region,
-        country,
-      ].where((e) => e.isNotEmpty).toList();
-      if (locParts.isNotEmpty) {
-        location = locParts.join(', ');
-      }
-    }
-
-    return {
-      'ip': ip,
-      'location': location,
-      'city': ipData['city']?.toString() ?? '',
-      'region': (ipData['region'] ?? ipData['regionName'])?.toString() ?? '',
-      'country':
-          (ipData['country'] ?? ipData['country_name'])?.toString() ?? '',
-      'timezone': ipData['timezone']?.toString() ?? '',
-      'latitude': (ipData['latitude'] ?? ipData['lat'])?.toString() ?? '',
-      'longitude': (ipData['longitude'] ?? ipData['lon'])?.toString() ?? '',
-      'org':
-          (ipData['organization_name'] ?? ipData['org'] ?? ipData['isp'])
-              ?.toString() ??
-          '',
-      'ipSource': ipSource,
-    };
   }
 
   StreamSubscription? _deviceStatusSub;

@@ -2,10 +2,7 @@
 part of '../creative_diary_screen.dart';
 
 extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
-  void _showSnack(
-    String message, {
-    Color? backgroundColor,
-  }) {
+  void _showSnack(String message, {Color? backgroundColor}) {
     if (!mounted) {
       return;
     }
@@ -13,29 +10,21 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
       ..clearSnackBars()
       ..showSnackBar(
         SLSnackBar(
-          content: Text(
-            message,
-            
-          ),
+          content: Text(message),
           backgroundColor: backgroundColor,
           behavior: SnackBarBehavior.floating,
         ),
       );
   }
 
-  String _errorText(
-    Object error, {
-    required String fallback,
-  }) {
-    return AppErrorMapper.resolve(
-      error,
-      fallbackMessage: fallback,
-    ).message;
+  String _errorText(Object error, {required String fallback}) {
+    return AppErrorMapper.resolve(error, fallbackMessage: fallback).message;
   }
 
   Future<bool> _hasRewardedSaveCooldown() async {
     final prefs = await SharedPreferences.getInstance();
-    final unlockedUntilMs = prefs.getInt(
+    final unlockedUntilMs =
+        prefs.getInt(
           _CreativeDiaryScreenState._rewardedSaveUnlockedUntilPrefsKey,
         ) ??
         0;
@@ -44,8 +33,9 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
 
   Future<void> _storeRewardedSaveCooldown() async {
     final prefs = await SharedPreferences.getInstance();
-    final unlockedUntil =
-        DateTime.now().add(_CreativeDiaryScreenState._rewardedSaveCooldown);
+    final unlockedUntil = DateTime.now().add(
+      _CreativeDiaryScreenState._rewardedSaveCooldown,
+    );
     await prefs.setInt(
       _CreativeDiaryScreenState._rewardedSaveUnlockedUntilPrefsKey,
       unlockedUntil.millisecondsSinceEpoch,
@@ -120,8 +110,9 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
     final errNoRepaint = context.tr('util_khngthdngt_7fda2c');
     for (var attempt = 0; attempt < 8; attempt++) {
       await WidgetsBinding.instance.endOfFrame;
-      final boundary = _exportBoundaryKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
+      final boundary =
+          _exportBoundaryKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary != null && !boundary.debugNeedsPaint) {
         return boundary;
       }
@@ -131,10 +122,7 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
     throw StateError(errNoRepaint);
   }
 
-  Future<Uint8List> _captureExportPage(
-    _DiaryPageData page,
-    int index,
-  ) async {
+  Future<Uint8List> _captureExportPage(_DiaryPageData page, int index) async {
     final errExportFailed = context.tr('util_khngthxutn_15afa3');
     final pixelRatio = math.min(
       WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio *
@@ -145,7 +133,10 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
     setState(() {
       _exportPage = page;
       _exportPageIndex = index;
-      _exportStatus = 'Đang chuẩn bị trang ${index + 1}/${_pages.length}...';
+      _exportStatus = L10nScope.of(context).format(
+        'ui_utilities_creative_diary_preparing_page_value1_value2',
+        {'value1': index + 1, 'value2': _pages.length},
+      );
     });
 
     final boundary = await _waitForExportBoundary();
@@ -175,7 +166,8 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
           'soullocket_diary_${batchStamp}_${(index + 1).toString().padLeft(2, '0')}',
     );
 
-    final isSuccess = result['isSuccess'] == true ||
+    final isSuccess =
+        result['isSuccess'] == true ||
         (result['filePath']?.toString().isNotEmpty ?? false);
     if (!isSuccess) {
       final message = result['errorMessage']?.toString().trim();
@@ -198,19 +190,13 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
     final fallbackExportErr = context.tr('util_khngthlust_5bf617');
 
     if (_pages.isEmpty) {
-      _showSnack(
-        emptyNotebookErr,
-        backgroundColor: const Color(0xFFE53935),
-      );
+      _showSnack(emptyNotebookErr, backgroundColor: const Color(0xFFE53935));
       return;
     }
 
     final granted = await _guardController.ensureGalleryPermission(context);
     if (!granted) {
-      _showSnack(
-        permissionDeniedErr,
-        backgroundColor: const Color(0xFFE53935),
-      );
+      _showSnack(permissionDeniedErr, backgroundColor: const Color(0xFFE53935));
       return;
     }
     final unlocked = await _confirmRewardedSave(
@@ -238,8 +224,10 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
         }
 
         setState(() {
-          _exportStatus =
-              'Đang lưu trang ${index + 1}/${_pages.length} về máy...';
+          _exportStatus = L10nScope.of(context).format(
+            'ui_utilities_creative_diary_saving_page_value1_value2',
+            {'value1': index + 1, 'value2': _pages.length},
+          );
         });
 
         try {
@@ -260,13 +248,21 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
       }
 
       if (savedCount == _pages.length) {
-        _showSnack(L10nScope.of(context).format('ui_utilities_saved_all_value1_notebook_pages_to_your_fc668b', {'value1': _pages.length}));
+        _showSnack(
+          L10nScope.of(context).format(
+            'ui_utilities_saved_all_value1_notebook_pages_to_your_fc668b',
+            {'value1': _pages.length},
+          ),
+        );
         return;
       }
 
       if (savedCount > 0) {
         _showSnack(
-          L10nScope.of(context).format('ui_utilities_saved_value1_value2_pages_some_pages_have_1323e2', {'value1': savedCount, 'value2': _pages.length}),
+          L10nScope.of(context).format(
+            'ui_utilities_saved_value1_value2_pages_some_pages_have_1323e2',
+            {'value1': savedCount, 'value2': _pages.length},
+          ),
           backgroundColor: const Color(0xFFB26A00),
         );
         return;
@@ -278,7 +274,14 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
         return;
       }
       _showSnack(
-        L10nScope.of(context).format('ui_utilities_unable_to_save_notebook_value1_03b027', {'value1': _errorText(error, fallback: 'Vui lòng thử lại sau.')}),
+        L10nScope.of(
+          context,
+        ).format('ui_utilities_unable_to_save_notebook_value1_03b027', {
+          'value1': _errorText(
+            error,
+            fallback: context.tr('core_err_try_again_later'),
+          ),
+        }),
         backgroundColor: const Color(0xFFE53935),
       );
     } finally {
@@ -305,10 +308,7 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
     final detailLog = context.tr('util_chtrangang_df85ea');
 
     if (_pages.isEmpty) {
-      _showSnack(
-        emptyNotebookErr,
-        backgroundColor: const Color(0xFFE53935),
-      );
+      _showSnack(emptyNotebookErr, backgroundColor: const Color(0xFFE53935));
       return;
     }
 
@@ -316,10 +316,7 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
     final page = _pages[index];
     final granted = await _guardController.ensureGalleryPermission(context);
     if (!granted) {
-      _showSnack(
-        permissionDeniedErr,
-        backgroundColor: const Color(0xFFE53935),
-      );
+      _showSnack(permissionDeniedErr, backgroundColor: const Color(0xFFE53935));
       return;
     }
     final unlocked = await _confirmRewardedSave(
@@ -334,8 +331,10 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
 
     setState(() {
       _isExportingNotebook = true;
-      _exportStatus =
-          'Đang chuẩn bị lưu trang ${index + 1}/${_pages.length}...';
+      _exportStatus = L10nScope.of(context).format(
+        'ui_utilities_creative_diary_preparing_save_page_value1_value2',
+        {'value1': index + 1, 'value2': _pages.length},
+      );
       _exportDetail = detailLog;
     });
 
@@ -345,8 +344,10 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
         return;
       }
       setState(() {
-        _exportStatus =
-            'Đang lưu trang ${index + 1}/${_pages.length} về máy...';
+        _exportStatus = L10nScope.of(context).format(
+          'ui_utilities_creative_diary_saving_page_value1_value2',
+          {'value1': index + 1, 'value2': _pages.length},
+        );
       });
       await _saveDiaryPageToGallery(
         bytes,
@@ -356,13 +357,25 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
       if (!mounted) {
         return;
       }
-      _showSnack(L10nScope.of(context).format('ui_utilities_page_value1_has_been_saved_to_the_9ee19b', {'value1': index + 1}));
+      _showSnack(
+        L10nScope.of(context).format(
+          'ui_utilities_page_value1_has_been_saved_to_the_9ee19b',
+          {'value1': index + 1},
+        ),
+      );
     } catch (error) {
       if (!mounted) {
         return;
       }
       _showSnack(
-        L10nScope.of(context).format('ui_utilities_this_page_could_not_be_saved_value1_a12e9d', {'value1': _errorText(error, fallback: 'Vui lòng thử lại sau.')}),
+        L10nScope.of(
+          context,
+        ).format('ui_utilities_this_page_could_not_be_saved_value1_a12e9d', {
+          'value1': _errorText(
+            error,
+            fallback: context.tr('core_err_try_again_later'),
+          ),
+        }),
         backgroundColor: const Color(0xFFE53935),
       );
     } finally {

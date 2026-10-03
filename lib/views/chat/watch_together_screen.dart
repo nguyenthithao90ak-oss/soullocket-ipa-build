@@ -703,15 +703,15 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                     children: [
                       _buildInfoChip(
                         Icons.sync_rounded,
-                        'Tự đồng bộ link hiện tại',
+                        context.tr('ui_chat_automatically_synchronize_the_current_link_18dedc'),
                       ),
                       _buildInfoChip(
                         Icons.favorite_rounded,
-                        'Mời nhanh qua đoạn chat',
+                        context.tr('ui_chat_please_quickly_join_the_chat_d6d57c'),
                       ),
                       _buildInfoChip(
                         Icons.smart_display_rounded,
-                        'Hợp với YouTube nhất',
+                        context.tr('ui_chat_most_suitable_for_youtube_304fff'),
                       ),
                     ],
                   ),

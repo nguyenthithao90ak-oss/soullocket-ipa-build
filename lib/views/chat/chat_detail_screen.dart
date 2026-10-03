@@ -137,14 +137,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     '\u{1F44F}',
     '\u{1F4AF}',
   ];
-  static const ChatMessagePreviewLabels
-  _conversationPreviewLabels = ChatMessagePreviewLabels(
+  static ChatMessagePreviewLabels get _conversationPreviewLabels => ChatMessagePreviewLabels(
     fallback:
-        'Nh\u1eafn tin \u0111\u1ec3 b\u1eaft \u0111\u1ea7u tr\u00f2 chuy\u1ec7n',
-    callInvite: '\u0110\u00e3 b\u1eaft \u0111\u1ea7u cu\u1ed9c g\u1ecdi',
-    watchInvite: '\u0110\u00e3 chia s\u1ebb ph\u00f2ng xem c\u00f9ng',
-    image: '\u0110\u00e3 g\u1eedi h\u00ecnh \u1ea3nh',
-    share: '\u0110\u00e3 chia s\u1ebb m\u1ed9t b\u00e0i vi\u1ebft',
+        L10nService().translate('ui_chat_text_to_start_chatting_dab6a3'),
+    callInvite: L10nService().translate('ui_chat_b_t_u_cu_c_g_i_f0e203'),
+    watchInvite: L10nService().translate('ui_chat_chia_s_ph_ng_xem_c_ng_a94571'),
+    image: L10nService().translate('ui_chat_g_i_h_nh_nh_a669bb'),
+    share: L10nService().translate('ui_chat_chia_s_m_t_b_i_vi_b78759'),
   );
   late final Stream<ChatRoomMeta> _roomMetaStream;
   StreamSubscription<ChatMessage>? _liveMessageSub;

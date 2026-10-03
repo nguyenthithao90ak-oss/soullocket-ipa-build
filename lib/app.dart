@@ -136,6 +136,19 @@ class MyApp extends StatelessWidget {
             useMaterial3: true,
             scaffoldBackgroundColor: SLColors.bgMain,
             dividerColor: SLColors.border,
+            // Loading chung theo phong cách SoulLocket: vòng hồng berry có
+            // nét bo tròn và vòng nền wash nhẹ, tránh cảm giác vòng mặc định
+            // mảnh và gắt trên nền giấy. Các loader có màu riêng (ảnh/video)
+            // vẫn giữ màu của bề mặt mà chúng đang phủ lên.
+            progressIndicatorTheme: ProgressIndicatorThemeData(
+              color: SLColors.primary,
+              circularTrackColor: SLColors.primarySoft,
+              linearTrackColor: SLColors.primarySoft,
+              linearMinHeight: 5,
+              borderRadius: BorderRadius.circular(999),
+              strokeWidth: 3.2,
+              strokeCap: StrokeCap.round,
+            ),
             shadowColor: Colors.black.withValues(alpha: 0.08),
             splashFactory: NoSplash.splashFactory,
             splashColor: SLColors.primary.withValues(alpha: 0.05),

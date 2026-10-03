@@ -18,6 +18,7 @@ import 'package:get_it/get_it.dart';
 import '../utils/services/app_referral_service.dart';
 import '../utils/services/games/soul_block_memory_service.dart';
 import '../utils/services/market_service.dart';
+import '../utils/services/calendar_reminder_service.dart';
 import 'package:soullocket_app/utils/services/companion_journey_service.dart';
 import 'package:soullocket_app/utils/services/privacy_collection_service.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
@@ -72,6 +73,7 @@ void setupLocator() {
   locator.registerLazySingleton(() => PresenceService());
   locator.registerLazySingleton(() => NotificationService());
   locator.registerLazySingleton(() => SoulEventReminderService.instance);
+  locator.registerLazySingleton(() => CalendarReminderService.instance);
   locator.registerLazySingleton(() => LocationService());
 
   // ── Storage & Cache ─────────────────────────────────────────────────────

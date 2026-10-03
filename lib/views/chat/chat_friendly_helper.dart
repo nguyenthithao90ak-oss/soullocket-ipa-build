@@ -1,43 +1,44 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'dart:math';
 
 class ChatFriendlyHelper {
   static List<String> get greetings => [
-        'Chào bạn nha! Hôm nay có chuyện gì vui kể mình nghe với?',
-        'Xin chào! Cần tâm sự gì cứ nói với mình nhé.',
-        'Hi bạn! Mình luôn ở đây để lắng nghe nè.',
+        L10nService().translate('ui_chat_ch_o_b_n_nha_h_m_751ce9'),
+        L10nService().translate('ui_chat_xin_ch_o_c_n_t_m_08b8ea'),
+        L10nService().translate('ui_chat_hi_b_n_m_nh_lu_n_eb632c'),
       ];
 
   static List<String> get wishes => [
-        'Chúc bạn một ngày thật vui vẻ và nhiều năng lượng nha!',
-        'Ngủ ngon và có những giấc mơ đẹp nhé!',
+        L10nService().translate('ui_chat_ch_c_b_n_m_t_ng_5e10d6'),
+        L10nService().translate('ui_chat_ng_ngon_v_c_nh_ng_gi_5cafcb'),
       ];
 
   static List<String> get encouragements => [
-        'Đừng buồn nhé, mọi chuyện rồi sẽ ổn thôi!',
-        'Bạn làm tốt lắm, hãy cứ tự tin lên nha!',
-        'Cố lên bạn nhé, mình luôn ủng hộ bạn!',
+        L10nService().translate('ui_chat_ng_bu_n_nh_m_i_chuy_54e270'),
+        L10nService().translate('ui_chat_b_n_l_m_t_t_l_c57d27'),
+        L10nService().translate('ui_chat_c_l_n_b_n_nh_m_945257'),
       ];
 
   static List<String> get offlineResponses => [
-        'Mạng có vẻ yếu quá, mình chưa nghe rõ bạn nói gì. Bạn kiểm tra lại wifi 3G nhé!',
-        'Hình như mất kết nối rồi, bạn gửi lại tin nhắn giúp mình nha.',
-        'Mình đang bị rớt mạng một chút, bạn chờ xíu rồi nói lại nha.',
+        L10nService().translate('ui_chat_m_ng_c_v_y_u_qu_d71e7b'),
+        L10nService().translate('ui_chat_h_nh_nh_m_t_k_t_15fe35'),
+        L10nService().translate('ui_chat_m_nh_ang_b_r_t_m_80d3bd'),
       ];
 
   static Map<String, List<String>> get qaPairs => {
         'mật khẩu|pass': [
-          'Nếu bạn quên mật khẩu, hãy vào Cài đặt và chọn Quên mật khẩu nhé.',
+          L10nService().translate('ui_chat_n_u_b_n_qu_n_m_ec0154'),
         ],
         'buồn|chán|mệt': [
-          'Thương quá! Đừng buồn nữa nha, đi ăn món gì ngon ngon cho đỡ mệt nhé.',
-          'Mọi chuyện rồi sẽ qua thôi, bạn hãy nghỉ ngơi một chút nha.',
+          L10nService().translate('ui_chat_th_ng_qu_ng_bu_n_n_d2bed0'),
+          L10nService().translate('ui_chat_m_i_chuy_n_r_i_s_079e84'),
         ],
         'yêu|thích': [
-          'Yêu thương luôn là điều tuyệt vời nhất! Hai bạn hãy luôn hạnh phúc nhé 💕',
-          'Nghe lãng mạn quá! Chúc hai bạn mãi mặn nồng nha.',
+          L10nService().translate('ui_chat_y_u_th_ng_lu_n_l_84971f'),
+          L10nService().translate('ui_chat_nghe_l_ng_m_n_qu_ch_d3f63e'),
         ],
         'tên|là ai': [
-          'Mình là Trợ lý AI của SoulLocket, luôn sẵn sàng lắng nghe bạn đây!',
+          L10nService().translate('ui_chat_m_nh_l_tr_l_ai_c_de4aaa'),
         ],
       };
 

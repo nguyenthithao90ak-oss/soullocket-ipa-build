@@ -30,8 +30,13 @@ class CalendarDisplayFormat {
 
   String shortDate(DateTime date) => DateFormat.yMd(intlLocale).format(date);
 
-  String time(DateTime date, {bool alwaysUse24HourFormat = false}) =>
-      (alwaysUse24HourFormat
+  String time(DateTime date, {
+    bool alwaysUse24HourFormat = false,
+    bool? use24HourFormat,
+  }) =>
+      (use24HourFormat == false
+              ? DateFormat('h:mm a', intlLocale)
+              : use24HourFormat == true || alwaysUse24HourFormat
               ? DateFormat.Hm(intlLocale)
               : DateFormat.jm(intlLocale))
           .format(date);

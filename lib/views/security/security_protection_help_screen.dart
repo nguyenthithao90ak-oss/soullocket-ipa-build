@@ -48,9 +48,9 @@ class _SecurityProtectionHelpScreenState
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => UserSupportChatScreen(
-          initialTopic: 'Bảo vệ thao tác nhạy cảm',
+          initialTopic: L10nService().translate('ui_security_protect_sensitive_operations_009056'),
           initialDraft:
-              '[${widget.verdict.reason.key}] ${copy.supportDraft}\nHành động: ${widget.verdict.actionId}\nMàn hình: ${widget.verdict.screenId}\nMã lý do: ${widget.verdict.reasonCode}',
+              L10nService().format('ui_security_value1_value2_action_value3_screen_value4_reason_d586de', {'value1': widget.verdict.reason.key, 'value2': copy.supportDraft, 'value3': widget.verdict.actionId, 'value4': widget.verdict.screenId, 'value5': widget.verdict.reasonCode}),
         ),
       ),
     );

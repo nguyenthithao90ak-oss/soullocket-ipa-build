@@ -459,7 +459,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       );
       final url = upload?.downloadUrl.trim() ?? '';
       if (url.isEmpty) {
-        throw 'Ảnh nền chưa tải lên được.';
+        throw L10nService().translate('ui_visitors_unable_to_upload_the_background_image_a60d58');
       }
       final refreshedUrl = _withRefreshToken(url);
       await StorageMediaCommit.commit(
@@ -508,7 +508,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       );
       final url = upload?.downloadUrl.trim() ?? '';
       if (url.isEmpty) {
-        throw 'Avatar chưa tải lên được.';
+        throw L10nService().translate('ui_visitors_unable_to_upload_the_profile_photo_242a6c');
       }
       final refreshedUrl = _withRefreshToken(url);
       if (!mounted) return;

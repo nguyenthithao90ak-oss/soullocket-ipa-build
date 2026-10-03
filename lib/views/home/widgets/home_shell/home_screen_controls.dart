@@ -45,12 +45,16 @@ extension _HomeScreenShellControls on _HomeScreenState {
                       final extraBottomPadding = isIos
                           ? (bottomInset > 0 ? bottomInset / 2.5 : 0.0)
                           : (bottomInset > 0 ? bottomInset : 0.0);
-                      return AnimatedSize(
+                      return AnimatedSwitcher(
                         duration: effectProfile.performanceMode || isSwiping
                             ? Duration.zero
                             : const Duration(milliseconds: 180),
-                        curve: Curves.easeOutCubic,
-                        alignment: Alignment.bottomCenter,
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        transitionBuilder: (child, animation) => FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        ),
                         child: navCollapsed
                             ? _buildCollapsedNavHandle(
                                 isDark: isDark,

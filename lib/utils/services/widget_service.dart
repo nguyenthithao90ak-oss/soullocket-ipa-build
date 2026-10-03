@@ -14,6 +14,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../core/constants/app_config.dart';
 import '../../utils/app_error_mapper.dart';
 import '../calendar_widget_snapshot.dart';
+import '../calendar/holiday_occurrence_resolver.dart';
 import '../sleep_tracking_math.dart';
 import 'storage/storage_service.dart';
 import 'package:soullocket_app/utils/flexible_date_input.dart';
@@ -27,6 +28,7 @@ import 'daily_quest_service.dart';
 import 'package:soullocket_app/utils/services/health_cycle_service.dart';
 import 'soul_event_service.dart';
 import 'package:soullocket_app/models/soul_event.dart';
+import 'holiday_service.dart';
 
 class WidgetService {
   static bool get supportsAndroidWidgets => !kIsWeb && Platform.isAndroid;
@@ -84,6 +86,7 @@ class WidgetService {
 
   static bool _didBootstrap = false;
   static int _sleepSyncRevision = 0;
+  static int _calendarSyncRevision = 0;
   static final Map<String, Object?> _runtimeWidgetData = <String, Object?>{};
   static final StorageService _storageService = StorageService();
   static Future<void> ensureInitialized({bool forceUpdate = false}) async {
@@ -419,6 +422,11 @@ class WidgetService {
     await _saveIfMissing<String>('cycle_tip', '');
     await _saveIfMissing<String>('cycle_progress', '0.0');
     await _saveIfMissing<bool>('calendar_enabled', false);
+    await _saveIfMissing<int>('calendar_payload_version', 2);
+    await _saveIfMissing<String>('calendar_next_date_key', '');
+    await _saveIfMissing<String>('calendar_locale', 'en');
+    await _saveIfMissing<String>('calendar_market_code', 'ALL');
+    await _saveIfMissing<String>('calendar_time_zone', '');
     await _saveIfMissing<String>('calendar_countdown', '');
     await _saveIfMissing<String>('calendar_next_date', '');
     await _saveIfMissing<String>('calendar_events_text', '');
@@ -1274,11 +1282,18 @@ class WidgetService {
     Object? calendarData,
   }) async {
     if (!supportsMobileWidgets) return;
+    final revision = ++_calendarSyncRevision;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final initialScope = '$uid\u0000$houseId';
+    bool active() => revision == _calendarSyncRevision &&
+        FirebaseAuth.instance.currentUser?.uid == uid &&
+        '$uid\u0000$houseId' == initialScope;
     try {
       await ensureInitialized();
+      if (!active()) return;
       final today = DateTime.now();
       final todayMidnight = DateTime(today.year, today.month, today.day);
-      final nextEvent = await CalendarWidgetSnapshot.resolve(
+      final planEvent = await CalendarWidgetSnapshot.resolve(
         now: today,
         calendarData: calendarData,
         loadPage: (afterKey, limit) async {
@@ -1294,9 +1309,18 @@ class WidgetService {
               : <String, dynamic>{};
         },
       );
+      if (!active()) return;
+
+      final todayDate = DateTime(today.year, today.month, today.day);
+      final nextHoliday = _nextHolidayWidgetSnapshot(todayDate);
+      final nextEvent = _mergeCalendarWidgetSnapshots(planEvent, nextHoliday);
 
       if (nextEvent == null) {
+        if (!active()) return;
         await _saveWidgetDataIfChanged<bool>('calendar_enabled', false);
+        await _saveWidgetDataIfChanged<int>('calendar_payload_version', 2);
+        await _saveWidgetDataIfChanged<String>('calendar_next_date_key', '');
+        await _saveWidgetDataIfChanged<String>('calendar_events_text', '');
         await _updateAuxiliaryWidget(
           androidName: androidWidgetCalendarName,
           qualifiedAndroidName: qualifiedAndroidWidgetCalendarName,
@@ -1318,19 +1342,38 @@ class WidgetService {
       }
 
       final dateLabel = await _formatCalendarDate(nextEvent.date, full: true);
+      if (!active()) return;
 
       final eventsText = nextEvent.titles.map((title) => '• $title').join('\n');
 
       await _saveWidgetDataIfChanged<bool>('calendar_enabled', true);
+      await _saveWidgetDataIfChanged<int>('calendar_payload_version', 2);
       await _saveWidgetDataIfChanged<String>(
         'calendar_countdown',
         countdownText,
       );
       await _saveWidgetDataIfChanged<String>('calendar_next_date', dateLabel);
       await _saveWidgetDataIfChanged<String>(
+        'calendar_next_date_key',
+        CalendarWidgetSnapshot.dateKeyFor(nextEvent.date),
+      );
+      await _saveWidgetDataIfChanged<String>(
+        'calendar_locale',
+        L10nService().locale.toLanguageTag(),
+      );
+      await _saveWidgetDataIfChanged<String>(
+        'calendar_market_code',
+        MarketService.instance.marketCode,
+      );
+      await _saveWidgetDataIfChanged<String>(
+        'calendar_time_zone',
+        MarketService.instance.preferences.timeZoneId ?? '',
+      );
+      await _saveWidgetDataIfChanged<String>(
         'calendar_events_text',
         eventsText,
       );
+      if (!active()) return;
 
       await _updateAuxiliaryWidget(
         androidName: androidWidgetCalendarName,
@@ -1342,6 +1385,35 @@ class WidgetService {
         'Error syncing calendar widget: ${AppErrorMapper.resolve(e).message}',
       );
     }
+  }
+
+  static CalendarWidgetSnapshot? _nextHolidayWidgetSnapshot(DateTime today) {
+    final holidays = HolidayService.getApplicableHolidays();
+    final occurrences = HolidayOccurrenceResolver.nextOccurrences(
+      holidays,
+      from: today,
+    );
+    if (occurrences.isEmpty) return null;
+    final date = occurrences.first.date;
+    final titles = occurrences
+        .where((occurrence) => occurrence.date == date)
+        .map((occurrence) => HolidayService.getLocalizedName(occurrence.holiday))
+        .toList(growable: false);
+    return CalendarWidgetSnapshot(date: date, titles: titles);
+  }
+
+  static CalendarWidgetSnapshot? _mergeCalendarWidgetSnapshots(
+    CalendarWidgetSnapshot? plan,
+    CalendarWidgetSnapshot? holiday,
+  ) {
+    if (plan == null) return holiday;
+    if (holiday == null) return plan;
+    if (holiday.date.isBefore(plan.date)) return holiday;
+    if (holiday.date.isAfter(plan.date)) return plan;
+    return CalendarWidgetSnapshot(
+      date: plan.date,
+      titles: List.unmodifiable([...plan.titles, ...holiday.titles]),
+    );
   }
 
   static Future<void> requestPinCalendarWidget() async {

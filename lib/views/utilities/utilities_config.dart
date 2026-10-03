@@ -26,7 +26,7 @@ const List<String> utilitiesHubDefaultOrder = <String>[
   'giftcode',
 ];
 
-final Map<String, Map<String, dynamic>> appConfig = {
+Map<String, Map<String, dynamic>> get appConfig => {
   'local_album': {
     'icon': Icons.photo_library_rounded,
     'colors': [const Color(0xFF7C4DFF), const Color(0xFF448AFF)],
@@ -44,7 +44,7 @@ final Map<String, Map<String, dynamic>> appConfig = {
   'note': {
     'icon': Icons.menu_book_rounded,
     'colors': [const Color(0xFFFFB74D), const Color(0xFFFF9800)],
-    'title': 'Sổ tay chung',
+    'title': L10nService().translate('p8_notebook_title'),
   },
   'friendly_chat': {
     'icon': Icons.smart_toy_rounded,
@@ -75,7 +75,7 @@ final Map<String, Map<String, dynamic>> appConfig = {
   'sleep_tracker': {
     'icon': Icons.bedtime_rounded,
     'colors': [const Color(0xFF5E35B1), const Color(0xFF3949AB)],
-    'title': 'Giấc ngủ',
+    'title': L10nService().translate('utility_title_sleep'),
   },
   'wheel': {
     'icon': Icons.pie_chart_rounded,
@@ -105,7 +105,7 @@ final Map<String, Map<String, dynamic>> appConfig = {
   'tarot': {
     'icon': Icons.auto_awesome_rounded,
     'colors': [const Color(0xFFB388FF), const Color(0xFF8E5CFF)],
-    'title': 'Tarot',
+    'title': L10nService().translate('utility_title_tarot'),
   },
   'collage': {
     'icon': Icons.dashboard_customize_rounded,
@@ -125,7 +125,7 @@ final Map<String, Map<String, dynamic>> appConfig = {
   'love_card': {
     'icon': Icons.style_rounded,
     'colors': [const Color(0xFFE94057), const Color(0xFFF27185)],
-    'title': 'Love Card',
+    'title': L10nService().translate('utility_title_love_card'),
   },
   'creative_diary': {
     'icon': Icons.menu_book_rounded,

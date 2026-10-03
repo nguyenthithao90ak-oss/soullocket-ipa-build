@@ -44,30 +44,30 @@ class _SingleMatchCallScreenState extends State<SingleMatchCallScreen>
 
   final int _maxDurationSeconds = 5 * 60; // 5 minutes speed date
 
-  final List<String> _icebreakers = [
-    "Nếu bạn có thể có một siêu năng lực trong 24 giờ, đó sẽ là gì?",
-    "Món ăn kỳ lạ nhất mà bạn từng thử là gì?",
-    "Bộ phim nào bạn có thể xem đi xem lại mà không chán?",
-    "Nếu được du hành thời gian, bạn muốn đi về quá khứ hay tương lai?",
-    "Đâu là bài hát 'tủ' của bạn khi đi hát karaoke?",
-    "Kỷ niệm đáng xấu hổ nhất của bạn lúc nhỏ là gì?",
-    "Nếu cuộc đời bạn là một cuốn sách, tiêu đề sẽ là gì?",
-    "Bạn thích người khác khen ngợi mình về điểm gì nhất?",
-    "Bạn nghĩ ấn tượng đầu tiên của người khác về bạn là gì?",
-    "Bạn thích nuôi chó, mèo hay một con vật kỳ lạ nào khác?",
-    "Chuyến du lịch trong mơ của bạn là đi đâu?",
-    "Bạn là người sống theo lý trí hay tình cảm?",
-    "Món quà ý nghĩa nhất bạn từng nhận được là gì?",
-    "Bạn thường làm gì vào cuối tuần khi ở nhà một mình?",
-    "Có điều gì bạn luôn muốn học nhưng chưa có thời gian?",
-    "Bạn thích xem phim thể loại gì nhất?",
-    "Cuốn sách nào đã thay đổi cách nhìn của bạn về cuộc sống?",
-    "Bạn thích một buổi tối hẹn hò lãng mạn ở nhà hàng hay dạo phố ẩm thực?",
-    "Nếu trúng số 10 tỷ, việc đầu tiên bạn làm là gì?",
-    "Đâu là thói quen kỳ lạ nhất của bạn?",
+  List<String> get _icebreakers => [
+    L10nService().translate('ui_single_if_you_could_have_one_superpower_for_4cd10f'),
+    L10nService().translate('ui_single_what_s_the_strangest_food_you_ve_4313a7'),
+    L10nService().translate('ui_single_what_movie_can_you_watch_over_and_426691'),
+    L10nService().translate('ui_single_if_you_could_time_travel_would_you_a54999'),
+    L10nService().translate('ui_single_what_is_your_favorite_song_when_you_6a3605'),
+    L10nService().translate('ui_single_what_is_your_most_embarrassing_memory_as_027dfe'),
+    L10nService().translate('ui_single_if_your_life_were_a_book_what_204723'),
+    L10nService().translate('ui_single_what_do_you_most_like_others_to_243de6'),
+    L10nService().translate('ui_single_what_do_you_think_other_people_s_fef519'),
+    L10nService().translate('ui_single_do_you_like_raising_dogs_cats_or_102fa0'),
+    L10nService().translate('ui_single_where_is_your_dream_trip_9d3463'),
+    L10nService().translate('ui_single_are_you_a_rational_or_emotional_person_4a0c02'),
+    L10nService().translate('ui_single_what_is_the_most_meaningful_gift_you_13457a'),
+    L10nService().translate('ui_single_what_do_you_usually_do_on_weekends_3d2c01'),
+    L10nService().translate('ui_single_is_there_something_you_ve_always_wanted_3d764c'),
+    L10nService().translate('ui_single_what_genre_of_movies_do_you_like_8ef7c9'),
+    L10nService().translate('ui_single_what_book_changed_your_outlook_on_life_9a71c9'),
+    L10nService().translate('ui_single_do_you_like_a_romantic_date_night_ad8754'),
+    L10nService().translate('ui_single_if_you_won_10_billion_in_the_46c9bd'),
+    L10nService().translate('ui_single_what_is_your_strangest_habit_951d6a'),
   ];
 
-  String _currentIcebreaker = "Chạm để xem câu hỏi gợi ý...";
+  String _currentIcebreaker = L10nService().translate('ui_single_tap_to_see_suggested_questions_5216b8');
   final Random _random = Random();
   final String _animalMask = [
     '🦊',

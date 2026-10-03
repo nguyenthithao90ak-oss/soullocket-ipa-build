@@ -20,18 +20,31 @@ class CalendarHolidayListSection extends StatelessWidget {
   Widget build(BuildContext context) {
     if (occurrences.isEmpty) return const SizedBox.shrink();
     return Padding(
-      padding: EdgeInsets.fromLTRB(horizontalInset + 4, 12, horizontalInset + 4, 12),
+      padding: EdgeInsets.fromLTRB(
+        horizontalInset + 4,
+        12,
+        horizontalInset + 4,
+        12,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             context.tr('calendar_holidays_title'),
-            style: CalendarDesign.text(context, size: 15, weight: FontWeight.w700),
+            style: CalendarDesign.text(
+              context,
+              size: 15,
+              weight: FontWeight.w700,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             context.tr('calendar_holidays_selected_packs'),
-            style: CalendarDesign.text(context, size: 12, color: CalendarDesign.muted(context)),
+            style: CalendarDesign.text(
+              context,
+              size: 12,
+              color: CalendarDesign.muted(context),
+            ),
           ),
           for (final occurrence in occurrences)
             Padding(
@@ -41,13 +54,21 @@ class CalendarHolidayListSection extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ExcludeSemantics(
-                    child: Icon(Icons.star_outline_rounded, size: 22, color: CalendarDesign.holidayAccent(context)),
+                    child: Icon(
+                      Icons.star_outline_rounded,
+                      size: 22,
+                      color: CalendarDesign.holidayAccent(context),
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       HolidayService.getLocalizedName(occurrence.holiday),
-                      style: CalendarDesign.text(context, size: 14, weight: FontWeight.w600),
+                      style: CalendarDesign.text(
+                        context,
+                        size: 14,
+                        weight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],

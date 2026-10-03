@@ -100,6 +100,8 @@ struct UtilityWidgetData {
     var themeKey = "pink"
     var cycleEnabled = false
     var calendarEnabled = false
+    var calendarPayloadVersion = 0
+    var calendarDateKey = ""
     var animated = false
     var sleepers = [SleepWidgetPerson(), SleepWidgetPerson()]
     var hasEvent = false
@@ -119,6 +121,8 @@ struct UtilityWidgetData {
         data.hasEvent = defaults?.bool(forKey: "se_has_event") ?? false
         data.cycleEnabled = defaults?.bool(forKey: "cycle_enabled") ?? false
         data.calendarEnabled = defaults?.bool(forKey: "calendar_enabled") ?? false
+        data.calendarPayloadVersion = defaults?.integer(forKey: "calendar_payload_version") ?? 0
+        data.calendarDateKey = defaults?.string(forKey: "calendar_next_date_key") ?? ""
         data.animated = defaults?.bool(forKey: "heartAnimated") ?? false
         return data
     }
@@ -190,7 +194,9 @@ struct WidgetUtilityView: View {
     private var large: Bool { family == .systemLarge }
     private var alternate: Bool { WidgetAppearanceDesign.alternate(at: date, enabled: data.animated && !reduceMotion) }
     private var enabled: Bool {
-        kind == .cycle ? data.cycleEnabled : data.calendarEnabled && !data.text("calendar_next_date").isEmpty
+        kind == .cycle ? data.cycleEnabled : data.calendarPayloadVersion >= 2 &&
+            data.calendarDateKey.range(of: "^\\d{4}-\\d{2}-\\d{2}$", options: .regularExpression) != nil &&
+            data.calendarEnabled && !data.text("calendar_next_date").isEmpty
     }
     private var progress: Double {
         let value = Double(data.text("cycle_progress")) ?? 0

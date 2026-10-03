@@ -191,12 +191,12 @@ class _CountdownQuickCustomizeSheetContentState
                     );
                   } else {
                     widget.homeState._showLatestSnackBar(
-                      'Chưa mở khóa. Vui lòng xem hết quảng cáo.',
+                      context.tr('ui_home_not_unlocked_yet_please_watch_all_ads_334eb2'),
                     );
                   }
                 } catch (_) {
                   widget.homeState._showLatestSnackBar(
-                    'Đã xảy ra lỗi khi tải quảng cáo.',
+                    context.tr('ui_home_an_error_occurred_while_loading_the_ad_cc279f'),
                   );
                 } finally {
                   if (mounted) {
@@ -840,7 +840,7 @@ class _CountdownQuickCustomizeSheetContentState
                                   primary: true,
                                   destructive: true,
 
-                                  child: Text('Xóa'),
+                                  child: Text(context.tr('p3_delete')),
                                   onPressed: () {
                                     Navigator.pop(ctx);
                                     _clearBgImage();
@@ -867,7 +867,7 @@ class _CountdownQuickCustomizeSheetContentState
     final houseId = (homeState._houseId ?? '').trim();
     if (houseId.isEmpty) {
       homeState._showLatestSnackBar(
-        'Vui lòng đăng nhập hoặc tham gia nhà để đổi ảnh nền.',
+        context.tr('ui_home_please_log_in_or_join_the_house_f56621'),
       );
       return;
     }
@@ -893,7 +893,7 @@ class _CountdownQuickCustomizeSheetContentState
         if (!mounted) return;
         if (!adSuccess) {
           homeState._showLatestSnackBar(
-            'Cần xem hết quảng cáo để thay đổi ảnh nền.',
+            context.tr('ui_home_need_to_watch_all_ads_to_change_46e4c9'),
           );
           return;
         }
@@ -966,7 +966,7 @@ class _CountdownQuickCustomizeSheetContentState
 
       if (!mounted) return;
       if (url == null || url.trim().isEmpty) {
-        homeState._showLatestSnackBar('Tải ảnh nền thất bại.');
+        homeState._showLatestSnackBar(context.tr('ui_home_background_image_download_failed_75884f'));
         return;
       }
 
@@ -986,10 +986,10 @@ class _CountdownQuickCustomizeSheetContentState
         isVip: widget.isVip,
       );
 
-      homeState._showLatestSnackBar('Đã lưu ảnh nền thành công!');
+      homeState._showLatestSnackBar(context.tr('ui_home_background_image_saved_successfully_b3e59f'));
     } catch (e) {
       if (mounted) {
-        homeState._showLatestSnackBar('Đã xảy ra lỗi khi tải lên ảnh nền.');
+        homeState._showLatestSnackBar(context.tr('ui_home_an_error_occurred_while_uploading_the_background_da5648'));
       }
     } finally {
       if (mounted) {
@@ -1016,7 +1016,7 @@ class _CountdownQuickCustomizeSheetContentState
       customBackgroundUrl: '',
       isVip: widget.isVip,
     );
-    widget.homeState._showLatestSnackBar('Đã xóa ảnh nền trang chủ.');
+    widget.homeState._showLatestSnackBar(context.tr('ui_home_removed_homepage_background_image_40e6e1'));
   }
 
   Widget buildAvatarIconToggleSection({
@@ -1318,7 +1318,7 @@ class _CountdownQuickCustomizeSheetContentState
                                 primary: true,
                                 destructive: true,
 
-                                child: Text('Xóa'),
+                                child: Text(context.tr('p3_delete')),
                                 onPressed: () {
                                   Navigator.pop(ctx);
                                   _clearBgImage();
@@ -1802,32 +1802,32 @@ class _CountdownQuickCustomizeSheetContentState
                           icon: Icons.flag_rounded,
                           accent: Color(0xFF2563EB),
                         ),
-                        const _CountdownQuickOption(
-                          label: '中文 (简体)',
+                        _CountdownQuickOption(
+                          label: context.tr('language_zh'),
                           value: 'zh',
                           icon: Icons.flag_rounded,
                           accent: Color(0xFFDC2626),
                         ),
-                        const _CountdownQuickOption(
-                          label: '中文 (繁體)',
+                        _CountdownQuickOption(
+                          label: context.tr('language_zh_TW'),
                           value: 'zh-TW',
                           icon: Icons.flag_rounded,
                           accent: Color(0xFF7C3AED),
                         ),
-                        const _CountdownQuickOption(
-                          label: '日本語',
+                        _CountdownQuickOption(
+                          label: context.tr('language_ja'),
                           value: 'ja',
                           icon: Icons.flag_rounded,
                           accent: Color(0xFFEA580C),
                         ),
-                        const _CountdownQuickOption(
-                          label: '한국어',
+                        _CountdownQuickOption(
+                          label: context.tr('language_ko'),
                           value: 'ko',
                           icon: Icons.flag_rounded,
                           accent: Color(0xFF0891B2),
                         ),
-                        const _CountdownQuickOption(
-                          label: 'ภาษาไทย',
+                        _CountdownQuickOption(
+                          label: context.tr('language_th'),
                           value: 'th',
                           icon: Icons.flag_rounded,
                           accent: Color(0xFF059669),

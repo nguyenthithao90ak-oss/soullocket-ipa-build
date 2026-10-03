@@ -467,7 +467,7 @@ class KeepsakeMediaTile extends StatelessWidget {
                   ColoredBox(
                     color: selected ? Colors.black26 : Colors.transparent,
                     child: Align(
-                      alignment: Alignment.topRight,
+                      alignment: AlignmentDirectional.topEnd,
                       child: Padding(
                         padding: const EdgeInsets.all(9),
                         child: Icon(
@@ -481,8 +481,8 @@ class KeepsakeMediaTile extends StatelessWidget {
                     ),
                   ),
                 if (badge != null && !selecting)
-                  Positioned(
-                    left: 8,
+                  PositionedDirectional(
+                    start: 8,
                     bottom: 8,
                     child: Container(
                       padding: const EdgeInsets.symmetric(

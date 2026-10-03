@@ -17,6 +17,8 @@ import '../../utils/app_error_mapper.dart';
 import '../../models/reward_missions.dart';
 import '../../utils/services/consent_service.dart';
 import 'reward_store_panels.dart';
+import 'reward_pro_exchange.dart';
+import '../../models/reward_pro_plan.dart';
 
 class RewardStoreScreen extends StatefulWidget {
   const RewardStoreScreen({super.key});
@@ -39,6 +41,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
   StreamSubscription<DatabaseEvent>? _userSubscription;
   StreamSubscription<DatabaseEvent>? _adRewardsSubscription;
   bool _isWatchingAd = false;
+  bool _hasPendingAdReward = false;
   bool _isRedeeming = false;
   bool _isCheckingIn = false;
 
@@ -52,49 +55,6 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
   final int _dailyAdLimit = AdMobService.dailyRewardedAdLimit;
   bool _isAdRewardsLoaded = false;
   bool _adRewardsHasError = false;
-
-  List<_RewardPlan> get _plans => [
-    _RewardPlan(
-      id: 'pro_12h',
-      title: L10nService().translate('util_gi12gi_9c0202'),
-      subtitle: L10nService().translate('util_tngnhanhth_1c7acb'),
-      icon: '12h',
-      points: 600,
-      duration: const Duration(hours: 12),
-    ),
-    _RewardPlan(
-      id: 'pro_1d',
-      title: L10nService().translate('util_gi1ngy_a2dd38'),
-      subtitle: L10nService().translate('util_dngchodpcb_e94421'),
-      icon: '1d',
-      points: 1000,
-      duration: const Duration(days: 1),
-    ),
-    _RewardPlan(
-      id: 'pro_3d',
-      title: L10nService().translate('util_gi3ngy_5c09fc'),
-      subtitle: L10nService().translate('util_cuitunngtn_9e3793'),
-      icon: '3d',
-      points: 2000,
-      duration: const Duration(days: 3),
-    ),
-    _RewardPlan(
-      id: 'pro_7d',
-      title: L10nService().translate('util_gi7ngy_c8c2d1'),
-      subtitle: L10nService().translate('util_mttunmfull_fdb897'),
-      icon: '7d',
-      points: 4000,
-      duration: const Duration(days: 7),
-    ),
-    _RewardPlan(
-      id: 'pro_30d',
-      title: L10nService().translate('util_gi1thng_1e6ebe'),
-      subtitle: L10nService().translate('util_lachntitki_ad5ee5'),
-      icon: '30d',
-      points: 10000,
-      duration: const Duration(days: 30),
-    ),
-  ];
 
   int _consecutiveAdsWatched = 0;
   bool _isAdCooldown = false;
@@ -114,6 +74,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
     _loadCheckinData();
     _listenAdRewardData();
     _scheduleRewardDayRefresh();
+    unawaited(_recoverAdReward());
   }
 
   @override
@@ -136,6 +97,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
     if (state == AppLifecycleState.resumed) {
       _refreshRewardDay();
       _scheduleRewardDayRefresh();
+      if (!_isWatchingAd) unawaited(_recoverAdReward());
     }
   }
 
@@ -450,7 +412,42 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
     return (diffMs / 1000).ceil();
   }
 
+  Future<void> _recoverAdReward() async {
+    if (_isWatchingAd || !mounted) return;
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
+    setState(() => _isWatchingAd = true);
+    try {
+      final result = await _adMob.recoverPendingAdReward();
+      if (!mounted || _auth.currentUser?.uid != uid) return;
+      final pending = await _adMob.pendingAdRewardPurpose();
+      if (!mounted || _auth.currentUser?.uid != uid) return;
+      setState(() => _hasPendingAdReward = pending != null);
+      if (result != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SLSnackBar(
+            content: Text(
+              result.ok
+                  ? context
+                        .tr('ad_reward_points_received')
+                        .replaceAll('{points}', '${result.granted}')
+                  : _rewardedAdFailureMessage(result),
+            ),
+          ),
+        );
+      }
+    } catch (_) {
+      // Giữ pending; lần mở lại/nút kiểm tra sẽ đọc receipt server.
+    } finally {
+      if (mounted) setState(() => _isWatchingAd = false);
+    }
+  }
+
   Future<void> _watchAd(int proUntil) async {
+    if (_hasPendingAdReward) {
+      await _recoverAdReward();
+      return;
+    }
     _refreshRewardDay();
     if (_isWatchingAd ||
         kIsWeb ||
@@ -471,6 +468,12 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
         return;
       }
       if (!mounted || _auth.currentUser?.uid != uid) return;
+      if (await _adMob.pendingAdRewardPurpose() != null) {
+        if (!mounted || _auth.currentUser?.uid != uid) return;
+        setState(() => _hasPendingAdReward = true);
+        return;
+      }
+      if (!mounted || _auth.currentUser?.uid != uid) return;
       final worked = await _adMob.showRewardedAd(verifiedPurpose: 'points');
       if (!mounted || _auth.currentUser?.uid != uid) return;
       if (!worked) {
@@ -482,6 +485,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
       _startAdCooldown();
       final result = await _adMob.claimRewardedAdPoints();
       if (!mounted || _auth.currentUser?.uid != uid) return;
+      final pending = await _adMob.pendingAdRewardPurpose();
+      if (!mounted || _auth.currentUser?.uid != uid) return;
+      setState(() => _hasPendingAdReward = pending != null);
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
           content: Text(
@@ -510,95 +516,69 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
     }
   }
 
-  Future<void> _redeemPlan(_RewardPlan plan) async {
+  Future<void> _redeemPlan(RewardProPlan plan) async {
     if (_isRedeeming) return;
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
     if (!AppConfig.isPurchaseEnabled) {
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(content: Text(context.tr('p5_premium_unavailable'))),
       );
       return;
     }
-
     setState(() => _isRedeeming = true);
     try {
-      final scaffoldMessenger = ScaffoldMessenger.of(context);
       if (!await SecurityService().guardAction(
         context,
         'reward_redeem_${plan.id}',
-      )) {
+      ))
         return;
-      }
-      if (!mounted) return;
-
-      final latestPointsBeforeRedeem = await _adMob.getUserPoints();
-      if (!mounted) return;
-      if (latestPointsBeforeRedeem < plan.points) {
-        scaffoldMessenger.showSnackBar(
+      if (!mounted || _auth.currentUser?.uid != uid) return;
+      final latestPoints = await _adMob.getUserPoints();
+      if (!mounted || _auth.currentUser?.uid != uid) return;
+      if (latestPoints < plan.points) {
+        ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: Text(
-              _buildInsufficientRedeemMessage(plan, latestPointsBeforeRedeem),
-            ),
+            content: Text(_buildInsufficientRedeemMessage(plan, latestPoints)),
           ),
         );
         return;
       }
-
-      var result = await _adMob.redeemProPlan(planId: plan.id);
-      if (!mounted) return;
-      if (result.error == 'not_enough_points') {
-        final latestPointsAfterFailure = await _adMob.getUserPoints();
-        if (!mounted) return;
-        if (latestPointsAfterFailure >= plan.points) {
-          debugPrint(
-            'Redeem plan retrying after mismatch: '
-            'plan=${plan.id}, localBefore=$latestPointsBeforeRedeem, '
-            'latestAfterFailure=$latestPointsAfterFailure',
-          );
-          await Future<void>.delayed(const Duration(milliseconds: 350));
-          if (!mounted) return;
-          result = await _adMob.redeemProPlan(planId: plan.id);
-          if (!mounted) return;
-        } else {
-          scaffoldMessenger.showSnackBar(
-            SLSnackBar(
-              content: Text(
-                _buildInsufficientRedeemMessage(plan, latestPointsAfterFailure),
-              ),
-            ),
-          );
-          return;
-        }
-      }
-      if (result.ok) {
-        scaffoldMessenger.showSnackBar(
-          SLSnackBar(
-            content: Text(
-              '${context.tr('reward_store_completed')} · ${plan.title}',
-            ),
+      // Không tự gửi lại giao dịch khi mất phản hồi: server có thể đã trừ điểm.
+      final result = await _adMob.redeemProPlan(
+        planId: plan.id,
+        expectedUid: uid,
+      );
+      if (!mounted || _auth.currentUser?.uid != uid) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SLSnackBar(
+          content: Text(
+            result.ok
+                ? '${context.tr('reward_store_completed')} · ${context.tr(plan.titleKey)}'
+                : _redeemErrorMessage(plan, result),
           ),
-        );
-      } else {
-        debugPrint(
-          'Redeem plan failed: plan=${plan.id}, error=${result.error}, status=${result.statusCode}',
-        );
-        scaffoldMessenger.showSnackBar(
-          SLSnackBar(content: Text(_redeemErrorMessage(plan, result))),
-        );
-      }
+        ),
+      );
+    } catch (error) {
+      if (!mounted || _auth.currentUser?.uid != uid) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SLSnackBar(content: Text(context.tr('util_khngktnicm_155696'))),
+      );
     } finally {
-      if (mounted) {
-        setState(() => _isRedeeming = false);
-      }
+      if (mounted) setState(() => _isRedeeming = false);
     }
   }
 
-  String _buildInsufficientRedeemMessage(_RewardPlan plan, int currentPoints) {
+  String _buildInsufficientRedeemMessage(
+    RewardProPlan plan,
+    int currentPoints,
+  ) {
     return '${context.tr('not_enough_points')} · '
         '${context.tr('reward_store_balance')}: ${_formatPointAmount(currentPoints)} / '
         '${_formatPointAmount(plan.points)}';
   }
 
-  String _redeemErrorMessage(_RewardPlan plan, RewardClaimResult result) {
+  String _redeemErrorMessage(RewardProPlan plan, RewardClaimResult result) {
     switch (result.error) {
       case 'not_enough_points':
         return context.tr('not_enough_points');
@@ -607,6 +587,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
       case 'house_not_found':
       case 'house_mismatch':
       case 'forbidden':
+      case 'house_membership_changed':
         return L10nService().translate('util_dliunginhc_bf4d03');
       case 'missing_app_check':
       case 'invalid_app_check':
@@ -614,7 +595,12 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
       case 'network_error':
       case 'network_timeout':
       case 'reward_server_unavailable':
-        return L10nService().translate('util_khngktnicm_155696');
+        return context.tr('reward_store_redeem_uncertain');
+      case 'unauthenticated':
+        return context.tr('util_phinngnhph_c11b0a');
+      case 'endpoint_not_found':
+      case 'endpoint_not_configured':
+        return context.tr('p5_premium_unavailable');
       case 'invalid_plan':
         return L10nService().translate('util_giiimkhngh_64e725');
       default:
@@ -708,7 +694,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
         proSnapshot.hasError ||
         !_isAdRewardsLoaded ||
         _adRewardsHasError;
-    final message = isPro
+    final message = _hasPendingAdReward
+        ? context.tr('ad_reward_verification_pending')
+        : isPro
         ? context.tr('reward_store_pro')
         : kIsWeb
         ? context.tr('reward_store_web')
@@ -723,6 +711,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
         : null;
     final label = _isWatchingAd
         ? context.tr('util_angm_112640')
+        : _hasPendingAdReward
+        ? context.tr('reward_store_check_reward')
         : seconds > 0
         ? context.tr('reward_store_wait').replaceAll('{seconds}', '$seconds')
         : limitReached
@@ -740,288 +730,25 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
       buttonLabel: label,
       message: message,
       busy: _isWatchingAd,
-      onWatch:
-          unavailable ||
-              isPro ||
-              kIsWeb ||
-              !privacyAllowed ||
-              limitReached ||
-              _isWatchingAd ||
-              seconds > 0
+      onWatch: _hasPendingAdReward && !_isWatchingAd
+          ? _recoverAdReward
+          : unavailable ||
+                isPro ||
+                kIsWeb ||
+                !privacyAllowed ||
+                limitReached ||
+                _isWatchingAd ||
+                seconds > 0
           ? null
           : () => _watchAd(proSnapshot.data!),
     );
   }
 
-  Widget _buildProRedeemSection(int points) {
-    return RepaintBoundary(
-      child: Container(
-        padding: SLSpacing.all16,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.88),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: SLTheme.glassBorderThin),
-          boxShadow: SLShadow.subtle,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFE6F1),
-                    borderRadius: SLRadius.lgAll,
-                  ),
-                  child: const Icon(
-                    Icons.workspace_premium_rounded,
-                    color: SLTheme.primary,
-                    size: 23,
-                  ),
-                ),
-                SLSpacing.w12,
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        L10nService().translate('util_giiimpro_28acbc'),
-                        style: SLTheme.quicksand(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                          color: SLTheme.textMain,
-                        ),
-                      ),
-                      SLSpacing.h4,
-                      Text(
-                        L10nService().translate('util_iimly12gi1_6f15ee'),
-                        style: SLTheme.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: SLTheme.textMuted,
-                          height: 1.35,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            SLSpacing.h12,
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final compact = constraints.maxWidth < 390;
-                final itemWidth = compact
-                    ? constraints.maxWidth
-                    : (constraints.maxWidth - 10) / 2;
-                return Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    for (final plan in _plans)
-                      SizedBox(
-                        width: itemWidth,
-                        child: _buildPlanItem(plan, points, compact: true),
-                      ),
-                  ],
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPlanItem(_RewardPlan plan, int points, {bool compact = false}) {
-    final affordable = points >= plan.points;
-    final missingPoints = math.max(0, plan.points - points);
-    final planPointText = _formatPointAmount(plan.points);
-    final balancePointText = _formatPointAmount(points);
-    final missingPointText = _formatPointAmount(missingPoints);
-    return Container(
-      constraints: BoxConstraints(minHeight: compact ? 150 : 178),
-      padding: EdgeInsets.all(compact ? 12 : 16),
-      decoration: BoxDecoration(
-        color: affordable
-            ? Colors.white.withValues(alpha: 0.94)
-            : Colors.white.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(compact ? 18 : 20),
-        border: Border.all(
-          color: affordable
-              ? SLTheme.primary.withValues(alpha: 0.26)
-              : SLTheme.glassBorderThin,
-        ),
-        boxShadow: compact ? SLShadow.subtle : SLTheme.cardShadow,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: compact ? 38 : 44,
-                height: compact ? 38 : 44,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFF7AAE), Color(0xFFD81B60)],
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Text(
-                  plan.icon,
-                  style: SLTheme.quicksand(
-                    fontSize: compact ? 13 : 14,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              SLSpacing.gapW(10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      plan.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontWeight: FontWeight.w900,
-                        fontSize: compact ? 13.5 : 14,
-                        color: SLTheme.textMain,
-                      ),
-                    ),
-                    SLSpacing.h4,
-                    Text(
-                      plan.subtitle,
-                      maxLines: compact ? 2 : 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontWeight: FontWeight.w700,
-                        fontSize: compact ? 11 : 11.5,
-                        height: 1.25,
-                        color: SLTheme.textMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SLSpacing.gapH(10),
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(
-              horizontal: compact ? 10 : 12,
-              vertical: compact ? 8 : 9,
-            ),
-            decoration: BoxDecoration(
-              color: affordable
-                  ? const Color(0xFFEAF8EF)
-                  : const Color(0xFFFFEEF4),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: affordable
-                    ? const Color(0xFF43A047).withValues(alpha: 0.24)
-                    : SLTheme.primary.withValues(alpha: 0.22),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.stars_rounded,
-                      size: 15,
-                      color: affordable
-                          ? const Color(0xFF2E7D32)
-                          : SLTheme.primary,
-                    ),
-                    SLSpacing.gapW(5),
-                    Expanded(
-                      child: Text(
-                        context
-                            .tr('reward_store_points')
-                            .replaceAll('{points}', planPointText),
-                        style: SLTheme.quicksand(
-                          fontSize: compact ? 11.5 : 12,
-                          fontWeight: FontWeight.w900,
-                          color: SLTheme.textMain,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        affordable
-                            ? L10nService().translate('util_im_e5cb90')
-                            : context.tr('not_enough_points'),
-                        textAlign: TextAlign.right,
-                        style: SLTheme.quicksand(
-                          fontSize: compact ? 10.5 : 11,
-                          fontWeight: FontWeight.w900,
-                          color: affordable
-                              ? const Color(0xFF2E7D32)
-                              : SLTheme.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SLSpacing.gapH(3),
-                Text(
-                  '${context.tr('reward_store_balance')}: $balancePointText',
-                  style: SLTheme.quicksand(
-                    fontSize: compact ? 10.5 : 11,
-                    fontWeight: FontWeight.w700,
-                    color: SLTheme.textMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SLSpacing.gapH(8),
-          SizedBox(
-            width: double.infinity,
-            height: compact ? 34 : 36,
-            child: ElevatedButton.icon(
-              onPressed: affordable && !_isRedeeming
-                  ? () => _redeemPlan(plan)
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: affordable
-                    ? SLTheme.primary
-                    : Colors.grey.shade400,
-                disabledBackgroundColor: Colors.grey.shade400,
-                disabledForegroundColor: Colors.white,
-                padding: EdgeInsets.zero,
-                shape: RoundedRectangleBorder(borderRadius: SLRadius.pillAll),
-              ),
-              icon: const Icon(Icons.stars, color: Colors.white, size: 16),
-              label: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  affordable
-                      ? '${context.tr('redeem')} · $planPointText'
-                      : '−$missingPointText',
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildProRedeemSection(int points) => RewardProExchange(
+    points: points,
+    busy: _isRedeeming,
+    onRedeem: _redeemPlan,
+  );
 
   String _formatDateTime(int ms) {
     final dt = DateTime.fromMillisecondsSinceEpoch(ms);
@@ -1030,24 +757,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
   }
 
   String _formatPointAmount(int value) {
-    return NumberFormat.decimalPattern('vi_VN').format(value);
+    return NumberFormat.decimalPattern(
+      L10nService().locale.toString(),
+    ).format(value);
   }
-}
-
-class _RewardPlan {
-  final String id;
-  final String title;
-  final String subtitle;
-  final String icon;
-  final int points;
-  final Duration duration;
-
-  const _RewardPlan({
-    required this.id,
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.points,
-    required this.duration,
-  });
 }

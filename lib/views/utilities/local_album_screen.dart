@@ -252,7 +252,12 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
 
   Future<void> _pickImages() async {
     if (_items.length >= _maxItems) {
-      _showMsg('Đã đạt giới hạn $_maxItems mục.');
+      _showMsg(
+        L10nScope.of(context).format(
+          'ui_utilities_the_value1_item_limit_has_been_reached_1e8810',
+          {'value1': _maxItems},
+        ),
+      );
       return;
     }
     final images = await _picker.pickMultiImage(
@@ -283,17 +288,29 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
 
   Future<void> _pickVideos() async {
     if (!AppConfig.isVideoUploadEnabled) {
-      _showMsg('Tính năng tải video đang tạm thời bảo trì để nâng cấp.');
+      _showMsg(
+        context.tr(
+          'ui_utilities_the_video_download_feature_is_temporarily_under_9fa7c6',
+        ),
+      );
       return;
     }
     if (_items.length >= _maxItems) {
-      _showMsg('Đã đạt giới hạn $_maxItems mục.');
+      _showMsg(
+        L10nScope.of(context).format(
+          'ui_utilities_the_value1_item_limit_has_been_reached_1e8810',
+          {'value1': _maxItems},
+        ),
+      );
       return;
     }
     int todayCount = await _getTodayVideoCount();
     if (todayCount >= _maxVideosPerDay) {
       _showMsg(
-        'Đã đạt giới hạn $_maxVideosPerDay video/ngày. Thử lại vào ngày mai.',
+        L10nScope.of(context).format(
+          'ui_utilities_value1_video_day_limit_reached_try_again_848612',
+          {'value1': _maxVideosPerDay},
+        ),
       );
       return;
     }
@@ -304,7 +321,10 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
       if (_items.length >= _maxItems) break;
       if (todayCount + added >= _maxVideosPerDay) {
         _showMsg(
-          'Đã đạt giới hạn $_maxVideosPerDay video/ngày. Một số video không được thêm.',
+          L10nScope.of(context).format(
+            'ui_utilities_value1_video_day_limit_reached_some_videos_d8a615',
+            {'value1': _maxVideosPerDay},
+          ),
         );
         break;
       }
@@ -316,7 +336,12 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
       final srcFile = File(xfile.path);
       final size = await srcFile.length();
       if (size > _maxVideoSizeBytes) {
-        _showMsg('"${p.basename(xfile.name)}" vượt giới hạn 500MB, bỏ qua.');
+        _showMsg(
+          L10nScope.of(context).format(
+            'ui_utilities_value1_exceeds_500mb_limit_ignored_95137a',
+            {'value1': p.basename(xfile.name)},
+          ),
+        );
         continue;
       }
       // Copy file thay vì readAsBytes để tránh OOM
@@ -341,7 +366,12 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
 
   Future<void> _pickFromFilePicker() async {
     if (_items.length >= _maxItems) {
-      _showMsg('Đã đạt giới hạn $_maxItems mục.');
+      _showMsg(
+        L10nScope.of(context).format(
+          'ui_utilities_the_value1_item_limit_has_been_reached_1e8810',
+          {'value1': _maxItems},
+        ),
+      );
       return;
     }
     int todayCount = await _getTodayVideoCount();
@@ -362,7 +392,10 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
       if (isVideo) {
         if (todayCount + videoAdded >= _maxVideosPerDay) {
           _showMsg(
-            'Đã đạt giới hạn $_maxVideosPerDay video/ngày. Một số video không được thêm.',
+            L10nScope.of(context).format(
+              'ui_utilities_value1_video_day_limit_reached_some_videos_d8a615',
+              {'value1': _maxVideosPerDay},
+            ),
           );
           continue;
         }
@@ -370,7 +403,12 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
         if (srcPath.isEmpty) continue;
         final size = await File(srcPath).length();
         if (size > _maxVideoSizeBytes) {
-          _showMsg('"${file.name}" vượt giới hạn 500MB, bỏ qua.');
+          _showMsg(
+            L10nScope.of(context).format(
+              'ui_utilities_value1_exceeds_500mb_limit_ignored_95137a',
+              {'value1': file.name},
+            ),
+          );
           continue;
         }
         final fileName = await _copyVideoFile(srcPath, ext);
@@ -440,8 +478,8 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     }
     if (mounted) {
       final msg = failed > 0
-          ? 'Đã lưu $saved ảnh, $failed ảnh lỗi'
-          : 'Đã lưu $saved ảnh vào thiết bị';
+          ? L10nService().format('ui_utilities_value1_image_saved_value2_image_error_2a26a1', {'value1': saved, 'value2': failed})
+          : L10nService().format('ui_utilities_value1_photo_saved_to_device_711cb5', {'value1': saved});
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(content: Text(msg), duration: const Duration(seconds: 2)),
       );
@@ -455,7 +493,10 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
       builder: (ctx) => SLAlertDialog(
         title: Text(context.tr('ui_utilities_delete_the_selected_item_e8a2f5')),
         content: Text(
-          L10nScope.of(context).format('ui_utilities_delete_value1_selected_items_this_cannot_be_b28e6e', {'value1': _selectedIds.length}),
+          L10nScope.of(context).format(
+            'ui_utilities_delete_value1_selected_items_this_cannot_be_b28e6e',
+            {'value1': _selectedIds.length},
+          ),
         ),
         actions: [
           SLDialogAction(
@@ -495,118 +536,110 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
 
   void _showMonthPicker() {
     final months = _availableMonths.toList()..sort((a, b) => b.compareTo(a));
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: KeepsakeStyle.surface(context),
-      showDragHandle: true,
-      useSafeArea: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(SLRadius.xl)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.tr('local_album_filter_month'),
-              style: SLTypography.titleMedium,
-            ),
-            SLSpacing.h12,
-            _buildSheetOption(
-              icon: Icons.all_inclusive_rounded,
-              title: context.tr('local_album_all_months'),
-              selected: _selectedMonth == null,
-              color: KeepsakeStyle.accent(context),
-              onTap: () {
-                setState(() {
-                  _selectedMonth = null;
-                  _applyFilters();
-                });
-                Navigator.pop(ctx);
-              },
-            ),
-            SizedBox(
-              height: (months.length * 58.0).clamp(0, 348).toDouble(),
-              child: ListView.separated(
-                itemCount: months.length,
-                separatorBuilder: (_, _) => SLSpacing.h4,
-                itemBuilder: (_, i) => _buildSheetOption(
-                  icon: Icons.calendar_month_rounded,
-                  title: DateFormat('MM/yyyy').format(months[i]),
-                  selected: _selectedMonth == months[i],
-                  color: KeepsakeStyle.accent(context),
-                  onTap: () {
-                    setState(() {
-                      _selectedMonth = months[i];
-                      _applyFilters();
-                    });
-                    Navigator.pop(ctx);
-                  },
-                ),
-              ),
-            ),
-          ],
+    _showAlbumSheet(
+      title: context.tr('local_album_filter_month'),
+      options: [
+        _buildSheetOption(
+          icon: Icons.all_inclusive_rounded,
+          title: context.tr('local_album_all_months'),
+          selected: _selectedMonth == null,
+          color: KeepsakeStyle.accent(context),
+          onTap: () {
+            setState(() {
+              _selectedMonth = null;
+              _applyFilters();
+            });
+            Navigator.pop(context);
+          },
         ),
-      ),
+        for (final month in months)
+          _buildSheetOption(
+            icon: Icons.calendar_month_rounded,
+            title: DateFormat('MM/yyyy').format(month),
+            selected: _selectedMonth == month,
+            color: KeepsakeStyle.accent(context),
+            onTap: () {
+              setState(() {
+                _selectedMonth = month;
+                _applyFilters();
+              });
+              Navigator.pop(context);
+            },
+          ),
+      ],
     );
   }
 
   void _showPickOptions() {
-    showModalBottomSheet(
+    _showAlbumSheet(
+      title: context.tr('local_album_choose_source'),
+      options: [
+        _buildSheetOption(
+          icon: Icons.photo_library_rounded,
+          title: context.tr('local_album_source_photos'),
+          subtitle: context.tr('local_album_source_photos_desc'),
+          color: KeepsakeStyle.accent(context),
+          onTap: () {
+            Navigator.pop(context);
+            _pickImages();
+          },
+        ),
+        _buildSheetOption(
+          icon: Icons.video_library_rounded,
+          title: context.tr('local_album_source_videos'),
+          subtitle: context.tr('local_album_source_videos_desc'),
+          color: KeepsakeStyle.accent(context),
+          onTap: () {
+            Navigator.pop(context);
+            _pickVideos();
+          },
+        ),
+        _buildSheetOption(
+          icon: Icons.folder_rounded,
+          title: context.tr('local_album_source_files'),
+          subtitle: context.tr('local_album_source_files_desc'),
+          color: KeepsakeStyle.accent(context),
+          onTap: () {
+            Navigator.pop(context);
+            _pickFromFilePicker();
+          },
+        ),
+      ],
+    );
+  }
+
+  void _showAlbumSheet({required String title, required List<Widget> options}) {
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: KeepsakeStyle.surface(context),
       showDragHandle: true,
       useSafeArea: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(SLRadius.xl)),
+      isScrollControlled: true,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * .8,
       ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.tr('local_album_choose_source'),
-              style: SLTypography.titleMedium,
-            ),
-            SLSpacing.h16,
-            _buildSheetOption(
-              icon: Icons.photo_library_rounded,
-              title: context.tr('local_album_source_photos'),
-              subtitle: context.tr('local_album_source_photos_desc'),
-              color: KeepsakeStyle.accent(context),
-              onTap: () {
-                Navigator.pop(ctx);
-                _pickImages();
-              },
-            ),
-            SLSpacing.h8,
-            _buildSheetOption(
-              icon: Icons.video_library_rounded,
-              title: context.tr('local_album_source_videos'),
-              subtitle: context.tr('local_album_source_videos_desc'),
-              color: KeepsakeStyle.accent(context),
-              onTap: () {
-                Navigator.pop(ctx);
-                _pickVideos();
-              },
-            ),
-            SLSpacing.h8,
-            _buildSheetOption(
-              icon: Icons.folder_rounded,
-              title: context.tr('local_album_source_files'),
-              subtitle: context.tr('local_album_source_files_desc'),
-              color: KeepsakeStyle.accent(context),
-              onTap: () {
-                Navigator.pop(ctx);
-                _pickFromFilePicker();
-              },
-            ),
-          ],
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => ListView(
+        shrinkWrap: true,
+        padding: EdgeInsets.fromLTRB(
+          20,
+          0,
+          20,
+          24 + MediaQuery.paddingOf(ctx).bottom,
         ),
+        children: [
+          Text(
+            title,
+            style: KeepsakeStyle.text(ctx, size: 19, weight: FontWeight.w600),
+          ),
+          const SizedBox(height: 16),
+          for (var i = 0; i < options.length; i++) ...[
+            if (i > 0) const SizedBox(height: 8),
+            options[i],
+          ],
+        ],
       ),
     );
   }
@@ -711,6 +744,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
       backgroundColor: KeepsakeStyle.canvas(context),
       appBar: KeepsakeStyle.appBar(
         context,
+        leading: const BackButton(),
         title: _showSearch
             ? TextField(
                 controller: _searchCtrl,
@@ -837,7 +871,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
   Widget _buildAlbumContent() {
     if (_albumDir == null || _isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: SLColors.primary),
+        child: CircularProgressIndicator(color: KeepsakeStyle.rosewood),
       );
     }
     if (_items.isEmpty) return _buildEmptyState();
@@ -1263,7 +1297,9 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: Text(context.tr('ui_utilities_no_files_found_to_share_5f33b7')),
+            content: Text(
+              context.tr('ui_utilities_no_files_found_to_share_5f33b7'),
+            ),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -1276,7 +1312,12 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: Text(L10nScope.of(context).format('ui_utilities_sharing_error_value1_41b4d8', {'value1': e})),
+            content: Text(
+              L10nScope.of(context).format(
+                'ui_utilities_sharing_error_value1_41b4d8',
+                {'value1': e},
+              ),
+            ),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -1290,7 +1331,9 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: Text(context.tr('ui_utilities_only_supports_saving_images_033833')),
+            content: Text(
+              context.tr('ui_utilities_only_supports_saving_images_033833'),
+            ),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -1301,9 +1344,13 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
       final file = File(_filePath(_currentIndex));
       if (!await file.exists()) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SLSnackBar(content: Text(context.tr('ui_utilities_file_does_not_exist_e5652f'))));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SLSnackBar(
+              content: Text(
+                context.tr('ui_utilities_file_does_not_exist_e5652f'),
+              ),
+            ),
+          );
         }
         return;
       }
@@ -1313,7 +1360,9 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: Text(context.tr('ui_utilities_photo_saved_to_device_196639')),
+            content: Text(
+              context.tr('ui_utilities_photo_saved_to_device_196639'),
+            ),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -1322,7 +1371,12 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: Text(L10nScope.of(context).format('ui_utilities_image_saving_error_value1_5a8b3a', {'value1': e})),
+            content: Text(
+              L10nScope.of(context).format(
+                'ui_utilities_image_saving_error_value1_5a8b3a',
+                {'value1': e},
+              ),
+            ),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -1379,7 +1433,9 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
                         fit: BoxFit.contain,
                         errorBuilder: (_, _, _) => Center(
                           child: Text(
-                            context.tr('ui_utilities_the_image_cannot_be_displayed_c6f58b'),
+                            context.tr(
+                              'ui_utilities_the_image_cannot_be_displayed_c6f58b',
+                            ),
                             style: TextStyle(color: Colors.white),
                           ),
                         ),
@@ -1393,7 +1449,7 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
         color: Colors.black87,
         padding: const EdgeInsets.all(12),
         child: Text(
-          '${widget.items[_currentIndex].type == 'video' ? 'Video' : 'Ảnh'} • ${widget.items[_currentIndex].addedAt != null ? '${widget.items[_currentIndex].addedAt!.day}/${widget.items[_currentIndex].addedAt!.month}/${widget.items[_currentIndex].addedAt!.year}' : ''}',
+          '${widget.items[_currentIndex].type == 'video' ? 'Video' : L10nService().translate('home_nh_3c6f33')} • ${widget.items[_currentIndex].addedAt != null ? '${widget.items[_currentIndex].addedAt!.day}/${widget.items[_currentIndex].addedAt!.month}/${widget.items[_currentIndex].addedAt!.year}' : ''}',
           textAlign: TextAlign.center,
           style: const TextStyle(color: Colors.white54, fontSize: 12),
         ),

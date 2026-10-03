@@ -93,21 +93,21 @@ class _AdminAuditLogsScreenState extends State<AdminAuditLogsScreen> {
   String _formatAction(String action) {
     switch (action) {
       case 'ban_perm':
-        return 'Khóa vĩnh viễn';
+        return L10nService().translate('admin_khavnhvin_d8d75f');
       case 'unban':
-        return 'Mở khóa';
+        return L10nService().translate('chat_unlock');
       case 'add_vip':
-        return 'Cấp PRO';
+        return L10nService().translate('grant_vip');
       case 'toggle_maintenance':
-        return 'Bật/Tắt bảo trì toàn hệ thống';
+        return L10nService().translate('admin_btttbotrto_bf8028');
       case 'toggle_community_maintenance':
-        return 'Bật/Tắt bảo trì Cộng đồng';
+        return L10nService().translate('admin_btttbotrcn_cfd5cc');
       case 'update_community_maintenance_info':
-        return 'Cập nhật lời nhắn bảo trì';
+        return L10nService().translate('admin_cpnhtlinhn_41e8dc');
       case 'global_notification':
-        return 'Gửi thông báo toàn Server';
+        return L10nService().translate('admin_githngboto_029620');
       case 'direct_notification':
-        return 'Gửi thông báo trực tiếp';
+        return L10nService().translate('admin_githngbotr_592bf2');
       default:
         return action;
     }

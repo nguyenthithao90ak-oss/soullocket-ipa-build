@@ -327,214 +327,39 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
             ],
           ),
           SLSpacing.h12,
-          _buildSecurityCard(
-            title: context.tr('security_question'),
-            subtitle: recoveryLocked
-                ? context.tr('security_q_locked')
-                : context.tr('home_chnntmtlnc_0791a2'),
-            children: [
-              _buildSecurityLine(
-                label: context.tr('home_cuhi_c1a8b2'),
-                value: _securityQuestion.isEmpty
-                    ? context.tr('home_chathitlp_bf65d4')
-                    : _securityQuestion,
-              ),
-              _buildSecurityLine(
-                label: context.tr('home_trli_4c5df0'),
-                value: _hasRecoveryAnswer
-                    ? context.tr('home_thitlp_2fdbaa')
-                    : context.tr('home_chathitlp_bf65d4'),
-                valueColor: _hasRecoveryAnswer
-                    ? const Color(0xFF2E7D32)
-                    : const Color(0xFF8D6E63),
-              ),
-              SLSpacing.h8,
-              DropdownButtonFormField<String>(
-                initialValue: questionItems.contains(selectedQuestion)
-                    ? selectedQuestion
-                    : questionItems.first,
-                isExpanded: true,
-                style: SLTextStyles.quicksand(
-                  color: const Color(0xFF58455B),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-                decoration: InputDecoration(
-                  hintText: context.tr('home_chncuhibom_0eba13'),
-                  border: OutlineInputBorder(borderRadius: SLRadius.mdAll),
-                  filled: true,
-                  fillColor: recoveryLocked
-                      ? const Color(0xFFF9F3F6)
-                      : Colors.white,
-                ),
-                items: questionItems
-                    .map(
-                      (question) => DropdownMenuItem<String>(
-                        value: question,
-                        child: Text(
-                          question,
-                          overflow: TextOverflow.ellipsis,
-                          style: SLTextStyles.quicksand(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    )
-                    .toList(),
-                onChanged: recoveryLocked
-                    ? null
-                    : (value) {
-                        if (value == null) return;
-                        setState(() {
-                          _selectedSecurityQuestion = value;
-                          _recoveryQuestionCtrl.text = value;
-                          _recoveryAnswerCtrl.clear();
-                        });
-                      },
-              ),
-              SLSpacing.h8,
-              if (_isBirthQuestion(selectedQuestion))
-                recoveryLocked
-                    ? TextFormField(
-                        initialValue: '********',
-                        enabled: false,
-                        decoration: InputDecoration(
-                          hintText: context.tr('select_your_dob'),
-                          prefixIcon: const Icon(
-                            Icons.calendar_month_rounded,
-                            color: Color(0xFFD81B60),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: SLRadius.mdAll,
-                          ),
-                          filled: true,
-                          fillColor: const Color(0xFFF9F3F6),
-                        ),
-                      )
-                    : TextField(
-                        controller: _recoveryAnswerCtrl,
-                        keyboardType: TextInputType.datetime,
-                        inputFormatters: const [FlexibleDateInputFormatter()],
-                        textInputAction: TextInputAction.done,
-                        onEditingComplete: _normalizeRecoveryBirthDateAnswer,
-                        onSubmitted: (_) => _normalizeRecoveryBirthDateAnswer(),
-                        decoration: InputDecoration(
-                          hintText: context.tr('home_ngythngnm_a697d0'),
-                          helperText: context.tr('home_angnhpngyt_377d85'),
-                          prefixIcon: const Icon(
-                            Icons.calendar_month_rounded,
-                            color: Color(0xFFD81B60),
-                          ),
-                          suffixIcon: IconButton(
-                            icon: const Icon(Icons.event_rounded),
-                            color: const Color(0xFFD81B60),
-                            onPressed: _pickRecoveryBirthDate,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: SLRadius.mdAll,
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                      )
-              else
-                TextField(
-                  controller: _recoveryAnswerCtrl,
-                  enabled: !recoveryLocked,
-                  decoration: InputDecoration(
-                    hintText: recoveryLocked
-                        ? '********'
-                        : context.tr('enter_answer'),
-                    prefixIcon: const Icon(
-                      Icons.key_rounded,
-                      color: Color(0xFFD81B60),
-                    ),
-                    border: OutlineInputBorder(borderRadius: SLRadius.mdAll),
-                    filled: true,
-                    fillColor: recoveryLocked
-                        ? const Color(0xFFF9F3F6)
-                        : Colors.white,
-                  ),
-                ),
-              SLSpacing.h8,
-              _buildGradientBtn(
-                label: recoveryLocked
-                    ? context.tr('home_thitlpcuhi_bc15f7')
-                    : context.tr('save_security_question'),
-                gradient: recoveryLocked
-                    ? const [Color(0xFFF48FB1), Color(0xFFE1BEE7)]
-                    : const [Color(0xFFFF6F91), Color(0xFFD81B60)],
-                onTap: recoveryLocked
-                    ? () => _showToast(
-                        context.tr('security_q_locked_msg'),
-                        success: false,
-                      )
-                    : () async {
-                        if (!await _ensureCanModifySecurityInfo()) return;
-                        _saveRecoveryInfo();
-                      },
-              ),
-            ],
+          SecurityRecoveryQuestion(
+            questions: questionItems,
+            selectedQuestion: selectedQuestion,
+            locked: recoveryLocked,
+            birthQuestion: _isBirthQuestion(selectedQuestion),
+            answerController: _recoveryAnswerCtrl,
+            onQuestionChanged: (value) {
+              if (value == null) return;
+              setState(() {
+                _selectedSecurityQuestion = value;
+                _recoveryQuestionCtrl.text = value;
+                _recoveryAnswerCtrl.clear();
+              });
+            },
+            onNormalizeDate: _normalizeRecoveryBirthDateAnswer,
+            onPickDate: _pickRecoveryBirthDate,
+            onSave: () async {
+              if (!await _ensureCanModifySecurityInfo()) return;
+              _saveRecoveryInfo();
+            },
           ),
-          SLSpacing.h12,
-          _buildSecurityCard(
-            title: context.tr('home_thitbngnhp_d39323'),
-            subtitle: context.tr('home_qunlthitbn_8d057f'),
-            children: [
-              _buildGradientBtn(
-                label: context.tr('home_mqunlthitb_7882fa'),
-                gradient: const [Color(0xFF64B5F6), Color(0xFF1976D2)],
-                onTap: openDeviceManager,
-              ),
-            ],
+          SecurityDeviceLink(onTap: openDeviceManager),
+          SecurityBackupPin(
+            configured: _housePin.isNotEmpty,
+            visible: _showHousePin,
+            controller: _housePinCtrl,
+            onToggleVisibility: () =>
+                setState(() => _showHousePin = !_showHousePin),
+            onSave: () async {
+              if (!await _ensureCanModifySecurityInfo()) return;
+              _saveHousePin();
+            },
           ),
-          SLSpacing.h12,
-          _buildSecurityCard(
-            title: context.tr('backup_pin'),
-            subtitle: context.tr('backup_pin_desc'),
-            children: [
-              _buildSecurityLine(
-                label: context.tr('home_pinph_af7cc5'),
-                value: _maskPin(_housePin),
-                trailing: TextButton(
-                  onPressed: () =>
-                      setState(() => _showHousePin = !_showHousePin),
-                  child: Text(
-                    _showHousePin
-                        ? context.tr('home_n_f7bc96')
-                        : context.tr('home_hin_726cac'),
-                  ),
-                ),
-              ),
-              SLSpacing.h8,
-              TextField(
-                controller: _housePinCtrl,
-                style: SLTheme.quicksand(
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w700,
-                ),
-                decoration: InputDecoration(
-                  hintText: context.tr('backup_pin_hint'),
-                  prefixIcon: const Icon(Icons.pin_outlined),
-                  border: OutlineInputBorder(borderRadius: SLRadius.mdAll),
-                  filled: true,
-                  fillColor: Colors.white,
-                ),
-              ),
-              SLSpacing.h8,
-              _buildGradientBtn(
-                label: context.tr('save_backup_pin'),
-                gradient: const [Color(0xFFFFB74D), Color(0xFFF57C00)],
-                textColor: Colors.black,
-                onTap: () async {
-                  if (!await _ensureCanModifySecurityInfo()) return;
-                  _saveHousePin();
-                },
-              ),
-            ],
-          ),
-          SLSpacing.h12,
         ],
       ),
     );

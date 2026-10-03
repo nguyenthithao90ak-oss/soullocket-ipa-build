@@ -337,11 +337,19 @@ class CalendarHeaderSection extends StatelessWidget {
                     },
                     markerBuilder: (context, day, events) {
                       if (events.isEmpty) return const SizedBox.shrink();
-                      final holidayCount = events.whereType<HolidayOccurrence>().length;
+                      final holidayCount = events
+                          .whereType<HolidayOccurrence>()
+                          .length;
                       final planCount = events.length - holidayCount;
                       final label = [
-                        if (planCount > 0) L10nService().format('calendar_plan_count', {'count': planCount}),
-                        if (holidayCount > 0) L10nService().format('calendar_holiday_count', {'count': holidayCount}),
+                        if (planCount > 0)
+                          L10nService().format('calendar_plan_count', {
+                            'count': planCount,
+                          }),
+                        if (holidayCount > 0)
+                          L10nService().format('calendar_holiday_count', {
+                            'count': holidayCount,
+                          }),
                       ].join(', ');
                       return Align(
                         alignment: Alignment.bottomCenter,
@@ -355,15 +363,23 @@ class CalendarHeaderSection extends StatelessWidget {
                                   Container(
                                     width: 3,
                                     height: 3,
-                                    decoration: BoxDecoration(color: primary, shape: BoxShape.circle),
+                                    decoration: BoxDecoration(
+                                      color: primary,
+                                      shape: BoxShape.circle,
+                                    ),
                                   ),
-                                if (planCount > 0 && holidayCount > 0) const SizedBox(width: 4),
+                                if (planCount > 0 && holidayCount > 0)
+                                  const SizedBox(width: 4),
                                 if (holidayCount > 0)
                                   Icon(
                                     Icons.star_rounded,
-                                    key: ValueKey('calendar-holiday-marker-${day.year}-${day.month}-${day.day}'),
+                                    key: ValueKey(
+                                      'calendar-holiday-marker-${day.year}-${day.month}-${day.day}',
+                                    ),
                                     size: 9,
-                                    color: CalendarDesign.holidayAccent(context),
+                                    color: CalendarDesign.holidayAccent(
+                                      context,
+                                    ),
                                   ),
                               ],
                             ),

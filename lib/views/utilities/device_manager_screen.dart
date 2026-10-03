@@ -30,6 +30,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
   bool _currentDeviceCanManageDevices = false;
   bool _securityDeviceSignalsAllowed = true;
   String _loadMessage = '';
+  int _loadRequest = 0;
 
   @override
   void initState() {
@@ -57,11 +58,6 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
         _isLoading = false;
         _isSyncingDevices = true;
       });
-      final trustState =
-          await _svc.getCurrentDeviceTrustState(autoApprove: true);
-      if (!mounted) return;
-      _currentDeviceCanManageDevices =
-          trustState.isTrusted || trustState.isAdmin;
       unawaited(_loadDevices());
     } catch (e) {
       final errorInfo = AppErrorMapper.resolve(
@@ -80,6 +76,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
 
   Future<void> _loadDevices() async {
     if (!mounted) return;
+    final request = ++_loadRequest;
     setState(() {
       _isSyncingDevices = true;
       if (_devices.isEmpty) {
@@ -95,11 +92,9 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
     try {
       _securityDeviceSignalsAllowed =
           await _svc.isSecurityDeviceSignalsAllowed();
-      if (!_securityDeviceSignalsAllowed) {
-        await _svc.setSecurityDeviceSignalsAllowed(true);
-        _securityDeviceSignalsAllowed = true;
+      if (_securityDeviceSignalsAllowed) {
+        await _svc.registerCurrentDevice();
       }
-      await _svc.registerCurrentDevice();
 
       List<Map<String, dynamic>> devices = const [];
       try {
@@ -117,7 +112,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
           device['deviceId']?.toString().trim() == _currentDeviceId);
       if (!hasCurrentDevice) {
         final currentSnapshot = await _svc.getCurrentDeviceSnapshot();
-        if (!mounted) return;
+        if (!mounted || request != _loadRequest) return;
         devices = [
           ...devices,
           {
@@ -135,7 +130,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
 
       if (devices.isEmpty) {
         final currentSnapshot = await _svc.getCurrentDeviceSnapshot();
-        if (!mounted) return;
+        if (!mounted || request != _loadRequest) return;
         devices = [
           {
             ...currentSnapshot,
@@ -170,7 +165,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
       final currentStatus = currentDevice?['status']?.toString();
       final currentIsAdmin = currentDevice?['is_admin'] == true;
       final canManageFromList = currentIsAdmin || currentStatus == 'approved';
-      if (mounted) {
+      if (mounted && request == _loadRequest) {
         setState(() {
           _devices = devices;
           _currentDeviceCanManageDevices =
@@ -185,7 +180,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
       debugPrint('Error loading devices context: ${errorInfo.message}');
       _loadMessage = errorInfo.message;
     } finally {
-      if (mounted) {
+      if (mounted && request == _loadRequest) {
         setState(() {
           _isLoading = false;
           _isSyncingDevices = false;
@@ -295,17 +290,17 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
       final diff = now.difference(dt);
 
       if (isMe || diff.inMinutes < 5) {
-        return 'Vẫn đang hoạt động';
+        return L10nService().translate('ui_utilities_still_active_c20c7f');
       }
 
       if (diff.inDays > 0) {
-        return 'Off ${diff.inDays} ngày trước';
+        return L10nService().format('ui_utilities_offline_since_value1_days_ago_be5867', {'value1': diff.inDays});
       } else if (diff.inHours > 0) {
-        return 'Off ${diff.inHours} giờ trước';
+        return L10nService().format('ui_utilities_offline_since_value1_hours_ago_d9ab7d', {'value1': diff.inHours});
       } else if (diff.inMinutes > 0) {
-        return 'Off ${diff.inMinutes} phút trước';
+        return L10nService().format('ui_utilities_offline_since_value1_minutes_ago_34547b', {'value1': diff.inMinutes});
       } else {
-        return 'Vừa xong';
+        return L10nService().translate('p4_match_just_now');
       }
     } catch (_) {
       return context.tr('util_khngr_b18ff7');
@@ -375,7 +370,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
     bool isMe,
   ) {
     if (_isSyncingDevices && isMe && status == 'local_only') {
-      return 'Đang xác minh với máy chủ...';
+      return L10nService().translate('ui_utilities_verifying_with_server_09cfa0');
     }
     return _statusLabel(status, device);
   }

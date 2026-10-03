@@ -163,7 +163,7 @@ extension _ChatDetailHelpersPart on _ChatDetailScreenState {
         _ChatInfoShortcut(
           id: 'report_user',
           icon: Icons.report_gmailerrorred_rounded,
-          title: 'Báo cáo',
+          title: context.tr('admin_boco_2e9037'),
           subtitle: context.tr('home_gibocotiqu_e68d16'),
           color: const Color(0xFFBE123C),
           enabled: true,
@@ -175,12 +175,14 @@ extension _ChatDetailHelpersPart on _ChatDetailScreenState {
 
   String _formatConversationPreview(
     Map<dynamic, dynamic>? raw, {
-    String fallback = 'Nhắn tin để bắt đầu trò chuyện',
+    String? fallback,
   }) {
+    final fallbackText = fallback ??
+        L10nService().translate('ui_chat_text_to_start_chatting_dab6a3');
     return formatChatMessagePreview(
       raw,
       labels: _ChatDetailScreenState._conversationPreviewLabels,
-      fallbackOverride: fallback,
+      fallbackOverride: fallbackText,
     );
     /*
     if (raw == null) return fallback;
@@ -213,7 +215,7 @@ extension _ChatDetailHelpersPart on _ChatDetailScreenState {
       return _formatConversationPreview(
         lastMessage,
         fallback: meta.closedMessage.trim().isEmpty
-            ? 'Chỉ xem lại lịch sử trò chuyện'
+            ? L10nService().translate('ui_chat_only_review_chat_history_b17cb7')
             : meta.closedMessage.trim(),
       );
     }

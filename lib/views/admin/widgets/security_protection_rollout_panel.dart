@@ -619,7 +619,7 @@ class _SecurityProtectionRolloutPanelState
 
   Widget _buildSaveBar() {
     final updatedText = _config.updatedAtMs > 0
-        ? 'Cập nhật ${formatDateTime(DateTime.fromMillisecondsSinceEpoch(_config.updatedAtMs))}'
+        ? L10nService().format('ui_admin_update_value1_d36e06', {'value1': formatDateTime(DateTime.fromMillisecondsSinceEpoch(_config.updatedAtMs))})
         : context.tr('admin_chaclnluno_c3107e');
 
     return Container(
@@ -836,7 +836,7 @@ class _ReasonToggleTile extends StatelessWidget {
                 ),
                 SLSpacing.h6,
                 Text(
-                  'Mã: ${reason.key}',
+                  L10nScope.of(context).format('ui_admin_m_value1_c74ed9', {'value1': reason.key}),
                   style: SLTheme.quicksand(
                     color: SLColors.textMuted,
                     fontSize: 12,

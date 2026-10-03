@@ -120,7 +120,7 @@ class AdminTopBar extends StatelessWidget {
                   ),
                   SLSpacing.h8,
                   Text(
-                    '${user.email ?? 'Admin'} · ${lastUpdatedAt == null ? context.tr('admin_changbdliu_d09b70') : 'Cập nhật ${formatDateTime(lastUpdatedAt!)}'}',
+                    '${user.email ?? 'Admin'} · ${lastUpdatedAt == null ? context.tr('admin_changbdliu_d09b70') : L10nService().format('ui_admin_update_value1_d36e06', {'value1': formatDateTime(lastUpdatedAt!)})}',
                     style: SLTheme.quicksand(
                       color: SLColors.textMuted,
                       fontSize: 13,

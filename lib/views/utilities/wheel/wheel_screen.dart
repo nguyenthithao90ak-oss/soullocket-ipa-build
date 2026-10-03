@@ -244,7 +244,7 @@ class _WheelScreenState extends State<WheelScreen>
         });
         await _saveWheelData();
         if (!mounted) return;
-        SLToast.success(context, 'Đã tìm thấy ${newItems.length} quán ăn gần bạn!');
+        SLToast.success(context, L10nService().format('ui_utilities_found_value1_eateries_near_you_fd7a0d', {'value1': newItems.length}));
       } else {
         throw Exception(L10nService().translate('util_khngtmthyq_bdb7de'));
       }

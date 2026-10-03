@@ -78,9 +78,9 @@ String _singleMatchBuildCandidatePreviewText(
   }
   if (sharedTags.isNotEmpty) {
     final highlighted = sharedTags.take(2).join(', ');
-    return 'Hai bạn cùng thích $highlighted, khá hợp để mở đầu bằng một cuộc gọi ngắn và tự nhiên.';
+    return L10nService().format('ui_single_you_both_like_value1_it_s_quite_eafc53', {'value1': highlighted});
   }
-  return 'Hồ sơ này hợp với kiểu ${_singleMatchAvailableModesLabel(canAudioCall: canAudioCall, canVideoCall: canVideoCall).toLowerCase()}. Bạn có thể mở hồ sơ hoặc kết nối ngay.';
+  return L10nService().format('ui_single_this_record_matches_type_value1_you_can_be70a1', {'value1': _singleMatchAvailableModesLabel(canAudioCall: canAudioCall, canVideoCall: canVideoCall).toLowerCase()});
 }
 
 String _singleMatchChoiceLabel(List<_MatchChoice> options, String value) {
@@ -103,13 +103,13 @@ String _singleMatchFormatRelativeTime(int epochMs) {
     return L10nService().translate('match_vaxong_e92d16');
   }
   if (diff.inMinutes < 60) {
-    return '${diff.inMinutes} phút trước';
+    return L10nService().format('ui_single_value1_minutes_ago_58721d', {'value1': diff.inMinutes});
   }
   if (diff.inHours < 24) {
-    return '${diff.inHours} giờ trước';
+    return L10nService().format('ui_single_value1_hours_ago_7d1c09', {'value1': diff.inHours});
   }
   if (diff.inDays < 7) {
-    return '${diff.inDays} ngày trước';
+    return L10nService().format('ui_single_value1_days_ago_488126', {'value1': diff.inDays});
   }
   final date = DateTime.fromMillisecondsSinceEpoch(epochMs);
   final dd = date.day.toString().padLeft(2, '0');
@@ -124,7 +124,7 @@ String _singleMatchFormatDuration(int seconds) {
   final minutes = seconds ~/ 60;
   final remain = seconds % 60;
   if (minutes <= 0) {
-    return '$remain giây';
+    return L10nService().format('ui_single_value1_seconds_a2626d', {'value1': remain});
   }
   return '${minutes}m ${remain.toString().padLeft(2, '0')}s';
 }

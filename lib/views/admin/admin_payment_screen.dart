@@ -180,10 +180,10 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSectionTitle('Gói PRO & Quyền lợi'),
+                    _buildSectionTitle(context.tr('admin_giproquynl_cf1d6a')),
                     _buildVipPackages(),
                     SLSpacing.h24,
-                    _buildSectionTitle('Lịch sử thanh toán'),
+                    _buildSectionTitle(context.tr('admin_lchsthanht_ce2573')),
                     _buildPaymentHistory(),
                   ],
                 ),
@@ -213,15 +213,15 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
       spacing: 16,
       runSpacing: 16,
       children: [
-        _buildPackageCard('1 Tháng', 'Theo giá Store',
-            ['Xóa quảng cáo', 'Huy hiệu PRO', 'Nhắn tin không giới hạn']),
-        _buildPackageCard('1 Năm', 'Theo giá Store', [
-          'Tất cả quyền lợi 1 tháng',
-          'Khung avatar đặc biệt',
-          'Hỗ trợ ưu tiên 24/7'
+        _buildPackageCard(context.tr('admin_1thng_d64ca7'), context.tr('admin_theogistor_113405'),
+            [context.tr('admin_xaqungco_c9db50'), context.tr('admin_huyhiupro_b263a9'), context.tr('admin_nhntinkhng_0191a0')]),
+        _buildPackageCard(context.tr('admin_1nm_c9c38d'), context.tr('admin_theogistor_113405'), [
+          context.tr('admin_ttcquynli1_ab4966'),
+          context.tr('admin_khungavata_3b43d0'),
+          context.tr('admin_htrutin247_917040')
         ]),
-        _buildPackageCard('Vĩnh viễn', 'Theo giá Store',
-            ['Tất cả quyền lợi', 'Sở hữu mãi mãi']),
+        _buildPackageCard(context.tr('Vĩnh viễn'), context.tr('admin_theogistor_113405'),
+            [context.tr('admin_ttcquynli_a8c5fc'), context.tr('admin_shumimi_e70277')]),
       ],
     );
   }

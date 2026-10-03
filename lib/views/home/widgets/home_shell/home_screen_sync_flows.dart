@@ -140,8 +140,8 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
           title: context.tr('home_yucughpni_6a3807'),
           message:
               L10nScope.of(context).format('ui_home_there_is_a_pairing_request_from_value1_654afe', {'value1': request.guestName}),
-          confirmText: 'Xem',
-          cancelText: 'Đóng',
+          confirmText: context.tr('ui_home_xem_c088a9'),
+          cancelText: context.tr('Đóng'),
         ).then((value) {
           if (value == true && mounted) {
             Navigator.push(

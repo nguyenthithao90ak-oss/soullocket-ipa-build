@@ -527,7 +527,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
               destructive: true,
 
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(repairMojibakeText('Xóa')),
+              child: Text(repairMojibakeText(context.tr('p3_delete'))),
             ),
           ],
         );
@@ -541,6 +541,6 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
       _groupDrafts.removeWhere((item) => item.id == group.id);
     });
     await _saveGroupDrafts();
-    _showMessengerNotice('Đã xóa ${group.name}');
+    _showMessengerNotice(L10nScope.of(context).format('ui_chat_deleted_value1_dc1f67', {'value1': group.name}));
   }
 }

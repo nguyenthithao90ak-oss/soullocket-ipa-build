@@ -556,20 +556,20 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     }
     if (accuracy <= _kMapGoodAccuracyMeters) {
       return (
-        label: 'GPS tốt ±${accuracy.toStringAsFixed(0)} m',
+        label: L10nService().format('ui_map_good_gps_value1_m_173844', {'value1': accuracy.toStringAsFixed(0)}),
         color: const Color(0xFF22C55E),
         isLow: false,
       );
     }
     if (accuracy <= _kMapFairAccuracyMeters) {
       return (
-        label: 'GPS tạm ổn ±${accuracy.toStringAsFixed(0)} m',
+        label: L10nService().format('ui_map_gps_is_okay_value1_m_062625', {'value1': accuracy.toStringAsFixed(0)}),
         color: const Color(0xFFF59E0B),
         isLow: false,
       );
     }
     return (
-      label: 'GPS yếu ±${accuracy.toStringAsFixed(0)} m',
+      label: L10nService().format('ui_map_weak_gps_value1_m_8f1783', {'value1': accuracy.toStringAsFixed(0)}),
       color: const Color(0xFFF97316),
       isLow: true,
     );
@@ -780,7 +780,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       _memories = merged;
       _memorySummary = merged.isEmpty
           ? context.tr('map_chacghimkn_c6823f')
-          : '${merged.length} ghim kỷ niệm trên bản đồ';
+          : L10nService().format('ui_map_value1_commemorative_pin_on_the_map_12c022', {'value1': merged.length});
     });
     _memorySummary = _buildMemorySummaryLabel(merged.length);
     _rebuildStaticMarkers();
@@ -1046,12 +1046,12 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
 
     if (history.isEmpty) {
       _mapInsightText = _isSingleRelationship
-          ? 'Ngày ${_prettyDayFormat.format(date)} chưa có dữ liệu di chuyển của bạn.'
-          : 'Ngày ${_prettyDayFormat.format(date)} chưa có dữ liệu di chuyển của hai bạn.';
+          ? L10nService().format('ui_map_date_value1_does_not_yet_have_your_214fdd', {'value1': _prettyDayFormat.format(date)})
+          : L10nService().format('ui_map_on_value1_there_is_no_movement_data_de7285', {'value1': _prettyDayFormat.format(date)});
     } else {
       _mapInsightText = _isSingleRelationship
-          ? 'Ngày ${_prettyDayFormat.format(date)}: Đang hiển thị lịch sử di chuyển của bạn.'
-          : 'Ngày ${_prettyDayFormat.format(date)}: Đang hiển thị lịch sử di chuyển của hai bạn.';
+          ? L10nService().format('ui_map_date_value1_showing_your_travel_history_08f174', {'value1': _prettyDayFormat.format(date)})
+          : L10nService().format('ui_map_date_value1_displaying_your_travel_history_ce7e41', {'value1': _prettyDayFormat.format(date)});
     }
 
     _emitLiveUiSnapshot();
@@ -1897,7 +1897,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                       } else if (speedKmh > 2) {
                         displayText += '\n🚶 $speedKmh km/h';
                       } else if (marker.speed != null) {
-                        displayText += '\nĐứng yên';
+                        displayText += L10nService().translate('ui_map_stand_still_7a682d');
                       }
                     }
 

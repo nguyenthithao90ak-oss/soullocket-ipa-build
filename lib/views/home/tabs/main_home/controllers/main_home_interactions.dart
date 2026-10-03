@@ -233,123 +233,123 @@ extension _MainHomeInteractions on _MainHomeTabState {
         case 'hot':
           title = customTitle ?? '$myName nhắc bạn uống nước';
           body = partnerOnline
-              ? '$partnerName đang ở nơi khá nóng, lời nhắc đáng yêu này hiện ngay rồi.'
-              : '$partnerName chưa mở nhà, lời nhắc uống nước sẽ đợi sẵn để người ấy mở ra là thấy.';
+              ? L10nService().format('ui_home_value1_is_in_a_pretty_hot_place_a451a6', {'value1': partnerName})
+              : L10nService().format('ui_home_value1_hasn_t_opened_the_house_yet_29e70d', {'value1': partnerName});
           message =
               customMessage ??
               L10nService().translate('home_tribnbnnng_6be553');
           notificationBody = partnerOnline
-              ? '$partnerName đang online, mở app là thấy lời dặn này ngay luôn.'
-              : '$partnerName chưa mở app, lời nhắc uống nước sẽ chờ khi người ấy quay lại.';
+              ? L10nService().format('ui_home_value1_is_online_opens_the_app_and_b4d9ce', {'value1': partnerName})
+              : L10nService().format('ui_home_value1_hasn_t_opened_the_app_yet_fd0b09', {'value1': partnerName});
           break;
         case 'warmth':
           title = customTitle ?? '$myName nhắc bạn mặc ấm';
           body = partnerOnline
-              ? '$partnerName đang ở nơi mưa hoặc lạnh, lời nhắc giữ ấm đã tới ngay rồi.'
-              : '$partnerName chưa mở nhà, lời nhắc giữ ấm sẽ đợi sẵn để người ấy mở ra là thấy.';
+              ? L10nService().format('ui_home_value1_is_in_a_rainy_or_cold_ee33bd', {'value1': partnerName})
+              : L10nService().format('ui_home_value1_hasn_t_opened_the_house_yet_2e5983', {'value1': partnerName});
           message =
               customMessage ??
               L10nService().translate('home_bnbncvlnhn_a92b57');
           notificationBody = partnerOnline
-              ? '$partnerName đang online, mở app là thấy lời dặn này ngay luôn.'
-              : '$partnerName chưa mở app, lời nhắc giữ ấm sẽ chờ khi người ấy quay lại.';
+              ? L10nService().format('ui_home_value1_is_online_opens_the_app_and_b4d9ce', {'value1': partnerName})
+              : L10nService().format('ui_home_value1_hasn_t_opened_the_app_yet_6d21ef', {'value1': partnerName});
           break;
         case 'kiss':
           title = customTitle ?? '$myName gửi bạn một nụ hôn';
           body = partnerOnline
-              ? '$partnerName đang online, nụ hôn này bay tới ngay luôn.'
-              : '$partnerName chưa mở nhà, nụ hôn sẽ nằm chờ xinh xắn khi người ấy quay lại.';
+              ? L10nService().format('ui_home_value1_is_online_this_kiss_came_right_b937db', {'value1': partnerName})
+              : L10nService().format('ui_home_value1_hasn_t_opened_the_house_yet_2093ea', {'value1': partnerName});
           message =
               customMessage ??
               L10nService().translate('home_chtmtcitht_f7bbad');
           notificationBody = partnerOnline
-              ? '$partnerName đang online, mở app là thấy ngay.'
-              : '$partnerName chưa mở app, nụ hôn sẽ chờ sẵn khi người ấy quay lại.';
+              ? L10nService().format('ui_home_value1_is_online_open_the_app_and_d40614', {'value1': partnerName})
+              : L10nService().format('ui_home_value1_hasn_t_opened_the_app_yet_8fee30', {'value1': partnerName});
           break;
         case 'hug':
           title = customTitle ?? '$myName ôm bạn một cái';
           body = partnerOnline
-              ? '$partnerName đang online, cái ôm mềm này tới ngay rồi.'
-              : '$partnerName chưa mở nhà, cái ôm sẽ đợi sẵn để người ấy mở ra là thấy.';
+              ? L10nService().format('ui_home_value1_is_online_this_soft_hug_is_954a62', {'value1': partnerName})
+              : L10nService().format('ui_home_value1_hasn_t_opened_the_house_yet_d30419', {'value1': partnerName});
           message =
               customMessage ??
               L10nService().translate('home_mbnmtcitht_a0ec5e');
           notificationBody = partnerOnline
-              ? '$partnerName đang online, mở app là thấy ngay.'
-              : '$partnerName chưa mở app, cái ôm sẽ chờ sẵn khi người ấy quay lại.';
+              ? L10nService().format('ui_home_value1_is_online_open_the_app_and_d40614', {'value1': partnerName})
+              : L10nService().format('ui_home_value1_hasn_t_opened_the_app_yet_845a47', {'value1': partnerName});
           break;
         case 'angry':
           title = customTitle ?? '$myName đang dỗi bạn đó';
           body = partnerOnline
-              ? '$partnerName đang online, lời dỗi yêu này hiện lên ngay rồi.'
-              : '$partnerName chưa mở nhà, lời dỗi yêu sẽ nằm chờ để người ấy dỗ bạn sau.';
+              ? L10nService().format('ui_home_value1_is_online_this_love_message_appeared_57ae14', {'value1': partnerName})
+              : L10nService().format('ui_home_value1_hasn_t_opened_the_house_yet_d345ce', {'value1': partnerName});
           message =
               customMessage ??
               L10nService().translate('home_hmangdixut_2726ac');
           notificationBody = partnerOnline
-              ? '$partnerName đang online, mở app là thấy ngay.'
-              : '$partnerName chưa mở app, lời dỗi hờn sẽ chờ sẵn khi người ấy quay lại.';
+              ? L10nService().format('ui_home_value1_is_online_open_the_app_and_d40614', {'value1': partnerName})
+              : L10nService().format('ui_home_value1_hasn_t_opened_the_app_yet_9c9038', {'value1': partnerName});
           break;
         case 'furious':
           title = customTitle ?? '$myName đang tức bạn đỏ mặt luôn';
           body = partnerOnline
-              ? '$partnerName đang online, cơn tức đỏ rực này hiện lên ngay rồi.'
-              : '$partnerName chưa mở nhà, cơn tức đỏ rực này sẽ chờ sẵn để người ấy dỗ bạn sau.';
+              ? L10nService().format('ui_home_value1_is_online_this_red_anger_appeared_e50739', {'value1': partnerName})
+              : L10nService().format('ui_home_value1_hasn_t_opened_the_house_yet_0900e8', {'value1': partnerName});
           message =
               customMessage ??
               L10nService().translate('home_mnhangtcth_dfdd25');
           notificationBody = partnerOnline
-              ? '$partnerName đang online, mở app là thấy ngay.'
-              : '$partnerName chưa mở app, cơn tức này sẽ chờ sẵn khi người ấy quay lại.';
+              ? L10nService().format('ui_home_value1_is_online_open_the_app_and_d40614', {'value1': partnerName})
+              : L10nService().format('ui_home_value1_hasn_t_opened_the_app_yet_f4f01d', {'value1': partnerName});
           break;
         case 'tease':
           title = customTitle ?? '$myName vừa trêu bạn một chút';
           body = partnerOnline
-              ? '$partnerName đang online, cú chọc yêu này bật ra ngay rồi.'
-              : '$partnerName chưa mở nhà, cú trêu nghịch này sẽ nằm chờ khi người ấy quay lại.';
+              ? L10nService().format('ui_home_value1_is_online_this_love_jab_popped_0180a9', {'value1': partnerName})
+              : L10nService().format('ui_home_value1_hasn_t_opened_the_house_yet_57bf3a', {'value1': partnerName});
           message =
               customMessage ??
               L10nService().translate('home_mnhvachcbn_f70061');
           notificationBody = partnerOnline
-              ? '$partnerName đang online, mở app là thấy ngay.'
-              : '$partnerName chưa mở app, cú trêu này sẽ chờ sẵn khi người ấy quay lại.';
+              ? L10nService().format('ui_home_value1_is_online_open_the_app_and_d40614', {'value1': partnerName})
+              : L10nService().format('ui_home_value1_hasn_t_opened_the_app_yet_a1e737', {'value1': partnerName});
           break;
         case 'cry':
           title = customTitle ?? '$myName đang cần bạn dỗ dành';
           body = partnerOnline
-              ? '$partnerName đang online, tín hiệu mít ướt này hiện lên ngay rồi.'
-              : '$partnerName chưa mở nhà, tín hiệu cần dỗ dành sẽ chờ khi người ấy quay lại.';
+              ? L10nService().format('ui_home_value1_is_online_this_cry_signal_appeared_f43a9b', {'value1': partnerName})
+              : L10nService().format('ui_home_value1_hasn_t_opened_the_house_yet_2c1e84', {'value1': partnerName});
           message =
               customMessage ??
               L10nService().translate('home_hmnaymnhhi_105e19');
           notificationBody = partnerOnline
-              ? '$partnerName đang online, mở app là thấy ngay.'
-              : '$partnerName chưa mở app, tín hiệu mít ướt sẽ chờ sẵn khi người ấy quay lại.';
+              ? L10nService().format('ui_home_value1_is_online_open_the_app_and_d40614', {'value1': partnerName})
+              : L10nService().format('ui_home_value1_hasn_t_opened_the_app_yet_72e6d6', {'value1': partnerName});
           break;
         case 'poop':
           title = customTitle ?? '$myName vừa ném 💩 vào bạn';
           body = partnerOnline
-              ? '$partnerName đang online, cú trêu này bật ra ngay rồi.'
-              : '$partnerName chưa mở nhà, cú trêu nghịch này sẽ chờ sẵn khi người ấy quay lại.';
+              ? L10nService().format('ui_home_value1_is_online_this_tease_popped_up_7ddb4e', {'value1': partnerName})
+              : L10nService().format('ui_home_value1_hasn_t_opened_the_house_yet_0c43c8', {'value1': partnerName});
           message =
               customMessage ??
               L10nService().translate('home_nmnhmtcctr_3e8a1f');
           notificationBody = partnerOnline
-              ? '$partnerName đang online, mở app là thấy ngay.'
-              : '$partnerName chưa mở app, 💩 sẽ chờ sẵn khi người ấy quay lại.';
+              ? L10nService().format('ui_home_value1_is_online_open_the_app_and_d40614', {'value1': partnerName})
+              : L10nService().format('ui_home_value1_hasn_t_opened_the_app_yet_16e298', {'value1': partnerName});
           break;
         case 'miss':
         default:
           title = customTitle ?? '$myName gửi ngàn nỗi nhớ';
           body = partnerOnline
-              ? '$partnerName đang online, nỗi nhớ này chạm tới ngay luôn.'
-              : '$partnerName chưa mở nhà, nỗi nhớ sẽ đợi sẵn để người ấy mở ra là nhận được.';
+              ? L10nService().format('ui_home_value1_is_online_this_nostalgia_hits_me_95a7c8', {'value1': partnerName})
+              : L10nService().format('ui_home_value1_hasn_t_opened_the_house_yet_e2a8f8', {'value1': partnerName});
           message =
               customMessage ??
               L10nService().translate('home_mnhnhbnnhi_88a6c7');
           notificationBody = partnerOnline
-              ? '$partnerName đang online, mở app là thấy ngay.'
-              : '$partnerName chưa mở app, nỗi nhớ sẽ chờ sẵn khi người ấy quay lại.';
+              ? L10nService().format('ui_home_value1_is_online_open_the_app_and_d40614', {'value1': partnerName})
+              : L10nService().format('ui_home_value1_hasn_t_opened_the_app_yet_60eed7', {'value1': partnerName});
           break;
       }
 

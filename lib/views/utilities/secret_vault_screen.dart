@@ -1801,7 +1801,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   ),
                   'after': context.tr('util_trongthigi_6645aa'),
                 })
-              : '${context.tr('util_resetkhonh_d0b294')}${context.tr('util_bnphixcnhn_b3fe0e')}${isWithin12Hours ? '\n\nDù bạn vừa đ�i mật khẩu gần đây, hệ thống vẫn áp dụng thời gian chờ đủ 1 ngày trước khi xoá dữ liệu.' : ''}',
+              : '${context.tr('util_resetkhonh_d0b294')}${context.tr('util_bnphixcnhn_b3fe0e')}${isWithin12Hours ? context.tr('vault_recent_password_reset_wait') : ''}',
         ),
         actions: [
           SLDialogAction(

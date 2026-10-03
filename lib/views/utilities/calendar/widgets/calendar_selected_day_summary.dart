@@ -13,6 +13,7 @@ class CalendarSelectedDaySummary extends StatelessWidget {
   final String shortDateLabel;
   final int eventCount;
   final int holidayCount;
+  final String? secondaryDateLabel;
 
   const CalendarSelectedDaySummary({
     super.key,
@@ -26,6 +27,7 @@ class CalendarSelectedDaySummary extends StatelessWidget {
     required this.shortDateLabel,
     required this.eventCount,
     this.holidayCount = 0,
+    this.secondaryDateLabel,
   });
 
   @override
@@ -62,8 +64,14 @@ class CalendarSelectedDaySummary extends StatelessWidget {
               ),
               if (holidayCount > 0)
                 Text(
-                  L10nService().format('calendar_holiday_count', {'count': holidayCount}),
-                  style: CalendarDesign.text(context, size: 13, color: CalendarDesign.holidayAccent(context)),
+                  L10nService().format('calendar_holiday_count', {
+                    'count': holidayCount,
+                  }),
+                  style: CalendarDesign.text(
+                    context,
+                    size: 13,
+                    color: CalendarDesign.holidayAccent(context),
+                  ),
                 ),
             ],
           ),
@@ -76,6 +84,17 @@ class CalendarSelectedDaySummary extends StatelessWidget {
               weight: FontWeight.w700,
             ),
           ),
+          if (secondaryDateLabel != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              secondaryDateLabel!,
+              style: CalendarDesign.text(
+                context,
+                size: 12,
+                color: CalendarDesign.muted(context),
+              ),
+            ),
+          ],
         ],
       ),
     ),

@@ -201,7 +201,7 @@ extension _SettingsTabSecurityLockHelpersPart on _SettingsTabState {
     } catch (e) {
       if (!mounted) return;
       _showToast(
-        'Không thể lưu cài đặt bảo mật trên thiết bị này: $e',
+        L10nScope.of(context).format('ui_home_unable_to_save_security_settings_on_this_1ea6c9', {'value1': e}),
         success: false,
       );
     }

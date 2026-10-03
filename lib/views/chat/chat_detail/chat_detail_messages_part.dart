@@ -488,7 +488,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
 
   Widget _buildCallInviteBubble(ChatMessage msg, bool isMe) {
     final isVideo = msg.callMode != 'audio';
-    final label = isVideo ? 'cuộc gọi video' : 'cuộc gọi thoại';
+    final label = isVideo ? L10nService().translate('p4_call_video_label') : L10nService().translate('p4_call_audio_label');
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -656,7 +656,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
         .map((item) => item.trim())
         .where((item) => item.isNotEmpty)
         .toList(growable: false);
-    final title = lines.isNotEmpty ? lines.first : 'Đã chia sẻ một nội dung';
+    final title = lines.isNotEmpty ? lines.first : L10nService().translate('p9_group_chat_share_fallback');
     final body = lines.length > 1 ? lines.sublist(1).join('\n') : '';
 
     return Align(

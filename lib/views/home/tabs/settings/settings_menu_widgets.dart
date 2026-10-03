@@ -109,6 +109,62 @@ class SettingsMenuHeading extends StatelessWidget {
   );
 }
 
+class SettingsMenuFooter extends StatelessWidget {
+  const SettingsMenuFooter({super.key, required this.tagline});
+
+  final String tagline;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(24, 4, 24, 8),
+    child: Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Transform.rotate(
+            angle: -0.035,
+            child: Container(
+              width: 52,
+              height: 52,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: SLColors.paper,
+                borderRadius: BorderRadius.circular(17),
+                border: Border.all(color: SLColors.border),
+                boxShadow: SLShadow.subtle,
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(13),
+                child: Image.asset('assets/icon.png', fit: BoxFit.cover),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'SoulLocket',
+            style: SLTheme.textStyleForKey(
+              'dancingScript',
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: SLColors.ink,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            tagline,
+            textAlign: TextAlign.center,
+            style: SLTheme.quicksand(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              color: SLColors.textSecond,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 class SettingsMenuDivider extends StatelessWidget {
   const SettingsMenuDivider({super.key, this.isDark = false});
 

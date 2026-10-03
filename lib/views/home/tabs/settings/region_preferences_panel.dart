@@ -19,6 +19,14 @@ class _RegionPreferencesPanelState extends State<RegionPreferencesPanel> {
   String? _market;
   bool _defaults = true;
   Set<String> _packs = {};
+  int? _firstWeekday;
+  bool? _use24HourFormat;
+  String? _secondaryCalendar;
+  String? _timeZoneId;
+  final _timeZoneController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  int _loadRevision = 0;
+  bool _holidayRemindersEnabled = false;
   bool _saving = false;
   bool _dirty = false;
 
@@ -30,11 +38,18 @@ class _RegionPreferencesPanelState extends State<RegionPreferencesPanel> {
   }
 
   void _load() {
+    _loadRevision++;
     _dirty = false;
     _scope = _service.accountScope;
     final saved = _service.preferences;
     _market = saved.marketCode;
     _defaults = saved.holidayPacks == null;
+    _firstWeekday = saved.firstWeekday;
+    _use24HourFormat = saved.use24HourFormat;
+    _secondaryCalendar = saved.secondaryCalendar;
+    _timeZoneId = saved.timeZoneId;
+    _timeZoneController.text = _timeZoneId ?? '';
+    _holidayRemindersEnabled = saved.holidayRemindersEnabled;
     _packs = _service
         .holidayPacks(languageCode: L10nService().locale.languageCode)
         .toSet();
@@ -50,6 +65,7 @@ class _RegionPreferencesPanelState extends State<RegionPreferencesPanel> {
   @override
   void dispose() {
     _service.removeListener(_onServiceChanged);
+    _timeZoneController.dispose();
     super.dispose();
   }
 
@@ -137,6 +153,7 @@ class _RegionPreferencesPanelState extends State<RegionPreferencesPanel> {
       setState(_load);
       return;
     }
+    if (_formKey.currentState?.validate() != true) return;
     final scope = _scope;
     setState(() => _saving = true);
     try {
@@ -144,6 +161,13 @@ class _RegionPreferencesPanelState extends State<RegionPreferencesPanel> {
         MarketPreferences(
           marketCode: _market,
           holidayPacks: _defaults ? null : _packs.toList(growable: false),
+          firstWeekday: _firstWeekday,
+          use24HourFormat: _use24HourFormat,
+          secondaryCalendar: _secondaryCalendar,
+          timeZoneId: _timeZoneId?.trim().isEmpty == true
+              ? null
+              : _timeZoneId?.trim(),
+          holidayRemindersEnabled: _holidayRemindersEnabled,
         ),
       );
       if (!mounted || scope != _service.accountScope) return;
@@ -153,9 +177,9 @@ class _RegionPreferencesPanelState extends State<RegionPreferencesPanel> {
       ).showSnackBar(SLSnackBar(content: Text(context.tr('region_saved'))));
     } catch (_) {
       if (!mounted || scope != _service.accountScope) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SLSnackBar(content: Text(context.tr('region_save_error'))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SLSnackBar(content: Text(context.tr('region_save_error'))),
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -164,7 +188,9 @@ class _RegionPreferencesPanelState extends State<RegionPreferencesPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
+    return Form(
+      key: _formKey,
+      child: Card(
       margin: const EdgeInsets.only(top: 16),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -284,6 +310,165 @@ class _RegionPreferencesPanelState extends State<RegionPreferencesPanel> {
                 ],
               ),
             ],
+            const Divider(height: 28),
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              initiallyExpanded: false,
+              title: Text(context.tr('region_display_title')),
+              subtitle: Text(context.tr('region_display_hint')),
+              children: [
+                DropdownButtonFormField<String>(
+                  key: ValueKey('weekday-$_scope-$_loadRevision'),
+                  isExpanded: true,
+                  itemHeight: null,
+                  initialValue: switch (_firstWeekday) {
+                    DateTime.monday => 'monday',
+                    DateTime.saturday => 'saturday',
+                    DateTime.sunday => 'sunday',
+                    _ => 'default',
+                  },
+                  decoration: InputDecoration(
+                    labelText: context.tr('region_first_weekday'),
+                  ),
+                  items: [
+                    DropdownMenuItem(
+                      value: 'default',
+                      child: Text(context.tr('region_default_value')),
+                    ),
+                    DropdownMenuItem(
+                      value: 'monday',
+                      child: Text(context.tr('region_monday')),
+                    ),
+                    DropdownMenuItem(
+                      value: 'saturday',
+                      child: Text(context.tr('region_saturday')),
+                    ),
+                    DropdownMenuItem(
+                      value: 'sunday',
+                      child: Text(context.tr('region_sunday')),
+                    ),
+                  ],
+                  onChanged: _saving
+                      ? null
+                      : (value) => setState(() {
+                          _dirty = true;
+                          _firstWeekday = switch (value) {
+                            'monday' => DateTime.monday,
+                            'saturday' => DateTime.saturday,
+                            'sunday' => DateTime.sunday,
+                            _ => null,
+                          };
+                        }),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  key: ValueKey('clock-$_scope-$_loadRevision'),
+                  isExpanded: true,
+                  itemHeight: null,
+                  initialValue: _use24HourFormat == null
+                      ? 'default'
+                      : _use24HourFormat!
+                      ? '24'
+                      : '12',
+                  decoration: InputDecoration(
+                    labelText: context.tr('region_time_format'),
+                  ),
+                  items: [
+                    DropdownMenuItem(
+                      value: 'default',
+                      child: Text(context.tr('region_default_value')),
+                    ),
+                    DropdownMenuItem(
+                      value: '12',
+                      child: Text(context.tr('region_time_12')),
+                    ),
+                    DropdownMenuItem(
+                      value: '24',
+                      child: Text(context.tr('region_time_24')),
+                    ),
+                  ],
+                  onChanged: _saving
+                      ? null
+                      : (value) => setState(() {
+                          _dirty = true;
+                          _use24HourFormat = switch (value) {
+                            '12' => false,
+                            '24' => true,
+                            _ => null,
+                          };
+                        }),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  key: ValueKey('secondary-$_scope-$_loadRevision'),
+                  isExpanded: true,
+                  itemHeight: null,
+                  initialValue: _secondaryCalendar ?? 'none',
+                  decoration: InputDecoration(
+                    labelText: context.tr('region_secondary_calendar'),
+                  ),
+                  items: [
+                    DropdownMenuItem(
+                      value: 'none',
+                      child: Text(context.tr('region_none')),
+                    ),
+                    DropdownMenuItem(
+                      value: 'buddhist',
+                      child: Text(context.tr('region_buddhist')),
+                    ),
+                    DropdownMenuItem(
+                      value: 'islamic-civil',
+                      child: Text(context.tr('region_islamic_civil')),
+                    ),
+                  ],
+                  onChanged: _saving
+                      ? null
+                      : (value) => setState(() {
+                          _dirty = true;
+                          _secondaryCalendar = value == 'none' ? null : value;
+                        }),
+                ),
+                if (_secondaryCalendar == 'islamic-civil')
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(context.tr('region_secondary_hint')),
+                  ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _timeZoneController,
+                  enabled: !_saving,
+                  textDirection: TextDirection.ltr,
+                  autocorrect: false,
+                  textCapitalization: TextCapitalization.none,
+                  validator: (value) {
+                    final id = value?.trim() ?? '';
+                    return id.isEmpty || MarketPreferences.isValidTimeZoneId(id)
+                        ? null : context.tr('region_timezone_invalid');
+                  },
+                  decoration: InputDecoration(
+                    labelText: context.tr('region_timezone'),
+                    hintText: context.tr('region_timezone_hint'),
+                  ),
+                  onChanged: (value) {
+                    _dirty = true;
+                    _timeZoneId = value;
+                  },
+                ),
+                const SizedBox(height: 4),
+                SwitchListTile.adaptive(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(context.tr('region_holiday_reminders')),
+                  subtitle: Text(context.tr('region_holiday_reminders_hint')),
+                  value: _holidayRemindersEnabled,
+                  onChanged: _saving
+                      ? null
+                      : (value) => setState(() {
+                          _dirty = true;
+                          _holidayRemindersEnabled = value;
+                        }),
+                ),
+              ],
+            ),
             const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: _saving ? null : _save,
@@ -297,6 +482,7 @@ class _RegionPreferencesPanelState extends State<RegionPreferencesPanel> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

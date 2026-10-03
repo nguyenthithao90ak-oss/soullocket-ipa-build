@@ -779,9 +779,6 @@ extension _SettingsTabPersistence on _SettingsTabState {
             'users/${currentUser.uid}/loginAliasEmail': normalized,
             'users/${currentUser.uid}/loginAliasUpdatedAt':
                 ServerValue.timestamp,
-            'houses/$_houseId/security/secondaryEmail': normalized,
-            'houses/$_houseId/security/backupEmail': normalized,
-            'houses/$_houseId/security/updatedAt': ServerValue.timestamp,
           });
           if (mounted) {
             setState(() => _secondaryEmail = normalized);

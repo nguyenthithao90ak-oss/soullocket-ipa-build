@@ -19,14 +19,14 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
         'icon': Icons.grid_view_rounded,
       },
       {
-        'label': 'Album',
+        'label': context.tr('ui_utilities_album_dfb4c9'),
         'hint': '1:1',
         'style': 'polaroid',
         'aspect': '1:1',
         'icon': Icons.photo_album_rounded,
       },
       {
-        'label': 'Poster',
+        'label': context.tr('collage_poster_preset'),
         'hint': '16:9',
         'style': 'poster',
         'aspect': '16:9',

@@ -1091,7 +1091,7 @@ class DiaryMemoryController extends ChangeNotifier {
       return;
     }
 
-    showSnackBar('Đang xử lý...');
+    showSnackBar(context.tr('home_angxl_5d4018'));
 
     try {
       final result = await _storageService.moveMemoryImagesToTrash(
@@ -1224,7 +1224,7 @@ class DiaryMemoryController extends ChangeNotifier {
       return;
     }
 
-    showSnackBar('Đang xử lý...');
+    showSnackBar(context.tr('home_angxl_5d4018'));
 
     try {
       final granted = await guardController.ensureGalleryPermission(context);
@@ -1308,7 +1308,7 @@ class DiaryMemoryController extends ChangeNotifier {
     required void Function(String message, {Color? backgroundColor})
     showSnackBar,
   }) async {
-    showSnackBar('Đang xử lý...');
+    showSnackBar(context.tr('home_angxl_5d4018'));
     try {
       final granted = await guardController.ensureGalleryPermission(context);
       if (!granted) {
@@ -1739,8 +1739,13 @@ class DiaryMemoryController extends ChangeNotifier {
         final imgCapMb = vipAccess.totalMemoryStorageCapMb;
         final vidCapMb = vipAccess.totalMemoryVideoCapMb;
         showSnackBar(
-          'Kho lưu trữ đã đầy (ảnh ${imgCapMb}MB, video ${vidCapMb}MB). Vui lòng xóa bớt kỷ niệm cũ để tải thêm mới.'
-          '${!vipAccess.isVip && AppConfig.isPurchaseEnabled ? ' Hoặc nâng cấp VIP để mở rộng kho!' : ''}',
+          L10nService().format('diary_storage_full_message', {
+                'image': imgCapMb,
+                'video': vidCapMb,
+              }) +
+              (!vipAccess.isVip && AppConfig.isPurchaseEnabled
+                  ? context.tr('diary_storage_upgrade_hint')
+                  : ''),
           backgroundColor: const Color(0xFFE53935),
         );
         return;
@@ -1774,10 +1779,10 @@ class DiaryMemoryController extends ChangeNotifier {
         );
         showSnackBar(
           vipAccess.isVip
-              ? 'Bạn đã dùng hết dung lượng tải lên hôm nay (ảnh ${imageLimitMb}MB, video ${videoLimitMb}MB). Vui lòng thử lại ngày mai.'
+              ? L10nScope.of(context).format('ui_home_you_have_used_up_all_your_upload_955ced', {'value1': imageLimitMb, 'value2': videoLimitMb})
               : AppConfig.isPurchaseEnabled
-              ? 'Tài khoản thường chỉ được tải lên ${imageLimitMb}MB ảnh và ${videoLimitMb}MB video mỗi ngày. Nâng cấp VIP để tải lên nhiều hơn!'
-              : 'Bạn đã dùng hết dung lượng tải lên hôm nay. Vui lòng thử lại ngày mai.',
+              ? L10nScope.of(context).format('ui_home_accounts_typically_only_upload_value1_mb_photos_c94b49', {'value1': imageLimitMb, 'value2': videoLimitMb})
+              : context.tr('ui_home_you_have_used_up_all_your_upload_44821d'),
           backgroundColor: const Color(0xFFE53935),
         );
         return;

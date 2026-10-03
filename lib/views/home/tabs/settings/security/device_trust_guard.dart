@@ -74,7 +74,7 @@ class DeviceTrustGuard {
     final unlockAtMs = trustState?.autoApproveAtMs ?? fallbackUnlockAtMs;
     final unlockLabel = formatPendingUnlockDate(unlockAtMs);
     final waitMessage = unlockLabel.isNotEmpty
-        ? 'Hãy duyệt trên thiết bị tin cậy hoặc đợi đến $unlockLabel.'
+        ? L10nService().format('ui_home_please_browse_on_a_trusted_device_or_c815cc', {'value1': unlockLabel})
         : L10nService().translate('home_hyduyttrnt_a5b595');
     return '${L10nService().translate('home_thitbnyang_707b26')}$waitMessage';
   }

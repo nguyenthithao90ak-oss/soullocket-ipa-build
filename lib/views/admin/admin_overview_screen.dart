@@ -353,15 +353,15 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                           children: [
                                                             _buildLegend(
                                                                 Colors.amber,
-                                                                'Nhà PRO ($_vipHouses)'),
+                                                                L10nScope.of(context).format('ui_admin_nh_pro_value1_fb8331', {'value1': _vipHouses})),
                                                             SLSpacing.h8,
                                                             _buildLegend(
                                                                 Colors.blue,
-                                                                'Nhà Thường (${_totalHouses - _vipHouses - _bannedHouses})'),
+                                                                L10nScope.of(context).format('ui_admin_regular_house_value1_a92081', {'value1': _totalHouses - _vipHouses - _bannedHouses})),
                                                             SLSpacing.h8,
                                                             _buildLegend(
                                                                 Colors.red,
-                                                                'Đã khóa ($_bannedHouses)'),
+                                                                L10nScope.of(context).format('ui_admin_locked_value1_7a22ed', {'value1': _bannedHouses})),
                                                           ],
                                                         )
                                                       ],

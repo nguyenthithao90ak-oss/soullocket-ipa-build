@@ -104,7 +104,7 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
 
       final scheduledAt = _pendingResetRequest?.scheduledAt ?? 0;
       _showVaultSnack(
-        'Đã lên lịch reset Kho ảnh mật vào ${_formatResetSchedule(scheduledAt)}.',
+        L10nScope.of(context).format('ui_utilities_scheduled_to_reset_secret_photo_vault_on_5dcbbf', {'value1': _formatResetSchedule(scheduledAt)}),
         variant: SLToastVariant.warning,
       );
     } catch (error) {

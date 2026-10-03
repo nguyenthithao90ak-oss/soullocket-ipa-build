@@ -938,7 +938,7 @@ extension _SettingsTabSecurityStateHelpers on _SettingsTabState {
     final unlockAtMs = trustState.autoApproveAtMs;
     final unlockLabel = _formatManagedPendingUnlockDate(unlockAtMs);
     final waitMessage = unlockLabel.isNotEmpty
-        ? 'Hãy duyệt trên thiết bị tin cậy hoặc đợi đến $unlockLabel.'
+        ? L10nService().format('ui_home_please_browse_on_a_trusted_device_or_c815cc', {'value1': unlockLabel})
         : context.tr('home_hyduyttrnt_a5b595');
     return '${context.tr('home_thitbnyang_94c8c6')}${context.tr('home_ccmckhctro_11e074')}$waitMessage';
   }

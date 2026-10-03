@@ -360,8 +360,8 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     final message = request.isProcessing
         ? context.tr('home_hthngangxl_2041f8')
         : request.isScheduled
-        ? 'Yêu cầu xóa hiện đã được lên lịch. Dữ liệu sẽ bị xóa vào ${_formatBreakupDateTime(request.deleteAt)} nếu bạn không rút lại trước thời điểm đó.'
-        : 'Yêu cầu xóa hiện vẫn đang chờ xác nhận từ thiết bị tin cậy bên kia hoặc chờ đến ${_formatBreakupDateTime(request.expireAt)} để chuyển sang lịch xóa.';
+        ? L10nService().format('ui_home_the_deletion_request_has_now_been_scheduled_3217f8', {'value1': _formatBreakupDateTime(request.deleteAt)})
+        : L10nService().format('ui_home_the_deletion_request_is_still_waiting_for_ef96d3', {'value1': _formatBreakupDateTime(request.expireAt)});
 
     try {
       await showDialog<void>(

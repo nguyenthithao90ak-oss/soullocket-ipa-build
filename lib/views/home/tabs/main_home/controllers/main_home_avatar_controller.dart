@@ -17,8 +17,8 @@ extension MainHomeAvatarController on _MainHomeTabState {
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: isUser1
-                ? 'Cắt avatar bạn nam'
-                : 'Cắt avatar người ấy',
+                ? L10nService().translate('home_ctavatarbn_f914c9')
+                : L10nService().translate('home_ctavatarng_30711f'),
             toolbarColor: const Color(0xFFD81B60),
             toolbarWidgetColor: Colors.white,
             initAspectRatio: CropAspectRatioPreset.square,
@@ -173,7 +173,7 @@ extension MainHomeAvatarController on _MainHomeTabState {
       );
       final url = upload?.downloadUrl.trim() ?? '';
       if (url.isEmpty) {
-        throw 'Không lấy được ảnh mới.';
+        throw L10nService().translate('ui_home_can_t_get_new_photos_76a1ef');
       }
 
       final oldAvatarUrl = (_houseSettings?[field] ?? '').toString().trim();

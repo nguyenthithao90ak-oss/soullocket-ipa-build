@@ -27,7 +27,7 @@ class _SingleMatchTopBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 Text(
-                  'Single Match',
+                  L10nService().translate('ui_match_single_match_title'),
                   style: SLTheme.quicksand(
                     fontSize: 24,
                     fontWeight: FontWeight.w900,

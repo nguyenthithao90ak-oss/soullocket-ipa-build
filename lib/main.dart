@@ -30,6 +30,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/material.dart';
 import 'utils/services/market_service.dart';
 import 'utils/services/soul_event_reminder_service.dart';
+import 'utils/services/calendar_reminder_service.dart';
 import 'package:soullocket_app/utils/services/infrastructure/storage_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/scheduler.dart';
@@ -297,6 +298,7 @@ void main() {
               .then((_) {
                 MarketService.instance.attachAuthListener();
                 SoulEventReminderService.instance.start();
+                CalendarReminderService.instance.start();
               })
               .timeout(const Duration(seconds: 3));
         } catch (e) {
@@ -315,6 +317,7 @@ void main() {
 
         await MarketService.instance.init();
         SoulEventReminderService.instance.start();
+        CalendarReminderService.instance.start();
         runApp(const MyApp());
         _scheduleDeferredBootstrap();
 

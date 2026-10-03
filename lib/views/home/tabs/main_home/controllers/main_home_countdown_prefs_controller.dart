@@ -37,7 +37,7 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
       if (!allowedCountdownShapeKeys.contains(resolvedCountdownShapeKey)) {
         if (mounted) {
           _showLatestSnackBar(
-            'Không thể đổi hình dạng vì mã "$resolvedCountdownShapeKey" không hợp lệ.',
+            L10nScope.of(context).format('ui_home_cannot_change_shape_because_code_value1_is_b21876', {'value1': resolvedCountdownShapeKey}),
           );
         }
         return;
@@ -68,7 +68,7 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
       if (!allowedCountdownStyleKeys.contains(resolvedCountdownStyleKey)) {
         if (mounted) {
           _showLatestSnackBar(
-            'Không thể đổi kiểu vòng đếm vì mã kiểu "$resolvedCountdownStyleKey" không hợp lệ.',
+            L10nScope.of(context).format('ui_home_cannot_change_count_ring_type_because_type_4400df', {'value1': resolvedCountdownStyleKey}),
           );
         }
         return;
@@ -90,7 +90,7 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
       if (!allowedFallingEffectKeys.contains(resolvedFallingEffectKey)) {
         if (mounted) {
           _showLatestSnackBar(
-            'Không thể đổi hiệu ứng vì mã hiệu ứng "$resolvedFallingEffectKey" không hợp lệ.',
+            L10nScope.of(context).format('ui_home_the_effect_cannot_be_changed_because_the_23aab5', {'value1': resolvedFallingEffectKey}),
           );
         }
         return;
@@ -108,7 +108,7 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
       if (!resolvedUnlockedStyles.contains(resolvedCountdownStyleKey)) {
         if (mounted) {
           _showLatestSnackBar(
-            'Kiểu "$resolvedCountdownStyleKey" chưa được mở. Hãy xem quảng cáo trong bảng tùy chỉnh để mở kiểu này.',
+            L10nScope.of(context).format('ui_home_type_value1_is_not_opened_see_the_53dbae', {'value1': resolvedCountdownStyleKey}),
           );
         }
         return;
@@ -207,7 +207,7 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
         ) {
           if (mounted) {
             _showLatestSnackBar(
-              'Đã lưu trên máy. Chưa thể đồng bộ lúc này, vui lòng thử lại sau.',
+              context.tr('home_lutrnmycha_08ba34'),
             );
           }
         }),

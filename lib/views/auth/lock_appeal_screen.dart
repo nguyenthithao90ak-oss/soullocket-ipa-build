@@ -182,7 +182,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
               primary: true,
 
               onPressed: () => Navigator.pop(context),
-              child: Text('Đã rõ'),
+              child: Text(context.tr('p3_understood')),
             ),
           ],
         ),
@@ -205,9 +205,9 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
   String _lockTitle() {
     if (_lockType == 'temporary' &&
         _lockedUntil > DateTime.now().millisecondsSinceEpoch) {
-      return 'Tạm khóa đến ${DateFormat('HH:mm - dd/MM/yyyy').format(DateTime.fromMillisecondsSinceEpoch(_lockedUntil))}';
+      return L10nService().format('ui_auth_temporarily_locked_to_value1_6554bb', {'value1': DateFormat('HH:mm - dd/MM/yyyy').format(DateTime.fromMillisecondsSinceEpoch(_lockedUntil))});
     }
-    return 'Khóa cho tới khi được xét lại';
+    return L10nService().translate('ui_auth_locked_until_reviewed_9bad7c');
   }
 
   Color _statusColor(String status) {
@@ -224,11 +224,11 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
   String _statusLabel(String status) {
     switch (status) {
       case 'approved':
-        return 'Đã duyệt';
+        return L10nService().translate('util_duyt_e451b6');
       case 'rejected':
-        return 'Từ chối';
+        return L10nService().translate('chat_decline');
       default:
-        return 'Đang chờ';
+        return L10nService().translate('util_angch_2bfffc');
     }
   }
 
@@ -333,7 +333,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
               _buildHeroChip(Icons.lock_clock_rounded, _lockTitle()),
               _buildHeroChip(
                 Icons.mark_email_read_rounded,
-                'Theo dõi ở lịch sử',
+                context.tr('ui_auth_follow_in_history_ee4144'),
               ),
             ],
           ),
@@ -374,19 +374,19 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
       subtitle: context.tr('ui_auth_soullocket_will_send_this_information_with_the_3f9313'),
       child: Column(
         children: [
-          _buildInfoRow('Nhà hiện tại', _houseName),
+          _buildInfoRow(context.tr('ui_auth_current_house_e2661c'), _houseName),
           _buildInfoRow(
-            'Mã nhà',
-            _houseId.isEmpty ? 'Chưa xác định' : _houseId,
+            context.tr('ui_auth_m_nh_1bd05b'),
+            _houseId.isEmpty ? context.tr('ui_auth_not_determined_3120f6') : _houseId,
           ),
           _buildInfoRow(
-            'Login ID',
-            _loginId.isEmpty ? 'Chưa có dữ liệu' : _loginId,
+            context.tr('ui_auth_login_id_e72a8f'),
+            _loginId.isEmpty ? context.tr('no_data') : _loginId,
           ),
-          _buildInfoRow('Email', _email.isEmpty ? 'Chưa có dữ liệu' : _email),
+          _buildInfoRow(context.tr('email'), _email.isEmpty ? context.tr('no_data') : _email),
           _buildInfoRow(
-            'Loại khóa',
-            _lockType == 'temporary' ? 'Tạm khóa' : 'Khóa thủ công',
+            context.tr('ui_auth_lock_type_51d340'),
+            _lockType == 'temporary' ? context.tr('ui_auth_temporarily_locked_4568c3') : context.tr('ui_auth_manual_lock_a72555'),
           ),
         ],
       ),
@@ -416,7 +416,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
               color: const Color(0xFF111827),
             ),
             decoration: _inputDecoration(
-              'Email, số điện thoại hoặc Zalo đang hoạt động',
+              context.tr('ui_auth_email_phone_number_or_zalo_is_active_408a6f'),
               Icons.contact_mail_rounded,
             ),
           ),
@@ -437,7 +437,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
               color: const Color(0xFF111827),
             ),
             decoration: _inputDecoration(
-              'Ví dụ: Tài khoản bị khóa nhầm, mình không thực hiện hành vi vi phạm nào trong thời điểm này...',
+              context.tr('ui_auth_for_example_the_account_was_locked_by_451da7'),
               Icons.edit_note_rounded,
             ),
           ),
@@ -581,7 +581,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
         ? DateFormat(
             'HH:mm - dd/MM/yyyy',
           ).format(DateTime.fromMillisecondsSinceEpoch(ts))
-        : 'Đang đồng bộ thời gian';
+        : L10nService().translate('ui_auth_time_synchronization_a7fbef');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

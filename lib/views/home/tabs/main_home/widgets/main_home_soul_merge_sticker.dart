@@ -127,7 +127,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
       if (type == 'photo_shot') {
         // 1. Hiển thị thông báo bằng chữ nếu được bật
         if (_showHeartNotif) {
-          _showFloatingMessage('Người ấy vừa thả tim cho bạn! 💕');
+          _showFloatingMessage(context.tr('ui_home_he_just_gave_you_his_heart_460cf6'));
         }
 
         // 2. Hiển thị hiệu ứng tim bay nếu:

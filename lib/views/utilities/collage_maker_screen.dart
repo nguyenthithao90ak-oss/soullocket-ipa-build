@@ -765,7 +765,13 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     if (newCount < minPhotos && !silent) {
       final presets = _stylePresets.where((s) => s.id == _selectedStyle);
       final label = presets.isNotEmpty ? presets.first.label : _selectedStyle;
-      SLToast.show(context, '$label cần tối thiểu $minPhotos ảnh.');
+      SLToast.show(
+        context,
+        L10nService().format('ui_utilities_collage_min_photos_value1_value2', {
+          'value1': label,
+          'value2': minPhotos,
+        }),
+      );
       return false;
     }
 
@@ -773,7 +779,13 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
       if (!silent) {
         final presets = _stylePresets.where((s) => s.id == _selectedStyle);
         final label = presets.isNotEmpty ? presets.first.label : _selectedStyle;
-        SLToast.show(context, '$label chỉ chứa tối đa $maxPhotos ảnh.');
+        SLToast.show(
+        context,
+        L10nService().format('ui_utilities_collage_max_photos_value1_value2', {
+          'value1': label,
+          'value2': maxPhotos,
+        }),
+      );
       }
       return false;
     }
@@ -1351,13 +1363,13 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
             Transform.rotate(
               angle: -0.04,
               child: _IntroChip(
-                label: 'Postcard Studio',
+                label: L10nService().translate('ui_utilities_postcard_studio_title'),
                 fixedHeight: isPhoneWidth ? 30 : 32,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              'Memory Collage',
+              L10nService().translate('ui_utilities_memory_collage_title'),
               style: _editorialStyle(
                 size: isPhoneWidth ? 21 : 23,
                 color: _paperInk,

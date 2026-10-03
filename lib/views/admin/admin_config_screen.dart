@@ -238,7 +238,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       if (targetId.isNotEmpty) {
         houseIds.add(targetId);
       } else {
-        throw 'Gửi thông báo toàn hệ thống tạm thời bị khóa. Vui lòng nhập House ID cụ thể.';
+        throw L10nService().translate('ui_admin_send_notification_that_the_entire_system_is_f73208');
       }
 
       // 2. Batch send to notifications node

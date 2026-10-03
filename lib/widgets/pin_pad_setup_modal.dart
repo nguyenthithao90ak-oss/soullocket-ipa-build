@@ -30,7 +30,7 @@ class PinPadSetupModal extends StatefulWidget {
 
   const PinPadSetupModal({
     super.key,
-    this.title = 'Thiết lập mã PIN',
+    this.title = '',
     this.subtitle,
     this.isConfirming = false,
     this.firstPin,
@@ -49,7 +49,7 @@ class PinPadSetupModal extends StatefulWidget {
 
   static Future<String?> show(
     BuildContext context, {
-    String title = 'Thiết lập mã PIN',
+    String title = '',
     String? subtitle,
     bool isConfirming = false,
     String? firstPin,
@@ -1307,36 +1307,45 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
 
   String get _defaultSubtitle {
     if (widget.isUnlock) {
-      return 'Nhập mã PIN để mở khóa ứng dụng.';
+      return L10nService().translate('pin_unlock_subtitle');
     }
     if (widget.isConfirming) {
-      return 'Nhập lại đúng mã PIN vừa rồi để xác nhận.';
+      return L10nService().translate('pin_confirm_subtitle');
     }
-    return 'Nhập 4-8 chữ số để khóa ứng dụng.';
+    return L10nService().translate('pin_setup_subtitle');
   }
 
   String get _cuteMessage {
     if (widget.isUnlock) {
-      return 'Mở cánh cửa riêng tư của hai bạn thôi nào 💖';
+      return L10nService().translate('pin_cute_unlock');
     }
     if (widget.isConfirming) {
-      return 'Xác nhận lại chiếc chìa khóa nhỏ xinh này nhé ✨';
+      return L10nService().translate('pin_cute_confirm');
     }
-    return 'Tạo một chiếc chìa khóa đáng yêu để giữ mọi điều riêng tư thật an toàn.';
+    return L10nService().translate('pin_cute_setup');
   }
 
   String get _defaultHintText {
     if (_pinSlotCount == _maxPinLength) {
-      return 'Nhập từ 4 đến 8 số.';
+      return L10nService().translate('pin_hint_4_8');
     }
-    return 'Nhập đủ $_pinSlotCount số để tiếp tục.';
+    return L10nService().format(
+      'pin_hint_exact_count',
+      {'count': _pinSlotCount},
+    );
   }
 
   String get _pinProgressText {
     if (_pinSlotCount == _maxPinLength) {
-      return '${_currentPin.length}/8 số · tối thiểu 4 số';
+      return L10nService().format(
+        'pin_progress_min',
+        {'current': _currentPin.length},
+      );
     }
-    return '${_currentPin.length}/$_pinSlotCount số';
+    return L10nService().format(
+      'pin_progress_exact',
+      {'current': _currentPin.length, 'count': _pinSlotCount},
+    );
   }
 
   @override

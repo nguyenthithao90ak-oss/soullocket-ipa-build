@@ -9,19 +9,61 @@ import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/market_catalog.dart';
+import '../calendar/calendar_time_zone.dart';
 
 /// Tùy chọn khu vực thuộc từng tài khoản trên thiết bị, độc lập ngôn ngữ.
 class MarketPreferences {
-  const MarketPreferences({this.marketCode, this.holidayPacks});
+  const MarketPreferences({
+    this.marketCode,
+    this.holidayPacks,
+    this.firstWeekday,
+    this.use24HourFormat,
+    this.secondaryCalendar,
+    this.timeZoneId,
+    this.holidayRemindersEnabled = false,
+  });
+
+  /// Ngày trong tuần dùng cho cột đầu tiên của lưới: DateTime.monday,
+  /// DateTime.saturday hoặc DateTime.sunday. null nghĩa là theo hồ sơ vùng.
+  static const supportedFirstWeekdays = <int>{
+    DateTime.monday,
+    DateTime.saturday,
+    DateTime.sunday,
+  };
+
+  static const supportedSecondaryCalendars = <String>{
+    'buddhist',
+    'islamic-civil',
+  };
+
   final String? marketCode;
   final List<String>? holidayPacks;
+  final int? firstWeekday;
+  final bool? use24HourFormat;
+  final String? secondaryCalendar;
+  final String? timeZoneId;
+  final bool holidayRemindersEnabled;
 
   factory MarketPreferences.fromJson(Object? raw) {
-    if (raw is! Map || raw['schemaVersion'] != 1) {
+    if (raw is! Map) {
       return const MarketPreferences();
     }
+    final schema = int.tryParse(raw['schemaVersion']?.toString() ?? '');
+    // V1 chỉ có marketCode/holidayPacks. Đọc được cả V1 và V2 để nâng cấp
+    // dần trên thiết bị và cloud, không làm mất lựa chọn cũ.
+    if (schema != 1 && schema != 2) return const MarketPreferences();
     final code = MarketCatalog.find(raw['marketCode']?.toString())?.code;
     final packs = raw['holidayPacks'];
+    final rawWeekday = raw['firstWeekday'];
+    final weekday = int.tryParse(rawWeekday?.toString() ?? '');
+    final normalizedWeekday = supportedFirstWeekdays.contains(weekday)
+        ? weekday
+        : null;
+    final rawSecondary = raw['secondaryCalendar']?.toString().trim();
+    final secondary = supportedSecondaryCalendars.contains(rawSecondary)
+        ? rawSecondary
+        : null;
+    final rawTimeZone = raw['timeZoneId']?.toString().trim();
     return MarketPreferences(
       marketCode: code,
       holidayPacks: packs is List
@@ -34,15 +76,29 @@ class MarketPreferences {
           : raw['useDefaultHolidayPacks'] == false
           ? const []
           : null,
+      firstWeekday: normalizedWeekday,
+      use24HourFormat: raw['use24HourFormat'] is bool
+          ? raw['use24HourFormat'] as bool
+          : null,
+      secondaryCalendar: secondary,
+      timeZoneId: isValidTimeZoneId(rawTimeZone) ? rawTimeZone : null,
+      holidayRemindersEnabled: raw['holidayRemindersEnabled'] == true,
     );
   }
 
   Map<String, Object?> toJson() => {
-    'schemaVersion': 1,
+    'schemaVersion': 2,
     'useDefaultHolidayPacks': holidayPacks == null,
     if (marketCode != null) 'marketCode': marketCode,
     if (holidayPacks != null) 'holidayPacks': holidayPacks,
+    if (firstWeekday != null) 'firstWeekday': firstWeekday,
+    if (use24HourFormat != null) 'use24HourFormat': use24HourFormat,
+    if (secondaryCalendar != null) 'secondaryCalendar': secondaryCalendar,
+    if (timeZoneId != null) 'timeZoneId': timeZoneId,
+    'holidayRemindersEnabled': holidayRemindersEnabled,
   };
+
+  static bool isValidTimeZoneId(String? value) => CalendarTimeZone.isValidId(value);
 }
 
 enum MarketSyncState { localOnly, syncing, synced, pending }
@@ -307,7 +363,10 @@ class MarketService extends ChangeNotifier with WidgetsBindingObserver {
           }
           return;
         }
-        if (raw is! Map || raw['schemaVersion'] != 1) {
+        final schema = raw is Map
+            ? int.tryParse(raw['schemaVersion']?.toString() ?? '')
+            : null;
+        if (raw is! Map || (schema != 1 && schema != 2)) {
           _setSyncState(MarketSyncState.pending, key);
           return;
         }

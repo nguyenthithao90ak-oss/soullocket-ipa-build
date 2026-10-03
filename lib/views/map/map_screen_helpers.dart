@@ -5,18 +5,18 @@ extension _MapScreenHelpers on _MapScreenState {
     if (total <= 0) return L10nService().translate('map_chacghimkn_c6823f');
     final visible = math.min(total, _kMaxRenderedMemoryMarkers);
     if (total <= _kMaxRenderedMemoryMarkers) {
-      return '$total ghim kỷ niệm trên bản đồ';
+      return L10nService().format('ui_map_value1_commemorative_pin_on_the_map_12c022', {'value1': total});
     }
-    return '$total ghim • đang hiển thị $visible mới nhất';
+    return L10nService().format('ui_map_value1_pin_is_showing_the_latest_value2_3af554', {'value1': total, 'value2': visible});
   }
 
   String _buildCheckinSummaryLabel(int total) {
     if (total <= 0) return L10nService().translate('map_chacchecki_51b108');
     final visible = math.min(total, _kMaxRenderedCheckinMarkers);
     if (total <= _kMaxRenderedCheckinMarkers) {
-      return '$total check-in gần đây';
+      return L10nService().format('ui_map_value1_recent_check_in_4323c6', {'value1': total});
     }
-    return '$total check-in • đang hiển thị $visible mới nhất';
+    return L10nService().format('ui_map_value1_check_in_is_showing_the_latest_d601be', {'value1': total, 'value2': visible});
   }
 
   String _formatFullDate(int ts) {

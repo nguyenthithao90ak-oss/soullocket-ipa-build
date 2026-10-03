@@ -232,7 +232,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
             Future<void> handleAction(_ChatInfoShortcut shortcut) async {
               if (!shortcut.enabled) {
                 _showNotice(
-                  'Mục này chỉ dùng được khi đoạn chat đang mở.',
+                  context.tr('ui_chat_this_item_is_only_available_when_the_bbabb7'),
                   error: true,
                 );
                 return;
@@ -632,8 +632,8 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                                                   currentBackgroundUrl
                                                       .trim()
                                                       .isEmpty
-                                                  ? 'Mặc định'
-                                                  : 'Đã đặt',
+                                                  ? context.tr('comm_mcnh_a57a8e')
+                                                  : context.tr('ui_chat_booked_81898d'),
                                               color: const Color(0xFF8B5CF6),
                                             ),
                                           ),
@@ -643,7 +643,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                                               icon: Icons.badge_outlined,
                                               label: context.tr('ui_chat_nickname_5206ed'),
                                               value: _nickname.trim().isEmpty
-                                                  ? 'Chưa đặt'
+                                                  ? context.tr('settings_not_set')
                                                   : _nickname.trim(),
                                               color: const Color(0xFFD81B60),
                                             ),
@@ -668,20 +668,20 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                           ),
                         ),
                         SLSpacing.h16,
-                        sectionTitle('Cá nhân hóa'),
+                        sectionTitle(context.tr('settings_menu_preferences')),
                         actionTile(shortcutById['chat_background']!),
                         SLSpacing.h8,
                         actionTile(shortcutById['nickname']!),
                         SLSpacing.h8,
                         actionTile(shortcutById['quick_reaction']!),
                         SLSpacing.h16,
-                        sectionTitle('Quản lý chat'),
+                        sectionTitle(context.tr('ui_chat_chat_management_00dfb0')),
                         ...managementActions.expand(
                           (shortcut) => [actionTile(shortcut), SLSpacing.h8],
                         ),
                         if (safetyActions.isNotEmpty) ...[
                           SLSpacing.h8,
-                          sectionTitle('An toàn'),
+                          sectionTitle(context.tr('home_anton_94fd1f')),
                           ...safetyActions.expand(
                             (shortcut) => [actionTile(shortcut), SLSpacing.h8],
                           ),
@@ -886,14 +886,14 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
   Future<void> _createGroupDraftFromChat() async {
     final snap = await _dbRef.child('friends/${widget.myHouseId}').get();
     if (!snap.exists || snap.value is! Map) {
-      _showNotice('Bạn chưa có bạn bè để tạo nhóm.', error: true);
+      _showNotice(context.tr('ui_chat_you_don_t_have_friends_to_create_211177'), error: true);
       return;
     }
     final raw = Map<dynamic, dynamic>.from(snap.value as Map);
     final allFriendIds = raw.keys.map((item) => item.toString()).toList()
       ..sort();
     if (allFriendIds.isEmpty) {
-      _showNotice('Bạn chưa có bạn bè để tạo nhóm.', error: true);
+      _showNotice(context.tr('ui_chat_you_don_t_have_friends_to_create_211177'), error: true);
       return;
     }
 
@@ -1086,7 +1086,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
     }
     nextDrafts.insert(0, draft);
     await prefs.setString(_groupDraftPrefsKey, jsonEncode(nextDrafts));
-    _showNotice('Đã tạo nhóm. Mở tab Nhóm ở Messenger để quản lý.');
+    _showNotice(context.tr('ui_chat_group_created_open_the_group_tab_in_72f0c7'));
   }
 
   Future<void> _blockTargetHouse() async {
@@ -1128,11 +1128,11 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
         removeFriendLinks: true,
       );
       if (!mounted) return;
-      _showNotice('Đã chặn người dùng.');
+      _showNotice(context.tr('p5_profile_blocked'));
       Navigator.of(context).pop();
     } catch (e) {
       _showNotice(
-        'Chưa thể chặn người dùng lúc này. Vui lòng thử lại.',
+        context.tr('home_chathchnng_81d840'),
         error: true,
       );
     }
@@ -1159,7 +1159,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
               destructive: true,
 
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Xóa'),
+              child: Text(context.tr('p3_delete')),
             ),
           ],
         );
@@ -1186,10 +1186,10 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
       }
       if (!mounted) return;
       _replaceMessageState(const []);
-      _showNotice('Đã xóa lịch sử cuộc trò chuyện.');
+      _showNotice(context.tr('ui_chat_deleted_conversation_history_671443'));
     } catch (e) {
       _showNotice(
-        'Chưa thể xóa đoạn chat lúc này. Vui lòng thử lại.',
+        context.tr('ui_chat_the_chat_cannot_be_deleted_at_this_af6619'),
         error: true,
       );
     }
@@ -1273,10 +1273,10 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
         reporterHouseId: widget.myHouseId,
         reason: reason,
       );
-      _showNotice('Đã gửi báo cáo. Cảm ơn bạn đã phản hồi.');
+      _showNotice(context.tr('p9_group_chat_report_success'));
     } catch (e) {
       _showNotice(
-        'Chưa thể gửi báo cáo lúc này. Vui lòng thử lại.',
+        context.tr('p9_group_chat_report_failed'),
         error: true,
       );
     }
@@ -1304,12 +1304,12 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
       backgroundColor: Colors.transparent,
       builder: (context) {
         final reactions = [
-          {'emoji': '\u2764\uFE0F', 'label': 'Yêu'},
-          {'emoji': '\u{1F602}', 'label': 'Buồn cười'},
-          {'emoji': '\u{1F62E}', 'label': 'Bất ngờ'},
-          {'emoji': '\u{1F622}', 'label': 'Buồn'},
-          {'emoji': '\u{1F621}', 'label': 'Giận'},
-          {'emoji': '\u{1F44D}', 'label': 'Thích'},
+          {'emoji': '\u2764\uFE0F', 'label': context.tr('home_yu_b0b34f')},
+          {'emoji': '\u{1F602}', 'label': context.tr('ui_chat_funny_d3bfa0')},
+          {'emoji': '\u{1F62E}', 'label': context.tr('ui_chat_surprise_5ae132')},
+          {'emoji': '\u{1F622}', 'label': context.tr('home_bun_cc7bc1')},
+          {'emoji': '\u{1F621}', 'label': context.tr('home_gin_6a4c8c')},
+          {'emoji': '\u{1F44D}', 'label': context.tr('call_btn_like')},
         ];
         return Container(
           margin: SLSpacing.all20,

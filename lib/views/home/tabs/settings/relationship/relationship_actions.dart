@@ -348,7 +348,7 @@ class SettingsRelationshipActions {
       return L10nService().translate('home_hthngangdn_fae73f');
     }
     if (request.isScheduled) {
-      return 'Dữ liệu sẽ bị xóa vào ${_formatDateTime(request.deleteAt)} nếu bạn không rút lại trước hạn.';
+      return L10nService().format('ui_home_the_data_will_be_deleted_on_value1_29eed8', {'value1': _formatDateTime(request.deleteAt)});
     }
     if (isSingle) {
       return L10nService().translate('home_tikhoncthn_7650c0');
@@ -356,7 +356,7 @@ class SettingsRelationshipActions {
     final expireLabel = request.expireAt > 0
         ? _formatDateTime(request.expireAt)
         : L10nService().translate('home_khicthayim_65b886');
-    return 'Yêu cầu đang chờ thiết bị bên kia hoặc hệ thống tự xử lý đến $expireLabel.';
+    return L10nService().format('ui_home_the_request_is_waiting_for_the_other_3a588c', {'value1': expireLabel});
   }
 
   static String statusLabel({

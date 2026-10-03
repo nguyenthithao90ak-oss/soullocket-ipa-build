@@ -380,7 +380,7 @@ extension _SettingsTabShell on _SettingsTabState {
                           physics: SLResponsive.scrollPhysicsForPlatform(),
                           padding: EdgeInsets.only(
                             top: headerHeight,
-                            bottom: 120,
+                            bottom: MediaQuery.paddingOf(context).bottom + 16,
                           ),
                           children: [
                             _buildSettingsSyncBanner(),
@@ -403,7 +403,7 @@ extension _SettingsTabShell on _SettingsTabState {
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   ..._buildNewSettingsList(isDark),
-                                  const SizedBox(height: 26),
+                                  const SizedBox(height: 16),
                                   _buildSettingsFooter(),
                                 ],
                               ),
@@ -1080,86 +1080,8 @@ extension _SettingsTabShell on _SettingsTabState {
   }
 
   Widget _buildSettingsFooter() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 4, 24, 28),
-      child: Center(
-        child: Column(
-          children: [
-            Transform.rotate(
-              angle: -0.035,
-              child: Container(
-                width: 52,
-                height: 52,
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: SLColors.paper,
-                  borderRadius: BorderRadius.circular(17),
-                  border: Border.all(color: SLColors.border),
-                  boxShadow: SLShadow.subtle,
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(13),
-                  child: Image.asset('assets/icon.png', fit: BoxFit.cover),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'SoulLocket',
-              style: SLTheme.textStyleForKey(
-                'dancingScript',
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: SLColors.ink,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              context.tr('settings_footer_tagline'),
-              textAlign: TextAlign.center,
-              style: SLTheme.quicksand(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w700,
-                color: SLColors.textSecond,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              context.tr('settings_copyright_short'),
-              textAlign: TextAlign.center,
-              style: SLTheme.quicksand(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w600,
-                color: SLColors.textTertiary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            /*
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 24),
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFCE4EC).withValues(alpha: 0.45),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: const Color(0xFFD81B60).withValues(alpha: 0.12),
-              ),
-            ),
-            child: Text(
-              '© ${DateTime.now().year} Tame Trương Việt Hoàng. SoulLocket có bản quyền. Mọi hành vi crack, mod, can thiệp trái phép đều bị nghiêm cấm.',
-              textAlign: TextAlign.center,
-              style: SLTheme.quicksand(
-                fontSize: 9,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFFAD1457).withValues(alpha: 0.7),
-                height: 1.4,
-              ),
-            ),
-          ),
-          */
-          ],
-        ),
-      ),
+    return SettingsMenuFooter(
+      tagline: context.tr('settings_footer_tagline'),
     );
   }
 

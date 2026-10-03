@@ -2082,7 +2082,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            'PRO (TEST) 🔓',
+                            L10nService().translate('ui_home_pro_test_unlocked_badge'),
                             style: SLTheme.quicksand(
                               color: Colors.black,
                               fontSize: 9,

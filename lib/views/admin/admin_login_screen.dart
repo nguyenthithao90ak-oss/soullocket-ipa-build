@@ -63,7 +63,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
     if (now < lockoutUntil) {
       final remainingMinutes = ((lockoutUntil - now) / 1000 / 60).ceil();
       setState(() => _errorText =
-          'Tài khoản bị khóa tạm thời. Vui lòng thử lại sau $remainingMinutes phút.');
+          L10nService().format('ui_admin_account_is_temporarily_locked_please_try_again_76409d', {'value1': remainingMinutes}));
       return;
     }
 
@@ -97,7 +97,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
         await prefs.setInt('admin_lockout_until', lockoutTime);
         setState(() {
           _errorText =
-              'Bạn đã nhập sai quá $maxFailedAttempts lần. Tài khoản bị khóa tạm thời trong $lockoutDurationMinutes phút.';
+              L10nService().format('ui_admin_you_entered_value1_incorrectly_too_many_times_89c1bd', {'value1': maxFailedAttempts, 'value2': lockoutDurationMinutes});
         });
       } else {
         debugPrint('Admin login failed: ${AppErrorMapper.resolve(
@@ -105,17 +105,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
           fallbackMessage: loginErrorFallback,
         ).message}');
         setState(() {
-          _errorText = '${_adminLoginErrorText(
-            error,
-            invalidEmail: invalidEmailMsg,
-            wrongCreds: wrongCredsMsg,
-            disabled: disabledMsg,
-            tooManyRequests: tooManyRequestsMsg,
-            networkFailed: networkFailedMsg,
-            adminRoleMissing: adminRoleMissingTerm,
-            noAccess: noAccessMsg,
-            genericError: genericLoginErrorMsg,
-          )}\n(Sai $newFailedAttempts/$maxFailedAttempts lần)';
+          _errorText = L10nService().format('ui_admin_value1_wrong_value2_value3_times_e8a886', {'value1': _adminLoginErrorText(error, invalidEmail: invalidEmailMsg, wrongCreds: wrongCredsMsg, disabled: disabledMsg, tooManyRequests: tooManyRequestsMsg, networkFailed: networkFailedMsg, adminRoleMissing: adminRoleMissingTerm, noAccess: noAccessMsg, genericError: genericLoginErrorMsg), 'value2': newFailedAttempts, 'value3': maxFailedAttempts});
         });
       }
     } finally {

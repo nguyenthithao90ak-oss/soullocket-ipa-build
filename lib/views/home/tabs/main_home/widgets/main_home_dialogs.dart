@@ -752,7 +752,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
               : DateTime.fromMillisecondsSinceEpoch(cooldownUntil);
           final message = unlockAt == null
               ? msgDatingCooldown
-              : 'Bạn cần chờ đến ${unlockAt.day}/${unlockAt.month}/${unlockAt.year} mới có thể đổi ngày yêu tiếp.';
+              : L10nService().format('ui_home_you_need_to_wait_until_value1_value2_4499b0', {'value1': unlockAt.day, 'value2': unlockAt.month, 'value3': unlockAt.year});
           scaffoldMessenger?.showSnackBar(SLSnackBar(content: Text(message)));
           return;
         }

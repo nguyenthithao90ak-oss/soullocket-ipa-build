@@ -54,7 +54,7 @@ class LoveCardService {
         final cardsMap = cardsSnap.value as Map;
         if (cardsMap.length >= 100) {
           throw Exception(
-            'Hộp thư tình yêu đã đạt giới hạn (tối đa 100 thiệp). Vui lòng xoá bớt trước khi gửi thêm.',
+            L10nService().translate('ui_utilities_the_love_mailbox_has_reached_its_limit_cb9f85'),
           );
         }
       }

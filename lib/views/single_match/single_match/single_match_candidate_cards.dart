@@ -127,7 +127,7 @@ class _SingleMatchFeaturedCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       [
-                        if (candidate.age != null) '${candidate.age} tuổi',
+                        if (candidate.age != null) L10nService().format('ui_single_value1_age_750f44', {'value1': candidate.age}),
                         goalLabel,
                         voiceLabel,
                       ].join(' • '),
@@ -401,7 +401,7 @@ class _SingleMatchCandidateCard extends StatelessWidget {
                       const SizedBox(height: 6),
                       Text(
                         [
-                          if (candidate.age != null) '${candidate.age} tuổi',
+                          if (candidate.age != null) L10nService().format('ui_single_value1_age_750f44', {'value1': candidate.age}),
                           goalLabel,
                           voiceLabel,
                         ].join(' • '),

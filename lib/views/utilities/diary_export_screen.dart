@@ -193,7 +193,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
     setState(() {
       _isExportingAll = true;
       _exportProgress = 0;
-      _exportStatus = 'Đang bắt đầu...';
+      _exportStatus = L10nService().translate('ui_utilities_starting_302522');
     });
 
     try {
@@ -447,7 +447,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
           _buildFeatureLine(
             Icons.folder_zip_rounded,
             'ZIP',
-            'Gói tất cả diary + ảnh kỷ niệm thành file ZIP',
+            context.tr('ui_utilities_package_all_diary_commemorative_photos_into_zip_bbc54d'),
           ),
         ],
       ),
@@ -581,19 +581,19 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
                 _actionIcon(
                   Icons.file_download_rounded,
                   const Color(0xFF15803D),
-                  'Lưu xuống',
+                  L10nService().translate('ui_utilities_save_to_device_2562f6'),
                   () => _saveToDownloads(record.filePath, fileName),
                 ),
                 _actionIcon(
                   Icons.open_in_new_rounded,
                   const Color(0xFF7C4DFF),
-                  'Mở file',
+                  L10nService().translate('ui_utilities_open_the_file_5cbe70'),
                   () => _openFile(record.filePath),
                 ),
                 _actionIcon(
                   Icons.share_rounded,
                   const Color(0xFF5DA9FF),
-                  'Chia sẻ',
+                  L10nService().translate('share'),
                   () => _shareFile(record.filePath),
                 ),
                 _actionIcon(

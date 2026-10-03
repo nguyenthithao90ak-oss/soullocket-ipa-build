@@ -360,8 +360,7 @@ class ScheduleNotifService {
         if (!isCurrentScope()) return;
         if (event.daysUntil < 0 || event.daysUntil > 3) continue;
 
-        final notifId =
-            'sched_d${event.daysUntil}_${event.eventKey.hashCode.toUnsigned(32).toRadixString(16)}';
+        final notifId = _notificationIdFor(event);
         final presentation = describeScheduleNotification(
           notificationId: notifId,
           fallbackTitle: _fallbackScheduleTitle(event.daysUntil),
@@ -388,6 +387,10 @@ class ScheduleNotifService {
     } finally {
       await authSubscription.cancel();
     }
+  }
+
+  String _notificationIdFor(UpcomingEvent event) {
+    return 'sched_d${event.daysUntil}_${event.eventKey.hashCode.toUnsigned(32).toRadixString(16)}';
   }
 
   Query _calendarQuery(

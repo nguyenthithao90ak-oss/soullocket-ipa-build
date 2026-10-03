@@ -333,16 +333,16 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
   String _pickWeatherCareTitle(String type) {
     final options = type == 'hot'
         ? <String>[
-            '${_resolveMyName()} phát hiện bạn đang nóng quá trời',
-            '${_resolveMyName()} gửi cảnh báo thời tiết level đổ mồ hôi',
-            '${_resolveMyName()} nhắc bạn hạ nhiệt liền nha',
-            '${_resolveMyName()} thấy bên bạn nóng quá nên réo ngay',
+            L10nService().format('ui_home_value1_detects_that_you_are_overheating_3a302f', {'value1': _resolveMyName()}),
+            L10nService().format('ui_home_value1_sends_sweat_level_weather_alert_743286', {'value1': _resolveMyName()}),
+            L10nService().format('ui_home_value1_reminds_you_to_cool_down_immediately_4cb478', {'value1': _resolveMyName()}),
+            L10nService().format('ui_home_value1_saw_that_your_side_was_too_f74e9b', {'value1': _resolveMyName()}),
           ]
         : <String>[
-            '${_resolveMyName()} thấy bên bạn lạnh quá rồi',
-            '${_resolveMyName()} gửi báo động giữ ấm khẩn cấp',
-            '${_resolveMyName()} nhắc bạn mặc ấm ngay nha',
-            '${_resolveMyName()} thấy trời bên bạn lạnh nên lo liền',
+            L10nService().format('ui_home_value1_feels_so_cold_around_you_1f43d6', {'value1': _resolveMyName()}),
+            L10nService().format('ui_home_value1_sends_emergency_warming_alarm_5fb7df', {'value1': _resolveMyName()}),
+            L10nService().format('ui_home_value1_reminds_you_to_dress_warmly_9f9182', {'value1': _resolveMyName()}),
+            L10nService().format('ui_home_value1_saw_that_the_weather_around_you_b0ec98', {'value1': _resolveMyName()}),
           ];
     return options[_random.nextInt(options.length)];
   }

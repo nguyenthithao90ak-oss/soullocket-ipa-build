@@ -11,7 +11,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
               houseId: widget.myHouseId,
               title: MilitaryLockService.getScopeTitle(LockScope.chat),
               reason:
-                  'Mở khóa để xem lại cuộc trò chuyện với ${_nickname.trim().isEmpty ? widget.targetName : _nickname.trim()}.',
+                  L10nService().format('ui_chat_unlock_to_review_the_conversation_with_value1_c2d8c8', {'value1': _nickname.trim().isEmpty ? widget.targetName : _nickname.trim()}),
             )
           : false;
       if (mounted) {
@@ -62,10 +62,10 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
             final days = result.daysAdded ?? 0;
             if (days > 0) {
               displayMessage =
-                  '🎉 Chúc mừng! Bạn đã nhận thành công $days ngày VIP PRO.';
+                  L10nService().format('ui_chat_congratulations_you_have_successfully_received_value1_vip_b6450f', {'value1': days});
             } else {
               displayMessage =
-                  '🎉 Chúc mừng! Bạn đã kích hoạt mã quà tặng thành công.';
+                  L10nService().translate('ui_chat_congratulations_you_have_successfully_activated_the_gift_2ccae4');
             }
           }
 
@@ -284,8 +284,8 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
 
       if (sentCount >= limit) {
         final noticeMsg = vipAccess.isVip
-            ? 'Bạn đã đạt giới hạn gửi 50 ảnh/ngày cho tài khoản Pro.'
-            : 'Oops! 😢 Cậu đã gửi hết 20 ảnh/ngày của tài khoản thường mất rồi. Nâng cấp PRO để tha hồ gửi 50 ảnh/ngày nha! 💕';
+            ? L10nService().translate('ui_chat_you_have_reached_the_sending_limit_of_debc2f')
+            : L10nService().translate('ui_chat_oops_you_ve_sent_all_20_photos_372f19');
         _showNotice(noticeMsg, error: true);
         return;
       }
@@ -340,7 +340,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       }
     } catch (e) {
       if (!mounted) return;
-      _showNotice('Chưa thể gửi ảnh lúc này. Vui lòng thử lại.', error: true);
+      _showNotice(context.tr('ui_chat_can_t_send_photos_at_this_time_a8440f'), error: true);
     } finally {
       if (mounted) {
         setState(() => _isUploading = false);
@@ -455,14 +455,14 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       await _saveChatMute(nextValue);
       _showNotice(
         nextValue
-            ? 'Đã tắt thông báo cho cuộc chat này.'
-            : 'Đã bật lại thông báo cho cuộc chat này.',
+            ? context.tr('ui_chat_notifications_for_this_chat_have_been_turned_62a0d8')
+            : context.tr('ui_chat_notifications_have_been_turned_back_on_for_1e4a51'),
       );
     } catch (e) {
       if (!mounted) return;
       setState(() => _isChatMuted = !nextValue);
       _showNotice(
-        'Chưa thể cập nhật thông báo lúc này. Vui lòng thử lại.',
+        context.tr('p9_group_chat_notification_update_failed'),
         error: true,
       );
     }
@@ -550,7 +550,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       final nextUrl = uploadResult?.downloadUrl.trim() ?? '';
       final nextStoragePath = uploadResult?.storagePath.trim() ?? '';
       if (nextUrl.isEmpty || nextStoragePath.isEmpty) {
-        throw 'Không thể tải nền chat lên lúc này.';
+        throw L10nService().translate('ui_chat_chat_background_cannot_be_uploaded_at_this_5d1a3c');
       }
 
       await _chatService.updateChatBackground(
@@ -575,7 +575,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
           'Delete old chat background after commit failed: ${AppErrorMapper.cleanMessage(cleanupError)}',
         );
         _showNotice(
-          'Đã cập nhật nền chat nhưng chưa xóa được file cũ. Vui lòng thử lại.',
+          context.tr('ui_chat_the_chat_background_has_been_updated_but_8095b4'),
           error: true,
         );
         return;
@@ -583,7 +583,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       await PendingUploadService.instance.clear(
         _pendingChatBackgroundUploadKey,
       );
-      _showNotice('Đã cập nhật nền chat.');
+      _showNotice(context.tr('ui_chat_updated_chat_background_b3d37a'));
     } catch (e) {
       if (!didPersistNewBackground) {
         final uploadedPath = uploadResult?.storagePath.trim() ?? '';
@@ -603,7 +603,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
         }
       }
       _showNotice(
-        'Chưa thể cập nhật nền chat lúc này. Vui lòng thử lại.',
+        context.tr('ui_chat_chat_background_cannot_be_updated_at_this_5ccf1c'),
         error: true,
       );
     } finally {
@@ -625,7 +625,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
         currentBackgroundUrl.trim().isNotEmpty ||
         currentBackgroundStoragePath.trim().isNotEmpty;
     if (!hasBackground) {
-      _showNotice('Đoạn chat này chưa có nền riêng.');
+      _showNotice(context.tr('ui_chat_this_chat_does_not_have_its_own_f59ecd'));
       return;
     }
 
@@ -643,10 +643,10 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
         previousBackgroundUrl: currentBackgroundUrl,
         previousBackgroundStoragePath: currentBackgroundStoragePath,
       );
-      _showNotice('Đã xóa nền chat.');
+      _showNotice(context.tr('ui_chat_removed_chat_background_cc75d0'));
     } catch (e) {
       _showNotice(
-        'Chưa thể xóa nền chat lúc này. Vui lòng thử lại.',
+        context.tr('ui_chat_it_is_not_possible_to_delete_the_672dcc'),
         error: true,
       );
     } finally {
@@ -700,7 +700,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
 
     final deletedByUrl = await _storageService.deleteImageByUrl(oldUrl);
     if (!deletedByUrl) {
-      throw Exception('Không thể xóa file nền chat cũ trên Firebase Storage.');
+      throw Exception(L10nService().translate('ui_chat_old_chat_background_files_cannot_be_deleted_c6e145'));
     }
   }
 }

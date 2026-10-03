@@ -110,7 +110,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
           return;
         }
         _showRootSnackBar(
-          'Đã khôi phục ảnh đang chọn trước đó. Mở lại chức năng ảnh để tiếp tục.',
+          context.tr('ui_app_the_previously_selected_photo_has_been_restored_635a59'),
         );
       }());
 

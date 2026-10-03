@@ -57,15 +57,16 @@ class BuildSignatureService {
     final raw = await _bootstrapChannel.invokeMapMethod<String, dynamic>(
       _signatureMethod,
     );
-    final status =
-        (raw?['status'] as String? ?? 'package_info_unavailable').trim();
+    final status = (raw?['status'] as String? ?? 'package_info_unavailable')
+        .trim();
     final reasonCode =
         (raw?['reasonCode'] as String? ?? _signatureMismatchReasonCode).trim();
     final isTrusted = raw?['isTrusted'] == true;
     return AppSignatureStatus(
       status: status,
-      reasonCode:
-          reasonCode.isEmpty ? _signatureMismatchReasonCode : reasonCode,
+      reasonCode: reasonCode.isEmpty
+          ? _signatureMismatchReasonCode
+          : reasonCode,
       isTrusted: isTrusted,
     );
   }

@@ -124,7 +124,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
                 ? data['msg'].toString().trim()
                 : msgNewDeviceBody;
 
-            _showLatestSnackBarImpl('âš ï¸ $title: $body');
+            _showLatestSnackBarImpl(L10nScope.of(context).format('ui_home_value1_value2_e3b4c7', {'value1': title, 'value2': body}));
           },
           onError: (Object error) {
             if (error.toString().contains('permission-denied')) {

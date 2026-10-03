@@ -89,17 +89,16 @@ class _MessengerScreenState extends State<MessengerScreen>
   static const Duration _friendRealtimeReleaseDelay = Duration(seconds: 5);
   static const Duration _realtimeUiDebounce = Duration(milliseconds: 140);
   static const int _friendRealtimeWarmupCount = 3;
-  static const ChatMessagePreviewLabels
-  _lastMessagePreviewLabels = ChatMessagePreviewLabels(
+  static ChatMessagePreviewLabels get _lastMessagePreviewLabels => ChatMessagePreviewLabels(
     fallback:
-        'Nh\u1ea5n \u0111\u1ec3 b\u1eaft \u0111\u1ea7u tr\u00f2 chuy\u1ec7n...',
+        L10nService().translate('messenger_start_conversation'),
     callInvite:
-        '\u0110\u00e3 b\u1eaft \u0111\u1ea7u m\u1ed9t cu\u1ed9c g\u1ecdi',
-    watchInvite: '\u0110\u00e3 chia s\u1ebb ph\u00f2ng xem chung',
-    image: '\u0110\u00e3 g\u1eedi m\u1ed9t h\u00ecnh \u1ea3nh',
-    share: '\u0110\u00e3 chia s\u1ebb m\u1ed9t b\u00e0i vi\u1ebft',
+        L10nService().translate('ui_chat_b_t_u_m_t_cu_c_9ec67f'),
+    watchInvite: L10nService().translate('ui_chat_chia_s_ph_ng_xem_chung_d1656b'),
+    image: L10nService().translate('ui_chat_g_i_m_t_h_nh_nh_141621'),
+    share: L10nService().translate('ui_chat_chia_s_m_t_b_i_vi_b78759'),
   );
-  static const String _deletedUserLabel = 'Người dùng đã xóa';
+  static String get _deletedUserLabel => L10nService().translate('chat_deleted_user');
 
   @override
   void initState() {
@@ -713,12 +712,12 @@ class _MessengerScreenState extends State<MessengerScreen>
       );
     }
 
-    addMate(nameKey: 'nameU1', avatarKey: 'avtUser1', fallbackName: 'Người 1');
+    addMate(nameKey: 'nameU1', avatarKey: 'avtUser1', fallbackName: L10nService().translate('ui_chat_person_1_498b95'));
     if (!_isSingleHouse(friendId)) {
       addMate(
         nameKey: 'nameU2',
         avatarKey: 'avtUser2',
-        fallbackName: 'Người 2',
+        fallbackName: L10nService().translate('ui_chat_person_2_f7840f'),
       );
     }
 
@@ -851,11 +850,11 @@ class _MessengerScreenState extends State<MessengerScreen>
 
   String _presenceLabel(Map<dynamic, dynamic>? raw) {
     if (_presenceIsOnline(raw)) {
-      return '\u0110ang online';
+      return L10nService().translate('ui_chat_online_2d064b');
     }
     final lastSeen = _presenceLastSeen(raw);
     if (lastSeen == null) {
-      return 'Ch\u01b0a r\u00f5 tr\u1ea1ng th\u00e1i';
+      return L10nService().translate('ui_chat_status_unknown_7f02cb');
     }
     return PresenceService.formatLastSeen(lastSeen);
   }
@@ -878,11 +877,11 @@ class _MessengerScreenState extends State<MessengerScreen>
 
   String _internalPartnerStatusLabel() {
     if (_rolePresenceIsOnline(_internalPartnerPresence)) {
-      return '\u0110ang online';
+      return L10nService().translate('ui_chat_online_2d064b');
     }
     final lastSeen = _rolePresenceLastSeen(_internalPartnerPresence);
     if (lastSeen == null) {
-      return 'Ch\u01b0a r\u00f5 tr\u1ea1ng th\u00e1i';
+      return L10nService().translate('ui_chat_status_unknown_7f02cb');
     }
     return PresenceService.formatLastSeen(lastSeen);
   }
@@ -895,13 +894,14 @@ class _MessengerScreenState extends State<MessengerScreen>
 
   String _formatLastMessage(
     Map<dynamic, dynamic>? raw, {
-    String fallback =
-        'Nh\u1ea5n \u0111\u1ec3 b\u1eaft \u0111\u1ea7u tr\u00f2 chuy\u1ec7n...',
+    String? fallback,
   }) {
+    final fallbackText =
+        fallback ?? L10nService().translate('messenger_start_conversation');
     return formatChatMessagePreview(
       raw,
       labels: _lastMessagePreviewLabels,
-      fallbackOverride: fallback,
+      fallbackOverride: fallbackText,
     );
   }
 
@@ -1025,7 +1025,7 @@ class _MessengerScreenState extends State<MessengerScreen>
       formatChatMessagePreview(
         group.lastMessage,
         labels: _lastMessagePreviewLabels,
-        fallbackOverride: 'Tạo lúc ',
+        fallbackOverride: L10nService().translate('ui_chat_create_at_16e7d3'),
       ),
     );
   }
