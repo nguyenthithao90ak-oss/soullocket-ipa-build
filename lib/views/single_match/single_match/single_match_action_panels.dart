@@ -130,7 +130,7 @@ class _SingleMatchActiveFiltersCard extends StatelessWidget {
               _SingleMatchFilterChip(
                 icon: Icons.cake_outlined,
                 label:
-                    '${current.preferredAgeMin}-${current.preferredAgeMax} tuổi',
+                    L10nScope.of(context).format('ui_single_value1_value2_years_old_163ed9', {'value1': current.preferredAgeMin, 'value2': current.preferredAgeMax}),
                 foreground: const Color(0xFF7B4D92),
                 background: const Color(0xFFF7EDFF),
               ),

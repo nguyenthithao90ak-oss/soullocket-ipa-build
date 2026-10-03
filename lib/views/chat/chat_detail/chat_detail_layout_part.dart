@@ -92,8 +92,8 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
                   SLSpacing.h16,
                   Text(
                     isChatClosed
-                        ? 'Đoạn chat này đã đóng'
-                        : 'Bắt đầu cuộc trò chuyện',
+                        ? context.tr('ui_chat_this_chat_has_been_closed_c1dd59')
+                        : context.tr('ui_chat_start_a_conversation_df3ded'),
                     style: SLTheme.quicksand(
                       color: const Color(0xFF6B7280),
                       fontWeight: FontWeight.w900,
@@ -103,8 +103,8 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
                   SLSpacing.h8,
                   Text(
                     isChatClosed
-                        ? 'Bạn vẫn có thể xem lại tin nhắn cũ, nhưng chưa thể gửi tin nhắn mới.'
-                        : 'Gửi tin nhắn, sticker hoặc ảnh để bắt đầu.',
+                        ? context.tr('ui_chat_you_can_still_review_old_messages_but_0b0ccc')
+                        : context.tr('ui_chat_send_a_message_sticker_or_photo_to_d04307'),
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
                       color: const Color(0xFF94A3B8),
@@ -205,7 +205,7 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
             ? Colors.white.withValues(alpha: 0.92)
             : Colors.white,
         child: Text(
-          'Tài khoản này không còn khả dụng nên cuộc chat hiện đã bị khóa.',
+          context.tr('ui_chat_this_account_is_no_longer_available_so_b94ac4'),
           textAlign: TextAlign.center,
           style: SLTheme.quicksand(
             color: const Color(0xFFD81B60),
@@ -295,7 +295,7 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
                             color: SLColors.darkNavy,
                           ),
                           decoration: InputDecoration(
-                            hintText: 'Nhắn tin...',
+                            hintText: context.tr('home_nhntin_3e833a'),
                             hintStyle: SLTheme.quicksand(
                               color: Colors.grey,
                               fontSize: 15,

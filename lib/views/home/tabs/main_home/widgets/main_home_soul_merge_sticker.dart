@@ -399,7 +399,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Tính năng dành cho cặp đôi',
+                context.tr('ui_home_features_for_couples_df1238'),
                 style: SLTheme.quicksand(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -408,7 +408,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
               ),
               const SizedBox(height: 12),
               Text(
-                'Bạn hãy ghép nối với nửa kia để sử dụng tính năng này nhé!',
+                context.tr('ui_home_please_pair_with_your_other_half_to_680016'),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontSize: 14,
@@ -436,7 +436,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                   ),
                 ),
                 child: Text(
-                  'Ghép nối ngay',
+                  context.tr('p6_pair_now'),
                   style: SLTheme.quicksand(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,

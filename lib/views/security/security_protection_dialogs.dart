@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -161,15 +162,15 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
                   runSpacing: 10,
                   children: [
                     _MetaChip(
-                      label: 'Mức rủi ro ${verdict.effectiveRisk.key}',
+                      label: L10nScope.of(context).format('ui_security_risk_level_value1_1e9ed1', {'value1': verdict.effectiveRisk.key}),
                       accent: accent,
                     ),
                     _MetaChip(
-                      label: 'Lý do ${verdict.reason.key}',
+                      label: L10nScope.of(context).format('ui_security_reason_value1_d1b6c3', {'value1': verdict.reason.key}),
                       accent: accent,
                     ),
                     _MetaChip(
-                      label: 'Giai đoạn ${verdict.rolloutStage.key}',
+                      label: L10nScope.of(context).format('ui_security_phase_value1_56217c', {'value1': verdict.rolloutStage.key}),
                       accent: accent,
                     ),
                   ],
@@ -186,7 +187,7 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Cần làm gì ngay',
+                        context.tr('ui_security_what_to_do_now_7b888c'),
                         style: SLTheme.quicksand(
                           color: SLColors.ink,
                           fontWeight: FontWeight.w900,

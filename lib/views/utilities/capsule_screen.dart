@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_date_picker.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
@@ -44,9 +45,6 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
   static const Color _textPrimary = Colors.white;
   static const Color _textSecondary = Color(0xE6FFFFFF);
   static const Color _textMuted = Color(0xB3FFFFFF);
-  static const Color _dialogSurface = Color(0xCC2B1F66);
-  static const Color _dialogInnerSurface = Color(0xB322164F);
-  static const Color _dialogBorder = Color(0x66FFFFFF);
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
@@ -320,7 +318,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime now = DateTime.now();
-    final DateTime? picked = await showDatePicker(
+    final DateTime? picked = await showSLDatePicker(
       context: context,
       initialDate: _unlockDate ?? now.add(const Duration(days: 1)),
       firstDate: now,
@@ -328,25 +326,6 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
       helpText: context.tr('util_chnngymth_6eec01'),
       cancelText: context.tr('util_hy_1e4050'),
       confirmText: context.tr('util_chnngyny_91b75a'),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: _buttonFill,
-              onPrimary: Colors.white,
-              surface: Color(0xFFFFF7FB),
-              onSurface: Color(0xFF2B1F66),
-            ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: _buttonFill,
-                textStyle: SLTheme.quicksand(fontWeight: FontWeight.w900),
-              ),
-            ),
-          ),
-          child: child ?? const SizedBox.shrink(),
-        );
-      },
     );
     if (picked != null && picked != _unlockDate) {
       setState(() {
@@ -404,239 +383,121 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
       showDialog(
         context: context,
         builder: (context) {
-          return Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: SLSpacing.all20,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(30),
-              child: FastBackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                child: Container(
-                  padding: SLSpacing.all24,
+          return SLAlertDialog(
+            title: SLDialogHeading(
+              title: context.tr('util_hpthtnglai_31f728'),
+              icon: Icons.mark_email_read_outlined,
+              tone: SLDialogTone.success,
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: _dialogSurface,
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: _dialogBorder),
+                    color: SLDialogStyle.field,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: SLDialogStyle.border),
                   ),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        '💌',
-                        style: TextStyle(fontSize: 60),
-                        textScaler: TextScaler.linear(1.0),
-                      ),
-                      SLSpacing.h16,
                       Text(
-                        context.tr('util_hpthtnglai_31f728'),
-                        style: SLTheme.quicksand(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: _textPrimary,
-                          letterSpacing: 1.5,
+                        L10nService().format('util_capsule_from', {
+                          'sender': updated['sender_uid'] == 'me'
+                              ? context.tr('util_ti_a843eb')
+                              : context.tr('util_ngiy_5bab37'),
+                        }),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: SLColors.ink,
                         ),
                       ),
-                      SLSpacing.h20,
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              const Color(0xFF6366F1).withValues(alpha: 0.12),
-                              const Color(0xFF8B5CF6).withValues(alpha: 0.12),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: const Color(
-                              0xFF8B5CF6,
-                            ).withValues(alpha: 0.25),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: const Color(
-                                  0xFF8B5CF6,
-                                ).withValues(alpha: 0.15),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.local_post_office_rounded,
-                                color: Color(0xFF8B5CF6),
-                                size: 24,
-                              ),
-                            ),
-                            SLSpacing.w16,
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    L10nService().format('util_capsule_from', {
-                                      'sender': updated['sender_uid'] == 'me'
-                                          ? context.tr('util_ti_a843eb')
-                                          : context.tr('util_ngiy_5bab37'),
-                                    }),
-                                    style: SLTheme.quicksand(
-                                      fontWeight: FontWeight.w800,
-                                      color: _textPrimary,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  SLSpacing.h4,
-                                  Text(
-                                    L10nService().format(
-                                      'util_capsule_open_date',
-                                      {
-                                        'date': DateFormat('dd/MM/yyyy').format(
-                                          DateTime.fromMillisecondsSinceEpoch(
-                                            updated['unlock_time_ms'] ?? 0,
-                                          ),
-                                        ),
-                                      },
-                                    ),
-                                    style: SLTheme.quicksand(
-                                      color: _textMuted,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SLSpacing.h20,
-                      Container(
-                        width: double.infinity,
-                        padding: SLSpacing.all20,
-                        decoration: BoxDecoration(
-                          color: _dialogInnerSurface,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: _dialogBorder),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.14),
-                              blurRadius: 14,
-                            ),
-                          ],
-                        ),
-                        constraints: const BoxConstraints(maxHeight: 350),
-                        child: SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (updated['image_url'] != null &&
-                                  updated['image_url']
-                                      .toString()
-                                      .isNotEmpty) ...[
-                                GestureDetector(
-                                  onTap: () => _showImageFullScreen(
-                                    context,
-                                    updated['image_url'],
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        CachedNetworkImage(
-                                          imageUrl: updated['image_url'],
-                                          width: double.infinity,
-                                          height: 220,
-                                          fit: BoxFit.cover,
-                                          memCacheWidth: 600,
-                                          filterQuality: FilterQuality.medium,
-                                          placeholder: (_, _) =>
-                                              const SkeletonContainer.rounded(
-                                                width: double.infinity,
-                                                height: 220,
-                                                borderRadius: BorderRadius.zero,
-                                              ),
-                                          errorWidget: (_, _, _) => const SizedBox(
-                                            height: 220,
-                                            child: Center(
-                                              child: Icon(
-                                                Icons
-                                                    .image_not_supported_outlined,
-                                                color: Colors.white70,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Positioned(
-                                          bottom: 8,
-                                          right: 8,
-                                          child: Container(
-                                            padding: const EdgeInsets.all(6),
-                                            decoration: BoxDecoration(
-                                              color: Colors.black.withValues(
-                                                alpha: 0.5,
-                                              ),
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: const Icon(
-                                              Icons.zoom_out_map,
-                                              color: Colors.white,
-                                              size: 16,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                SLSpacing.h16,
-                              ],
-                              Text(
-                                updated['content'] ?? '',
-                                style: SLTheme.quicksand(
-                                  fontSize: 16,
-                                  height: 1.6,
-                                  fontWeight: FontWeight.w600,
-                                  color: _textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SLSpacing.h24,
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _buttonFill,
-                            padding: const EdgeInsets.symmetric(vertical: 15),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: SLRadius.lgAll,
+                      const SizedBox(height: 4),
+                      Text(
+                        L10nService().format('util_capsule_open_date', {
+                          'date': DateFormat('dd/MM/yyyy').format(
+                            DateTime.fromMillisecondsSinceEpoch(
+                              updated['unlock_time_ms'] ?? 0,
                             ),
                           ),
-                          child: Text(
-                            context.tr('util_ng_aecc61'),
-                            style: SLTheme.quicksand(
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                            ),
-                          ),
+                        }),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: SLDialogStyle.secondary,
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
+                const SizedBox(height: 18),
+                if (updated['image_url'] != null &&
+                    updated['image_url'].toString().isNotEmpty) ...[
+                  GestureDetector(
+                    onTap: () =>
+                        _showImageFullScreen(context, updated['image_url']),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CachedNetworkImage(
+                            imageUrl: updated['image_url'],
+                            width: double.infinity,
+                            height: 220,
+                            fit: BoxFit.cover,
+                            memCacheWidth: 600,
+                            filterQuality: FilterQuality.medium,
+                            placeholder: (_, _) =>
+                                const SkeletonContainer.rounded(
+                                  width: double.infinity,
+                                  height: 220,
+                                  borderRadius: BorderRadius.zero,
+                                ),
+                            errorWidget: (_, _, _) => const SizedBox(
+                              height: 220,
+                              child: Center(
+                                child: Icon(
+                                  Icons.image_not_supported_outlined,
+                                  color: SLDialogStyle.secondary,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 8,
+                            right: 8,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.5),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.zoom_out_map,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                Text(updated['content'] ?? ''),
+              ],
             ),
+            actions: [
+              SLDialogAction(
+                primary: true,
+                onPressed: () => Navigator.pop(context),
+                child: Text(context.tr('util_ng_aecc61')),
+              ),
+            ],
           );
         },
       );

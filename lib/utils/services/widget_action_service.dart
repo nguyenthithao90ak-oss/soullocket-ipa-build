@@ -12,6 +12,7 @@ enum WidgetLaunchAction {
   calendar,
   cycle,
   soul_events,
+  sleep,
 }
 
 class WidgetActionService {
@@ -113,6 +114,8 @@ class WidgetActionService {
           return WidgetLaunchAction.calendar;
         case 'cycle':
           return WidgetLaunchAction.cycle;
+        case 'sleep':
+          return WidgetLaunchAction.sleep;
         case 'soul_events':
           return WidgetLaunchAction.soul_events;
       }

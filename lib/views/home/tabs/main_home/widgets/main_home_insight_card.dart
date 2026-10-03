@@ -21,7 +21,7 @@ extension _MainHomeInsightCardExt on _MainHomeTabState {
             _InsightBubbleSpec(
               label: isSingle
                   ? L10nService().translate('home_hotng_faccd7')
-                  : 'LOVE',
+                  : context.tr('p7_love_upper'),
               value: insight.loveScore,
               color: const Color(0xFFD81B60),
               phase: 1.7,

@@ -666,7 +666,11 @@ class UiPrefs {
     );
 
     try {
-      unawaited(SettingsSyncService().backupSettingsToCloud());
+      unawaited(
+        SettingsSyncService().backupSettingsToCloud().catchError((Object error) {
+          debugPrint('[UiPrefs] Automatic settings backup skipped or failed: $error');
+        }),
+      );
     } catch (error) {
       debugPrint('[SuppressedError] lib/views/ui_prefs.dart: $error');
     }

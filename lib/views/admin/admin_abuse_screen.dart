@@ -222,7 +222,7 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
     } catch (e) {
       debugPrint('Lỗi tải danh sách từ cấm: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Chưa thể tải danh sách từ cấm lúc này.',
+        fallbackMessage: context.tr('ui_admin_the_list_of_banned_words_cannot_be_22122e'),
       ).message}');
     }
   }
@@ -603,7 +603,7 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
                       ),
                       SLSpacing.h4,
                       Text(
-                        'User: ${log['uid']} - ${log['details'] ?? ''}',
+                        L10nScope.of(context).format('ui_admin_user_value1_value2_605017', {'value1': log['uid'], 'value2': log['details'] ?? ''}),
                         style: SLTheme.quicksand(
                             color: SLColors.textMuted, fontSize: 13),
                       ),

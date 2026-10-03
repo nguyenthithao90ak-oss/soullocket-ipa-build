@@ -42,6 +42,7 @@ import 'diary_item.dart';
 import 'diary_list.dart';
 import 'diary/widgets/diary_memory_section.dart';
 import 'diary/widgets/diary_tab_shell_sections.dart';
+import 'diary/widgets/memory_viewer_chrome.dart';
 
 part 'diary/sections/diary_composer_launcher_section.dart';
 part 'diary/sections/diary_tab_shell.dart';
@@ -231,7 +232,9 @@ class _DiaryTabState extends State<DiaryTab>
     if (!mounted) return;
     if (photos.length > maxItems) {
       _showDiarySnackBar(
-        context.tr('memory_share_max_items').replaceAll('{count}', maxItems.toString()),
+        context
+            .tr('memory_share_max_items')
+            .replaceAll('{count}', maxItems.toString()),
         backgroundColor: const Color(0xFFE53935),
       );
       return;
@@ -321,11 +324,10 @@ class _DiaryTabState extends State<DiaryTab>
       ShareBottomSheet.show(
         context: context,
         myHouseId: houseId,
-        contentToShare:
-            context
-                .tr('memory_share_created_message')
-                .replaceAll('{count}', result.photoCount.toString())
-                .replaceAll('{date}', expiryLabel),
+        contentToShare: context
+            .tr('memory_share_created_message')
+            .replaceAll('{count}', result.photoCount.toString())
+            .replaceAll('{date}', expiryLabel),
         shareUrl: result.url,
         loadInAppTargets: false,
       );
@@ -547,7 +549,7 @@ class _DiaryTabState extends State<DiaryTab>
           actions: [
             SLDialogAction(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text('Hủy'),
+              child: Text(context.tr('core_cancel')),
             ),
             SLDialogAction(
               primary: true,
@@ -574,50 +576,10 @@ class _DiaryTabState extends State<DiaryTab>
   ) async {
     final action = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetContext) => SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.download_rounded),
-                title: Text(context.tr('home_lunh_9088ba')),
-                onTap: () => Navigator.of(sheetContext).pop('save'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.link_rounded),
-                title: Text(context.tr('home_chiasnh_003604')),
-                onTap: () => Navigator.of(sheetContext).pop('share'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.info_outline_rounded),
-                title: Text(context.tr('home_chititnh_958bbd')),
-                onTap: () => Navigator.of(sheetContext).pop('info'),
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.delete_outline_rounded,
-                  color: Color(0xFFFF6B6B),
-                ),
-                title: Text(
-                  context.tr('home_xanh_0b98d1'),
-                  style: SLTheme.quicksand(
-                    color: const Color(0xFFFF6B6B),
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                onTap: () => Navigator.of(sheetContext).pop('delete'),
-              ),
-            ],
-          ),
-        ),
-      ),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      constraints: const BoxConstraints(maxWidth: 440),
+      builder: (sheetContext) => const MemoryViewerActionSheet(),
     );
 
     if (action == null || !mounted || !dialogContext.mounted) return;
@@ -930,13 +892,13 @@ class _DiaryTabState extends State<DiaryTab>
         photos: photos,
       );
       _showDiarySnackBar(
-        'Đã đổi ngày album sang ${DateFormat('dd/MM/yyyy').format(selectedDate)}.',
+        L10nScope.of(context).format('ui_home_changed_album_date_to_value1_4e2baf', {'value1': DateFormat('dd/MM/yyyy').format(selectedDate)}),
       );
     } catch (error) {
       _showDiarySnackBar(
         AppErrorMapper.resolve(
           error,
-          fallbackMessage: 'Không thể đổi ngày album lúc này.',
+          fallbackMessage: context.tr('ui_home_album_dates_cannot_be_changed_at_this_f2a489'),
         ).message,
         backgroundColor: const Color(0xFFE53935),
       );
@@ -1198,113 +1160,19 @@ class _DiaryTabState extends State<DiaryTab>
                                             ),
                                           ),
                                           Positioned(
-                                            left: 18,
-                                            right: 86,
-                                            bottom:
-                                                MediaQuery.of(
-                                                  context,
-                                                ).padding.bottom +
-                                                18,
+                                            left: 0,
+                                            right: 0,
+                                            bottom: 0,
                                             child: IgnorePointer(
-                                              child: Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 14,
-                                                      vertical: 12,
+                                              child: MemoryViewerFooter(
+                                                position: currentIndex + 1,
+                                                total: allPhotos.isEmpty
+                                                    ? 1
+                                                    : allPhotos.length,
+                                                timestamp:
+                                                    _formatMemoryTimestamp(
+                                                      currentItem,
                                                     ),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.black
-                                                      .withValues(alpha: 0.42),
-                                                  borderRadius:
-                                                      BorderRadius.circular(22),
-                                                  border: Border.all(
-                                                    color: Colors.white
-                                                        .withValues(
-                                                          alpha: 0.10,
-                                                        ),
-                                                  ),
-                                                ),
-                                                child: Row(
-                                                  children: [
-                                                    Container(
-                                                      width: 32,
-                                                      height: 32,
-                                                      decoration: BoxDecoration(
-                                                        gradient:
-                                                            const LinearGradient(
-                                                              colors: [
-                                                                Color(
-                                                                  0xFFFF6F91,
-                                                                ),
-                                                                Color(
-                                                                  0xFF7C8BFF,
-                                                                ),
-                                                              ],
-                                                            ),
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              12,
-                                                            ),
-                                                      ),
-                                                      child: const Icon(
-                                                        Icons.favorite_rounded,
-                                                        color: Colors.white,
-                                                        size: 17,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 10),
-                                                    Expanded(
-                                                      child: Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        children: [
-                                                          Text(
-                                                            '${currentIndex + 1}/${allPhotos.isEmpty ? 1 : allPhotos.length} kỷ niệm',
-                                                            maxLines: 1,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                            style:
-                                                                SLTheme.quicksand(
-                                                                  color: Colors
-                                                                      .white,
-                                                                  fontSize: 13,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w900,
-                                                                ),
-                                                          ),
-                                                          const SizedBox(
-                                                            height: 2,
-                                                          ),
-                                                          Text(
-                                                            _formatMemoryTimestamp(
-                                                              currentItem,
-                                                            ),
-                                                            maxLines: 1,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                            style: SLTheme.quicksand(
-                                                              color: Colors
-                                                                  .white
-                                                                  .withValues(
-                                                                    alpha: 0.68,
-                                                                  ),
-                                                              fontSize: 11,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
                                               ),
                                             ),
                                           ),
@@ -1335,136 +1203,7 @@ class _DiaryTabState extends State<DiaryTab>
                                                 ).padding.top +
                                                 16,
                                             right: 12,
-                                            child: PopupMenuButton<String>(
-                                              tooltip: context.tr(
-                                                'home_tychnnh_5e18e0',
-                                              ),
-                                              padding: const EdgeInsets.all(11),
-                                              icon: const Icon(
-                                                Icons.more_vert_rounded,
-                                                color: Colors.white,
-                                                size: 23,
-                                              ),
-                                              color: const Color(0xFF171A21),
-                                              surfaceTintColor: const Color(
-                                                0xFF171A21,
-                                              ),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                              ),
-                                              itemBuilder: (menuContext) => [
-                                                PopupMenuItem<String>(
-                                                  value: 'save',
-                                                  child: Row(
-                                                    children: [
-                                                      const Icon(
-                                                        Icons.download_rounded,
-                                                        color: Colors.white,
-                                                        size: 19,
-                                                      ),
-                                                      const SizedBox(width: 12),
-                                                      Text(
-                                                        context.tr(
-                                                          'home_lunh_9088ba',
-                                                        ),
-                                                        style:
-                                                            SLTheme.quicksand(
-                                                              color:
-                                                                  Colors.white,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w800,
-                                                            ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                PopupMenuItem<String>(
-                                                  value: 'share',
-                                                  child: Row(
-                                                    children: [
-                                                      const Icon(
-                                                        Icons.link_rounded,
-                                                        color: Colors.white,
-                                                        size: 19,
-                                                      ),
-                                                      const SizedBox(width: 12),
-                                                      Text(
-                                                        context.tr(
-                                                          'home_chiasnh_003604',
-                                                        ),
-                                                        style:
-                                                            SLTheme.quicksand(
-                                                              color:
-                                                                  Colors.white,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w800,
-                                                            ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                PopupMenuItem<String>(
-                                                  value: 'info',
-                                                  child: Row(
-                                                    children: [
-                                                      const Icon(
-                                                        Icons
-                                                            .info_outline_rounded,
-                                                        color: Colors.white,
-                                                        size: 19,
-                                                      ),
-                                                      const SizedBox(width: 12),
-                                                      Text(
-                                                        context.tr(
-                                                          'home_chititnh_958bbd',
-                                                        ),
-                                                        style:
-                                                            SLTheme.quicksand(
-                                                              color:
-                                                                  Colors.white,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w800,
-                                                            ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                PopupMenuItem<String>(
-                                                  value: 'delete',
-                                                  child: Row(
-                                                    children: [
-                                                      const Icon(
-                                                        Icons
-                                                            .delete_outline_rounded,
-                                                        color: Color(
-                                                          0xFFFF6B6B,
-                                                        ),
-                                                        size: 19,
-                                                      ),
-                                                      const SizedBox(width: 12),
-                                                      Text(
-                                                        context.tr(
-                                                          'home_xanh_0b98d1',
-                                                        ),
-                                                        style:
-                                                            SLTheme.quicksand(
-                                                              color:
-                                                                  const Color(
-                                                                    0xFFFF6B6B,
-                                                                  ),
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w800,
-                                                            ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
+                                            child: MemoryViewerActionsButton(
                                               onSelected: (value) async {
                                                 switch (value) {
                                                   case 'save':
@@ -1881,7 +1620,8 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
                     interactionEndFrictionCoefficient: 0.00008,
                     child: _isVideo
                         ? DiaryMemoryVideoPlayer(
-                            requireFreshAuthorization: PrivateMemoryLinkPolicy.isPrivate(widget.item),
+                            requireFreshAuthorization:
+                                PrivateMemoryLinkPolicy.isPrivate(widget.item),
                             isActive: widget.isActive,
                             url: url,
                             houseId:
@@ -1893,9 +1633,13 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
                         ? Hero(
                             tag: 'memory_image_${widget.item['id']}',
                             child: PrivateDiaryImage(
-                              houseId: widget.item['houseId']?.toString() ?? widget.item['house_id']?.toString() ?? '',
+                              houseId:
+                                  widget.item['houseId']?.toString() ??
+                                  widget.item['house_id']?.toString() ??
+                                  '',
                               memoryId: widget.item['id']?.toString() ?? '',
-                              fit: BoxFit.contain, cacheWidth: 2200,
+                              fit: BoxFit.contain,
+                              cacheWidth: 2200,
                             ),
                           )
                         : _imageProvider != null

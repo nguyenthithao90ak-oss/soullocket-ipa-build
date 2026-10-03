@@ -1536,9 +1536,9 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                               child: Text(
                                 _canUseForgotPin
                                     ? (_isRecoveringPin
-                                        ? 'Đang khôi phục mã PIN...'
-                                        : 'Quên mã pin?')
-                                    : 'Quên mã pin sau khi nhập sai 5 lần',
+                                        ? context.tr('ui_common_restoring_pin_962cd6')
+                                        : context.tr('security_pin_forgot_title'))
+                                    : context.tr('ui_common_enter_an_incorrect_pin_5_times_to_a60a17'),
                                 style: SLTheme.quicksand(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w800,
@@ -1579,7 +1579,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                                           vertical: 18),
                                       foregroundColor: Colors.black54,
                                     ),
-                                    child: const Text('Hủy bỏ',
+                                    child: Text(context.tr('ui_common_cancel_247d4b'),
                                         style: TextStyle(
                                             fontWeight: FontWeight.w900,
                                             fontSize: 15,
@@ -1603,8 +1603,8 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                                     ),
                                     child: SLTheme.primaryButton(
                                       text: widget.isConfirming
-                                          ? 'XÁC NHẬN'
-                                          : 'TIẾP TỤC',
+                                          ? context.tr('core_confirm_upper')
+                                          : context.tr('core_continue_upper'),
                                       onPressed: _currentPin.length >=
                                                   _minimumSubmitLength &&
                                               !_isInputLocked

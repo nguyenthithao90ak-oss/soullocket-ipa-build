@@ -635,6 +635,11 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
     final femaleRoleName = context.tr('role_female');
 
     try {
+      if (!_settingsIdentityReady) {
+        await OfflineCacheService.initialize();
+        if (!mounted || _auth.currentUser?.uid != user.uid) return;
+        setState(_restoreSettingsInitialIdentity);
+      }
       final resolvedHouseId = await _houseService.getCurrentHouseId()
           .timeout(const Duration(seconds: 10));
       if (!mounted || _auth.currentUser?.uid != user.uid) return;
@@ -837,6 +842,7 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
             });
           }
           _markSettingsBootstrapComplete();
+          _rememberSettingsInitialIdentity();
 
           // Chạy song song sau khi UI đã mở — không chặn màn hình Cài đặt
           unawaited(

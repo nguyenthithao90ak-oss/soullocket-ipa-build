@@ -479,10 +479,20 @@ class AuthSignInService {
     }
 
     try {
+      final user = _auth.currentUser;
+      if ((playIntegrityPayload['uid'] ?? '') != (user?.uid ?? '')) {
+        return null;
+      }
+      final idToken = await user?.getIdToken();
+      if (action == 'success' && (idToken == null || idToken.isEmpty)) {
+        return null;
+      }
       final response = await _httpPost(
         Uri.parse(endpoint),
         headers: await AppCheckHttpHeaders.withRequiredToken(<String, String>{
           'Content-Type': 'application/json',
+          if (idToken != null && idToken.isNotEmpty)
+            'Authorization': 'Bearer $idToken',
         }, forceRefresh: false),
         body: jsonEncode(<String, dynamic>{
           'action': action,
@@ -497,7 +507,9 @@ class AuthSignInService {
         final decoded = jsonDecode(response.body);
         if (decoded is Map) {
           final payload = Map<String, dynamic>.from(decoded);
-          await _cacheSecurityVerdictFromPayload(payload);
+          if (payload['enforcement'] == 'block') {
+            await _cacheSecurityVerdictFromPayload(payload);
+          }
         }
         return null;
       }
@@ -1629,7 +1641,7 @@ class AuthSignInService {
       _ensureUserProfileExists(user),
       _db.child('users/${user.uid}/houseId').get(),
       _prefs,
-      SettingsSyncService().restoreSettingsFromCloud(user.uid),
+      SettingsSyncService().prepareForSignIn(user.uid),
     ]);
 
     final postLoginBlockReason = phase1Results[0] as String?;

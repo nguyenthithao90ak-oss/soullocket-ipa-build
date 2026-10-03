@@ -61,7 +61,7 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
       final code = PairingInviteQrCodec.normalizeCode(
         active['code']?.toString(),
       );
-      final expiresAt = active['expiresAt'] as int? ?? 0;
+      final expiresAt = (active['expiresAt'] as num?)?.toInt() ?? 0;
       if (code != null && expiresAt > DateTime.now().millisecondsSinceEpoch) {
         setState(() => _pairingCode = code);
         _startCountdown(expiresAt);
@@ -88,20 +88,18 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
       _errorMsg = null;
     });
     try {
-      final code = PairingInviteQrCodec.normalizeCode(
-        await PairingService.instance.createPairingCode(_durationMinutes),
+      final invite = await PairingService.instance.createPairingCode(
+        _durationMinutes,
       );
+      final code = PairingInviteQrCodec.normalizeCode(invite.code);
       if (code == null) {
         throw StateError('invalid pairing invite');
       }
-      final expiresAt =
-          DateTime.now().millisecondsSinceEpoch +
-          (_durationMinutes * Duration.millisecondsPerMinute);
       if (!mounted) {
         return;
       }
       setState(() => _pairingCode = code);
-      _startCountdown(expiresAt);
+      _startCountdown(invite.expiresAt);
     } catch (error) {
       if (mounted) {
         setState(() {

@@ -23,6 +23,7 @@ import 'package:soullocket_app/utils/services/storage/storage_content_policy.dar
 import 'package:soullocket_app/utils/services/storage/storage_delete_helper.dart';
 import 'package:soullocket_app/utils/services/storage/storage_download_cache_helper.dart';
 import 'package:soullocket_app/utils/services/storage/storage_finalize_helper.dart';
+import 'package:soullocket_app/utils/services/storage/storage_image_upload_input.dart';
 import 'package:soullocket_app/utils/services/storage/storage_managed_upload_helper.dart';
 import 'package:soullocket_app/utils/services/storage/storage_media_constants.dart';
 import 'package:soullocket_app/utils/services/storage/storage_path_policy.dart';
@@ -492,6 +493,7 @@ class StorageService {
     required String target,
     required String contentType,
     required String fileName,
+    int? fileSize,
   }) async {
     try {
       return _uploadSessionHelper.createUploadSession(
@@ -505,6 +507,7 @@ class StorageService {
           'target': target.trim(),
           'contentType': contentType.trim(),
           'fileName': fileName.trim(),
+          'fileSize': ?fileSize,
         },
         label: 'Public image upload session',
         requireSessionId: true,
@@ -1211,12 +1214,15 @@ class StorageService {
   }) {
     return _uploadSignedImageWithCompression(
       file: file,
-      sessionBuilder: (contentType, preferredFileName) =>
+      sessionBuilder: (contentType, preferredFileName) async =>
           _createPublicImageUploadSession(
             houseId: houseId,
             target: target,
             contentType: contentType,
             fileName: preferredFileName,
+            fileSize: target == 'custom_mood_sticker'
+                ? await file.length()
+                : null,
           ),
       minWidth: minWidth,
       minHeight: minHeight,
@@ -1230,6 +1236,7 @@ class StorageService {
             'house_avatar',
             'profile_header',
             'soul_merge',
+            'custom_mood_sticker',
           }.contains(target)
           ? (session) async {
               final result = await finalizePublicImageUpload(
@@ -1545,12 +1552,10 @@ class StorageService {
     }
 
     try {
-      final originalFileName = file.name.isNotEmpty ? file.name : file.path;
+      final input = StorageImageUploadInput.fromFile(file);
+      final originalFileName = input.fileName;
       var fileExtension = p.extension(originalFileName).toLowerCase();
-      var contentType = detectContentType(
-        originalFileName,
-        fallback: 'image/jpeg',
-      );
+      var contentType = input.contentType;
       XFile uploadFile = file;
 
       if (!kIsWeb &&

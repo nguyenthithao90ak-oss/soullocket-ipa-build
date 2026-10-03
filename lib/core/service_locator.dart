@@ -15,6 +15,7 @@
 library;
 
 import 'package:get_it/get_it.dart';
+import '../utils/services/app_referral_service.dart';
 import '../utils/services/games/soul_block_memory_service.dart';
 import '../utils/services/market_service.dart';
 import 'package:soullocket_app/utils/services/companion_journey_service.dart';
@@ -27,6 +28,7 @@ import 'package:soullocket_app/utils/services/notification_service.dart';
 import 'package:soullocket_app/utils/services/soul_event_reminder_service.dart';
 import 'package:soullocket_app/utils/services/presence_service.dart';
 import 'package:soullocket_app/utils/services/storage/storage_service.dart';
+import 'package:soullocket_app/utils/services/infrastructure/cloudflare_data_service.dart';
 import 'package:soullocket_app/utils/services/utilities/note_service.dart';
 import 'package:soullocket_app/utils/services/utility_service.dart';
 import 'package:soullocket_app/utils/services/sound_service.dart';
@@ -41,6 +43,10 @@ final GetIt locator = GetIt.instance;
 /// - Storage: secure storage, offline cache.
 /// - Insight/Utility: love insight, utility chung, note.
 void setupLocator() {
+  locator.registerLazySingleton(
+    () => AppReferralService(),
+    dispose: (service) => service.dispose(),
+  );
   locator.registerFactory(() => SoulBlockMemoryService());
   locator.registerLazySingleton(() => MarketService.instance);
   // Bật cùng backend/rules đã kiểm thử; bản cũ giữ nguyên hành vi khi chưa rollout.
@@ -70,6 +76,10 @@ void setupLocator() {
 
   // ── Storage & Cache ─────────────────────────────────────────────────────
   locator.registerLazySingleton(() => StorageService());
+  locator.registerLazySingleton(
+    () => CloudflareDataService(),
+    dispose: (service) => service.dispose(),
+  );
 
   // ── Insight / Utility ───────────────────────────────────────────────────
   locator.registerLazySingleton(() => LoveInsightService());

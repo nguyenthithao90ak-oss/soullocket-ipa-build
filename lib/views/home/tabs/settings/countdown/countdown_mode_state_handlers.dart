@@ -648,7 +648,7 @@ extension _CountdownModeIndependentScreenStatePart
                 final calendarInitial = candidate != null && inRange(candidate)
                     ? candidate
                     : dialogInitial;
-                final picked = await showDatePicker(
+                final picked = await showSLDatePicker(
                   context: context,
                   initialDate: calendarInitial,
                   firstDate: firstDate,

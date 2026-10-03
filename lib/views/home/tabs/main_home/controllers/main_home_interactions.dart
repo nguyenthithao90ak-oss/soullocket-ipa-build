@@ -408,10 +408,10 @@ extension _MainHomeInteractions on _MainHomeTabState {
       if (!mounted || !showSentNotice) return;
       _showOutgoingInteractionNotice(
         interactionType: type,
-        title: 'Đã gửi yêu thương cho $partnerName',
+        title: L10nScope.of(context).format('ui_home_sent_love_to_value1_91e959', {'value1': partnerName}),
         body: partnerOnline
-            ? '$partnerName sẽ thấy tín hiệu này ngay trên màn hình chính luôn đó.'
-            : '$partnerName chưa mở nhà, nhưng tín hiệu này đã được gửi sang và sẽ chờ người ấy mở ra.',
+            ? L10nScope.of(context).format('ui_home_value1_will_see_this_signal_right_on_39ac68', {'value1': partnerName})
+            : L10nScope.of(context).format('ui_home_value1_has_not_opened_the_house_yet_f12fe8', {'value1': partnerName}),
         partnerName: partnerName,
         partnerOnline: partnerOnline,
       );

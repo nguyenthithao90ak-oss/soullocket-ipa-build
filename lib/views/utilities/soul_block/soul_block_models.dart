@@ -30,6 +30,22 @@ class _SoulPieceOption {
   final bool isBomb;
 }
 
+({int games, bool advance}) _nextSoulPhotoCycleGame({
+  required int games,
+  required bool advancePending,
+}) => (games: min(2, games + 1), advance: advancePending || games >= 2);
+
+int _soulPhotoCycleAfterLoad({
+  required int games,
+  required bool photoChanged,
+  required bool inGameplay,
+}) {
+  // Ảnh mới đã được dùng ngay trong ván hiện tại, nên ván này là ván thứ nhất.
+  // Tải lại cùng ảnh (khôi phục/cache hoặc chỉ có một ảnh) không đổi bộ đếm.
+  if (!photoChanged) return games;
+  return inGameplay ? 1 : 0;
+}
+
 class _SoulPieceTemplate {
   const _SoulPieceTemplate({
     required this.id,
@@ -55,6 +71,7 @@ class _SoulPieceTemplate {
   _metadataCache = <(String, int), ({int width, int height, int cellCount})>{};
   static final Map<(String, int), Set<int>> _cellKeyCache =
       <(String, int), Set<int>>{};
+  static final Map<(String, int), _SoulPieceTemplate> _rotationCache = {};
 
   ({int width, int height, int cellCount}) get metadata =>
       _metadataCache[(id, quarterTurns)] ??= (
@@ -68,6 +85,9 @@ class _SoulPieceTemplate {
       .toSet();
 
   _SoulPieceTemplate rotate() {
+    final key = (id, (quarterTurns + 1) % 4);
+    final cached = _rotationCache[key];
+    if (cached != null) return cached;
     final rotatedCells = cells.map((p) => Point<int>(-p.y, p.x)).toList();
     final minX = rotatedCells.map((p) => p.x).reduce(min);
     final minY = rotatedCells.map((p) => p.y).reduce(min);
@@ -78,7 +98,7 @@ class _SoulPieceTemplate {
     final newWidth = normalizedCells.map((p) => p.x).reduce(max) + 1;
     final newHeight = normalizedCells.map((p) => p.y).reduce(max) + 1;
 
-    return _SoulPieceTemplate(
+    return _rotationCache[key] = _SoulPieceTemplate(
       id: id,
       label: label,
       cells: normalizedCells,
@@ -178,6 +198,7 @@ class _RecommendedMove {
     required this.heuristic,
     required this.expectedGain,
     required this.clearCount,
+    this.quarterTurns = 0,
   });
 
   final int pieceId;
@@ -186,6 +207,7 @@ class _RecommendedMove {
   final double heuristic;
   final int expectedGain;
   final int clearCount;
+  final int quarterTurns;
 }
 
 class _PreparedSoulRun {

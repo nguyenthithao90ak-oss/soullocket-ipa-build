@@ -391,7 +391,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                       builder: (ctx) => SLAlertDialog(
                         title: Text(context.tr('home_xcnhnchn_ae00a6')),
                         content: Text(
-                          'Bạn có chắc muốn chặn người này không?\nHọ sẽ không thể xem nhà bạn nữa.',
+                          context.tr('p5_profile_block_message'),
                         ),
                         actions: [
                           SLDialogAction(

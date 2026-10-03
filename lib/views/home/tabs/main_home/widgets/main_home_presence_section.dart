@@ -248,20 +248,11 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
                 );
               }
             }
-            final picked = await showDatePicker(
+            final picked = await showSLDatePicker(
               context: context,
               initialDate: initial,
               firstDate: DateTime(1950),
               lastDate: DateTime.now(),
-              builder: (ctx, child) => Theme(
-                data: Theme.of(ctx).copyWith(
-                  colorScheme: const ColorScheme.light(
-                    primary: Color(0xFFD81B60),
-                    onPrimary: Colors.white,
-                  ),
-                ),
-                child: child!,
-              ),
             );
             if (!mounted) return;
             if (picked != null && _houseId != null) {

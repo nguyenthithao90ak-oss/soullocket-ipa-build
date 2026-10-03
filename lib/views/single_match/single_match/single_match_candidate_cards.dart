@@ -66,7 +66,7 @@ class _SingleMatchFeaturedCard extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                '$totalPool hồ sơ • đã xem $seenCount',
+                L10nScope.of(context).format('ui_single_value1_profiles_value2_viewed_847245', {'value1': totalPool, 'value2': seenCount}),
                 style: SLTheme.quicksand(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -244,8 +244,8 @@ class _SingleMatchFeaturedCard extends StatelessWidget {
                     foregroundColor: Colors.white,
                   ),
                   icon: const Icon(Icons.videocam_rounded),
-                  label: const Text(
-                    'Video call',
+                  label: Text(
+                    context.tr('p4_soul_video_call'),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -278,7 +278,7 @@ class _SingleMatchStatStrip extends StatelessWidget {
       children: <Widget>[
         Expanded(
           child: _StatTile(
-            label: 'Pool live',
+            label: context.tr('single_match_candidate_pool'),
             value: '$totalCandidates',
             icon: Icons.flash_on_rounded,
             color: const Color(0xFFFF5E8C),

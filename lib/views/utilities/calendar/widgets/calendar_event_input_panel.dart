@@ -31,18 +31,14 @@ class CalendarEventInputPanel extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(compact ? 16 : 18),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFF9FCFF), Color(0xFFF7F3FF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: const Color(0xFFFFFDF9),
           borderRadius: BorderRadius.circular(26),
-          border: Border.all(color: const Color(0xFFE6EAF9)),
+          border: Border.all(color: const Color(0xFFE8DCD3)),
           boxShadow: [
             BoxShadow(
-              color: accent.withValues(alpha: 0.08),
+              color: const Color(0xFF4B3540).withValues(alpha: 0.06),
               blurRadius: 20,
-              offset: const Offset(0, 10),
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -102,9 +98,9 @@ class CalendarEventInputPanel extends StatelessWidget {
             SizedBox(height: compact ? 12 : 14),
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: const Color(0xFFFBF7F3),
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFFE9D8D3)),
+                border: Border.all(color: const Color(0xFFE8DCD3)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.02),

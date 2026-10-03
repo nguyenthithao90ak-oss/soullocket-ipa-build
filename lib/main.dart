@@ -156,7 +156,6 @@ void main() {
       }
 
       await Hive.initFlutter();
-      unawaited(OfflineSyncQueue.instance.startListening());
       setupLocator();
       // Web không có luồng remove splash tương ứng; defer first frame tại đây
       // sẽ khiến toàn bộ ứng dụng chỉ hiển thị màn hình trắng.
@@ -289,6 +288,8 @@ void main() {
         registerSoulLocketLicenses();
         await UiPrefs.ensureLoaded();
         await L10nService().init();
+        await BuildSignatureService.verifyOfficialBuildSignature();
+        unawaited(OfflineSyncQueue.instance.startListening());
 
         // Firebase khởi tạo với timeout để không bao giờ treo màn hình Splash
         try {
@@ -320,7 +321,6 @@ void main() {
         // Các tác vụ không cần chặn UI — chạy sau khi đã hiển thị app
         unawaited(
           Future<void>.delayed(const Duration(milliseconds: 500), () async {
-            await BuildSignatureService.verifyOfficialBuildSignature();
             await _clearStaleIosAuthAfterFreshInstall();
             if (!kIsWeb) {
               try {

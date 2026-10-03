@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -577,7 +578,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Thì thầm với $_partnerName',
+                              L10nScope.of(context).format('ui_home_whisper_to_value1_36ba60', {'value1': _partnerName}),
                               style: GoogleFonts.quicksand(
                                 color: Colors.white,
                                 fontSize: 14,
@@ -618,7 +619,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             child: Text(
-                              'Đang đồng bộ dữ liệu...\nVui lòng mở lại ứng dụng nếu chờ lâu 💕',
+                              context.tr('ui_home_syncing_data_please_reopen_the_app_if_6ba23c'),
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.6),
@@ -631,7 +632,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                       : _chatHistory.isEmpty
                       ? Center(
                           child: Text(
-                            'Hãy gửi lời thì thầm tâm hồn... 💕',
+                            context.tr('soul_merge_message_hint'),
                             style: GoogleFonts.quicksand(
                               color: Colors.white.withValues(alpha: 0.4),
                               fontSize: 12,
@@ -823,7 +824,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                               fontWeight: FontWeight.w600,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Nhắn tin...',
+                              hintText: context.tr('home_nhntin_3e833a'),
                               hintStyle: GoogleFonts.quicksand(
                                 color: Colors.white.withValues(alpha: 0.4),
                                 fontSize: 14,

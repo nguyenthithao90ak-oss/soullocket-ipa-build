@@ -271,6 +271,7 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
     }
 
     return _ThemeEventPreviewSection(
+      key: ValueKey((FirebaseAuth.instance.currentUser?.uid, houseId)),
       houseId: houseId,
       scheduleNotifService: _scheduleNotifService,
       eventCardBuilder: _buildThemeEventCard,
@@ -293,6 +294,7 @@ class _ThemeEventPreviewSection extends StatefulWidget {
   final BuildContext context;
 
   const _ThemeEventPreviewSection({
+    super.key,
     required this.houseId,
     required this.scheduleNotifService,
     required this.eventCardBuilder,

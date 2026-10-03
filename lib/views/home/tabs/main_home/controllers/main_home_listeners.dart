@@ -39,7 +39,7 @@ extension _MainHomeListeners on _MainHomeTabState {
               _homeCalendarEvents = [];
             });
           }
-          if (!WidgetService.supportsAndroidWidgets) return;
+          if (!WidgetService.supportsMobileWidgets) return;
           _calendarWidgetSyncDebounce?.cancel();
           _calendarWidgetSyncDebounce = Timer(
             const Duration(milliseconds: 500),
@@ -82,7 +82,7 @@ extension _MainHomeListeners on _MainHomeTabState {
               _homeCalendarEvents = parsedEvents;
             });
           }
-          if (!WidgetService.supportsAndroidWidgets) return;
+          if (!WidgetService.supportsMobileWidgets) return;
           // Debounce 500ms trước khi sync calendar widget
           _calendarWidgetSyncDebounce?.cancel();
           _calendarWidgetSyncDebounce = Timer(
@@ -110,7 +110,7 @@ extension _MainHomeListeners on _MainHomeTabState {
   void _listenHealthCycleForWidgetSync(String houseId) {
     _healthCycleSyncSubscription?.cancel();
     _healthCycleSyncSubscription = null;
-    if (!WidgetService.supportsAndroidWidgets) return;
+    if (!WidgetService.supportsMobileWidgets) return;
     final healthRef = _dbRef.child('houses/$houseId/health_cycle');
     _healthCycleSyncSubscription = healthRef.onValue.listen(
       (event) {

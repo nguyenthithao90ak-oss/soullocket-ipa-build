@@ -43,7 +43,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  'Nền chat',
+                  context.tr('ui_chat_chat_background_60fd91'),
                   style: SLTheme.quicksand(
                     color: const Color(0xFF0F172A),
                     fontSize: 18,
@@ -53,8 +53,8 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                 SLSpacing.h4,
                 Text(
                   hasBackground
-                      ? 'Ảnh nền này sẽ áp dụng cho toàn bộ đoạn chat hiện tại.'
-                      : 'Tải ảnh riêng cho giao diện chat. Ảnh sẽ được cắt và nén trước khi lưu.',
+                      ? context.tr('ui_chat_this_background_image_will_apply_to_the_a5fdc9')
+                      : context.tr('ui_chat_upload_separate_photos_for_chat_interface_the_74bb05'),
                   style: SLTheme.quicksand(
                     color: const Color(0xFF64748B),
                     fontWeight: FontWeight.w700,
@@ -105,7 +105,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Đang dùng nền mặc định',
+                              context.tr('ui_chat_using_default_background_8d48c6'),
                               style: SLTheme.quicksand(
                                 color: const Color(0xFF64748B),
                                 fontWeight: FontWeight.w800,
@@ -130,11 +130,11 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                     ),
                   ),
                   title: Text(
-                    hasBackground ? 'Đổi ảnh nền' : 'Chọn ảnh nền',
+                    hasBackground ? context.tr('p5_profile_change_header') : context.tr('home_chnnhnn_414d61'),
                     style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                   ),
                   subtitle: Text(
-                    'Ảnh sẽ được cắt vừa khung chat và nén trước khi tải lên.',
+                    context.tr('ui_chat_the_photo_will_be_cropped_to_fit_16acd5'),
                     style: SLTheme.quicksand(
                       color: const Color(0xFF64748B),
                       fontWeight: FontWeight.w700,
@@ -162,13 +162,13 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                     ),
                   ),
                   title: Text(
-                    'Xóa nền riêng',
+                    context.tr('ui_chat_remove_custom_background_7fdb1c'),
                     style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                   ),
                   subtitle: Text(
                     hasBackground
-                        ? 'Gỡ khỏi chat và xóa luôn file nền cũ.'
-                        : 'Đoạn chat này chưa có nền riêng để xóa.',
+                        ? context.tr('ui_chat_remove_from_chat_and_delete_old_background_a5c75a')
+                        : context.tr('ui_chat_this_chat_does_not_have_a_separate_dd3ad4'),
                     style: SLTheme.quicksand(
                       color: const Color(0xFF64748B),
                       fontWeight: FontWeight.w700,
@@ -577,8 +577,8 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                                         ? Icons.home_work_outlined
                                         : Icons.chat_bubble_outline_rounded,
                                     label: _isInternal
-                                        ? 'Không gian riêng'
-                                        : 'Chat 1-1',
+                                        ? context.tr('home_khnggianri_5aa2fb')
+                                        : context.tr('ui_chat_chat_1_1_2c057b'),
                                     color: const Color(0xFF0A7CFF),
                                   ),
                                   statusChip(
@@ -586,8 +586,8 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                                         ? Icons.lock_outline_rounded
                                         : Icons.bolt_rounded,
                                     label: isChatClosed
-                                        ? 'Đang đóng'
-                                        : 'Đang hoạt động',
+                                        ? context.tr('ui_chat_closed_6192b4')
+                                        : context.tr('core_presence_online'),
                                     color: isChatClosed
                                         ? const Color(0xFFD97706)
                                         : const Color(0xFF16A34A),
@@ -595,19 +595,19 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                                   if (_nickname.trim().isNotEmpty)
                                     statusChip(
                                       icon: Icons.badge_outlined,
-                                      label: 'Biệt danh: ',
+                                      label: context.tr('ui_chat_nickname_d6e370'),
                                       color: const Color(0xFFD81B60),
                                     ),
                                   if (currentBackgroundUrl.trim().isNotEmpty)
                                     statusChip(
                                       icon: Icons.wallpaper_rounded,
-                                      label: 'Đã đặt nền',
+                                      label: context.tr('ui_chat_background_set_97e373'),
                                       color: const Color(0xFF8B5CF6),
                                     ),
                                   if (_isChatMuted)
                                     statusChip(
                                       icon: Icons.notifications_off_outlined,
-                                      label: 'Đã tắt thông báo',
+                                      label: context.tr('ui_chat_notifications_turned_off_847798'),
                                       color: const Color(0xFF6366F1),
                                     ),
                                 ],
@@ -627,7 +627,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                                           Expanded(
                                             child: summaryCard(
                                               icon: Icons.wallpaper_rounded,
-                                              label: 'Nền chat',
+                                              label: context.tr('ui_chat_chat_background_60fd91'),
                                               value:
                                                   currentBackgroundUrl
                                                       .trim()
@@ -641,7 +641,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                                           Expanded(
                                             child: summaryCard(
                                               icon: Icons.badge_outlined,
-                                              label: 'Biệt danh',
+                                              label: context.tr('ui_chat_nickname_5206ed'),
                                               value: _nickname.trim().isEmpty
                                                   ? 'Chưa đặt'
                                                   : _nickname.trim(),
@@ -653,7 +653,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                                             child: summaryCard(
                                               icon:
                                                   Icons.emoji_emotions_outlined,
-                                              label: 'Cảm xúc nhanh',
+                                              label: context.tr('ui_chat_quick_reaction_5e9d2f'),
                                               value: _quickReactionEmoji,
                                               color: const Color(0xFFF59E0B),
                                             ),
@@ -704,27 +704,27 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
       context: context,
       builder: (dialogContext) {
         return SLAlertDialog(
-          title: Text('Biệt danh trong chat'),
+          title: Text(context.tr('ui_chat_nickname_in_chat_10b034')),
           content: TextField(
             controller: ctrl,
             maxLength: 28,
-            decoration: const InputDecoration(hintText: 'Nhập biệt danh...'),
+            decoration: InputDecoration(hintText: context.tr('ui_chat_enter_a_nickname_f8c6e1')),
           ),
           actions: [
             SLDialogAction(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Hủy'),
+              child: Text(context.tr('core_cancel')),
             ),
             SLDialogAction(
               onPressed: () => Navigator.of(dialogContext).pop(''),
-              child: const Text('Bỏ biệt danh'),
+              child: Text(context.tr('ui_chat_remove_nickname_8a660b')),
             ),
             SLDialogAction(
               primary: true,
 
               onPressed: () =>
                   Navigator.of(dialogContext).pop(ctrl.text.trim()),
-              child: const Text('Lưu'),
+              child: Text(context.tr('p3_save')),
             ),
           ],
         );
@@ -771,7 +771,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  'Chọn cảm xúc nhanh',
+                  context.tr('ui_chat_choose_a_quick_reaction_370fae'),
                   style: SLTheme.quicksand(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
@@ -780,7 +780,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                 ),
                 SLSpacing.h4,
                 Text(
-                  'Chạm một biểu tượng để dùng làm phản hồi gửi nhanh.',
+                  context.tr('ui_chat_tap_an_icon_to_use_it_as_fa8acf'),
                   style: SLTheme.quicksand(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -808,7 +808,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                       SLSpacing.w10,
                       Expanded(
                         child: Text(
-                          'Hiện đang chọn cảm xúc này cho nút gửi nhanh.',
+                          context.tr('ui_chat_currently_selecting_this_emotion_for_the_quick_623a05'),
                           style: SLTheme.quicksand(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -929,7 +929,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Tạo nhóm chat',
+                        context.tr('ui_chat_create_a_chat_group_abb329'),
                         style: SLTheme.quicksand(
                           fontWeight: FontWeight.w900,
                           fontSize: 17,
@@ -939,9 +939,9 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                       TextField(
                         controller: nameCtrl,
                         maxLength: 36,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           counterText: '',
-                          hintText: 'Tên nhóm',
+                          hintText: context.tr('ui_chat_group_name_79553e'),
                         ),
                       ),
                       SLSpacing.h8,
@@ -1044,7 +1044,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                                     'createdAtMs': createdAt,
                                   });
                                 },
-                          child: const Text('Tạo nhóm'),
+                          child: Text(context.tr('ui_chat_create_groups_5b7194')),
                         ),
                       ),
                     ],
@@ -1094,21 +1094,21 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
       context: context,
       builder: (dialogContext) {
         return SLAlertDialog(
-          title: const Text('Chặn người dùng'),
+          title: Text(context.tr('ui_chat_block_users_a37d68')),
           content: Text(
-            'Bạn có chắc muốn chặn ${widget.targetName}? Sau khi chặn, hai bên sẽ không thể nhắn tin.',
+            L10nScope.of(context).format('ui_chat_are_you_sure_you_want_to_block_bb7933', {'value1': widget.targetName}),
           ),
           actions: [
             SLDialogAction(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Hủy'),
+              child: Text(context.tr('core_cancel')),
             ),
             SLDialogAction(
               primary: true,
               destructive: true,
 
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Chặn'),
+              child: Text(context.tr('home_chn_483b6f')),
             ),
           ],
         );
@@ -1143,16 +1143,16 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
       context: context,
       builder: (dialogContext) {
         return SLAlertDialog(
-          title: const Text('Xóa đoạn chat'),
+          title: Text(context.tr('ui_chat_delete_chat_7ebcf4')),
           content: Text(
             _isInternal
-                ? 'Xóa toàn bộ lịch sử tin nhắn nội bộ?'
-                : 'Xóa toàn bộ lịch sử tin nhắn của đoạn chat này?',
+                ? context.tr('ui_chat_delete_entire_internal_message_history_89bd43')
+                : context.tr('ui_chat_delete_the_entire_message_history_of_this_37e93b'),
           ),
           actions: [
             SLDialogAction(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Hủy'),
+              child: Text(context.tr('core_cancel')),
             ),
             SLDialogAction(
               primary: true,
@@ -1204,22 +1204,22 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
         return StatefulBuilder(
           builder: (dialogContext, setDialogState) {
             return SLAlertDialog(
-              title: const Text('Báo cáo người dùng'),
+              title: Text(context.tr('ui_chat_user_report_b6dc5d')),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
                     initialValue: selected,
-                    items: const [
-                      DropdownMenuItem(value: 'spam', child: Text('Spam')),
+                    items: [
+                      DropdownMenuItem(value: 'spam', child: Text(context.tr('Spam'))),
                       DropdownMenuItem(
                         value: 'harassment',
-                        child: Text('Quấy rối'),
+                        child: Text(context.tr('p9_group_chat_report_harassment')),
                       ),
-                      DropdownMenuItem(value: 'scam', child: Text('Lừa đảo')),
+                      DropdownMenuItem(value: 'scam', child: Text(context.tr('home_lao_415dda'))),
                       DropdownMenuItem(
                         value: 'inappropriate_content',
-                        child: Text('Nội dung không phù hợp'),
+                        child: Text(context.tr('util_nidungkhng_493873')),
                       ),
                     ],
                     onChanged: (value) {
@@ -1231,8 +1231,8 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                   TextField(
                     controller: reasonCtrl,
                     maxLength: 140,
-                    decoration: const InputDecoration(
-                      hintText: 'Ghi chú thêm (không bắt buộc)',
+                    decoration: InputDecoration(
+                      hintText: context.tr('p9_group_chat_report_note_hint'),
                     ),
                   ),
                 ],
@@ -1240,7 +1240,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
               actions: [
                 SLDialogAction(
                   onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Hủy'),
+                  child: Text(context.tr('core_cancel')),
                 ),
                 SLDialogAction(
                   primary: true,
@@ -1251,7 +1251,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                       dialogContext,
                     ).pop(extra.isEmpty ? selected : '$selected: $extra');
                   },
-                  child: const Text('Gửi báo cáo'),
+                  child: Text(context.tr('p9_group_chat_send_report')),
                 ),
               ],
             );
@@ -1328,7 +1328,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Thả cảm xúc cho tin nhắn',
+                context.tr('ui_chat_react_to_a_message_06be8d'),
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w900,
                   fontSize: 16,
@@ -1337,7 +1337,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
               ),
               SLSpacing.h4,
               Text(
-                'Chạm đúp vào bubble để thả tim nhanh.',
+                context.tr('chat_double_tap_heart_hint'),
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF94A3B8),

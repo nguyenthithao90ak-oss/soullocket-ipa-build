@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_date_picker.dart';
 import '../../../models/widget_appearance.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
@@ -57,6 +58,7 @@ import 'package:soullocket_app/utils/services/love_insight_service.dart';
 import 'package:soullocket_app/utils/services/location_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/holiday_service.dart';
+import 'package:soullocket_app/utils/calendar/holiday_occurrence_resolver.dart';
 import 'package:soullocket_app/utils/services/military_lock_service.dart';
 import 'package:soullocket_app/utils/services/presence_service.dart';
 import 'package:soullocket_app/utils/services/utility_service.dart';
@@ -233,8 +235,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SLSnackBar(
-            content: const Text(
-              'Đã làm mờ nút cài đặt. Bạn vẫn có thể nhấn vào góc này để mở cài đặt, hoặc nhấn giữ để hiện lại.',
+            content: Text(
+              context.tr('ui_home_the_settings_button_has_been_blurred_you_241a2c'),
             ),
             behavior: SnackBarBehavior.floating,
             duration: Duration(seconds: 3),

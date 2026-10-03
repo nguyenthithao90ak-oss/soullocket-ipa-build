@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/sl_theme.dart';
@@ -69,7 +70,7 @@ class _SecurityProtectionHelpScreenState
         foregroundColor: const Color(0xFF1F2A44),
         elevation: 0,
         title: Text(
-          'Bảo vệ thao tác nhạy cảm',
+          context.tr('ui_security_protect_sensitive_operations_009056'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w900,
             color: const Color(0xFF1F2A44),
@@ -145,15 +146,15 @@ class _SecurityProtectionHelpScreenState
                   runSpacing: 10,
                   children: [
                     _buildMetaChip(
-                      label: 'Mức rủi ro: ${widget.verdict.effectiveRisk.key}',
+                      label: L10nScope.of(context).format('ui_security_risk_level_value1_32a21e', {'value1': widget.verdict.effectiveRisk.key}),
                       accent: accent,
                     ),
                     _buildMetaChip(
-                      label: 'Lý do: ${widget.verdict.reason.key}',
+                      label: L10nScope.of(context).format('ui_security_reason_value1_4442c8', {'value1': widget.verdict.reason.key}),
                       accent: accent,
                     ),
                     _buildMetaChip(
-                      label: 'Giai đoạn: ${widget.verdict.rolloutStage.key}',
+                      label: L10nScope.of(context).format('ui_security_phase_value1_68a79a', {'value1': widget.verdict.rolloutStage.key}),
                       accent: accent,
                     ),
                   ],
@@ -163,7 +164,7 @@ class _SecurityProtectionHelpScreenState
           ),
           const SizedBox(height: 18),
           _buildSectionCard(
-            title: 'Cần làm gì ngay bây giờ',
+            title: context.tr('ui_security_what_to_do_now_4ced36'),
             icon: Icons.task_alt_rounded,
             children: [
               for (var index = 0; index < copy.steps.length; index++)
@@ -209,7 +210,7 @@ class _SecurityProtectionHelpScreenState
           ),
           const SizedBox(height: 16),
           _buildSectionCard(
-            title: 'FAQ nhanh cho CSKH và người dùng',
+            title: context.tr('ui_security_quick_faq_for_customer_service_and_users_b8feaa'),
             icon: Icons.help_outline_rounded,
             children: [
               for (final faq in copy.faqs)
@@ -243,11 +244,11 @@ class _SecurityProtectionHelpScreenState
           ),
           const SizedBox(height: 16),
           _buildSectionCard(
-            title: 'Nếu cần hỏi hỗ trợ',
+            title: context.tr('ui_security_if_needed_ask_for_support_7365ba'),
             icon: Icons.support_agent_rounded,
             children: [
               Text(
-                'Gửi kèm hành động, màn hình, mã lý do và các app đang chạy nền. Như vậy đội ngũ dễ phân biệt báo nhầm với thiết bị thực sự có rủi ro.',
+                context.tr('ui_security_include_actions_screens_reason_codes_and_apps_a25951'),
                 style: SLTheme.quicksand(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w700,
@@ -270,7 +271,7 @@ class _SecurityProtectionHelpScreenState
                   ),
                   icon: const Icon(Icons.support_agent_rounded),
                   label: Text(
-                    'Liên hệ hỗ trợ',
+                    context.tr('Liên hệ hỗ trợ'),
                     style: SLTheme.quicksand(
                       color: Colors.white,
                       fontWeight: FontWeight.w900,
@@ -294,7 +295,7 @@ class _SecurityProtectionHelpScreenState
             side: BorderSide(color: accent.withValues(alpha: 0.28)),
           ),
           child: Text(
-            isBlocked ? 'Tôi sẽ xử lý rồi thử lại sau' : 'Đã hiểu, tiếp tục',
+            isBlocked ? context.tr('ui_security_i_ll_handle_it_and_try_again_d7f39e') : context.tr('ui_security_understood_continue_61278b'),
             style: SLTheme.quicksand(
               fontWeight: FontWeight.w900,
               color: accent,

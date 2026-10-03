@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
@@ -46,13 +47,13 @@ class RichNotifController {
       show(RichNotifData(type: RichNotifType.message, title: name, body: body, avatarUrl: avatarUrl, onTap: onTap));
 
   void showMissYou({required String name, String? avatarUrl, VoidCallback? onTap}) =>
-      show(RichNotifData(type: RichNotifType.missYou, title: name, body: 'đang nhớ bạn 💕', avatarUrl: avatarUrl, onTap: onTap));
+      show(RichNotifData(type: RichNotifType.missYou, title: name, body: L10nService().translate('ui_home_missing_you_51550a'), avatarUrl: avatarUrl, onTap: onTap));
 
   void showLike({required String name, String? avatarUrl, VoidCallback? onTap}) =>
-      show(RichNotifData(type: RichNotifType.like, title: name, body: 'đã gửi tim cho bạn ❤️', avatarUrl: avatarUrl, onTap: onTap));
+      show(RichNotifData(type: RichNotifType.like, title: name, body: L10nService().translate('ui_home_sent_you_a_heart_a12d3e'), avatarUrl: avatarUrl, onTap: onTap));
 
   void showDistance({required String name, required String distance, VoidCallback? onTap}) =>
-      show(RichNotifData(type: RichNotifType.distance, title: name, body: 'cách bạn $distance', onTap: onTap));
+      show(RichNotifData(type: RichNotifType.distance, title: name, body: L10nService().format('ui_home_value1_away_from_you_bbba54', {'value1': distance}), onTap: onTap));
 
   void dispose() => _stream.close();
 }

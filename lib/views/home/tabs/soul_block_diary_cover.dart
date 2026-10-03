@@ -85,6 +85,10 @@ class _SoulBlockDiaryCoverState extends State<SoulBlockDiaryCover>
   Future<void> _loadPhoto() async {
     final request = ++_request;
     final uid = FirebaseAuth.instance.currentUser?.uid;
+    final media = MediaQuery.of(context);
+    final diaryWidth = (((media.size.width - 64) / 3) * media.devicePixelRatio)
+        .ceil()
+        .clamp(240, 768);
     _lastLoad = DateTime.now();
     bool current() =>
         mounted &&
@@ -115,17 +119,23 @@ class _SoulBlockDiaryCoverState extends State<SoulBlockDiaryCover>
       final candidates = await _memories.candidates(
         houseId,
         preferredId: preferredId,
+        diaryWidth: diaryWidth,
       );
       final budget = Stopwatch()..start();
       for (final candidate in candidates.take(4)) {
         if (!current() || budget.elapsed > const Duration(seconds: 18)) return;
         try {
-          final memory = await _memories
-              .resolve(houseId, candidate)
-              .timeout(const Duration(seconds: 8));
-          if (!current()) return;
+          final memory = await _memories.loadPhoto(
+            houseId,
+            candidate,
+            diaryWidth: diaryWidth,
+          );
+          if (!current()) {
+            memory?.image.dispose();
+            return;
+          }
           if (memory == null) continue;
-          final image = await _decodeCoverImage(NetworkImage(memory.url));
+          final image = memory.image;
           if (!current()) {
             image.dispose();
             return;

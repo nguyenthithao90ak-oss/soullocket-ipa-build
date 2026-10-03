@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,6 +9,8 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/services/auth_service.dart';
+import '../core/service_locator.dart';
+import '../utils/services/app_referral_service.dart';
 import '../utils/services/deeplink_service.dart';
 import '../utils/services/house_service.dart';
 import '../utils/services/image_picker_recovery_service.dart';
@@ -97,6 +100,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
 
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(locator<AppReferralService>().initialize());
       unawaited(WidgetActionService().initialize());
       unawaited(TexasAgeGateService().resolveAgeSignal());
       unawaited(() async {
@@ -446,14 +450,14 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     _privacyGuardEntry = OverlayEntry(
       builder: (context) => Container(
         color: Colors.black,
-        child: const Center(
+        child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.security_rounded, color: Colors.white, size: 64),
               SizedBox(height: 16),
               Text(
-                'Chống nhìn trộm đang bật',
+                context.tr('ui_app_anti_peeping_is_on_ba6788'),
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,
@@ -523,10 +527,10 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     _removeSplashOnce();
     // Kiểm tra bảo trì ở TOP LEVEL - tất cả user, mọi màn hình, không bypass được
     if (_isMaintenance) {
-      return const BlockedScaffold(
-        title: 'Bảo trì hệ thống',
+      return BlockedScaffold(
+        title: context.tr('under_maintenance'),
         message:
-            'Chúng tôi đang bảo trì hệ thống để nâng cấp trải nghiệm tốt hơn. Vui lòng quảy lại sau ít phút.',
+            context.tr('app_maintenance_message'),
         showActions: false,
       );
     }
@@ -543,10 +547,10 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     }
 
     if (_isCompromised) {
-      return const BlockedScaffold(
-        title: 'Thiết bị không an toàn',
+      return BlockedScaffold(
+        title: context.tr('ui_app_the_device_is_not_safe_397490'),
         message:
-            'Thiết bị của bạn đang trong trạng thái Root hoặc dùng phần mềm Fake GPS.\n\nĐể bảo vệ dữ liệu cá nhân, SoulLocket tự động vô hiệu hóa trên môi trường này.',
+            context.tr('ui_app_your_device_is_in_root_state_or_4f580d'),
         showActions: false,
       );
     }
@@ -567,10 +571,10 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
 
         if (snapshot.hasError) {
           return BlockedScaffold(
-            title: 'Lỗi xác thực',
+            title: context.tr('ui_app_authentication_error_71555a'),
             message: kDebugMode
-                ? 'Không thể kết nối hệ thống xác thực. Vui lòng thử lại.\n${AppErrorMapper.resolve(snapshot.error).message}'
-                : 'Không thể kiểm tra đăng nhập. Hãy kiểm tra mạng rồi mở lại ứng dụng.',
+                ? L10nScope.of(context).format('ui_app_unable_to_connect_authentication_system_please_try_f0c743', {'value1': AppErrorMapper.resolve(snapshot.error).message})
+                : context.tr('ui_app_unable_to_check_login_please_check_the_bd9c62'),
             onSignOut: () async {},
           );
         }
@@ -611,9 +615,9 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
 
             if (accessSnap.hasError) {
               return BlockedScaffold(
-                title: 'Lỗi hệ thống',
+                title: context.tr('ui_app_system_error_b3af2f'),
                 message:
-                    'Không thể tải thông tin tài khoản.\n${AppErrorMapper.resolve(accessSnap.error).message}',
+                    L10nScope.of(context).format('ui_app_unable_to_load_account_information_value1_4c7679', {'value1': AppErrorMapper.resolve(accessSnap.error).message}),
                 onSignOut: () async {
                   await _authService.signOut();
                 },
@@ -621,17 +625,17 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
             }
 
             if (accessState?.isMaintenance == true) {
-              return const BlockedScaffold(
-                title: 'Bảo trì hệ thống',
+              return BlockedScaffold(
+                title: context.tr('under_maintenance'),
                 message:
-                    'Chúng tôi đang bảo trì hệ thống để nâng cấp trải nghiệm tốt hơn. Vui lòng quay lại sau ít phút.',
+                    context.tr('app_maintenance_message'),
                 showActions: false,
               );
             }
 
             if (accessState?.blockReason != null) {
               return BlockedScaffold(
-                title: 'Tài khoản bị khóa',
+                title: context.tr('ui_app_account_locked_c71d15'),
                 message: accessState!.blockReason!,
                 onSignOut: () async {
                   await _authService.signOut();

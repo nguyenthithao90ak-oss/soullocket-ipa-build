@@ -108,21 +108,23 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'UID: ${user['uid']}',
+              L10nScope.of(context).format('ui_admin_uid_value1_b0bd42', {'value1': user['uid']}),
               style: const TextStyle(color: Colors.grey),
             ),
             SLSpacing.h16,
             TextField(
               controller: pointsCtrl,
               keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: SLColors.ink),
               decoration: InputDecoration(
                 labelText: context.tr('admin_simmi_4b0e3e'),
                 labelStyle: const TextStyle(color: Colors.grey),
                 enabledBorder: const OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.grey)),
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
                 focusedBorder: const OutlineInputBorder(
-                    borderSide: BorderSide(color: SLColors.brandPink)),
+                  borderSide: BorderSide(color: SLColors.brandPink),
+                ),
               ),
             ),
           ],
@@ -226,11 +228,11 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
                                       contentPadding:
                                           const EdgeInsets.symmetric(
                                               horizontal: 24, vertical: 8),
-                                      title: Text('UID: $uid',
+                                      title: Text(L10nScope.of(context).format('ui_admin_uid_value1_b0bd42', {'value1': uid}),
                                           style: const TextStyle(
                                               color: Colors.white,
                                               fontWeight: FontWeight.bold)),
-                                      subtitle: Text('Điểm hiện tại: $points',
+                                      subtitle: Text(L10nScope.of(context).format('ui_admin_current_point_value1_38aaf7', {'value1': points}),
                                           style: const TextStyle(
                                               color: Colors.amber)),
                                       trailing: IconButton(

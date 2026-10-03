@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_date_picker.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 
@@ -126,23 +127,11 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
   }
 
   Future<void> _pickDate() async {
-    final currentTheme = Theme.of(context);
-    final date = await showDatePicker(
+    final date = await showSLDatePicker(
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(1900),
       lastDate: DateTime(2100),
-      builder: (context, child) {
-        return Theme(
-          data: currentTheme.copyWith(
-            colorScheme: currentTheme.colorScheme.copyWith(
-              primary: SLColors.primary,
-              secondary: SLColors.secondary,
-            ),
-          ),
-          child: child!,
-        );
-      },
     );
     if (date != null && mounted) {
       setState(() {
@@ -679,7 +668,7 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
                       onTap: _isSaving || !SoulEventReminderService.supported
                           ? null
                           : () async {
-                              final picked = await showTimePicker(
+                              final picked = await showSLTimePicker(
                                 context: context,
                                 initialTime: TimeOfDay(
                                   hour: _reminderMinutes ~/ 60,

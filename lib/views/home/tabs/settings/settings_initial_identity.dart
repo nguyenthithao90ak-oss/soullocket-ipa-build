@@ -20,6 +20,20 @@ class SettingsInitialIdentity {
   final String avatar1;
   final String avatar2;
 
+  static String cacheKey(String uid, String houseId) =>
+      'settings_identity_${uid}_$houseId';
+
+  Map<String, dynamic> toCache(String uid) => {
+    'uid': uid,
+    'houseId': houseId,
+    'relationshipMode': relationshipMode,
+    'role': role,
+    'nameU1': name1,
+    'nameU2': name2,
+    'avtUser1': avatar1,
+    'avtUser2': avatar2,
+  };
+
   static SettingsInitialIdentity? restore({
     required SharedPreferences prefs,
     required String? uid,
@@ -30,7 +44,14 @@ class SettingsInitialIdentity {
     }
     final houseId = prefs.getString('il_house_id')?.trim() ?? '';
     if (houseId.isEmpty) return null;
-    final data = readCache('home_settings_$houseId');
+    final saved = readCache(cacheKey(uid, houseId));
+    final scoped =
+        saved is Map &&
+        saved['uid'] == uid &&
+        saved['houseId'] == houseId &&
+        (saved['relationshipMode'] == 'single' ||
+            saved['role'] == prefs.getString('il_role'));
+    final data = scoped ? saved : readCache('home_settings_$houseId');
     if (data is! Map || data.isEmpty) return null;
     final mode = data['relationshipMode']?.toString().trim().toLowerCase();
     if (mode != 'single' && mode != 'couple') return null;

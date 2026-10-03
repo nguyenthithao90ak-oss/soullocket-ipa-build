@@ -6,7 +6,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 
 import 'custom_mood_sticker_image.dart';
-import 'infrastructure/cloudflare_r2_service.dart';
+import 'infrastructure/storage_service.dart';
 import 'storage/storage_picker_service.dart';
 
 class CustomMoodStickerService {
@@ -33,7 +33,11 @@ class CustomMoodStickerService {
     required Future<void> Function(String houseId, String uid, String? url)
     saveUrl,
     required Future<XFile?> Function() pickImage,
-    required Future<String> Function(CustomMoodStickerImage image, String uid)
+    required Future<String> Function(
+      CustomMoodStickerImage image,
+      String uid,
+      String houseId,
+    )
     uploadImage,
     Stream<String?> Function()? authChanges,
   }) : this._withCallbacks(
@@ -59,7 +63,11 @@ class CustomMoodStickerService {
   final Stream<Object?> Function(String houseId, String uid) _watchUrl;
   final Future<void> Function(String houseId, String uid, String? url) _saveUrl;
   final Future<XFile?> Function() _pickImage;
-  final Future<String> Function(CustomMoodStickerImage image, String uid)
+  final Future<String> Function(
+    CustomMoodStickerImage image,
+    String uid,
+    String houseId,
+  )
   _uploadImage;
 
   static const maxImageSize = CustomMoodStickerImage.maxDimension;
@@ -74,6 +82,19 @@ class CustomMoodStickerService {
   String? _syncedUid;
   int _scope = 0;
   bool _disposed = false;
+  String? _previewUrl;
+  Uint8List? _previewBytes;
+
+  Uint8List? previewBytesFor(String url) =>
+      url == _previewUrl ? _previewBytes : null;
+
+  void _setUrl(String? url) {
+    if (url != _previewUrl) {
+      _previewUrl = null;
+      _previewBytes = null;
+    }
+    customStickerUrlVN.value = url;
+  }
 
   static String _path(String houseId, String uid) =>
       'houses/$houseId/custom_mood_stickers/$uid';
@@ -81,16 +102,23 @@ class CustomMoodStickerService {
   static Future<String> _upload(
     CustomMoodStickerImage image,
     String uid,
+    String houseId,
   ) async {
-    final result = await CloudflareR2Service.instance.uploadMedia(
+    if (FirebaseAuth.instance.currentUser?.uid != uid) {
+      throw StateError('unauthenticated');
+    }
+    final result = await StorageService().uploadPublicImage(
+      houseId,
+      'custom_mood_sticker',
       XFile.fromData(
         image.bytes,
         name: 'mood.${image.extension}',
         mimeType: image.contentType,
       ),
-      folderPath: 'diary/custom_stickers/$uid',
-      contentType: image.contentType,
+      minWidth: maxImageSize,
+      minHeight: maxImageSize,
     );
+    if (result == null) throw StateError('Upload failed');
     return result.downloadUrl;
   }
 
@@ -112,10 +140,10 @@ class CustomMoodStickerService {
       (value) {
         if (_disposed || scope != _scope || _currentUid() != uid) return;
         final url = value is String ? value.trim() : null;
-        customStickerUrlVN.value = url != null && url.isNotEmpty ? url : null;
+        _setUrl(url != null && url.isNotEmpty ? url : null);
       },
       onError: (Object error) {
-        if (!_disposed && scope == _scope) customStickerUrlVN.value = null;
+        if (!_disposed && scope == _scope) _setUrl(null);
       },
     );
     _authSubscription = _authChanges().listen((authUid) {
@@ -131,7 +159,7 @@ class CustomMoodStickerService {
     _authSubscription = null;
     _currentHouseId = null;
     _syncedUid = null;
-    if (!_disposed) customStickerUrlVN.value = null;
+    if (!_disposed) _setUrl(null);
   }
 
   void _checkScope(String uid, int scope) {
@@ -159,12 +187,14 @@ class CustomMoodStickerService {
       final bytes = await file.readAsBytes();
       final image = await compute(CustomMoodStickerImage.encode, bytes);
       _checkScope(uid, scope);
-      final url = await _uploadImage(image, uid);
+      final url = await _uploadImage(image, uid, houseId.trim());
       _checkScope(uid, scope);
       if (url.trim().isEmpty) throw StateError('Upload failed');
       await _saveUrl(houseId.trim(), uid, url);
       _checkScope(uid, scope);
-      customStickerUrlVN.value = url;
+      _previewUrl = url;
+      _previewBytes = image.bytes;
+      _setUrl(url);
       return url;
     } finally {
       if (!_disposed) {
@@ -185,7 +215,7 @@ class CustomMoodStickerService {
     try {
       await _saveUrl(houseId.trim(), uid, null);
       _checkScope(uid, scope);
-      customStickerUrlVN.value = null;
+      _setUrl(null);
     } finally {
       if (!_disposed) isBusyVN.value = false;
     }

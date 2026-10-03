@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:flutter/material.dart';
@@ -78,20 +79,20 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => SLAlertDialog(
-        title: Text('Xác nhận hoàn tiền'),
+        title: Text(context.tr('admin_xcnhnhonti_5f2304')),
         content: Text(
-          'Bạn có chắc chắn muốn hoàn tiền thủ công cho giao dịch này không? Hành động này sẽ được ghi vào Audit Log.',
+          context.tr('admin_bncchcchnm_07fa70'),
         ),
         actions: [
           SLDialogAction(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Hủy'),
+            child: Text(context.tr('core_cancel')),
           ),
           SLDialogAction(
             primary: true,
 
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Hoàn tiền'),
+            child: Text(context.tr('admin_hontin_548fd0')),
           ),
         ],
       ),
@@ -118,7 +119,7 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SLSnackBar(content: const Text('Hoàn tiền thành công')),
+        SLSnackBar(content: Text(context.tr('admin_hontinthnh_1c37ca'))),
       );
       _loadData();
     } catch (e) {
@@ -126,7 +127,7 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
-          content: const Text('Chưa thể hoàn tiền lúc này. Vui lòng thử lại.'),
+          content: Text(context.tr('ui_admin_refunds_are_not_possible_at_this_time_94157d')),
         ),
       );
     }
@@ -142,7 +143,7 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Quản lý thanh toán & PRO',
+                context.tr('admin_qunlthanht_fb385c'),
                 style: SLTheme.quicksand(
                   color: Colors.white,
                   fontSize: 24,
@@ -157,7 +158,7 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
           ),
           SLSpacing.h8,
           Text(
-            'Quản lý các gói PRO, lịch sử giao dịch, và xử lý hoàn tiền thủ công.',
+            context.tr('admin_qunlccgipr_f4b921'),
             style: SLTheme.quicksand(
               color: SLColors.textMuted,
               fontSize: 14,
@@ -169,7 +170,7 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
           else if (_errorText != null)
             Center(
               child: Text(
-                'Lỗi: $_errorText',
+                L10nScope.of(context).format('ui_admin_error_value1_01d14e', {'value1': _errorText}),
                 style: const TextStyle(color: Colors.red),
               ),
             )
@@ -279,9 +280,9 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
 
   Widget _buildPaymentHistory() {
     if (_paymentHistory.isEmpty) {
-      return const Padding(
+      return Padding(
         padding: SLSpacing.all16,
-        child: Text('Chưa có dữ liệu thanh toán.',
+        child: Text(context.tr('admin_chacdliuth_b9c077'),
             style: TextStyle(color: Colors.white)),
       );
     }
@@ -305,18 +306,18 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
 
           return ListTile(
             title: Text(
-              'User: ${tx['uid']} - ${tx['packageName'] ?? 'N/A'}',
+              L10nScope.of(context).format('ui_admin_user_value1_value2_605017', {'value1': tx['uid'], 'value2': tx['packageName'] ?? 'N/A'}),
               style: SLTheme.quicksand(
                   color: Colors.white, fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              'ID: ${tx['id']} - ${tx['amount']}đ',
+              L10nScope.of(context).format('ui_admin_id_value1_value2_c2b525', {'value1': tx['id'], 'value2': tx['amount']}),
               style: SLTheme.quicksand(
                   color: SLColors.textMuted, fontSize: 13),
             ),
             trailing: isRefunded
                 ? Text(
-                    'Đã hoàn tiền',
+                    context.tr('admin_hontin_12add5'),
                     style: SLTheme.quicksand(
                         color: Colors.orange, fontWeight: FontWeight.bold),
                   )
@@ -324,7 +325,7 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
                     onPressed: () => _manualRefund(tx['id'], tx['uid']),
                     style: TextButton.styleFrom(
                         foregroundColor: SLColors.brandPink),
-                    child: const Text('Hoàn tiền'),
+                    child: Text(context.tr('admin_hontin_548fd0')),
                   ),
           );
         },

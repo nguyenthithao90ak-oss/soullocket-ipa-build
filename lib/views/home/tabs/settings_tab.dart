@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_date_picker.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'settings/region_preferences_panel.dart';
@@ -39,9 +40,15 @@ import 'settings/theme/theme_preview_builder.dart';
 import 'settings/widget/widget_studio_components.dart';
 import '../../../models/widget_appearance.dart';
 import 'settings/widget/widget_couple_preview.dart';
+import 'settings/widget/widget_theme_surface.dart';
 import 'settings/widget/widget_photo_collage.dart';
+import 'settings/widget/widget_content_controls.dart';
+import 'settings/widget/widget_utility_gallery.dart';
 import 'settings/settings_initial_identity.dart';
 import 'settings/settings_initial_content.dart';
+import 'settings/settings_menu_widgets.dart';
+import 'settings/settings_gps_mode_dialog.dart';
+import '../../../widgets/sl_detail_widgets.dart';
 import '../../../widgets/stable_future_builder.dart';
 import '../../../utils/services/offline_cache_service.dart';
 
@@ -138,6 +145,7 @@ import '../../../utils/services/app_lifecycle_presence_guard.dart';
 import '../../../widgets/soul_locket_brand_mark.dart';
 import '../../visitors/visitor_profile_screen.dart';
 import 'settings/account/identity_panel.dart';
+import 'settings/account/account_settings_widgets.dart';
 import 'main_home_tab.dart' show AnimatedWaveBackground, ShootingHeartEffect;
 import 'settings/controllers/settings_identity_controller.dart';
 import 'settings/controllers/settings_notifications_controller.dart';
@@ -203,7 +211,6 @@ const Color _kSettingsBgTop = SLColors.paperCanvas;
 const Color _kSettingsHeaderSurface = SLColors.paper;
 const Color _kSettingsHeaderBorder = SLColors.border;
 const Color _kSettingsActionTileText = SLColors.ink;
-const List<String> _widgetHeartStyleKeys = WidgetAppearance.heartStyles;
 const String _defaultWidgetHeartStyleKey = '❤️';
 
 const List<String> _widgetPreviewSizeKeys = <String>[
@@ -220,7 +227,8 @@ const List<String> _widgetSeasonModeKeys = <String>[
   'birthday',
 ];
 
-String _normalizeWidgetHeartStyleKey(String? value) => WidgetAppearance.normalizeHeart(value);
+String _normalizeWidgetHeartStyleKey(String? value) =>
+    WidgetAppearance.normalizeHeart(value);
 
 String _widgetPreviewSizeLabel(String key) {
   switch (key) {
@@ -337,6 +345,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       SettingsRelationshipWatcher();
 
   String? _houseId;
+  String? _settingsOwnerUid;
   bool _houseIdChanged = false;
   String _houseName = L10nService().translate('home_nginhtnhyu_dbebce');
   bool _homeShowHouseName = false;
@@ -573,6 +582,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    _settingsOwnerUid = _auth.currentUser?.uid;
     _restoreSettingsInitialIdentity();
     WidgetsBinding.instance.addObserver(this);
     _startEmailVerifyTimer();
@@ -587,7 +597,9 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     final identity = SettingsInitialIdentity.restore(
       prefs: prefs,
       uid: _auth.currentUser?.uid,
-      readCache: OfflineCacheService.loadCacheSync,
+      readCache: (key) =>
+          OfflineCacheService.getMemoryCache(key) ??
+          OfflineCacheService.loadCacheSync(key),
     );
     if (identity == null) return;
     _houseId = identity.houseId;
@@ -598,6 +610,38 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     _avatarUrl1 = identity.avatar1;
     _avatarUrl2 = identity.avatar2;
     _settingsIdentityReady = true;
+  }
+
+  void _rememberSettingsInitialIdentity() {
+    final uid = _auth.currentUser?.uid;
+    final houseId = _houseId;
+    if (!_settingsIdentityReady ||
+        uid == null ||
+        uid != _settingsOwnerUid ||
+        houseId == null) {
+      return;
+    }
+    final prefs = OfflineCacheService.getPrefsSync();
+    if (prefs?.getString('il_auth_uid') != uid ||
+        prefs?.getString('il_house_id') != houseId) {
+      return;
+    }
+    final snapshot = SettingsInitialIdentity(
+      houseId: houseId,
+      relationshipMode: _relationshipMode,
+      role: _activeRoleKey,
+      name1: _nameU1,
+      name2: _nameU2,
+      avatar1: _avatarUrl1,
+      avatar2: _avatarUrl2,
+    ).toCache(uid);
+    final key = SettingsInitialIdentity.cacheKey(uid, houseId);
+    OfflineCacheService.setMemoryCache(key, snapshot, const Duration(hours: 8));
+    unawaited(
+      OfflineCacheService.saveCache(key, snapshot).catchError((Object error) {
+        debugPrint('[Settings] Display cache unavailable: $error');
+      }),
+    );
   }
 
   void _syncDraftsFromUiPrefs() {
@@ -681,10 +725,11 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       steps: [
         FirstSetupSpotlightStep(
           targetKey: _accountGuideKey,
+          targetBorderRadius: 28,
           title: L10nService().translate('home_tikhonvthn_2521e3'),
           description: L10nService().translate('home_qunltnnhtn_e09121'),
-          icon: Icons.manage_accounts_rounded,
-          color: const Color(0xFFF1B42A),
+          icon: Icons.manage_accounts_outlined,
+          color: const Color(0xFF648575),
         ),
         FirstSetupSpotlightStep(
           targetKey: _securityGuideKey,
@@ -765,6 +810,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _rememberSettingsInitialIdentity();
     UiPrefs.notifier.removeListener(_syncDraftsFromUiPrefs);
     AdMobService().disposeBanner(_bottomBannerAd);
     // ✅ FIX: Cancel auto-save timer to ensure settings persist
@@ -798,7 +844,11 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     _musicLinkCtrl.dispose();
     _customWidgetEventTitleCtrl.dispose();
     _customWidgetEventDateCtrl.dispose();
-    SettingsSyncService().backupSettingsToCloud();
+    unawaited(
+      SettingsSyncService().backupSettingsToCloud().catchError((Object error) {
+        debugPrint('[SettingsTab] Settings backup skipped or failed: $error');
+      }),
+    );
     super.dispose();
   }
 

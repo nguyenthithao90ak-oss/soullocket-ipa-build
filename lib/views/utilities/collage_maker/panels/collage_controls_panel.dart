@@ -12,7 +12,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
         'icon': Icons.smart_display_rounded,
       },
       {
-        'label': 'Feed 4 ảnh',
+        'label': context.tr('collage_preset_feed'),
         'hint': '4:5',
         'style': 'grid',
         'aspect': '4:5',
@@ -46,7 +46,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Mẫu nhanh',
+            context.tr('ui_utilities_quick_presets_a60c8b'),
             style: SLTheme.quicksand(
               fontWeight: FontWeight.w800,
               color: _paperInk,
@@ -553,7 +553,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
           ),
           SLSpacing.h8,
           Text(
-            'Thêm ảnh từ thư viện hoặc chọn từ kỷ niệm có sẵn.',
+            context.tr('ui_utilities_add_photos_from_your_library_or_choose_2e234c'),
             style: SLTheme.quicksand(
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
@@ -564,7 +564,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
           const SizedBox(height: 14),
           _buildSourceButton(
             icon: Icons.photo_library_outlined,
-            label: 'Chọn từ máy',
+            label: context.tr('ui_utilities_choose_from_device_131ca4'),
             onTap: _pickDevicePhotos,
             accent: _paperRoseDeep,
           ),

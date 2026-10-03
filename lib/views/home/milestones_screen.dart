@@ -8,6 +8,7 @@ import '../utilities/calendar_screen.dart';
 import '../../core/sl_page_physics.dart';
 import '../../widgets/living_sticker_scene.dart';
 import '../../utils/services/holiday_service.dart';
+import '../../utils/calendar/holiday_occurrence_resolver.dart';
 import 'milestone_sticker_gallery_screen.dart';
 
 class MilestoneEvent {
@@ -235,24 +236,24 @@ class _MilestonesScreenState extends State<MilestonesScreen>
 
     // 3. Ngày lễ lớn đầy đủ (lọc theo quốc gia / ngôn ngữ của người dùng)
     final applicableHolidays = HolidayService.getApplicableHolidays();
-    for (final h in applicableHolidays) {
-      for (int yearOffset = -1; yearOffset <= 1; yearOffset++) {
-        final targetYear = todayMidnight.year + yearOffset;
-        final holidayDate = h.dateInYear(targetYear);
-        if (holidayDate == null) continue;
-        final diff = holidayDate.difference(todayMidnight).inDays;
-        final displayName = HolidayService.getLocalizedName(h);
-        allEvents.add(
-          MilestoneEvent(
-            title: displayName,
-            date: holidayDate,
-            type: 'holiday',
-            stickerKey:
-                h.stickerKey ?? MilestoneStickerCatalog.holidayKey(holidayDate),
-            diffDays: diff,
-          ),
-        );
-      }
+    final holidayOccurrences = HolidayOccurrenceResolver.occurrencesBetween(
+      applicableHolidays,
+      start: DateTime(todayMidnight.year - 1),
+      end: DateTime(todayMidnight.year + 1, 12, 31),
+    );
+    for (final occurrence in holidayOccurrences) {
+      final h = occurrence.holiday;
+      allEvents.add(
+        MilestoneEvent(
+          title: HolidayService.getLocalizedName(h),
+          date: occurrence.date,
+          type: 'holiday',
+          stickerKey:
+              h.stickerKey ??
+              MilestoneStickerCatalog.holidayKey(occurrence.date),
+          diffDays: occurrence.daysFrom(todayMidnight),
+        ),
+      );
     }
 
     // 4. Lịch trình chuyến đi

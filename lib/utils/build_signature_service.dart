@@ -41,6 +41,19 @@ class BuildSignatureService {
       );
     }
 
+    try {
+      return await _readNativeStatus().timeout(const Duration(seconds: 3));
+    } catch (_) {
+      // Thiếu bridge, lỗi native và timeout đều không chứng minh được chữ ký.
+      return const AppSignatureStatus(
+        status: 'package_info_unavailable',
+        reasonCode: _signatureMismatchReasonCode,
+        isTrusted: false,
+      );
+    }
+  }
+
+  static Future<AppSignatureStatus> _readNativeStatus() async {
     final raw = await _bootstrapChannel.invokeMapMethod<String, dynamic>(
       _signatureMethod,
     );
@@ -61,7 +74,10 @@ class BuildSignatureService {
     if (kDebugMode || kIsWeb) {
       return;
     }
-    final signatureStatus = await loadSignatureStatus();
+    requireTrustedStatus(await loadSignatureStatus());
+  }
+
+  static void requireTrustedStatus(AppSignatureStatus signatureStatus) {
     if (signatureStatus.shouldBlock) {
       throw UnofficialBuildDetected(
         reasonCode: signatureStatus.reasonCode,

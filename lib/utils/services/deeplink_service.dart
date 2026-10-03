@@ -6,6 +6,9 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
 import '../../utils/services/love_card_link_service.dart';
+import '../../models/app_referral.dart';
+import '../../core/service_locator.dart';
+import 'app_referral_service.dart';
 
 /// ============================================================
 ///  DeeplinkService — Gra (Logic/Data)
@@ -92,7 +95,9 @@ class DeeplinkService {
     final mode = uri.queryParameters['mode'];
 
     try {
-      if (isJoinPath) {
+      if (AppReferralProfile.codeFromUri(uri) != null) {
+        await locator<AppReferralService>().captureLink(uri);
+      } else if (isJoinPath) {
         final houseId = uri.queryParameters['house']?.trim();
         if (houseId != null && houseId.isNotEmpty) {
           onJoinHouse(houseId);

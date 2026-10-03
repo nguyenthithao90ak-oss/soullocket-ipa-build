@@ -7,10 +7,8 @@ import 'package:flutter/foundation.dart';
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 
-typedef GeofenceCallback = void Function(
-  String zoneName,
-  double distanceMeters,
-);
+typedef GeofenceCallback =
+    void Function(String zoneName, double distanceMeters);
 
 class GpsTrackerService {
   static const int _kGpsHistoryRetentionDays = 14;
@@ -19,10 +17,19 @@ class GpsTrackerService {
 
   static final GpsTrackerService _instance = GpsTrackerService._internal();
   factory GpsTrackerService() => _instance;
-  GpsTrackerService._internal();
+  GpsTrackerService._internal()
+    : _db = FirebaseDatabase.instance,
+      _uidProvider = (() => FirebaseAuth.instance.currentUser?.uid);
 
-  final _db = FirebaseDatabase.instance;
-  final _auth = FirebaseAuth.instance;
+  @visibleForTesting
+  GpsTrackerService.forTesting(
+    FirebaseDatabase database, {
+    required String? Function() currentUid,
+  }) : _db = database,
+       _uidProvider = currentUid;
+
+  final FirebaseDatabase _db;
+  final String? Function() _uidProvider;
 
   GeofenceCallback? onGeofenceAlert;
 
@@ -40,17 +47,13 @@ class GpsTrackerService {
   final Map<String, int> _historyCleanupTsByScope = <String, int>{};
 
   Future<void> updateMyLocation(String houseId, double lat, double lng) async {
-    final uid = _auth.currentUser?.uid;
+    final uid = _uidProvider();
     if (uid == null) return;
     final role = await _resolveMyRole(houseId, uid);
-    if (role == null || role.isEmpty) return;
+    if (role == null || role.isEmpty || _uidProvider() != uid) return;
 
     final now = DateTime.now();
-    final locationData = {
-      'lat': lat,
-      'lng': lng,
-      'ts': ServerValue.timestamp,
-    };
+    final locationData = {'lat': lat, 'lng': lng, 'ts': ServerValue.timestamp};
 
     await _db.ref('gps/$houseId/$role').set(locationData);
 
@@ -63,11 +66,7 @@ class GpsTrackerService {
     });
 
     unawaited(
-      _maybeTrimGpsHistory(
-        houseId: houseId,
-        role: role,
-        dateKey: dateKey,
-      ),
+      _maybeTrimGpsHistory(houseId: houseId, role: role, dateKey: dateKey),
     );
 
     await _ensurePartnerMonitor(houseId, myUid: uid);
@@ -105,7 +104,7 @@ class GpsTrackerService {
   }
 
   Future<void> startPartnerGeofenceMonitoring(String houseId) async {
-    final myUid = _auth.currentUser?.uid;
+    final myUid = _uidProvider();
     if (myUid == null) return;
     await _ensurePartnerMonitor(houseId, myUid: myUid, forceRefresh: true);
   }
@@ -131,6 +130,7 @@ class GpsTrackerService {
     required String myUid,
     bool forceRefresh = false,
   }) async {
+    if (_uidProvider() != myUid) return;
     if (!forceRefresh &&
         _monitoredHouseId == houseId &&
         _partnerUid != null &&
@@ -139,6 +139,7 @@ class GpsTrackerService {
     }
 
     final myRole = await _resolveMyRole(houseId, myUid);
+    if (_uidProvider() != myUid) return;
     final partnerRole = _partnerRoleOf(myRole);
     if (partnerRole == null || partnerRole.isEmpty) {
       await stopPartnerGeofenceMonitoring();
@@ -157,51 +158,43 @@ class GpsTrackerService {
     _partnerUid = partnerRole;
     _partnerLocation = null;
 
-    _partnerLocationSubscription =
-        _db.ref('gps/$houseId/$partnerRole').onValue.listen(
-      (event) {
-        if (!event.snapshot.exists || event.snapshot.value == null) {
-          _partnerLocation = null;
-          return;
-        }
-        _partnerLocation =
-            Map<String, dynamic>.from(event.snapshot.value as Map);
-      },
-      onError: (Object error) {
-        debugPrint('[GPS] Partner monitor error: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: 'Không thể theo dõi vị trí đối phương.',
-        ).message}');
-      },
-    );
+    _partnerLocationSubscription = _db
+        .ref('gps/$houseId/$partnerRole')
+        .onValue
+        .listen(
+          (event) {
+            if (!event.snapshot.exists || event.snapshot.value == null) {
+              _partnerLocation = null;
+              return;
+            }
+            _partnerLocation = Map<String, dynamic>.from(
+              event.snapshot.value as Map,
+            );
+          },
+          onError: (Object error) {
+            debugPrint(
+              '[GPS] Partner monitor error: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể theo dõi vị trí đối phương.').message}',
+            );
+          },
+        );
   }
 
   Future<String?> _resolveMyRole(String houseId, String myUid) async {
     try {
+      final memberSnap = await _db.ref('houses/$houseId/members/$myUid').get();
+      final member = _toStringDynamicMap(memberSnap.value);
+      final role = member['role']?.toString().trim() ?? '';
+      if (role == 'user1' || role == 'user2') return role;
+
       final ownerSnap = await _db.ref('houses/$houseId/owner_uid').get();
       final ownerUid = ownerSnap.value?.toString().trim() ?? '';
       if (ownerUid.isNotEmpty && ownerUid == myUid) {
         return 'user1';
       }
-
-      final snap = await _db.ref('houses/$houseId/members').get();
-      if (!snap.exists || snap.value == null) return null;
-
-      final data = Map<dynamic, dynamic>.from(snap.value as Map);
-      for (final entry in data.entries) {
-        final uid = entry.key.toString().trim();
-        if (uid != myUid) {
-          continue;
-        }
-        final item = _toStringDynamicMap(entry.value);
-        final role = item['role']?.toString().trim() ?? '';
-        if (role == 'user1' || role == 'user2') return role;
-      }
     } catch (e) {
-      debugPrint('[GPS] Resolve role error: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể xác định vai trò GPS.',
-      ).message}');
+      debugPrint(
+        '[GPS] Resolve role error: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể xác định vai trò GPS.').message}',
+      );
     }
     return null;
   }
@@ -228,17 +221,21 @@ class GpsTrackerService {
         onGeofenceAlert?.call('nearby_partner', distance);
       }
     } catch (e) {
-      debugPrint('[GPS] Geofence check error: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể kiểm tra vùng GPS.',
-      ).message}');
+      debugPrint(
+        '[GPS] Geofence check error: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể kiểm tra vùng GPS.').message}',
+      );
     }
   }
 
   double _calculateDistance(
-      double lat1, double lon1, double lat2, double lon2) {
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
     const double p = 0.017453292519943295;
-    final a = 0.5 -
+    final a =
+        0.5 -
         cos((lat2 - lat1) * p) / 2 +
         cos(lat1 * p) * cos(lat2 * p) * (1 - cos((lon2 - lon1) * p)) / 2;
     return 12742 * asin(sqrt(a)) * 1000;
@@ -279,10 +276,9 @@ class GpsTrackerService {
         dateKey: dateKey,
       );
     } catch (e) {
-      debugPrint('[GPS] History cleanup error: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể dọn lịch sử GPS.',
-      ).message}');
+      debugPrint(
+        '[GPS] History cleanup error: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể dọn lịch sử GPS.').message}',
+      );
     }
   }
 
@@ -291,10 +287,12 @@ class GpsTrackerService {
     required String role,
   }) async {
     final historyRoot = _db.ref('gps_history/$houseId/$role');
-    final oldestKeptDay = DateTime.now()
-        .subtract(const Duration(days: _kGpsHistoryRetentionDays - 1));
-    final deleteThroughKey =
-        _formatDateKey(oldestKeptDay.subtract(const Duration(days: 1)));
+    final oldestKeptDay = DateTime.now().subtract(
+      const Duration(days: _kGpsHistoryRetentionDays - 1),
+    );
+    final deleteThroughKey = _formatDateKey(
+      oldestKeptDay.subtract(const Duration(days: 1)),
+    );
     final snap = await historyRoot.orderByKey().endAt(deleteThroughKey).get();
     final raw = _toStringDynamicMap(snap.value);
     if (raw.isEmpty) {
@@ -319,17 +317,18 @@ class GpsTrackerService {
       return;
     }
 
-    final rankedEntries = raw.entries
-        .map(
-          (entry) => MapEntry(
-            entry.key,
-            _readTimestamp(_toStringDynamicMap(entry.value)['ts']),
-          ),
-        )
-        .where((entry) => entry.value != null)
-        .cast<MapEntry<String, int>>()
-        .toList()
-      ..sort((a, b) => a.value.compareTo(b.value));
+    final rankedEntries =
+        raw.entries
+            .map(
+              (entry) => MapEntry(
+                entry.key,
+                _readTimestamp(_toStringDynamicMap(entry.value)['ts']),
+              ),
+            )
+            .where((entry) => entry.value != null)
+            .cast<MapEntry<String, int>>()
+            .toList()
+          ..sort((a, b) => a.value.compareTo(b.value));
 
     if (rankedEntries.length <= _kGpsHistoryMaxPointsPerDay) {
       return;

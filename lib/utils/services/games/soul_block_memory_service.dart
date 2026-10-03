@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:ui' as ui;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -11,6 +12,7 @@ import '../../app_error_mapper.dart';
 import '../../../views/home/tabs/diary/utils/diary_memory_media.dart';
 import '../../../views/home/tabs/diary/utils/private_memory_link_policy.dart';
 import '../private_media_url_service.dart';
+import 'soul_block_image_cache.dart';
 
 class SoulBlockMemory {
   const SoulBlockMemory({required this.id, required this.url});
@@ -18,9 +20,23 @@ class SoulBlockMemory {
   final String url;
 }
 
+class SoulBlockPhoto {
+  const SoulBlockPhoto({required this.id, required this.image});
+  final String id;
+  final ui.Image image;
+}
+
+class _SoulCandidateCache {
+  _SoulCandidateCache(this.items) : age = Stopwatch()..start();
+  final List<Map<String, dynamic>> items;
+  final Stopwatch age;
+}
+
 /// Chỉ lấy ảnh trong Nhật ký của ngôi nhà hiện tại; không lưu URL đã ký.
 class SoulBlockMemoryService {
-  final _urls = PrivateMediaUrlService();
+  final _urls = PrivateMediaUrlService(cacheCompletedUrls: true);
+  static final _candidateCache = <String, _SoulCandidateCache>{};
+  static final _candidateLoads = <String, Future<List<Map<String, dynamic>>>>{};
   final _random = Random();
   Future<void> _historyWrite = Future<void>.value();
 
@@ -31,25 +47,17 @@ class SoulBlockMemoryService {
     String houseId, {
     String? preferredId,
     bool next = false,
+    int diaryWidth = 640,
   }) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null || houseId.trim().isEmpty) return const [];
-    final snapshot = await FirebaseDatabase.instance
-        .ref('houses/$houseId/memories')
-        .orderByChild('ts')
-        .limitToLast(80)
-        .get()
-        .timeout(const Duration(seconds: 12));
+    final key = jsonEncode([uid, houseId]);
+    final cached = _candidateCache[key];
+    final items =
+        cached != null && cached.age.elapsed < const Duration(minutes: 3)
+        ? cached.items.map(Map<String, dynamic>.from).toList()
+        : await _readCandidates(uid, houseId, key);
     if (FirebaseAuth.instance.currentUser?.uid != uid) return const [];
-    final raw = snapshot.value;
-    if (raw is! Map) return const [];
-    final source = Map<dynamic, dynamic>.from(raw);
-    final items = <Map<String, dynamic>>[];
-    for (final entry in source.entries) {
-      if (entry.value is! Map) continue;
-      final data = _photoCandidate(entry.key.toString(), entry.value);
-      if (data != null) items.add(data);
-    }
     // Ván đang lưu giữ đúng ảnh, kể cả ảnh đã nằm ngoài 80 nhật ký mới nhất.
     if (!next &&
         preferredId != null &&
@@ -71,6 +79,13 @@ class SoulBlockMemoryService {
     final prefs = await SharedPreferences.getInstance();
     final recent =
         prefs.getStringList(_historyKey(uid, houseId)) ?? const <String>[];
+    final cachedIds = await SoulBlockImageCache.instance.cachedIds(
+      uid: uid,
+      houseId: houseId,
+      ids: items.map((item) => item['id'] as String),
+      diaryWidth: diaryWidth,
+    );
+    if (FirebaseAuth.instance.currentUser?.uid != uid) return const [];
     final shuffledOrder = <String, int>{
       for (var i = 0; i < items.length; i++) items[i]['id'] as String: i,
     };
@@ -83,11 +98,80 @@ class SoulBlockMemoryService {
 
     items.sort((a, b) {
       final order = rank(a).compareTo(rank(b));
-      return order != 0
-          ? order
+      if (order != 0) return order;
+      final aCached = cachedIds.contains(a['id']) ? 0 : 1;
+      final bCached = cachedIds.contains(b['id']) ? 0 : 1;
+      return aCached != bCached
+          ? aCached.compareTo(bCached)
           : shuffledOrder[a['id']]!.compareTo(shuffledOrder[b['id']]!);
     });
     return items;
+  }
+
+  Future<List<Map<String, dynamic>>> _readCandidates(
+    String uid,
+    String houseId,
+    String key,
+  ) async {
+    final pending = _candidateLoads.putIfAbsent(key, () async {
+      final snapshot = await FirebaseDatabase.instance
+          .ref('houses/$houseId/memories')
+          .orderByChild('ts')
+          .limitToLast(80)
+          .get()
+          .timeout(const Duration(seconds: 12));
+      if (FirebaseAuth.instance.currentUser?.uid != uid) {
+        return <Map<String, dynamic>>[];
+      }
+      final items = <Map<String, dynamic>>[];
+      final raw = snapshot.value;
+      if (raw is Map) {
+        for (final entry in raw.entries) {
+          final data = _photoCandidate(entry.key.toString(), entry.value);
+          if (data != null) {
+            items.add(
+              PrivateMemoryLinkPolicy.isPrivate(data)
+                  ? PrivateMemoryLinkPolicy.offlineMetadata(data)
+                  : data,
+            );
+          }
+        }
+      }
+      _candidateCache[key] = _SoulCandidateCache(items);
+      while (_candidateCache.length > 2) {
+        _candidateCache.remove(_candidateCache.keys.first);
+      }
+      return items;
+    });
+    try {
+      return (await pending).map(Map<String, dynamic>.from).toList();
+    } catch (_) {
+      final stale = _candidateCache[key];
+      if (stale != null && FirebaseAuth.instance.currentUser?.uid == uid) {
+        return stale.items.map(Map<String, dynamic>.from).toList();
+      }
+      rethrow;
+    } finally {
+      if (identical(_candidateLoads[key], pending)) _candidateLoads.remove(key);
+    }
+  }
+
+  Future<SoulBlockPhoto?> loadPhoto(
+    String houseId,
+    Map<String, dynamic> data, {
+    int diaryWidth = 640,
+  }) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return null;
+    final id = data['id'] as String;
+    final image = await SoulBlockImageCache.instance.load(
+      uid: uid,
+      houseId: houseId,
+      id: id,
+      diaryWidth: diaryWidth,
+      resolveUrl: () async => (await resolve(houseId, data))?.url,
+    );
+    return image == null ? null : SoulBlockPhoto(id: id, image: image);
   }
 
   Map<String, dynamic>? _photoCandidate(String id, Object? raw) {

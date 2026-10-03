@@ -200,9 +200,10 @@ mixin _SoulBlockStrategyLogic {
   double _difficultyBiasForCombo(
     List<List<bool>> boardMask,
     List<_SoulPieceTemplate> combo,
-    double progress,
-  ) {
-    final stress = _boardStressLevel(boardMask);
+    double progress, {
+    double? boardStress,
+  }) {
+    final stress = boardStress ?? _boardStressLevel(boardMask);
     final avgTier =
         combo.fold<double>(0, (total, item) => total + item.tier) /
         combo.length;
@@ -271,18 +272,29 @@ mixin _SoulBlockStrategyLogic {
     final boardMask = _boardMask(boardTiles);
     // Mỗi trạng thái bàn + mẫu chỉ tính placements một lần trong lượt refill.
     // Beam search dùng lại cache này để tránh quét lặp khi ba mảnh có đường đi chung.
-    final placementMemo = <String, List<_PlacementEval>>{};
+    final placementMemo = <(String, String, int, bool), List<_PlacementEval>>{};
+    final positionMemo = <String, double>{};
     List<_PlacementEval> placementsFor(
       List<List<bool>> mask,
       _SoulPieceTemplate template, {
       bool bomb = false,
     }) {
-      final key = '${_serializeBoard(mask)}|${template.id}|${bomb ? '1' : '0'}';
+      final key = (
+        _serializeBoard(mask),
+        template.id,
+        template.quarterTurns,
+        bomb,
+      );
       final cached = placementMemo[key];
       if (cached != null) {
         return cached;
       }
-      final placements = _findPlacements(mask, template, bomb: bomb);
+      final placements = _findPlacements(
+        mask,
+        template,
+        bomb: bomb,
+        positionMemo: positionMemo,
+      );
       // Cache cục bộ, có trần để một bàn bất thường không giữ quá nhiều board copy.
       if (placementMemo.length < 128) {
         placementMemo[key] = placements;
@@ -369,8 +381,9 @@ mixin _SoulBlockStrategyLogic {
       var unlockedCount = 0;
       for (final template in _kSoulBlockTemplates) {
         if (unlockedCount >= 2 || pool.length >= 10) break;
-        if (initialIds.contains(template.id) || template.cellCount < 4)
+        if (initialIds.contains(template.id) || template.cellCount < 4) {
           continue;
+        }
         if (openingBoards.any(
           (mask) => placementsFor(mask, template).isNotEmpty,
         )) {
@@ -422,6 +435,11 @@ mixin _SoulBlockStrategyLogic {
 
     // Giữ tối đa 10 mẫu để có đủ khối hồi phục nhưng vẫn giới hạn số nhánh.
     final shortlist = pool.take(10).toList(growable: false);
+    final mobilityMemo = <String, int>{};
+    int mobilityFor(List<List<bool>> mask) => mobilityMemo.putIfAbsent(
+      _serializeBoard(mask),
+      () => _countPlayableTemplates(mask, shortlist),
+    );
     final beamWidth = boardStress >= 0.62 || (_combo > 0 && _comboMisses >= 2)
         ? 4
         : 3;
@@ -471,16 +489,18 @@ mixin _SoulBlockStrategyLogic {
             final repeated = plan.templates.any(
               (item) => item.id == template.id,
             );
-            final mobility = _countPlayableTemplates(
-              placement.boardAfter,
-              shortlist,
-            );
+            final mobility = mobilityFor(placement.boardAfter);
             final clearBonus =
                 placement.clearedLines * (progress < 0.60 ? 76.0 : 54.0);
             final mobilityBonus = mobility * (depth == 2 ? 12.0 : 4.0);
             final deadlockPenalty = mobility == 0 ? 180.0 : 0.0;
             final bias = depth == 2
-                ? _difficultyBiasForCombo(boardMask, templates, progress)
+                ? _difficultyBiasForCombo(
+                    boardMask,
+                    templates,
+                    progress,
+                    boardStress: boardStress,
+                  )
                 : 0.0;
             final comboState = _nextComboState(
               level: plan.comboLevel,
@@ -528,14 +548,15 @@ mixin _SoulBlockStrategyLogic {
         }
         return b.score.compareTo(a.score);
       });
-      final signatures = <String>{};
+      final signatures = <(String, String, int, int)>{};
       beam = next
           .where(
-            (plan) => signatures.add(
-              plan.templates.map((template) => template.id).join('|') +
-                  _serializeBoard(plan.board) +
-                  '|${plan.comboLevel}|${plan.comboMisses}',
-            ),
+            (plan) => signatures.add((
+              plan.templates.map((template) => template.id).join('|'),
+              _serializeBoard(plan.board),
+              plan.comboLevel,
+              plan.comboMisses,
+            )),
           )
           .take(beamWidth)
           .toList(growable: false);
@@ -560,6 +581,7 @@ mixin _SoulBlockStrategyLogic {
       if (!sequencePool.any((item) => item.id == single.id)) {
         sequencePool.add(single);
       }
+      final fallbackMobility = <String, int>{};
       var fallbackBoard = boardMask;
       var fallbackScore = 0.0;
       var fallbackClearedLines = 0;
@@ -583,9 +605,9 @@ mixin _SoulBlockStrategyLogic {
             bomb: depth == 0 && firstPieceIsBomb,
           );
           for (final placement in _topPlacements(placements, 3)) {
-            final mobility = _countPlayableTemplates(
-              placement.boardAfter,
-              sequencePool,
+            final mobility = fallbackMobility.putIfAbsent(
+              _serializeBoard(placement.boardAfter),
+              () => _countPlayableTemplates(placement.boardAfter, sequencePool),
             );
             choices.add((
               template: template,
@@ -707,8 +729,9 @@ mixin _SoulBlockStrategyLogic {
 
   _RecommendedMove? _recommendMoveFor(
     List<List<_SoulTile?>> boardTiles,
-    List<_SoulPieceOption> tray,
-  ) {
+    List<_SoulPieceOption> tray, {
+    bool includeRotations = true,
+  }) {
     final boardMask = _boardMask(boardTiles);
     final boardKey = _serializeBoard(boardMask);
     if (_moveCacheBoard != boardKey ||
@@ -721,19 +744,21 @@ mixin _SoulBlockStrategyLogic {
     }
     if (_moveCache.length > 32) _moveCache.clear();
     _RecommendedMove? bestMove;
-    for (final piece in tray) {
+    final positionMemo = <String, double>{};
+    void consider(_SoulPieceOption piece, _SoulPieceTemplate template) {
       final key = (
         piece.id,
-        piece.template.id,
-        piece.template.quarterTurns,
+        template.id,
+        template.quarterTurns,
         piece.isGold,
         piece.isBomb,
       );
       if (!_moveCache.containsKey(key)) {
         final placements = _findPlacements(
           boardMask,
-          piece.template,
+          template,
           bomb: piece.isBomb,
+          positionMemo: positionMemo,
         );
         if (placements.isEmpty) {
           _moveCache[key] = null;
@@ -752,7 +777,7 @@ mixin _SoulBlockStrategyLogic {
             heuristic: rankedValue(best),
             expectedGain:
                 _scoreGainFor(
-                  piece.template,
+                  template,
                   best.clearedLines,
                   _combo,
                   bombClearedCells: best.bombClearedCells,
@@ -761,13 +786,30 @@ mixin _SoulBlockStrategyLogic {
                 ) *
                 (piece.isGold ? 2 : 1),
             clearCount: best.clearedLines,
+            quarterTurns: template.quarterTurns,
           );
         }
       }
       final move = _moveCache[key];
+      final currentBest = bestMove;
       if (move != null &&
-          (bestMove == null || move.heuristic > bestMove.heuristic)) {
+          (currentBest == null || move.heuristic > currentBest.heuristic)) {
         bestMove = move;
+      }
+    }
+
+    for (final piece in tray) {
+      consider(piece, piece.template);
+    }
+    // Chỉ tìm hướng xoay khi mọi mảnh ở hướng hiện tại đều kẹt. Người chơi
+    // vẫn tự xoay bằng nút có sẵn; không báo Game Over khi còn cách đặt này.
+    if (bestMove == null && includeRotations) {
+      for (final piece in tray) {
+        var rotated = piece.template;
+        for (var turn = 0; turn < 3; turn++) {
+          rotated = rotated.rotate();
+          consider(piece, rotated);
+        }
       }
     }
     return bestMove;
@@ -787,6 +829,7 @@ mixin _SoulBlockStrategyLogic {
     List<List<bool>> boardMask,
     _SoulPieceTemplate template, {
     bool bomb = false,
+    Map<String, double>? positionMemo,
   }) {
     final placements = <_PlacementEval>[];
     for (var row = 0; row <= _strategyBoardSize - template.height; row++) {
@@ -795,7 +838,14 @@ mixin _SoulBlockStrategyLogic {
           continue;
         }
         placements.add(
-          _simulatePlacement(boardMask, template, row, col, bomb: bomb),
+          _simulatePlacement(
+            boardMask,
+            template,
+            row,
+            col,
+            bomb: bomb,
+            positionMemo: positionMemo,
+          ),
         );
       }
     }
@@ -957,6 +1007,7 @@ mixin _SoulBlockStrategyLogic {
     int startRow,
     int startCol, {
     bool bomb = false,
+    Map<String, double>? positionMemo,
   }) {
     final nextBoard = List<List<bool>>.generate(
       _strategyBoardSize,
@@ -1020,23 +1071,22 @@ mixin _SoulBlockStrategyLogic {
     }
 
     final clearedLines = clearedRows.length + clearedCols.length;
-    final nearLinePressure = _countNearLines(nextBoard);
-    final tightHoles = _countTightHoles(nextBoard);
-    final adjacency = _countAdjacency(nextBoard);
-    final occupancy =
-        _filledCount(nextBoard) / (_strategyBoardSize * _strategyBoardSize);
+    final boardKey = positionMemo == null ? null : _serializeBoard(nextBoard);
+    final cachedPosition = positionMemo?[boardKey];
+    final positionValue = cachedPosition ?? _boardPositionValue(nextBoard);
+    // Nhiều cách đặt/bom dẫn tới cùng một bàn. Chỉ tính các đặc trưng bàn
+    // một lần trong lượt sinh khối; cache có trần và được bỏ sau lượt này.
+    if (positionMemo != null && boardKey != null && positionMemo.length < 512) {
+      positionMemo[boardKey] = positionValue;
+    }
     final centerBias = _centerBias(template, startRow, startCol);
 
     final heuristic =
         _basePiecePoints(template).toDouble() +
         (clearedLines * 145) +
         (bombCells * 18) +
-        (nearLinePressure * 16) +
-        (adjacency * 1.6) -
-        (tightHoles * 18) -
-        (occupancy > 0.74 ? occupancy * 72 : occupancy * 28) -
-        centerBias +
-        _openSpaceValue(nextBoard);
+        positionValue -
+        centerBias;
 
     return _PlacementEval(
       row: startRow,
@@ -1046,6 +1096,66 @@ mixin _SoulBlockStrategyLogic {
       boardAfter: nextBoard,
       bombClearedCells: bombCells,
     );
+  }
+
+  double _boardPositionValue(List<List<bool>> boardMask) {
+    final size = _strategyBoardSize;
+    final colCounts = List<int>.filled(size, 0);
+    var filled = 0;
+    var nearLines = 0;
+    var adjacency = 0;
+    var holes = 0;
+    var squares2 = 0;
+    var squares3 = 0;
+    // Gộp các lần quét bàn của heuristic thành một vòng, giữ nguyên trọng số.
+    for (var row = 0; row < size; row++) {
+      var rowCount = 0;
+      for (var col = 0; col < size; col++) {
+        if (boardMask[row][col]) {
+          filled++;
+          rowCount++;
+          colCounts[col]++;
+          if (row + 1 < size && boardMask[row + 1][col]) adjacency++;
+          if (col + 1 < size && boardMask[row][col + 1]) adjacency++;
+          continue;
+        }
+        var neighbors = 0;
+        if (row > 0 && boardMask[row - 1][col]) neighbors++;
+        if (row + 1 < size && boardMask[row + 1][col]) neighbors++;
+        if (col > 0 && boardMask[row][col - 1]) neighbors++;
+        if (col + 1 < size && boardMask[row][col + 1]) neighbors++;
+        if (neighbors >= 3) holes++;
+        if (row + 1 < size &&
+            col + 1 < size &&
+            !boardMask[row][col + 1] &&
+            !boardMask[row + 1][col] &&
+            !boardMask[row + 1][col + 1]) {
+          squares2++;
+          if (row + 2 < size &&
+              col + 2 < size &&
+              !boardMask[row][col + 2] &&
+              !boardMask[row + 1][col + 2] &&
+              !boardMask[row + 2][col] &&
+              !boardMask[row + 2][col + 1] &&
+              !boardMask[row + 2][col + 2]) {
+            squares3++;
+          }
+        }
+      }
+      final gaps = size - rowCount;
+      nearLines += gaps == 1 ? 3 : (gaps == 2 ? 1 : 0);
+    }
+    for (final count in colCounts) {
+      final gaps = size - count;
+      nearLines += gaps == 1 ? 3 : (gaps == 2 ? 1 : 0);
+    }
+    final occupancy = filled / (size * size);
+    return (nearLines * 16) +
+        (adjacency * 1.6) -
+        (holes * 18) -
+        (occupancy > 0.74 ? occupancy * 72 : occupancy * 28) +
+        min(24, squares2) * .8 +
+        min(4, squares3) * 6;
   }
 
   int _countPlayableTemplates(
@@ -1077,29 +1187,28 @@ mixin _SoulBlockStrategyLogic {
   // ignore: unused_element
   bool _hasAnyPlayableMove(
     List<List<_SoulTile?>> boardTiles,
-    List<_SoulPieceOption> tray,
-  ) {
+    List<_SoulPieceOption> tray, {
+    bool includeRotations = true,
+  }) {
     final boardMask = _boardMask(boardTiles);
     for (final piece in tray) {
-      for (
-        var row = 0;
-        row <= _strategyBoardSize - piece.template.height;
-        row++
-      ) {
-        for (
-          var col = 0;
-          col <= _strategyBoardSize - piece.template.width;
-          col++
-        ) {
-          if (_canPlace(boardMask, piece.template, row, col)) {
-            return true;
+      var template = piece.template;
+      for (var turn = 0; turn < (includeRotations ? 4 : 1); turn++) {
+        for (var row = 0; row <= _strategyBoardSize - template.height; row++) {
+          for (var col = 0; col <= _strategyBoardSize - template.width; col++) {
+            if (_canPlace(boardMask, template, row, col)) {
+              return true;
+            }
           }
         }
+        template = template.rotate();
       }
     }
     return false;
   }
 
+  // Hàm tham chiếu cho phép đối chiếu heuristic trong công cụ kiểm tra.
+  // ignore: unused_element
   int _countNearLines(List<List<bool>> boardMask) {
     var score = 0;
     for (var row = 0; row < _strategyBoardSize; row++) {
@@ -1130,6 +1239,7 @@ mixin _SoulBlockStrategyLogic {
     return _countTightHoles(boardMask);
   }
 
+  // ignore: unused_element
   double _openSpaceValue(List<List<bool>> boardMask) {
     var squares2 = 0;
     var squares3 = 0;
@@ -1138,8 +1248,9 @@ mixin _SoulBlockStrategyLogic {
         if (boardMask[row][col] ||
             boardMask[row][col + 1] ||
             boardMask[row + 1][col] ||
-            boardMask[row + 1][col + 1])
+            boardMask[row + 1][col + 1]) {
           continue;
+        }
         squares2++;
         if (row < _strategyBoardSize - 2 &&
             col < _strategyBoardSize - 2 &&
@@ -1147,8 +1258,9 @@ mixin _SoulBlockStrategyLogic {
             !boardMask[row + 1][col + 2] &&
             !boardMask[row + 2][col] &&
             !boardMask[row + 2][col + 1] &&
-            !boardMask[row + 2][col + 2])
+            !boardMask[row + 2][col + 2]) {
           squares3++;
+        }
       }
     }
     // Ưu tiên giữ chỗ cho khối vuông lớn, thay vì chỉ đếm số ô trống rời rạc.
@@ -1183,6 +1295,7 @@ mixin _SoulBlockStrategyLogic {
     return holes;
   }
 
+  // ignore: unused_element
   int _countAdjacency(List<List<bool>> boardMask) {
     var adjacency = 0;
     for (var row = 0; row < _strategyBoardSize; row++) {
@@ -1224,13 +1337,17 @@ mixin _SoulBlockStrategyLogic {
   }
 
   String _serializeBoard(List<List<bool>> boardMask) {
-    final buffer = StringBuffer();
-    for (final row in boardMask) {
-      for (final filled in row) {
-        buffer.write(filled ? '1' : '0');
+    // Khóa nội bộ: mỗi hàng 8–10 bit nằm trong một mã ký tự, không phải
+    // 64–100 ký tự '0'/'1'. Dùng được trên web và không đổi định dạng ván lưu.
+    final rows = List<int>.filled(boardMask.length, 0);
+    for (var row = 0; row < boardMask.length; row++) {
+      var bits = 0;
+      for (var col = 0; col < boardMask[row].length; col++) {
+        if (boardMask[row][col]) bits |= 1 << col;
       }
+      rows[row] = bits;
     }
-    return buffer.toString();
+    return String.fromCharCodes(rows);
   }
 
   int _scoreGainFor(

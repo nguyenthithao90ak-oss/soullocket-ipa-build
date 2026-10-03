@@ -34,46 +34,46 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
   static const List<_LoadingMessage> _kLoadingMessages = [
     _LoadingMessage(
       icon: Icons.shield_rounded,
-      badge: 'Bảo mật 100%',
-      text: 'Dữ liệu được mã hóa an toàn tuyệt đối & bảo mật nghiêm ngặt',
+      badge: 'loading_security_badge',
+      text: 'loading_security_text',
       subText:
-          'Kỷ niệm của hai bạn luôn được bảo vệ, không bao giờ lo mất dữ liệu',
+          'loading_security_hint',
     ),
     _LoadingMessage(
       icon: Icons.cloud_done_rounded,
-      badge: 'Đồng bộ 24/7',
-      text: 'Tự động sao lưu & đồng bộ ký ức tình yêu trên đám mây',
-      subText: 'Mỗi bức ảnh và nhật ký đều được cất giữ trọn vẹn và an tâm',
+      badge: 'loading_sync_badge',
+      text: 'loading_sync_text',
+      subText: 'loading_sync_hint',
     ),
     _LoadingMessage(
       icon: Icons.lock_rounded,
-      badge: 'Riêng tư tuyệt đối',
-      text: 'Không gian tình yêu riêng tư chỉ dành cho hai bạn',
-      subText: 'Bảo mật 2 lớp nghiêm ngặt, chỉ hai bạn mới có thể xem',
+      badge: 'loading_privacy_badge',
+      text: 'loading_privacy_text',
+      subText: 'loading_privacy_hint',
     ),
     _LoadingMessage(
       icon: Icons.favorite_rounded,
-      badge: 'Kỷ niệm vô giá',
-      text: 'Tình yêu là duy nhất, từng khoảnh khắc đều là vô giá',
-      subText: 'Nơi lưu giữ trọn vẹn từng cột mốc ngọt ngào và đáng nhớ',
+      badge: 'loading_memories_badge',
+      text: 'loading_memories_text',
+      subText: 'loading_memories_hint',
     ),
     _LoadingMessage(
       icon: Icons.auto_awesome_rounded,
-      badge: 'Khoảnh khắc ngọt ngào',
-      text: 'Cùng nhau đếm từng ngày yêu và viết tiếp câu chuyện đẹp nhé!',
-      subText: 'Chúc hai bạn hôm nay có thêm thật nhiều niềm vui và hạnh phúc',
+      badge: 'loading_countdown_badge',
+      text: 'loading_countdown_text',
+      subText: 'loading_countdown_hint',
     ),
     _LoadingMessage(
       icon: Icons.verified_user_rounded,
-      badge: 'An tâm trọn đời',
-      text: 'Cam kết bảo vệ dữ liệu trọn đời cho các cặp đôi',
-      subText: 'Lưu giữ tình yêu bền chặt qua năm tháng cùng SoulLocket',
+      badge: 'loading_backup_badge',
+      text: 'loading_backup_text',
+      subText: 'loading_backup_hint',
     ),
     _LoadingMessage(
       icon: Icons.favorite_border_rounded,
-      badge: 'Trao gửi yêu thương',
-      text: 'Từng tin nhắn, cái chạm tim đều được gửi gắm an toàn nhất',
-      subText: 'Hôm nay bạn đã nhớ và yêu thương người ấy nhiều hơn chưa? 💕',
+      badge: 'loading_message_badge',
+      text: 'loading_message_text',
+      subText: 'loading_message_hint',
     ),
   ];
 
@@ -283,7 +283,7 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
                                   borderRadius: BorderRadius.circular(999),
                                 ),
                                 child: Text(
-                                  currentMsg.badge,
+                                  context.tr(currentMsg.badge),
                                   style: SLTheme.quicksand(
                                     fontSize: 10.5,
                                     fontWeight: FontWeight.w800,
@@ -295,7 +295,7 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            currentMsg.text,
+                            context.tr(currentMsg.text),
                             textAlign: TextAlign.center,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -308,7 +308,7 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            currentMsg.subText,
+                            context.tr(currentMsg.subText),
                             textAlign: TextAlign.center,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,

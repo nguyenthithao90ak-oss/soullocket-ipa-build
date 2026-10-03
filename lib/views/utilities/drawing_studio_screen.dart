@@ -7,7 +7,6 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -17,7 +16,6 @@ import 'package:flutter/rendering.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/drawing_studio_service.dart';
 import '../../utils/app_error_mapper.dart';
-import '../../utils/services/role_utils.dart';
 
 part 'drawing_studio/models/drawing_models.dart';
 part 'drawing_studio/painters/drawing_painters.dart';
@@ -44,21 +42,8 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       _CanvasRepaintNotifier();
   final List<_DrawStroke> _strokes = [];
   final DrawingStudioService _drawingService = DrawingStudioService();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final Map<String, _DrawStroke> _realtimeStrokes = {};
-  final Map<String, _DrawStroke> _partnerActiveStrokes = {};
-  final Set<String> _localPendingStrokeIds = {};
-  StreamSubscription<List<DrawingStudioStroke>>? _strokesSub;
-  StreamSubscription<Map<String, DrawingStudioStroke>>? _activeStrokesSub;
-  StreamSubscription<DrawingStudioBackground>? _backgroundSub;
-  StreamSubscription<List<DrawingStudioPresence>>? _presenceSub;
-
-  Timer? _presenceTimer;
-  bool _presenceIsDrawing = false;
-
   String _mode = 'frame';
 
-  DateTime? _lastActiveStrokeSentAt;
   String _backgroundId = 'paper_grid';
   String _aspectRatioId = '4_5';
   Color _currentColor = const Color(0xFFFF3B4D);
@@ -69,10 +54,8 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   bool _isDrawing = false;
   bool _isCanvasLocked = false;
   bool _isGalleryLoading = true;
-  bool _isSyncOnline = false;
   String? _activeGalleryActionId;
   List<DrawingStudioGalleryItem> _gallery = [];
-  List<DrawingStudioPresence> _presence = [];
 
   static const List<Color> _palette = [
     Color(0xFFFF3B4D),
@@ -95,129 +78,20 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   @override
   void initState() {
     super.initState();
-    _loadGallery();
-    _startRealtimeSync();
+    unawaited(_loadGallery());
   }
 
   @override
   void dispose() {
-    _presenceTimer?.cancel();
-    _strokesSub?.cancel();
-    _activeStrokesSub?.cancel();
-    _backgroundSub?.cancel();
-    _presenceSub?.cancel();
-    final myRole = RoleUtils.currentRoleSync();
-    if (myRole.isNotEmpty) {
-      unawaited(
-        _drawingService.removePresence(houseId: widget.houseId, uid: myRole),
-      );
-    }
+    _canvasRepaintNotifier.dispose();
     super.dispose();
   }
 
-  void _startRealtimeSync() {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null || uid.isEmpty || widget.houseId.trim().isEmpty) {
-      return;
-    }
+  List<_DrawStroke> get _allVisibleStrokes => _strokes;
 
-    _isSyncOnline = true;
-    unawaited(_updatePresence(isDrawing: false));
+  bool get _hasAnyStroke => _strokes.isNotEmpty;
 
-    _strokesSub = _drawingService.streamStrokes(widget.houseId).listen((
-      strokes,
-    ) {
-      if (!mounted) return;
-      setState(() {
-        _realtimeStrokes
-          ..clear()
-          ..addEntries(
-            strokes.map(
-              (stroke) => MapEntry(stroke.id, _strokeFromRealtime(stroke)),
-            ),
-          );
-        _localPendingStrokeIds.removeWhere(_realtimeStrokes.containsKey);
-      });
-    });
-
-    _activeStrokesSub = _drawingService
-        .streamActiveStrokes(widget.houseId)
-        .listen((activeStrokesMap) {
-          if (!mounted) return;
-          setState(() {
-            _partnerActiveStrokes.clear();
-            final myUid = _auth.currentUser?.uid ?? '';
-            for (final entry in activeStrokesMap.entries) {
-              if (entry.key != myUid) {
-                _partnerActiveStrokes[entry.key] = _strokeFromRealtime(
-                  entry.value,
-                );
-              }
-            }
-          });
-        });
-
-    _backgroundSub = _drawingService.streamBackground(widget.houseId).listen((
-      background,
-    ) {
-      if (!mounted) return;
-      setState(() => _backgroundId = background.id);
-    });
-
-    final myRole = RoleUtils.currentRoleSync();
-    _presenceSub = _drawingService.streamPresence(widget.houseId).listen((
-      items,
-    ) {
-      if (!mounted) return;
-      setState(() {
-        _presence = items.where((item) => item.uid != myRole).toList();
-      });
-    });
-  }
-
-  Future<void> _updatePresence({required bool isDrawing}) async {
-    final myRole = RoleUtils.currentRoleSync();
-    if (myRole.isEmpty || widget.houseId.trim().isEmpty) {
-      return;
-    }
-    await _drawingService.updatePresence(
-      houseId: widget.houseId,
-      uid: myRole,
-      name: widget.myName,
-      isDrawing: isDrawing,
-      colorValue: _currentColor.toARGB32(),
-    );
-  }
-
-  _DrawStroke _strokeFromRealtime(DrawingStudioStroke stroke) {
-    return _DrawStroke(
-      id: stroke.id,
-      authorUid: stroke.authorUid,
-      color: Color(stroke.colorValue),
-      width: stroke.width,
-      points: stroke.points
-          .map((point) => Offset(point[0], point[1]))
-          .toList(growable: false),
-      normalized: true,
-    );
-  }
-
-  List<_DrawStroke> get _allVisibleStrokes {
-    final allStrokes = _realtimeStrokes.values.toList()
-      ..addAll(_strokes.where((s) => _localPendingStrokeIds.contains(s.id)))
-      ..addAll(_partnerActiveStrokes.values);
-
-    allStrokes.sort((a, b) => a.id.compareTo(b.id));
-    return allStrokes;
-  }
-
-  bool get _hasAnyStroke => _allVisibleStrokes.isNotEmpty;
-
-  bool get _hasOwnStroke {
-    final uid = _auth.currentUser?.uid ?? '';
-    if (uid.isEmpty) return false;
-    return _allVisibleStrokes.any((stroke) => stroke.authorUid == uid);
-  }
+  bool get _hasOwnStroke => _hasAnyStroke;
 
   _CanvasRatioPreset get _selectedRatio => _ratioPresets.firstWhere(
     (preset) => preset.id == _aspectRatioId,
@@ -264,44 +138,24 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     );
   }
 
-  Future<void> _setPresenceDrawingState(bool isDrawing) async {
-    _presenceTimer?.cancel();
-    if (isDrawing) {
-      if (!_presenceIsDrawing) {
-        _presenceIsDrawing = true;
-        await _updatePresence(isDrawing: true);
-      }
-    } else {
-      _presenceTimer = Timer(const Duration(milliseconds: 1500), () async {
-        if (!mounted) return;
-        _presenceIsDrawing = false;
-        await _updatePresence(isDrawing: false);
-      });
-    }
-  }
-
   void _startStroke(DragStartDetails details) {
     final point = _toCanvasPoint(details.globalPosition);
     if (point == null) {
       return;
     }
 
-    final uid = _auth.currentUser?.uid ?? '';
     final strokeId = 'local_${DateTime.now().microsecondsSinceEpoch}';
     setState(() {
       _isDrawing = true;
       _strokes.add(
         _DrawStroke(
           id: strokeId,
-          authorUid: uid,
           color: _currentColor,
           width: _strokeWidth,
           points: [point],
         ),
       );
-      _localPendingStrokeIds.add(strokeId);
     });
-    unawaited(_setPresenceDrawingState(true));
   }
 
   void _appendStrokePoint(DragUpdateDetails details) {
@@ -330,149 +184,19 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
 
     lastStroke.points.add(finalPoint);
     _canvasRepaintNotifier.repaint();
-    _pushActiveStroke(lastStroke);
-  }
-
-  void _pushActiveStroke(_DrawStroke stroke) {
-    final uid = _auth.currentUser?.uid ?? '';
-    if (uid.isEmpty || stroke.points.isEmpty) return;
-
-    final now = DateTime.now();
-    if (_lastActiveStrokeSentAt != null &&
-        now.difference(_lastActiveStrokeSentAt!).inMilliseconds < 160) {
-      return; // Preview khoảng 6 lần/giây, nét hoàn tất giữ độ chi tiết cao hơn.
-    }
-    _lastActiveStrokeSentAt = now;
-
-    final canvasSize = _canvasKey.currentContext?.size;
-    if (canvasSize == null || canvasSize.width <= 0 || canvasSize.height <= 0) {
-      return;
-    }
-
-    final simplifiedPoints = <Offset>[];
-    if (stroke.points.isNotEmpty) {
-      simplifiedPoints.add(stroke.points.first);
-      for (int i = 1; i < stroke.points.length - 1; i++) {
-        final lastSaved = simplifiedPoints.last;
-        final current = stroke.points[i];
-        if ((current - lastSaved).distance >= 4.0) {
-          simplifiedPoints.add(current);
-        }
-      }
-      if (stroke.points.length > 1) {
-        simplifiedPoints.add(stroke.points.last);
-      }
-    }
-
-    final normalizedPoints = simplifiedPoints
-        .map(
-          (point) => <double>[
-            (point.dx / canvasSize.width).clamp(0.0, 1.0).toDouble(),
-            (point.dy / canvasSize.height).clamp(0.0, 1.0).toDouble(),
-          ],
-        )
-        .toList(growable: false);
-
-    final payload = DrawingStudioStroke(
-      id: stroke.id,
-      authorUid: uid,
-      authorName: widget.myName,
-      colorValue: stroke.color.toARGB32(),
-      width: stroke.width,
-      points: normalizedPoints,
-      createdAt: DateTime.now().millisecondsSinceEpoch,
-    );
-    unawaited(_drawingService.updateActiveStroke(widget.houseId, uid, payload));
   }
 
   void _endStroke([DragEndDetails? _]) {
-    if (!_isDrawing) {
-      return;
-    }
-    final stroke = _strokes.isNotEmpty ? _strokes.last : null;
+    if (!_isDrawing) return;
     setState(() => _isDrawing = false);
-    unawaited(_setPresenceDrawingState(false));
-    final uid = _auth.currentUser?.uid ?? '';
-    if (uid.isNotEmpty) {
-      unawaited(_drawingService.clearActiveStroke(widget.houseId, uid));
-    }
-    if (stroke != null) {
-      unawaited(_pushCompletedStroke(stroke));
-    }
-  }
-
-  Future<void> _pushCompletedStroke(_DrawStroke stroke) async {
-    final uid = _auth.currentUser?.uid ?? '';
-    if (uid.isEmpty || stroke.points.isEmpty) {
-      return;
-    }
-    final canvasSize = _canvasKey.currentContext?.size;
-    if (canvasSize == null || canvasSize.width <= 0 || canvasSize.height <= 0) {
-      return;
-    }
-
-    // Simplify/Downsample the points list to reduce database payload size.
-    final simplifiedPoints = <Offset>[];
-    if (stroke.points.isNotEmpty) {
-      simplifiedPoints.add(stroke.points.first);
-      for (int i = 1; i < stroke.points.length - 1; i++) {
-        final lastSaved = simplifiedPoints.last;
-        final current = stroke.points[i];
-        // Only keep points that are at least 4.0 logical pixels apart to compress payload
-        if ((current - lastSaved).distance >= 4.0) {
-          simplifiedPoints.add(current);
-        }
-      }
-      if (stroke.points.length > 1) {
-        simplifiedPoints.add(stroke.points.last);
-      }
-    }
-
-    final normalizedPoints = simplifiedPoints
-        .map(
-          (point) => <double>[
-            (point.dx / canvasSize.width).clamp(0.0, 1.0).toDouble(),
-            (point.dy / canvasSize.height).clamp(0.0, 1.0).toDouble(),
-          ],
-        )
-        .toList(growable: false);
-    try {
-      await _drawingService.pushStroke(
-        houseId: widget.houseId,
-        stroke: DrawingStudioStroke(
-          id: stroke.id,
-          authorUid: uid,
-          authorName: widget.myName,
-          colorValue: stroke.color.toARGB32(),
-          width: stroke.width,
-          points: normalizedPoints,
-          createdAt: DateTime.now().millisecondsSinceEpoch,
-        ),
-      );
-      if (!mounted) return;
-      setState(() => _localPendingStrokeIds.remove(stroke.id));
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _localPendingStrokeIds.remove(stroke.id));
-      _showSnack(context.tr('util_changbcntv_14c0f8'));
-    }
   }
 
   void _clearDrawing() {
-    if (!_hasAnyStroke) {
-      return;
-    }
-    final uid = _auth.currentUser?.uid ?? '';
+    if (!_hasAnyStroke) return;
     setState(() {
       _strokes.clear();
-      _realtimeStrokes.clear();
-      _localPendingStrokeIds.clear();
+      _isDrawing = false;
     });
-    if (uid.isNotEmpty) {
-      unawaited(
-        _drawingService.clearRealtimeCanvas(houseId: widget.houseId, uid: uid),
-      );
-    }
   }
 
   void _toggleCanvasLock() {
@@ -487,29 +211,11 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   }
 
   void _undoStroke() {
-    final uid = _auth.currentUser?.uid ?? '';
-    if (uid.isEmpty) return;
-
-    final ownStrokes = _allVisibleStrokes
-        .where((stroke) => stroke.authorUid == uid)
-        .toList();
-    if (ownStrokes.isEmpty) return;
-
-    final latest = ownStrokes.last;
-
-    if (_localPendingStrokeIds.contains(latest.id)) {
-      _strokes.removeWhere((s) => s.id == latest.id);
-      setState(() => _localPendingStrokeIds.remove(latest.id));
-      return;
-    }
-
-    setState(() => _realtimeStrokes.remove(latest.id));
-    unawaited(
-      _drawingService.deleteStroke(
-        houseId: widget.houseId,
-        strokeId: latest.id,
-      ),
-    );
+    if (_strokes.isEmpty) return;
+    setState(() {
+      _strokes.removeLast();
+      _isDrawing = false;
+    });
   }
 
   Future<Uint8List> _captureCanvasPng() async {
@@ -600,7 +306,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     double? right;
     double? bottom;
     for (final stroke in strokes) {
-      final points = stroke.resolvedPoints(canvasSize);
+      final points = stroke.points;
       for (final point in points) {
         left = left == null ? point.dx : math.min(left, point.dx);
         top = top == null ? point.dy : math.min(top, point.dy);
@@ -614,20 +320,8 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     return Rect.fromLTRB(left, top, right, bottom);
   }
 
-  Future<void> _selectBackground(String id) async {
-    final msgChangeFail = context.tr('util_changbcnnm_8867a9');
-    final uid = _auth.currentUser?.uid ?? '';
+  void _selectBackground(String id) {
     setState(() => _backgroundId = id);
-    if (uid.isEmpty) return;
-    try {
-      await _drawingService.setBackground(
-        houseId: widget.houseId,
-        uid: uid,
-        background: DrawingStudioBackground(id: id),
-      );
-    } catch (_) {
-      _showSnack(msgChangeFail);
-    }
   }
 
   Future<void> _showBackgroundPicker() async {
@@ -718,7 +412,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       },
     );
     if (selected != null) {
-      await _selectBackground(selected);
+      _selectBackground(selected);
     }
   }
 
@@ -1482,24 +1176,13 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   }
 
   Widget _buildCanvasStatusBar() {
-    final partnerDrawing = _presence.any((item) => item.isDrawing);
-    final statusText = partnerDrawing
-        ? L10nService().format('util_drawing_partner_drawing', {
-            'name': _presence.firstWhere((item) => item.isDrawing).name.isEmpty
-                ? context.tr('util_ngikia_5cc882')
-                : _presence.firstWhere((item) => item.isDrawing).name,
-          })
-        : _isSyncOnline
-        ? L10nService().format('util_drawing_sync_online_count', {
-            'count': _presence.length,
-          })
-        : context.tr('util_chm2lnvokh_5f9664');
+    final statusText = context.tr('util_drawing_local_only_hint');
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: partnerDrawing || _isCanvasLocked
+        color: _isCanvasLocked
             ? const Color(0xFFFFF2F7)
             : const Color(0xFFFFFAFC),
         borderRadius: SLRadius.lgAll,
@@ -1508,11 +1191,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       child: Row(
         children: [
           Icon(
-            partnerDrawing
-                ? Icons.draw_rounded
-                : _isCanvasLocked
-                ? Icons.lock_rounded
-                : Icons.sync_rounded,
+            _isCanvasLocked ? Icons.lock_rounded : Icons.draw_rounded,
             size: 18,
             color: const Color(0xFFD81B60),
           ),

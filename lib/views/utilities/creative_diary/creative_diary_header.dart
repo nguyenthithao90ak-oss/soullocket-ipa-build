@@ -50,7 +50,7 @@ class CreativeDiaryHeader extends StatelessWidget {
               children: [
                 Text(
                   hasPages
-                      ? 'Trang ${safeIndex + 1}/$totalPages'
+                      ? L10nScope.of(context).format('ui_utilities_page_value1_value2_349ac0', {'value1': safeIndex + 1, 'value2': totalPages})
                       : L10nService().translate('util_stayringca_d5d3c4'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

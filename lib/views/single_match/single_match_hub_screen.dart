@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_date_picker.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 import 'dart:math';
@@ -321,20 +322,11 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
   Future<void> _pickDob() async {
     final initial = DateTime.tryParse(_myDob) ??
         DateTime.now().subtract(const Duration(days: 365 * 23));
-    final picked = await showDatePicker(
+    final picked = await showSLDatePicker(
       context: context,
       initialDate: initial,
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: Color(0xFFFF5E7E),
-            onPrimary: Colors.white,
-          ),
-        ),
-        child: child!,
-      ),
     );
 
     if (picked == null || !mounted) {
@@ -886,8 +878,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                             Tab(
                                 text: L10nService()
                                     .translate('match_ghpni_91676a')),
-                            const Tab(text: 'Trò chuyện'),
-                            const Tab(text: 'Cuộc gọi'),
+                            Tab(text: context.tr('chat_tab')),
+                            Tab(text: context.tr('ui_single_call_b25622')),
                           ],
                         ),
                       ),
@@ -1030,7 +1022,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                   ),
                 ),
                 Text(
-                  '${others.length + 1} hồ sơ',
+                  L10nScope.of(context).format('ui_single_value1_profiles_07709c', {'value1': others.length + 1}),
                   style: SLTheme.quicksand(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
@@ -1243,7 +1235,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                       child: Text(
                         _myAge == null
                             ? L10nService().translate('match_bnchathmng_98f34a')
-                            : 'Đang dùng $_myAge tuổi cho thuật toán gợi ý.',
+                            : L10nScope.of(context).format('ui_single_using_value1_age_for_recommendation_algorithm_c9e086', {'value1': _myAge}),
                         style: SLTheme.quicksand(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -1341,7 +1333,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(
-                '${current.preferredAgeMin} - ${current.preferredAgeMax} tuổi',
+                L10nScope.of(context).format('ui_single_value1_value2_years_old_6c3f78', {'value1': current.preferredAgeMin, 'value2': current.preferredAgeMax}),
                 style: SLTheme.quicksand(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
@@ -1565,7 +1557,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            'Soul Merge - Kết nối bí mật',
+            context.tr('ui_single_soul_merge_secret_connection_3387d4'),
             style: SLTheme.quicksand(
               fontSize: 15,
               fontWeight: FontWeight.w900,
@@ -1574,7 +1566,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
           ),
           const SizedBox(height: 6),
           Text(
-            'Nhập mã bí mật để kết nối trực tiếp và nhắn tin với một người cụ thể.',
+            context.tr('ui_single_enter_a_secret_code_to_connect_directly_08b004'),
             style: SLTheme.quicksand(
               fontSize: 12,
               height: 1.45,
@@ -1606,7 +1598,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                 }
               },
               icon: const Icon(Icons.vpn_key_rounded, size: 18),
-              label: Text('Nhập mã',
+              label: Text(context.tr('ui_single_enter_the_code_7ad20e'),
                   style: SLTheme.quicksand(fontWeight: FontWeight.w800)),
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF7C61FF),

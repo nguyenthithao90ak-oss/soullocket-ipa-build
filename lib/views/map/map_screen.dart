@@ -1796,7 +1796,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                           children: [
                             const Text('🌙 ', style: TextStyle(fontSize: 10)),
                             Text(
-                              'Đang ngủ 💤',
+                              context.tr('Đang ngủ 💤'),
                               style: SLTheme.quicksand(
                                 fontSize: 9.0,
                                 fontWeight: FontWeight.w900,
@@ -1830,7 +1830,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                           children: [
                             const Text('🚗 ', style: TextStyle(fontSize: 10)),
                             Text(
-                              '$speedKmh km/h • Đi cẩn thận!',
+                              L10nScope.of(context).format('ui_map_value1_km_h_drive_carefully_16ec63', {'value1': speedKmh}),
                               style: SLTheme.quicksand(
                                 fontSize: 8.5,
                                 fontWeight: FontWeight.w900,

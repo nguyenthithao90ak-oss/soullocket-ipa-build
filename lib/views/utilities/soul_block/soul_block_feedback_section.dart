@@ -16,7 +16,7 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
           ),
           iOS: AudioContextIOS(
             category: AVAudioSessionCategory.playback,
-            options: <AVAudioSessionOptions>{
+            options: const <AVAudioSessionOptions>{
               AVAudioSessionOptions.mixWithOthers,
             },
           ),
@@ -173,7 +173,7 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
               ),
               iOS: AudioContextIOS(
                 category: AVAudioSessionCategory.playback,
-                options: <AVAudioSessionOptions>{
+                options: const <AVAudioSessionOptions>{
                   AVAudioSessionOptions.mixWithOthers,
                 },
               ),

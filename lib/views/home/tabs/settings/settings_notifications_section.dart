@@ -379,97 +379,50 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
   Widget _buildAdvancedPanel({
     bool hideBackButton = false,
     bool showSaveButton = true,
-    bool showHeaderCard = true,
   }) {
-    return _buildPanel(
-      hideBackButton: hideBackButton,
-      id: 'advanced',
-      title: showHeaderCard
-          ? context.tr('advanced')
-          : context.tr('notification_center'),
-      flatMode: true,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (showHeaderCard)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF2FBFC),
-                borderRadius: SLRadius.lgAll,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context.tr('notification_center'),
-                    style: SLTextStyles.quicksand(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF006064),
-                    ),
-                  ),
-                  SLSpacing.h8,
-                  _buildSwitchRow(
-                    context.tr('push_notification_label'),
-                    _notificationsEnabled,
-                    _handleNotificationsEnabledChanged,
-                    helperText: _notificationsEnabled
-                        ? context.tr('home_bttronghth_f0f025')
-                        : context.tr('home_btappxinqu_1a6325'),
-                    onTap: _notificationsEnabled
-                        ? _showDisableNotificationsOutsideAppNotice
-                        : null,
-                    ignoreDirectSwitchTap: _notificationsEnabled,
-                  ),
-                ],
-              ),
-            )
-          else
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF2FBFC),
-                borderRadius: SLRadius.lgAll,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSwitchRow(
-                    context.tr('push_notification_label'),
-                    _notificationsEnabled,
-                    _handleNotificationsEnabledChanged,
-                    helperText: _notificationsEnabled
-                        ? context.tr('home_bttronghth_f0f025')
-                        : context.tr('home_btappxinqu_1a6325'),
-                    onTap: _notificationsEnabled
-                        ? _showDisableNotificationsOutsideAppNotice
-                        : null,
-                    ignoreDirectSwitchTap: _notificationsEnabled,
-                  ),
-                ],
-              ),
-            ),
-          SLSpacing.h12,
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF8E1),
-              borderRadius: SLRadius.lgAll,
-            ),
+          SLDetailPageHeader(
+            title: context.tr('notification_center'),
+            icon: Icons.notifications_none_rounded,
+            backLabel: context.tr('p6_back'),
+            onBack: hideBackButton ? null : () => Navigator.pop(context),
+          ),
+          SLDetailCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  context.tr('smart_reminders'),
-                  style: SLTextStyles.quicksand(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF9C6A00),
-                  ),
+                _buildNotificationToggle(
+                  context.tr('push_notification_label'),
+                  _notificationsEnabled,
+                  _handleNotificationsEnabledChanged,
+                  icon: Icons.notifications_active_outlined,
+                  helperText: _notificationsEnabled
+                      ? context.tr('home_bttronghth_f0f025')
+                      : context.tr('home_btappxinqu_1a6325'),
+                  onTap: _notificationsEnabled
+                      ? _showDisableNotificationsOutsideAppNotice
+                      : null,
+                  ignoreDirectSwitchTap: _notificationsEnabled,
+                ),
+              ],
+            ),
+          ),
+          SLSpacing.h12,
+          SLDetailCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SLDetailHeading(
+                  title: context.tr('smart_reminders'),
+                  icon: Icons.calendar_today_outlined,
+                  color: SLDetailStyle.sage,
                 ),
                 SLSpacing.h8,
-                _buildSwitchRow(
+                _buildNotificationToggle(
                   context.tr('smart_reminders_anniversary'),
                   _notifAnniversary,
                   (v) {
@@ -478,8 +431,9 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                     unawaited(_persistNotificationPrefs());
                   },
                   helperText: context.tr('smart_reminders_anniversary_desc'),
+                  icon: Icons.favorite_border_rounded,
                 ),
-                _buildSwitchRow(
+                _buildNotificationToggle(
                   context.tr('smart_reminders_diary'),
                   _smartDiaryReminder,
                   (v) {
@@ -488,8 +442,9 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                     unawaited(_persistNotificationPrefs());
                   },
                   helperText: context.tr('smart_reminders_diary_desc'),
+                  icon: Icons.edit_note_rounded,
                 ),
-                _buildSwitchRow(
+                _buildNotificationToggle(
                   context.tr('smart_reminders_capsule'),
                   _smartCapsuleReminder,
                   (v) {
@@ -498,8 +453,9 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                     unawaited(_persistNotificationPrefs());
                   },
                   helperText: context.tr('smart_reminders_capsule_desc'),
+                  icon: Icons.inventory_2_outlined,
                 ),
-                _buildSwitchRow(
+                _buildNotificationToggle(
                   context.tr('smart_reminders_love_note'),
                   _smartLoveNoteReminder,
                   (v) {
@@ -508,8 +464,9 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                     unawaited(_persistNotificationPrefs());
                   },
                   helperText: context.tr('smart_reminders_love_note_desc'),
+                  icon: Icons.mail_outline_rounded,
                 ),
-                _buildSwitchRow(
+                _buildNotificationToggle(
                   context.tr('smart_reminders_sleep'),
                   _smartSleepReminder,
                   (v) {
@@ -527,12 +484,13 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                     );
                   },
                   helperText: context.tr('smart_reminders_sleep_desc'),
+                  icon: Icons.bedtime_outlined,
                 ),
                 if (_smartLoveNoteReminder || _smartSleepReminder) ...[
                   const SizedBox(height: 8),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Divider(color: Color(0xFFE2E8F0), height: 1),
+                    child: Divider(color: SLDetailStyle.border, height: 1),
                   ),
                   const SizedBox(height: 8),
                   _buildTimePickerRow(
@@ -566,71 +524,74 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
             ),
           ),
           SLSpacing.h12,
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-            decoration: BoxDecoration(
-              color: SLColors.tertiarySoft.withValues(alpha: 0.55),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: SLColors.accentPurple.withValues(alpha: 0.18),
-              ),
-            ),
+          SLDetailCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  context.tr('interaction_effects'),
-                  style: SLTextStyles.quicksand(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF4A148C),
-                  ),
+                SLDetailHeading(
+                  title: context.tr('interaction_effects'),
+                  icon: Icons.auto_awesome_outlined,
+                  color: SLDetailStyle.rose,
                 ),
                 SLSpacing.h8,
-                _buildSwitchRow(context.tr('show_weather'), _showWeather, (v) {
-                  setState(() => _showWeather = v);
-                  SoundService().playClick();
-                  unawaited(_persistHomeDisplayPrefsQuickly());
-                }),
-                _buildSwitchRow(context.tr('show_status'), _showStatus, (v) {
-                  setState(() => _showStatus = v);
-                  SoundService().playClick();
-                  unawaited(_persistHomeDisplayPrefsQuickly());
-                  if (v) {
-                    PresenceService().reconnectPresence();
-                  } else {
-                    PresenceService().hidePresence();
-                  }
-                }),
-                _buildSwitchRow(context.tr('show_timer_home'), _homeShowTimer, (
-                  v,
-                ) {
-                  setState(() => _homeShowTimer = v);
-                  SoundService().playClick();
-                  unawaited(_persistHomeDisplayPrefsQuickly());
-                }),
+                _buildNotificationToggle(
+                  context.tr('show_weather'),
+                  _showWeather,
+                  (v) {
+                    setState(() => _showWeather = v);
+                    SoundService().playClick();
+                    unawaited(_persistHomeDisplayPrefsQuickly());
+                  },
+                  icon: Icons.wb_sunny_outlined,
+                ),
+                _buildNotificationToggle(
+                  context.tr('show_status'),
+                  _showStatus,
+                  (v) {
+                    setState(() => _showStatus = v);
+                    SoundService().playClick();
+                    unawaited(_persistHomeDisplayPrefsQuickly());
+                    if (v) {
+                      PresenceService().reconnectPresence();
+                    } else {
+                      PresenceService().hidePresence();
+                    }
+                  },
+                  icon: Icons.circle_outlined,
+                ),
+                _buildNotificationToggle(
+                  context.tr('show_timer_home'),
+                  _homeShowTimer,
+                  (v) {
+                    setState(() => _homeShowTimer = v);
+                    SoundService().playClick();
+                    unawaited(_persistHomeDisplayPrefsQuickly());
+                  },
+                  icon: Icons.timer_outlined,
+                ),
               ],
             ),
           ),
           if (showSaveButton) ...[
             SLSpacing.h12,
-            _buildGradientBtn(
+            SLDetailButton(
+              icon: Icons.check_rounded,
+              primary: true,
               label: _isSavingAdvanced
                   ? context.tr('saving')
                   : context.tr('save_all_settings'),
-              gradient: const [Color(0xFF00BCD4), Color(0xFF0097A7)],
-              onTap: _isSavingAdvanced
-                  ? () {}
+              onPressed: _isSavingAdvanced
+                  ? null
                   : () async {
                       SoundService().playClick();
                       await _saveAdvancedSettingsV2();
                     },
             ),
             SLSpacing.h8,
-            _buildGradientBtn(
+            SLDetailButton(
+              icon: Icons.cleaning_services_outlined,
               label: context.tr('clear_cache'),
-              gradient: const [Color(0xFFffb74d), Color(0xFFf57c00)],
-              onTap: () async {
+              onPressed: () async {
                 final prefs = await SharedPreferences.getInstance();
                 final allKeys = prefs.getKeys();
                 int cleared = 0;
@@ -663,12 +624,14 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
   ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
-      child: InkWell(
-        onTap: () async {
+      child: SLDetailButton(
+        icon: Icons.schedule_rounded,
+        label: '$label · $timeStr',
+        onPressed: () async {
           final parts = timeStr.split(':');
           final hour = parts.isNotEmpty ? (int.tryParse(parts[0]) ?? 0) : 0;
           final minute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
-          final time = await showTimePicker(
+          final time = await showSLTimePicker(
             context: context,
             initialTime: TimeOfDay(hour: hour, minute: minute),
           );
@@ -678,95 +641,38 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
             onChanged(formatted);
           }
         },
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          decoration: BoxDecoration(
-            color: SLColors.paper,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: SLColors.border, width: 1),
-            boxShadow: SLShadow.subtle,
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: SLTextStyles.quicksand(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                    color: SLColors.ink,
-                  ),
-                ),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    timeStr,
-                    style: SLTextStyles.quicksand(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 14.5,
-                      color: SLColors.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  const Icon(
-                    Icons.access_time_filled_rounded,
-                    size: 18,
-                    color: SLColors.primary,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
 
+  Widget _buildNotificationToggle(
+    String title,
+    bool value,
+    ValueChanged<bool> onChanged, {
+    IconData icon = Icons.tune_rounded,
+    String? helperText,
+    VoidCallback? onTap,
+    bool ignoreDirectSwitchTap = false,
+  }) => SLDetailToggle(
+    icon: icon,
+    title: title,
+    description: helperText,
+    value: value,
+    onChanged: onChanged,
+    onTap: onTap,
+    ignoreDirectSwitchTap: ignoreDirectSwitchTap,
+  );
+
   /// Nút gửi thông báo test đến điện thoại đối phương (dùng để kiểm tra)
   Widget _buildTestNotificationButton() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: SLColors.primary.withAlpha(90), width: 1.2),
-        color: SLColors.paperBlush,
-        boxShadow: SLShadow.subtle,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    return SLDetailCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.notifications_active_rounded,
-                color: Color(0xFFD81B60),
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                context.tr('p6_test_notifications_title'),
-                style: SLTextStyles.quicksand(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 14.5,
-                  color: const Color(0xFFD81B60),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            context.tr('p6_test_notifications_description'),
-            style: SLTextStyles.quicksand(
-              fontWeight: FontWeight.w600,
-              fontSize: 12.5,
-              color: const Color(0xFF64748B),
-              height: 1.4,
-            ),
+          SLDetailHeading(
+            icon: Icons.notifications_active_outlined,
+            title: context.tr('p6_test_notifications_title'),
+            description: context.tr('p6_test_notifications_description'),
           ),
           const SizedBox(height: 12),
           Row(
@@ -774,7 +680,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
               Expanded(
                 child: _buildTestNotifBtn(
                   label: context.tr('p6_test_chat_label'),
-                  color: const Color(0xFF6366F1),
+                  color: SLDetailStyle.blue,
                   type: 'chat',
                   screen: 'chat',
                   title: context.tr('p6_test_chat_title'),
@@ -785,7 +691,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
               Expanded(
                 child: _buildTestNotifBtn(
                   label: context.tr('p6_test_soul_merge_label'),
-                  color: const Color(0xFFD81B60),
+                  color: SLDetailStyle.rose,
                   type: 'soul_merge',
                   screen: 'soul_merge',
                   title: context.tr('p6_test_soul_merge_title'),
@@ -799,7 +705,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
             width: double.infinity,
             child: _buildTestNotifBtn(
               label: context.tr('p6_test_regular_notification_label'),
-              color: const Color(0xFF059669),
+              color: SLDetailStyle.sage,
               type: 'home',
               screen: 'home',
               title: context.tr('p6_test_regular_notification_title'),

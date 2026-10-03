@@ -37,84 +37,19 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
         children: [
           const AppHelpButton(articleId: 'security'),
           if (!isSingleMode) ...[
-            _buildSectionBlock(
-              colorTint: const Color(0xFFE57373),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.person_pin_rounded,
-                        color: Color(0xFFE57373),
-                        size: 16,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        context.tr('home_angngnhp_af3562'),
-                        style: SLTextStyles.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFFE57373),
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    activeName,
-                    textAlign: TextAlign.center,
-                    style: SLTextStyles.quicksand(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFFD81B60),
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  GestureDetector(
-                    onTap: _houseIdChanged
-                        ? null
-                        : () => _showChangeHouseIdDialog(),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _houseId == null
-                                ? context.tr('home_mnhchac_a0dca8')
-                                : 'ID: $_houseId',
-                            style: SLTextStyles.quicksand(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFFE8A0B6),
-                            ),
-                          ),
-                          if (!_houseIdChanged && _houseId != null) ...[
-                            const SizedBox(width: 4),
-                            const Icon(
-                              Icons.edit_rounded,
-                              size: 11,
-                              color: Color(0xFFE8A0B6),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            AccountSessionHeader(
+              label: context.tr('home_angngnhp_af3562'),
+              name: activeName,
+              id: _houseId == null
+                  ? context.tr('home_mnhchac_a0dca8')
+                  : context
+                        .tr('p6_house_id_value')
+                        .replaceAll('{houseId}', _houseId!),
+              onEdit: _houseIdChanged || _houseId == null
+                  ? null
+                  : _showChangeHouseIdDialog,
             ),
-            SLSpacing.h16,
+            const SizedBox(height: 8),
           ],
           if (isSingleMode) ...[
             Center(
@@ -238,6 +173,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 isLoading: _isLinkingGoogle,
                 accentColor: const Color(0xFFEA4335),
                 showCheckmark: _googleLinked,
+                showDivider: false,
               ),
             ],
           ),

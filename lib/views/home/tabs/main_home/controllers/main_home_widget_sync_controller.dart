@@ -276,6 +276,8 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
           ? settings['avtUser2'].toString()
           : defaultFemaleAvatarUrl;
 
+      await WidgetService.syncSleepWidgetData(houseId: houseId);
+      if (!mounted || _houseId != houseId) return;
       final status1Text = _presenceStatusText('user1');
       final status2Text = _presenceStatusText('user2');
       final isOnline1 = _isPresenceDataOnlineForRole(

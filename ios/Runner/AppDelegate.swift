@@ -1,5 +1,6 @@
 import Flutter
 import UIKit
+import workmanager_apple
 #if canImport(ActivityKit)
 import ActivityKit
 #endif
@@ -17,6 +18,10 @@ import ActivityKit
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
+    WorkmanagerPlugin.setPluginRegistrantCallback { registry in
+      GeneratedPluginRegistrant.register(with: registry)
+    }
+    WorkmanagerPlugin.registerPeriodicTask(withIdentifier: "com.soullocket.app.sleep.refresh", earliestBeginInSeconds: 1800)
     
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self

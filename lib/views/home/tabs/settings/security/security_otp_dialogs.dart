@@ -91,13 +91,13 @@ Future<bool> showSettingsEmailOtpDialog({
                     children: [
                       Text(
                         isSending
-                            ? 'Đang gửi mã OTP tới $email.'
+                            ? L10nScope.of(context).format('ui_home_sending_otp_code_to_value1_3b4e18', {'value1': email})
                             : isVerifying
                                 ? context.tr('home_angkimtram_f1186f')
                                 : sendError != null
-                                    ? 'Không gửi được mã:\n$sendError'
+                                    ? L10nScope.of(context).format('ui_home_unable_to_send_code_value1_a79934', {'value1': sendError})
                                     : verifyError != null
-                                        ? 'Mã không hợp lệ:\n$verifyError'
+                                        ? L10nScope.of(context).format('ui_home_invalid_code_value1_6e4038', {'value1': verifyError})
                                         : context.tr('home_nhpm6stipt_fc04d6'),
                         style: SLTheme.quicksand(
                           fontWeight: FontWeight.w600,

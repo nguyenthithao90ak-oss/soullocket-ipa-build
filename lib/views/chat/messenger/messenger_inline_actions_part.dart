@@ -6,7 +6,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
     FocusScope.of(context).unfocus();
     if (_friends.isEmpty) {
       _showMessengerNotice(
-        'Bạn cần có bạn bè trước khi tạo nhóm.',
+        context.tr('ui_chat_you_need_to_have_friends_before_creating_bdac84'),
         error: true,
       );
       return;
@@ -58,7 +58,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          repairMojibakeText('Tạo nhóm mới'),
+                          repairMojibakeText(context.tr('ui_chat_create_a_new_group_629e3e')),
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w900,
                             fontSize: 18,
@@ -71,7 +71,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                           maxLength: 36,
                           decoration: InputDecoration(
                             counterText: '',
-                            hintText: repairMojibakeText('Tên nhóm'),
+                            hintText: repairMojibakeText(context.tr('ui_chat_group_name_79553e')),
                             filled: true,
                             fillColor: const Color(0xFFF8FAFC),
                             border: OutlineInputBorder(
@@ -90,7 +90,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          repairMojibakeText('Chọn thành viên'),
+                          repairMojibakeText(context.tr('ui_chat_select_member_d6a349')),
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w900,
                             fontSize: 14,
@@ -206,7 +206,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                               ),
                             ),
                             child: Text(
-                              repairMojibakeText('Tạo nhóm'),
+                              repairMojibakeText(context.tr('ui_chat_create_groups_5b7194')),
                               style: SLTheme.quicksand(
                                 fontWeight: FontWeight.w900,
                                 color: Colors.white,
@@ -260,8 +260,8 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
       }
       _showMessengerNotice(
         created.alreadyExists
-            ? 'Nh\u00f3m \u0111\u00e3 t\u1ed3n t\u1ea1i, \u0111ang m\u1edf chat chung.'
-            : '\u0110\u00e3 t\u1ea1o ${created.name}',
+            ? context.tr('ui_chat_the_group_already_exists_and_is_opening_b67979')
+            : L10nScope.of(context).format('ui_chat_created_value1_14a3dd', {'value1': created.name}),
       );
       _openGroupChat(initialRoom);
     } catch (error) {
@@ -272,7 +272,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
         AppErrorMapper.resolve(
           error,
           fallbackMessage:
-              'Chưa thể tạo nhóm chat. Hãy kiểm tra kết nối rồi thử lại.',
+              context.tr('ui_chat_cannot_create_a_chat_group_please_check_ca631b'),
         ).message,
         error: true,
       );
@@ -334,7 +334,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                     const SizedBox(height: 6),
                     Text(
                       repairMojibakeText(
-                        '${current.memberHouseIds.length} thành viên • Tạo lúc ${_formatGroupCreatedAt(current.createdAtMs)}',
+                        L10nScope.of(context).format('ui_chat_value1_member_created_at_value2_d9daae', {'value1': current.memberHouseIds.length, 'value2': _formatGroupCreatedAt(current.createdAtMs)}),
                       ),
                       style: SLTheme.quicksand(
                         fontWeight: FontWeight.w700,
@@ -352,7 +352,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                               await _renameGroupDraft(current);
                             },
                             child: Text(
-                              repairMojibakeText('Đổi tên'),
+                              repairMojibakeText(context.tr('p9_group_chat_rename_action')),
                             ),
                           ),
                         ),
@@ -367,7 +367,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                               foregroundColor: const Color(0xFFDC2626),
                             ),
                             child: Text(
-                              repairMojibakeText('Xóa nhóm'),
+                              repairMojibakeText(context.tr('ui_chat_x_a_nh_m_a4564e')),
                             ),
                           ),
                         ),
@@ -375,7 +375,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                     ),
                     const SizedBox(height: 14),
                     Text(
-                      repairMojibakeText('Thành viên'),
+                      repairMojibakeText(context.tr('p9_group_chat_members_title')),
                       style: SLTheme.quicksand(
                         fontWeight: FontWeight.w900,
                         fontSize: 14,
@@ -467,26 +467,26 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
       context: context,
       builder: (dialogContext) {
         return SLAlertDialog(
-          title: Text(repairMojibakeText('Đổi tên nhóm')),
+          title: Text(repairMojibakeText(context.tr('p9_group_chat_rename_title'))),
           content: TextField(
             controller: ctrl,
             maxLength: 36,
             autofocus: true,
             decoration: InputDecoration(
-              hintText: repairMojibakeText('Nhập tên nhóm'),
+              hintText: repairMojibakeText(context.tr('ui_chat_enter_a_group_name_ab9f31')),
             ),
           ),
           actions: [
             SLDialogAction(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(repairMojibakeText('Hủy')),
+              child: Text(repairMojibakeText(context.tr('p3_cancel'))),
             ),
             SLDialogAction(
               primary: true,
 
               onPressed: () =>
                   Navigator.of(dialogContext).pop(ctrl.text.trim()),
-              child: Text(repairMojibakeText('Lưu')),
+              child: Text(repairMojibakeText(context.tr('p3_save'))),
             ),
           ],
         );
@@ -503,7 +503,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
       _groupDrafts[index] = _groupDrafts[index].copyWith(name: nextName.trim());
     });
     await _saveGroupDrafts();
-    _showMessengerNotice('Đã cập nhật tên nhóm');
+    _showMessengerNotice(context.tr('ui_chat_updated_group_name_5759df'));
   }
 
   Future<void> _deleteGroupDraft(ChatGroupDraft group) async {
@@ -511,16 +511,16 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
       context: context,
       builder: (dialogContext) {
         return SLAlertDialog(
-          title: Text(repairMojibakeText('Xóa nhóm?')),
+          title: Text(repairMojibakeText(context.tr('ui_chat_x_a_nh_m_fcbfaf'))),
           content: Text(
             repairMojibakeText(
-              'Nh\u00f3m ${group.name} s\u1ebd b\u1ecb x\u00f3a kh\u1ecfi danh s\u00e1ch n\u00e0y.',
+              L10nScope.of(context).format('ui_chat_the_group_value1_will_be_removed_from_d7d1da', {'value1': group.name}),
             ),
           ),
           actions: [
             SLDialogAction(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(repairMojibakeText('Hủy')),
+              child: Text(repairMojibakeText(context.tr('p3_cancel'))),
             ),
             SLDialogAction(
               primary: true,

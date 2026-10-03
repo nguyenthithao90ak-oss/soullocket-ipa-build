@@ -213,13 +213,13 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                                   icon: Icons.security_rounded,
                                   label: context.tr('admin_kimtracust_db4d9b'),
                                 ),
-                                const HighlightChip(
+                                HighlightChip(
                                   icon: Icons.dashboard_rounded,
-                                  label: 'Dashboard overview realtime',
+                                  label: context.tr('admin_live_overview_label'),
                                 ),
-                                const HighlightChip(
+                                HighlightChip(
                                   icon: Icons.dark_mode_rounded,
-                                  label: 'Dark UI Flutter Web',
+                                  label: context.tr('admin_dark_interface_label'),
                                 ),
                               ],
                             ),
@@ -257,7 +257,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                             SLSpacing.h24,
                             AdminTextField(
                               controller: _emailController,
-                              label: 'Email admin',
+                              label: context.tr('ui_admin_admin_email_c029e8'),
                               keyboardType: TextInputType.emailAddress,
                               textInputAction: TextInputAction.next,
                               prefixIcon: Icons.mail_outline_rounded,

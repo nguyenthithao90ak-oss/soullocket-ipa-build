@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../core/sl_theme.dart';
+import 'widget_theme_surface.dart';
 
 /// Khung giao diện dùng riêng cho trang tuỳ chỉnh widget.
 ///
@@ -476,9 +477,6 @@ class WidgetStudioThemePicker extends StatelessWidget {
           children: options
               .map((option) {
                 final selected = option.id == selectedId;
-                final isLight =
-                    ThemeData.estimateBrightnessForColor(option.colors.first) ==
-                    Brightness.light;
                 return SizedBox(
                   width: itemWidth,
                   child: Semantics(
@@ -513,35 +511,12 @@ class WidgetStudioThemePicker extends StatelessWidget {
                             children: [
                               AspectRatio(
                                 aspectRatio: 1.28,
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: option.colors,
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    borderRadius: BorderRadius.circular(11),
-                                    border: isLight
-                                        ? Border.all(
-                                            color: const Color(0xFFDDE3EA),
-                                          )
-                                        : null,
-                                  ),
+                                child: WidgetThemeSurface(
+                                  themeKey: option.id,
+                                  colors: option.colors,
+                                  radius: 11,
                                   child: Stack(
                                     children: [
-                                      Positioned(
-                                        top: 6,
-                                        left: 7,
-                                        child: Icon(
-                                          option.icon,
-                                          size: 16,
-                                          color: isLight
-                                              ? const Color(0xFF93A1B2)
-                                              : Colors.white.withValues(
-                                                  alpha: 0.78,
-                                                ),
-                                        ),
-                                      ),
                                       if (selected)
                                         Align(
                                           alignment: Alignment.bottomRight,

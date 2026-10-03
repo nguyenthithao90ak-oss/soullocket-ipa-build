@@ -72,10 +72,6 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
     });
   }
 
-  Future<void> _handleWidgetHeartColorChanged(String value) async {
-    await _updateWidgetAppearanceDraft(() => _widgetHeartColorKey = value);
-  }
-
   Future<void> _handleWidgetDiaryVisibilityChanged(bool value) async {
     await _updateWidgetAppearanceDraft(() {
       _showDiaryOnWidget = value;

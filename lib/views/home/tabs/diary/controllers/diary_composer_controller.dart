@@ -126,7 +126,7 @@ class DiaryComposerController {
         NotificationService()
             .sendPartnerNotification(
               houseId: houseId,
-              title: '$authorName $mood vừa viết tâm sự!',
+              title: L10nService().format('ui_home_value1_value2_just_wrote_a_confession_f3dc57', {'value1': authorName, 'value2': mood}),
               body: preview,
               data: const {'screen': 'diary', 'type': 'diary_post'},
             )

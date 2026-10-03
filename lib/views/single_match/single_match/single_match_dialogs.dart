@@ -71,7 +71,7 @@ class _MatchReadySheet extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              '${scored.score.toStringAsFixed(0)}% match • $goalLabel • $voiceLabel',
+              L10nScope.of(context).format('ui_single_value1_match_value2_value3_a16508', {'value1': scored.score.toStringAsFixed(0), 'value2': goalLabel, 'value3': voiceLabel}),
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 fontSize: 12,

@@ -547,7 +547,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                             OutlinedButton.icon(
                               onPressed: () => app_permission.openAppSettings(),
                               icon: const Icon(Icons.settings_rounded),
-                              label: const Text('Cài đặt quyền'),
+                              label: Text(context.tr('ui_map_permission_settings_fffa2a')),
                             ),
                         ],
                       ),

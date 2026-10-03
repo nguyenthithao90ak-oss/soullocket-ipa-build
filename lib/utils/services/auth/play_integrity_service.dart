@@ -207,7 +207,8 @@ class PlayIntegrityService {
   final MethodChannel _methodChannel;
 
   bool _prepared = false;
-  static bool _markedUnsupported = false;
+  bool _markedUnsupported = false;
+  Future<bool>? _warmingUp;
 
   firebase_auth.FirebaseAuth get _auth =>
       _firebaseAuth ?? firebase_auth.FirebaseAuth.instance;
@@ -219,13 +220,26 @@ class PlayIntegrityService {
     if (!_isAndroidSupported) return false;
     if (_markedUnsupported && !force) return false;
     if (_prepared && !force) return true;
+    final pending = _warmingUp;
+    if (pending != null) return pending;
+    final operation = _prepareProvider();
+    _warmingUp = operation;
+    try {
+      return await operation;
+    } finally {
+      _warmingUp = null;
+    }
+  }
+
+  Future<bool> _prepareProvider() async {
     try {
       await _methodChannel
           .invokeMethod<void>(_prepareMethod, <String, Object?>{
             'cloudProjectNumber': AppConfig.playIntegrityCloudProjectNumber,
           })
-          .timeout(const Duration(seconds: 3));
+          .timeout(const Duration(seconds: 60));
       _prepared = true;
+      _markedUnsupported = false;
       return true;
     } on MissingPluginException {
       _prepared = false;
@@ -233,19 +247,16 @@ class PlayIntegrityService {
       return false;
     } on TimeoutException {
       _prepared = false;
-      _markedUnsupported = true;
       debugPrint('PlayIntegrity warmUp timed out');
       return false;
     } on PlatformException catch (error) {
       _prepared = false;
-      _markedUnsupported = true;
       debugPrint(
         'PlayIntegrity warmUp failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể khởi tạo Play Integrity.').message}',
       );
       return false;
     } catch (_) {
       _prepared = false;
-      _markedUnsupported = true;
       return false;
     }
   }
@@ -508,17 +519,17 @@ class PlayIntegrityService {
       _markedUnsupported = true;
       return null;
     } on PlatformException catch (error) {
-      _markedUnsupported = true;
+      _prepared = false;
       debugPrint(
         'PlayIntegrity request token failed: ${error.code} ${error.message}',
       );
       return null;
     } on TimeoutException {
-      _markedUnsupported = true;
+      _prepared = false;
       debugPrint('PlayIntegrity request token timed out');
       return null;
     } catch (_) {
-      _markedUnsupported = true;
+      _prepared = false;
       return null;
     }
   }

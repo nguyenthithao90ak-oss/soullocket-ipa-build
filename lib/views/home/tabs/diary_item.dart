@@ -11,6 +11,7 @@ import '../../../utils/services/cloudflare_r2_service.dart';
 import '../../../utils/services/l10n_service.dart';
 import '../../../widgets/r2_sticker_image.dart';
 import '../../../widgets/soullocket_animated_sticker.dart';
+import 'diary/widgets/diary_custom_mood_image.dart';
 
 class DiaryItem extends StatelessWidget {
   final DiaryPost post;
@@ -278,28 +279,31 @@ class DiaryItem extends StatelessWidget {
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(17),
-                              child: R2StickerImage(
-                                _getMoodAsset(
-                                  post.mood,
-                                  customMoodUrl: post.customMoodUrl,
-                                  houseId: houseId,
-                                  authorId: post.authorId,
-                                ),
-                                width: moodSize,
-                                height: moodSize,
-                                fit: post.mood == '📷'
-                                    ? BoxFit.cover
-                                    : BoxFit.contain,
-                                animateLocalSticker: true,
-                                errorWidget: Text(
-                                  post.mood,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: isShortText ? 34 : 25,
-                                    color: moodColor,
-                                  ),
-                                ),
-                              ),
+                              child: post.mood == '📷'
+                                  ? DiaryCustomMoodImage(
+                                      url: post.customMoodUrl,
+                                      size: moodSize,
+                                    )
+                                  : R2StickerImage(
+                                      _getMoodAsset(
+                                        post.mood,
+                                        customMoodUrl: post.customMoodUrl,
+                                        houseId: houseId,
+                                        authorId: post.authorId,
+                                      ),
+                                      width: moodSize,
+                                      height: moodSize,
+                                      fit: BoxFit.contain,
+                                      animateLocalSticker: true,
+                                      errorWidget: Text(
+                                        post.mood,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: isShortText ? 34 : 25,
+                                          color: moodColor,
+                                        ),
+                                      ),
+                                    ),
                             ),
                           ),
                         ],
@@ -466,13 +470,13 @@ class _DiaryItemVideoWidgetState extends State<_DiaryItemVideoWidget> {
         height: 140,
         color: Colors.black26,
         alignment: Alignment.center,
-        child: const Column(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.error_outline_rounded, color: Colors.white70, size: 28),
             SizedBox(height: 4),
             Text(
-              'Không thể phát video',
+              context.tr('ui_home_cannot_play_video_e932b6'),
               style: TextStyle(color: Colors.white70, fontSize: 12),
             ),
           ],

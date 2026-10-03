@@ -137,9 +137,9 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
         final request = pendingRequests.first;
         SLNotice.showConfirmDialog(
           context,
-          title: 'Yêu cầu ghép nối',
+          title: context.tr('home_yucughpni_6a3807'),
           message:
-              'Có yêu cầu ghép nối từ ${request.guestName}. Bạn có muốn xem không?',
+              L10nScope.of(context).format('ui_home_there_is_a_pairing_request_from_value1_654afe', {'value1': request.guestName}),
           confirmText: 'Xem',
           cancelText: 'Đóng',
         ).then((value) {

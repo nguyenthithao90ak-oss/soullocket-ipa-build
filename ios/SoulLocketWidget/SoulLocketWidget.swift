@@ -31,10 +31,15 @@ struct CoupleWidgetData {
     var isCharging2: Bool
     var soulMergeMessage: String
     var soulMergeSenderName: String
+    var widgetStyleKey: String = "classic"
+    var widgetStickerKey: String = "none"
+    var photoFrameKey: String = "rounded"
+    var diaryLayoutKey: String = "single"
+    var loveDateText: String = ""
 
     func resolvedDaysText(referenceDate: Date = Date()) -> String {
         var unit = dayUnitText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            ? "ngày"
+            ? widgetText("comm_ngy_41ec10")
             : dayUnitText.trimmingCharacters(in: .whitespacesAndNewlines)
         
         unit = unit.replacingOccurrences(of: " yêu", with: "")
@@ -70,6 +75,19 @@ struct CoupleWidgetData {
         return "\(days) \(unit)"
     }
 
+    static func preview() -> CoupleWidgetData {
+        CoupleWidgetData(name1: widgetText("p3_sleep_default_me"),
+            name2: widgetText("p3_sleep_default_partner"),
+            daysText: "259 " + widgetText("comm_ngy_41ec10"),
+            status1: "", status2: "", isOnline1: false, isOnline2: false,
+            weather1: "", weather2: "", stars1: "", stars2: "", bgTheme: "pink",
+            heartAnimated: false, heartStyleKey: "❤️", heartColorKey: "rose",
+            avatar1Path: nil, avatar2Path: nil, diaryImagePaths: [],
+            showDiaryOnWidget: false, startDateRaw: "",
+            dayUnitText: widgetText("comm_ngy_41ec10"), battery1: -1, battery2: -1,
+            isCharging1: false, isCharging2: false, soulMergeMessage: "", soulMergeSenderName: "Soul Merge")
+    }
+
     static func load() -> CoupleWidgetData {
         let defaults = UserDefaults(suiteName: appGroupID)
 
@@ -86,9 +104,9 @@ struct CoupleWidgetData {
         let battery2Raw = defaults?.integer(forKey: "battery2") ?? -1
 
         return CoupleWidgetData(
-            name1: defaults?.string(forKey: "name1") ?? "Bạn",
-            name2: defaults?.string(forKey: "name2") ?? "Người ấy",
-            daysText: defaults?.string(forKey: "daysText") ?? "0 ngày",
+            name1: defaults?.string(forKey: "name1") ?? widgetText("p3_sleep_default_me"),
+            name2: defaults?.string(forKey: "name2") ?? widgetText("p3_sleep_default_partner"),
+            daysText: defaults?.string(forKey: "daysText") ?? ("0 " + widgetText("comm_ngy_41ec10")),
             status1: defaults?.string(forKey: "status1") ?? "",
             status2: defaults?.string(forKey: "status2") ?? "",
             isOnline1: defaults?.bool(forKey: "isOnline1") ?? false,
@@ -98,7 +116,7 @@ struct CoupleWidgetData {
             stars1: defaults?.string(forKey: "stars1") ?? "--",
             stars2: defaults?.string(forKey: "stars2") ?? "--",
             bgTheme: defaults?.string(forKey: "bgTheme") ?? "pink",
-            heartAnimated: defaults?.bool(forKey: "heartAnimated") ?? true,
+            heartAnimated: defaults?.bool(forKey: "heartAnimated") ?? false,
             heartStyleKey: defaults?.string(forKey: "heartStyleKey") ?? "❤️",
             heartColorKey: defaults?.string(forKey: "heartColorKey") ?? "rose",
             avatar1Path: defaults?.string(forKey: "avatar1Path"),
@@ -106,13 +124,18 @@ struct CoupleWidgetData {
             diaryImagePaths: diaryPaths,
             showDiaryOnWidget: defaults?.bool(forKey: "showDiaryOnWidget") ?? false,
             startDateRaw: defaults?.string(forKey: "startDateRaw") ?? "",
-            dayUnitText: defaults?.string(forKey: "dayUnitText") ?? "ngày",
+            dayUnitText: defaults?.string(forKey: "dayUnitText") ?? widgetText("comm_ngy_41ec10"),
             battery1: battery1Raw == 0 && !(defaults?.object(forKey: "battery1") != nil) ? -1 : battery1Raw,
             battery2: battery2Raw == 0 && !(defaults?.object(forKey: "battery2") != nil) ? -1 : battery2Raw,
             isCharging1: defaults?.bool(forKey: "isCharging1") ?? false,
             isCharging2: defaults?.bool(forKey: "isCharging2") ?? false,
-            soulMergeMessage: defaults?.string(forKey: "soulMergeMessage") ?? "Hãy vào nhà để trò chuyện nhé!",
-            soulMergeSenderName: defaults?.string(forKey: "soulMergeSenderName") ?? "Soul Merge"
+            soulMergeMessage: defaults?.string(forKey: "soulMergeMessage") ?? widgetText("widget_sync_empty"),
+            soulMergeSenderName: defaults?.string(forKey: "soulMergeSenderName") ?? "Soul Merge",
+            widgetStyleKey: WidgetAppearanceDesign.style(defaults?.string(forKey: "widgetStyleKey") ?? "classic"),
+            widgetStickerKey: WidgetAppearanceDesign.sticker(defaults?.string(forKey: "widgetStickerKey") ?? "none"),
+            photoFrameKey: WidgetAppearanceDesign.frame(defaults?.string(forKey: "photoFrameKey") ?? "rounded"),
+            diaryLayoutKey: WidgetAppearanceDesign.layout(defaults?.string(forKey: "diaryLayoutKey") ?? "single"),
+            loveDateText: defaults?.string(forKey: "loveDateText") ?? ""
         )
     }
 }
@@ -124,18 +147,24 @@ struct CoupleEntry: TimelineEntry {
 
 struct CoupleWidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> CoupleEntry {
-        CoupleEntry(date: Date(), data: CoupleWidgetData.load())
+        CoupleEntry(date: Date(), data: CoupleWidgetData.preview())
     }
 
     func getSnapshot(in context: Context, completion: @escaping (CoupleEntry) -> Void) {
-        completion(CoupleEntry(date: Date(), data: CoupleWidgetData.load()))
+        completion(CoupleEntry(date: Date(), data: context.isPreview ? CoupleWidgetData.preview() : CoupleWidgetData.load()))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<CoupleEntry>) -> Void) {
         let now = Date()
-        let entry = CoupleEntry(date: now, data: CoupleWidgetData.load())
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 1, to: now)!
-        completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
+        let data = CoupleWidgetData.load()
+        // Mốc 30 phút: WidgetKit quản lý lịch render, không chạy timer liên tục.
+        let start = floor(now.timeIntervalSince1970 / 1800) * 1800
+        var dates = [now]
+        for index in 1...12 {
+            dates.append(Date(timeIntervalSince1970: start + Double(index) * 1800))
+        }
+        let entries = dates.map { CoupleEntry(date: $0, data: data) }
+        completion(Timeline(entries: entries, policy: .atEnd))
     }
 }
 
@@ -159,6 +188,7 @@ struct SoulLocketWidgetLauncher {
 struct SoulLocketWidgetBundle16: WidgetBundle {
     var body: some Widget {
         WidgetCoupleProvider()
+        SoulLocketUtilityWidgets().body
         WidgetCoupleAccessoryAvatarProvider()
         WidgetSoulMergeAccessoryProvider()
         SoulLocketLiveActivity()
@@ -170,10 +200,20 @@ struct SoulLocketWidgetBundle16: WidgetBundle {
 struct SoulLocketWidgetBundle15: WidgetBundle {
     var body: some Widget {
         WidgetCoupleProvider()
+        SoulLocketUtilityWidgets().body
         if #available(iOS 16.0, *) {
             WidgetCoupleAccessoryAvatarProvider()
             WidgetSoulMergeAccessoryProvider()
         }
+    }
+}
+
+struct SoulLocketUtilityWidgets: WidgetBundle {
+    var body: some Widget {
+        WidgetCycleProvider()
+        WidgetCalendarProvider()
+        WidgetSoulEventProvider()
+        WidgetSleepProvider()
     }
 }
 
@@ -196,9 +236,10 @@ struct WidgetCoupleProvider: Widget {
                 SoulLocketWidgetView15(entry: entry)
             }
         }
-        .configurationDisplayName("SoulLocket")
-        .description("Hiển thị thông tin cặp đôi của bạn.")
+        .configurationDisplayName(Text("home_cpi_d525b0", tableName: "WidgetStrings"))
+        .description(Text("settings_widget_desc_mobile", tableName: "WidgetStrings"))
         .supportedFamilies(families)
+        .contentMarginsDisabled()
     }
 }
 

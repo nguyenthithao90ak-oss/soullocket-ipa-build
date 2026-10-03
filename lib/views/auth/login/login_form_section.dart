@@ -139,30 +139,30 @@ class LoginForm extends StatelessWidget {
                               if (email.isEmpty) {
                                 SLNotice.showError(
                                   context,
-                                  l10n.translate('Vui lòng nhập Email.'),
+                                  l10n.translate('auth_email_required'),
                                 );
                               } else if (!_loginEmailRegex.hasMatch(email)) {
                                 SLNotice.showError(
                                   context,
-                                  l10n.translate('Email không hợp lệ.'),
+                                  l10n.translate('auth_email_invalid'),
                                 );
                               } else if (password.isEmpty) {
                                 SLNotice.showError(
                                   context,
-                                  l10n.translate('Vui lòng nhập Mật khẩu.'),
+                                  l10n.translate('auth_password_required'),
                                 );
                               } else if (password.length < 6) {
                                 SLNotice.showError(
                                   context,
                                   l10n.translate(
-                                    'Mật khẩu phải từ 6 ký tự trở lên.',
+                                    'auth_password_min_length',
                                   ),
                                 );
                               } else {
                                 SLNotice.showError(
                                   context,
                                   l10n.translate(
-                                    'Thông tin đăng nhập chưa hợp lệ.',
+                                    'auth_login_invalid',
                                   ),
                                 );
                               }
@@ -178,7 +178,7 @@ class LoginForm extends StatelessWidget {
             },
           ),
           const SizedBox(height: 15),
-          AuthSocialDivider(label: l10n.translate('Hoặc đăng nhập nhanh bằng')),
+          AuthSocialDivider(label: l10n.translate('auth_social_login_divider')),
           const SizedBox(height: 13),
           SocialAuthButtons(onProviderTap: onSocialLogin),
           const SizedBox(height: 12),

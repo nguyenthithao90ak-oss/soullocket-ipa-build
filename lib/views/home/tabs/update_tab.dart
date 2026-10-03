@@ -15,6 +15,7 @@ import '../../utilities/user_support_chat_screen.dart';
 import '../screens/document_viewer_screen.dart';
 import 'settings_tab.dart';
 import 'widgets/update_hub_body.dart';
+import 'widgets/app_referral_card.dart';
 
 class UpdateTab extends StatefulWidget {
   const UpdateTab({super.key});
@@ -132,6 +133,7 @@ class _UpdateTabState extends State<UpdateTab>
     return Scaffold(
       body: UpdateHubBody(
         version: _version,
+        invitation: const AppReferralCard(),
         onSettings: () => Navigator.push(
           context,
           SLRoute(builder: (_) => const SettingsTab()),

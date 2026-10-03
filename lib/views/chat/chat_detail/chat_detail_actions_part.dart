@@ -80,7 +80,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SLSnackBar(
-                content: const Text('Có lỗi xảy ra khi kích hoạt Giftcode.'),
+                content: Text(context.tr('ui_chat_an_error_occurred_while_activating_giftcode_4977e4')),
                 backgroundColor: Colors.red,
               ),
             );
@@ -196,9 +196,9 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
-          content: const Text('Lần upload chat trước đã bị gián đoạn.'),
+          content: Text(context.tr('chat_upload_interrupted')),
           action: SnackBarAction(
-            label: 'Thử lại',
+            label: context.tr('Thử lại'),
             onPressed: () {
               unawaited(_retryPendingChatUploads());
             },
@@ -372,7 +372,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SLSnackBar(content: const Text('Không tìm thấy phòng gọi')));
+      ).showSnackBar(SLSnackBar(content: Text(context.tr('ui_chat_call_room_not_found_7b6fe4'))));
       return;
     }
 
@@ -427,11 +427,11 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
     }
     final message = AppErrorMapper.resolve(
       error,
-      fallbackMessage: 'Không thể gửi tin nhắn lúc này. Vui lòng thử lại sau.',
+      fallbackMessage: context.tr('ui_chat_messages_cannot_be_sent_at_this_time_74fe87'),
     ).message;
     ScaffoldMessenger.of(context).showSnackBar(
       SLSnackBar(
-        content: Text(message.isEmpty ? 'Không thể gửi tin nhắn' : message),
+        content: Text(message.isEmpty ? context.tr('ui_chat_cannot_send_message_b931ba') : message),
       ),
     );
   }
@@ -491,7 +491,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       maxHeight: 2560,
       uiSettings: [
         IOSUiSettings(
-          title: 'Cắt nền chat',
+          title: context.tr('ui_chat_crop_chat_background_c0c52d'),
           aspectRatioLockEnabled: true,
           aspectRatioPickerButtonHidden: true,
           resetAspectRatioEnabled: false,

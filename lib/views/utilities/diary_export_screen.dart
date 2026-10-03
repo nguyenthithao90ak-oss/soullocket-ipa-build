@@ -98,7 +98,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
 
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
-      tooltip: 'Hướng dẫn',
+      tooltip: context.tr('auth_guide_short'),
       icon: const Icon(
         Icons.info_outline_rounded,
         color: Color(0xFFD81B60),
@@ -112,25 +112,25 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
     showDialog<void>(
       context: context,
       builder: (context) => SLAlertDialog(
-        title: Text('Xuất nhật ký'),
-        content: const SingleChildScrollView(
+        title: Text(context.tr('export_diary')),
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(context.tr('vault_features_label'), style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
               Text(
-                '- Đóng gói toàn bộ nhật ký tình yêu thành một file duy nhất để lưu trữ Offline vĩnh viễn.\n- Dễ dàng in thành sách nếu muốn lưu giữ kỷ niệm cầm tay.',
+                context.tr('diary_export_help_features'),
               ),
               SizedBox(height: 12),
               Text(
-                'Cách sử dụng:',
+                context.tr('p3_help_how_to_label'),
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 4),
               Text(
-                '- Bấm "Bắt đầu xuất dữ liệu", hệ thống sẽ thu thập bài viết, ảnh, và sticker.\n- File tải về được lưu trong ứng dụng, bạn có thể mở lại bất cứ lúc nào.',
+                context.tr('ui_utilities_click_start_exporting_data_the_system_will_03ed4e'),
               ),
             ],
           ),
@@ -140,7 +140,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
             primary: true,
 
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu'),
+            child: Text(context.tr('Đã hiểu')),
           ),
         ],
       ),
@@ -166,10 +166,10 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: Text('Đã xuất HTML: ${filePath.split('/').last}'),
+            content: Text(L10nScope.of(context).format('ui_utilities_exported_html_value1_b8061a', {'value1': filePath.split('/').last})),
             behavior: SnackBarBehavior.floating,
             action: SnackBarAction(
-              label: 'Mở',
+              label: context.tr('p8_notebook_open'),
               onPressed: () => _openFile(filePath),
             ),
           ),
@@ -218,11 +218,11 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: Text('Đã xuất ZIP: ${filePath.split('/').last}'),
+            content: Text(L10nScope.of(context).format('ui_utilities_exported_zip_value1_69e938', {'value1': filePath.split('/').last})),
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 4),
             action: SnackBarAction(
-              label: 'Mở',
+              label: context.tr('p8_notebook_open'),
               onPressed: () => _openFile(filePath),
             ),
           ),
@@ -232,7 +232,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
-          content: Text('Lỗi: ${e.toString()}'),
+          content: Text(L10nScope.of(context).format('ui_utilities_error_value1_01d14e', {'value1': e.toString()})),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -254,7 +254,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: Text('Không thể mở file: ${result.message}'),
+            content: Text(L10nScope.of(context).format('ui_utilities_cannot_open_file_value1_52bf4b', {'value1': result.message})),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -263,7 +263,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
-          content: Text('Không thể mở file: $e'),
+          content: Text(L10nScope.of(context).format('ui_utilities_cannot_open_file_value1_52bf4b', {'value1': e})),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -277,7 +277,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: const Text('File không tồn tại'),
+            content: Text(context.tr('ui_utilities_file_does_not_exist_e5652f')),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -295,7 +295,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
-          content: Text('Đã lưu: $fileName'),
+          content: Text(L10nScope.of(context).format('ui_utilities_saved_value1_bfd7a4', {'value1': fileName})),
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 3),
         ),
@@ -304,7 +304,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
-          content: Text('Lỗi lưu file: $e'),
+          content: Text(L10nScope.of(context).format('ui_utilities_error_saving_file_value1_802da4', {'value1': e})),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -317,14 +317,14 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
       await SharePlus.instance.share(
         ShareParams(
           files: [XFile(path)],
-          text: '💞 SoulLocket - $fileName\nNhật ký tình yêu của $_houseName',
+          text: L10nScope.of(context).format('ui_utilities_soullocket_value1_value2_s_love_diary_733d56', {'value1': fileName, 'value2': _houseName}),
         ),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
-          content: Text('Không thể chia sẻ: $e'),
+          content: Text(L10nScope.of(context).format('ui_utilities_unable_to_share_value1_f76018', {'value1': e})),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -382,8 +382,8 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
                     SLSpacing.h12,
                     _buildExportCard(
                       icon: Icons.folder_zip_rounded,
-                      title: '📦 Xuất tất cả kỷ niệm',
-                      description: 'Diary + ảnh kỷ niệm → file ZIP',
+                      title: context.tr('ui_utilities_export_all_memories_626026'),
+                      description: context.tr('ui_utilities_diary_and_memory_photos_zip_file_27d8c5'),
                       colors: const [Color(0xFFD81B60), Color(0xFFFF5E92)],
                       isBusy: _isExportingAll,
                       onTap: _exportAllMemories,
@@ -497,7 +497,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
               ),
               SLSpacing.w8,
               Text(
-                'Đã xuất gần đây',
+                context.tr('ui_utilities_recent_exports_f7b5d2'),
                 style: SLTheme.quicksand(
                   fontSize: 15,
                   fontWeight: FontWeight.w900,
@@ -506,7 +506,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
               ),
               SLSpacing.w8,
               Text(
-                '${_history.length} file',
+                L10nScope.of(context).format('ui_utilities_value1_files_4bbfd0', {'value1': _history.length}),
                 style: SLTheme.quicksand(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -604,12 +604,12 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
                     showDialog(
                       context: context,
                       builder: (ctx) => SLAlertDialog(
-                        title: const Text('Xoá file xuất'),
-                        content: Text('Xoá "$fileName" khỏi thiết bị?'),
+                        title: Text(context.tr('ui_utilities_delete_export_file_eb5347')),
+                        content: Text(L10nScope.of(context).format('ui_utilities_remove_value1_from_device_bb47eb', {'value1': fileName})),
                         actions: [
                           SLDialogAction(
                             onPressed: () => Navigator.pop(ctx),
-                            child: const Text('Huỷ'),
+                            child: Text(context.tr('Huỷ')),
                           ),
                           SLDialogAction(
                             primary: true,
@@ -620,7 +620,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
                               _removeFromHistory(index);
                             },
 
-                            child: const Text('Xoá'),
+                            child: Text(context.tr('ui_utilities_delete_82339c')),
                           ),
                         ],
                       ),

@@ -1,27 +1,27 @@
 part of '../settings_tab.dart';
 
 extension _SettingsDataHealthSection on _SettingsTabState {
+  bool _settingsBackupScopeIsCurrent(String? uid, String? houseId) =>
+      mounted && _auth.currentUser?.uid == uid && _houseId == houseId;
+
   Future<void> _refreshSettingsBackupStatus({bool showFeedback = false}) async {
     if (_isCheckingBackupStatus) {
-      if (showFeedback) {
-        _showToast(context.tr('settings_cloud_checking_wait'));
-      }
+      if (showFeedback) _showToast(context.tr('settings_cloud_checking_wait'));
       return;
     }
-    if (mounted) {
-      setState(() {
-        _isCheckingBackupStatus = true;
-        _settingsBackupStatusError = '';
-      });
-    }
+    if (!mounted) return;
+    final uid = _auth.currentUser?.uid;
+    final houseId = _houseId;
+    setState(() {
+      _isCheckingBackupStatus = true;
+      _settingsBackupStatusError = '';
+    });
     if (showFeedback) {
       _showToast(context.tr('settings_cloud_checking_in_progress'));
     }
     try {
-      final status = await SettingsSyncService().getBackupStatus().timeout(
-        const Duration(seconds: 8),
-      );
-      if (!mounted) return;
+      final status = await SettingsSyncService().getBackupStatus();
+      if (!mounted || !_settingsBackupScopeIsCurrent(uid, houseId)) return;
       setState(() {
         _hasSettingsCloudBackup = status.hasCloudBackup;
         _settingsCloudBackupAt = status.cloudUpdatedAt;
@@ -36,39 +36,46 @@ extension _SettingsDataHealthSection on _SettingsTabState {
         );
       }
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || !_settingsBackupScopeIsCurrent(uid, houseId)) return;
       final message = AppErrorMapper.resolve(
         error,
         fallbackMessage: context.tr('settings_cloud_check_failed'),
       ).message;
       setState(() => _settingsBackupStatusError = message);
-      if (showFeedback) {
-        _showToast(message, success: false);
-      }
+      if (showFeedback) _showToast(message, success: false);
     } finally {
-      if (mounted) {
-        setState(() => _isCheckingBackupStatus = false);
-      }
+      if (mounted) setState(() => _isCheckingBackupStatus = false);
     }
   }
 
   Future<void> _syncSettingsBackupNow() async {
-    if (_isManualBackupSyncing) return;
-    if (mounted) {
-      setState(() {
-        _isManualBackupSyncing = true;
-        _settingsBackupStatusError = '';
-      });
+    if (!mounted ||
+        _isManualBackupSyncing ||
+        _isRestoringSettingsBackup ||
+        _isCheckingBackupStatus) {
+      return;
     }
+    final uid = _auth.currentUser?.uid;
+    final houseId = _houseId;
+    if (uid == null) {
+      _showToast(context.tr('err_auth_session_expired'), success: false);
+      return;
+    }
+    setState(() {
+      _isManualBackupSyncing = true;
+      _settingsBackupStatusError = '';
+    });
     try {
-      await CriticalDataSyncService()
-          .syncCurrentUserData(houseId: _houseId, force: true)
-          .timeout(const Duration(seconds: 15));
+      await CriticalDataSyncService().syncCurrentUserData(
+        houseId: houseId,
+        force: true,
+      );
+      if (!mounted || !_settingsBackupScopeIsCurrent(uid, houseId)) return;
       await _refreshSettingsBackupStatus();
-      if (!mounted) return;
+      if (!mounted || !_settingsBackupScopeIsCurrent(uid, houseId)) return;
       _showToast(context.tr('settings_sync_to_cloud_success'));
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || !_settingsBackupScopeIsCurrent(uid, houseId)) return;
       final message = AppErrorMapper.resolve(
         error,
         fallbackMessage: context.tr('settings_sync_to_cloud_failed'),
@@ -76,58 +83,84 @@ extension _SettingsDataHealthSection on _SettingsTabState {
       setState(() => _settingsBackupStatusError = message);
       _showToast(message, success: false);
     } finally {
-      if (mounted) {
-        setState(() => _isManualBackupSyncing = false);
-      }
+      if (mounted) setState(() => _isManualBackupSyncing = false);
     }
   }
 
   Future<void> _restoreSettingsBackupFromCloud() async {
-    if (_isRestoringSettingsBackup) return;
-    final user = _auth.currentUser;
-    if (user == null) {
+    if (!mounted ||
+        _isRestoringSettingsBackup ||
+        _isManualBackupSyncing ||
+        _isCheckingBackupStatus) {
+      return;
+    }
+    final uid = _auth.currentUser?.uid;
+    final houseId = _houseId;
+    if (uid == null) {
       _showToast(
         context.tr('settings_sign_in_required_to_restore'),
         success: false,
       );
       return;
     }
-
-    if (!_hasSettingsCloudBackup) {
-      await _refreshSettingsBackupStatus();
-      if (!mounted || !_hasSettingsCloudBackup) {
-        _showToast(
-          // ignore: use_build_context_synchronously
-          context.tr('settings_cloud_backup_not_found_to_restore'),
-          success: false,
-        );
-        return;
-      }
-    }
-
-    final confirmed = await SLNotice.showConfirmDialog(
-      context,
-      title: context.tr('settings_restore_title'),
-      message: context.tr('settings_restore_message'),
-      confirmText: context.tr('settings_restore_confirm_btn'),
-      cancelText: context.tr('cancel'),
-    );
-    if (confirmed != true || !mounted) return;
-
     setState(() {
       _isRestoringSettingsBackup = true;
       _settingsBackupStatusError = '';
     });
     try {
-      await SettingsSyncService()
-          .restoreSettingsFromCloud(user.uid)
-          .timeout(const Duration(seconds: 15));
-      await _fetchSettingsData();
+      if (!_hasSettingsCloudBackup) {
+        await _refreshSettingsBackupStatus();
+        if (!mounted || !_settingsBackupScopeIsCurrent(uid, houseId)) return;
+        if (!_hasSettingsCloudBackup) {
+          _showToast(
+            context.tr('settings_cloud_backup_not_found_to_restore'),
+            success: false,
+          );
+          return;
+        }
+      }
+      final confirmed = await SLNotice.showConfirmDialog(
+        context,
+        title: context.tr('settings_restore_title'),
+        message: context.tr('settings_restore_message'),
+        confirmText: context.tr('settings_restore_confirm_btn'),
+        cancelText: context.tr('cancel'),
+      );
+      if (!mounted ||
+          confirmed != true ||
+          !_settingsBackupScopeIsCurrent(uid, houseId)) {
+        return;
+      }
+      final result = await SettingsSyncService().restoreSettingsFromCloud(uid);
+      if (!mounted || !_settingsBackupScopeIsCurrent(uid, houseId)) return;
+      if (!result.found) {
+        setState(() => _hasSettingsCloudBackup = false);
+        _showToast(
+          context.tr('settings_cloud_backup_not_found_to_restore'),
+          success: false,
+        );
+        return;
+      }
+      setState(() {
+        _draftThemeKey = null;
+        _draftEffectKey = null;
+        _draftAvatarSizePx = null;
+        _draftCountdownSizePx = null;
+        _draftAvatarFrameKey = null;
+        _draftCountdownStyleKey = null;
+        _draftFontKey = null;
+        _draftHomeBlockToneKey = null;
+        _draftCustomBackgroundUrl = null;
+        _draftTransparentMode = null;
+        _draftWidgetThemeKey = null;
+      });
+      await _loadLocalSettings();
+      if (!mounted || !_settingsBackupScopeIsCurrent(uid, houseId)) return;
       await _refreshSettingsBackupStatus();
-      if (!mounted) return;
+      if (!mounted || !_settingsBackupScopeIsCurrent(uid, houseId)) return;
       _showToast(context.tr('settings_restore_from_cloud_success'));
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || !_settingsBackupScopeIsCurrent(uid, houseId)) return;
       final message = AppErrorMapper.resolve(
         error,
         fallbackMessage: context.tr('settings_restore_from_cloud_failed'),
@@ -135,9 +168,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
       setState(() => _settingsBackupStatusError = message);
       _showToast(message, success: false);
     } finally {
-      if (mounted) {
-        setState(() => _isRestoringSettingsBackup = false);
-      }
+      if (mounted) setState(() => _isRestoringSettingsBackup = false);
     }
   }
 
@@ -151,100 +182,81 @@ extension _SettingsDataHealthSection on _SettingsTabState {
         ? context.tr('settings_cloud_backup_found')
         : context.tr('settings_cloud_backup_missing');
     final statusColor = _isCheckingBackupStatus
-        ? const Color(0xFF1565C0)
+        ? SLDetailStyle.blue
         : hasError
-        ? const Color(0xFFC62828)
+        ? const Color(0xFFAC4E54)
         : _hasSettingsCloudBackup
-        ? const Color(0xFF2E7D32)
-        : const Color(0xFFEF6C00);
+        ? SLDetailStyle.sage
+        : SLDetailStyle.warning;
 
     return _buildCompactCard(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  _isCheckingBackupStatus
-                      ? Icons.sync_rounded
+              Expanded(
+                child: SLDetailHeading(
+                  icon: _isCheckingBackupStatus
+                      ? Icons.cloud_sync_outlined
                       : hasError
-                      ? Icons.error_outline_rounded
-                      : Icons.cloud_done_rounded,
+                      ? Icons.cloud_off_outlined
+                      : _hasSettingsCloudBackup
+                      ? Icons.cloud_done_outlined
+                      : Icons.cloud_queue_outlined,
+                  title: context.tr('settings_sync_restore_title'),
+                  description: statusLabel,
                   color: statusColor,
-                  size: 20,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.tr('settings_sync_restore_title'),
-                      style: SLTheme.quicksand(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: SLColors.darkNavy,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      statusLabel,
-                      style: SLTheme.quicksand(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: statusColor,
-                      ),
-                    ),
-                  ],
-                ),
+              const SizedBox(width: 4),
+              IconButton(
+                tooltip: context.tr('settings_check_now'),
+                onPressed:
+                    _isCheckingBackupStatus ||
+                        _isManualBackupSyncing ||
+                        _isRestoringSettingsBackup
+                    ? null
+                    : () => _refreshSettingsBackupStatus(showFeedback: true),
+                icon: const Icon(Icons.refresh_rounded),
+                color: SLDetailStyle.muted(context),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
-                child: _buildCompactActionBtn(
-                  icon: Icons.refresh_rounded,
-                  label: _isCheckingBackupStatus
-                      ? context.tr('settings_checking_short')
-                      : context.tr('settings_check_now'),
-                  onTap: _isCheckingBackupStatus
-                      ? () {}
-                      : () => _refreshSettingsBackupStatus(showFeedback: true),
+                child: SLDetailButton(
+                  icon: Icons.cloud_sync_outlined,
+                  label: context.tr(
+                    _isManualBackupSyncing
+                        ? 'settings_syncing_short'
+                        : 'settings_sync_now',
+                  ),
+                  primary: true,
+                  onPressed:
+                      _isManualBackupSyncing || _isRestoringSettingsBackup
+                      ? null
+                      : _syncSettingsBackupNow,
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: _buildCompactActionBtn(
-                  icon: Icons.cloud_sync_rounded,
-                  label: _isManualBackupSyncing
-                      ? context.tr('settings_syncing_short')
-                      : context.tr('settings_sync_now'),
-                  onTap: _isManualBackupSyncing
-                      ? () {}
-                      : _syncSettingsBackupNow,
+                child: SLDetailButton(
+                  icon: Icons.restore_rounded,
+                  label: context.tr(
+                    _isRestoringSettingsBackup
+                        ? 'settings_restoring_short'
+                        : 'settings_restore_from_cloud',
+                  ),
+                  onPressed:
+                      _isRestoringSettingsBackup || _isManualBackupSyncing
+                      ? null
+                      : _restoreSettingsBackupFromCloud,
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 8),
-          _buildCompactActionBtn(
-            icon: Icons.restore_rounded,
-            label: _isRestoringSettingsBackup
-                ? context.tr('settings_restoring_short')
-                : context.tr('settings_restore_from_cloud'),
-            isPrimary: true,
-            onTap: _isRestoringSettingsBackup
-                ? () {}
-                : _restoreSettingsBackupFromCloud,
           ),
         ],
       ),
@@ -255,60 +267,28 @@ extension _SettingsDataHealthSection on _SettingsTabState {
     final cloudStatus = _isCheckingBackupStatus
         ? context.tr('settings_data_status_checking')
         : _hasSettingsCloudBackup
-        ? context.tr('settings_data_status_cloud_found')
-        : context.tr('settings_data_status_cloud_not_found');
+        ? context.tr('settings_cloud_backup_found')
+        : context.tr('settings_cloud_backup_missing');
     final houseStatus = (_houseId ?? '').trim().isNotEmpty
         ? context.tr('settings_data_status_linked')
         : context.tr('settings_data_status_no_house');
 
-    return _buildCompactCard(
+    return SLDetailDisclosure(
+      icon: Icons.inventory_2_outlined,
+      title: context.tr('settings_restore_groups_title'),
+      color: SLDetailStyle.warning,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFFF3E0),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.inventory_2_rounded,
-                  color: Color(0xFFE65100),
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.tr('settings_restore_groups_title'),
-                      style: SLTheme.quicksand(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: SLColors.darkNavy,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      context.tr('settings_restore_groups_desc'),
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF64748B),
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          Text(
+            context.tr('settings_restore_groups_desc'),
+            style: SLTheme.quicksand(
+              fontSize: 12,
+              height: 1.45,
+              color: SLDetailStyle.muted(context),
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           _buildRestoreDataGroupTile(
             icon: Icons.tune_rounded,
             title: context.tr('settings_group_config_title'),
@@ -325,7 +305,6 @@ extension _SettingsDataHealthSection on _SettingsTabState {
           _buildCompactActionBtn(
             icon: Icons.fact_check_rounded,
             label: context.tr('settings_restore_groups_details_btn'),
-            isPrimary: true,
             onTap: _showRestoreDataGroupsDetail,
           ),
         ],
@@ -340,7 +319,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
         title: context.tr('settings_group_config_title'),
         status: _hasSettingsCloudBackup
             ? context.tr('settings_status_ready')
-            : context.tr('settings_status_cloud_missing'),
+            : context.tr('settings_cloud_backup_missing'),
         description: context.tr('settings_group_config_desc'),
         isReady: _hasSettingsCloudBackup,
       ),
@@ -401,9 +380,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
   }
 
   Widget _buildRestoreDataGroupDetail(_RestoreDataGroupInfo group) {
-    final color = group.isReady
-        ? const Color(0xFF2E7D32)
-        : const Color(0xFFEF6C00);
+    final color = group.isReady ? SLDetailStyle.sage : SLDetailStyle.warning;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -421,7 +398,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                   style: SLTheme.quicksand(
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
-                    color: const Color(0xFF243041),
+                    color: SLDetailStyle.text(context),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -439,7 +416,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                   style: SLTheme.quicksand(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF66758A),
+                    color: SLDetailStyle.muted(context),
                     height: 1.35,
                   ),
                 ),
@@ -461,48 +438,11 @@ extension _SettingsDataHealthSection on _SettingsTabState {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE8F5E9),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.privacy_tip_rounded,
-                  color: Color(0xFF2E7D32),
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.tr('settings_privacy_center_title'),
-                      style: SLTheme.quicksand(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: SLColors.darkNavy,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      context.tr('settings_privacy_center_desc'),
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF64748B),
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          SLDetailHeading(
+            icon: Icons.shield_outlined,
+            title: context.tr('settings_privacy_center_title'),
+            description: context.tr('settings_privacy_center_desc'),
+            color: SLDetailStyle.sage,
           ),
           const SizedBox(height: 16),
           _buildPrivacyStatusTile(
@@ -573,292 +513,23 @@ extension _SettingsDataHealthSection on _SettingsTabState {
     required String status,
     required bool isReady,
     VoidCallback? onTap,
-  }) {
-    final color = isReady ? const Color(0xFF2E7D32) : const Color(0xFFEF6C00);
-
-    final content = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              title,
-              style: SLTheme.quicksand(
-                fontSize: 12.2,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF243041),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Text(
-            status,
-            style: SLTheme.quicksand(
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-              color: color,
-            ),
-          ),
-          if (onTap != null) ...[
-            const SizedBox(width: 4),
-            Icon(Icons.chevron_right_rounded, size: 16, color: color),
-          ],
-        ],
-      ),
-    );
-
-    if (onTap != null) {
-      return InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: content,
-      );
-    }
-    return content;
-  }
-
-  Widget _buildGpsOptionCard({
-    required BuildContext ctx,
-    required bool isSelected,
-    required String title,
-    String? badge,
-    required String description,
-    String? warningText,
-    required IconData icon,
-    required Color activeColor,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? activeColor.withValues(alpha: 0.08)
-              : const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? activeColor : const Color(0xFFE2E8F0),
-            width: isSelected ? 1.8 : 1.0,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(7),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? activeColor.withValues(alpha: 0.15)
-                        : Colors.black.withValues(alpha: 0.05),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 18,
-                    color: isSelected ? activeColor : const Color(0xFF64748B),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          title,
-                          style: SLTheme.quicksand(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: isSelected
-                                ? activeColor
-                                : const Color(0xFF1E293B),
-                          ),
-                        ),
-                      ),
-                      if (badge != null) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: activeColor.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            badge,
-                            style: SLTheme.quicksand(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w800,
-                              color: activeColor,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                Icon(
-                  isSelected
-                      ? Icons.radio_button_checked_rounded
-                      : Icons.radio_button_off_rounded,
-                  color: isSelected ? activeColor : const Color(0xFF94A3B8),
-                  size: 20,
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              description,
-              style: SLTheme.quicksand(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF64748B),
-                height: 1.35,
-              ),
-            ),
-            if (warningText != null) ...[
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF3E0),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: const Color(0xFFFFB74D),
-                    width: 0.8,
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      Icons.warning_amber_rounded,
-                      size: 16,
-                      color: Color(0xFFE65100),
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        warningText,
-                        style: SLTheme.quicksand(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFFBF360C),
-                          height: 1.35,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
+  }) => SLDetailStatusRow(
+    icon: icon,
+    title: title,
+    status: status,
+    ready: isReady,
+    onTap: onTap,
+  );
 
   Future<void> _showGpsModeSelectorDialog() async {
     final currentMode = _gpsMode;
     final selectedMode = await showDialog<String>(
       context: context,
-      builder: (dialogCtx) {
-        String tempMode = currentMode;
-        return StatefulBuilder(
-          builder: (ctx, setDialogState) {
-            return SLAlertDialog(
-              title: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE1F5FE),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.location_on_rounded,
-                      color: Color(0xFF0288D1),
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(child: Text(context.tr('settings_gps_mode_title'))),
-                ],
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.tr('settings_gps_mode_dialog_desc'),
-                      style: SLTheme.quicksand(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF64748B),
-                        height: 1.35,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildGpsOptionCard(
-                      ctx: ctx,
-                      isSelected:
-                          tempMode == LocationService.kGpsModeForegroundOnly,
-                      title: context.tr('settings_gps_mode_foreground'),
-                      badge: context.tr('settings_gps_mode_recommended'),
-                      description:
-                          context.tr('settings_gps_mode_foreground_desc'),
-                      icon: Icons.battery_saver_rounded,
-                      activeColor: const Color(0xFF2E7D32),
-                      onTap: () {
-                        setDialogState(() {
-                          tempMode = LocationService.kGpsModeForegroundOnly;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    _buildGpsOptionCard(
-                      ctx: ctx,
-                      isSelected: tempMode == LocationService.kGpsModeAlways,
-                      title: context.tr('settings_gps_mode_always'),
-                      description: context.tr('settings_gps_mode_always_desc'),
-                      warningText:
-                          context.tr('settings_gps_mode_always_warning'),
-                      icon: Icons.all_inclusive_rounded,
-                      activeColor: const Color(0xFFEF6C00),
-                      onTap: () {
-                        setDialogState(() {
-                          tempMode = LocationService.kGpsModeAlways;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                SLDialogAction(
-                  onPressed: () => Navigator.of(dialogCtx).pop(),
-                  child: Text(context.tr('cancel')),
-                ),
-                SLDialogAction(
-                  primary: true,
-
-                  onPressed: () => Navigator.of(dialogCtx).pop(tempMode),
-                  child: Text(context.tr('save')),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder: (_) => SettingsGpsModeDialog(
+        initialMode: currentMode,
+        foregroundMode: LocationService.kGpsModeForegroundOnly,
+        alwaysMode: LocationService.kGpsModeAlways,
+      ),
     );
 
     if (selectedMode != null && selectedMode != currentMode) {
@@ -878,6 +549,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
         }
       }
 
+      if (!mounted) return;
       _showToast(context.tr('settings_gps_mode_saved'), success: true);
     }
   }
@@ -887,38 +559,12 @@ extension _SettingsDataHealthSection on _SettingsTabState {
     required String title,
     required String status,
     required bool isReady,
-  }) {
-    final color = isReady ? const Color(0xFF2E7D32) : const Color(0xFFEF6C00);
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              title,
-              style: SLTheme.quicksand(
-                fontSize: 12.2,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF243041),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Text(
-            status,
-            style: SLTheme.quicksand(
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  }) => SLDetailStatusRow(
+    icon: icon,
+    title: title,
+    status: status,
+    ready: isReady,
+  );
 
   Future<void> _applyPerformancePreset({
     required bool liteMode,
@@ -951,67 +597,13 @@ extension _SettingsDataHealthSection on _SettingsTabState {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFE3F2FD),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.speed_rounded,
-                      color: Color(0xFF1565C0),
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.tr('settings_performance_mode_title'),
-                          style: SLTheme.quicksand(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            color: SLColors.darkNavy,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          isPerformanceMode
-                              ? context.tr('settings_perf_preset_smoother')
-                              : context.tr('settings_perf_preset_balanced'),
-                          style: SLTheme.quicksand(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: isPerformanceMode
-                                ? const Color(0xFF2E7D32)
-                                : const Color(0xFF1565C0),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          isPerformanceMode
-                              ? context.tr(
-                                  'settings_performance_mode_desc_smooth',
-                                )
-                              : context.tr(
-                                  'settings_performance_mode_desc_balanced',
-                                ),
-                          style: SLTheme.quicksand(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF64748B),
-                            height: 1.35,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              SLDetailHeading(
+                icon: Icons.speed_rounded,
+                title: context.tr('settings_performance_mode_title'),
+                color: SLDetailStyle.blue,
+                description: isPerformanceMode
+                    ? context.tr('settings_performance_mode_desc_smooth')
+                    : context.tr('settings_performance_mode_desc_balanced'),
               ),
               const SizedBox(height: 16),
               Row(
@@ -1183,7 +775,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
         ),
         child: Row(
           children: [
-            Icon(icon, color: const Color(0xFF1565C0)),
+            Icon(icon, color: SLDetailStyle.blue),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -1194,7 +786,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                     style: SLTheme.quicksand(
                       fontSize: 14,
                       fontWeight: FontWeight.w900,
-                      color: const Color(0xFF243041),
+                      color: SLDetailStyle.text(context),
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -1203,7 +795,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                     style: SLTheme.quicksand(
                       fontSize: 11.8,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF66758A),
+                      color: SLDetailStyle.muted(context),
                       height: 1.35,
                     ),
                   ),
@@ -1245,7 +837,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
             obscureText: true,
             autofocus: true,
             style: SLTheme.quicksand(
-              color: const Color(0xFF1565C0),
+              color: SLDetailStyle.blue,
               fontWeight: FontWeight.w700,
             ),
             decoration: InputDecoration(
@@ -1311,7 +903,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: const Color(0xFF1565C0),
+                color: SLDetailStyle.blue,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: const Icon(Icons.download_rounded, color: Colors.white),
@@ -1430,51 +1022,13 @@ extension _SettingsDataHealthSection on _SettingsTabState {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              if (!hideBackButton)
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FBFF),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFDCE7F2)),
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      size: 16,
-                      color: SLColors.primaryActive,
-                    ),
-                  ),
-                ),
-              if (!hideBackButton) const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  context.tr('home_dliuhthng_59a15f'),
-                  style: SLTheme.quicksand(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF243041),
-                  ),
-                ),
-              ),
-              const Icon(Icons.hub_rounded, color: SLColors.primaryActive),
-            ],
+          SLDetailPageHeader(
+            title: context.tr('settings_menu_data_title'),
+            icon: Icons.cloud_sync_outlined,
+            description: context.tr('settings_menu_data_desc'),
+            backLabel: context.tr('p6_back'),
+            onBack: hideBackButton ? null : () => Navigator.pop(context),
           ),
-          const SizedBox(height: 14),
-          Text(
-            context.tr('home_qunlthngbo_d7ad66'),
-            style: SLTheme.quicksand(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF66758A),
-              height: 1.45,
-            ),
-          ),
-          const SizedBox(height: 12),
           _buildSettingsBackupStatusCard(),
           const SizedBox(height: 12),
           _buildRestoreDataGroupsCard(),
@@ -1483,16 +1037,13 @@ extension _SettingsDataHealthSection on _SettingsTabState {
           const SizedBox(height: 12),
           _buildPerformanceStatusCard(),
           const SizedBox(height: 12),
-          _buildActionBtn(
+          _buildCompactActionBtn(
             icon: Icons.menu_book_rounded,
             label: context.tr('home_xemhngdnch_685e26'),
-            gradient: const [Color(0xFFF48FB1), Color(0xFFC2185B)],
-            textColor: Colors.white,
             onTap: _openGuideDocument,
           ),
           const SizedBox(height: 16),
-          _buildSectionBlock(
-            colorTint: const Color(0xFF1976D2),
+          _buildCompactCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1503,12 +1054,12 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE3F2FD),
+                        color: const Color(0xFFEBEFEF),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
                         Icons.download_for_offline_rounded,
-                        color: Color(0xFF1565C0),
+                        color: SLDetailStyle.blue,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1521,7 +1072,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                             style: SLTheme.quicksand(
                               fontSize: 14,
                               fontWeight: FontWeight.w900,
-                              color: const Color(0xFF243041),
+                              color: SLDetailStyle.text(context),
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -1530,7 +1081,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                             style: SLTheme.quicksand(
                               fontSize: 11.8,
                               fontWeight: FontWeight.w700,
-                              color: const Color(0xFF66758A),
+                              color: SLDetailStyle.muted(context),
                               height: 1.4,
                             ),
                           ),
@@ -1540,11 +1091,9 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                   ],
                 ),
                 const SizedBox(height: 12),
-                _buildActionBtn(
+                _buildCompactActionBtn(
                   icon: Icons.download_rounded,
                   label: context.tr('home_tobntixung_3d109d'),
-                  gradient: const [Color(0xFF64B5F6), Color(0xFF1976D2)],
-                  textColor: Colors.white,
                   onTap: _requestUserDataExportFromHealthCenter,
                 ),
               ],
@@ -1561,12 +1110,12 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF3E0),
+                    color: const Color(0xFFF2E8DA),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
                     Icons.link_rounded,
-                    color: Color(0xFFEF6C00),
+                    color: SLDetailStyle.warning,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -1579,7 +1128,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                         style: SLTheme.quicksand(
                           fontSize: 14,
                           fontWeight: FontWeight.w900,
-                          color: const Color(0xFF243041),
+                          color: SLDetailStyle.text(context),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -1588,7 +1137,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                         style: SLTheme.quicksand(
                           fontSize: 11.8,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF66758A),
+                          color: SLDetailStyle.muted(context),
                           height: 1.4,
                         ),
                       ),
@@ -1599,11 +1148,9 @@ extension _SettingsDataHealthSection on _SettingsTabState {
             ),
           ),
           const SizedBox(height: 12),
-          _buildActionBtn(
+          _buildCompactActionBtn(
             icon: Icons.link_rounded,
             label: context.tr('home_qunllinkt_df5d77'),
-            gradient: const [Color(0xFFFFB74D), Color(0xFFF57C00)],
-            textColor: Colors.white,
             onTap: () {
               if (_houseId == null || _houseId!.trim().isEmpty) {
                 _showToast(
@@ -1631,61 +1178,15 @@ extension _SettingsDataHealthSection on _SettingsTabState {
     required String label,
     required VoidCallback onTap,
     bool isPrimary = false,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-        decoration: BoxDecoration(
-          color: isPrimary ? SLColors.primary : SLColors.paperBlush,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isPrimary
-                ? SLColors.primary
-                : SLColors.primary.withValues(alpha: 0.16),
-          ),
-        ),
-        alignment: Alignment.center,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 16,
-              color: isPrimary ? Colors.white : SLColors.primary,
-            ),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                label,
-                style: SLTheme.quicksand(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: isPrimary ? Colors.white : SLColors.ink,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  }) => SLDetailButton(
+    icon: icon,
+    label: label,
+    primary: isPrimary,
+    onPressed: onTap,
+  );
 
-  Widget _buildCompactCard({required Widget child}) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: SLColors.bgSubtle,
-        borderRadius: BorderRadius.circular(21),
-        border: Border.all(color: SLColors.border),
-        boxShadow: SLShadow.subtle,
-      ),
-      child: child,
-    );
-  }
+  Widget _buildCompactCard({required Widget child}) =>
+      SLDetailCard(child: child);
 }
 
 class _RestoreDataGroupInfo {

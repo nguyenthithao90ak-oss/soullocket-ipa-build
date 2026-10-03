@@ -216,8 +216,8 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
-          content: const Text(
-            'Bạn thao tác hơi nhanh. Vui lòng chờ một lát rồi thử lại.',
+          content: Text(
+            context.tr('chat_friendly_19'),
           ),
           duration: Duration(seconds: 2),
         ),
@@ -418,7 +418,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (password.length < 6) {
         _showErrorDialog(
-          L10nService().translate('Mật khẩu cần tối thiểu 6 ký tự!'),
+          L10nService().translate('auth_password_min_length'),
         );
         return;
       }
@@ -916,7 +916,7 @@ class _LoginScreenState extends State<LoginScreen> {
         builder: (_) => DocumentViewerScreen(
           title: l10n.locale.languageCode == 'vi'
               ? l10n.translate('Điều khoản sử dụng')
-              : 'Terms of Use',
+              : context.tr('update_hub_terms'),
           assetPath: 'assets/docs/terms.html',
         ),
       ),
@@ -931,7 +931,7 @@ class _LoginScreenState extends State<LoginScreen> {
         builder: (_) => DocumentViewerScreen(
           title: l10n.locale.languageCode == 'vi'
               ? l10n.translate('Chính sách bảo mật')
-              : 'Privacy Policy',
+              : context.tr('privacy_policy'),
           assetPath: 'assets/docs/privacy.html',
         ),
       ),
@@ -946,7 +946,7 @@ class _LoginScreenState extends State<LoginScreen> {
         builder: (_) => DocumentViewerScreen(
           title: l10n.locale.languageCode == 'vi'
               ? l10n.translate('Hướng dẫn sử dụng')
-              : 'User Guide',
+              : context.tr('Hướng dẫn sử dụng'),
           assetPath: 'assets/docs/huong_dan.html',
         ),
       ),
@@ -1141,7 +1141,7 @@ class _SyncGuideDialogContentState extends State<_SyncGuideDialogContent>
                           ),
                           const SizedBox(width: 5),
                           Text(
-                            _l10n.translate('Kết nối hai thiết bị'),
+                            _l10n.translate('auth_pairing_title'),
                             style: const TextStyle(
                               fontFamily: 'Quicksand',
                               fontSize: 9.8,
@@ -1177,7 +1177,7 @@ class _SyncGuideDialogContentState extends State<_SyncGuideDialogContent>
                   ),
                 ),
                 Text(
-                  _l10n.translate('Hai tài khoản, một góc nhỏ chung'),
+                  _l10n.translate('auth_pairing_subtitle'),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontFamily: 'Quicksand',
@@ -1190,7 +1190,7 @@ class _SyncGuideDialogContentState extends State<_SyncGuideDialogContent>
                 const SizedBox(height: 6),
                 Text(
                   _l10n.translate(
-                    'Mỗi người vẫn có tài khoản riêng. Sau khi ghép đôi, dữ liệu thuộc không gian chung mới được đồng bộ giữa hai máy.',
+                    'auth_pairing_account_desc',
                   ),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
@@ -1204,27 +1204,27 @@ class _SyncGuideDialogContentState extends State<_SyncGuideDialogContent>
                 const SizedBox(height: 16),
                 _buildStep(
                   number: '1',
-                  title: _l10n.translate('Mỗi người đăng nhập tài khoản riêng'),
+                  title: _l10n.translate('auth_pairing_account_title'),
                   description: _l10n.translate(
-                    'Đăng ký hoặc đăng nhập trên điện thoại của mình bằng Email, Google hoặc Apple.',
+                    'auth_pairing_account_desc',
                   ),
                   icon: Icons.person_outline_rounded,
                   accent: const Color(0xFFE06686),
                 ),
                 _buildStep(
                   number: '2',
-                  title: _l10n.translate('Ghép đôi bằng một mã kết nối'),
+                  title: _l10n.translate('auth_pairing_code_title'),
                   description: _l10n.translate(
-                    'Vào Cài đặt → Ghép nối dữ liệu. Một người tạo mã, người còn lại nhập mã đó để xác nhận.',
+                    'auth_pairing_code_desc',
                   ),
                   icon: Icons.qr_code_2_rounded,
                   accent: const Color(0xFF8771C7),
                 ),
                 _buildStep(
                   number: '3',
-                  title: _l10n.translate('Cùng cập nhật không gian chung'),
+                  title: _l10n.translate('auth_pairing_sync_title'),
                   description: _l10n.translate(
-                    'Kỷ niệm, nhật ký, album và dữ liệu đôi sẽ được cập nhật sau khi hai tài khoản đã kết nối.',
+                    'auth_pairing_sync_desc',
                   ),
                   icon: Icons.favorite_outline_rounded,
                   accent: const Color(0xFF4F9B90),
@@ -1254,7 +1254,7 @@ class _SyncGuideDialogContentState extends State<_SyncGuideDialogContent>
                       Expanded(
                         child: Text(
                           _l10n.translate(
-                            'Khi đổi điện thoại, hãy đăng nhập lại đúng tài khoản để tải phần dữ liệu đã được lưu trên cloud.',
+                            'auth_pairing_restore_hint',
                           ),
                           style: const TextStyle(
                             fontFamily: 'Quicksand',

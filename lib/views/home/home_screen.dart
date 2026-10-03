@@ -15,6 +15,7 @@ import 'package:flutter/gestures.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter/material.dart';
+import '../utilities/sleep_tracker_screen.dart';
 import '../utilities/update_dialog_helper.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/models/account_deletion_status.dart';
@@ -1032,6 +1033,11 @@ class _HomeScreenState extends State<HomeScreen>
         return;
       case WidgetLaunchAction.cycle:
         await _openHealthScreenFromWidget();
+        return;
+      case WidgetLaunchAction.sleep:
+        final sleepHouse = await _houseService.getCurrentHouseId();
+        if (!mounted || sleepHouse == null || sleepHouse.isEmpty) return;
+        await Navigator.of(context).push(SLRoute(builder: (_) => SleepTrackerScreen(houseId: sleepHouse, myName: '')));
         return;
       case WidgetLaunchAction.soul_events:
         await _openSoulEventsFromWidget();

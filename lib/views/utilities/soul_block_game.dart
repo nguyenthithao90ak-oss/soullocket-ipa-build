@@ -715,9 +715,11 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     _PreparedSoulRun? preparedRun,
   }) {
     final _PreparedSoulRun nextRun = preparedRun ?? _prepareFreshRun();
-    final int nextGamesSincePhotoChange = min(2, _newGamesSincePhotoChange + 1);
-    final bool shouldRotatePhoto =
-        _photoNeedsNext || _newGamesSincePhotoChange >= 2;
+    final photoCycle = _nextSoulPhotoCycleGame(
+      games: _newGamesSincePhotoChange,
+      advancePending: _photoNeedsNext,
+    );
+    final bool shouldRotatePhoto = photoCycle.advance;
     _memoryBurstController.stop();
     _explosionController.stop();
     _floatingController.stop();
@@ -759,7 +761,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _draggingFromHold = false;
       _dragPreviewFootprintKeys = null;
       _photoNeedsNext = shouldRotatePhoto;
-      _newGamesSincePhotoChange = nextGamesSincePhotoChange;
+      _newGamesSincePhotoChange = photoCycle.games;
       _isReviving = false;
       _isRestarting = false;
       _isOpeningGameplay = false;

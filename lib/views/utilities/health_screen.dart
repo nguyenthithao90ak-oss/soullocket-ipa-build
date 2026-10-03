@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_date_picker.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import '../../core/sl_theme.dart';
 import '../../utils/services/health_period_service.dart';
 import 'package:soullocket_app/utils/services/widget_service.dart';
 import '../../utils/services/l10n_service.dart';
+import 'widgets/health_cycle_dashboard.dart';
 
 class HealthScreen extends StatefulWidget {
   final String houseId;
@@ -27,6 +29,7 @@ class _HealthScreenState extends State<HealthScreen> {
   int _periodDays = 5;
   bool _hasConsent = false;
   bool _shareWithPartner = true;
+  Map<String, dynamic>? _cycleWidgetData;
   List<DateTime> _recentHistory = const [];
 
   StreamSubscription<DatabaseEvent>? _healthSub;
@@ -73,7 +76,11 @@ class _HealthScreenState extends State<HealthScreen> {
           _hasConsent = true;
         });
       }
-      unawaited(WidgetService.syncCycleWidgetData(houseId: widget.houseId));
+      if (_cycleWidgetData != null) {
+        unawaited(
+          WidgetService.updateCycleWidgetData(cycleData: _cycleWidgetData),
+        );
+      }
     }
   }
 
@@ -88,7 +95,14 @@ class _HealthScreenState extends State<HealthScreen> {
         .child('houses/${widget.houseId}/health_cycle')
         .onValue
         .listen((event) {
+          if (!mounted) return;
           final raw = event.snapshot.value;
+          _cycleWidgetData = raw is Map ? Map<String, dynamic>.from(raw) : null;
+          if (_hasConsent) {
+            unawaited(
+              WidgetService.updateCycleWidgetData(cycleData: _cycleWidgetData),
+            );
+          }
           if (raw is Map) {
             final data = Map<String, dynamic>.from(raw);
             if (mounted) {
@@ -147,20 +161,21 @@ class _HealthScreenState extends State<HealthScreen> {
 
   Future<void> _saveHealthData() async {
     if (_lastDate == null) return;
-    await _dbRef.child('houses/${widget.houseId}/health_cycle').set({
+    final cycleData = <String, dynamic>{
       'lastDate': DateFormat('yyyy-MM-dd').format(_lastDate!),
       'length': _length,
       'periodDays': _periodDays,
       'shareWithPartner': _shareWithPartner,
       'history': _buildHistoryIsoDates(_lastDate!),
       'updatedAt': ServerValue.timestamp,
-    });
+    };
+    await _dbRef.child('houses/${widget.houseId}/health_cycle').set(cycleData);
 
     // Log the period start and trigger notification scheduling
     await HealthPeriodService().logPeriodStart(widget.houseId, _lastDate!);
 
     // Sync widget cycle data
-    unawaited(WidgetService.syncCycleWidgetData(houseId: widget.houseId));
+    unawaited(WidgetService.updateCycleWidgetData(cycleData: cycleData));
 
     if (mounted) {
       setState(() {
@@ -223,7 +238,7 @@ class _HealthScreenState extends State<HealthScreen> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    final DateTime? picked = await showSLDatePicker(
       context: context,
       initialDate: _lastDate ?? DateTime.now(),
       firstDate: DateTime(2020),
@@ -235,41 +250,6 @@ class _HealthScreenState extends State<HealthScreen> {
       });
       _saveHealthData();
     }
-  }
-
-  Widget _buildOutlinedText(
-    String text,
-    double fontSize,
-    Color textColor,
-    Color outlineColor, {
-    FontWeight fontWeight = FontWeight.w900,
-  }) {
-    return Stack(
-      children: [
-        Text(
-          text,
-          style: SLTheme.quicksand(
-            fontSize: fontSize,
-            fontWeight: fontWeight,
-            color: outlineColor,
-            shadows: [
-              Shadow(offset: const Offset(-1.5, -1.5), color: outlineColor),
-              Shadow(offset: const Offset(1.5, -1.5), color: outlineColor),
-              Shadow(offset: const Offset(1.5, 1.5), color: outlineColor),
-              Shadow(offset: const Offset(-1.5, 1.5), color: outlineColor),
-            ],
-          ),
-        ),
-        Text(
-          text,
-          style: SLTheme.quicksand(
-            fontSize: fontSize,
-            fontWeight: fontWeight,
-            color: textColor,
-          ),
-        ),
-      ],
-    );
   }
 
   @override
@@ -314,7 +294,7 @@ class _HealthScreenState extends State<HealthScreen> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         SLSpacing.h8,
-                        _buildHeader(),
+                        const HealthCycleHeader(),
                         SLSpacing.h24,
                         if (!_hasConsent)
                           _buildConsentButton()
@@ -343,46 +323,6 @@ class _HealthScreenState extends State<HealthScreen> {
     );
   }
 
-  Widget _buildHeader() {
-    return Column(
-      children: [
-        _buildOutlinedText(
-          context.tr('p3_health_header_tracking'),
-          32,
-          const Color(0xFFFF69B4),
-          Colors.white,
-          fontWeight: FontWeight.w900,
-        ),
-        const SizedBox(height: 0),
-        _buildOutlinedText(
-          context.tr('p3_health_header_cycle'),
-          48,
-          const Color(0xFFD81B60),
-          Colors.white,
-          fontWeight: FontWeight.w900,
-        ),
-        SLSpacing.h8,
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.favorite, color: Color(0xFFFF80AB), size: 16),
-            const SizedBox(width: 8),
-            Text(
-              context.tr('p3_health_header_subtitle'),
-              style: SLTheme.quicksand(
-                color: const Color(0xFF880E4F),
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Icon(Icons.favorite, color: Color(0xFFFF80AB), size: 16),
-          ],
-        ),
-      ],
-    );
-  }
-
   Widget _buildConsentButton() {
     return Center(
       child: ElevatedButton(
@@ -405,247 +345,44 @@ class _HealthScreenState extends State<HealthScreen> {
 
   Widget _buildMainDashboard(Map<String, dynamic> cycleData) {
     if (_lastDate == null) {
-      return Center(
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFFF80AB).withValues(alpha: 0.2),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Text(
-            context.tr('p3_health_set_start_prompt'),
-            style: SLTheme.quicksand(
-              color: const Color(0xFFD81B60),
-              fontWeight: FontWeight.w800,
-              fontSize: 18,
+      return Container(
+        width: double.infinity,
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: .9),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFF6C8D9)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFD81B60).withValues(alpha: .10),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
             ),
-            textAlign: TextAlign.center,
+          ],
+        ),
+        child: Text(
+          context.tr('p3_health_set_start_prompt'),
+          textAlign: TextAlign.center,
+          style: SLTheme.quicksand(
+            color: const Color(0xFF9B3158),
+            fontWeight: FontWeight.w800,
+            fontSize: 17,
+            height: 1.35,
           ),
         ),
       );
     }
 
-    return Stack(
-      clipBehavior: Clip.none,
-      alignment: Alignment.center,
-      children: [
-        // Outer Gradient Ring
-        Container(
-          width: 280,
-          height: 280,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFFB6C1), Color(0xFFE0B0FF)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFFF80AB).withValues(alpha: 0.3),
-                blurRadius: 30,
-                offset: const Offset(0, 15),
-              ),
-            ],
-          ),
-          child: Center(
-            // Inner White Circle
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    context.tr('p3_health_expected_date'),
-                    style: SLTheme.quicksand(
-                      color: const Color(0xFF880E4F),
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFCE4EC),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      context.tr('p3_health_next_period'),
-                      style: SLTheme.quicksand(
-                        color: const Color(0xFFD81B60),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    cycleData['nextPeriodDays'] == 0
-                        ? context.tr('p3_today')
-                        : '${cycleData['nextPeriodDays']}',
-                    style: SLTheme.quicksand(
-                      color: const Color(0xFFD81B60),
-                      fontWeight: FontWeight.w900,
-                      fontSize: cycleData['nextPeriodDays'] == 0 ? 32 : 72,
-                      height: 1.0,
-                    ),
-                  ),
-                  if (cycleData['nextPeriodDays'] != 0)
-                    Text(
-                      context.tr('p3_health_days_remaining'),
-                      style: SLTheme.quicksand(
-                        color: const Color(0xFFD81B60),
-                        fontWeight: FontWeight.w800,
-                        fontSize: 18,
-                      ),
-                    ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF3E5F5),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      L10nService().format('p3_health_fertility_label', {
-                        'value': cycleData['fertility'],
-                      }),
-                      style: SLTheme.quicksand(
-                        color: const Color(0xFF6A1B9A),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-
-        // Top Ring Decor
-        Positioned(
-          top: -8,
-          child: Container(
-            width: 32,
-            height: 32,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-            ),
-            child: Center(
-              child: Container(
-                width: 20,
-                height: 20,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFFFF80AB),
-                ),
-                child: Center(
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-
-        // Bottom Status Pill
-        Positioned(
-          bottom: -20,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFFF80AB).withValues(alpha: 0.2),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: cycleData['phaseColor'],
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.favorite_border,
-                    color: Color(0xFFD81B60),
-                    size: 16,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  L10nService().format('p3_health_phase_label', {
-                    'value': cycleData['phase'],
-                  }),
-                  style: SLTheme.quicksand(
-                    color: const Color(0xFF880E4F),
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // Cute placeholder icon on the bottom right (replacing bunny)
-        Positioned(
-          bottom: 20,
-          right: -10,
-          child: Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFFF80AB).withValues(alpha: 0.3),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: const Center(
-              child: Icon(Icons.pets, color: Color(0xFFFF80AB), size: 30),
-            ),
-          ),
-        ),
-      ],
+    final safeLength = _length > 0 ? _length : 28;
+    return HealthCycleDashboard(
+      daysRemaining: cycleData['nextPeriodDays'] as int? ?? 0,
+      progress:
+          (safeLength - (cycleData['nextPeriodDays'] as int? ?? safeLength)) /
+          safeLength,
+      phase: cycleData['phase']?.toString() ?? '',
+      phaseColor: cycleData['phaseColor'] as Color? ?? const Color(0xFFFFEBEE),
+      fertility: cycleData['fertility']?.toString() ?? '',
     );
   }
 

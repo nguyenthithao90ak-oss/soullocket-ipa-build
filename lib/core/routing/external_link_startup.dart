@@ -1,11 +1,13 @@
 import '../../utils/services/deeplink_service.dart';
 import '../../utils/services/love_card_link_service.dart';
 import '../constants/app_config.dart';
+import '../../models/app_referral.dart';
 
 /// Các liên kết ngoài cần AppEntry xử lý trước khi router đọc fragment.
 /// Ví dụ #open hoặc payload thiệp không phải tên route của ứng dụng.
 bool shouldStartAtAppEntry(Uri uri) {
   return LoveCardLinkService.isSupportedLoveCardUri(uri) ||
+      AppReferralProfile.codeFromUri(uri) != null ||
       DeeplinkService.isSupportedAuthUri(uri) ||
       (AppConfig.isTrustedWebUri(uri) && uri.path == '/join');
 }

@@ -1,8 +1,11 @@
+import 'widget_sleep_event_preview.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../../core/sl_theme.dart';
+import 'widget_theme_surface.dart';
+import '../../../../../models/widget_appearance.dart';
 
 class WidgetStickerArtwork extends StatelessWidget {
   const WidgetStickerArtwork({
@@ -39,6 +42,9 @@ class WidgetCouplePreview extends StatelessWidget {
     this.loveDate = '',
     this.dark = false,
     this.backgroundOverlay,
+    this.themeKey = 'pink',
+    this.themeAnimated = false,
+    this.footer,
   });
   final String sizeKey,
       heading,
@@ -53,18 +59,25 @@ class WidgetCouplePreview extends StatelessWidget {
   final Color textColor, daysColor;
   final Widget center;
   final bool countdown, dark;
-  final Widget? backgroundOverlay;
+  final Widget? backgroundOverlay, footer;
+  final String themeKey;
+  final bool themeAnimated;
 
   @override
   Widget build(BuildContext context) {
     final compact = sizeKey == 'small';
     final large = sizeKey == 'large';
-    final width = compact
+    final ios = Theme.of(context).platform == TargetPlatform.iOS;
+    final width = ios
+        ? (compact ? 155.0 : 329.0)
+        : compact
         ? 140.0
         : large
         ? 320.0
         : 220.0;
-    final height = compact
+    final height = ios
+        ? (large ? 345.0 : 155.0)
+        : compact
         ? 120.0
         : large
         ? 240.0
@@ -72,23 +85,87 @@ class WidgetCouplePreview extends StatelessWidget {
     final centerSize = compact
         ? 28.0
         : large
-        ? 64.0
-        : 48.0;
-    final counterHeight = compact ? 36.0 : large ? 56.0 : 40.0;
-    final nameHeight = compact ? 15.0 : large ? 23.0 : 18.0;
-    final headingHeight = !countdown && large ? 17.0 : 0.0;
-    final dateHeight = countdown && !compact && loveDate.isNotEmpty
-        ? 19.0
+        ? 72.0
+        : 44.0;
+    final counterHeight = ios
+        ? (compact
+              ? 28.0
+              : large
+              ? 46.0
+              : 28.0)
+        : compact
+        ? 36.0
+        : large
+        ? 56.0
+        : 40.0;
+    final nameHeight = ios
+        ? (countdown
+              ? 0.0
+              : large
+              ? 18.0
+              : 14.0)
+        : compact
+        ? 15.0
+        : large
+        ? 23.0
+        : 18.0;
+    final headingHeight = !ios && !countdown && large ? 17.0 : 0.0;
+    final dateHeight = countdown && (!compact || ios) && loveDate.isNotEmpty
+        ? (ios ? (large ? 16.0 : 12.0) : 19.0)
         : 0.0;
     // Avatar gấp đôi mẫu cũ; chỉ co lại nếu ô nhỏ không đủ bề rộng/chiều cao.
-    final avatarSize = math.min(
-      compact ? 64.0 : large ? 116.0 : 80.0,
-      math.min(
-        (width - 16 - centerSize) / 2,
-        height - 16 - counterHeight -
-            (countdown ? dateHeight : nameHeight + headingHeight + 5),
-      ),
-    );
+    final avatarSize = ios
+        ? math.min(
+            compact
+                ? 64.0
+                : large
+                ? 132.0
+                : 96.0,
+            math.min(
+              (width -
+                      (large ? 24 : 16) -
+                      centerSize -
+                      (large
+                          ? 16
+                          : compact
+                          ? 12
+                          : 8)) /
+                  2,
+              height -
+                  (large ? 24 : 16) -
+                  counterHeight -
+                  nameHeight -
+                  (countdown ? 0 : 3) -
+                  (large
+                      ? 32
+                      : compact
+                      ? 12
+                      : 8) -
+                  (dateHeight > 0
+                      ? (large
+                            ? 8
+                            : compact
+                            ? 6
+                            : 4)
+                      : 0) -
+                  dateHeight -
+                  (large ? 92 : 0),
+            ),
+          )
+        : math.min(
+            compact
+                ? 64.0
+                : large
+                ? 116.0
+                : 80.0,
+            math.min(
+              (width - 16 - centerSize) / 2,
+              height -
+                  12 -
+                  counterHeight -
+                  (countdown ? dateHeight : nameHeight + headingHeight + 7),
+            ),
+          );
     Widget fitted(String value, double sp, Color color) => FittedBox(
       fit: BoxFit.scaleDown,
       child: Text(
@@ -130,7 +207,7 @@ class WidgetCouplePreview extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           avatar(url, warm),
-          const SizedBox(height: 2),
+          SizedBox(height: ios ? 3 : 2),
           SizedBox(
             height: nameHeight,
             child: fitted(
@@ -213,73 +290,95 @@ class WidgetCouplePreview extends StatelessWidget {
           child: FittedBox(
             child: MediaQuery.withClampedTextScaling(
               maxScaleFactor: 1.3,
-              child: Container(
+              child: SizedBox(
                 width: width,
                 height: height,
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  gradient: LinearGradient(
-                    colors: colors,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                child: WidgetThemeSurface(
+                  themeKey: themeKey,
+                  colors: colors,
+                  animated: themeAnimated,
+                  child: Stack(
+                    children: [
+                      Padding(
+                        padding: ios
+                            ? EdgeInsets.all(large ? 12 : 8)
+                            : const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 6,
+                              ),
+                        child: Column(
+                          mainAxisAlignment: ios
+                              ? MainAxisAlignment.start
+                              : MainAxisAlignment.center,
+                          children: [
+                            if (!ios && !countdown && large) ...[
+                              SizedBox(
+                                height: 15,
+                                child: fitted(heading, 10, textColor),
+                              ),
+                              const SizedBox(height: 2),
+                            ],
+                            if (ios || !countdown) counter,
+                            if (ios || !countdown)
+                              SizedBox(
+                                height: ios
+                                    ? (large
+                                          ? 8
+                                          : compact
+                                          ? 6
+                                          : 4)
+                                    : 5,
+                              ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: countdown
+                                  ? [
+                                      Expanded(
+                                        child: Center(
+                                          child: avatar(avatar1, true),
+                                        ),
+                                      ),
+                                      visual,
+                                      Expanded(
+                                        child: Center(
+                                          child: avatar(avatar2, false),
+                                        ),
+                                      ),
+                                    ]
+                                  : [
+                                      person(avatar1, name1, true),
+                                      visual,
+                                      person(avatar2, name2, false),
+                                    ],
+                            ),
+                            if (countdown && !ios) counter,
+                            if (countdown &&
+                                (!compact || ios) &&
+                                loveDate.isNotEmpty) ...[
+                              SizedBox(
+                                height: ios
+                                    ? (large
+                                          ? 8
+                                          : compact
+                                          ? 6
+                                          : 4)
+                                    : 2,
+                              ),
+                              SizedBox(
+                                height: ios ? dateHeight : 17,
+                                child: fitted(loveDate, 11, textColor),
+                              ),
+                            ],
+                            if (ios && large) ...[
+                              const Spacer(),
+                              SizedBox(height: 92, child: footer),
+                            ],
+                            if (ios) const Spacer(),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  border: Border.all(color: Colors.white.withValues(alpha: .8)),
-                ),
-                child: Stack(
-                  children: [
-                    if (backgroundOverlay != null)
-                      Positioned.fill(child: backgroundOverlay!),
-                    Positioned.fill(
-                      child: SvgPicture.asset(
-                        'assets/images/widget_stickers/decor.svg',
-                        fit: BoxFit.fill,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (!countdown && large) ...[
-                            SizedBox(
-                              height: 15,
-                              child: fitted(heading, 10, textColor),
-                            ),
-                            const SizedBox(height: 2),
-                          ],
-                          if (!countdown) counter,
-                          if (!countdown) const SizedBox(height: 5),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: countdown
-                                ? [
-                                    Expanded(
-                                      child: Center(child: avatar(avatar1, true)),
-                                    ),
-                                    visual,
-                                    Expanded(
-                                      child: Center(child: avatar(avatar2, false)),
-                                    ),
-                                  ]
-                                : [
-                                    person(avatar1, name1, true),
-                                    visual,
-                                    person(avatar2, name2, false),
-                                  ],
-                          ),
-                          if (countdown) counter,
-                          if (countdown && !compact && loveDate.isNotEmpty) ...[
-                            const SizedBox(height: 2),
-                            SizedBox(
-                              height: 17,
-                              child: fitted(loveDate, 11, textColor),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ),
@@ -340,11 +439,13 @@ class WidgetHeartArtwork extends StatelessWidget {
           child: Center(
             child: Transform.scale(
               scale: scale,
-              child: Text(
-                styleKey,
-                key: ValueKey('heart-art-$styleKey'),
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: size * .535, height: 1),
+              child: SizedBox.square(
+                dimension: size * .82,
+                child: SvgPicture.asset(
+                  'assets/images/widget_stickers/heart_${WidgetAppearance.heartArtworkKey(styleKey)}.svg',
+                  key: ValueKey('heart-art-$styleKey'),
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
           ),
@@ -372,46 +473,59 @@ class WidgetVisualChoiceTile extends StatelessWidget {
     button: true,
     selected: selected,
     label: label,
+    excludeSemantics: true,
     child: Material(
-      color: selected ? const Color(0xFFFFEDF3) : const Color(0xFFFFFBF7),
-      borderRadius: BorderRadius.circular(18),
+      color: selected ? const Color(0xFFFFF0F4) : const Color(0xFFFAF8FB),
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(8),
+          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: selected
-                  ? const Color(0xFFE66D96)
-                  : const Color(0xFFEEE3EB),
-              width: selected ? 1.7 : 1,
+                  ? const Color(0xFFC44B74)
+                  : const Color(0xFFEDE7EE),
+              width: 1.6,
             ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: Stack(
             children: [
-              SizedBox(height: showLabel ? 64 : 40, child: artwork),
-              if (showLabel) ...[
-                const SizedBox(height: 4),
-                Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  style: SLTheme.quicksand(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: selected
-                        ? const Color(0xFFAF3F67)
-                        : const Color(0xFF695466),
-                  ),
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(height: showLabel ? 64 : 40, child: artwork),
+                    if (showLabel) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        label,
+                        textAlign: TextAlign.center,
+                        style: SLTheme.quicksand(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: selected
+                              ? const Color(0xFF9C3359)
+                              : const Color(0xFF655B70),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ],
+              ),
               if (selected)
-                const Icon(
-                  Icons.check_circle_rounded,
-                  size: 14,
-                  color: Color(0xFFE66D96),
+                const Positioned(
+                  top: 5,
+                  right: 5,
+                  child: Icon(
+                    Icons.check_circle_rounded,
+                    size: 16,
+                    color: Color(0xFFC44B74),
+                  ),
                 ),
             ],
           ),
@@ -419,4 +533,39 @@ class WidgetVisualChoiceTile extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// Tỷ lệ tham khảo iPhone; kích thước cuối cùng do WidgetKit cấp.
+class WidgetIOSEventPreview extends StatelessWidget {
+  const WidgetIOSEventPreview({
+    super.key,
+    required this.sizeKey,
+    required this.heading,
+    required this.title,
+    required this.days,
+    required this.label,
+    required this.date,
+    required this.accent,
+    this.themeKey = 'pink',
+    this.animated = false,
+  });
+  final String sizeKey, heading, title, days, label, date;
+  final Color accent;
+  final String themeKey;
+  final bool animated;
+  @override
+  Widget build(BuildContext context) {
+    return WidgetSleepEventPreview(
+      sizeKey: sizeKey,
+      heading: heading,
+      title: title,
+      days: days,
+      label: label,
+      date: date,
+      accent: accent,
+      themeKey: themeKey,
+      animated: animated,
+      hasEvent: date != '--/--/----',
+    );
+  }
 }

@@ -283,7 +283,7 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                             TextButton.icon(
                               onPressed: () async {
                                 final now = DateTime.now();
-                                final picked = await showDatePicker(
+                                final picked = await showSLDatePicker(
                                   context: sheetContext,
                                   initialDate: draftDate ?? now,
                                   firstDate: DateTime(1970, 1, 1),

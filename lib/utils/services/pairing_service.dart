@@ -43,6 +43,13 @@ class PairingRequest {
   }
 }
 
+class PairingInviteCode {
+  final String code;
+  final int expiresAt;
+
+  const PairingInviteCode({required this.code, required this.expiresAt});
+}
+
 class PairingService {
   static final PairingService instance = PairingService._();
   PairingService._();
@@ -56,7 +63,7 @@ class PairingService {
   }
 
   /// Creates a new pairing code with a given duration in minutes
-  Future<String> createPairingCode(int durationMinutes) async {
+  Future<PairingInviteCode> createPairingCode(int durationMinutes) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Chưa đăng nhập');
 
@@ -66,9 +73,13 @@ class PairingService {
       payload: <String, dynamic>{'durationMinutes': durationMinutes},
       fallbackErrorMessage: 'Không thể tạo mã ghép nối lúc này.',
     );
-    final code = _asMap(response.data)['code']?.toString().trim() ?? '';
-    if (code.isEmpty) throw Exception('Máy chủ không trả về mã ghép nối.');
-    return code;
+    final data = _asMap(response.data);
+    final code = data['code']?.toString().trim() ?? '';
+    final expiresAt = (data['expiresAt'] as num?)?.toInt() ?? 0;
+    if (code.isEmpty || expiresAt <= DateTime.now().millisecondsSinceEpoch) {
+      throw Exception('Máy chủ không trả về mã ghép nối hợp lệ.');
+    }
+    return PairingInviteCode(code: code, expiresAt: expiresAt);
   }
 
   /// Sends a pairing request using a 12-digit code

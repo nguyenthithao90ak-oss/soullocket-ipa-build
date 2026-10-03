@@ -3,7 +3,8 @@ import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'widgets/ai_task_status_banner.dart';
-import 'dart:ui';
+import '../../widgets/sl_detail_widgets.dart';
+import 'widgets/friendly_chat_widgets.dart';
 
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
@@ -12,11 +13,9 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/sl_theme.dart';
-import '../../core/fast_backdrop_filter.dart';
 import '../../utils/services/ai_counselor_service.dart';
 import '../../utils/services/storage/ai_pending_request_store.dart';
 import '../ui_prefs.dart';
-import '../../widgets/r2_sticker_image.dart';
 import '../home/widgets/soul_merge_screen.dart';
 import 'soul_block_game.dart';
 
@@ -361,7 +360,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
 
     final reason = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: SLDetailStyle.card(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
@@ -374,13 +373,13 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
                 child: Row(
                   children: [
-                    const Icon(Icons.flag_rounded, color: Color(0xFFD81B60)),
+                    const Icon(Icons.flag_rounded, color: SLDetailStyle.primary),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         context.tr('util_bococutrli_dceda5'),
                         style: SLTheme.quicksand(
-                          color: const Color(0xFF243042),
+                          color: SLDetailStyle.text(context),
                           fontWeight: FontWeight.w900,
                         ),
                       ),
@@ -393,7 +392,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
                   title: Text(
                     item,
                     style: SLTheme.quicksand(
-                      color: const Color(0xFF243042),
+                      color: SLDetailStyle.text(context),
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -464,7 +463,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
 
     final action = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: SLDetailStyle.card(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
@@ -498,8 +497,8 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
                         ? Icons.check_circle_rounded
                         : Icons.flag_rounded,
                     color: message.reported
-                        ? const Color(0xFF16A34A)
-                        : const Color(0xFFD81B60),
+                        ? SLDetailStyle.sage
+                        : SLDetailStyle.primary,
                   ),
                   title: Text(
                     isReporting
@@ -794,7 +793,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
         actions: [
           SLDialogAction(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Hủy'),
+            child: Text(context.tr('cancel')),
           ),
           SLDialogAction(
             primary: true,
@@ -883,88 +882,92 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: SLDetailStyle.card(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 20,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Phong cách trò chuyện',
-                style: SLTheme.quicksand(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF243042),
-                ),
+        return SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Giới thiệu bản thân và cách xưng hô (Tối đa 50 ký tự). AI sẽ luôn tuân thủ theo!',
-                style: SLTheme.quicksand(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF6B4A5D),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: controller,
-                maxLength: 50,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: 'Ví dụ: Mình là sếp, hãy gọi là anh/em',
-                  filled: true,
-                  fillColor: const Color(0xFFF9FAFB),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                ),
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF243042),
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    UiPrefs.setFriendlyChatPersona(controller.text);
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFD81B60),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: Text(
-                    'Lưu cấu hình',
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.tr('detail_chat_style'),
                     style: SLTheme.quicksand(
-                      fontSize: 16,
+                      fontSize: 18,
                       fontWeight: FontWeight.w900,
+                      color: SLDetailStyle.text(context),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    context.tr('detail_chat_style_desc'),
+                    style: SLTheme.quicksand(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: SLDetailStyle.muted(context),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: controller,
+                    maxLength: 50,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: context.tr('detail_chat_style_hint'),
+                      filled: true,
+                      fillColor: SLDetailStyle.background(context),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                    style: SLTheme.quicksand(
+                      fontWeight: FontWeight.w700,
+                      color: SLDetailStyle.text(context),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        UiPrefs.setFriendlyChatPersona(controller.text);
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: SLDetailStyle.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: Text(
+                        context.tr('detail_save_changes'),
+                        style: SLTheme.quicksand(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },
@@ -994,7 +997,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
       children: [
         Expanded(
           child: !_historyVisible && !_historyLoadFailed
-              ? const Center(child: CircularProgressIndicator())
+              ? const FriendlyChatLoading()
               : ListView.builder(
                   controller: _scrollController,
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
@@ -1022,7 +1025,11 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
         SizedBox(
           height: 4,
           child: !_historyReady && !_historyLoadFailed
-              ? const LinearProgressIndicator()
+              ? const LinearProgressIndicator(
+                  color: SLDetailStyle.primary,
+                  backgroundColor: SLDetailStyle.border,
+                  minHeight: 2,
+                )
               : null,
         ),
         if (_historyLoadFailed)
@@ -1048,223 +1055,116 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
       ],
     );
 
-    if (widget.embedded) {
-      return DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFFFF0F5), Color(0xFFF3E5F5), Color(0xFFFFF3E0)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    final body = ColoredBox(
+      color: SLDetailStyle.background(context),
+      child: SafeArea(
+        top: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: content,
           ),
         ),
-        child: SafeArea(top: false, child: content),
-      );
-    }
-
+      ),
+    );
+    if (widget.embedded) return body;
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
+      backgroundColor: SLDetailStyle.background(context),
       appBar: AppBar(
-        backgroundColor: Colors.white.withValues(alpha: 0.7),
-        flexibleSpace: ClipRect(
-          child: FastBackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: const SizedBox.expand(),
-          ),
-        ),
+        toolbarHeight: MediaQuery.textScalerOf(context).scale(20) > 26
+            ? 88
+            : 64,
+        backgroundColor: SLDetailStyle.card(context),
+        foregroundColor: SLDetailStyle.text(context),
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF243042)),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const _BotStickerAvatar(size: 34),
-            const SizedBox(width: 10),
-            Text(
-              context.tr('util_chatthnthi_c39699'),
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFF243042),
-              ),
-            ),
-          ],
+        titleSpacing: 0,
+        title: Text(
+          context.tr('util_chatthnthi_c39699'),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: SLTheme.quicksand(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: SLDetailStyle.text(context),
+          ),
         ),
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(
-              Icons.psychology_alt_rounded,
-              color: Color(0xFFD81B60),
-            ),
-            tooltip: 'Chọn Tính Cách AI',
+            icon: Icon(Icons.tune_rounded, color: SLDetailStyle.muted(context)),
+            color: SLDetailStyle.card(context),
+            tooltip: context.tr('detail_chat_style'),
             initialValue: _persona,
             onSelected: (value) {
-              setState(() {
-                _persona = value;
-              });
+              if (value == 'style') {
+                _showPersonaConfigSheet();
+                return;
+              }
+              setState(() => _persona = value);
               ScaffoldMessenger.of(context).showSnackBar(
                 SLSnackBar(
                   content: Text(
-                    'Đã chuyển sang tính cách: ${value == 'funny'
-                        ? 'Hài hước 😆'
-                        : value == 'advice'
-                        ? 'Tư vấn 🧠'
-                        : 'Mặc định 💖'}',
+                    L10nService().format('detail_chat_persona_changed', {
+                      'name': context.tr('detail_chat_persona_$value'),
+                    }),
                   ),
                   duration: const Duration(seconds: 2),
                 ),
               );
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'default',
-                child: Text('💖 Mặc định (Dễ thương)'),
-              ),
-              const PopupMenuItem(
-                value: 'funny',
-                child: Text('😆 Hài hước (Lầy lội)'),
-              ),
-              const PopupMenuItem(
-                value: 'advice',
-                child: Text('🧠 Tư vấn (Chín chắn)'),
+              for (final item in [
+                ('default', Icons.favorite_border_rounded),
+                ('funny', Icons.sentiment_satisfied_alt_rounded),
+                ('advice', Icons.lightbulb_outline_rounded),
+              ])
+                PopupMenuItem(
+                  value: item.$1,
+                  child: Row(
+                    children: [
+                      Icon(item.$2, size: 20, color: SLDetailStyle.primary),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          context.tr('detail_chat_persona_${item.$1}'),
+                        ),
+                      ),
+                      if (_persona == item.$1)
+                        const Icon(Icons.check_rounded, size: 18),
+                    ],
+                  ),
+                ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'style',
+                child: Text(context.tr('detail_chat_style')),
               ),
             ],
           ),
           IconButton(
-            tooltip: 'Phong cách trò chuyện',
-            onPressed: _showPersonaConfigSheet,
-            icon: const Icon(Icons.tune_rounded, color: Color(0xFF6B4A5D)),
-          ),
-          IconButton(
-            tooltip: 'Làm mới cuộc trò chuyện',
+            tooltip: context.tr('detail_chat_reset'),
             onPressed: _isSending ? null : _clearHistory,
-            icon: const Icon(Icons.refresh_rounded, color: Color(0xFFD81B60)),
+            icon: Icon(
+              Icons.refresh_rounded,
+              color: SLDetailStyle.muted(context),
+            ),
           ),
         ],
       ),
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFFFF0F5), Color(0xFFF3E5F5), Color(0xFFFFF3E0)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: SafeArea(top: false, child: content),
-      ),
+      body: body,
     );
   }
 
-  Widget _buildInputBar() {
-    return ClipRect(
-      child: FastBackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.6),
-            border: Border(
-              top: BorderSide(color: Colors.white.withValues(alpha: 0.8)),
-            ),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _messageController,
-                  minLines: 1,
-                  maxLines: 4,
-                  maxLength: 500,
-                  textInputAction: TextInputAction.newline,
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF243042),
-                  ),
-                  decoration: InputDecoration(
-                    hintText: context.tr('util_nhpiubnmun_30266b'),
-                    hintStyle: SLTheme.quicksand(
-                      color: const Color(0xFF9AA4B2),
-                      fontWeight: FontWeight.w700,
-                    ),
-                    filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.7),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(18),
-                      borderSide: const BorderSide(
-                        color: Colors.white,
-                        width: 1.5,
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(18),
-                      borderSide: const BorderSide(
-                        color: Colors.white,
-                        width: 1.5,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(18),
-                      borderSide: const BorderSide(
-                        color: Color(0xFFD81B60),
-                        width: 1.5,
-                      ),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
-                    ),
-                  ),
-                  onSubmitted: (_) => _sendMessage(),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFD81B60), Color(0xFFFF8FB7)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFD81B60).withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(16),
-                    onTap:
-                        !_historyReady ||
-                            _historyLoadFailed ||
-                            _isSending ||
-                            _isCheckingAiResult ||
-                            _pendingAiOutcome != null
-                        ? null
-                        : _sendMessage,
-                    child: Center(
-                      child: Icon(
-                        Icons.send_rounded,
-                        size: 22,
-                        color: _isSending
-                            ? Colors.white.withValues(alpha: 0.5)
-                            : Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget _buildInputBar() => FriendlyChatComposer(
+    controller: _messageController,
+    canSend:
+        _historyReady &&
+        !_historyLoadFailed &&
+        !_isSending &&
+        !_isCheckingAiResult &&
+        _pendingAiOutcome == null,
+    onSend: _sendMessage,
+  );
 }
 
 class _FriendlyChatBubble extends StatelessWidget {
@@ -1283,74 +1183,16 @@ class _FriendlyChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUser = message.isUser;
-    final bubble = GestureDetector(
-      onLongPress: onLongPress,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.sizeOf(context).width * (isUser ? 0.78 : 0.70),
-        ),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: isUser
-                ? [
-                    BoxShadow(
-                      color: const Color(0xFFD81B60).withValues(alpha: 0.25),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: FastBackdropFilter(
-              filter: ImageFilter.blur(
-                sigmaX: isUser ? 0.001 : 12,
-                sigmaY: isUser ? 0.001 : 12,
-              ),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 11,
-                ),
-                decoration: BoxDecoration(
-                  gradient: isUser
-                      ? const LinearGradient(
-                          colors: [Color(0xFFD81B60), Color(0xFFFF8FB7)],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        )
-                      : null,
-                  color: isUser ? null : Colors.white.withValues(alpha: 0.65),
-                  borderRadius: BorderRadius.circular(18),
-                  border: isUser
-                      ? null
-                      : Border.all(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          width: 1.2,
-                        ),
-                ),
-                child: Text(
-                  message.text,
-                  style: SLTheme.quicksand(
-                    fontSize: 14,
-                    height: 1.35,
-                    fontWeight: FontWeight.w700,
-                    color: isUser ? Colors.white : const Color(0xFF243042),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
+    final bubble = ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth:
+            MediaQuery.sizeOf(context).width.clamp(0, 720) *
+            (isUser ? 0.78 : 0.70),
+      ),
+      child: FriendlyChatTextBubble(
+        text: message.text,
+        isUser: isUser,
+        onLongPress: onLongPress,
       ),
     );
 
@@ -1377,7 +1219,7 @@ class _FriendlyChatBubble extends StatelessWidget {
                     height: 14,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Color(0xFFD81B60),
+                      color: SLDetailStyle.primary,
                     ),
                   ),
                 )
@@ -1391,10 +1233,10 @@ class _FriendlyChatBubble extends StatelessWidget {
                           : Icons.outlined_flag_rounded,
                       size: 20,
                       color: message.reported
-                          ? const Color(0xFF16A34A)
-                          : const Color(0xFF9AA4B2),
+                          ? SLDetailStyle.sage
+                          : SLDetailStyle.muted(context),
                     ),
-                    tooltip: 'Báo cáo',
+                    tooltip: context.tr('p5_profile_report'),
                     splashRadius: 20,
                     onPressed: message.reported ? null : onReport,
                   ),
@@ -1414,41 +1256,18 @@ class _AiDisclosureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: FastBackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(
-                  Icons.info_rounded,
-                  color: Color(0xFFD81B60),
-                  size: 20,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    context.tr('util_tinnhncthc_aeaabb'),
-                    style: SLTheme.quicksand(
-                      color: const Color(0xFF5E6A7D),
-                      fontSize: 12,
-                      height: 1.35,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: SLDetailDisclosure(
+        icon: Icons.info_outline_rounded,
+        title: context.tr('util_trlai_e23336'),
+        description: context.tr('detail_chat_privacy_short'),
+        child: Text(
+          context.tr('util_tinnhncthc_aeaabb'),
+          style: SLTheme.quicksand(
+            fontSize: 12,
+            height: 1.5,
+            color: SLDetailStyle.muted(context),
           ),
         ),
       ),
@@ -1495,43 +1314,14 @@ class _TypingBubbleState extends State<_TypingBubble>
             child: _BotStickerAvatar(size: 28),
           ),
           const SizedBox(width: 8),
-          Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(18),
-              child: FastBackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 11,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.65),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      width: 1.2,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        L10nService().translate('ai_task_waiting_reply'),
-                        style: SLTheme.quicksand(
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFF7A8598),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      _TypingDots(controller: _controller),
-                    ],
-                  ),
-                ),
-              ),
+          Flexible(
+            child: FriendlyChatTextBubble(
+              text: context.tr('ai_task_waiting_reply'),
+              isUser: false,
             ),
           ),
+          const SizedBox(width: 8),
+          _TypingDots(controller: _controller),
         ],
       ),
     );
@@ -1564,7 +1354,7 @@ class _TypingDots extends StatelessWidget {
                 child: const Text(
                   '.',
                   style: TextStyle(
-                    color: Color(0xFFD81B60),
+                    color: SLDetailStyle.primary,
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
                     height: 1,
@@ -1586,28 +1376,7 @@ class _BotStickerAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.7),
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFD81B60).withValues(alpha: 0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(size * 0.12),
-        child: const R2StickerImage(
-          'assets/images/anhtomau_stickers/sticker_28.gif',
-        ),
-      ),
-    );
+    return SLDetailIcon(icon: Icons.chat_bubble_outline_rounded, size: size);
   }
 }
 

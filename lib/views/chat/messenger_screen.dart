@@ -313,7 +313,7 @@ class _MessengerScreenState extends State<MessengerScreen>
             if (!mounted || generation != _bootstrapGeneration) return;
             _failMessengerBootstrap();
             debugPrint(
-              'Messenger friends listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể tải danh sách bạn bè.').message}',
+              'Messenger friends listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: context.tr('home_khngthtida_063ede')).message}',
             );
           },
         );
@@ -392,7 +392,7 @@ class _MessengerScreenState extends State<MessengerScreen>
           },
           onError: (Object error) {
             debugPrint(
-              'Messenger partner presence listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể tải trạng thái người ấy.').message}',
+              'Messenger partner presence listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: context.tr('ui_chat_unable_to_download_that_person_s_status_045f83')).message}',
             );
           },
         );
@@ -423,7 +423,7 @@ class _MessengerScreenState extends State<MessengerScreen>
             if (!mounted || generation != _bootstrapGeneration) return;
             _failMessengerBootstrap();
             debugPrint(
-              'Messenger internal room meta listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể tải tin nhắn gần nhất.').message}',
+              'Messenger internal room meta listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: context.tr('ui_chat_unable_to_download_recent_messages_5ea10f')).message}',
             );
           },
         );
@@ -515,7 +515,7 @@ class _MessengerScreenState extends State<MessengerScreen>
             },
             onError: (Object error) {
               debugPrint(
-                'Messenger friend presence listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể tải trạng thái bạn bè.').message}',
+                'Messenger friend presence listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: context.tr('ui_chat_unable_to_load_friend_status_0f3380')).message}',
               );
             },
           );
@@ -557,7 +557,7 @@ class _MessengerScreenState extends State<MessengerScreen>
             },
             onError: (Object error) {
               debugPrint(
-                'Messenger room meta listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể tải tin nhắn gần nhất.').message}',
+                'Messenger room meta listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: context.tr('ui_chat_unable_to_download_recent_messages_5ea10f')).message}',
               );
             },
           );
@@ -609,7 +609,7 @@ class _MessengerScreenState extends State<MessengerScreen>
     final houseName = info?['houseName']?.toString().trim() ?? '';
     return houseName.isNotEmpty
         ? repairMojibakeText(houseName)
-        : repairMojibakeText('Ngôi nhà $friendId');
+        : repairMojibakeText(L10nScope.of(context).format('ui_chat_ng_i_nh_value1_1a3fb0', {'value1': friendId}));
   }
 
   String _internalPartnerName({bool allowFallback = true}) {
@@ -988,7 +988,7 @@ class _MessengerScreenState extends State<MessengerScreen>
       final mine = _myHouseInfo['houseName']?.toString().trim() ?? '';
       return mine.isNotEmpty
           ? repairMojibakeText(mine)
-          : repairMojibakeText('Nhà của bạn');
+          : repairMojibakeText(context.tr('p9_group_chat_your_house'));
     }
     return _displayName(houseId);
   }
@@ -1037,12 +1037,12 @@ class _MessengerScreenState extends State<MessengerScreen>
         .map(_groupHouseName)
         .toList();
     if (others.isEmpty) {
-      return repairMojibakeText('Nhóm mới');
+      return repairMojibakeText(context.tr('ui_chat_new_group_558bb2'));
     }
     if (others.length == 1) {
-      return repairMojibakeText('Nhóm với ${others.first}');
+      return repairMojibakeText(L10nScope.of(context).format('ui_chat_group_with_value1_6fe2a6', {'value1': others.first}));
     }
-    return repairMojibakeText('Nhóm ${others.first} & ${others.last}');
+    return repairMojibakeText(L10nScope.of(context).format('ui_chat_nh_m_value1_value2_e3bb1b', {'value1': others.first, 'value2': others.last}));
   }
 
   void _showMessengerNotice(String message, {bool error = false}) {

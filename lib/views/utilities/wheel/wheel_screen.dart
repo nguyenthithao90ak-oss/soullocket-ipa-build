@@ -486,7 +486,7 @@ class _WheelScreenState extends State<WheelScreen>
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               border: InputBorder.none,
-              hintText: 'Ví dụ:\nAi nấu cơm?\nAi rửa bát?',
+              hintText: context.tr('ui_utilities_for_example_who_cooks_who_washes_the_85f0e7'),
               hintStyle: SLTheme.quicksand(
                 color: SLTheme.textMuted.withValues(alpha: 0.5),
                 fontWeight: FontWeight.w600,
@@ -569,7 +569,7 @@ class _WheelScreenState extends State<WheelScreen>
                           ),
                           child: Center(
                             child: Text(
-                              'SPIN',
+                              context.tr('ui_utilities_spin_962324'),
                               style: SLTheme.quicksand(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w900,
@@ -925,7 +925,7 @@ class _WheelScreenState extends State<WheelScreen>
                       color: SLTheme.primary.withValues(alpha: 0.18)),
                 ),
                 child: Text(
-                  '${entry.options.length} mục',
+                  L10nScope.of(context).format('ui_utilities_value1_items_1acb61', {'value1': entry.options.length}),
                   style: SLTheme.quicksand(
                     fontSize: 11,
                     fontWeight: FontWeight.w900,

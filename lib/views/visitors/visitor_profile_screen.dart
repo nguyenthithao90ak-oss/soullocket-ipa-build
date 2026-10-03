@@ -1039,19 +1039,23 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
             expandedHeight: _kProfileHeaderExpandedHeight,
             pinned: true,
             automaticallyImplyLeading: widget.showBackButton,
-            backgroundColor: SLColors.primary,
+            backgroundColor: SLColors.paper,
+            foregroundColor: SLColors.ink,
+            surfaceTintColor: Colors.transparent,
+            scrolledUnderElevation: 0,
+            systemOverlayStyle: SLTheme.pageSystemOverlayStyle,
             elevation: 0,
             leading: widget.showBackButton
                 ? IconButton(
                     icon: Container(
                       padding: SLSpacing.all8,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
+                      decoration: const BoxDecoration(
+                        color: SLColors.paper,
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.arrow_back_ios_new,
-                        color: Colors.white,
+                        color: SLColors.ink,
                         size: 16,
                       ),
                     ),
@@ -1427,12 +1431,9 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SLSnackBar(
-        content: Text(
-          msg,
-          
-        ),
+        content: Text(msg),
         behavior: SnackBarBehavior.floating,
-        
+
         backgroundColor: SLColors.textPrimary,
       ),
     );

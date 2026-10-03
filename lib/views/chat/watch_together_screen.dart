@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -405,7 +406,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
       },
       onError: (Object error) {
         debugPrint(
-          'Watch together listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể đồng bộ phòng xem chung.').message}',
+          'Watch together listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: context.tr('ui_chat_unable_to_synchronize_shared_viewing_room_471db9')).message}',
         );
       },
     );
@@ -414,7 +415,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
   Future<void> _shareCurrentUrl() async {
     final normalized = _normalizeUrl(_urlController.text);
     if (normalized == null) {
-      _showSnack('Link chưa hợp lệ', isError: true);
+      _showSnack(context.tr('ui_chat_the_link_is_not_valid_87babc'), isError: true);
       return;
     }
 
@@ -434,7 +435,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
       url: normalized,
     );
     await _loadUrl(normalized);
-    _showSnack('Đã mời ${widget.targetName} vào xem chung');
+    _showSnack(L10nScope.of(context).format('ui_chat_invited_value1_to_watch_together_0a1b58', {'value1': widget.targetName}));
   }
 
   Future<void> _toggleVoiceCall() async {
@@ -442,7 +443,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
       await _webrtc.hangUp();
       _isCallingVN.value = false;
       _micMutedVN.value = false;
-      _showSnack('Đã kết thúc gọi thoại');
+      _showSnack(context.tr('ui_chat_voice_call_ended_2efe56'));
       return;
     }
 
@@ -458,10 +459,10 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
       }
 
       _isCallingVN.value = true;
-      _showSnack('Đã kết nối cuộc gọi thoại.');
+      _showSnack(context.tr('ui_chat_voice_call_connected_3df07c'));
     } catch (e) {
       _showSnack(
-        'Chưa thể kết nối cuộc gọi thoại lúc này. Vui lòng thử lại.',
+        context.tr('ui_chat_voice_calls_cannot_be_connected_at_this_d2d44c'),
         isError: true,
       );
     }
@@ -560,7 +561,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
           backgroundColor: Colors.white,
           surfaceTintColor: Colors.white,
           title: Text(
-            'XEM CHUNG',
+            context.tr('ui_chat_watch_together_0bf9d9'),
             style: SLTheme.quicksand(
               fontWeight: FontWeight.w900,
               color: const Color(0xFFD81B60),
@@ -575,7 +576,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
               backgroundColor: isCalling ? Colors.red : const Color(0xFF2E7D32),
               icon: Icon(isCalling ? Icons.call_end : Icons.call),
               label: Text(
-                isCalling ? 'Kết thúc gọi' : 'Gọi thoại',
+                isCalling ? context.tr('ui_chat_end_call_005e85') : context.tr('p4_soul_voice_call'),
                 style: SLTheme.quicksand(fontWeight: FontWeight.w800),
               ),
             );
@@ -586,7 +587,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
             child: Padding(
               padding: SLSpacing.all24,
               child: Text(
-                'Tính năng Xem Chung hiện chưa hỗ trợ trên Web.',
+                context.tr('ui_chat_the_view_together_feature_is_not_currently_0d69a2'),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w800,
@@ -608,7 +609,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         title: Text(
-          'XEM CHUNG',
+          context.tr('ui_chat_watch_together_0bf9d9'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w900,
             color: const Color(0xFFD81B60),
@@ -623,7 +624,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
             backgroundColor: isCalling ? Colors.red : const Color(0xFF2E7D32),
             icon: Icon(isCalling ? Icons.call_end : Icons.call),
             label: Text(
-              isCalling ? 'Kết thúc gọi' : 'Gọi thoại',
+              isCalling ? context.tr('ui_chat_end_call_005e85') : context.tr('p4_soul_voice_call'),
               style: SLTheme.quicksand(fontWeight: FontWeight.w800),
             ),
           );
@@ -674,7 +675,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Xem cùng ${widget.targetName}',
+                              L10nScope.of(context).format('ui_chat_watch_with_value1_c3b958', {'value1': widget.targetName}),
                               style: SLTheme.quicksand(
                                 fontWeight: FontWeight.w900,
                                 fontSize: 18,
@@ -683,7 +684,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                             ),
                             SLSpacing.gapH(2),
                             Text(
-                              'Dán một link video hoặc website để hai bạn mở cùng lúc.',
+                              context.tr('ui_chat_paste_a_video_or_website_link_for_c070b4'),
                               style: SLTheme.quicksand(
                                 color: const Color(0xFF6D5C63),
                                 fontWeight: FontWeight.w700,
@@ -743,7 +744,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                                 SLSpacing.w8,
                                 Expanded(
                                   child: Text(
-                                    'Đang trong cuộc gọi thoại. Vui lòng nói chuyện trực tiếp.',
+                                    context.tr('ui_chat_on_a_voice_call_please_talk_directly_3d3bff'),
                                     style: SLTheme.quicksand(
                                       fontWeight: FontWeight.w700,
                                       color: Colors.green.shade800,
@@ -777,8 +778,8 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                     keyboardType: TextInputType.url,
                     style: SLTheme.quicksand(fontWeight: FontWeight.w700),
                     decoration: InputDecoration(
-                      labelText: 'Dán link video hoặc website',
-                      hintText: 'youtube.com, tiktok.com, vnexpress.net...',
+                      labelText: context.tr('ui_chat_paste_the_video_or_website_link_c57bcb'),
+                      hintText: context.tr('ui_chat_youtube_com_tiktok_com_vnexpress_net_774b33'),
                       labelStyle: SLTheme.quicksand(
                         fontWeight: FontWeight.w800,
                       ),
@@ -811,7 +812,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Cinema chỉ nhận link để xem chung, app không còn tải video từ máy lên.',
+                        context.tr('ui_chat_paste_a_video_or_website_link_to_1c7cc5'),
                         style: SLTheme.quicksand(
                           fontWeight: FontWeight.w700,
                           color: Colors.black54,
@@ -831,7 +832,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                         ),
                         icon: const Icon(Icons.send_rounded),
                         label: Text(
-                          'Chia sẻ link',
+                          context.tr('ui_chat_share_links_16f770'),
                           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                         ),
                       ),
@@ -865,8 +866,8 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                         Expanded(
                           child: Text(
                             hasUrl
-                                ? 'Đang chia sẻ: $_currentUrl'
-                                : 'Chưa có link nào được chia sẻ trong phòng xem này.',
+                                ? L10nScope.of(context).format('ui_chat_sharing_value1_0fb070', {'value1': _currentUrl})
+                                : context.tr('ui_chat_no_links_have_been_shared_in_this_144603'),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: SLTheme.quicksand(
@@ -979,7 +980,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                               ),
                               SLSpacing.h16,
                               Text(
-                                'Chưa có nội dung để xem cùng',
+                                context.tr('ui_chat_there_is_no_content_to_view_yet_ec972c'),
                                 textAlign: TextAlign.center,
                                 style: SLTheme.quicksand(
                                   fontWeight: FontWeight.w900,
@@ -989,7 +990,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                               ),
                               SLSpacing.h8,
                               Text(
-                                'Dán một link rồi bấm "Chia sẻ link" để mời ${widget.targetName} vào phòng xem chung này.',
+                                L10nScope.of(context).format('ui_chat_paste_a_link_and_tap_share_link_594080', {'value1': widget.targetName}),
                                 textAlign: TextAlign.center,
                                 style: SLTheme.quicksand(
                                   color: const Color(0xFF94A3B8),
@@ -1050,7 +1051,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                                   valueListenable: _progressVN,
                                   builder: (context, value, _) {
                                     return Text(
-                                      'Đang tải... ${(value * 100).toInt()}%',
+                                      L10nScope.of(context).format('ui_chat_loading_value1_0250bc', {'value1': (value * 100).toInt()}),
                                       style: SLTheme.quicksand(
                                         fontWeight: FontWeight.w800,
                                         color: const Color(0xFF6D5C63),

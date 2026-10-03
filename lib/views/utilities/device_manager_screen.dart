@@ -450,7 +450,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
               children: [
                 Text(
                   isSyncing
-                      ? 'Đang tải danh sách thiết bị từ máy chủ. Thiết bị bên dưới chỉ là máy hiện tại tạm thời.'
+                      ? context.tr('ui_utilities_loading_device_list_from_server_the_device_57c1c7')
                       : message,
                   style: SLTheme.quicksand(
                     fontSize: 13,
@@ -601,7 +601,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: Text(
-                                'Thiết bị này',
+                                context.tr('ui_utilities_this_device_870b01'),
                                 style: SLTheme.quicksand(
                                   fontSize: 9.5,
                                   fontWeight: FontWeight.bold,
@@ -620,7 +620,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: Text(
-                                'Quản trị viên',
+                                context.tr('ui_utilities_administrator_2aeb82'),
                                 style: SLTheme.quicksand(
                                   fontSize: 9.5,
                                   fontWeight: FontWeight.bold,
@@ -644,7 +644,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
                           if (device['ip'] != null &&
                               device['ip'] != 'unknown') ...[
                             SLSpacing.gapH(2),
-                            Text('IP: ${device['ip']}',
+                            Text(L10nScope.of(context).format('ui_utilities_ip_value1_cf7f6d', {'value1': device['ip']}),
                                 style: SLTheme.quicksand(
                                     fontSize: 11, color: Colors.black45)),
                           ],

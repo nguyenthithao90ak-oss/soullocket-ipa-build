@@ -437,51 +437,10 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
         uiState.themeKey == 'theme-night' ||
         uiState.themeKey == 'theme-dark' ||
         uiState.themeKey == 'theme-true-black';
-    return Padding(
-      padding: EdgeInsets.fromLTRB(18, topPadding, 18, 9),
-      child: Row(
-        children: [
-          Container(
-            width: 25,
-            height: 25,
-            margin: const EdgeInsets.only(right: 9),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? SLColors.primary.withValues(alpha: 0.2)
-                  : SLColors.primarySoft,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.favorite_rounded,
-              size: 13,
-              color: SLColors.primary,
-            ),
-          ),
-          Text(
-            title,
-            style: SLTheme.quicksand(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w900,
-              color: isDark ? Colors.white : SLColors.ink,
-              letterSpacing: 0.15,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Container(
-              height: 1,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    SLColors.thread.withValues(alpha: isDark ? 0.4 : 0.28),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+    return SettingsMenuHeading(
+      title: title,
+      isDark: isDark,
+      topPadding: topPadding,
     );
   }
 
@@ -537,6 +496,23 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     final isStandalone = Navigator.of(context).canPop();
     final showBack = isStandalone && !hideBackButton;
     final showExpand = !isStandalone;
+    if (const {'vip', 'identity', 'language', 'security', 'lock'}.contains(id)) {
+      return AccountSettingsSection(
+        title: title,
+        icon: switch (id) {
+          'vip' => Icons.diamond_outlined,
+          'identity' => Icons.person_outline_rounded,
+          'language' => Icons.language_rounded,
+          'lock' => Icons.lock_outline_rounded,
+          _ => Icons.shield_outlined,
+        },
+        onBack: showBack ? () => Navigator.pop(context) : null,
+        backLabel: context.tr('p6_back'),
+        onClose: showExpand ? () => _togglePanel(id) : null,
+        closeLabel: context.tr('p6_close_panel'),
+        child: child,
+      );
+    }
     final shortestSide = MediaQuery.sizeOf(context).shortestSide;
     final isMobile = shortestSide < 600;
 

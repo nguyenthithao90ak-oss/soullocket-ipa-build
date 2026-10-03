@@ -575,132 +575,32 @@ extension _SettingsTabShell on _SettingsTabState {
     return const SizedBox(height: 8);
   }
 
-  Widget _buildiOSSectionCard(List<Widget> children, bool isDark) {
-    return RepaintBoundary(
-      child: SLTheme.paperCard(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        padding: EdgeInsets.zero,
-        radius: 22,
-        showTape: false,
-        color: isDark ? const Color(0xFF261F23) : SLColors.paper,
-        accentColor: SLColors.thread,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: children,
-        ),
-      ),
-    );
-  }
+  Widget _buildiOSSectionCard(List<Widget> children, bool isDark) =>
+      RepaintBoundary(
+        child: SettingsMenuCard(isDark: isDark, children: children),
+      );
 
   Widget _buildiOSRow({
     Key? guideKey,
     required IconData icon,
     required Color iconBgColor,
-    Gradient? iconGradient,
     required String title,
     required VoidCallback onTap,
     String? subtitle,
     bool isDark = false,
     bool isDestructive = false,
-  }) {
-    final textColor = isDestructive
-        ? SLColors.danger
-        : (isDark ? Colors.white : SLColors.ink);
+  }) => SettingsMenuTile(
+    key: guideKey,
+    icon: icon,
+    accent: iconBgColor,
+    title: title,
+    subtitle: subtitle,
+    isDark: isDark,
+    isDestructive: isDestructive,
+    onTap: onTap,
+  );
 
-    return Material(
-      key: guideKey,
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-          child: Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: isDestructive
-                      ? SLColors.danger.withValues(alpha: 0.1)
-                      : (iconGradient == null
-                            ? iconBgColor.withValues(
-                                alpha: isDark ? 0.22 : 0.13,
-                              )
-                            : null),
-                  gradient: isDestructive ? null : iconGradient,
-                  borderRadius: BorderRadius.circular(13),
-                  border: Border.all(
-                    color: isDestructive
-                        ? SLColors.danger.withValues(alpha: 0.2)
-                        : iconBgColor.withValues(alpha: 0.2),
-                  ),
-                ),
-                child: Icon(
-                  icon,
-                  size: 20,
-                  color: isDestructive
-                      ? SLColors.danger
-                      : (iconGradient == null ? iconBgColor : Colors.white),
-                ),
-              ),
-              const SizedBox(width: 13),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: SLTheme.quicksand(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w800,
-                        color: textColor,
-                      ),
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: SLTheme.quicksand(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: isDark
-                              ? Colors.grey[500]
-                              : SLColors.textTertiary,
-                          height: 1.35,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              if (!isDestructive)
-                Icon(
-                  Icons.arrow_forward_rounded,
-                  size: 18,
-                  color: isDark
-                      ? Colors.white38
-                      : SLColors.thread.withValues(alpha: 0.72),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDivider(bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 67, right: 16),
-      child: Divider(
-        height: 1,
-        thickness: 1,
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.07)
-            : SLColors.borderLight,
-      ),
-    );
-  }
+  Widget _buildDivider(bool isDark) => SettingsMenuDivider(isDark: isDark);
 
   Widget _buildSettingsAccountHero(bool isDark) {
     final avatarUrl = (_activeRoleKey == 'user2' ? _avatarUrl2 : _avatarUrl1)
@@ -712,7 +612,7 @@ extension _SettingsTabShell on _SettingsTabState {
     final email = FirebaseAuth.instance.currentUser?.email?.trim() ?? '';
 
     return SLTheme.paperCard(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+      margin: EdgeInsets.zero,
       padding: const EdgeInsets.fromLTRB(18, 22, 16, 18),
       radius: 28,
       showTape: true,
@@ -844,7 +744,13 @@ extension _SettingsTabShell on _SettingsTabState {
                   final houseId = await _houseService.getCurrentHouseId(
                     preferFresh: true,
                   );
-                  if (mounted) setState(() => _houseId = houseId);
+                  if (!mounted || _houseId == houseId) return;
+                  setState(() {
+                    _houseId = houseId;
+                    _settingsIdentityReady = false;
+                    _isBootstrappingSettings = true;
+                  });
+                  unawaited(_fetchSettingsData());
                 },
               ),
             ),
@@ -937,9 +843,12 @@ extension _SettingsTabShell on _SettingsTabState {
 
   List<Widget> _buildNewSettingsList(bool isDark) {
     return [
-      KeyedSubtree(
-        key: _accountGuideKey,
-        child: _buildSettingsAccountHero(isDark),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+        child: KeyedSubtree(
+          key: _accountGuideKey,
+          child: _buildSettingsAccountHero(isDark),
+        ),
       ),
       _buildSectionTitle(
         context.tr('settings_categories_title'),
@@ -947,14 +856,14 @@ extension _SettingsTabShell on _SettingsTabState {
       ),
       _buildSettingsQuickActions(isDark),
       _buildSectionTitle(
-        context.tr('settings_group_config_title'),
+        context.tr('settings_menu_preferences'),
         topPadding: 22,
       ),
       _buildiOSSectionCard([
         if (_relationshipMode != 'single') ...[
           _buildiOSRow(
             icon: Icons.swap_horiz_rounded,
-            iconBgColor: SLColors.info,
+            iconBgColor: SettingsMenuStyle.blue,
             title: _activeRoleKey == 'user1'
                 ? context.tr('settings_swap_role_to_female')
                 : context.tr('settings_swap_role_to_male'),
@@ -966,29 +875,29 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildiOSRow(
           icon: Icons.widgets_outlined,
           guideKey: _widgetGuideKey,
-          iconBgColor: SLColors.success,
-          title: context.tr('settings_widget_label'),
+          iconBgColor: SettingsMenuStyle.sage,
+          title: context.tr('settings_menu_widget_title'),
           subtitle: kIsWeb
-              ? context.tr('settings_widget_desc_web')
-              : context.tr('settings_widget_desc_mobile'),
+              ? context.tr('settings_menu_widget_web')
+              : context.tr('settings_menu_widget_mobile'),
           isDark: isDark,
           onTap: () => _togglePanel('widget'),
         ),
         _buildDivider(isDark),
         _buildiOSRow(
           icon: Icons.notifications_none_rounded,
-          iconBgColor: SLColors.success,
+          iconBgColor: SettingsMenuStyle.sage,
           title: context.tr('settings_notifications_interactions'),
-          subtitle: context.tr('settings_notifications_interactions_desc'),
+          subtitle: context.tr('settings_menu_notifications_desc'),
           isDark: isDark,
           onTap: () => _togglePanel('notifications'),
         ),
         _buildDivider(isDark),
         _buildiOSRow(
-          icon: Icons.smart_toy_rounded,
-          iconBgColor: const Color(0xFFD81B60),
+          icon: Icons.chat_bubble_outline_rounded,
+          iconBgColor: SettingsMenuStyle.rose,
           title: context.tr('util_chatthnthi_c39699'),
-          subtitle: L10nService().translate('settings_friendly_chat_desc'),
+          subtitle: L10nService().translate('settings_menu_chat_desc'),
           isDark: isDark,
           onTap: () {
             final houseId = (_houseId ?? '').trim();
@@ -1000,14 +909,17 @@ extension _SettingsTabShell on _SettingsTabState {
           },
         ),
       ], isDark),
-      _buildSectionTitle(context.tr('settings_security_label'), topPadding: 22),
+      _buildSectionTitle(
+        context.tr('settings_menu_security_group'),
+        topPadding: 22,
+      ),
       _buildiOSSectionCard([
         _buildiOSRow(
           icon: Icons.shield_outlined,
           guideKey: _securityGuideKey,
-          iconBgColor: SLColors.primary,
-          title: context.tr('settings_security_label'),
-          subtitle: context.tr('settings_security_desc'),
+          iconBgColor: SettingsMenuStyle.rose,
+          title: context.tr('settings_menu_security_title'),
+          subtitle: context.tr('settings_menu_security_desc'),
           isDark: isDark,
           onTap: () => _togglePanel('security'),
         ),
@@ -1015,16 +927,16 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildiOSRow(
           icon: Icons.cloud_sync_outlined,
           guideKey: _dataGuideKey,
-          iconBgColor: SLColors.info,
-          title: context.tr('settings_data_system_label'),
-          subtitle: context.tr('settings_data_system_desc'),
+          iconBgColor: SettingsMenuStyle.blue,
+          title: context.tr('settings_menu_data_title'),
+          subtitle: context.tr('settings_menu_data_desc'),
           isDark: isDark,
           onTap: () => _togglePanel('dataHealth'),
         ),
         _buildDivider(isDark),
         _buildiOSRow(
           icon: Icons.location_on_outlined,
-          iconBgColor: const Color(0xFF0288D1),
+          iconBgColor: SettingsMenuStyle.blue,
           title: context.tr('settings_gps_mode_title'),
           subtitle: _gpsMode == LocationService.kGpsModeAlways
               ? context.tr('settings_gps_mode_always')
@@ -1034,23 +946,24 @@ extension _SettingsTabShell on _SettingsTabState {
         ),
         _buildDivider(isDark),
         _buildiOSRow(
-          icon: Icons.admin_panel_settings_outlined,
-          iconBgColor: SLColors.accentPurple,
-          title: context.tr('theme_permission_center'),
-          subtitle: context.tr('settings_permission_center_desc'),
+          icon: Icons.verified_user_outlined,
+          iconBgColor: SettingsMenuStyle.lavender,
+          title: context.tr('settings_menu_permissions_title'),
+          subtitle: context.tr('settings_menu_permissions_desc'),
           isDark: isDark,
           onTap: _isGrantingPermissions ? () {} : _requestAllPermissions,
         ),
       ], isDark),
       _buildSectionTitle(
-        context.tr('settings_support_legal_label'),
+        context.tr('settings_menu_support_group'),
         topPadding: 22,
       ),
       _buildiOSSectionCard([
         _buildiOSRow(
           icon: Icons.history_rounded,
-          iconBgColor: SLColors.info,
+          iconBgColor: SettingsMenuStyle.blue,
           title: context.tr('settings_activity_history'),
+          subtitle: context.tr('settings_menu_history_desc'),
           isDark: isDark,
           onTap: () {
             final houseId = _houseId?.trim() ?? '';
@@ -1063,31 +976,33 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildiOSRow(
           icon: Icons.support_agent_rounded,
           guideKey: _supportGuideKey,
-          iconBgColor: SLColors.success,
-          title: context.tr('support_center'),
+          iconBgColor: SettingsMenuStyle.sage,
+          title: context.tr('settings_menu_support_title'),
+          subtitle: context.tr('settings_menu_support_desc'),
           isDark: isDark,
           onTap: _openSupportContact,
         ),
         _buildDivider(isDark),
         _buildiOSRow(
           icon: Icons.menu_book_outlined,
-          iconBgColor: SLColors.primary,
-          title: context.tr('auth_help_center_guide'),
+          iconBgColor: SettingsMenuStyle.rose,
+          title: context.tr('settings_menu_guide_title'),
+          subtitle: context.tr('settings_menu_guide_desc'),
           isDark: isDark,
           onTap: _openHelpCenter,
         ),
         _buildDivider(isDark),
         _buildiOSRow(
-          icon: Icons.help_outline_rounded,
-          iconBgColor: SLColors.info,
-          title: context.tr('guide_replay_settings'),
+          icon: Icons.tune_rounded,
+          iconBgColor: SettingsMenuStyle.blue,
+          title: context.tr('settings_menu_replay_settings'),
           isDark: isDark,
           onTap: () => _maybeShowSettingsGuideOnOpen(replay: true),
         ),
         _buildDivider(isDark),
         _buildiOSRow(
           icon: Icons.explore_outlined,
-          iconBgColor: SLColors.primary,
+          iconBgColor: SettingsMenuStyle.rose,
           title: context.tr('starter_title'),
           isDark: isDark,
           onTap: () {
@@ -1122,8 +1037,8 @@ extension _SettingsTabShell on _SettingsTabState {
           _buildDivider(isDark),
           _buildiOSRow(
             icon: Icons.home_outlined,
-            iconBgColor: SLColors.primary,
-            title: context.tr('guide_replay_home'),
+            iconBgColor: SettingsMenuStyle.rose,
+            title: context.tr('settings_menu_replay_home'),
             isDark: isDark,
             onTap: () {
               final replay = widget.onReplayFirstSetupGuide!;
@@ -1135,7 +1050,7 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildDivider(isDark),
         _buildiOSRow(
           icon: Icons.star_outline_rounded,
-          iconBgColor: SLColors.warning,
+          iconBgColor: SettingsMenuStyle.tea,
           title: context.tr('rate_app'),
           isDark: isDark,
           onTap: _rateApp,
@@ -1145,7 +1060,7 @@ extension _SettingsTabShell on _SettingsTabState {
       _buildiOSSectionCard([
         _buildiOSRow(
           icon: Icons.logout_rounded,
-          iconBgColor: SLColors.danger,
+          iconBgColor: SettingsMenuStyle.danger,
           title: context.tr('logout'),
           isDark: isDark,
           isDestructive: true,
@@ -1154,7 +1069,7 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildDivider(isDark),
         _buildiOSRow(
           icon: Icons.delete_forever_outlined,
-          iconBgColor: SLColors.danger,
+          iconBgColor: SettingsMenuStyle.danger,
           title: context.tr('settings_delete_account_data'),
           isDark: isDark,
           isDestructive: true,
@@ -1287,7 +1202,12 @@ extension _SettingsTabShell on _SettingsTabState {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          if (sectionId == 'theme')
+          if (sectionId == 'notifications' ||
+              sectionId == 'dataHealth' ||
+              sectionId == 'account' ||
+              sectionId == 'security')
+            ColoredBox(color: SLDetailStyle.background(context))
+          else if (sectionId == 'theme')
             const ColoredBox(color: AppearancePanelStyle.canvas)
           else
             const _SettingsBackgroundLayer(),

@@ -1,5 +1,7 @@
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/sl_dialog.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -62,12 +64,12 @@ class _SingleMatchPostCallDialogState extends State<SingleMatchPostCallDialog> {
   bool _sentRequest = false;
 
   static const List<Map<String, String>> _impressionTags = [
-    {'key': 'warm_voice', 'label': 'Giọng ấm áp 🍯'},
-    {'key': 'humorous', 'label': 'Hài hước 😂'},
-    {'key': 'polite', 'label': 'Lịch sự, tinh tế ✨'},
-    {'key': 'friendly', 'label': 'Dễ gần, thân thiện 🌸'},
-    {'key': 'deep_talker', 'label': 'Tâm sự sâu sắc 🌙'},
-    {'key': 'good_listener', 'label': 'Biết lắng nghe 🎧'},
+    {'key': 'warm_voice', 'label': 'dialog_call_warm_voice'},
+    {'key': 'humorous', 'label': 'dialog_call_humorous'},
+    {'key': 'polite', 'label': 'dialog_call_polite'},
+    {'key': 'friendly', 'label': 'dialog_call_friendly'},
+    {'key': 'deep_talker', 'label': 'dialog_call_deep_talker'},
+    {'key': 'good_listener', 'label': 'dialog_call_good_listener'},
   ];
 
   String _formatDuration(int totalSec) {
@@ -79,11 +81,15 @@ class _SingleMatchPostCallDialogState extends State<SingleMatchPostCallDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: const BorderSide(color: SLDialogStyle.border),
+      ),
+      constraints: const BoxConstraints(maxWidth: SLDialogStyle.maxWidth),
+      backgroundColor: SLDialogStyle.surface,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -113,12 +119,12 @@ class _SingleMatchPostCallDialogState extends State<SingleMatchPostCallDialog> {
                             fit: BoxFit.cover,
                             memCacheWidth: 200,
                             memCacheHeight: 200,
-                            placeholder: (_, __) => const Icon(
+                            placeholder: (_, _) => const Icon(
                               Icons.person_rounded,
                               size: 40,
                               color: Color(0xFF9CA3AF),
                             ),
-                            errorWidget: (_, __, ___) => const Icon(
+                            errorWidget: (_, _, _) => const Icon(
                               Icons.person_rounded,
                               size: 40,
                               color: Color(0xFF9CA3AF),
@@ -127,14 +133,14 @@ class _SingleMatchPostCallDialogState extends State<SingleMatchPostCallDialog> {
                         : const Icon(
                             Icons.favorite_rounded,
                             size: 40,
-                            color: Color(0xFFFF5E7E),
+                            color: SLDialogStyle.primary,
                           ),
                   ),
                 ),
                 Container(
                   padding: const EdgeInsets.all(5),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFF5E7E),
+                    color: SLDialogStyle.primary,
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white, width: 2),
                   ),
@@ -148,32 +154,36 @@ class _SingleMatchPostCallDialogState extends State<SingleMatchPostCallDialog> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Cuộc gọi với ${widget.peerName}',
+              L10nService().format('dialog_call_title', {
+                'name': widget.peerName,
+              }),
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 fontSize: 18,
                 fontWeight: FontWeight.w900,
-                color: const Color(0xFF2D1F3B),
+                color: SLColors.ink,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              'Thời lượng: ${_formatDuration(widget.durationSeconds)}',
+              L10nService().format('dialog_call_duration', {
+                'duration': _formatDuration(widget.durationSeconds),
+              }),
               style: SLTheme.quicksand(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF8A798E),
+                color: SLDialogStyle.secondary,
               ),
             ),
             const SizedBox(height: 20),
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Ấn tượng của bạn về người ấy:',
+                context.tr('dialog_call_impressions'),
                 style: SLTheme.quicksand(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF4A3858),
+                  color: SLColors.ink,
                 ),
               ),
             ),
@@ -201,24 +211,25 @@ class _SingleMatchPostCallDialogState extends State<SingleMatchPostCallDialog> {
                     ),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? const Color(0xFFFFF1F2)
-                          : const Color(0xFFF9FAFB),
+                          ? SLDialogStyle.iconSurface(SLDialogTone.neutral)
+                          : SLDialogStyle.field,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: isSelected
-                            ? const Color(0xFFFF5E7E)
-                            : const Color(0xFFF0E5DF),
+                            ? SLDialogStyle.primary
+                            : SLDialogStyle.border,
                         width: 1.5,
                       ),
                     ),
                     child: Text(
-                      tag['label']!,
+                      context.tr(tag['label']!),
                       style: SLTheme.quicksand(
                         fontSize: 12,
-                        fontWeight:
-                            isSelected ? FontWeight.w900 : FontWeight.w700,
+                        fontWeight: isSelected
+                            ? FontWeight.w900
+                            : FontWeight.w700,
                         color: isSelected
-                            ? const Color(0xFFFF5E7E)
+                            ? SLDialogStyle.primary
                             : const Color(0xFF5E5056),
                       ),
                     ),
@@ -230,21 +241,13 @@ class _SingleMatchPostCallDialogState extends State<SingleMatchPostCallDialog> {
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
+                  child: SLDialogAction(
                     onPressed: () {
                       widget.onSubmitFeedback?.call(_selectedTags.toList());
                       Navigator.pop(context);
                     },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF7A6B72),
-                      side: const BorderSide(color: Color(0xFFF0E5DF)),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
                     child: Text(
-                      'Bỏ qua',
+                      context.tr('core_skip'),
                       style: SLTheme.quicksand(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
@@ -255,34 +258,31 @@ class _SingleMatchPostCallDialogState extends State<SingleMatchPostCallDialog> {
                 const SizedBox(width: 12),
                 Expanded(
                   flex: 2,
-                  child: FilledButton.icon(
+                  child: SLDialogAction.icon(
+                    primary: true,
                     onPressed: _sentRequest
                         ? null
                         : () {
                             setState(() => _sentRequest = true);
                             widget.onSendFriendRequest?.call();
-                            widget.onSubmitFeedback
-                                ?.call(_selectedTags.toList());
+                            widget.onSubmitFeedback?.call(
+                              _selectedTags.toList(),
+                            );
                             ScaffoldMessenger.of(context).showSnackBar(
                               SLSnackBar(
-                                content: const Text('Đã gửi lời mời kết bạn! 💌'),
-                                backgroundColor: Color(0xFFFF5E7E),
+                                content: Text(
+                                  context.tr('p5_profile_friend_request_sent'),
+                                ),
+                                backgroundColor: SLDialogStyle.primary,
                               ),
                             );
-                            Future.delayed(const Duration(milliseconds: 600),
-                                () {
-                              if (context.mounted) Navigator.pop(context);
-                            });
+                            Future.delayed(
+                              const Duration(milliseconds: 600),
+                              () {
+                                if (context.mounted) Navigator.pop(context);
+                              },
+                            );
                           },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF5E7E),
-                      disabledBackgroundColor:
-                          const Color(0xFFFF5E7E).withValues(alpha: 0.6),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
                     icon: Icon(
                       _sentRequest
                           ? Icons.check_rounded
@@ -290,7 +290,9 @@ class _SingleMatchPostCallDialogState extends State<SingleMatchPostCallDialog> {
                       size: 18,
                     ),
                     label: Text(
-                      _sentRequest ? 'Đã gửi lời mời' : 'Kết bạn & Trò chuyện',
+                      _sentRequest
+                          ? context.tr('p5_profile_pending_sent')
+                          : context.tr('p5_profile_add_friend'),
                       style: SLTheme.quicksand(
                         fontSize: 14,
                         fontWeight: FontWeight.w900,

@@ -5,20 +5,25 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'dart:ui' as ui;
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:soullocket_app/utils/services/notification_service.dart';
 import 'package:soullocket_app/utils/services/widget_service.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
+import 'package:soullocket_app/core/constants/market_calendar_profiles.dart';
+import 'package:soullocket_app/utils/calendar/calendar_display_format.dart';
+import 'package:soullocket_app/utils/calendar/calendar_reminder_times.dart';
+import 'package:soullocket_app/utils/calendar/holiday_occurrence_resolver.dart';
+import 'package:soullocket_app/utils/services/holiday_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/utils/services/market_service.dart';
 import 'package:soullocket_app/views/utilities/calendar/calendar_notification_ids.dart';
 import 'package:soullocket_app/views/utilities/calendar/dialogs/calendar_quick_add_sheet.dart';
 import 'package:soullocket_app/views/utilities/calendar/widgets/calendar_background_decor.dart';
-import 'package:soullocket_app/views/utilities/calendar/widgets/calendar_event_input_panel.dart';
 import 'package:soullocket_app/views/utilities/calendar/widgets/calendar_event_list_section.dart';
+import 'package:soullocket_app/views/utilities/calendar/widgets/calendar_holiday_list_section.dart';
 import 'package:soullocket_app/views/utilities/calendar/widgets/calendar_header_section.dart';
-import 'package:soullocket_app/views/utilities/calendar/widgets/calendar_info_pill.dart';
 import 'package:soullocket_app/views/utilities/calendar/widgets/calendar_selected_day_summary.dart';
+import 'package:soullocket_app/views/utilities/calendar/widgets/calendar_design.dart';
 
 class CalendarScreen extends StatefulWidget {
   final String houseId;
@@ -41,14 +46,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  final TextEditingController _eventController = TextEditingController();
-
   Map<DateTime, List<dynamic>> _events = {};
   StreamSubscription<DatabaseEvent>? _calendarSubscription;
   int _calendarQueryGeneration = 0;
   bool _isQuickAddSheetOpen = false;
   bool _isCalendarLoading = true;
-  bool _isSavingEvent = false;
   String? _calendarErrorMessage;
 
   static int _parseTimestamp(dynamic value) {
@@ -71,9 +73,34 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   void initState() {
     super.initState();
+    // Nạp CLDR trước frame đầu tiên để TableCalendar hiển thị đúng locale.
+    unawaited(initializeDateFormatting());
+    MarketService.instance.addListener(_onCalendarPreferencesChanged);
+    L10nService().addListener(_onCalendarPreferencesChanged);
     _selectedDay = _focusedDay;
     unawaited(_loadEvents());
   }
+
+  @override
+  void didUpdateWidget(covariant CalendarScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.houseId != widget.houseId) {
+      _events = {};
+      unawaited(_reloadCalendar());
+    }
+  }
+
+  void _onCalendarPreferencesChanged() {
+    if (mounted) setState(() {});
+  }
+
+  MarketCalendarProfile get _calendarProfile =>
+      MarketCalendarProfiles.forMarket(MarketService.instance.marketCode);
+
+  CalendarDisplayFormat get _displayFormat => CalendarDisplayFormat.forLocale(
+    L10nService().locale,
+    MarketService.instance.marketCode,
+  );
 
   Future<void> _loadEvents() async {
     final queryGeneration = ++_calendarQueryGeneration;
@@ -219,108 +246,66 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return isSameDay(tomorrow, target);
   }
 
-  Color _selectedAccent(DateTime date) {
-    if (_isPastDate(date)) {
-      return const Color(0xFFE46A7A);
-    }
-    if (_isToday(date)) {
-      return const Color(0xFF2157F2);
-    }
-    if (_isTomorrow(date)) {
-      return const Color(0xFF0E9F8D);
-    }
-    return const Color(0xFFFF8A65);
-  }
-
-  String _weekdayName(DateTime date) {
-    switch (date.weekday) {
-      case DateTime.monday:
-        return 'Thứ Hai';
-      case DateTime.tuesday:
-        return 'Thứ Ba';
-      case DateTime.wednesday:
-        return 'Thứ Tư';
-      case DateTime.thursday:
-        return 'Thứ Năm';
-      case DateTime.friday:
-        return 'Thứ Sáu';
-      case DateTime.saturday:
-        return 'Thứ Bảy';
-      case DateTime.sunday:
-        return 'Chủ Nhật';
-      default:
-        return 'Hôm nay';
-    }
-  }
-
-  String _monthName(int month) {
-    const months = <String>[
-      'tháng 1',
-      'tháng 2',
-      'tháng 3',
-      'tháng 4',
-      'tháng 5',
-      'tháng 6',
-      'tháng 7',
-      'tháng 8',
-      'tháng 9',
-      'tháng 10',
-      'tháng 11',
-      'tháng 12',
-    ];
-    return months[month - 1];
-  }
+  Color _selectedAccent(DateTime date) => CalendarDesign.primary(context);
 
   String _formatDisplayDate(DateTime date) {
-    return '${_weekdayName(date)}, ${date.day} ${_monthName(date.month)} ${date.year}';
+    return _displayFormat.longDate(date);
   }
 
   String _formatShortDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+    return _displayFormat.shortDate(date);
   }
 
   String _formatCreatedTime(int timestamp) {
     if (timestamp <= 0) {
-      return 'Không rõ giờ tạo';
+      return L10nService().translate('sleep_state_unknown');
     }
-    final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
-    final hour = date.hour.toString().padLeft(2, '0');
-    final minute = date.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
+    return _displayFormat.time(
+      DateTime.fromMillisecondsSinceEpoch(timestamp),
+      alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
+    );
   }
 
   String _selectedDayBadge(DateTime date) {
     if (_isToday(date)) {
-      return 'Hôm nay';
+      return L10nService().translate('p3_today');
     }
     if (_isTomorrow(date)) {
-      return 'Ngày mai';
+      return L10nService().translate('theme_event_tomorrow');
     }
     if (_isPastDate(date)) {
-      return 'Đã qua';
+      return L10nService().translate('milestone_tab_past');
     }
-    return 'Sắp tới';
+    return L10nService().translate('milestone_tab_upcoming');
   }
 
   String _selectedDayDescription(DateTime date, int eventCount) {
     if (_isToday(date)) {
       return eventCount == 0
-          ? 'Hôm nay đang trống lịch. Bạn có thể thêm kế hoạch mới để cả hai cùng theo dõi.'
-          : 'Hôm nay có $eventCount kế hoạch. Nên ghi càng cụ thể càng dễ nhớ và dễ chuẩn bị.';
+          ? L10nService().translate('calendar_empty_day_desc')
+          : L10nService().format('util_calendar_today_with_count', {
+              'count': eventCount,
+            });
     }
     if (_isTomorrow(date)) {
       return eventCount == 0
-          ? 'Ngày mai chưa có lịch nào. Có thể thêm lịch hẹn, việc cần làm hoặc nhắc quà từ bây giờ.'
-          : 'Ngày mai đã có $eventCount kế hoạch. Ứng dụng sẽ nhắc trước để không bị quên.';
+          ? L10nService().translate('calendar_empty_day_desc')
+          : L10nService().format('util_calendar_tomorrow_with_count', {
+              'count': eventCount,
+            });
     }
     if (_isPastDate(date)) {
       return eventCount == 0
-          ? 'Ngày này đã qua và chưa có dấu mốc nào được lưu lại.'
-          : 'Ngày này đã qua, bạn vẫn có thể xem lại $eventCount kế hoạch từng được tạo.';
+          ? L10nService().translate('calendar_empty_day_desc')
+          : L10nService().format('util_calendar_past_with_count', {
+              'count': eventCount,
+            });
     }
     return eventCount == 0
-        ? 'Ngày này đang trống. Hãy thêm lịch để biến nó thành một mốc đáng nhớ.'
-        : 'Đã có $eventCount kế hoạch cho ngày này. Bạn có thể bổ sung thêm chi tiết nếu cần.';
+        ? L10nService().translate('calendar_empty_day_desc')
+        : L10nService().format('util_calendar_day_with_count', {
+            'count': eventCount,
+          });
   }
 
   Future<bool> _saveEventForDay({
@@ -369,44 +354,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return true;
   }
 
-  Future<void> _addEvent() async {
-    final selectedDay = _selectedDay;
-    if (selectedDay == null || _isSavingEvent) return;
-
-    setState(() => _isSavingEvent = true);
-    try {
-      final added = await _saveEventForDay(
-        day: selectedDay,
-        text: _eventController.text,
-      );
-      if (!added) {
-        return;
-      }
-
-      _eventController.clear();
-      if (mounted) {
-        FocusScope.of(context).unfocus();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SLSnackBar(
-            content: Text(
-              'Đã thêm kế hoạch cho ${_formatShortDate(selectedDay)}',
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SLSnackBar(content: Text('Không thể lưu kế hoạch: $e')));
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSavingEvent = false);
-      }
-    }
-  }
-
   Future<void> _showQuickAddSheet(DateTime day) async {
     if (_isQuickAddSheetOpen || !mounted) {
       return;
@@ -426,7 +373,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
       if (added && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: Text('Đã thêm kế hoạch cho ${_formatShortDate(day)}'),
+            content: Text(
+              L10nService().format('calendar_add_success', {
+                'date': _formatShortDate(day),
+              }),
+            ),
           ),
         );
       }
@@ -439,10 +390,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
     if (!mounted) {
       return;
     }
+    final monthChanged =
+        _focusedDay.month != focused.month || _focusedDay.year != focused.year;
     setState(() {
       _selectedDay = selected;
       _focusedDay = focused;
     });
+    if (monthChanged) unawaited(_reloadCalendar());
   }
 
   void _handleDayLongPressed(DateTime selected, DateTime focused) {
@@ -461,35 +415,61 @@ class _CalendarScreenState extends State<CalendarScreen> {
     required CalendarNotificationIds notificationIds,
   }) async {
     final now = DateTime.now();
-    // Normalize eventDate to 9:00 AM
-    final scheduleTime = DateTime(
-      eventDate.year,
-      eventDate.month,
-      eventDate.day,
-      9,
-      0,
-    );
+    final reminderTimes = CalendarReminderTimes.forDate(eventDate);
+    final scheduleTime = reminderTimes.onEventDay;
 
     // Nếu ngày sự kiện là hôm nay và chưa qua 9h sáng
     if (scheduleTime.isAfter(now)) {
       await NotificationService().scheduleLocalNotification(
         id: notificationIds.onEventDay,
-        title: 'Lịch trình hôm nay 📅',
-        body: 'Đừng quên: $eventTitle',
+        title: L10nService().translate('calendar_notification_today_title'),
+        body: L10nService().format('calendar_notification_body', {
+          'title': eventTitle,
+        }),
         scheduledDate: scheduleTime,
       );
     }
 
     // Thông báo trước 1 ngày
-    final dayBefore = scheduleTime.subtract(const Duration(days: 1));
+    final dayBefore = reminderTimes.dayBefore;
     if (dayBefore.isAfter(now)) {
       await NotificationService().scheduleLocalNotification(
         id: notificationIds.dayBefore,
-        title: 'Nhắc nhở ngày mai ⏰',
-        body: 'Sắp tới: $eventTitle',
+        title: L10nService().translate('calendar_notification_tomorrow_title'),
+        body: L10nService().format('calendar_notification_upcoming_body', {
+          'title': eventTitle,
+        }),
         scheduledDate: dayBefore,
       );
     }
+  }
+
+  Future<void> _requestDeleteEvent(String dateKey, String eventId) async {
+    final entry = _eventsForDay(
+      _selectedDay ?? _focusedDay,
+    ).where((event) => event['key']?.toString() == eventId);
+    final title = entry.isEmpty ? '' : entry.first['title']?.toString() ?? '';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: CalendarDesign.surface(dialogContext),
+        title: Text(dialogContext.tr('confirm_delete')),
+        content: Text(
+          title.isEmpty ? dialogContext.tr('calendar_plan_no_content') : title,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(dialogContext.tr('cancel')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(dialogContext.tr('p3_delete')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) await _deleteEvent(dateKey, eventId);
   }
 
   Future<void> _deleteEvent(String dateKey, String eventId) async {
@@ -499,6 +479,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
           .remove();
     } catch (error) {
       debugPrint('[Calendar] Không thể xóa sự kiện $eventId: $error');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SLSnackBar(content: Text(context.tr('calendar_sync_error_title'))),
+        );
+      }
       return;
     }
 
@@ -537,375 +522,111 @@ class _CalendarScreenState extends State<CalendarScreen> {
     };
   }
 
-  Future<void> _showUsageGuide() async {
-    final width = MediaQuery.of(context).size.width;
-    final compact = width < 380;
-
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (dialogContext) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 18,
-            vertical: 24,
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
-            child: FastBackdropFilter(
-              filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: Container(
-                padding: EdgeInsets.fromLTRB(
-                  compact ? 18 : 20,
-                  compact ? 18 : 20,
-                  compact ? 18 : 20,
-                  compact ? 16 : 18,
-                ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.white.withValues(alpha: 0.96),
-                      Colors.white.withValues(alpha: 0.86),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.5),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.14),
-                      blurRadius: 24,
-                      offset: const Offset(0, 12),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: compact ? 44 : 48,
-                          height: compact ? 44 : 48,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFFF8AA4), Color(0xFFE85D75)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(
-                              compact ? 14 : 16,
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.info_outline_rounded,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                        SLSpacing.w12,
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Hướng dẫn dùng Lịch chung',
-                                style: SLTheme.quicksand(
-                                  fontSize: compact ? 16 : 17,
-                                  fontWeight: FontWeight.w900,
-                                  color: SLTheme.textMain,
-                                ),
-                              ),
-                              SLSpacing.h4,
-                              Text(
-                                'Thêm lịch hẹn, việc cần nhớ hoặc kế hoạch chung để cả hai cùng theo dõi dễ hơn.',
-                                style: SLTheme.quicksand(
-                                  fontSize: compact ? 11.5 : 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: SLTheme.textMuted,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.of(dialogContext).pop(),
-                          icon: const Icon(Icons.close_rounded),
-                          color: SLTheme.textMuted,
-                          splashRadius: 20,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: compact ? 14 : 16),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        CalendarInfoPill(
-                          icon: Icons.notifications_active_rounded,
-                          label: 'Nhắc vào 9:00 sáng',
-                          accent: const Color(0xFFE85D75),
-                          compact: compact,
-                        ),
-                        CalendarInfoPill(
-                          icon: Icons.event_available_rounded,
-                          label: 'Nhắc trước 1 ngày',
-                          accent: const Color(0xFF2157F2),
-                          compact: compact,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: compact ? 14 : 16),
-                    _buildGuideStep(
-                      number: '1',
-                      title: 'Chọn ngày',
-                      description:
-                          'Chạm vào ngày bạn muốn tạo lịch trên lịch phía trên.',
-                    ),
-                    _buildGuideStep(
-                      number: '2',
-                      title: 'Nhập nội dung',
-                      description:
-                          'Ghi ngắn gọn nhưng rõ ràng, ví dụ giờ hẹn, địa điểm hoặc việc cần chuẩn bị.',
-                    ),
-                    _buildGuideStep(
-                      number: '3',
-                      title: 'Thêm vào lịch',
-                      description:
-                          'Bấm nút thêm để lưu kế hoạch vào ngày đã chọn.',
-                    ),
-                    _buildGuideStep(
-                      number: '4',
-                      title: 'Cách thông báo hoạt động',
-                      description:
-                          'Ứng dụng hiện sẽ nhắc trước 1 ngày vào 9:00 sáng và nhắc lại vào chính ngày đó lúc 9:00 sáng nếu thời điểm đó vẫn còn ở phía trước.',
-                    ),
-                    SizedBox(height: compact ? 14 : 16),
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(compact ? 12 : 14),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF5F7),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: const Color(0xFFFFD5DE)),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.lightbulb_outline_rounded,
-                            color: Color(0xFFE85D75),
-                            size: 20,
-                          ),
-                          SLSpacing.w10,
-                          Expanded(
-                            child: Text(
-                              'Mẹo: nên ghi kiểu “19:30 đi ăn ở ..., mang quà, gọi trước 15 phút” để khi nhận thông báo là hiểu ngay cần làm gì.',
-                              style: SLTheme.quicksand(
-                                fontSize: compact ? 11.5 : 12,
-                                fontWeight: FontWeight.w700,
-                                color: SLTheme.textMain,
-                                height: 1.4,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+  Future<void> _showUsageGuide() => showDialog<void>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      backgroundColor: CalendarDesign.surface(dialogContext),
+      title: Text(
+        dialogContext.tr('calendar_usage_guide_tooltip'),
+        style: CalendarDesign.text(
+          dialogContext,
+          size: 20,
+          weight: FontWeight.w700,
+        ),
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              dialogContext.tr('calendar_hero_desc'),
+              style: CalendarDesign.text(dialogContext),
             ),
-          ),
+            const SizedBox(height: 16),
+            Text(
+              dialogContext.tr('calendar_add_plan_desc'),
+              style: CalendarDesign.text(dialogContext),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              dialogContext.tr('calendar_remind_one_day_before'),
+              style: CalendarDesign.text(dialogContext),
+            ),
+            Text(
+              dialogContext.tr('calendar_reminder_at_nine'),
+              style: CalendarDesign.text(dialogContext),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(),
+          child: Text(dialogContext.tr('close')),
+        ),
+      ],
+    ),
+  );
+
+  Widget _buildPinWidgetTile(bool compact) => ListTile(
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    tileColor: CalendarDesign.soft(context),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+    leading: Icon(
+      Icons.add_to_home_screen_rounded,
+      color: CalendarDesign.primary(context),
+    ),
+    title: Text(
+      context.tr('add_widget'),
+      style: CalendarDesign.text(context, size: 14, weight: FontWeight.w700),
+    ),
+    subtitle: Text(
+      context.tr('add_widget_desc'),
+      style: CalendarDesign.text(
+        context,
+        size: 12,
+        color: CalendarDesign.muted(context),
+      ),
+    ),
+    trailing: Icon(
+      Icons.chevron_right_rounded,
+      color: CalendarDesign.muted(context),
+    ),
+    onTap: () async {
+      try {
+        await WidgetService.requestPinCalendarWidget();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SLSnackBar(content: Text(context.tr('widget_pin_req_sent'))),
         );
-      },
-    );
-  }
-
-  Widget _buildGuideStep({
-    required String number,
-    required String title,
-    required String description,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFFF8AA4), Color(0xFFE85D75)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-            ),
-            child: Text(
-              number,
-              style: SLTheme.quicksand(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                fontSize: 13,
-              ),
-            ),
-          ),
-          SLSpacing.w12,
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: SLTheme.quicksand(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w900,
-                    color: SLTheme.textMain,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  description,
-                  style: SLTheme.quicksand(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: SLTheme.textMuted,
-                    height: 1.38,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPinWidgetTile(bool compact) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFF758C), Color(0xFFFF7EB3)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.9),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFF758C).withValues(alpha: 0.35),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () async {
-              final scaffoldMessenger = ScaffoldMessenger.of(context);
-              scaffoldMessenger.hideCurrentSnackBar();
-              scaffoldMessenger.showSnackBar(
-                SLSnackBar(
-                  content: const Text(
-                    'Đang gửi yêu cầu... Nếu không thấy phản hồi, vui lòng nhấn giữ màn hình chính để tự thêm thủ công nhé! ✨',
-                  ),
-                  duration: Duration(seconds: 5),
-                ),
-              );
-              await WidgetService.requestPinCalendarWidget();
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    width: compact ? 40 : 44,
-                    height: compact ? 40 : 44,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.06),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.add_to_home_screen_rounded,
-                      color: Color(0xFFFF5E7E),
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Thêm tiện ích ra màn hình chính',
-                          style: SLTheme.quicksand(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            fontSize: compact ? 14 : 15,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          'Ghim lịch trình & đếm ngược chuyến đi ra màn hình chính',
-                          style: SLTheme.quicksand(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            fontWeight: FontWeight.w700,
-                            fontSize: compact ? 11 : 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.chevron_right_rounded, color: Colors.white),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+      } catch (_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SLSnackBar(content: Text(context.tr('widget_pin_failed'))),
+        );
+      }
+    },
+  );
 
   @override
   void dispose() {
     _calendarQueryGeneration++;
     unawaited(_calendarSubscription?.cancel());
-    _eventController.dispose();
+    MarketService.instance.removeListener(_onCalendarPreferencesChanged);
+    L10nService().removeListener(_onCalendarPreferencesChanged);
     super.dispose();
   }
 
   double _horizontalInsetForWidth(double width) {
-    if (width > 860) {
-      return (width - 820) / 2;
+    if (width > 680) {
+      return (width - 640) / 2;
     }
     if (width <= 360) {
-      return 8;
+      return 16;
     }
     if (width <= 420) {
-      return 10;
+      return 20;
     }
     return 18;
   }
@@ -924,8 +645,29 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ? 0
         : _eventsForDay(selectedDay).length;
 
+    // Cùng preferences/resolver với Home; lớp lễ không ghi vào calendar RTDB.
+    final applicableHolidays = HolidayService.getApplicableHolidays();
+    final holidaysByDate = <DateTime, List<HolidayOccurrence>>{};
+    for (final occurrence in HolidayOccurrenceResolver.occurrencesBetween(
+      applicableHolidays,
+      start: DateTime(_focusedDay.year, _focusedDay.month - 1),
+      end: DateTime(_focusedDay.year, _focusedDay.month + 2, 0),
+    )) {
+      (holidaysByDate[_normalizeDate(occurrence.date)] ??= []).add(occurrence);
+    }
+    if (selectedDay != null) {
+      holidaysByDate.putIfAbsent(
+        _normalizeDate(selectedDay),
+        () => HolidayOccurrenceResolver.occurrencesBetween(
+          applicableHolidays, start: selectedDay, end: selectedDay,
+        ),
+      );
+    }
+    List<HolidayOccurrence> holidaysForDay(DateTime day) =>
+        holidaysByDate[_normalizeDate(day)] ?? const [];
+
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      backgroundColor: CalendarDesign.background(context),
       appBar: AppBar(
         title: Text(
           context.tr('calendar_shared_title'),
@@ -933,25 +675,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
             fontWeight: FontWeight.w900,
             fontSize: 19,
             letterSpacing: 0.5,
-            color: Colors.white,
+            color: CalendarDesign.ink(context),
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
+        backgroundColor: CalendarDesign.background(context),
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF5668C8), Color(0xFF7C70D4)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
         leading: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_new,
-            color: Colors.white,
+            color: CalendarDesign.ink(context),
             size: 20,
           ),
           onPressed: () => Navigator.pop(context),
@@ -960,19 +694,62 @@ class _CalendarScreenState extends State<CalendarScreen> {
           IconButton(
             tooltip: context.tr('calendar_usage_guide_tooltip'),
             onPressed: _showUsageGuide,
-            icon: const Icon(
+            icon: Icon(
               Icons.info_outline_rounded,
-              color: Colors.white,
+              color: CalendarDesign.primary(context),
               size: 22,
             ),
           ),
           const SizedBox(width: 4),
         ],
       ),
+      bottomNavigationBar: selectedDay == null
+          ? null
+          : ColoredBox(
+              color: CalendarDesign.background(context),
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalInset,
+                    10,
+                    horizontalInset,
+                    12,
+                  ),
+                  child: FilledButton.icon(
+                    onPressed: () => _showQuickAddSheet(selectedDay),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: CalendarDesign.primary(context),
+                      foregroundColor: CalendarDesign.onPrimary(context),
+                      minimumSize: const Size(48, 54),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    icon: const Icon(Icons.add_rounded),
+                    label: Text(
+                      context.tr('calendar_add_plan_title'),
+                      textAlign: TextAlign.center,
+                      style: CalendarDesign.text(
+                        context,
+                        size: 15,
+                        weight: FontWeight.w700,
+                        color: CalendarDesign.onPrimary(context),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
       body: Stack(
         children: [
           const Positioned.fill(child: CalendarBackgroundDecor()),
           SafeArea(
+            top: false,
             child: RefreshIndicator(
               onRefresh: () async {
                 await _reloadCalendar();
@@ -985,81 +762,21 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 padding: const EdgeInsets.only(bottom: 20),
                 child: Column(
                   children: [
-                    if (_calendarErrorMessage != null &&
-                        _calendarErrorMessage!.trim().isNotEmpty)
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          horizontalInset,
-                          10,
-                          horizontalInset,
-                          4,
-                        ),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.95),
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: const Color(0xFFFFD4DE)),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Icon(
-                                Icons.wifi_tethering_error_rounded,
-                                color: Color(0xFFE45B87),
-                                size: 20,
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      context.tr('calendar_sync_error_title'),
-                                      style: SLTheme.quicksand(
-                                        fontSize: 13.5,
-                                        fontWeight: FontWeight.w900,
-                                        color: SLTheme.textMain,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      context.tr('calendar_sync_error_desc'),
-                                      style: SLTheme.quicksand(
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: SLTheme.textMuted,
-                                        height: 1.35,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  unawaited(_reloadCalendar());
-                                },
-                                child: Text(
-                                  context.tr('calendar_retry'),
-                                  style: SLTheme.quicksand(
-                                    fontWeight: FontWeight.w900,
-                                    color: const Color(0xFFE45B87),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
                     CalendarHeaderSection(
                       horizontalInset: horizontalInset,
                       compact: compact,
                       calendarFormat: _calendarFormat,
                       focusedDay: _focusedDay,
                       selectedDay: selectedDay,
+                      locale: _displayFormat.intlLocale,
+                      calendarProfile: _calendarProfile,
                       eventLoader: (day) =>
                           _events[_normalizeDate(day)] ?? const <dynamic>[],
+                      holidayLoader: holidaysForDay,
+                      onTodayPressed: () {
+                        final today = DateTime.now();
+                        _selectDay(today, today);
+                      },
                       onDaySelected: _selectDay,
                       onDayLongPressed: _handleDayLongPressed,
                       onFormatChanged: (format) {
@@ -1070,7 +787,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       onPageChanged: (focusedDay) {
                         final oldMonth = _focusedDay.month;
                         final oldYear = _focusedDay.year;
-                        _focusedDay = focusedDay;
+                        setState(() => _focusedDay = focusedDay);
                         // Khi chuyển tháng → reload query cho tháng mới
                         if (focusedDay.month != oldMonth ||
                             focusedDay.year != oldYear) {
@@ -1094,25 +811,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         badgeLabel: _selectedDayBadge(selectedDay),
                         shortDateLabel: _formatShortDate(selectedDay),
                         eventCount: eventCount,
+                        holidayCount: holidaysForDay(selectedDay).length,
                       ),
-                      if (!kIsWeb && Platform.isAndroid) ...[
-                        SizedBox(height: compact ? 12 : 16),
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: horizontalInset,
-                          ),
-                          child: _buildPinWidgetTile(compact),
-                        ),
-                      ],
-                      SizedBox(height: compact ? 12 : 16),
-                      CalendarEventInputPanel(
+                      CalendarHolidayListSection(
+                        occurrences: holidaysForDay(selectedDay),
                         horizontalInset: horizontalInset,
-                        compact: compact,
-                        accent: _selectedAccent(selectedDay),
-                        eventCount: eventCount,
-                        controller: _eventController,
-                        onAdd: _addEvent,
-                        isSaving: _isSavingEvent,
                       ),
                       SizedBox(height: compact ? 12 : 16),
                       CalendarEventListSection(
@@ -1131,10 +834,22 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         formatCreatedTime: _formatCreatedTime,
                         onDelete: (eventId) {
                           unawaited(
-                            _deleteEvent(_getDateKey(selectedDay), eventId),
+                            _requestDeleteEvent(
+                              _getDateKey(selectedDay),
+                              eventId,
+                            ),
                           );
                         },
                       ),
+                      if (!kIsWeb && Platform.isAndroid) ...[
+                        SizedBox(height: compact ? 12 : 16),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: horizontalInset,
+                          ),
+                          child: _buildPinWidgetTile(compact),
+                        ),
+                      ],
                     ],
                   ],
                 ),

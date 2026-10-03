@@ -54,7 +54,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             Future<void> pickCalendar() async {
-              final picked = await showDatePicker(
+              final picked = await showSLDatePicker(
                 context: context,
                 initialDate:
                     dateOnly(draftDate).isBefore(minDate) ||
@@ -63,15 +63,6 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                     : draftDate,
                 firstDate: firstDate,
                 lastDate: lastDate,
-                builder: (ctx, child) => Theme(
-                  data: Theme.of(ctx).copyWith(
-                    colorScheme: const ColorScheme.light(
-                      primary: _settingsAccountAccentColor,
-                      onPrimary: Colors.white,
-                    ),
-                  ),
-                  child: child!,
-                ),
               );
               if (!context.mounted || !dialogContext.mounted) return;
               if (picked == null) return;
@@ -540,239 +531,51 @@ extension _SettingsTabAccountSection on _SettingsTabState {
 
   Widget _buildVipPanel({bool hideBackButton = false}) {
     final isPremium = _isVipActive;
-
+    final purchaseEnabled = AppConfig.isPurchaseEnabled;
     return _buildPanel(
       hideBackButton: hideBackButton,
       id: 'vip',
-      title: AppConfig.isPurchaseEnabled
+      title: purchaseEnabled
           ? context.tr('account_vip_plan')
           : context.tr('home_thngtintik_f57634'),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isPremium ? const Color(0xFFFFF5D6) : SLColors.paperBlush,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: isPremium ? const Color(0xFFE4BD57) : SLColors.border,
-            width: 1.1,
-          ),
-          boxShadow: SLShadow.subtle,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isPremium
-                        ? const Color(0xFFFFE082)
-                        : const Color(0xFFE2E8F0),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    isPremium
-                        ? Icons.workspace_premium_rounded
-                        : Icons.account_circle_outlined,
-                    color: isPremium
-                        ? const Color(0xFFF57F17)
-                        : const Color(0xFF64748B),
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _accountTierTitle(),
-                        style: SLTextStyles.quicksand(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: isPremium
-                              ? const Color(0xFF7A5200)
-                              : SLColors.darkNavy,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _accountTierSubtitle(),
-                        style: SLTextStyles.quicksand(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: isPremium
-                              ? const Color(0xFFF57F17)
-                              : const Color(0xFF64748B),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (isPremium)
-                  const Icon(
-                    Icons.star_rounded,
-                    color: Color(0xFFFBC02D),
-                    size: 24,
-                  ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: SLColors.paper.withValues(alpha: 0.86),
-                borderRadius: BorderRadius.circular(17),
-                border: Border.all(color: SLColors.borderLight),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.tr('home_thihn_2493a0'),
-                          style: SLTextStyles.quicksand(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF94A3B8),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _accountTierTimeLabel(),
-                          style: SLTextStyles.quicksand(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF334155),
-                          ),
-                        ),
-                      ],
+      child: AccountPlanCard(
+        title: _accountTierTitle(),
+        plan: _accountTierSubtitle(),
+        timeLabel: context.tr('home_thihn_2493a0'),
+        timeValue: _accountTierTimeLabel(),
+        storageLabel: context.tr('home_khoknim_c6067c'),
+        storageValue: _accountMemoryLimitLabel(),
+        isPremium: isPremium,
+        actionLabel: purchaseEnabled
+            ? context.tr(isPremium ? 'p6_view_benefits' : 'p6_upgrade_vip')
+            : null,
+        restoreLabel: purchaseEnabled
+            ? context.tr(
+                _isRestoringVip
+                    ? 'home_angkhiphc_944cf4'
+                    : 'home_khiphc_efda66',
+              )
+            : null,
+        restoreDescription: purchaseEnabled
+            ? context.tr('restore_vip_desc')
+            : null,
+        restoring: _isRestoringVip,
+        onViewBenefits: purchaseEnabled
+            ? () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PremiumStoreScreen(
+                      houseId: _houseId ?? '',
+                      myName: _nameU1,
                     ),
                   ),
-                  Container(
-                    width: 1,
-                    height: 30,
-                    color: const Color(0xFFCBD5E1),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.tr('home_khoknim_c6067c'),
-                          style: SLTextStyles.quicksand(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF94A3B8),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _accountMemoryLimitLabel(),
-                          style: SLTextStyles.quicksand(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF334155),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (AppConfig.isPurchaseEnabled) ...[
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => PremiumStoreScreen(
-                              houseId: _houseId ?? '',
-                              myName: _nameU1,
-                            ),
-                          ),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: isPremium
-                              ? const Color(0xFFF57F17)
-                              : SLColors.primary,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Center(
-                          child: Text(
-                            isPremium
-                                ? context.tr('p6_view_benefits')
-                                : context.tr('p6_upgrade_vip'),
-                            style: SLTextStyles.quicksand(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: GestureDetector(
-                      onTap: _isRestoringVip ? null : _restoreVipPurchases,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: SLColors.paper.withValues(alpha: 0.86),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: SLColors.border),
-                        ),
-                        child: Center(
-                          child: Text(
-                            _isRestoringVip
-                                ? context.tr('home_angkhiphc_944cf4')
-                                : context.tr('home_khiphc_efda66'),
-                            style: SLTextStyles.quicksand(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF334155),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Center(
-                child: Text(
-                  context.tr('restore_vip_desc'),
-                  style: SLTextStyles.quicksand(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF94A3B8),
-                    height: 1.4,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
-          ],
-        ),
+                );
+              }
+            : null,
+        onRestore: purchaseEnabled && !_isRestoringVip
+            ? _restoreVipPurchases
+            : null,
       ),
     );
   }
@@ -781,339 +584,155 @@ extension _SettingsTabAccountSection on _SettingsTabState {
     final panelState = _buildIdentityPanelState();
     final panelActions = _buildIdentityPanelActions();
     final isSingle = panelState.isSingle;
-    const panelAccent = Color(0xFFf48fb1);
-
+    // Ẩn hiển thị tên nhà theo yêu cầu
+    // Container(
+    //   margin: const EdgeInsets.only(bottom: 8),
+    //   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+    //   decoration: BoxDecoration(
+    //     color: Colors.white,
+    //     borderRadius: BorderRadius.circular(14),
+    //     border: Border.all(color: const Color(0xFFE2E8F0)),
+    //   ),
+    //   child: Row(
+    //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    //     children: [
+    //       Expanded(
+    //         child: Text(
+    //           context.tr('show_house_name_home'),
+    //           style: SLTextStyles.quicksand(
+    //               fontSize: 14, fontWeight: FontWeight.w700),
+    //         ),
+    //       ),
+    //       Switch(
+    //         value: panelState.homeShowHouseName,
+    //         activeThumbColor: const Color(0xFFD81B60),
+    //         onChanged: panelActions.onToggleShowHouseName,
+    //       ),
+    //     ],
+    //   ),
+    // ),
     return _buildPanel(
       hideBackButton: hideBackButton,
       id: 'identity',
       title: context.tr('profile_info_title'),
-      borderColor: panelAccent,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSubCard(
+          AccountProfileGroup(
             children: [
-              _buildLabel(
-                isSingle
-                    ? context.tr('birth_year_or_start')
-                    : context.tr('start_love_date'),
-              ),
-              GestureDetector(
-                onTap: panelActions.onPickLoveDate,
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: SLColors.paper,
-                    borderRadius: BorderRadius.circular(17),
-                    border: Border.all(color: SLColors.border),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.calendar_today,
-                        color: Color(0xFFD81B60),
-                        size: 20,
-                      ),
-                      SLSpacing.w8,
-                      Expanded(
-                        child: Text(
-                          !panelState.hasLoveDate
-                              ? context.tr('select_date')
-                              : panelState.loveDateDisplay,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+              AccountFieldLabel(
+                context.tr(
+                  isSingle ? 'birth_year_or_start' : 'start_love_date',
                 ),
               ),
-              _buildLabel(
+              AccountValueRow(
+                icon: Icons.calendar_month_outlined,
+                value: !panelState.hasLoveDate
+                    ? context.tr('select_date')
+                    : panelState.loveDateDisplay,
+                onTap: panelActions.onPickLoveDate,
+              ),
+              AccountFieldLabel(
                 '${context.tr('house_name')} (${context.tr('home_khngbtbuc_0a1fee')})',
               ),
-              _buildInput(
-                _houseNameCtrl,
-                context.tr('house_name_hint'),
+              AccountFieldInput(
+                controller: _houseNameCtrl,
+                hint: context.tr('house_name_hint'),
                 maxLength: 30,
-                accentColor: panelAccent,
               ),
-              _buildLabel(context.tr('p6_house_id_label')),
-              Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
+              AccountFieldLabel(context.tr('p6_house_id_label')),
+              AccountValueRow(
+                icon: Icons.home_outlined,
+                value: _houseId ?? '',
+                description: context.tr(
+                  _houseIdChanged
+                      ? 'p6_house_id_changed_status'
+                      : 'p6_house_id_available_status',
                 ),
-                decoration: BoxDecoration(
-                  color: SLColors.paper,
-                  borderRadius: BorderRadius.circular(17),
-                  border: Border.all(color: SLColors.border),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.home_rounded,
-                      color: Color(0xFFD81B60),
-                      size: 20,
-                    ),
-                    SLSpacing.w8,
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _houseId ?? '',
-                            style: SLTextStyles.quicksand(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFF2C1B22),
-                            ),
-                          ),
-                          if (_houseIdChanged)
-                            Text(
-                              context.tr('p6_house_id_changed_status'),
-                              style: SLTextStyles.quicksand(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.grey,
-                              ),
-                            )
-                          else
-                            Text(
-                              context.tr('p6_house_id_available_status'),
-                              style: SLTextStyles.quicksand(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFFD81B60),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    if (!_houseIdChanged)
-                      TextButton(
-                        onPressed: () {
-                          _showChangeHouseIdDialog();
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          foregroundColor: const Color(0xFFD81B60),
-                        ),
-                        child: Text(
-                          context.tr('p6_change_action'),
-                          style: SLTextStyles.quicksand(
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+                onTap: _houseIdChanged ? null : _showChangeHouseIdDialog,
               ),
-              // Ẩn hiển thị tên nhà theo yêu cầu
-              // Container(
-              //   margin: const EdgeInsets.only(bottom: 8),
-              //   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              //   decoration: BoxDecoration(
-              //     color: Colors.white,
-              //     borderRadius: BorderRadius.circular(14),
-              //     border: Border.all(color: const Color(0xFFE2E8F0)),
-              //   ),
-              //   child: Row(
-              //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //     children: [
-              //       Expanded(
-              //         child: Text(
-              //           context.tr('show_house_name_home'),
-              //           style: SLTextStyles.quicksand(
-              //               fontSize: 14, fontWeight: FontWeight.w700),
-              //         ),
-              //       ),
-              //       Switch(
-              //         value: panelState.homeShowHouseName,
-              //         activeThumbColor: const Color(0xFFD81B60),
-              //         onChanged: panelActions.onToggleShowHouseName,
-              //       ),
-              //     ],
-              //   ),
-              // ),
-              Container(
-                margin: const EdgeInsets.only(bottom: 4),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: SLColors.paper,
-                  borderRadius: BorderRadius.circular(17),
-                  border: Border.all(color: SLColors.border),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        context.tr('show_timer_home'),
-                        style: SLTextStyles.quicksand(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    Switch(
-                      value: panelState.homeShowTimer,
-                      activeThumbColor: const Color(0xFFD81B60),
-                      onChanged: panelActions.onToggleShowTimer,
-                    ),
-                  ],
-                ),
+              SLDetailToggle(
+                icon: Icons.timer_outlined,
+                title: context.tr('show_timer_home'),
+                value: panelState.homeShowTimer,
+                onChanged: panelActions.onToggleShowTimer,
+                color: SLDetailStyle.rose,
               ),
             ],
           ),
-          _buildSubCard(
+          AccountProfileGroup(
             children: [
-              _buildLabel(
-                isSingle
-                    ? context.tr('your_nickname')
-                    : context.tr('male_nickname'),
+              AccountFieldLabel(
+                context.tr(isSingle ? 'your_nickname' : 'male_nickname'),
               ),
-              _buildInput(
-                _nameU1Ctrl,
-                context.tr('your_name'),
+              AccountFieldInput(
+                controller: _nameU1Ctrl,
+                hint: context.tr('your_name'),
                 maxLength: 20,
-                accentColor: const Color(0xFF90CAF9),
               ),
-              _buildLabel(
-                isSingle ? context.tr('your_dob') : context.tr('male_dob'),
-              ),
-              GestureDetector(
+              AccountFieldLabel(context.tr(isSingle ? 'your_dob' : 'male_dob')),
+              AccountValueRow(
+                icon: Icons.cake_outlined,
+                value: !panelState.hasDobU1
+                    ? context.tr('select_dob')
+                    : panelState.dobU1Display,
                 onTap: panelActions.onPickDobU1,
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 4),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: SLColors.paper,
-                    borderRadius: BorderRadius.circular(17),
-                    border: Border.all(color: SLColors.border),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.cake,
-                        color: Color(0xFF1976D2),
-                        size: 20,
-                      ),
-                      SLSpacing.w8,
-                      Expanded(
-                        child: Text(
-                          !panelState.hasDobU1
-                              ? context.tr('select_dob')
-                              : panelState.dobU1Display,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ),
             ],
           ),
           if (panelState.showPartnerFields) ...[
-            _buildSubCard(
+            AccountProfileGroup(
               children: [
-                _buildLabel(context.tr('female_nickname')),
-                _buildInput(
-                  _nameU2Ctrl,
-                  context.tr('partner_name'),
+                AccountFieldLabel(context.tr('female_nickname')),
+                AccountFieldInput(
+                  controller: _nameU2Ctrl,
+                  hint: context.tr('partner_name'),
                   maxLength: 20,
-                  accentColor: panelAccent,
                 ),
-                _buildLabel(context.tr('female_dob')),
-                GestureDetector(
+                AccountFieldLabel(context.tr('female_dob')),
+                AccountValueRow(
+                  icon: Icons.cake_outlined,
+                  value: !panelState.hasDobU2
+                      ? context.tr('select_dob')
+                      : panelState.dobU2Display,
                   onTap: panelActions.onPickDobU2,
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 4),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: SLColors.paper,
-                      borderRadius: BorderRadius.circular(17),
-                      border: Border.all(color: SLColors.border),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.cake,
-                          color: Color(0xFFD81B60),
-                          size: 20,
-                        ),
-                        SLSpacing.w8,
-                        Expanded(
-                          child: Text(
-                            !panelState.hasDobU2
-                                ? context.tr('select_dob')
-                                : panelState.dobU2Display,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
               ],
             ),
-            _buildSubCard(
+            AccountProfileGroup(
               children: [
-                _buildLabel(context.tr('greeting_quote')),
-                _buildInput(
-                  _autoReplyCtrl,
-                  context.tr('quote_hint'),
+                AccountFieldLabel(context.tr('greeting_quote')),
+                AccountFieldInput(
+                  controller: _autoReplyCtrl,
+                  hint: context.tr('quote_hint'),
                   maxLength: 22,
-                  accentColor: const Color(0xFFCE93D8),
                 ),
-                _buildLabel(context.tr('count_unit')),
-                _buildInput(
-                  _loveUnitCtrl,
-                  context.tr('unit_hint'),
+                AccountFieldLabel(context.tr('count_unit')),
+                AccountFieldInput(
+                  controller: _loveUnitCtrl,
+                  hint: context.tr('unit_hint'),
                   maxLength: 14,
-                  accentColor: const Color(0xFFCE93D8),
                 ),
               ],
             ),
           ],
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8, left: 4),
-            child: Text(
-              context.tr('name_change_notice'),
-              style: SLTheme.quicksand(
-                fontSize: 12,
-                color: Colors.red[400],
-                fontWeight: FontWeight.w600,
-                fontStyle: FontStyle.italic,
-              ),
+          Text(
+            context.tr('name_change_notice'),
+            style: SLTheme.quicksand(
+              fontSize: 12,
+              height: 1.5,
+              color: SLDetailStyle.accent(context, SLDetailStyle.rose),
             ),
           ),
-          SLSpacing.h8,
-          _buildGradientBtn(
-            label: context.tr('save_info'),
-            gradient: const [Color(0xFFff6f91), Color(0xFFD81B60)],
-            onTap: panelActions.onSave,
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: AccountSettingsButton(
+              label: context.tr('save_info'),
+              icon: Icons.check_rounded,
+              primary: true,
+              onPressed: panelActions.onSave,
+            ),
           ),
         ],
       ),

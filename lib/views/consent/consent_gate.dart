@@ -81,7 +81,7 @@ class _ConsentGateState extends State<ConsentGate> {
       context: context,
       useRootNavigator: true,
       barrierDismissible: false,
-      barrierColor: const Color(0xFF18191B),
+      barrierColor: const Color(0xFFFAF7F2),
       builder: (ctx) => StartupPrivacyDialog(
         onOpenDocument: (title, path) => _openDoc(ctx, title, path),
         onContinue: (level) async {

@@ -1,5 +1,10 @@
-import 'package:firebase_database/firebase_database.dart';
+import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
+
+import '../calendar_widget_snapshot.dart';
 import 'core/cloud_functions_helper.dart';
 import 'schedule_notification_presenter.dart';
 
@@ -9,9 +14,40 @@ class ScheduleNotifService {
 
   factory ScheduleNotifService() => _instance;
 
-  ScheduleNotifService._internal();
+  ScheduleNotifService._internal()
+    : _root = FirebaseDatabase.instance.ref(),
+      _now = DateTime.now,
+      _currentUid = (() => FirebaseAuth.instance.currentUser?.uid),
+      _uidChanges = (() =>
+          FirebaseAuth.instance.authStateChanges().map((user) => user?.uid)),
+      _sendPayload = _sendSecurePayload;
 
-  final FirebaseDatabase _db = FirebaseDatabase.instance;
+  @visibleForTesting
+  ScheduleNotifService.forTesting(
+    this._root, {
+    required String? Function() readUid,
+    DateTime Function()? now,
+    Stream<String?> Function()? uidChanges,
+    required Future<void> Function(Map<String, dynamic>) sendNotification,
+  }) : _currentUid = readUid,
+       _now = now ?? DateTime.now,
+       _uidChanges = uidChanges ?? (() => const Stream<String?>.empty()),
+       _sendPayload = sendNotification;
+
+  final DatabaseReference _root;
+  final DateTime Function() _now;
+  final String? Function() _currentUid;
+  final Stream<String?> Function() _uidChanges;
+  final Future<void> Function(Map<String, dynamic>) _sendPayload;
+  final _pendingChecks = <(String, String, String), Future<void>>{};
+  static const _identityFields = [
+    'houseName',
+    'nameU1',
+    'nameU2',
+    'startDate',
+    'dobU1',
+    'dobU2',
+  ];
 
   Future<String?> addCustomEvent({
     required String houseId,
@@ -19,7 +55,7 @@ class ScheduleNotifService {
     required DateTime date,
     bool repeat = false,
   }) async {
-    final ref = _db.ref('houses/$houseId/settings/customEvents').push();
+    final ref = _root.child('houses/$houseId/settings/customEvents').push();
     await ref.set({
       'name': name.trim(),
       'date': '${date.year}-${_pad(date.month)}-${_pad(date.day)}',
@@ -30,87 +66,183 @@ class ScheduleNotifService {
   }
 
   Future<void> deleteCustomEvent(String houseId, String eventId) async {
-    await _db.ref('houses/$houseId/settings/customEvents/$eventId').remove();
+    await _root
+        .child('houses/$houseId/settings/customEvents/$eventId')
+        .remove();
   }
 
   Stream<List<UpcomingEvent>> streamUpcomingEvents(String houseId) {
-    return _db
-        .ref('houses/$houseId/settings/customEvents')
-        .onValue
-        .asyncMap((customEvent) async {
-      final calSnap = await _db.ref('houses/$houseId/calendar').get();
-      final events = <UpcomingEvent>[];
-      final today = _todayMidnight();
+    final normalizedHouseId = houseId.trim();
+    final uid = _currentUid();
+    if (!_validHouseId(normalizedHouseId) || uid == null || uid.isEmpty) {
+      return Stream.value(const []);
+    }
+    final snapshots = <String, DataSnapshot>{};
+    final subscriptions = <StreamSubscription<DatabaseEvent>>[];
+    StreamSubscription<String?>? authSubscription;
+    late StreamController<List<UpcomingEvent>> controller;
+    var active = true;
+    Future<void> cancelSources() async {
+      active = false;
+      await Future.wait([
+        for (final subscription in subscriptions) subscription.cancel(),
+        if (authSubscription != null) authSubscription!.cancel(),
+      ]);
+    }
 
-      if (calSnap.exists && calSnap.value is Map) {
-        final calData = Map<dynamic, dynamic>.from(calSnap.value as Map);
-        for (final dateKey in calData.keys) {
-          final dateMs = _parseDateKey(dateKey.toString());
-          if (dateMs == null) continue;
-          final dayObj = calData[dateKey];
-          if (dayObj is! Map) continue;
-          for (final eventId in dayObj.keys) {
-            final eventRaw = dayObj[eventId];
-            final title = eventRaw is Map
-                ? eventRaw['title']?.toString() ?? 'Sự kiện'
-                : 'Sự kiện';
-            events.add(
-              UpcomingEvent(
-                eventKey: 'cal:$dateKey:$eventId',
-                dateKey: dateKey.toString(),
-                dateMs: dateMs,
-                title: title,
-                source: 'calendar',
-                daysUntil: _daysUntil(dateMs, today),
-              ),
-            );
-          }
-        }
+    void stop() {
+      if (!active) return;
+      unawaited(cancelSources());
+      controller.add(const []);
+      unawaited(controller.close());
+    }
+
+    bool isCurrentScope() => active && _currentUid() == uid;
+    void emit() {
+      if (!isCurrentScope()) {
+        stop();
+        return;
       }
+      if (snapshots.length != _identityFields.length + 2) return;
+      controller.add(
+        _upcomingEvents(
+          calendar: snapshots['calendar']!,
+          custom: snapshots['custom']!,
+          identity: _identityFromValues(normalizedHouseId, {
+            for (final field in _identityFields) field: snapshots[field]!.value,
+          }),
+        ),
+      );
+    }
 
-      if (customEvent.snapshot.exists && customEvent.snapshot.value is Map) {
-        final customData =
-            Map<dynamic, dynamic>.from(customEvent.snapshot.value as Map);
-        for (final key in customData.keys) {
-          final value = customData[key];
-          if (value is! Map) continue;
-          final dateStr = value['date']?.toString() ?? '';
-          final dateMs = _parseDateKey(dateStr);
-          if (dateMs == null) continue;
-
-          DateTime eventDate = DateTime.fromMillisecondsSinceEpoch(dateMs);
-          if (value['repeat'] == true) {
-            final now = DateTime.now();
-            eventDate = DateTime(now.year, eventDate.month, eventDate.day);
-            final todayDate = DateTime(now.year, now.month, now.day);
-            if (eventDate.isBefore(todayDate)) {
-              eventDate =
-                  DateTime(now.year + 1, eventDate.month, eventDate.day);
-            }
-          }
-
-          final resolvedMs = eventDate.millisecondsSinceEpoch;
-          events.add(
-            UpcomingEvent(
-              eventKey: 'cust:$key',
-              dateKey:
-                  '${eventDate.year}-${_pad(eventDate.month)}-${_pad(eventDate.day)}',
-              dateMs: resolvedMs,
-              title: value['name']?.toString() ?? 'Sự kiện',
-              source: 'custom',
-              daysUntil: _daysUntil(resolvedMs, today),
+    controller = StreamController<List<UpcomingEvent>>(
+      onListen: () {
+        if (!isCurrentScope()) {
+          stop();
+          return;
+        }
+        authSubscription = _uidChanges().listen((value) {
+          if (value != uid) stop();
+        });
+        final queries = <String, Query>{
+          'calendar': _calendarQuery(normalizedHouseId, _now()),
+          'custom': _root.child(
+            'houses/$normalizedHouseId/settings/customEvents',
+          ),
+          for (final field in _identityFields)
+            field: _root.child('houses/$normalizedHouseId/settings/$field'),
+        };
+        for (final entry in queries.entries) {
+          subscriptions.add(
+            entry.value.onValue.listen(
+              (event) {
+                if (!isCurrentScope()) {
+                  stop();
+                  return;
+                }
+                snapshots[entry.key] = event.snapshot;
+                emit();
+              },
+              onError: (Object error, StackTrace stack) {
+                if (!isCurrentScope()) {
+                  stop();
+                  return;
+                }
+                controller.addError(error, stack);
+                unawaited(cancelSources());
+                unawaited(controller.close());
+              },
             ),
           );
         }
+      },
+      onCancel: cancelSources,
+      onPause: () {
+        for (final subscription in subscriptions) {
+          subscription.pause();
+        }
+      },
+      onResume: () {
+        if (!isCurrentScope()) {
+          stop();
+          return;
+        }
+        for (final subscription in subscriptions) {
+          subscription.resume();
+        }
+      },
+    );
+    return controller.stream;
+  }
+
+  List<UpcomingEvent> _upcomingEvents({
+    required DataSnapshot calendar,
+    required DataSnapshot custom,
+    required ScheduleIdentityContext identity,
+  }) {
+    final events = <UpcomingEvent>[];
+    final today = _todayMidnight();
+
+    for (final daySnapshot in calendar.children) {
+      final dateKey = daySnapshot.key ?? '';
+      final dateMs = _parseDateKey(dateKey);
+      if (dateMs == null) continue;
+      for (final eventSnapshot in daySnapshot.children) {
+        final eventId = eventSnapshot.key;
+        if (eventId == null) continue;
+        final eventRaw = eventSnapshot.value;
+        final title = eventRaw is Map
+            ? eventRaw['title']?.toString() ?? 'Sự kiện'
+            : 'Sự kiện';
+        events.add(
+          UpcomingEvent(
+            eventKey: 'cal:$dateKey:$eventId',
+            dateKey: dateKey.toString(),
+            dateMs: dateMs,
+            title: title,
+            source: 'calendar',
+            daysUntil: _daysUntil(dateMs, today),
+          ),
+        );
+      }
+    }
+    for (final customSnapshot in custom.children) {
+      final key = customSnapshot.key;
+      if (key == null) continue;
+      final value = customSnapshot.value;
+      if (value is! Map) continue;
+      final dateStr = value['date']?.toString() ?? '';
+      final dateMs = _parseDateKey(dateStr);
+      if (dateMs == null) continue;
+
+      DateTime eventDate = DateTime.fromMillisecondsSinceEpoch(dateMs);
+      if (value['repeat'] == true) {
+        final now = _now();
+        eventDate = DateTime(now.year, eventDate.month, eventDate.day);
+        final todayDate = DateTime(now.year, now.month, now.day);
+        if (eventDate.isBefore(todayDate)) {
+          eventDate = DateTime(now.year + 1, eventDate.month, eventDate.day);
+        }
       }
 
-      final identity = await _loadIdentityContext(houseId);
-      events.addAll(_buildSystemEvents(identity, today));
+      final resolvedMs = eventDate.millisecondsSinceEpoch;
+      events.add(
+        UpcomingEvent(
+          eventKey: 'cust:$key',
+          dateKey:
+              '${eventDate.year}-${_pad(eventDate.month)}-${_pad(eventDate.day)}',
+          dateMs: resolvedMs,
+          title: value['name']?.toString() ?? 'Sự kiện',
+          source: 'custom',
+          daysUntil: _daysUntil(resolvedMs, today),
+        ),
+      );
+    }
+    events.addAll(_buildSystemEvents(identity, today));
 
-      events.removeWhere((event) => event.daysUntil < 0);
-      events.sort((left, right) => left.daysUntil.compareTo(right.daysUntil));
-      return events;
-    });
+    events.removeWhere((event) => event.daysUntil < 0);
+    events.sort((left, right) => left.daysUntil.compareTo(right.daysUntil));
+    return events;
   }
 
   Future<void> sendScheduleNotification({
@@ -123,41 +255,74 @@ class ScheduleNotifService {
     required String eventDate,
     required String eventTitle,
   }) async {
-    await CloudFunctionsHelper.callSecure<dynamic>(
-      'createScheduleNotificationSecure',
-      payload: <String, dynamic>{
-        'houseId': toHouseId,
-        'notificationId': notifId,
-        'title': title,
-        'message': message,
-        'sourceLabel': sourceLabel,
-        'eventKey': eventKey,
-        'eventDate': eventDate,
-        'eventTitle': eventTitle,
-      },
-    );
+    await _sendPayload(<String, dynamic>{
+      'houseId': toHouseId,
+      'notificationId': notifId,
+      'title': title,
+      'message': message,
+      'sourceLabel': sourceLabel,
+      'eventKey': eventKey,
+      'eventDate': eventDate,
+      'eventTitle': eventTitle,
+    });
   }
 
   Future<void> checkAndNotify(String houseId) async {
-    final today = _todayMidnight();
-    final calSnap = await _db.ref('houses/$houseId/calendar').get();
-    final customSnap =
-        await _db.ref('houses/$houseId/settings/customEvents').get();
-    final identity = await _loadIdentityContext(houseId);
+    final normalizedHouseId = houseId.trim();
+    final uid = _currentUid();
+    if (!_validHouseId(normalizedHouseId) || uid == null || uid.isEmpty) return;
+    final now = _now();
+    final key = (uid, normalizedHouseId, _formatDateKey(now));
+    final pending = _pendingChecks[key];
+    if (pending != null) return pending;
+    final operation = _checkAndNotify(normalizedHouseId, uid, now);
+    _pendingChecks[key] = operation;
+    try {
+      await operation;
+    } finally {
+      if (identical(_pendingChecks[key], operation)) _pendingChecks.remove(key);
+    }
+  }
 
-    final events = <UpcomingEvent>[];
+  Future<void> _checkAndNotify(String houseId, String uid, DateTime now) async {
+    var invalidated = false;
+    final authSubscription = _uidChanges().listen((value) {
+      if (value != uid) invalidated = true;
+    });
+    bool isCurrentScope() => !invalidated && _currentUid() == uid;
+    try {
+      if (!isCurrentScope()) return;
+      final today = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).millisecondsSinceEpoch;
+      final calSnap = await _calendarQuery(
+        houseId,
+        now,
+        reminderOnly: true,
+      ).get();
+      if (!isCurrentScope()) return;
+      final customSnap = await _root
+          .child('houses/$houseId/settings/customEvents')
+          .get();
+      if (!isCurrentScope()) return;
+      final identity = await _loadIdentityContext(houseId);
+      if (!isCurrentScope()) return;
 
-    if (calSnap.exists && calSnap.value is Map) {
-      final data = Map<dynamic, dynamic>.from(calSnap.value as Map);
-      for (final dateKey in data.keys) {
-        final dateMs = _parseDateKey(dateKey.toString());
+      final events = <UpcomingEvent>[];
+
+      for (final daySnapshot in calSnap.children) {
+        final dateKey = daySnapshot.key ?? '';
+        final dateMs = _parseDateKey(dateKey);
         if (dateMs == null) continue;
-        final dayObj = data[dateKey];
-        if (dayObj is! Map) continue;
-        for (final eventId in dayObj.keys) {
-          final eventRaw = dayObj[eventId];
-          final title =
-              eventRaw is Map ? eventRaw['title']?.toString() ?? '' : '';
+        for (final eventSnapshot in daySnapshot.children) {
+          final eventId = eventSnapshot.key;
+          if (eventId == null) continue;
+          final eventRaw = eventSnapshot.value;
+          final title = eventRaw is Map
+              ? eventRaw['title']?.toString() ?? ''
+              : '';
           events.add(
             UpcomingEvent(
               eventKey: 'cal:$dateKey:$eventId',
@@ -170,12 +335,10 @@ class ScheduleNotifService {
           );
         }
       }
-    }
-
-    if (customSnap.exists && customSnap.value is Map) {
-      final data = Map<dynamic, dynamic>.from(customSnap.value as Map);
-      for (final key in data.keys) {
-        final value = data[key];
+      for (final customSnapshot in customSnap.children) {
+        final key = customSnapshot.key;
+        if (key == null) continue;
+        final value = customSnapshot.value;
         if (value is! Map) continue;
         final dateStr = value['date']?.toString() ?? '';
         final dateMs = _parseDateKey(dateStr);
@@ -191,52 +354,96 @@ class ScheduleNotifService {
           ),
         );
       }
+      events.addAll(_buildSystemEvents(identity, today));
+
+      for (final event in events) {
+        if (!isCurrentScope()) return;
+        if (event.daysUntil < 0 || event.daysUntil > 3) continue;
+
+        final notifId =
+            'sched_d${event.daysUntil}_${event.eventKey.hashCode.toUnsigned(32).toRadixString(16)}';
+        final presentation = describeScheduleNotification(
+          notificationId: notifId,
+          fallbackTitle: _fallbackScheduleTitle(event.daysUntil),
+          fallbackMessage: _fallbackScheduleMessage(
+            event.daysUntil,
+            event.title,
+          ),
+          eventTitle: event.title,
+          eventDate: event.dateKey,
+          identity: identity,
+        );
+
+        await sendScheduleNotification(
+          toHouseId: houseId,
+          notifId: notifId,
+          title: presentation.title,
+          message: presentation.message,
+          sourceLabel: presentation.sourceLabel,
+          eventKey: event.eventKey,
+          eventDate: event.dateKey,
+          eventTitle: event.title,
+        );
+      }
+    } finally {
+      await authSubscription.cancel();
     }
+  }
 
-    events.addAll(_buildSystemEvents(identity, today));
+  Query _calendarQuery(
+    String houseId,
+    DateTime now, {
+    bool reminderOnly = false,
+  }) {
+    final today = DateTime(now.year, now.month, now.day);
+    final query = _root
+        .child('houses/$houseId/calendar')
+        .orderByKey()
+        .startAt(CalendarWidgetSnapshot.dateKeyFor(today));
+    return reminderOnly
+        ? query.endAt(
+            CalendarWidgetSnapshot.dateKeyFor(
+              DateTime(today.year, today.month, today.day + 3),
+            ),
+          )
+        : query;
+  }
 
-    for (final event in events) {
-      if (event.daysUntil < 0 || event.daysUntil > 3) continue;
+  static bool _validHouseId(String houseId) =>
+      RegExp(r'^[A-Za-z0-9_-]{1,128}$').hasMatch(houseId);
 
-      final notifId =
-          'sched_d${event.daysUntil}_${event.eventKey.hashCode.toUnsigned(32).toRadixString(16)}';
-      final presentation = describeScheduleNotification(
-        notificationId: notifId,
-        fallbackTitle: _fallbackScheduleTitle(event.daysUntil),
-        fallbackMessage: _fallbackScheduleMessage(event.daysUntil, event.title),
-        eventTitle: event.title,
-        eventDate: event.dateKey,
-        identity: identity,
-      );
+  static Future<void> _sendSecurePayload(Map<String, dynamic> payload) async {
+    await CloudFunctionsHelper.callSecure<dynamic>(
+      'createScheduleNotificationSecure',
+      payload: payload,
+    );
+  }
 
-      await sendScheduleNotification(
-        toHouseId: houseId,
-        notifId: notifId,
-        title: presentation.title,
-        message: presentation.message,
-        sourceLabel: presentation.sourceLabel,
-        eventKey: event.eventKey,
-        eventDate: event.dateKey,
-        eventTitle: event.title,
-      );
-    }
+  ScheduleIdentityContext _identityFromValues(
+    String houseId,
+    Map<String, Object?> values,
+  ) {
+    return ScheduleIdentityContext(
+      houseId: houseId,
+      houseName: (values['houseName'] ?? '').toString(),
+      nameU1: (values['nameU1'] ?? '').toString(),
+      nameU2: (values['nameU2'] ?? '').toString(),
+      startDate: (values['startDate'] ?? '').toString(),
+      dobU1: (values['dobU1'] ?? '').toString(),
+      dobU2: (values['dobU2'] ?? '').toString(),
+    );
   }
 
   Future<ScheduleIdentityContext> _loadIdentityContext(String houseId) async {
     try {
-      final settingsSnap = await _db.ref('houses/$houseId/settings').get();
-      final settings = settingsSnap.value is Map
-          ? Map<String, dynamic>.from(settingsSnap.value as Map)
-          : const <String, dynamic>{};
-      return ScheduleIdentityContext(
-        houseId: houseId,
-        houseName: (settings['houseName'] ?? '').toString(),
-        nameU1: (settings['nameU1'] ?? '').toString(),
-        nameU2: (settings['nameU2'] ?? '').toString(),
-        startDate: (settings['startDate'] ?? '').toString(),
-        dobU1: (settings['dobU1'] ?? '').toString(),
-        dobU2: (settings['dobU2'] ?? '').toString(),
-      );
+      final snapshots = await Future.wait([
+        for (final field in _identityFields)
+          _root.child('houses/$houseId/settings/$field').get(),
+      ]);
+      return _identityFromValues(houseId, {
+        for (var index = 0; index < _identityFields.length; index++)
+          _identityFields[index]: snapshots[index].value,
+      });
     } catch (_) {
       return ScheduleIdentityContext(houseId: houseId);
     }
@@ -278,7 +485,7 @@ class ScheduleNotifService {
     int todayMs,
   ) {
     final events = <UpcomingEvent>[];
-    final now = DateTime.now();
+    final now = DateTime.fromMillisecondsSinceEpoch(todayMs);
 
     _addRecurringMonthDayEvent(
       events: events,
@@ -337,8 +544,9 @@ class ScheduleNotifService {
     final anchor = _parseFlexibleDate(identity.startDate);
     if (anchor != null) {
       for (final milestone in const [30, 100, 365]) {
-        final milestoneDate =
-            _startOfDay(anchor).add(Duration(days: milestone));
+        final milestoneDate = _startOfDay(
+          anchor,
+        ).add(Duration(days: milestone));
         final dateKey = _formatDateKey(milestoneDate);
         final dateMs = milestoneDate.millisecondsSinceEpoch;
         events.add(
@@ -412,14 +620,15 @@ class ScheduleNotifService {
     '🌟 Bộ đèn sao trần phòng ngủ lãng mạn',
   ];
 
-  void _addAdvanceNoticeBirthdayEvent(
-      {required List<UpcomingEvent> events,
-      required String eventKey,
-      required String rawDate,
-      required String name,
-      required int advanceDays,
-      required DateTime now,
-      required int todayMs}) {
+  void _addAdvanceNoticeBirthdayEvent({
+    required List<UpcomingEvent> events,
+    required String eventKey,
+    required String rawDate,
+    required String name,
+    required int advanceDays,
+    required DateTime now,
+    required int todayMs,
+  }) {
     final parsed = _parseFlexibleDate(rawDate);
     if (parsed == null) return;
     var bd = DateTime(now.year, parsed.month, parsed.day);
@@ -429,15 +638,19 @@ class ScheduleNotifService {
     final rk = _formatDateKey(rd);
     final rms = rd.millisecondsSinceEpoch;
     if (rms < todayMs) return;
-    final g = _giftSuggestions[
-        (parsed.day + parsed.month + advanceDays) % _giftSuggestions.length];
-    events.add(UpcomingEvent(
+    final g =
+        _giftSuggestions[(parsed.day + parsed.month + advanceDays) %
+            _giftSuggestions.length];
+    events.add(
+      UpcomingEvent(
         eventKey: '$eventKey:$rk',
         dateKey: rk,
         dateMs: rms,
         title: '🎂 Sinh nhật $name sắp tới! Gợi ý quà: $g',
         source: 'system',
-        daysUntil: _daysUntil(rms, todayMs)));
+        daysUntil: _daysUntil(rms, todayMs),
+      ),
+    );
   }
 
   DateTime _startOfDay(DateTime date) {
@@ -478,8 +691,8 @@ class ScheduleNotifService {
     return '${date.year}-${_pad(date.month)}-${_pad(date.day)}';
   }
 
-  static int _todayMidnight() {
-    final now = DateTime.now();
+  int _todayMidnight() {
+    final now = _now();
     return DateTime(now.year, now.month, now.day).millisecondsSinceEpoch;
   }
 

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../core/sl_theme.dart';
 import '../utils/services/l10n_service.dart';
@@ -16,6 +17,7 @@ class FirstSetupSpotlightStep {
   final String description;
   final IconData icon;
   final Color color;
+  final double? targetBorderRadius;
 
   final VoidCallback? onNext;
 
@@ -25,6 +27,7 @@ class FirstSetupSpotlightStep {
     required this.description,
     required this.icon,
     required this.color,
+    this.targetBorderRadius,
     this.onNext,
   });
 }
@@ -69,7 +72,11 @@ class FirstSetupSpotlightGuide extends StatefulWidget {
         barrierDismissible: false,
         barrierLabel: context.tr('user_guide'),
         barrierColor: Colors.transparent,
-        transitionDuration: Duration.zero,
+        transitionDuration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 180),
+        transitionBuilder: (_, animation, _, child) =>
+            FadeTransition(opacity: animation, child: child),
         pageBuilder: (_, _, _) => FirstSetupSpotlightGuide(
           steps: steps,
           onFinished: onFinished,
@@ -96,6 +103,13 @@ class _FirstSetupSpotlightGuideState extends State<FirstSetupSpotlightGuide>
   bool _closing = false;
   bool _syncing = false;
   int? _lastRecorded;
+  final GlobalKey _overlayKey = GlobalKey();
+  final Set<ScrollPosition> _targetScrollPositions = {};
+  int? _pendingIndex;
+  int _generation = 0;
+  bool _frameQueued = false;
+  bool _needsSync = false;
+  bool _needsScroll = false;
 
   @override
   void initState() {
@@ -113,22 +127,58 @@ class _FirstSetupSpotlightGuideState extends State<FirstSetupSpotlightGuide>
     // Theo dõi target tải muộn chỉ trong thời gian tour đang mở.
     _targetTimer = Timer.periodic(
       const Duration(milliseconds: 400),
-      (_) => _syncTargetRect(),
+      (_) => _queueTargetSync(),
     );
   }
 
   @override
   void dispose() {
     _targetTimer?.cancel();
+    for (final position in _targetScrollPositions) {
+      position.removeListener(_onTargetScroll);
+    }
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
   void didChangeMetrics() {
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _syncTargetRect(scroll: true),
-    );
+    _queueTargetSync(scroll: true);
+  }
+
+  void _onTargetScroll() => _queueTargetSync();
+
+  void _queueTargetSync({bool scroll = false}) {
+    if (!mounted || _closing) return;
+    _needsScroll = _needsScroll || scroll;
+    if (_frameQueued) return;
+    _frameQueued = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _frameQueued = false;
+      final shouldScroll = _needsScroll;
+      _needsScroll = false;
+      unawaited(_syncTargetRect(scroll: shouldScroll));
+    });
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  void _bindTargetScroll(BuildContext? targetContext) {
+    final positions = <ScrollPosition>{};
+    targetContext?.visitAncestorElements((element) {
+      if (element is StatefulElement && element.state is ScrollableState) {
+        positions.add((element.state as ScrollableState).position);
+      }
+      return true;
+    });
+    for (final position in _targetScrollPositions.difference(positions)) {
+      position.removeListener(_onTargetScroll);
+    }
+    for (final position in positions.difference(_targetScrollPositions)) {
+      position.addListener(_onTargetScroll);
+    }
+    _targetScrollPositions
+      ..clear()
+      ..addAll(positions);
   }
 
   Future<void> _record(SetupGuideStatus status) async {
@@ -145,15 +195,22 @@ class _FirstSetupSpotlightGuideState extends State<FirstSetupSpotlightGuide>
   }
 
   Future<void> _syncTargetRect({bool scroll = false}) async {
-    if (!mounted || _syncing || _closing) return;
+    if (!mounted || _closing) return;
+    if (_syncing) {
+      _needsSync = true;
+      _needsScroll = _needsScroll || scroll;
+      return;
+    }
     if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
     if (!(widget.isStillValid?.call() ?? true)) {
       _closing = true;
       Navigator.of(context).pop();
       return;
     }
-    final step = _step;
-    if (step == null) return;
+    final index = _pendingIndex ?? _index;
+    if (index >= widget.steps.length) return;
+    final step = widget.steps[index];
+    final generation = _generation;
     _syncing = true;
     try {
       final targetContext = step.targetKey.currentContext;
@@ -163,65 +220,111 @@ class _FirstSetupSpotlightGuideState extends State<FirstSetupSpotlightGuide>
         if (element.widget case Opacity(opacity: 0)) hidden = true;
         return !hidden;
       });
+      _bindTargetScroll(hidden ? null : targetContext);
       if (targetContext != null && !hidden && (scroll || _targetRect == null)) {
         await Scrollable.ensureVisible(
           targetContext,
-          alignment: .5,
+          alignment: .35,
           duration: Duration.zero,
         );
+        await WidgetsBinding.instance.endOfFrame;
       }
-      if (!mounted || _closing) return;
+      if (!mounted || _closing || generation != _generation) return;
+      if (!(widget.isStillValid?.call() ?? true)) {
+        _closing = true;
+        Navigator.of(context).pop();
+        return;
+      }
       final render = targetContext?.findRenderObject();
+      final overlay = _overlayKey.currentContext?.findRenderObject();
       Rect? rect;
       if (render is RenderBox &&
+          overlay is RenderBox &&
           !hidden &&
           render.attached &&
           render.hasSize &&
-          !render.size.isEmpty) {
-        final candidate = render.localToGlobal(Offset.zero) & render.size;
-        final viewport = Offset.zero & MediaQuery.sizeOf(context);
-        if (candidate.overlaps(viewport)) rect = candidate.intersect(viewport);
+          !render.size.isEmpty &&
+          overlay.hasSize) {
+        final media = MediaQuery.of(context);
+        final viewport = Rect.fromLTRB(
+          0,
+          media.padding.top,
+          overlay.size.width,
+          math.max(
+            media.padding.top,
+            overlay.size.height -
+                media.padding.bottom -
+                media.viewInsets.bottom,
+          ),
+        );
+        var candidate = MatrixUtils.transformRect(
+          render.getTransformTo(overlay),
+          Offset.zero & render.size,
+        );
+        RenderObject? ancestor = render.parent;
+        while (ancestor != null) {
+          if (ancestor is RenderBox &&
+              (ancestor is RenderAbstractViewport ||
+                  ancestor is RenderClipRect ||
+                  ancestor is RenderClipRRect)) {
+            final clip = MatrixUtils.transformRect(
+              ancestor.getTransformTo(overlay),
+              Offset.zero & ancestor.size,
+            );
+            candidate = candidate.intersect(clip);
+          }
+          ancestor = ancestor.parent;
+        }
+        if (candidate.overlaps(viewport) && !candidate.isEmpty) {
+          rect = candidate.intersect(viewport);
+        }
       }
-      if (_targetRect != rect) setState(() => _targetRect = rect);
-      if (rect != null && _lastRecorded != _index) {
-        _lastRecorded = _index;
+      if (index != _index || !_sameTargetRect(_targetRect, rect)) {
+        setState(() {
+          _index = index;
+          _targetRect = rect;
+          _pendingIndex = null;
+        });
+      } else {
+        _pendingIndex = null;
+      }
+      if (rect != null && _lastRecorded != index) {
+        _lastRecorded = index;
         unawaited(_record(SetupGuideStatus.inProgress));
       }
     } finally {
       _syncing = false;
+      if (_needsSync && mounted && !_closing) {
+        _needsSync = false;
+        _queueTargetSync(scroll: _needsScroll);
+      }
     }
   }
 
   void _next() {
     if (_closing ||
+        _pendingIndex != null ||
         _targetRect == null ||
         !(widget.isStillValid?.call() ?? true)) {
       return;
     }
-    final currentStep = _step;
-    currentStep?.onNext?.call();
+    _step?.onNext?.call();
     if (_index >= widget.steps.length - 1) {
-      _finish(SetupGuideOutcome.completed);
+      unawaited(_finish(SetupGuideOutcome.completed));
       return;
     }
-    setState(() {
-      _index++;
-      _targetRect = null;
-    });
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _syncTargetRect(scroll: true),
-    );
+    _moveTo(_index + 1);
   }
 
   void _back() {
-    if (_index == 0 || _closing) return;
-    setState(() {
-      _index--;
-      _targetRect = null;
-    });
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _syncTargetRect(scroll: true),
-    );
+    if (_index == 0 || _closing || _pendingIndex != null) return;
+    _moveTo(_index - 1);
+  }
+
+  void _moveTo(int index) {
+    _generation++;
+    _pendingIndex = index;
+    _queueTargetSync(scroll: true);
   }
 
   Future<void> _finish(SetupGuideOutcome outcome) async {
@@ -240,106 +343,118 @@ class _FirstSetupSpotlightGuideState extends State<FirstSetupSpotlightGuide>
   @override
   Widget build(BuildContext context) {
     final step = _step;
-    final targetRect = _targetRect;
-    if (step == null) {
-      return const SizedBox.expand();
-    }
-
-    final media = MediaQuery.of(context);
-    final size = media.size;
-    final safeTop = media.padding.top + 12;
-    final safeBottom = media.padding.bottom + 16;
-    final cardWidth = math.min(size.width - 32, 390.0);
-    final targetCenter = targetRect?.center ?? Offset(size.width / 2, 0);
-    final showCardAbove = targetCenter.dy > size.height * 0.54;
-    final cardLeft = (targetCenter.dx - cardWidth / 2).clamp(
-      16.0,
-      size.width - cardWidth - 16,
-    );
-
-    final targetHighlightRect = targetRect?.inflate(8) ?? Rect.zero;
-    final targetRadius = _spotlightRadiusFor(targetHighlightRect);
-
+    if (step == null) return const SizedBox.expand();
     return PopScope<SetupGuideOutcome>(
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) _closing = true;
       },
       child: SizedBox.expand(
+        key: _overlayKey,
         child: Material(
           color: Colors.transparent,
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: _SpotlightPainter(
-                    target: targetHighlightRect,
-                    radius: targetRadius,
-                    color: step.color,
-                  ),
-                ),
-              ),
-              if (targetRect != null)
-                Positioned.fromRect(
-                  rect: targetHighlightRect,
-                  child: IgnorePointer(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(targetRadius),
-                        border: Border.all(
-                          color: step.color.withValues(alpha: 0.92),
-                          width: 2.4,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final media = MediaQuery.of(context);
+              final size = constraints.biggest;
+              final safeTop = media.padding.top + 12;
+              final safeBottom =
+                  media.padding.bottom + media.viewInsets.bottom + 16;
+              final usableHeight = math.max(
+                80.0,
+                size.height - safeTop - safeBottom,
+              );
+              final targetRect = _targetRect;
+              final above = math.max(
+                0.0,
+                (targetRect?.top ?? safeTop) - safeTop - 16,
+              );
+              final below = math.max(
+                0.0,
+                size.height - safeBottom - (targetRect?.bottom ?? safeTop) - 16,
+              );
+              final showCardAbove = targetRect != null && above > below;
+              final available = targetRect == null
+                  ? usableHeight * .68
+                  : (showCardAbove ? above : below);
+              final cardHeight = math.min(
+                usableHeight * .68,
+                math.max(80.0, available),
+              );
+              final cardWidth = math.min(size.width - 32, 420.0);
+              final targetCenter =
+                  targetRect?.center ?? Offset(size.width / 2, 0);
+              final cardLeft = (targetCenter.dx - cardWidth / 2).clamp(
+                16.0,
+                size.width - cardWidth - 16,
+              );
+              final highlight = targetRect
+                  ?.inflate(4)
+                  .intersect(Offset.zero & size);
+              final radius = highlight == null
+                  ? 0.0
+                  : math.min(
+                      step.targetBorderRadius == null
+                          ? _spotlightRadiusFor(highlight)
+                          : step.targetBorderRadius! + 4,
+                      highlight.shortestSide / 2,
+                    );
+              return Stack(
+                children: [
+                  Positioned.fill(
+                    child: RepaintBoundary(
+                      child: CustomPaint(
+                        key: const ValueKey('setup-guide-scrim'),
+                        painter: _SpotlightPainter(
+                          target: highlight ?? Rect.zero,
+                          radius: radius,
+                          color: const Color(0xFFFFF4E5),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: step.color.withValues(alpha: 0.36),
-                            blurRadius: 28,
-                            spreadRadius: 2,
-                          ),
-                        ],
                       ),
                     ),
                   ),
-                ),
-              Positioned(
-                left: cardLeft,
-                top: showCardAbove ? safeTop : null,
-                bottom: showCardAbove
-                    ? null
-                    : safeBottom + media.viewInsets.bottom,
-                width: cardWidth,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: math.max(
-                      80,
-                      (size.height -
-                              safeTop -
-                              safeBottom -
-                              media.viewInsets.bottom) *
-                          .62,
+                  if (highlight != null)
+                    Positioned.fromRect(
+                      key: const ValueKey('setup-guide-target'),
+                      rect: highlight,
+                      child: const IgnorePointer(child: SizedBox.expand()),
+                    ),
+                  Positioned(
+                    left: cardLeft,
+                    top: showCardAbove ? safeTop : null,
+                    bottom: showCardAbove ? null : safeBottom,
+                    width: cardWidth,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxHeight: cardHeight),
+                      child: _SpotlightCard(
+                        step: step,
+                        index: _index,
+                        total: widget.steps.length,
+                        onSkip: () => _finish(SetupGuideOutcome.dismissed),
+                        onNext: targetRect == null
+                            ? () => _syncTargetRect(scroll: true)
+                            : _next,
+                        onBack: _index > 0 ? _back : null,
+                        targetReady: targetRect != null,
+                        isLast: _index >= widget.steps.length - 1,
+                      ),
                     ),
                   ),
-                  child: SingleChildScrollView(
-                    child: _SpotlightCard(
-                      step: step,
-                      index: _index,
-                      total: widget.steps.length,
-                      onSkip: () => _finish(SetupGuideOutcome.dismissed),
-                      onNext: targetRect == null
-                          ? () => _syncTargetRect(scroll: true)
-                          : _next,
-                      onBack: _index > 0 ? _back : null,
-                      targetReady: targetRect != null,
-                      isLast: _index >= widget.steps.length - 1,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
         ),
       ),
     );
   }
+}
+
+bool _sameTargetRect(Rect? previous, Rect? next) {
+  if (previous == null || next == null) return previous == next;
+  return (previous.left - next.left).abs() < .5 &&
+      (previous.top - next.top).abs() < .5 &&
+      (previous.right - next.right).abs() < .5 &&
+      (previous.bottom - next.bottom).abs() < .5;
 }
 
 double _spotlightRadiusFor(Rect rect) {
@@ -348,7 +463,7 @@ double _spotlightRadiusFor(Rect rect) {
   if (shortestSide <= 72 && (longestSide - shortestSide).abs() <= 18) {
     return shortestSide / 2;
   }
-  return math.min(28, shortestSide / 2);
+  return math.min(20, shortestSide / 2);
 }
 
 class _SpotlightPainter extends CustomPainter {
@@ -368,17 +483,14 @@ class _SpotlightPainter extends CustomPainter {
     final cutout = Path()
       ..addRRect(RRect.fromRectAndRadius(target, Radius.circular(radius)));
     final path = Path.combine(PathOperation.difference, overlay, cutout);
-    canvas.drawPath(
-      path,
-      Paint()..color = Colors.black.withValues(alpha: 0.66),
-    );
+    canvas.drawPath(path, Paint()..color = const Color(0xA6141018));
 
     canvas.drawRRect(
       RRect.fromRectAndRadius(target, Radius.circular(radius)),
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2
-        ..color = Colors.white.withValues(alpha: 0.82),
+        ..strokeWidth = 2
+        ..color = color,
     );
   }
 
@@ -389,6 +501,10 @@ class _SpotlightPainter extends CustomPainter {
         oldDelegate.color != color;
   }
 }
+
+const _guideAccent = Color(0xFF965C6C);
+const _guideInk = Color(0xFF3D343A);
+const _guideMuted = Color(0xFF756770);
 
 class _SpotlightCard extends StatelessWidget {
   final FirstSetupSpotlightStep step;
@@ -413,118 +529,182 @@ class _SpotlightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final nextButton = FilledButton.icon(
+      key: const ValueKey('setup-guide-next'),
+      style: FilledButton.styleFrom(
+        backgroundColor: _guideAccent,
+        foregroundColor: Colors.white,
+        minimumSize: const Size(48, 48),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      onPressed: onNext,
+      icon: Icon(
+        !targetReady
+            ? Icons.refresh_rounded
+            : isLast
+            ? Icons.check_rounded
+            : isRtl
+            ? Icons.arrow_back_rounded
+            : Icons.arrow_forward_rounded,
+        size: 18,
+      ),
+      iconAlignment: IconAlignment.end,
+      label: Text(
+        context.tr(
+          !targetReady
+              ? 'core_retry'
+              : isLast
+              ? 'core_done'
+              : 'core_next',
+        ),
+        textAlign: TextAlign.center,
+        style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 14),
+      ),
+    );
+    final skip = TextButton(
+      style: TextButton.styleFrom(
+        foregroundColor: _guideMuted,
+        minimumSize: const Size(48, 48),
+      ),
+      onPressed: onSkip,
+      child: Text(
+        context.tr('core_skip'),
+        style: SLTheme.quicksand(fontSize: 13, fontWeight: FontWeight.w600),
+      ),
+    );
+    final back = onBack == null
+        ? null
+        : TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: _guideInk,
+              minimumSize: const Size(48, 48),
+            ),
+            onPressed: onBack,
+            child: Text(
+              context.tr('settings_back_btn'),
+              style: SLTheme.quicksand(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          );
     return Container(
-      padding: const EdgeInsets.all(16),
+      key: const ValueKey('setup-guide-card'),
       decoration: BoxDecoration(
         color: const Color(0xFFFFFCF8),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.90)),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE8DDD8)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.22),
-            blurRadius: 30,
-            offset: const Offset(0, 16),
+            color: Colors.black.withValues(alpha: .16),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+      child: ClipRRect(
+        key: const ValueKey('setup-guide-card-clip'),
+        borderRadius: BorderRadius.circular(19),
+        child: SingleChildScrollView(
+          key: ValueKey(index),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: step.color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(step.icon, color: step.color, size: 21),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  step.title,
-                  style: SLTheme.quicksand(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    color: SLColors.textPrimary,
-                    height: 1.18,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                spacing: 12,
+                runSpacing: 4,
+                children: [
+                  Text(
+                    context.tr('guide_tour_label'),
+                    style: SLTheme.quicksand(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: _guideMuted,
+                    ),
                   ),
-                ),
+                  Text(
+                    L10nService().format('guide_step_counter', {
+                      'current': index + 1,
+                      'total': total,
+                    }),
+                    textDirection: Directionality.of(context),
+                    style: SLTheme.quicksand(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: _guideAccent,
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: step.color.withValues(alpha: .1),
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                    child: Icon(step.icon, color: step.color, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      step.title,
+                      style: SLTheme.quicksand(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: _guideInk,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
               Text(
-                '${index + 1}/$total',
+                step.description,
                 style: SLTheme.quicksand(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
-                  color: step.color,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: _guideMuted,
+                  height: 1.5,
                 ),
+              ),
+              if (!targetReady) ...[
+                const SizedBox(height: 12),
+                Text(
+                  context.tr('guide_target_unavailable'),
+                  style: SLTheme.quicksand(fontSize: 12, color: _guideMuted),
+                ),
+              ],
+              const SizedBox(height: 18),
+              LinearProgressIndicator(
+                value: (index + 1) / total,
+                minHeight: 3,
+                borderRadius: BorderRadius.circular(2),
+                color: _guideAccent,
+                backgroundColor: const Color(0xFFEEE4E7),
+              ),
+              const SizedBox(height: 16),
+              nextButton,
+              const SizedBox(height: 4),
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                spacing: 8,
+                runSpacing: 4,
+                children: [skip, ?back],
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Text(
-            step.description,
-            style: SLTheme.quicksand(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: SLColors.textSecondary,
-              height: 1.45,
-            ),
-          ),
-          const SizedBox(height: 14),
-          if (!targetReady) ...[
-            Text(context.tr('guide_target_unavailable')),
-            const SizedBox(height: 12),
-          ],
-          LinearProgressIndicator(
-            value: (index + 1) / total,
-            color: const Color(0xFFAC4E6C),
-            backgroundColor: const Color(0xFFF0E7E9),
-          ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              TextButton(
-                onPressed: onSkip,
-                child: Text(
-                  L10nService().translate('core_skip'),
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF7A6570),
-                  ),
-                ),
-              ),
-              if (onBack != null)
-                TextButton(
-                  onPressed: onBack,
-                  child: Text(context.tr('settings_back_btn')),
-                ),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFAC4E6C),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-                onPressed: onNext,
-                child: Text(
-                  !targetReady
-                      ? context.tr('core_retry')
-                      : isLast
-                      ? L10nService().translate('core_done')
-                      : L10nService().translate('core_next'),
-                  style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }

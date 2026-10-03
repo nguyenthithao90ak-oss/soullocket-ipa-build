@@ -153,14 +153,12 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
+      appBar: SLTheme.pageAppBar(
         title: Text(
           widget.title,
           style: const TextStyle(fontWeight: FontWeight.w900),
         ),
-        backgroundColor: const Color(0xFFD81B60),
-        foregroundColor: Colors.white,
-        elevation: 0,
+        backgroundColor: Colors.white,
       ),
       body: Stack(
         children: [

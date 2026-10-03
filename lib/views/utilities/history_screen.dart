@@ -1,13 +1,11 @@
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
-import 'dart:ui' as ui;
+import '../../widgets/sl_detail_widgets.dart';
+import 'widgets/history_widgets.dart';
 
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
-import 'package:intl/intl.dart';
-
-import '../../core/fast_backdrop_filter.dart';
 
 import '../../core/sl_theme.dart';
 import '../../utils/services/activity_history_service.dart';
@@ -28,48 +26,33 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  Widget _buildInfoIcon(BuildContext context) {
-    return IconButton(
-      tooltip: 'Hướng dẫn',
-      icon:
-          const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
-      onPressed: () => _showInfoDialog(context),
-    );
-  }
+  Widget _buildInfoIcon(BuildContext context) => IconButton(
+    tooltip: context.tr('settings_menu_guide_title'),
+    icon: const Icon(Icons.info_outline_rounded),
+    onPressed: () => _showInfoDialog(context),
+  );
 
   void _showInfoDialog(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (context) => SLAlertDialog(
-        title: Text('Lịch sử hoạt động'),
-        content: const SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
-              Text(
-                '- Ghi lại toàn bộ dấu chân tương tác của hai người: ngày bắt đầu yêu, lần đầu thêm ảnh, khi thay đổi hình nền, v.v.\n- Giúp dễ dàng theo dõi dòng thời gian phát triển tình cảm.',
-              ),
-              SizedBox(height: 12),
-              Text(
-                'Cách sử dụng:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 4),
-              Text(
-                '- Hệ thống tự động lưu các sự kiện quan trọng vào lịch sử.\n- Bạn có thể xem lại để thấy nhà chung của mình đã thay đổi thế nào qua thời gian.',
-              ),
-            ],
-          ),
+      builder: (dialogContext) => SLAlertDialog(
+        title: SLDialogHeading(
+          icon: Icons.history_rounded,
+          title: context.tr('settings_activity_history'),
+        ),
+        content: Text(
+          [
+            context.tr('settings_menu_history_desc'),
+            L10nService().format('util_history_limit', {
+              'count': ActivityHistoryService.maxItems,
+            }),
+          ].join('\n\n'),
         ),
         actions: [
           SLDialogAction(
             primary: true,
-
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu'),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(context.tr('picker_confirm')),
           ),
         ],
       ),
@@ -88,12 +71,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _loadHistory() async {
-    await _criticalSync.syncCurrentUserData(
-      houseId: widget.houseId,
-      force: true,
-    );
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    try {
+      await _criticalSync.syncCurrentUserData(
+        houseId: widget.houseId,
+        force: true,
+      );
+    } catch (error) {
+      debugPrint('[HistoryScreen] Optional background sync failed: $error');
+    }
+    if (!mounted || FirebaseAuth.instance.currentUser?.uid != uid) return;
     final list = await _svc.loadAll(houseId: widget.houseId);
-    if (!mounted) return;
+    if (!mounted || FirebaseAuth.instance.currentUser?.uid != uid) return;
     setState(() {
       _history = list.reversed.take(ActivityHistoryService.maxItems).toList();
     });
@@ -157,431 +147,39 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
-  String _formatTime(int ts) {
-    return DateFormat('dd/MM/yyyy HH:mm')
-        .format(DateTime.fromMillisecondsSinceEpoch(ts));
-  }
-
-  Widget _buildTag(String label, Color background, Color foreground) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: SLTheme.quicksand(
-          color: foreground,
-          fontWeight: FontWeight.w800,
-          fontSize: 9,
-        ),
-      ),
-    );
-  }
-
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        automaticallyImplyLeading: !widget.embedded,
-        title: Text(
-          context.tr('util_lchshotng_3defc0'),
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.w800,
-            fontSize: 18,
-            letterSpacing: 1.1,
-            color: Colors.white,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        flexibleSpace: ClipRect(
-          child: FastBackdropFilter(
-            filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.55),
-            ),
-          ),
-        ),
-        leading: widget.embedded
-            ? null
-            : IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_ios_new,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                onPressed: () => Navigator.pop(context),
-              ),
-        actions: [
-          _buildInfoIcon(context),
-          IconButton(
-            icon:
-                const Icon(Icons.delete_sweep_outlined, color: Colors.white70),
-            onPressed: _history.isEmpty ? null : _clearHistory,
-          ),
-        ],
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: SLDetailStyle.background(context),
+    appBar: AppBar(
+      toolbarHeight: MediaQuery.textScalerOf(context).scale(20) > 26 ? 88 : 64,
+      titleSpacing: 0,
+      automaticallyImplyLeading: !widget.embedded,
+      backgroundColor: SLDetailStyle.card(context),
+      foregroundColor: SLDetailStyle.text(context),
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      title: Text(
+        context.tr('settings_activity_history'),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: SLTheme.quicksand(fontSize: 17, fontWeight: FontWeight.w700),
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF070A12),
-              Color(0xFF101827),
-              Color(0xFF21111F),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+      actions: [
+        _buildInfoIcon(context),
+        IconButton(
+          tooltip: context.tr('util_xalchs_4e0e74'),
+          icon: const Icon(Icons.delete_sweep_outlined),
+          onPressed: _history.isEmpty ? null : _clearHistory,
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildStatsHeader(),
-              Expanded(child: _buildHistoryList()),
-            ],
-          ),
-        ),
+      ],
+    ),
+    body: SafeArea(
+      top: false,
+      child: ActivityHistoryContent(
+        entries: _history,
+        restoringEntryId: _restoringEntryId,
+        onRestore: _restore,
       ),
-    );
-  }
-
-  Widget _buildStatsHeader() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: FastBackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  SLColors.darkNavy.withValues(alpha: 0.7),
-                  const Color(0xFF0F172A).withValues(alpha: 0.8),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: SLColors.primary.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Icon(
-                        Icons.history_rounded,
-                        color: SLColors.primary,
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.tr('util_tngshotng_1d889d').toUpperCase(),
-                          style: SLTheme.quicksand(
-                            color: Colors.white60,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 11,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${_history.length}',
-                          style: SLTheme.quicksand(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 28,
-                            height: 1.0,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(12),
-                    border:
-                        Border.all(color: Colors.white.withValues(alpha: 0.05)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.sd_storage_rounded,
-                          size: 14, color: Colors.white54),
-                      const SizedBox(width: 6),
-                      Text(
-                        L10nService().format('util_history_limit',
-                            {'count': ActivityHistoryService.maxItems}),
-                        style: SLTheme.quicksand(
-                          color: Colors.white70,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHistoryList() {
-    if (_history.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.03),
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.05),
-                ),
-                child: const Icon(
-                  Icons.history_toggle_off_rounded,
-                  size: 64,
-                  color: Colors.white30,
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              context.tr('util_chaclchsho_b9320d'),
-              style: SLTheme.quicksand(
-                color: Colors.white70,
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Lịch sử tương tác của hai bạn sẽ xuất hiện ở đây',
-              style: SLTheme.quicksand(
-                color: Colors.white38,
-                fontWeight: FontWeight.w500,
-                fontSize: 13,
-              ),
-            ),
-            const SizedBox(height: 60), // Offset slightly upwards
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: _history.length,
-      itemBuilder: (context, index) {
-        final entry = _history[index];
-        final isUser2 = entry.role == 'user2';
-        final subtitle = entry.subtitle.trim();
-        final canRestore = entry.canRestore;
-        final expired = entry.isRestoreExpired;
-        final source = entry.effectiveSourceLabel;
-        final isRestoring = _restoringEntryId == entry.id;
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: const Color(0xFF151B2A).withValues(alpha: 0.94),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF2B3448)),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: isUser2
-                      ? const Color(0xFF7C2D64).withValues(alpha: 0.42)
-                      : const Color(0xFF075985).withValues(alpha: 0.42),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  isUser2 ? Icons.favorite : Icons.auto_awesome,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(width: 12),
-              if (entry.hasPreview && entry.isImagePreview)
-                Container(
-                  width: 50,
-                  height: 50,
-                  margin: const EdgeInsets.only(right: 12),
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF20283A),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: CachedNetworkImage(
-                    imageUrl: entry.previewUrl,
-                    fit: BoxFit.cover,
-                    memCacheWidth: 150,
-                    filterQuality: FilterQuality.medium,
-                    placeholder: (_, __) => const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    errorWidget: (_, __, ___) => const Icon(
-                      Icons.image_not_supported_outlined,
-                      color: Colors.white70,
-                    ),
-                  ),
-                )
-              else if (entry.isVoicePreview)
-                Container(
-                  width: 50,
-                  height: 50,
-                  margin: const EdgeInsets.only(right: 12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF20283A),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(
-                    Icons.mic_rounded,
-                    color: Colors.white,
-                  ),
-                ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      entry.displayLine,
-                      style: SLTheme.quicksand(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 13,
-                      ),
-                    ),
-                    if (subtitle.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        subtitle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: SLTheme.quicksand(
-                          color: Colors.white.withValues(alpha: 0.82),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        if (source.isNotEmpty)
-                          _buildTag(
-                            source,
-                            const Color(0xFF243044),
-                            const Color(0xFFE5E7EB),
-                          ),
-                        if (canRestore)
-                          _buildTag(
-                            context.tr('util_khiphcc_3014dd'),
-                            const Color(0xFF113826),
-                            const Color(0xFF86EFAC),
-                          ),
-                        if (expired)
-                          _buildTag(
-                            context.tr('util_qu3ngy_45ff69'),
-                            const Color(0xFF3F1721),
-                            const Color(0xFFFCA5A5),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _formatTime(entry.ts),
-                      style: SLTheme.quicksand(
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (canRestore)
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF20283A),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFF334155)),
-                  ),
-                  child: IconButton(
-                    tooltip: isRestoring
-                        ? context.tr('util_angkhiphc_4d5bed')
-                        : context.tr('util_khiphc_682697'),
-                    constraints: const BoxConstraints.tightFor(
-                      width: 36,
-                      height: 36,
-                    ),
-                    padding: EdgeInsets.zero,
-                    onPressed: isRestoring ? null : () => _restore(entry),
-                    icon: isRestoring
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(
-                            Icons.restore_rounded,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+    ),
+  );
 }

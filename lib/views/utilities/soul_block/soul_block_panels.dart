@@ -189,7 +189,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
           ),
           const SizedBox(height: 8),
           Text(
-            'Fast • Addictive • Endless',
+            context.tr('soul_block_tagline'),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               fontSize: 13,
@@ -234,7 +234,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  'Best ${_formatNumber(_bestScore)}',
+                  L10nScope.of(context).format('ui_utilities_best_value1_c6ee12', {'value1': _formatNumber(_bestScore)}),
                   style: SLTheme.quicksand(
                     fontSize: 15.5,
                     fontWeight: FontWeight.w900,
@@ -317,7 +317,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                             ],
                           )
                         : Text(
-                            'PLAY',
+                            context.tr('soul_block_play_action'),
                             key: const ValueKey<String>('play-idle'),
                             style: SLTheme.quicksand(
                               fontSize: 26,
@@ -336,7 +336,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
               Expanded(
                 child: _MenuMiniButton(
                   icon: Icons.settings_rounded,
-                  label: 'Settings',
+                  label: context.tr('Cài đặt'),
                   onTap: _openSettingsSheet,
                 ),
               ),
@@ -344,7 +344,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
               Expanded(
                 child: _MenuMiniButton(
                   icon: Icons.leaderboard_rounded,
-                  label: 'Scores',
+                  label: context.tr('Bảng điểm'),
                   onTap: _openLeaderboardSheet,
                 ),
               ),
@@ -353,7 +353,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                 Expanded(
                   child: _MenuMiniButton(
                     icon: Icons.block_rounded,
-                    label: 'No Ads',
+                    label: context.tr('Gỡ quảng cáo'),
                     onTap: _openPremiumStore,
                   ),
                 ),
@@ -578,7 +578,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
             children: <Widget>[
               Expanded(
                 child: _TopScoreCard(
-                  label: 'BEST',
+                  label: context.tr('soul_block_best'),
                   icon: Icons.emoji_events_rounded,
                   accent: const Color(0xFFFFD166),
                   value: _formatNumber(_bestScore),
@@ -589,7 +589,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
               SizedBox(height: sideGap),
               Expanded(
                 child: _TopScoreCard(
-                  label: 'LINES',
+                  label: context.tr('soul_block_lines_label'),
                   icon: Icons.grid_4x4_rounded,
                   accent: const Color(0xFF7AE7FF),
                   value: _formatNumber(_clearedLines),
@@ -726,7 +726,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                   ),
                 ),
                 child: Text(
-                  'RUN SCORE',
+                  context.tr('soul_block_run_score_label'),
                   style: SLTheme.quicksand(
                     fontSize: ultraCompact
                         ? 8.4
@@ -769,7 +769,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
             if (!ultraCompact) ...<Widget>[
               SizedBox(height: compact ? 2 : 4),
               Text(
-                'Keep the board breathing and clear chains fast',
+                context.tr('soul_block_play_hint'),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: SLTheme.quicksand(

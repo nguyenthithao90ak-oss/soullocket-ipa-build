@@ -20,9 +20,9 @@ extension _CinemaScreenStateReelPart on _CinemaScreenState {
 
     return _CinemaDailyReel(
       dateKey: _dateKey(today),
-      title: 'Video ${badge.label}',
+      title: L10nScope.of(context).format('ui_utilities_video_value1_2bd944', {'value1': badge.label}),
       subtitle:
-          'Dựng tự động từ ${selected.length} ảnh ngẫu nhiên trong kho kỷ niệm của hai bạn cho mốc ${badge.label}.',
+          L10nScope.of(context).format('ui_utilities_automatically_build_from_value1_random_photos_in_128960', {'value1': selected.length, 'value2': badge.label}),
       accentValue: badge.accent.toARGB32(),
       createdAt: now,
       expiresAt: DateTime(now.year, now.month, now.day, 23, 59, 59, 999),

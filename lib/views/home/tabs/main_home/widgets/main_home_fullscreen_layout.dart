@@ -51,11 +51,11 @@ class _FullscreenHomeBody extends StatelessWidget {
     final avatarSize = compactHeight ? 66.0 : 78.0;
     final topLabel = circleTopLabel.trim().isNotEmpty
         ? circleTopLabel.trim()
-        : context.tr('Bên nhau');
+        : context.tr('home_together_title');
     final bottomLabel = circleBottomLabel.trim().isNotEmpty
         ? circleBottomLabel.trim()
         : context.tr('ngày yêu');
-    final quote = context.tr('Mỗi ngày bên nhau là một trang đáng nhớ');
+    final quote = context.tr('home_together_subtitle');
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -130,7 +130,7 @@ class _FullscreenHomeBody extends StatelessWidget {
                             child: Center(
                               child: Semantics(
                                 button: true,
-                                label: context.tr('Chỉnh ngày bắt đầu'),
+                                label: context.tr('home_countdown_start_date'),
                                 child: GestureDetector(
                                   onTap: state._showEditStartDateDialog,
                                   onLongPressStart:
@@ -169,7 +169,7 @@ class _FullscreenHomeBody extends StatelessWidget {
                                                   Semantics(
                                                     button: true,
                                                     label: context.tr(
-                                                      'Chỉnh tiêu đề đếm ngày',
+                                                      'home_countdown_title',
                                                     ),
                                                     child: GestureDetector(
                                                       onTap: () => state
@@ -274,7 +274,7 @@ class _FullscreenHomeBody extends StatelessWidget {
                                                   Semantics(
                                                     button: true,
                                                     label: context.tr(
-                                                      'Chỉnh nhãn đếm ngày',
+                                                      'home_countdown_label',
                                                     ),
                                                     child: GestureDetector(
                                                       onTap: () => state
@@ -558,7 +558,7 @@ class _FullscreenLoveLetterhead extends StatelessWidget {
     final visibleHouseName = showHouseName && houseName.trim().isNotEmpty;
     final title = visibleHouseName
         ? houseName.trim()
-        : context.tr(isSingle ? 'Nhật ký của mình' : 'Nhật ký tình yêu');
+        : context.tr(isSingle ? 'home_diary_mine' : 'Nhật ký tình yêu');
 
     return Semantics(
       header: true,

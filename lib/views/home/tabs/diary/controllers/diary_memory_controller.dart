@@ -2079,7 +2079,7 @@ class DiaryMemoryController extends ChangeNotifier {
             content: Text(
               failedCount == 0
                   ? skippedMapPinBecauseLimit
-                        ? 'Đã thêm $uploadedCount kỷ niệm. Ảnh vẫn được lưu nhưng không ghim vị trí mới vì bản đồ đã đủ ${MapPinLimitService.maxPins} điểm.'
+                        ? L10nScope.of(context).format('ui_home_added_value1_memories_the_photo_is_still_991b52', {'value1': uploadedCount, 'value2': MapPinLimitService.maxPins})
                         : L10nService().format('diary_added_new_memories', {
                             'count': uploadedCount,
                           })

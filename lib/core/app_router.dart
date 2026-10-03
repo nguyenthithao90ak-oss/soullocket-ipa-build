@@ -47,6 +47,17 @@ class AppRouter {
     observers: [_ConsentAnalyticsObserver()],
     routes: [
       GoRoute(path: '/', builder: (context, state) => const AppEntry()),
+      // Giữ mã trong URL tới AppEntry, nơi service ghi nhận sau đăng nhập.
+      for (final path in ['/invite', '/invite/open'])
+        GoRoute(
+          path: path,
+          redirect: (context, state) => Uri(
+            path: '/',
+            queryParameters: {
+              'referral': state.uri.queryParameters['code'] ?? '',
+            },
+          ).toString(),
+        ),
       GoRoute(
         path: LoveCardLinkService.viewerPath,
         builder: (context, state) => LoveCardPublicLinkScreen(

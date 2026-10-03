@@ -55,7 +55,9 @@ class AppConfig {
   );
   static const String androidAppCheckDebugToken = String.fromEnvironment(
     'APP_CHECK_ANDROID_DEBUG_TOKEN',
-    defaultValue: 'e093f0e4-3b78-4a1f-b339-5dc8a1c65807',
+    // Debug tokens are device-specific and must never be embedded in the
+    // source or used as a fallback. Pass one only to a local debug build.
+    defaultValue: '',
   );
   static const String openStreetMapTileUrl = String.fromEnvironment(
     'OSM_TILE_URL',

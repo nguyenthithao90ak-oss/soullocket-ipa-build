@@ -1,16 +1,23 @@
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/models/utilities/shared_note.dart';
 import 'package:soullocket_app/utils/services/daily_quest_service.dart';
 
 class NoteService {
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+  NoteService() : _dbRef = FirebaseDatabase.instance.ref();
+
+  @visibleForTesting
+  NoteService.forTesting(this._dbRef);
+
+  final DatabaseReference _dbRef;
 
   // Tạo Note mới
   Future<void> addNote(String houseId, SharedNote note) async {
     final normalizedHouseId = houseId.trim();
     if (normalizedHouseId.isEmpty) return;
-    final pushRef =
-        _dbRef.child('houses/$normalizedHouseId/utilities/notes').push();
+    final pushRef = _dbRef
+        .child('houses/$normalizedHouseId/utilities/notes')
+        .push();
     await pushRef.set(note.toMap());
 
     // Record daily quest progress
@@ -29,7 +36,10 @@ class NoteService {
 
   // Thay đổi màu sắc giấy nhớ
   Future<void> changeNoteColor(
-      String houseId, String noteId, String colorHex) async {
+    String houseId,
+    String noteId,
+    String colorHex,
+  ) async {
     final normalizedHouseId = houseId.trim();
     final normalizedNoteId = noteId.trim();
     final normalizedColorHex = colorHex.trim();
@@ -40,19 +50,24 @@ class NoteService {
     }
     await _dbRef
         .child(
-            'houses/$normalizedHouseId/utilities/notes/$normalizedNoteId/color')
+          'houses/$normalizedHouseId/utilities/notes/$normalizedNoteId/color',
+        )
         .set(normalizedColorHex);
   }
 
   // Ghim Note lên bảng
   Future<void> togglePin(
-      String houseId, String noteId, bool currentStatus) async {
+    String houseId,
+    String noteId,
+    bool currentStatus,
+  ) async {
     final normalizedHouseId = houseId.trim();
     final normalizedNoteId = noteId.trim();
     if (normalizedHouseId.isEmpty || normalizedNoteId.isEmpty) return;
     await _dbRef
         .child(
-            'houses/$normalizedHouseId/utilities/notes/$normalizedNoteId/isPinned')
+          'houses/$normalizedHouseId/utilities/notes/$normalizedNoteId/isPinned',
+        )
         .set(!currentStatus);
   }
 
@@ -76,22 +91,22 @@ class NoteService {
         .child('houses/$normalizedHouseId/utilities/notes')
         .onValue
         .map((event) {
-      if (!event.snapshot.exists) return [];
-      final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
-      final List<SharedNote> notes = [];
-      data.forEach((key, value) {
-        if (value is! Map) return;
-        final map = Map<dynamic, dynamic>.from(value);
-        notes.add(SharedNote.fromMap(key, map));
-      });
-      // Sắp xếp: Ghi chú Ghim luôn nằm trên cùng
-      notes.sort((a, b) {
-        if (a.isPinned && !b.isPinned) return -1;
-        if (!a.isPinned && b.isPinned) return 1;
-        return b.updatedAt.compareTo(a.updatedAt);
-      });
-      return notes;
-    });
+          if (!event.snapshot.exists) return [];
+          final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
+          final List<SharedNote> notes = [];
+          data.forEach((key, value) {
+            if (value is! Map) return;
+            final map = Map<dynamic, dynamic>.from(value);
+            notes.add(SharedNote.fromMap(key, map));
+          });
+          // Sắp xếp: Ghi chú Ghim luôn nằm trên cùng
+          notes.sort((a, b) {
+            if (a.isPinned && !b.isPinned) return -1;
+            if (!a.isPinned && b.isPinned) return 1;
+            return b.updatedAt.compareTo(a.updatedAt);
+          });
+          return notes;
+        });
   }
 
   // Stream giới hạn cho Home — chỉ tải 10 note gần nhất thay vì toàn bộ
@@ -102,24 +117,24 @@ class NoteService {
     }
     return _dbRef
         .child('houses/$normalizedHouseId/utilities/notes')
-        .orderByChild('updatedAt')
-        .limitToLast(limit)
+        .orderByChild('ts')
+        .limitToLast(limit.clamp(1, 50))
         .onValue
         .map((event) {
-      if (!event.snapshot.exists) return [];
-      final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
-      final List<SharedNote> notes = [];
-      data.forEach((key, value) {
-        if (value is! Map) return;
-        final map = Map<dynamic, dynamic>.from(value);
-        notes.add(SharedNote.fromMap(key, map));
-      });
-      notes.sort((a, b) {
-        if (a.isPinned && !b.isPinned) return -1;
-        if (!a.isPinned && b.isPinned) return 1;
-        return b.updatedAt.compareTo(a.updatedAt);
-      });
-      return notes;
-    });
+          if (!event.snapshot.exists) return [];
+          final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
+          final List<SharedNote> notes = [];
+          data.forEach((key, value) {
+            if (value is! Map) return;
+            final map = Map<dynamic, dynamic>.from(value);
+            notes.add(SharedNote.fromMap(key, map));
+          });
+          notes.sort((a, b) {
+            if (a.isPinned && !b.isPinned) return -1;
+            if (!a.isPinned && b.isPinned) return 1;
+            return b.updatedAt.compareTo(a.updatedAt);
+          });
+          return notes;
+        });
   }
 }

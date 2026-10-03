@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:flutter/material.dart';
@@ -26,7 +27,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
       await _dbRef.child(id).remove();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SLSnackBar(content: const Text('Đã xoá đóng góp ý kiến.')),
+          SLSnackBar(content: Text(context.tr('ui_admin_feedback_deleted_7297e4'))),
         );
       }
     } catch (e) {
@@ -35,7 +36,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
           SLSnackBar(
             content: Text(
               AppErrorMapper.resolve(e,
-                      fallbackMessage: 'Không thể xoá đóng góp ý kiến.')
+                      fallbackMessage: context.tr('ui_admin_comments_cannot_be_deleted_9c5b51'))
                   .message,
             ),
           ),
@@ -56,7 +57,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
               child: Column(
                 children: [
                   AdminTopBar(
-                    title: 'ĐÓNG GÓP Ý KIẾN',
+                    title: context.tr('ui_admin_feedback_a523dc'),
                     user: widget.user,
                     isRefreshing: _isRefreshing,
                     lastUpdatedAt: _lastUpdatedAt,
@@ -89,7 +90,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                         if (snapshot.hasError) {
                           return Center(
                             child: Text(
-                              'Lỗi nạp dữ liệu: ${snapshot.error}',
+                              L10nScope.of(context).format('ui_admin_error_loading_data_value1_80398c', {'value1': snapshot.error}),
                               style: SLTheme.quicksand(color: Colors.redAccent),
                             ),
                           );
@@ -99,7 +100,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                         if (data == null || data is! Map) {
                           return Center(
                             child: Text(
-                              'Chưa có đóng góp ý kiến nào.',
+                              context.tr('ui_admin_there_are_no_comments_yet_1ecbb4'),
                               style: SLTheme.quicksand(
                                   color: SLColors.textMuted, fontSize: 16),
                             ),
@@ -210,7 +211,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                                           ),
                                           const SizedBox(height: 6),
                                           Text(
-                                            'UID: ${item.uid}',
+                                            L10nScope.of(context).format('ui_admin_uid_value1_b0bd42', {'value1': item.uid}),
                                             style: SLTheme.quicksand(
                                               color: const Color(0xFF475569),
                                               fontSize: 11,
@@ -230,15 +231,15 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                                         showDialog(
                                           context: context,
                                           builder: (ctx) => SLAlertDialog(
-                                            title: Text('Xoá ý kiến?'),
+                                            title: Text(context.tr('ui_admin_delete_comments_95ae88')),
                                             content: Text(
-                                              'Bạn có chắc chắn muốn xoá đóng góp ý kiến này không?',
+                                              context.tr('ui_admin_are_you_sure_you_want_to_delete_a97d4d'),
                                             ),
                                             actions: [
                                               SLDialogAction(
                                                 onPressed: () =>
                                                     Navigator.pop(ctx),
-                                                child: Text('Huỷ'),
+                                                child: Text(context.tr('Huỷ')),
                                               ),
                                               SLDialogAction(
                                                 primary: true,
@@ -248,7 +249,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                                                   Navigator.pop(ctx);
                                                   _deleteFeedback(item.id);
                                                 },
-                                                child: Text('Xoá'),
+                                                child: Text(context.tr('ui_admin_delete_82339c')),
                                               ),
                                             ],
                                           ),

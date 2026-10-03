@@ -161,11 +161,16 @@ class ConnectivityService {
       }
       final future = _runSyncAfterReconnect();
       _syncAfterReconnectFuture = future;
-      unawaited(future.whenComplete(() {
-        if (identical(_syncAfterReconnectFuture, future)) {
-          _syncAfterReconnectFuture = null;
-        }
-      }));
+      unawaited(
+        future.whenComplete(() {
+          if (identical(_syncAfterReconnectFuture, future)) {
+            _syncAfterReconnectFuture = null;
+          }
+        }).catchError((Object error) {
+          debugPrint('[Connectivity] Data sync skipped or failed: $error');
+          _emitStatus();
+        }),
+      );
     });
   }
 

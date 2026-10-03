@@ -125,7 +125,7 @@ class _SingleMatchHeaderCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Hồ sơ: $profileCompletion% • $ageText • $goalText',
+                    L10nScope.of(context).format('ui_single_profile_value1_value2_value3_09e053', {'value1': profileCompletion, 'value2': ageText, 'value3': goalText}),
                     style: SLTheme.quicksand(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -154,7 +154,7 @@ class _SingleMatchHeaderCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'tags',
+                    context.tr('ui_single_interests_9b6ef5'),
                     style: SLTheme.quicksand(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,

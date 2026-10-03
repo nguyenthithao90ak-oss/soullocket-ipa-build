@@ -188,6 +188,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
           await _persistAndSyncWidgetAppearance();
         }
         if (!mounted) return;
+        setState(() => _widgetMediaRevision++);
         _showToast(context.tr('widget_updated_success'), success: true);
       } catch (_) {
         if (!mounted) return;
@@ -218,6 +219,32 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
             child: Column(
               children: [
                 _buildWidgetPreview(),
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    context.tr('widget_utility_examples'),
+                    style: SLTheme.quicksand(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      color: SLColors.textMedium,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  context.tr('widget_utility_examples_hint'),
+                  style: SLTheme.quicksand(
+                    fontSize: 11,
+                    color: SLColors.textMedium,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                WidgetUtilityGallery(
+                  sizeKey: _widgetPreviewSizeKey,
+                  themeKey: _draftWidgetThemeKey ?? 'pink',
+                  animated: _widgetHeartAnimated,
+                ),
                 const SizedBox(height: 14),
                 WidgetStudioSegmentedControl(
                   selectedId: _widgetPreviewSizeKey,
@@ -241,7 +268,11 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  context.tr('widget_preview_resize_hint'),
+                  context.tr(
+                    Theme.of(context).platform == TargetPlatform.iOS
+                        ? 'ios_widget_pin_guide'
+                        : 'widget_preview_resize_hint',
+                  ),
                   textAlign: TextAlign.center,
                   style: SLTheme.quicksand(
                     fontSize: 11,
@@ -252,10 +283,8 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
             ),
           ),
           const SizedBox(height: 16),
-          if (Theme.of(context).platform != TargetPlatform.iOS) ...[
-            _buildWidgetPanelTabBar(),
-            const SizedBox(height: 14),
-          ],
+          _buildWidgetPanelTabBar(),
+          const SizedBox(height: 14),
           if (_widgetPanelTabKey == 'soulevent') ...[
             _buildWidgetSectionCard(
               icon: Icons.info_outline_rounded,
@@ -275,15 +304,38 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 ),
               ),
             ),
-          ] else ...[
-            _buildWidgetSectionCard(
-              icon: Icons.palette_outlined,
-              title: context.tr('theme_widget_bg'),
-              subtitle: null,
-              iconGradient: const [Color(0xFFFF9A9E), Color(0xFFFECF6A)],
-              child: _buildWidgetThemeSwatchGrid(config),
-            ),
           ],
+          const SizedBox(height: 14),
+          _buildWidgetSectionCard(
+            icon: Icons.palette_outlined,
+            title: context.tr('theme_widget_bg'),
+            subtitle: null,
+            iconGradient: const [Color(0xFFFF9A9E), Color(0xFFFECF6A)],
+            child: _buildWidgetThemeSwatchGrid(config),
+          ),
+          const SizedBox(height: 14),
+          _buildWidgetSectionCard(
+            icon: Icons.auto_awesome_rounded,
+            title: context.tr('widget_gentle_motion'),
+            subtitle: null,
+            iconGradient: const [Color(0xFF9A79C6), Color(0xFFC5B0DF)],
+            child: WidgetContentToggle(
+              icon: Icons.auto_awesome_rounded,
+              title: context.tr('widget_gentle_motion'),
+              subtitle: context.tr(
+                Theme.of(context).platform == TargetPlatform.iOS
+                    ? 'widget_ios_motion_hint'
+                    : 'widget_motion_keeps_choice',
+              ),
+              value: _widgetHeartAnimated,
+              accent: const Color(0xFF9A79C6),
+              onChanged: (value) => unawaited(
+                _updateWidgetAppearanceDraft(
+                  () => _widgetHeartAnimated = value,
+                ),
+              ),
+            ),
+          ),
           if (_widgetPanelTabKey != 'soulevent') ...[
             const SizedBox(height: 14),
             _buildWidgetSectionCard(
@@ -313,31 +365,15 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                     ),
                   ),
                   const SizedBox(height: 14),
-                  Text(
-                    context.tr('home_mutritim_6406c9'),
-                    style: SLTheme.quicksand(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF243041),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildThemeDropdownField(
-                    value: _widgetHeartColorKey,
-                    options: config.heartColorOptions,
-                    onChanged: (value) async =>
-                        _handleWidgetHeartColorChanged(value),
-                  ),
-                  const SizedBox(height: 14),
                   const Divider(height: 1, color: Color(0xFFE5ECF4)),
                   const SizedBox(height: 14),
                   if (_widgetPanelTabKey != 'countdown')
-                    _buildWidgetToggleTile(
+                    WidgetContentToggle(
                       icon: Icons.photo_library_outlined,
                       title: context.tr('widget_show_diary_photos'),
-                      subtitle: null,
+                      subtitle: context.tr('widget_diary_content_hint'),
                       value: _showDiaryOnWidget,
-                      accentColor: const Color(0xFF0EA5C6),
+                      accent: const Color(0xFF8A78B4),
                       onChanged: _handleWidgetDiaryVisibilityChanged,
                     ),
                   if (_showDiaryOnWidget &&
@@ -348,33 +384,36 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                       style: SLTheme.quicksand(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 6),
-                    _buildThemeDropdownField(
-                      value: _widgetDiaryLayoutKey,
-                      options: config.diaryLayoutOptions,
-                      onChanged: (key) => _updateWidgetAppearanceDraft(
-                        () => _widgetDiaryLayoutKey = key,
+                    WidgetPhotoLayoutPicker(
+                      selectedKey: _widgetDiaryLayoutKey,
+                      labels: {
+                        for (final item in config.diaryLayoutOptions)
+                          item.$2: item.$1,
+                      },
+                      onChanged: (key) => unawaited(
+                        _updateWidgetAppearanceDraft(
+                          () => _widgetDiaryLayoutKey = key,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    if (Theme.of(context).platform != TargetPlatform.iOS)
-                      Text(
-                        context.tr('widget_photo_frame'),
-                        style: SLTheme.quicksand(fontWeight: FontWeight.w800),
-                      ),
+                    Text(
+                      context.tr('widget_photo_frame'),
+                      style: SLTheme.quicksand(fontWeight: FontWeight.w800),
+                    ),
                     const SizedBox(height: 6),
-                    if (Theme.of(context).platform != TargetPlatform.iOS)
-                      WidgetPhotoFramePicker(
-                        selectedKey: _widgetPhotoFrameKey,
-                        labels: {
-                          for (final key in WidgetAppearance.photoFrameKeys)
-                            key: context.tr('widget_frame_$key'),
-                        },
-                        onChanged: (key) => unawaited(
-                          _updateWidgetAppearanceDraft(
-                            () => _widgetPhotoFrameKey = key,
-                          ),
+                    WidgetPhotoFramePicker(
+                      selectedKey: _widgetPhotoFrameKey,
+                      labels: {
+                        for (final key in WidgetAppearance.photoFrameKeys)
+                          key: context.tr('widget_frame_$key'),
+                      },
+                      onChanged: (key) => unawaited(
+                        _updateWidgetAppearanceDraft(
+                          () => _widgetPhotoFrameKey = key,
                         ),
                       ),
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       context.tr('widget_photo_sync_hint'),
@@ -384,25 +423,11 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 12),
-                  _buildWidgetToggleTile(
-                    icon: Icons.auto_awesome_rounded,
-                    title: context.tr('widget_gentle_motion'),
-                    subtitle: context.tr('widget_motion_keeps_choice'),
-                    value: _widgetHeartAnimated,
-                    accentColor: const Color(0xFF9A79C6),
-                    onChanged: (value) => unawaited(
-                      _updateWidgetAppearanceDraft(
-                        () => _widgetHeartAnimated = value,
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
           ],
-          if (_widgetPanelTabKey != 'soulevent' &&
-              Theme.of(context).platform != TargetPlatform.iOS) ...[
+          if (_widgetPanelTabKey != 'soulevent') ...[
             const SizedBox(height: 14),
             _buildWidgetSectionCard(
               icon: Icons.auto_awesome_rounded,
@@ -456,7 +481,11 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
             title: Theme.of(context).platform == TargetPlatform.iOS
                 ? '${context.tr('settings_widget_label')}:'
                 : context.tr('android_real_widget'),
-            subtitle: context.tr('add_widget_desc'),
+            subtitle: context.tr(
+              Theme.of(context).platform == TargetPlatform.iOS
+                  ? 'ios_widget_pin_guide'
+                  : 'add_widget_desc',
+            ),
             iconGradient: const [Color(0xFF14B8A6), Color(0xFF06B6D4)],
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

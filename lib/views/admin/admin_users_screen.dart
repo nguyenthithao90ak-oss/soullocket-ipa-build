@@ -158,7 +158,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         final file = io.File(path);
         await file.writeAsBytes(bytes);
         await SharePlus.instance.share(
-          ShareParams(files: [XFile(path)], text: 'Export Users'),
+          ShareParams(files: [XFile(path)], text: context.tr('ui_admin_export_users_80d32e')),
         );
       }
     } catch (e) {
@@ -191,21 +191,23 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'ID: ${house['id']}',
+              L10nScope.of(context).format('ui_admin_id_value1_4975f9', {'value1': house['id']}),
               style: const TextStyle(color: Colors.grey),
             ),
             SLSpacing.h16,
             if (actionType == 'ban')
               TextField(
                 controller: reasonCtrl,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: SLColors.ink),
                 decoration: InputDecoration(
                   labelText: context.tr('admin_ldo_bb946f'),
                   labelStyle: const TextStyle(color: Colors.grey),
                   enabledBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey)),
+                    borderSide: BorderSide(color: Colors.grey),
+                  ),
                   focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: SLColors.brandPink)),
+                    borderSide: BorderSide(color: SLColors.brandPink),
+                  ),
                 ),
               ),
           ],
@@ -472,7 +474,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                               color: Colors.red,
                                               borderRadius:
                                                   BorderRadius.circular(4)),
-                                          child: const Text('BANNED',
+                                          child: Text(context.tr('ui_admin_banned_7d6d9b'),
                                               style: TextStyle(
                                                   color: Colors.white,
                                                   fontSize: 10)),
@@ -496,7 +498,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                     ],
                                   ),
                                   subtitle: Text(
-                                    'Role: ${h['role'] ?? 'user'} | ${h['user1_name'] ?? ''} & ${h['user2_name'] ?? ''}',
+                                    L10nScope.of(context).format('ui_admin_role_value1_value2_value3_b6d599', {'value1': h['role'] ?? 'user', 'value2': h['user1_name'] ?? '', 'value3': h['user2_name'] ?? ''}),
                                     style: const TextStyle(color: Colors.grey),
                                   ),
                                   trailing: Row(

@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_date_picker.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
@@ -52,17 +53,9 @@ class _HabitScreenState extends State<HabitScreen> {
   }
 
   Future<void> _selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
+    final TimeOfDay? picked = await showSLTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
-      builder: (context, child) {
-        return Theme(
-          data: ThemeData.light().copyWith(
-            colorScheme: const ColorScheme.light(primary: Color(0xFFD81B60)),
-          ),
-          child: child!,
-        );
-      },
     );
     if (picked != null && picked != _selectedTime) {
       setState(() {

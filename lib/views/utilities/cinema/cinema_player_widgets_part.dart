@@ -483,7 +483,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                             ),
                           ),
                           Text(
-                            '~${preset.estimatedMbPer30Sec.toStringAsFixed(1)}MB/30s • ${preset.fps}fps',
+                            L10nScope.of(context).format('ui_utilities_value1_mb_30s_value2_fps_a3c1ca', {'value1': preset.estimatedMbPer30Sec.toStringAsFixed(1), 'value2': preset.fps}),
                             style: SLTheme.quicksand(
                               fontSize: 9,
                               color: Colors.white.withValues(alpha: 0.48),

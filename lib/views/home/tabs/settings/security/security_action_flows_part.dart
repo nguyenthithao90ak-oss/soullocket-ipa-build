@@ -634,17 +634,11 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
   }
 
   Future<void> _pickRecoveryBirthDate() async {
-    final picked = await showDatePicker(
+    final picked = await showSLDatePicker(
       context: context,
       initialDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(primary: Color(0xFFD81B60)),
-        ),
-        child: child!,
-      ),
     );
     if (picked == null || !mounted) return;
     setState(() {

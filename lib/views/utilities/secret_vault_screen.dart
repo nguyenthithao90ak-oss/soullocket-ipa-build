@@ -727,28 +727,34 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   TextField(
                     controller: captionCtrl,
                     style: const TextStyle(
-                      color: _vaultTextPrimary,
+                      color: SLColors.ink,
                       fontWeight: FontWeight.w600,
                     ),
                     maxLength: 1000,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: _vaultField,
+                      fillColor: SLDialogStyle.field,
                       hintText: context.tr('util_mtkhonhkhc_52663c'),
-                      hintStyle: const TextStyle(color: _vaultTextHint),
+                      hintStyle: const TextStyle(
+                        color: SLDialogStyle.secondary,
+                      ),
                       counterText: '',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: _vaultBorder),
+                        borderSide: const BorderSide(
+                          color: SLDialogStyle.border,
+                        ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: _vaultBorder),
+                        borderSide: const BorderSide(
+                          color: SLDialogStyle.border,
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(
-                          color: _vaultBorderFocus,
+                          color: SLDialogStyle.primary,
                           width: 2,
                         ),
                       ),
@@ -765,9 +771,11 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                           onChanged: (v) {
                             setLocalState(() => dontAskAgain = v ?? false);
                           },
-                          checkColor: _vaultBg,
-                          activeColor: _vaultAccent,
-                          side: const BorderSide(color: _vaultTextSecondary),
+                          checkColor: SLDialogStyle.surface,
+                          activeColor: SLDialogStyle.primary,
+                          side: const BorderSide(
+                            color: SLDialogStyle.secondary,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -1026,36 +1034,42 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     controller: passphraseCtrl,
                     obscureText: obscurePass,
                     style: const TextStyle(
-                      color: _vaultTextPrimary,
+                      color: SLColors.ink,
                       fontWeight: FontWeight.w600,
                     ),
                     maxLength: 32,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: _vaultField,
+                      fillColor: SLDialogStyle.field,
                       hintText: context.tr('util_mtkhutithi_d4f304'),
-                      hintStyle: const TextStyle(color: _vaultTextHint),
+                      hintStyle: const TextStyle(
+                        color: SLDialogStyle.secondary,
+                      ),
                       counterText: '',
                       suffixIcon: IconButton(
                         onPressed: () =>
                             setLocalState(() => obscurePass = !obscurePass),
                         icon: Icon(
                           obscurePass ? Icons.visibility : Icons.visibility_off,
-                          color: _vaultTextSecondary,
+                          color: SLDialogStyle.secondary,
                         ),
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: _vaultBorder),
+                        borderSide: const BorderSide(
+                          color: SLDialogStyle.border,
+                        ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: _vaultBorder),
+                        borderSide: const BorderSide(
+                          color: SLDialogStyle.border,
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(
-                          color: _vaultBorderFocus,
+                          color: SLDialogStyle.primary,
                           width: 2,
                         ),
                       ),
@@ -1067,15 +1081,17 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                       controller: confirmCtrl,
                       obscureText: obscureConfirm,
                       style: const TextStyle(
-                        color: _vaultTextPrimary,
+                        color: SLColors.ink,
                         fontWeight: FontWeight.w600,
                       ),
                       maxLength: 32,
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: _vaultField,
+                        fillColor: SLDialogStyle.field,
                         hintText: context.tr('util_nhplimtkhu_eee7a7'),
-                        hintStyle: const TextStyle(color: _vaultTextHint),
+                        hintStyle: const TextStyle(
+                          color: SLDialogStyle.secondary,
+                        ),
                         counterText: '',
                         suffixIcon: IconButton(
                           onPressed: () => setLocalState(
@@ -1085,21 +1101,25 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                             obscureConfirm
                                 ? Icons.visibility
                                 : Icons.visibility_off,
-                            color: _vaultTextSecondary,
+                            color: SLDialogStyle.secondary,
                           ),
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: _vaultBorder),
+                          borderSide: const BorderSide(
+                            color: SLDialogStyle.border,
+                          ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: _vaultBorder),
+                          borderSide: const BorderSide(
+                            color: SLDialogStyle.border,
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: _vaultBorderFocus,
+                            color: SLDialogStyle.primary,
                             width: 2,
                           ),
                         ),
@@ -1186,15 +1206,15 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             controller: controller,
             textCapitalization: TextCapitalization.characters,
             style: const TextStyle(
-              color: _vaultTextPrimary,
+              color: SLColors.ink,
               fontWeight: FontWeight.w600,
             ),
             maxLength: 30,
             decoration: InputDecoration(
               filled: true,
-              fillColor: _vaultField,
+              fillColor: SLDialogStyle.field,
               hintText: L10nService().translate('vault_code_placeholder'),
-              hintStyle: const TextStyle(color: _vaultTextHint),
+              hintStyle: const TextStyle(color: SLDialogStyle.secondary),
               counterText: '',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -1242,15 +1262,15 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: _vaultField,
+                color: SLDialogStyle.field,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: _vaultBorder),
+                border: Border.all(color: SLDialogStyle.border),
               ),
               child: SelectableText(
                 recoveryCode,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.jetBrainsMono(
-                  color: _vaultAccent,
+                  color: SLDialogStyle.primary,
                   fontWeight: FontWeight.w800,
                   fontSize: 18,
                   letterSpacing: 1.2,
@@ -1368,7 +1388,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                                   label: Text(
                                     m == 0
                                         ? context.tr('home_tcth_3c4371')
-                                        : '$m phút',
+                                        : L10nScope.of(context).format('ui_utilities_value1_minutes_eba409', {'value1': m}),
                                   ),
                                   selected: isSel,
                                   selectedColor: _vaultAccent,
@@ -1587,20 +1607,22 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     controller: oldPassCtrl,
                     obscureText: obscureOld,
                     style: const TextStyle(
-                      color: _vaultTextPrimary,
+                      color: SLColors.ink,
                       fontWeight: FontWeight.w600,
                     ),
                     maxLength: 32,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: _vaultField,
+                      fillColor: SLDialogStyle.field,
                       labelText: context.tr('util_mtkhuc_36b0a2'),
-                      labelStyle: const TextStyle(color: _vaultTextSecondary),
+                      labelStyle: const TextStyle(
+                        color: SLDialogStyle.secondary,
+                      ),
                       counterText: '',
                       suffixIcon: IconButton(
                         icon: Icon(
                           obscureOld ? Icons.visibility : Icons.visibility_off,
-                          color: _vaultTextSecondary,
+                          color: SLDialogStyle.secondary,
                         ),
                         onPressed: () =>
                             setLocalState(() => obscureOld = !obscureOld),
@@ -1615,20 +1637,22 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     controller: newPassCtrl,
                     obscureText: obscureNew,
                     style: const TextStyle(
-                      color: _vaultTextPrimary,
+                      color: SLColors.ink,
                       fontWeight: FontWeight.w600,
                     ),
                     maxLength: 32,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: _vaultField,
+                      fillColor: SLDialogStyle.field,
                       labelText: context.tr('util_mtkhumi_ccef95'),
-                      labelStyle: const TextStyle(color: _vaultTextSecondary),
+                      labelStyle: const TextStyle(
+                        color: SLDialogStyle.secondary,
+                      ),
                       counterText: '',
                       suffixIcon: IconButton(
                         icon: Icon(
                           obscureNew ? Icons.visibility : Icons.visibility_off,
-                          color: _vaultTextSecondary,
+                          color: SLDialogStyle.secondary,
                         ),
                         onPressed: () =>
                             setLocalState(() => obscureNew = !obscureNew),
@@ -1643,15 +1667,17 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     controller: confirmCtrl,
                     obscureText: obscureNew,
                     style: const TextStyle(
-                      color: _vaultTextPrimary,
+                      color: SLColors.ink,
                       fontWeight: FontWeight.w600,
                     ),
                     maxLength: 32,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: _vaultField,
+                      fillColor: SLDialogStyle.field,
                       labelText: context.tr('util_nhplimtkhu_82a9a4'),
-                      labelStyle: const TextStyle(color: _vaultTextSecondary),
+                      labelStyle: const TextStyle(
+                        color: SLDialogStyle.secondary,
+                      ),
                       counterText: '',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -1670,7 +1696,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                         child: Text(
                           context.tr('util_tiqunmtkhu_e343b1'),
                           style: SLTheme.quicksand(
-                            color: _vaultAccent,
+                            color: SLDialogStyle.primary,
                             decoration: TextDecoration.underline,
                           ),
                         ),

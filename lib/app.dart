@@ -13,6 +13,7 @@ import 'package:soullocket_app/views/ui_prefs.dart';
 import 'package:soullocket_app/widgets/sound_effects_scope.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
+import 'package:soullocket_app/widgets/sl_date_picker.dart';
 
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 
@@ -209,6 +210,18 @@ class MyApp extends StatelessWidget {
               space: 1,
             ),
             dialogTheme: SLDialogStyle.theme(
+              SLTheme.textThemeForKey(
+                UiPrefs.notifier.value.fontKey,
+                baseTextTheme,
+              ),
+            ),
+            datePickerTheme: SLPickerStyle.dateTheme(
+              SLTheme.textThemeForKey(
+                UiPrefs.notifier.value.fontKey,
+                baseTextTheme,
+              ),
+            ),
+            timePickerTheme: SLPickerStyle.timeTheme(
               SLTheme.textThemeForKey(
                 UiPrefs.notifier.value.fontKey,
                 baseTextTheme,

@@ -7,6 +7,7 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'widgets/keepsake_design.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
@@ -452,14 +453,14 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     showDialog(
       context: context,
       builder: (ctx) => SLAlertDialog(
-        title: const Text('Xoá mục đã chọn'),
+        title: Text(context.tr('ui_utilities_delete_the_selected_item_e8a2f5')),
         content: Text(
-          'Bạn có chắc chắn muốn xoá ${_selectedIds.length} mục đã chọn? Hành động này không thể hoàn tác.',
+          L10nScope.of(context).format('ui_utilities_delete_value1_selected_items_this_cannot_be_b28e6e', {'value1': _selectedIds.length}),
         ),
         actions: [
           SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Huỷ'),
+            child: Text(context.tr('Huỷ')),
           ),
           SLDialogAction(
             primary: true,
@@ -480,7 +481,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
               setState(() {});
             },
 
-            child: const Text('Xoá'),
+            child: Text(context.tr('ui_utilities_delete_82339c')),
           ),
         ],
       ),
@@ -496,7 +497,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     final months = _availableMonths.toList()..sort((a, b) => b.compareTo(a));
     showModalBottomSheet(
       context: context,
-      backgroundColor: SLColors.bgElevated,
+      backgroundColor: KeepsakeStyle.surface(context),
       showDragHandle: true,
       useSafeArea: true,
       shape: const RoundedRectangleBorder(
@@ -517,7 +518,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
               icon: Icons.all_inclusive_rounded,
               title: context.tr('local_album_all_months'),
               selected: _selectedMonth == null,
-              color: SLColors.primary,
+              color: KeepsakeStyle.accent(context),
               onTap: () {
                 setState(() {
                   _selectedMonth = null;
@@ -535,7 +536,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
                   icon: Icons.calendar_month_rounded,
                   title: DateFormat('MM/yyyy').format(months[i]),
                   selected: _selectedMonth == months[i],
-                  color: SLColors.accentPurpleDark,
+                  color: KeepsakeStyle.accent(context),
                   onTap: () {
                     setState(() {
                       _selectedMonth = months[i];
@@ -555,7 +556,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
   void _showPickOptions() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: SLColors.bgElevated,
+      backgroundColor: KeepsakeStyle.surface(context),
       showDragHandle: true,
       useSafeArea: true,
       shape: const RoundedRectangleBorder(
@@ -576,7 +577,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
               icon: Icons.photo_library_rounded,
               title: context.tr('local_album_source_photos'),
               subtitle: context.tr('local_album_source_photos_desc'),
-              color: SLColors.primary,
+              color: KeepsakeStyle.accent(context),
               onTap: () {
                 Navigator.pop(ctx);
                 _pickImages();
@@ -587,7 +588,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
               icon: Icons.video_library_rounded,
               title: context.tr('local_album_source_videos'),
               subtitle: context.tr('local_album_source_videos_desc'),
-              color: SLColors.accentPurpleDark,
+              color: KeepsakeStyle.accent(context),
               onTap: () {
                 Navigator.pop(ctx);
                 _pickVideos();
@@ -598,7 +599,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
               icon: Icons.folder_rounded,
               title: context.tr('local_album_source_files'),
               subtitle: context.tr('local_album_source_files_desc'),
-              color: SLColors.info,
+              color: KeepsakeStyle.accent(context),
               onTap: () {
                 Navigator.pop(ctx);
                 _pickFromFilePicker();
@@ -619,7 +620,9 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     bool selected = false,
   }) {
     return Material(
-      color: selected ? color.withValues(alpha: 0.10) : SLColors.bgSubtle,
+      color: selected
+          ? color.withValues(alpha: 0.10)
+          : KeepsakeStyle.surface(context),
       borderRadius: SLRadius.lgAll,
       child: InkWell(
         onTap: onTap,
@@ -642,10 +645,23 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: SLTypography.labelLarge),
+                    Text(
+                      title,
+                      style: KeepsakeStyle.text(
+                        context,
+                        weight: FontWeight.w500,
+                      ),
+                    ),
                     if (subtitle != null) ...[
                       SLSpacing.h4,
-                      Text(subtitle, style: SLTypography.bodySmall),
+                      Text(
+                        subtitle,
+                        style: KeepsakeStyle.text(
+                          context,
+                          size: 12,
+                          color: KeepsakeStyle.muted(context),
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -654,7 +670,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
                 selected
                     ? Icons.check_circle_rounded
                     : Icons.chevron_right_rounded,
-                color: selected ? color : SLColors.textTertiary,
+                color: selected ? color : KeepsakeStyle.muted(context),
               ),
             ],
           ),
@@ -692,129 +708,128 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: SLColors.paperCanvas,
-      appBar: AppBar(
-        backgroundColor: SLColors.paper.withValues(alpha: 0.96),
-        surfaceTintColor: Colors.transparent,
+      backgroundColor: KeepsakeStyle.canvas(context),
+      appBar: KeepsakeStyle.appBar(
+        context,
         title: _showSearch
             ? TextField(
                 controller: _searchCtrl,
                 autofocus: true,
-                style: SLTypography.bodyLarge,
+                style: KeepsakeStyle.text(context),
                 decoration: InputDecoration(
                   hintText: context.tr('local_album_search_hint'),
-                  hintStyle: SLTypography.bodyMedium,
+                  hintStyle: KeepsakeStyle.text(
+                    context,
+                    size: 12,
+                    color: KeepsakeStyle.muted(context),
+                  ),
                   filled: false,
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
                 ),
-                onChanged: (v) {
-                  setState(() {
-                    _searchQuery = v;
-                    _applyFilters();
-                  });
-                },
+                onChanged: (v) => setState(() {
+                  _searchQuery = v;
+                  _applyFilters();
+                }),
               )
             : Text(
                 _isSelectionMode
                     ? L10nService().format('local_album_selected_count', {
                         'count': _selectedIds.length,
                       })
-                    : context.tr('util_luunhtbit_6f4b4a'),
-                style: SLTypography.titleMedium,
+                    : context.tr('util_nhknim_6f622f'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
         actions: [
-          if (!_isSelectionMode)
+          if (_isSelectionMode) ...[
+            IconButton(
+              tooltip: context.tr('local_album_cancel_selection'),
+              icon: const Icon(Icons.close_rounded),
+              onPressed: () => setState(() {
+                _isSelectionMode = false;
+                _selectedIds.clear();
+              }),
+            ),
+            if (_selectedIds.isNotEmpty) ...[
+              IconButton(
+                icon: const Icon(Icons.download_outlined),
+                onPressed: _saveSelected,
+                tooltip: context.tr('local_album_save_selected'),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline_rounded),
+                onPressed: _deleteSelected,
+                tooltip: context.tr('local_album_delete_selected'),
+              ),
+            ],
+          ] else ...[
             IconButton(
               icon: Icon(
                 _showSearch ? Icons.close_rounded : Icons.search_rounded,
               ),
-              onPressed: () {
-                setState(() {
-                  _showSearch = !_showSearch;
-                  if (!_showSearch) {
-                    _searchQuery = '';
-                    _searchCtrl.clear();
-                    _applyFilters();
-                  }
-                });
+              onPressed: () => setState(() {
+                _showSearch = !_showSearch;
+                if (!_showSearch) {
+                  _searchQuery = '';
+                  _searchCtrl.clear();
+                  _applyFilters();
+                }
+              }),
+              tooltip: context.tr(
+                _showSearch ? 'local_album_close_search' : 'local_album_search',
+              ),
+            ),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_horiz_rounded),
+              color: KeepsakeStyle.surface(context),
+              surfaceTintColor: Colors.transparent,
+              onSelected: (value) {
+                if (value == 'month') {
+                  _showMonthPicker();
+                }
+                if (value == 'select') {
+                  setState(() => _isSelectionMode = true);
+                }
+                if (value == 'info') {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SLSnackBar(
+                      content: Text(context.tr('local_album_notice')),
+                      duration: const Duration(seconds: 5),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
               },
-              tooltip: _showSearch
-                  ? context.tr('local_album_close_search')
-                  : context.tr('local_album_search'),
-            ),
-          if (!_isSelectionMode && _items.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.calendar_month_rounded),
-              onPressed: _showMonthPicker,
-              tooltip: context.tr('local_album_filter_month'),
-            ),
-          IconButton(
-            icon: const Icon(Icons.info_outline_rounded),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SLSnackBar(
-                  content: Text(context.tr('local_album_notice')),
-                  duration: const Duration(seconds: 5),
-                  behavior: SnackBarBehavior.floating,
+              itemBuilder: (_) => [
+                if (_items.isNotEmpty)
+                  PopupMenuItem(
+                    value: 'month',
+                    child: Text(context.tr('local_album_filter_month')),
+                  ),
+                if (_filteredItems.isNotEmpty)
+                  PopupMenuItem(
+                    value: 'select',
+                    child: Text(context.tr('local_album_select_items')),
+                  ),
+                PopupMenuItem(
+                  value: 'info',
+                  child: Text(context.tr('local_album_storage_info')),
                 ),
-              );
-            },
-            tooltip: context.tr('local_album_storage_info'),
-          ),
-          if (_filteredItems.isNotEmpty)
-            IconButton(
-              icon: Icon(
-                _isSelectionMode ? Icons.close_rounded : Icons.checklist,
-              ),
-              onPressed: () {
-                setState(() {
-                  _isSelectionMode = !_isSelectionMode;
-                  if (!_isSelectionMode) _selectedIds.clear();
-                });
-              },
-              tooltip: _isSelectionMode
-                  ? context.tr('local_album_cancel_selection')
-                  : context.tr('local_album_select_items'),
-            ),
-          if (_isSelectionMode && _selectedIds.isNotEmpty) ...[
-            IconButton(
-              icon: const Icon(
-                Icons.download_rounded,
-                color: Color(0xFF4CAF50),
-              ),
-              onPressed: _saveSelected,
-              tooltip: context.tr('local_album_save_selected'),
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_rounded, color: Colors.red),
-              onPressed: _deleteSelected,
-              tooltip: context.tr('local_album_delete_selected'),
+              ],
             ),
           ],
+          const SizedBox(width: 6),
         ],
       ),
-      body: SLTheme.softCanvasBackdrop(
-        baseColor: SLColors.paperCanvas,
-        accentColor: SLColors.primary,
-        secondaryAccent: SLColors.accentPurple,
-        motif: SLCanvasBackdropMotif.journal,
-        child: _buildAlbumContent(),
-      ),
-      floatingActionButton: _isSelectionMode
+      body: SafeArea(top: false, child: _buildAlbumContent()),
+      bottomNavigationBar: _isSelectionMode
           ? null
-          : FloatingActionButton.extended(
+          : KeepsakeActionBar(
+              label: context.tr('local_album_add_memory'),
+              icon: Icons.add_photo_alternate_outlined,
               onPressed: _showPickOptions,
-              backgroundColor: SLColors.primary,
-              foregroundColor: SLColors.textInverse,
-              icon: const Icon(Icons.add_photo_alternate_rounded),
-              label: Text(
-                context.tr('local_album_add_memory'),
-                style: SLTypography.labelLarge.copyWith(
-                  color: SLColors.textInverse,
-                ),
-              ),
             ),
     );
   }
@@ -830,86 +845,58 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     return _buildGrid();
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: SingleChildScrollView(
-        padding: SLSpacing.all24,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 440),
-          child: SLTheme.softPanel(
-            padding: const EdgeInsets.fromLTRB(28, 30, 28, 28),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 86,
-                  height: 86,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [SLColors.primarySoft, SLColors.tertiarySoft],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: SLRadius.xlAll,
-                    boxShadow: SLShadow.primary,
-                  ),
-                  child: const Icon(
-                    Icons.photo_library_rounded,
-                    size: 42,
-                    color: SLColors.primary,
-                  ),
-                ),
-                SLSpacing.h20,
-                Text(
-                  context.tr('local_album_empty_title'),
-                  textAlign: TextAlign.center,
-                  style: SLTypography.titleLarge,
-                ),
-                SLSpacing.h8,
-                Text(
-                  context.tr('local_album_empty_desc'),
-                  textAlign: TextAlign.center,
-                  style: SLTypography.bodyMedium,
-                ),
-                SLSpacing.h20,
-                _buildPrivacyNote(),
-                SLSpacing.h24,
-                ElevatedButton.icon(
-                  onPressed: _showPickOptions,
-                  icon: const Icon(Icons.add_photo_alternate_rounded),
-                  label: Text(context.tr('local_album_add_photos_videos')),
-                ),
-              ],
-            ),
+  Widget _buildEmptyState() => Center(
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 720),
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+        children: [
+          KeepsakeHeader(
+            title: context.tr('util_nhknim_6f622f'),
+            subtitle: context.tr('local_album_empty_desc'),
+            icon: Icons.photo_library_outlined,
           ),
-        ),
+          KeepsakeEmptyPanel(
+            kind: KeepsakeKind.album,
+            title: context.tr('local_album_empty_title'),
+            subtitle: '',
+          ),
+          KeepsakeStorageNote(text: context.tr('local_album_local_only_short')),
+        ],
       ),
-    );
-  }
+    ),
+  );
 
   Widget _buildNoResultsState() {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: SLSpacing.all24,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.photo_filter_rounded,
               size: 56,
-              color: SLColors.textTertiary,
+              color: KeepsakeStyle.muted(context),
             ),
             SLSpacing.h16,
             Text(
               context.tr('local_album_no_results_title'),
               textAlign: TextAlign.center,
-              style: SLTypography.titleMedium,
+              style: KeepsakeStyle.text(
+                context,
+                size: 19,
+                weight: FontWeight.w600,
+              ),
             ),
             SLSpacing.h8,
             Text(
               context.tr('local_album_no_results_desc'),
               textAlign: TextAlign.center,
-              style: SLTypography.bodyMedium,
+              style: KeepsakeStyle.text(
+                context,
+                color: KeepsakeStyle.muted(context),
+              ),
             ),
             SLSpacing.h20,
             OutlinedButton.icon(
@@ -931,267 +918,186 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     );
   }
 
-  Widget _buildPrivacyNote() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: SLColors.infoLight,
-        borderRadius: SLRadius.lgAll,
-        border: Border.all(color: SLColors.info.withValues(alpha: 0.18)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(
-            Icons.phone_android_rounded,
-            color: SLColors.info,
-            size: 20,
-          ),
-          SLSpacing.w10,
-          Expanded(
-            child: Text(
-              context.tr('local_album_local_only_short'),
-              style: SLTypography.bodySmall.copyWith(
-                color: SLColors.textPrimary,
-              ),
-            ),
-          ),
-        ],
+  Widget _buildGrid() {
+    final groups = _groupedByDate;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 960),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 720
+                ? 4
+                : constraints.maxWidth >= 520
+                ? 3
+                : 2;
+            return CustomScrollView(
+              physics: SLResponsive.scrollPhysicsForPlatform(),
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  sliver: SliverToBoxAdapter(
+                    child: KeepsakeHeader(
+                      title: context.tr('util_nhknim_6f622f'),
+                      subtitle: context.tr('local_album_empty_desc'),
+                      icon: Icons.photo_library_outlined,
+                      summary: _gridLabel,
+                    ),
+                  ),
+                ),
+                if (_selectedMonth != null)
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                    sliver: SliverToBoxAdapter(
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: InputChip(
+                          backgroundColor: KeepsakeStyle.surface(context),
+                          side: BorderSide(color: KeepsakeStyle.line(context)),
+                          label: Text(
+                            DateFormat('MM/yyyy').format(_selectedMonth!),
+                            style: KeepsakeStyle.text(context, size: 12),
+                          ),
+                          onDeleted: () => setState(() {
+                            _selectedMonth = null;
+                            _applyFilters();
+                          }),
+                          deleteIcon: const Icon(Icons.close_rounded, size: 16),
+                        ),
+                      ),
+                    ),
+                  ),
+                for (final group in groups) ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 14),
+                      child: Row(
+                        children: [
+                          Text(
+                            group['date'] as String,
+                            style: KeepsakeStyle.text(
+                              context,
+                              size: 12,
+                              weight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Divider(
+                              color: KeepsakeStyle.line(context),
+                              height: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Builder(
+                    builder: (context) {
+                      final items = group['items'] as List<LocalAlbumItem>;
+                      if (items.length == 1) {
+                        return SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                            child: Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 320,
+                                ),
+                                child: AspectRatio(
+                                  aspectRatio: 1,
+                                  child: _buildMediaTile(items.first),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                      return SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                        sliver: SliverGrid(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: columns,
+                                mainAxisSpacing: 12,
+                                crossAxisSpacing: 12,
+                              ),
+                          delegate: SliverChildBuilderDelegate(
+                            (context, i) => _buildMediaTile(items[i]),
+                            childCount: items.length,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  sliver: SliverToBoxAdapter(
+                    child: KeepsakeStorageNote(
+                      text: context.tr('local_album_local_only_short'),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildGrid() {
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final crossAxisCount = screenWidth >= 1000
-        ? 6
-        : screenWidth >= 720
-        ? 5
-        : screenWidth >= 520
-        ? 4
-        : 3;
-
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 960),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: SLColors.paper.withValues(alpha: 0.94),
-                borderRadius: SLRadius.lgAll,
-                border: Border.all(color: SLColors.border),
-                boxShadow: SLShadow.subtle,
+  Widget _buildMediaTile(LocalAlbumItem item) {
+    final selected = _selectedIds.contains(item.id);
+    final video = item.type == 'video';
+    return KeepsakeMediaTile(
+      label: item.name,
+      selecting: _isSelectionMode,
+      selected: selected,
+      badge: video ? context.tr('local_album_video_badge') : null,
+      onTap: () {
+        if (_isSelectionMode) {
+          setState(() {
+            if (selected) {
+              _selectedIds.remove(item.id);
+            } else {
+              _selectedIds.add(item.id);
+            }
+          });
+        } else {
+          _viewItem(item);
+        }
+      },
+      onLongPress: _isSelectionMode
+          ? null
+          : () => setState(() {
+              _isSelectionMode = true;
+              _selectedIds.add(item.id);
+            }),
+      child: video
+          ? const ColoredBox(
+              color: KeepsakeStyle.charcoal,
+              child: Center(
+                child: Icon(
+                  Icons.play_circle_outline_rounded,
+                  color: Colors.white70,
+                  size: 40,
+                ),
               ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.collections_bookmark_rounded,
-                    color: SLColors.primary,
-                    size: 20,
-                  ),
-                  SLSpacing.w10,
-                  Expanded(
-                    child: Text(
-                      _gridLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTypography.labelMedium,
-                    ),
-                  ),
-                  if (_selectedMonth != null)
-                    InputChip(
-                      label: Text(
-                        DateFormat('MM/yyyy').format(_selectedMonth!),
-                      ),
-                      onDeleted: () {
-                        setState(() {
-                          _selectedMonth = null;
-                          _applyFilters();
-                        });
-                      },
-                      deleteIcon: const Icon(Icons.close_rounded, size: 16),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                ],
+            )
+          : Image.file(
+              File(_filePath(item)),
+              fit: BoxFit.cover,
+              filterQuality: FilterQuality.low,
+              cacheWidth: 720,
+              errorBuilder: (_, _, _) => ColoredBox(
+                color: KeepsakeStyle.accentSurface(context),
+                child: Icon(
+                  Icons.broken_image_outlined,
+                  color: KeepsakeStyle.muted(context),
+                ),
               ),
             ),
-          ),
-        ),
-        Expanded(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 960),
-              child: CustomScrollView(
-                physics: SLResponsive.scrollPhysicsForPlatform(),
-                slivers: [
-                  for (
-                    int index = 0;
-                    index < _groupedByDate.length;
-                    index++
-                  ) ...[
-                    Builder(
-                      builder: (context) {
-                        final group = _groupedByDate[index];
-                        final dateStr = group['date'] as String;
-                        return SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 18, 16, 9),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.favorite_border_rounded,
-                                  size: 17,
-                                  color: SLColors.primary,
-                                ),
-                                SLSpacing.w8,
-                                Text(dateStr, style: SLTypography.labelLarge),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    Builder(
-                      builder: (context) {
-                        final group = _groupedByDate[index];
-                        final items = group['items'] as List<LocalAlbumItem>;
-                        return SliverPadding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          sliver: SliverGrid(
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: crossAxisCount,
-                                  mainAxisSpacing: 8,
-                                  crossAxisSpacing: 8,
-                                ),
-                            delegate: SliverChildBuilderDelegate((context, i) {
-                              final item = items[i];
-                              final selected = _selectedIds.contains(item.id);
-                              return Semantics(
-                                button: true,
-                                selected: selected,
-                                label: item.name,
-                                child: Material(
-                                  color: SLColors.bgMuted,
-                                  borderRadius: SLRadius.mdAll,
-                                  clipBehavior: Clip.antiAlias,
-                                  child: InkWell(
-                                    onTap: () {
-                                      if (_isSelectionMode) {
-                                        setState(() {
-                                          if (selected) {
-                                            _selectedIds.remove(item.id);
-                                          } else {
-                                            _selectedIds.add(item.id);
-                                          }
-                                        });
-                                      } else {
-                                        _viewItem(item);
-                                      }
-                                    },
-                                    onLongPress: _isSelectionMode
-                                        ? null
-                                        : () {
-                                            setState(() {
-                                              _isSelectionMode = true;
-                                              _selectedIds.add(item.id);
-                                            });
-                                          },
-                                    child: Stack(
-                                      fit: StackFit.expand,
-                                      children: [
-                                        if (item.type == 'video')
-                                          Container(
-                                            color: SLColors.darkBgMain,
-                                            child: const Center(
-                                              child: Icon(
-                                                Icons.play_circle_fill_rounded,
-                                                color: Colors.white70,
-                                                size: 40,
-                                              ),
-                                            ),
-                                          )
-                                        else
-                                          Image.file(
-                                            File(_filePath(item)),
-                                            fit: BoxFit.cover,
-                                            filterQuality: FilterQuality.low,
-                                            errorBuilder: (_, _, _) =>
-                                                const ColoredBox(
-                                                  color: SLColors.bgMuted,
-                                                  child: Icon(
-                                                    Icons.broken_image_rounded,
-                                                    color:
-                                                        SLColors.textTertiary,
-                                                  ),
-                                                ),
-                                          ),
-                                        if (_isSelectionMode)
-                                          Container(
-                                            color: selected
-                                                ? Colors.black.withValues(
-                                                    alpha: 0.3,
-                                                  )
-                                                : Colors.transparent,
-                                            child: Center(
-                                              child: Icon(
-                                                selected
-                                                    ? Icons.check_circle_rounded
-                                                    : Icons.circle_outlined,
-                                                color: selected
-                                                    ? Colors.white
-                                                    : Colors.white54,
-                                                size: 28,
-                                              ),
-                                            ),
-                                          ),
-                                        if (item.type == 'video' &&
-                                            !_isSelectionMode)
-                                          Positioned(
-                                            top: 2,
-                                            left: 2,
-                                            child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 6,
-                                                    vertical: 3,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color: SLColors.danger,
-                                                borderRadius: SLRadius.smAll,
-                                              ),
-                                              child: Text(
-                                                context.tr(
-                                                  'local_album_video_badge',
-                                                ),
-                                                style: SLTypography.labelSmall
-                                                    .copyWith(
-                                                      color: Colors.white,
-                                                      fontSize: 9,
-                                                    ),
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }, childCount: items.length),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -1312,14 +1218,14 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
     showDialog(
       context: context,
       builder: (ctx) => SLAlertDialog(
-        title: const Text('Xoá mục này'),
-        content: const Text(
-          'Bạn có chắc chắn muốn xoá mục này? Hành động này không thể hoàn tác.',
+        title: Text(context.tr('ui_utilities_delete_this_entry_ecee81')),
+        content: Text(
+          context.tr('ui_utilities_are_you_sure_you_want_to_delete_792297'),
         ),
         actions: [
           SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Huỷ'),
+            child: Text(context.tr('Huỷ')),
           ),
           SLDialogAction(
             primary: true,
@@ -1342,7 +1248,7 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
               });
             },
 
-            child: const Text('Xoá'),
+            child: Text(context.tr('ui_utilities_delete_82339c')),
           ),
         ],
       ),
@@ -1357,8 +1263,8 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: const Text('Không tìm thấy file để chia sẻ'),
-            duration: Duration(seconds: 2),
+            content: Text(context.tr('ui_utilities_no_files_found_to_share_5f33b7')),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -1370,7 +1276,7 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: Text('Lỗi chia sẻ: $e'),
+            content: Text(L10nScope.of(context).format('ui_utilities_sharing_error_value1_41b4d8', {'value1': e})),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -1384,8 +1290,8 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: const Text('Chỉ hỗ trợ lưu ảnh'),
-            duration: Duration(seconds: 2),
+            content: Text(context.tr('ui_utilities_only_supports_saving_images_033833')),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -1397,7 +1303,7 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SLSnackBar(content: const Text('File không tồn tại')));
+          ).showSnackBar(SLSnackBar(content: Text(context.tr('ui_utilities_file_does_not_exist_e5652f'))));
         }
         return;
       }
@@ -1407,8 +1313,8 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: const Text('Đã lưu ảnh vào thiết bị'),
-            duration: Duration(seconds: 2),
+            content: Text(context.tr('ui_utilities_photo_saved_to_device_196639')),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -1416,7 +1322,7 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: Text('Lỗi lưu ảnh: $e'),
+            content: Text(L10nScope.of(context).format('ui_utilities_image_saving_error_value1_5a8b3a', {'value1': e})),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -1471,9 +1377,9 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
                       child: Image.file(
                         File(_filePath(index)),
                         fit: BoxFit.contain,
-                        errorBuilder: (_, _, _) => const Center(
+                        errorBuilder: (_, _, _) => Center(
                           child: Text(
-                            'Không thể hiển thị ảnh',
+                            context.tr('ui_utilities_the_image_cannot_be_displayed_c6f58b'),
                             style: TextStyle(color: Colors.white),
                           ),
                         ),
@@ -1502,7 +1408,7 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
       );
     }
     if (_videoController == null || !_videoController!.value.isInitialized) {
-      return const Padding(
+      return Padding(
         padding: EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1510,7 +1416,7 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
             Icon(Icons.video_file_rounded, color: Colors.white70, size: 80),
             SizedBox(height: 16),
             Text(
-              'Không thể phát video',
+              context.tr('ui_utilities_cannot_play_video_e932b6'),
               style: TextStyle(color: Colors.white54, fontSize: 14),
             ),
           ],

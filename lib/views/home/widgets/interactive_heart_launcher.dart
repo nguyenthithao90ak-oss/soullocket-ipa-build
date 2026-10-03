@@ -1,4 +1,5 @@
-﻿import 'dart:async';
+﻿import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -177,7 +178,7 @@ class _InteractiveHeartLauncherState extends State<InteractiveHeartLauncher>
                     const Text('💖', style: TextStyle(fontSize: 16)),
                     const SizedBox(width: 6),
                     Text(
-                      'Gõ tim nhớ bạn',
+                      context.tr('ui_home_send_your_partner_a_heart_6b4241'),
                       style: SLTheme.quicksand(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w800,

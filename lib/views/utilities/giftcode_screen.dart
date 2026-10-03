@@ -28,9 +28,12 @@ class GiftcodeScreen extends StatefulWidget {
 class _GiftcodeScreenState extends State<GiftcodeScreen> {
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
-      tooltip: 'Hướng dẫn',
-      icon:
-          const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
+      tooltip: context.tr('auth_guide_short'),
+      icon: const Icon(
+        Icons.info_outline_rounded,
+        color: SLColors.ink,
+        size: 22,
+      ),
       onPressed: () => _showInfoDialog(context),
     );
   }
@@ -39,16 +42,16 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
     showDialog<void>(
       context: context,
       builder: (context) => SLAlertDialog(
-        title: Text('Nhập mã Quà tặng'),
+        title: Text(context.tr('util_nhpmqutng_72acdf')),
         content: Text(
-          'Nhập mã Giftcode để nhận được những phần quà đặc biệt từ các sự kiện của SoulLocket.',
+          context.tr('ui_utilities_enter_giftcode_to_receive_special_gifts_from_1d9d8e'),
         ),
         actions: [
           SLDialogAction(
             primary: true,
 
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu'),
+            child: Text(context.tr('Đã hiểu')),
           ),
         ],
       ),
@@ -98,7 +101,7 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: const Text('Có lỗi xảy ra, vui lòng thử lại.'),
+            content: Text(context.tr('ui_utilities_an_error_occurred_please_try_again_80f9db')),
             backgroundColor: Colors.red,
           ),
         );
@@ -120,36 +123,17 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
+      appBar: SLTheme.pageAppBar(
         title: Text(
           context.tr('util_mqutng_d30beb'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w800,
             fontSize: 18,
             letterSpacing: 1.1,
-            color: Colors.white,
+            color: SLColors.ink,
           ),
         ),
-        centerTitle: true,
         actions: [_buildInfoIcon(context)],
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        flexibleSpace: ClipRect(
-          child: FastBackdropFilter(
-            filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.2),
-            ),
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new,
-            color: Colors.white,
-            size: 20,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -165,9 +149,7 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
               padding: const EdgeInsets.all(30),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildGlassCard(),
-                ],
+                children: [_buildGlassCard()],
               ),
             ),
           ),
@@ -237,9 +219,7 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
                   obscureText: false,
                   textCapitalization: TextCapitalization.characters,
                   inputFormatters: [
-                    FilteringTextInputFormatter.allow(
-                      RegExp(r'[A-Za-z0-9_-]'),
-                    ),
+                    FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9_-]')),
                     LengthLimitingTextInputFormatter(32),
                   ],
                   textAlign: TextAlign.center,
@@ -268,9 +248,7 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: SLRadius.lgAll,
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
                     elevation: 0,
                   ),
                   onPressed: _isLoading ? null : _redeemCode,

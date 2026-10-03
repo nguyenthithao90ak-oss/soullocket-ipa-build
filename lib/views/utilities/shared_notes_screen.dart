@@ -195,8 +195,8 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     if (_cachedNotes.length >= 50) {
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
-          content: const Text(
-            'Danh sách ghi chú đã đạt giới hạn (tối đa 50 ghi chú). Vui lòng xoá bớt trước khi thêm mới.',
+          content: Text(
+            context.tr('ui_utilities_the_notes_list_has_reached_its_limit_b2e2f7'),
           ),
           backgroundColor: SLColors.danger,
         ),
@@ -235,12 +235,12 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     showDialog(
       context: context,
       builder: (ctx) => SLAlertDialog(
-        title: const Text('Xoá ghi chú'),
-        content: const Text('Bạn có chắc chắn muốn xoá ghi chú này?'),
+        title: Text(context.tr('ui_utilities_delete_note_c9f2d9')),
+        content: Text(context.tr('ui_utilities_are_you_sure_you_want_to_delete_0de2e3')),
         actions: [
           SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Huỷ'),
+            child: Text(context.tr('Huỷ')),
           ),
           SLDialogAction(
             primary: true,
@@ -251,7 +251,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
               _doDeleteNote(key);
             },
 
-            child: const Text('Xoá'),
+            child: Text(context.tr('ui_utilities_delete_82339c')),
           ),
         ],
       ),
@@ -302,7 +302,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
         elevation: 4,
         icon: const Icon(Icons.edit, color: Colors.white, size: 20),
         label: Text(
-          'Viết trang mới',
+          context.tr('ui_utilities_write_a_new_page_c42e0b'),
           style: SLTheme.quicksand(
             color: Colors.white,
             fontWeight: FontWeight.w800,
@@ -396,7 +396,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                 Row(
                   children: [
                     Text(
-                      'Hp Bênh Nhau',
+                      context.tr('shared_notes_title'),
                       style: SLTheme.quicksand(
                         fontWeight: FontWeight.w900,
                         fontSize: 17,
@@ -413,7 +413,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Những điều nhỏ bé, nhưng đầy yêu thương',
+                  context.tr('shared_notes_subtitle'),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w700,
                     fontSize: 11,
@@ -421,7 +421,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                   ),
                 ),
                 Text(
-                  '6 TỪ • ${DateFormat('dd/MM/yyyy').format(DateTime.now())}',
+                  context.tr('shared_notes_date').replaceFirst('{date}', DateFormat('dd/MM/yyyy').format(DateTime.now())),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w900,
                     fontSize: 10,
@@ -802,8 +802,8 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
         if (visibleItems.isEmpty && index == 1) {
           return SLTheme.emptyStatePanel(
             icon: Icons.filter_alt_off_rounded,
-            title: 'Chưa có ghi chú phù hợp',
-            subtitle: 'Đổi bộ lọc để xem các ghi chú khác.',
+            title: context.tr('ui_utilities_there_are_no_suitable_notes_d9f91b'),
+            subtitle: context.tr('ui_utilities_change_filters_to_see_more_notes_dfc1a2'),
             accentColor: const Color(0xFFF59EBA),
           );
         }
@@ -847,7 +847,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
           ),
           const SizedBox(width: 12),
           Text(
-            'Những ghi chú đã lưu',
+            context.tr('ui_utilities_saved_notes_20453e'),
             style: SLTheme.quicksand(
               fontWeight: FontWeight.w900,
               fontSize: 16,
@@ -894,7 +894,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Prompt gợi nhớ ✨',
+                  context.tr('shared_notes_prompt_title'),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w900,
                     fontSize: 15,
@@ -903,7 +903,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Hãy thêm một chi tiết nhỏ để ghi nhớ lâu hơn.',
+                  context.tr('util_hythmmtchi_6eddec'),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w700,
                     fontSize: 12,
@@ -975,7 +975,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        title.isNotEmpty ? title : 'Ghi chú',
+                        title.isNotEmpty ? title : context.tr('core_note'),
                         style: SLTheme.quicksand(
                           fontSize: 15,
                           fontWeight: FontWeight.w900,
@@ -1026,7 +1026,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${item['time']}  •  $wordCount từ',
+                      L10nScope.of(context).format('ui_utilities_value1_value2_words_2a022b', {'value1': item['time'], 'value2': wordCount}),
                       style: SLTheme.quicksand(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,

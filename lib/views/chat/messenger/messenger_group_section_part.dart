@@ -56,7 +56,7 @@ extension _MessengerGroupSectionPart on _MessengerScreenState {
                       const SizedBox(height: 4),
                       Text(
                         repairMojibakeText(
-                          '${group.memberHouseIds.length} thành viên',
+                          L10nScope.of(context).format('ui_chat_value1_th_nh_vi_n_611868', {'value1': group.memberHouseIds.length}),
                         ),
                         style: SLTheme.quicksand(
                           fontWeight: FontWeight.w800,

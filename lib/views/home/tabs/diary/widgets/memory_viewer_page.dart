@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import '../../../../../utils/services/private_media_url_service.dart';
@@ -370,8 +371,8 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
               size: 48,
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Không thể phát video',
+            Text(
+              context.tr('ui_home_cannot_play_video_e932b6'),
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
@@ -387,7 +388,7 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
                 _initVideo();
               },
               icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: const Text('Thử lại'),
+              label: Text(context.tr('Thử lại')),
             ),
           ],
         ),
@@ -415,8 +416,8 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
                   size: 48,
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Không thể phát video',
+                Text(
+                  context.tr('ui_home_cannot_play_video_e932b6'),
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -432,7 +433,7 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
                     _initVideo();
                   },
                   icon: const Icon(Icons.refresh_rounded, size: 18),
-                  label: const Text('Thử lại'),
+                  label: Text(context.tr('Thử lại')),
                 ),
               ],
             ),

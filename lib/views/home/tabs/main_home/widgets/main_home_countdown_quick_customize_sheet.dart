@@ -702,7 +702,7 @@ class _CountdownQuickCustomizeSheetContentState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Ảnh nền trang chủ',
+                        context.tr('ui_home_home_page_background_image_03ab7c'),
                         style: SLTheme.quicksand(
                           fontSize: 14.8,
                           fontWeight: FontWeight.w900,
@@ -711,7 +711,7 @@ class _CountdownQuickCustomizeSheetContentState
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Tải lên hoặc xóa ảnh nền trang chủ.',
+                        context.tr('ui_home_upload_or_remove_the_homepage_background_image_7e3019'),
                         style: SLTheme.quicksand(
                           fontSize: 12.1,
                           fontWeight: FontWeight.w700,
@@ -741,8 +741,8 @@ class _CountdownQuickCustomizeSheetContentState
                   Expanded(
                     child: Text(
                       _bgUploadProgress != null
-                          ? 'Đang tải lên: ${(_bgUploadProgress! * 100).toInt()}%'
-                          : 'Đang chuẩn bị tải lên...',
+                          ? L10nScope.of(context).format('ui_home_uploading_value1_b346dd', {'value1': (_bgUploadProgress! * 100).toInt()})
+                          : context.tr('ui_home_preparing_to_upload_97d135'),
                       style: SLTheme.quicksand(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -801,7 +801,7 @@ class _CountdownQuickCustomizeSheetContentState
                         color: Color(0xFFD81B60),
                       ),
                       label: Text(
-                        hasBg ? 'Thay đổi ảnh' : 'Tải ảnh lên',
+                        hasBg ? context.tr('diary_custom_sticker_replace') : context.tr('ui_home_upload_a_photo_3cd9bb'),
                         style: SLTheme.quicksand(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
@@ -827,13 +827,13 @@ class _CountdownQuickCustomizeSheetContentState
                           showDialog(
                             context: context,
                             builder: (ctx) => SLAlertDialog(
-                              title: Text('Xóa ảnh nền?'),
+                              title: Text(context.tr('home_xanhnn_abd8b5')),
                               content: Text(
-                                'Bạn có chắc chắn muốn xóa ảnh nền trang chủ không?',
+                                context.tr('ui_home_are_you_sure_you_want_to_remove_f452e2'),
                               ),
                               actions: [
                                 SLDialogAction(
-                                  child: Text('Hủy'),
+                                  child: Text(context.tr('core_cancel')),
                                   onPressed: () => Navigator.pop(ctx),
                                 ),
                                 SLDialogAction(
@@ -1078,7 +1078,7 @@ class _CountdownQuickCustomizeSheetContentState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Hiển thị icon trang trí',
+                    context.tr('ui_home_display_decorative_icons_1b78b6'),
                     style: SLTheme.quicksand(
                       fontSize: 14.8,
                       fontWeight: FontWeight.w900,
@@ -1087,7 +1087,7 @@ class _CountdownQuickCustomizeSheetContentState
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Bật/tắt các biểu tượng trang trí trên khung.',
+                    context.tr('ui_home_turn_on_off_decorative_icons_on_the_67ad77'),
                     style: SLTheme.quicksand(
                       fontSize: 12.1,
                       fontWeight: FontWeight.w700,
@@ -1180,7 +1180,7 @@ class _CountdownQuickCustomizeSheetContentState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Ảnh nền trang chủ',
+                      context.tr('ui_home_home_page_background_image_03ab7c'),
                       style: SLTheme.quicksand(
                         fontSize: 14.8,
                         fontWeight: FontWeight.w900,
@@ -1189,7 +1189,7 @@ class _CountdownQuickCustomizeSheetContentState
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Tải lên hoặc xóa ảnh nền trang chủ.',
+                      context.tr('ui_home_upload_or_remove_the_homepage_background_image_7e3019'),
                       style: SLTheme.quicksand(
                         fontSize: 12.1,
                         fontWeight: FontWeight.w700,
@@ -1219,8 +1219,8 @@ class _CountdownQuickCustomizeSheetContentState
                 Expanded(
                   child: Text(
                     _bgUploadProgress != null
-                        ? 'Đang tải lên: ${(_bgUploadProgress! * 100).toInt()}%'
-                        : 'Đang chuẩn bị tải lên...',
+                        ? L10nScope.of(context).format('ui_home_uploading_value1_b346dd', {'value1': (_bgUploadProgress! * 100).toInt()})
+                        : context.tr('ui_home_preparing_to_upload_97d135'),
                     style: SLTheme.quicksand(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -1279,7 +1279,7 @@ class _CountdownQuickCustomizeSheetContentState
                       color: Color(0xFFD81B60),
                     ),
                     label: Text(
-                      hasBg ? 'Thay đổi ảnh' : 'Tải ảnh lên',
+                      hasBg ? context.tr('diary_custom_sticker_replace') : context.tr('ui_home_upload_a_photo_3cd9bb'),
                       style: SLTheme.quicksand(
                         fontSize: 13,
                         fontWeight: FontWeight.w800,
@@ -1305,13 +1305,13 @@ class _CountdownQuickCustomizeSheetContentState
                         showDialog(
                           context: context,
                           builder: (ctx) => SLAlertDialog(
-                            title: Text('Xóa ảnh nền?'),
+                            title: Text(context.tr('home_xanhnn_abd8b5')),
                             content: Text(
-                              'Bạn có chắc chắn muốn xóa ảnh nền trang chủ không?',
+                              context.tr('ui_home_are_you_sure_you_want_to_remove_f452e2'),
                             ),
                             actions: [
                               SLDialogAction(
-                                child: Text('Hủy'),
+                                child: Text(context.tr('core_cancel')),
                                 onPressed: () => Navigator.pop(ctx),
                               ),
                               SLDialogAction(
@@ -1395,7 +1395,7 @@ class _CountdownQuickCustomizeSheetContentState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Bố cục trang chủ',
+                      context.tr('ui_home_home_page_layout_677257'),
                       style: SLTheme.quicksand(
                         fontSize: 14.8,
                         fontWeight: FontWeight.w900,
@@ -1404,7 +1404,7 @@ class _CountdownQuickCustomizeSheetContentState
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Chọn giao diện hiển thị cho Màn hình chính.',
+                      context.tr('ui_home_choose_a_display_view_for_the_home_e4ea0c'),
                       style: SLTheme.quicksand(
                         fontSize: 12.1,
                         fontWeight: FontWeight.w700,
@@ -1596,7 +1596,7 @@ class _CountdownQuickCustomizeSheetContentState
                 const SizedBox(height: 12),
                 buildSizeSection(
                   title: context.tr('home_kthuocvongdem'),
-                  description: 'Kéo để điều chỉnh độ lớn của vòng đếm ngày.',
+                  description: context.tr('ui_home_drag_to_adjust_the_size_of_the_8cbd98'),
                   icon: Icons.photo_size_select_large_rounded,
                   currentValue: uiState.countdownSizePx,
                   tempValue: _tempCountdownSize,
@@ -1660,7 +1660,7 @@ class _CountdownQuickCustomizeSheetContentState
                     buildCollapsedSection(
                       title: L10nService().translate('home_kieukhungavatar'),
                       description:
-                          'Đổi kiểu viền avatar hiển thị trên trang chủ.',
+                          context.tr('ui_home_change_the_avatar_border_style_displayed_on_9f0976'),
                       icon: Icons.account_circle_rounded,
                       options: [
                         for (final key in KeepsakePalette.newStyleKeys)
@@ -1741,7 +1741,7 @@ class _CountdownQuickCustomizeSheetContentState
                     buildCollapsedSection(
                       title: L10nService().translate('home_chatluongdohoa'),
                       description:
-                          'Tùy chỉnh chất lượng đồ họa và hiệu ứng hiển thị.',
+                          context.tr('ui_home_customize_graphic_quality_and_display_effects_3251e4'),
                       icon: Icons.high_quality_rounded,
                       options: [
                         _CountdownQuickOption(
@@ -1787,17 +1787,17 @@ class _CountdownQuickCustomizeSheetContentState
                     // --- Ngôn ngữ ---
                     buildCollapsedSection(
                       title: L10nService().translate('home_ngonngu'),
-                      description: 'Đổi ngôn ngữ hiển thị của ứng dụng.',
+                      description: context.tr('ui_home_change_the_application_s_display_language_68599c'),
                       icon: Icons.language_rounded,
                       options: [
-                        const _CountdownQuickOption(
-                          label: 'Tiếng Việt',
+                        _CountdownQuickOption(
+                          label: context.tr('lang_vi'),
                           value: 'vi',
                           icon: Icons.flag_rounded,
                           accent: Color(0xFFD81B60),
                         ),
-                        const _CountdownQuickOption(
-                          label: 'English',
+                        _CountdownQuickOption(
+                          label: context.tr('lang_en'),
                           value: 'en',
                           icon: Icons.flag_rounded,
                           accent: Color(0xFF2563EB),
@@ -1832,20 +1832,20 @@ class _CountdownQuickCustomizeSheetContentState
                           icon: Icons.flag_rounded,
                           accent: Color(0xFF059669),
                         ),
-                        const _CountdownQuickOption(
-                          label: 'Bahasa Indonesia',
+                        _CountdownQuickOption(
+                          label: context.tr('language_id'),
                           value: 'id',
                           icon: Icons.flag_rounded,
                           accent: Color(0xFFD97706),
                         ),
-                        const _CountdownQuickOption(
-                          label: 'Español',
+                        _CountdownQuickOption(
+                          label: context.tr('language_es'),
                           value: 'es',
                           icon: Icons.flag_rounded,
                           accent: Color(0xFFB91C1C),
                         ),
-                        const _CountdownQuickOption(
-                          label: 'Français',
+                        _CountdownQuickOption(
+                          label: context.tr('language_fr'),
                           value: 'fr',
                           icon: Icons.flag_rounded,
                           accent: Color(0xFF1D4ED8),

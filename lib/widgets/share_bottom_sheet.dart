@@ -490,7 +490,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Chia sẻ kỷ niệm',
+                        context.tr('ui_common_share_memories_6d3374'),
                         style: SLTheme.quicksand(
                           fontSize: SLResponsive.sp(18, screenWidth),
                           fontWeight: FontWeight.w900,
@@ -820,7 +820,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                           ),
                                         ),
                                         Text(
-                                          'Quản lý',
+                                          context.tr('comm_qunl_ca8eb6'),
                                           style: SLTheme.quicksand(
                                             fontSize: SLResponsive.sp(
                                               compact ? 11 : 11.5,
@@ -1079,7 +1079,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Nội dung bạn đang chia sẻ',
+                      context.tr('ui_common_the_content_you_are_sharing_a1e6ee'),
                       style: SLTheme.quicksand(
                         fontSize: SLResponsive.sp(
                           compact ? 12.8 : 13.4,
@@ -1120,7 +1120,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                     cursor: SystemMouseCursors.click,
                     child: Text(
                       previewText.isEmpty
-                          ? 'Chưa có nội dung hiển thị.'
+                          ? context.tr('ui_common_there_is_no_content_to_display_b4efdc')
                           : previewText,
                       maxLines: 4,
                       overflow: TextOverflow.ellipsis,

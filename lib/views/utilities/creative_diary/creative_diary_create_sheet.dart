@@ -84,7 +84,7 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
                     SLSpacing.h12,
                     _DiaryInput(
                       controller: promptCtrl,
-                      label: 'Prompt',
+                      label: context.tr('creative_diary_memory_question'),
                       hintText: context.tr('util_mtcuhiginh_cd66f6'),
                       maxLines: 2,
                     ),

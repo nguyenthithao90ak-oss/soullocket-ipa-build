@@ -27,7 +27,7 @@ class _StickerPainter extends CustomPainter {
     double width,
     Color color,
   ) {
-    final points = stroke.resolvedPoints(size);
+    final points = stroke.points;
     if (points.isEmpty) {
       return;
     }
@@ -409,7 +409,7 @@ class _DrawingCanvasPainter extends CustomPainter {
       return;
     }
 
-    final points = stroke.resolvedPoints(size);
+    final points = stroke.points;
 
     final paint = Paint()
       ..color = stroke.color

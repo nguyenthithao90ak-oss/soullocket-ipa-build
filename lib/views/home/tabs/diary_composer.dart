@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/sl_theme.dart';
@@ -7,6 +6,7 @@ import '../../../utils/services/custom_mood_sticker_service.dart';
 import '../../../utils/services/l10n_service.dart';
 import '../../../widgets/r2_sticker_image.dart';
 import '../../../widgets/sl_feedback.dart';
+import 'diary/widgets/diary_custom_mood_image.dart';
 
 const _diaryRose = Color(0xFFB65C86);
 const _diaryLilac = Color(0xFF8873BD);
@@ -299,19 +299,10 @@ class _DiaryComposerState extends State<DiaryComposer> {
       }
       return ClipRRect(
         borderRadius: BorderRadius.circular(13),
-        child: CachedNetworkImage(
-          imageUrl: url,
-          width: size,
-          height: size,
-          memCacheWidth: 160,
-          fit: BoxFit.cover,
-          fadeInDuration: Duration.zero,
-          placeholder: (_, _) =>
-              const Icon(Icons.photo_outlined, color: _diaryLilac),
-          errorWidget: (_, _, _) => const Icon(
-            Icons.image_not_supported_outlined,
-            color: _diaryLilac,
-          ),
+        child: DiaryCustomMoodImage(
+          url: url,
+          size: size,
+          stickerService: _stickers,
         ),
       );
     }

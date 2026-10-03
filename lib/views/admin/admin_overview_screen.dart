@@ -308,7 +308,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                                   value: _bannedHouses
                                                                       .toDouble(),
                                                                   title:
-                                                                      'Banned',
+                                                                      context.tr('ui_admin_banned_c8cd83'),
                                                                   radius: 30,
                                                                   titleStyle: const TextStyle(
                                                                       fontSize:
@@ -595,10 +595,10 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                         ),
                                         AdminStatCard(
                                           width: cardWidth,
-                                          title: 'Ticket support',
+                                          title: context.tr('ui_admin_support_tickets_673d06'),
                                           value: '$_totalSupportTickets',
                                           subtitle:
-                                              '$_unreadSupportTickets tin chưa đọc',
+                                              L10nScope.of(context).format('ui_admin_value1_unread_message_e529c8', {'value1': _unreadSupportTickets}),
                                           color: const Color(0xFFB388FF),
                                           icon: Icons.support_agent_rounded,
                                         ),
@@ -690,14 +690,14 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                 ),
                                                 SLSpacing.h12,
                                                 MetaRow(
-                                                  label: 'Email',
+                                                  label: context.tr('email'),
                                                   value: widget.user.email ??
                                                       context.tr(
                                                           'admin_chacemail_4d9065'),
                                                 ),
                                                 SLSpacing.h12,
-                                                const MetaRow(
-                                                  label: 'Claim',
+                                                MetaRow(
+                                                  label: context.tr('ui_admin_admin_claim_dc4e08'),
                                                   value: 'admin / super_admin',
                                                 ),
                                                 SLSpacing.h12,

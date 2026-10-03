@@ -260,13 +260,13 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
       }
 
       if (savedCount == _pages.length) {
-        _showSnack('Đã lưu trọn bộ ${_pages.length} trang sổ về máy.');
+        _showSnack(L10nScope.of(context).format('ui_utilities_saved_all_value1_notebook_pages_to_your_fc668b', {'value1': _pages.length}));
         return;
       }
 
       if (savedCount > 0) {
         _showSnack(
-          'Đã lưu $savedCount/${_pages.length} trang. Một vài trang chưa lưu, bạn có thể thử lại.',
+          L10nScope.of(context).format('ui_utilities_saved_value1_value2_pages_some_pages_have_1323e2', {'value1': savedCount, 'value2': _pages.length}),
           backgroundColor: const Color(0xFFB26A00),
         );
         return;
@@ -278,7 +278,7 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
         return;
       }
       _showSnack(
-        'Không thể lưu sổ tay: ${_errorText(error, fallback: 'Vui lòng thử lại sau.')}',
+        L10nScope.of(context).format('ui_utilities_unable_to_save_notebook_value1_03b027', {'value1': _errorText(error, fallback: 'Vui lòng thử lại sau.')}),
         backgroundColor: const Color(0xFFE53935),
       );
     } finally {
@@ -356,13 +356,13 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
       if (!mounted) {
         return;
       }
-      _showSnack('Đã lưu trang ${index + 1} về máy.');
+      _showSnack(L10nScope.of(context).format('ui_utilities_page_value1_has_been_saved_to_the_9ee19b', {'value1': index + 1}));
     } catch (error) {
       if (!mounted) {
         return;
       }
       _showSnack(
-        'Không thể lưu trang này: ${_errorText(error, fallback: 'Vui lòng thử lại sau.')}',
+        L10nScope.of(context).format('ui_utilities_this_page_could_not_be_saved_value1_a12e9d', {'value1': _errorText(error, fallback: 'Vui lòng thử lại sau.')}),
         backgroundColor: const Color(0xFFE53935),
       );
     } finally {

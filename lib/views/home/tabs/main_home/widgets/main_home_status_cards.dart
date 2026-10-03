@@ -183,12 +183,17 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
 
     // 3. Ngày lễ lớn (lọc theo quốc gia / ngôn ngữ của người dùng)
     final applicableHolidays = HolidayService.getApplicableHolidays();
-    for (final h in applicableHolidays) {
-      final nextH = h.nextOccurrence(todayMidnight);
-      if (nextH == null) continue;
-      final displayName = HolidayService.getLocalizedName(h);
+    for (final occurrence in HolidayOccurrenceResolver.nextOccurrences(
+      applicableHolidays,
+      from: todayMidnight,
+    )) {
+      final displayName = HolidayService.getLocalizedName(occurrence.holiday);
       upcomingEvents.add(
-        HomeUpcomingEvent(title: displayName, date: nextH, type: 'holiday'),
+        HomeUpcomingEvent(
+          title: displayName,
+          date: occurrence.date,
+          type: 'holiday',
+        ),
       );
     }
 
@@ -218,7 +223,16 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     final seenTitles = <String>{};
     final uniqueEvents = <HomeUpcomingEvent>[];
     for (final e in upcomingEvents) {
-      final diffDays = e.date.difference(todayMidnight).inDays;
+      // Cửa sổ 7 ngày theo ngày dân sự, không theo số giờ đi qua DST.
+      final diffDays = DateTime.utc(e.date.year, e.date.month, e.date.day)
+          .difference(
+            DateTime.utc(
+              todayMidnight.year,
+              todayMidnight.month,
+              todayMidnight.day,
+            ),
+          )
+          .inDays;
       if (diffDays >= 0 && diffDays <= 7) {
         if (seenTitles.add('${e.title}_${e.date.millisecondsSinceEpoch}')) {
           uniqueEvents.add(e);

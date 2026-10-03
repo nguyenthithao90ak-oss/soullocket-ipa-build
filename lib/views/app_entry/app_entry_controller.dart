@@ -22,6 +22,7 @@ import '../../utils/services/session/app_background_session_tracker.dart';
 import '../../utils/services/session/session_connectivity_coordinator.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/widget_service.dart';
+import '../../utils/services/core/background_tracking_service.dart';
 import '../../utils/services/role_utils.dart';
 
 class AppEntryAuthState {
@@ -358,6 +359,10 @@ class AppEntryController {
   }
 
   Future<void> handleSignedOutSession() async {
+    await _runGuarded(
+      'stop sleep tracking after sign out',
+      BackgroundTrackingService.stop,
+    );
     await _runGuarded(
       'reset widget state after sign out',
       () => WidgetService.resetWidgetState(),

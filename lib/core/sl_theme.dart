@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -140,6 +141,7 @@ class SLSpacing {
   static const h10 = SizedBox(height: 10);
   static const h12 = SizedBox(height: sm);
   static const h16 = SizedBox(height: md);
+  static const h18 = SizedBox(height: 18);
   static const h20 = SizedBox(height: lg);
   static const h24 = SizedBox(height: xl);
   static const h32 = SizedBox(height: xxl);
@@ -739,6 +741,30 @@ class SLTheme {
   }
 
   // ─── AppBar ───────────────────────────────────────────────────
+  static const pageSystemOverlayStyle = SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.dark,
+    statusBarBrightness: Brightness.light,
+  );
+
+  static AppBar pageAppBar({
+    required Widget title,
+    Color backgroundColor = SLColors.paper,
+    List<Widget>? actions,
+  }) {
+    return AppBar(
+      title: title,
+      centerTitle: true,
+      backgroundColor: backgroundColor,
+      foregroundColor: SLColors.ink,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+      systemOverlayStyle: pageSystemOverlayStyle,
+      actions: actions,
+    );
+  }
+
   static AppBar appBar(
     BuildContext context,
     String title, {

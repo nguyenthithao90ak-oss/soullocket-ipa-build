@@ -154,3 +154,127 @@ class WidgetPhotoFramePicker extends StatelessWidget {
     },
   );
 }
+
+/// Mẫu bố cục nhìn trực tiếp, không cần mở dropdown và đoán cách ghép ảnh.
+class WidgetPhotoLayoutPicker extends StatelessWidget {
+  const WidgetPhotoLayoutPicker({
+    super.key,
+    required this.selectedKey,
+    required this.labels,
+    required this.onChanged,
+  });
+  final String selectedKey;
+  final Map<String, String> labels;
+  final ValueChanged<String> onChanged;
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final width = (constraints.maxWidth - 16) / 3;
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: labels.entries
+            .map(
+              (entry) => SizedBox(
+                width: width,
+                child: WidgetVisualChoiceTile(
+                  key: ValueKey('widget-photo-layout-${entry.key}'),
+                  label: entry.value,
+                  selected: selectedKey == entry.key,
+                  onTap: () => onChanged(entry.key),
+                  artwork: _PhotoLayoutSample(layoutKey: entry.key),
+                ),
+              ),
+            )
+            .toList(),
+      );
+    },
+  );
+}
+
+class _PhotoLayoutSample extends StatelessWidget {
+  const _PhotoLayoutSample({required this.layoutKey});
+  final String layoutKey;
+  @override
+  Widget build(BuildContext context) {
+    Widget image(int index) => ClipRRect(
+      borderRadius: BorderRadius.circular(6),
+      child: CustomPaint(
+        painter: _PhotoLandscapePainter(index),
+        child: const SizedBox.expand(),
+      ),
+    );
+    Widget row(int a, int b) => Row(
+      children: [
+        Expanded(child: image(a)),
+        const SizedBox(width: 3),
+        Expanded(child: image(b)),
+      ],
+    );
+    return Center(
+      child: AspectRatio(
+        aspectRatio: .95,
+        child: switch (layoutKey) {
+          'duo' => row(0, 1),
+          'grid' => Column(
+            children: [
+              Expanded(child: row(0, 1)),
+              const SizedBox(height: 3),
+              Expanded(child: row(2, 3)),
+            ],
+          ),
+          _ => image(0),
+        },
+      ),
+    );
+  }
+}
+
+class _PhotoLandscapePainter extends CustomPainter {
+  const _PhotoLandscapePainter(this.index);
+  final int index;
+  @override
+  void paint(Canvas canvas, Size size) {
+    const skies = [
+      Color(0xFFD9EAF5),
+      Color(0xFFF5DCCD),
+      Color(0xFFE5DEF3),
+      Color(0xFFDDEBDF),
+    ];
+    const hills = [
+      Color(0xFF8BAAB5),
+      Color(0xFFD19D88),
+      Color(0xFFAE98C7),
+      Color(0xFF9BB598),
+    ];
+    final w = size.width, h = size.height;
+    canvas.drawRect(Offset.zero & size, Paint()..color = skies[index]);
+    canvas.drawCircle(
+      Offset(w * .73, h * .27),
+      w * .13,
+      Paint()..color = const Color(0xFFFFFBF0),
+    );
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, h * .72)
+        ..lineTo(w * .32, h * .4)
+        ..lineTo(w * .8, h)
+        ..lineTo(0, h)
+        ..close(),
+      Paint()..color = hills[index].withValues(alpha: .65),
+    );
+    canvas.drawPath(
+      Path()
+        ..moveTo(w * .2, h)
+        ..lineTo(w * .72, h * .56)
+        ..lineTo(w, h * .83)
+        ..lineTo(w, h)
+        ..close(),
+      Paint()..color = hills[index],
+    );
+  }
+
+  @override
+  bool shouldRepaint(_PhotoLandscapePainter oldDelegate) =>
+      index != oldDelegate.index;
+}

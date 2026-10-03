@@ -383,7 +383,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Author: ${postData['authorName'] ?? 'Unknown'} (House: ${postData['houseId'] ?? 'Unknown'})',
+                                L10nScope.of(context).format('ui_admin_author_value1_house_value2_357a21', {'value1': postData['authorName'] ?? 'Unknown', 'value2': postData['houseId'] ?? 'Unknown'}),
                                 style: const TextStyle(
                                   color: Colors.grey,
                                   fontSize: 12,
@@ -434,7 +434,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Author: ${commentData['authorName'] ?? 'Unknown'}',
+                                  L10nScope.of(context).format('ui_admin_author_value1_24c738', {'value1': commentData['authorName'] ?? 'Unknown'}),
                                   style: const TextStyle(
                                     color: Colors.grey,
                                     fontSize: 12,
@@ -676,7 +676,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                                     vertical: 8,
                                   ),
                                   title: Text(
-                                    'Target ID: $targetIdStr',
+                                    L10nScope.of(context).format('ui_admin_target_id_value1_2ccd89', {'value1': targetIdStr}),
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
@@ -687,19 +687,19 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Loại: ${r['type'] ?? 'post_report'}',
+                                        L10nScope.of(context).format('ui_admin_type_value1_a1cdf0', {'value1': r['type'] ?? 'post_report'}),
                                         style: const TextStyle(
                                           color: Colors.orangeAccent,
                                         ),
                                       ),
                                       Text(
-                                        'Lý do: ${r['reason'] ?? context.tr('admin_khngcldo_4c7b39')}',
+                                        L10nScope.of(context).format('ui_admin_reason_value1_4442c8', {'value1': r['reason'] ?? context.tr('admin_khngcldo_4c7b39')}),
                                         style: const TextStyle(
                                           color: Colors.redAccent,
                                         ),
                                       ),
                                       Text(
-                                        'Người báo cáo: ${r['by'] ?? r['reporterId'] ?? 'Unknown'}',
+                                        L10nScope.of(context).format('ui_admin_reporting_person_value1_9aab62', {'value1': r['by'] ?? r['reporterId'] ?? 'Unknown'}),
                                         style: const TextStyle(
                                           color: Colors.grey,
                                         ),
@@ -713,7 +713,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                                             borderRadius: SLRadius.smAll,
                                           ),
                                           child: Text(
-                                            'Trích dẫn: ${r['postData']['content']?.toString() ?? context.tr('admin_chcnh_f0b82e')}',
+                                            L10nScope.of(context).format('ui_admin_quote_value1_fa4527', {'value1': r['postData']['content']?.toString() ?? context.tr('admin_chcnh_f0b82e')}),
                                             maxLines: 2,
                                             overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(

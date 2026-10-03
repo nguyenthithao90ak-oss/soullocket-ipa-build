@@ -970,7 +970,7 @@ class _SliderWithLabelState extends State<_SliderWithLabel> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '${context.tr('theme_countdown_size')}: ${_value.round()}px',
+          L10nScope.of(context).format('ui_home_value1_value2_px_419aad', {'value1': context.tr('theme_countdown_size'), 'value2': _value.round()}),
           style: SLTheme.quicksand(
             fontSize: 13,
             fontWeight: FontWeight.w800,

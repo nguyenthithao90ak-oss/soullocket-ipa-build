@@ -9,6 +9,7 @@ class SLDialogStyle {
   static const border = Color(0xFFE5D6C4);
   static const primary = Color(0xFF72543F);
   static const secondary = Color(0xFF796757);
+  static const field = Color(0xFFF5ECE0);
   static const danger = Color(0xFFAC4E54);
   static const barrier = Color(0x6643322D);
   static const maxWidth = 440.0;
@@ -98,6 +99,44 @@ class SLAlertDialog extends AlertDialog {
     final currentTheme = Theme.of(context);
     return Theme(
       data: currentTheme.copyWith(
+        colorScheme: currentTheme.colorScheme.copyWith(
+          brightness: Brightness.light,
+          primary: SLDialogStyle.primary,
+          onPrimary: SLDialogStyle.surface,
+          surface: SLDialogStyle.surface,
+          surfaceContainerHighest: SLDialogStyle.field,
+          onSurface: SLColors.ink,
+          onSurfaceVariant: SLDialogStyle.secondary,
+          outline: SLDialogStyle.border,
+          error: SLDialogStyle.danger,
+        ),
+        textTheme: currentTheme.textTheme.apply(
+          bodyColor: SLColors.ink,
+          displayColor: SLColors.ink,
+        ),
+        iconTheme: const IconThemeData(color: SLDialogStyle.primary),
+        textSelectionTheme: TextSelectionThemeData(
+          cursorColor: SLDialogStyle.primary,
+          selectionColor: SLDialogStyle.primary.withValues(alpha: 0.2),
+          selectionHandleColor: SLDialogStyle.primary,
+        ),
+        inputDecorationTheme: currentTheme.inputDecorationTheme.copyWith(
+          filled: true,
+          fillColor: SLDialogStyle.field,
+          labelStyle: const TextStyle(color: SLDialogStyle.secondary),
+          hintStyle: const TextStyle(color: SLDialogStyle.secondary),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: SLDialogStyle.border),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(
+              color: SLDialogStyle.primary,
+              width: 1.5,
+            ),
+          ),
+        ),
         dialogTheme: SLDialogStyle.theme(currentTheme.textTheme),
       ),
       child: Builder(builder: (context) => super.build(context)),
@@ -136,7 +175,7 @@ class SLDialogAction extends StatelessWidget {
       onPressed: onPressed,
       style: TextButton.styleFrom(
         foregroundColor: primary ? SLDialogStyle.surface : accent,
-        backgroundColor: primary ? accent : const Color(0xFFF5ECE0),
+        backgroundColor: primary ? accent : SLDialogStyle.field,
         disabledForegroundColor: SLDialogStyle.secondary.withValues(
           alpha: 0.55,
         ),

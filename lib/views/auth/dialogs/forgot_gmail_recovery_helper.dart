@@ -90,7 +90,7 @@ class ForgotGmailRecoveryHelper {
     return showDialog<String>(
       context: context,
       builder: (dialogContext) => SLAlertDialog(
-        title: Text('QUÊN GMAIL'),
+        title: Text(L10nService().translate('Quên Gmail?')),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -105,7 +105,7 @@ class ForgotGmailRecoveryHelper {
                 autofocus: true,
                 style: SLTheme.quicksand(),
                 decoration: InputDecoration(
-                  hintText: 'VD: NH_...',
+                  hintText: L10nService().translate('ui_auth_example_nh_39b8cc'),
                   border: OutlineInputBorder(borderRadius: SLRadius.mdAll),
                 ),
               ),
@@ -141,7 +141,7 @@ class ForgotGmailRecoveryHelper {
     return showDialog<String>(
       context: context,
       builder: (dialogContext) => SLAlertDialog(
-        title: Text('CÂU HỎI BẢO MẬT'),
+        title: Text(L10nService().translate('security_question')),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,

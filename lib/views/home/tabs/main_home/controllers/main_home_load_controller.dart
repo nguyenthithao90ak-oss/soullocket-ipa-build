@@ -519,6 +519,11 @@ extension _MainHomeLoadController on _MainHomeTabState {
       _presenceData[role] is Map ? _presenceData[role] as Map : {},
     );
     roleData[field] = value;
+    if (field == 'sleep_updated_at' && _houseId != null) {
+      unawaited(WidgetService.syncSleepWidgetData(houseId: _houseId!).catchError((Object error) {
+        debugPrint('[SleepWidget] Refresh failed: $error');
+      }));
+    }
     final nextPresence = Map<String, dynamic>.from(_presenceData);
     nextPresence[role] = roleData;
     _hasLoadedPresenceSnapshot = true;
@@ -564,6 +569,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
       'weather',
       'city',
       'activeSessionCount',
+      'sleep_updated_at',
     ];
 
     for (final role in roles) {

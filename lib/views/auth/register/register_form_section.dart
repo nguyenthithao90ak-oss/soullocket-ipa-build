@@ -149,7 +149,7 @@ class RegisterForm extends StatelessWidget {
             },
           ),
           const SizedBox(height: 16),
-          AuthSocialDivider(label: l10n.translate('Hoặc đăng ký nhanh với')),
+          AuthSocialDivider(label: l10n.translate('auth_social_register_divider')),
           const SizedBox(height: 14),
           SocialAuthButtons(onProviderTap: onSocialLogin),
           const SizedBox(height: 12),

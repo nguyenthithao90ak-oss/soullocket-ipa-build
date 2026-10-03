@@ -431,7 +431,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                           ),
                           const SizedBox(width: 2),
                           Text(
-                            msg.isRead ? 'Đã xem' : 'Đã gửi',
+                            msg.isRead ? context.tr('ui_chat_viewed_f98099') : context.tr('ui_chat_sent_5fab02'),
                             style: TextStyle(
                               color: isMe ? Colors.white70 : Colors.black38,
                               fontSize: 10,
@@ -521,8 +521,8 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                 Expanded(
                   child: Text(
                     isMe
-                        ? 'Bạn đã bắt đầu $label'
-                        : '${widget.targetName} mời bạn vào $label',
+                        ? L10nScope.of(context).format('ui_chat_you_have_started_value1_c47110', {'value1': label})
+                        : L10nScope.of(context).format('ui_chat_value1_invites_you_to_value2_67c638', {'value1': widget.targetName, 'value2': label}),
                     style: SLTheme.quicksand(
                       color: Colors.black87,
                       fontSize: 14,
@@ -554,7 +554,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                   ),
                   icon: Icon(isVideo ? Icons.videocam : Icons.call, size: 16),
                   label: Text(
-                    isMe ? 'Mở lại' : 'Tham gia',
+                    isMe ? context.tr('ui_chat_open_again_aa44a9') : context.tr('ui_chat_join_62903c'),
                     style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                   ),
                 ),
@@ -595,8 +595,8 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                 Expanded(
                   child: Text(
                     isMe
-                        ? 'Bạn đã chia sẻ phòng xem chung'
-                        : '${widget.targetName} mời bạn xem chung',
+                        ? context.tr('ui_chat_you_shared_a_watch_room_53b7d9')
+                        : L10nScope.of(context).format('ui_chat_value1_invites_you_to_watch_together_f5308c', {'value1': widget.targetName}),
                     style: SLTheme.quicksand(
                       color: Colors.black87,
                       fontSize: 14,
@@ -638,7 +638,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                   ),
                   icon: const Icon(Icons.open_in_new, size: 16),
                   label: Text(
-                    isMe ? 'Mở lại' : 'Tham gia',
+                    isMe ? context.tr('ui_chat_open_again_aa44a9') : context.tr('ui_chat_join_62903c'),
                     style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                   ),
                 ),
@@ -702,7 +702,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Chia sẻ từ Cộng đồng',
+                    context.tr('p9_group_chat_shared_from_community'),
                     style: SLTheme.quicksand(
                       color: const Color(0xFFD81B60),
                       fontSize: 11.5,

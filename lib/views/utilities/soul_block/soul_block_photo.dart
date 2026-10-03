@@ -2,35 +2,6 @@
 part of '../soul_block_game.dart';
 
 extension _SoulBlockPhotoExperience on _SoulBlockGameState {
-  Future<ui.Image> _decodeBoardPhoto(String url) async {
-    // Một ảnh giải mã dùng chung cho bàn, khay và các mảnh vỡ.
-    final provider = ResizeImage(
-      NetworkImage(url),
-      width: 1024,
-      height: 1024,
-      policy: ResizeImagePolicy.fit,
-    );
-    final stream = provider.resolve(const ImageConfiguration());
-    final completer = Completer<ui.Image>();
-    late final ImageStreamListener listener;
-    listener = ImageStreamListener(
-      (info, _) {
-        if (!completer.isCompleted) completer.complete(info.image.clone());
-        info.dispose();
-      },
-      onError: (Object error, StackTrace? stack) {
-        if (!completer.isCompleted) completer.completeError(error, stack);
-      },
-    );
-    stream.addListener(listener);
-    try {
-      return await completer.future.timeout(const Duration(seconds: 12));
-    } finally {
-      stream.removeListener(listener);
-      await provider.evict();
-    }
-  }
-
   void _clearDiaryPhoto() {
     _photoRequest++;
     final old = _boardPhoto;
@@ -60,6 +31,10 @@ extension _SoulBlockPhotoExperience on _SoulBlockGameState {
       return;
     }
     final request = ++_photoRequest;
+    final media = MediaQuery.of(context);
+    final diaryWidth = (((media.size.width - 64) / 3) * media.devicePixelRatio)
+        .ceil()
+        .clamp(240, 768);
     final bool advanceRequested = next || _photoNeedsNext;
     final String? previousPhotoId = _photoId;
     bool isCurrent() =>
@@ -77,6 +52,7 @@ extension _SoulBlockPhotoExperience on _SoulBlockGameState {
         houseId,
         preferredId: _photoId,
         next: advanceRequested,
+        diaryWidth: diaryWidth,
       );
       if (!isCurrent()) return;
       final loadingTime = Stopwatch()..start();
@@ -85,12 +61,17 @@ extension _SoulBlockPhotoExperience on _SoulBlockGameState {
         if (!isCurrent()) return;
         ui.Image? decoded;
         try {
-          final memory = await _memoryService
-              .resolve(houseId, candidate)
-              .timeout(const Duration(seconds: 8));
-          if (!isCurrent()) return;
+          final memory = await _memoryService.loadPhoto(
+            houseId,
+            candidate,
+            diaryWidth: diaryWidth,
+          );
+          if (!isCurrent()) {
+            memory?.image.dispose();
+            return;
+          }
           if (memory == null) continue;
-          decoded = await _decodeBoardPhoto(memory.url);
+          decoded = memory.image;
           // Chờ thao tác và cả hai hiệu ứng kết thúc trước khi đổi ảnh.
           while (isCurrent() &&
               (_draggingPiece != null ||
@@ -111,9 +92,11 @@ extension _SoulBlockPhotoExperience on _SoulBlockGameState {
             _photoNeedsNext = false;
             _photoUnavailable = false;
             _draggedPieceOverlay = null;
-            if (advanceRequested) {
-              _newGamesSincePhotoChange = 0;
-            }
+            _newGamesSincePhotoChange = _soulPhotoCycleAfterLoad(
+              games: _newGamesSincePhotoChange,
+              photoChanged: memory.id != previousPhotoId,
+              inGameplay: _view == _SoulGameView.gameplay,
+            );
           });
           WidgetsBinding.instance.addPostFrameCallback((_) => old?.dispose());
           if (advanceRequested && memory.id == previousPhotoId && mounted) {
@@ -160,7 +143,7 @@ extension _SoulBlockPhotoExperience on _SoulBlockGameState {
   }
 
   Point<int> _piecePhotoAnchor(_SoulPieceOption piece) {
-    final move = _recommendMoveFor(_board, [piece]);
+    final move = _recommendMoveFor(_board, [piece], includeRotations: false);
     if (move != null) return Point(move.col, move.row);
     // Mảnh chưa có chỗ đặt vẫn giữ cùng tỉ lệ ảnh của bàn.
     return Point(

@@ -198,7 +198,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
   ),
   _PartnerInteractionPreset(
     type: 'poop',
-    label: 'Troll',
+    label: L10nService().translate('home_playful_signal_label'),
     emoji: '\u{1F4A9}',
     assetPath: HomeInteractionStickers.defaultFor('poop'),
     weight: 6,

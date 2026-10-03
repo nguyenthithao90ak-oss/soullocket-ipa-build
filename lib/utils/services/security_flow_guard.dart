@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:flutter/material.dart';
@@ -224,9 +225,9 @@ class SecurityFlowGuard {
           action: action,
           level: SecurityRiskLevel.block,
           code: 'device_blocked',
-          title: 'Thiết bị đang bị chặn',
+          title: L10nService().translate('ui_common_the_device_is_blocked_557e31'),
           message:
-              'Thiết bị này đang bị chặn trên nhà hiện tại nên không thể thực hiện thao tác bảo mật này.',
+              L10nService().translate('ui_common_this_device_is_currently_blocked_on_your_9b8cd7'),
         ),
       );
     }
@@ -237,9 +238,9 @@ class SecurityFlowGuard {
           action: action,
           level: SecurityRiskLevel.block,
           code: 'compromised_device',
-          title: 'Phát hiện thiết bị rủi ro',
+          title: L10nService().translate('ui_common_device_risk_detected_81c544'),
           message:
-              'Hệ thống phát hiện dấu hiệu root, jailbreak, fake GPS hoặc can thiệp hệ thống. Tạm khóa thao tác nhạy cảm này để bảo vệ tài khoản.',
+              L10nService().translate('ui_common_the_system_detects_signs_of_rooting_jailbreaking_beabac'),
         ),
       );
     }
@@ -252,9 +253,9 @@ class SecurityFlowGuard {
             action: action,
             level: SecurityRiskLevel.warn,
             code: 'pending_device',
-            title: 'Thiết bị đang chờ duyệt',
+            title: L10nService().translate('home_thitbangch_91f2dd'),
             message:
-                'Thiết bị này đang chờ duyệt. Hãy duyệt trên máy tin cậy để thực hiện thao tác này, hoặc bỏ qua nếu bạn tin thiết bị này.',
+                L10nService().translate('ui_common_this_device_is_awaiting_approval_approve_it_7a6eb0'),
           ),
         );
       } else if (signals.trustState.isBlocked) {
@@ -263,9 +264,9 @@ class SecurityFlowGuard {
             action: action,
             level: SecurityRiskLevel.block,
             code: 'blocked_device',
-            title: 'Thiết bị bị chặn',
+            title: L10nService().translate('ui_common_device_is_blocked_bb86a1'),
             message:
-                'Thiết bị này đang bị chặn. Hãy dùng thiết bị tin cậy để mở lại quyền truy cập hoặc liên hệ hỗ trợ.',
+                L10nService().translate('ui_common_this_device_is_blocked_use_a_trusted_de155b'),
           ),
         );
       }
@@ -278,9 +279,9 @@ class SecurityFlowGuard {
           action: action,
           level: SecurityRiskLevel.warn,
           code: 'proxy_detected',
-          title: 'Cảnh báo kết nối',
+          title: L10nService().translate('ui_common_connection_warning_8c0135'),
           message:
-              'Hệ thống phát hiện VPN/Proxy đang bật hoặc vừa được dùng ở lần đăng nhập trước. Nếu đây là bạn, hãy xác minh thêm trước khi tiếp tục.',
+              L10nService().translate('ui_common_the_system_detects_that_vpn_proxy_is_eaac5a'),
         ),
       );
     }
@@ -439,9 +440,9 @@ class SecurityFlowGuard {
         action: action,
         level: SecurityRiskLevel.block,
         code: 'rapid_repeat',
-        title: 'Bạn đang bấm quá nhanh',
+        title: L10nService().translate('ui_common_you_re_clicking_too_fast_eeefa5'),
         message:
-            'Hãy chờ ${_formatMilliseconds(visibleWaitMs)} rồi thử lại để tránh gửi lặp thao tác bảo mật.',
+            L10nService().format('ui_common_wait_for_value1_and_then_try_again_7a247a', {'value1': _formatMilliseconds(visibleWaitMs)}),
       );
     }
 
@@ -672,7 +673,7 @@ class SecurityFlowGuard {
             if (!isBlocking)
               SLDialogAction(
                 onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: const Text('Dừng lại'),
+                child: Text(context.tr('ui_common_stop_d8d8b9')),
               ),
             SLDialogAction(
               primary: true,
@@ -681,7 +682,7 @@ class SecurityFlowGuard {
 
               child: Text(
                 isBlocking
-                    ? 'Đã hiểu'
+                    ? context.tr('Đã hiểu')
                     : continueLabel ??
                           (requiresStepUp ? 'Xác minh thêm' : 'Vẫn tiếp tục'),
               ),

@@ -10,12 +10,12 @@ extension _ChatDetailHelpersPart on _ChatDetailScreenState {
       _ChatInfoShortcut(
         id: 'chat_background',
         icon: Icons.wallpaper_rounded,
-        title: 'Nền chat',
+        title: context.tr('ui_chat_chat_background_60fd91'),
         subtitle: _isUpdatingChatBackground
-            ? 'Đang cập nhật ảnh nền cho đoạn chat này'
+            ? context.tr('ui_chat_updating_the_background_image_for_this_chat_338ab1')
             : currentBackgroundUrl.trim().isEmpty
-                ? 'Tải ảnh nền riêng cho giao diện chat'
-                : 'Đã có nền riêng, chạm để đổi hoặc xóa',
+                ? context.tr('ui_chat_upload_a_custom_chat_background_3ba394')
+                : context.tr('ui_chat_already_has_its_own_background_touch_to_418978'),
         color: const Color(0xFF8B5CF6),
         enabled: !_isUpdatingChatBackground,
         closeDrawerBeforeAction: true,
@@ -27,10 +27,10 @@ extension _ChatDetailHelpersPart on _ChatDetailScreenState {
       _ChatInfoShortcut(
         id: 'nickname',
         icon: Icons.badge_outlined,
-        title: 'Biệt danh',
+        title: context.tr('ui_chat_nickname_5206ed'),
         subtitle: _nickname.trim().isEmpty
-            ? 'Đặt tên riêng cho cuộc chat này'
-            : 'Đang dùng: ${_nickname.trim()}',
+            ? context.tr('ui_chat_give_this_chat_a_unique_name_fb7e80')
+            : L10nScope.of(context).format('ui_chat_currently_using_value1_499491', {'value1': _nickname.trim()}),
         color: const Color(0xFFD81B60),
         enabled: true,
         closeDrawerBeforeAction: false,
@@ -39,8 +39,8 @@ extension _ChatDetailHelpersPart on _ChatDetailScreenState {
       _ChatInfoShortcut(
         id: 'quick_reaction',
         icon: Icons.emoji_emotions_outlined,
-        title: 'Cảm xúc nhanh',
-        subtitle: 'Hiện tại: $_quickReactionEmoji',
+        title: context.tr('ui_chat_quick_reaction_5e9d2f'),
+        subtitle: L10nScope.of(context).format('ui_chat_current_value1_4f3243', {'value1': _quickReactionEmoji}),
         color: const Color(0xFFF59E0B),
         enabled: true,
         closeDrawerBeforeAction: false,
@@ -51,10 +51,10 @@ extension _ChatDetailHelpersPart on _ChatDetailScreenState {
         icon: _isChatMuted
             ? Icons.notifications_active_outlined
             : Icons.notifications_off_outlined,
-        title: _isChatMuted ? 'Bật lại thông báo' : 'Tắt thông báo',
+        title: _isChatMuted ? context.tr('ui_chat_turn_notifications_back_on_33d80c') : context.tr('p9_group_chat_disable_notifications'),
         subtitle: _isChatMuted
-            ? 'Cuộc chat này đang tắt thông báo trên thiết bị này'
-            : 'Ẩn thông báo mới từ cuộc chat này trên thiết bị này',
+            ? context.tr('ui_chat_notifications_for_this_chat_are_muted_on_25bc5a')
+            : context.tr('ui_chat_hide_new_notifications_from_this_chat_on_ccc95a'),
         color: const Color(0xFF6366F1),
         enabled: true,
         closeDrawerBeforeAction: false,
@@ -63,10 +63,10 @@ extension _ChatDetailHelpersPart on _ChatDetailScreenState {
       _ChatInfoShortcut(
         id: 'send_image',
         icon: Icons.image_outlined,
-        title: 'Gửi ảnh',
+        title: context.tr('ui_chat_send_photos_f7dc07'),
         subtitle: isChatClosed
-            ? 'Đoạn chat đang đóng nên tạm khóa'
-            : 'Chọn ảnh từ máy và gửi ngay',
+            ? context.tr('ui_chat_the_chat_is_closed_so_temporarily_locked_12a24f')
+            : context.tr('ui_chat_select_photos_from_your_device_and_send_eff1e2'),
         color: const Color(0xFF0A7CFF),
         enabled: !isChatClosed,
         closeDrawerBeforeAction: true,
@@ -75,10 +75,10 @@ extension _ChatDetailHelpersPart on _ChatDetailScreenState {
       _ChatInfoShortcut(
         id: 'stickers',
         icon: Icons.auto_awesome,
-        title: 'Sticker',
+        title: context.tr('sticker'),
         subtitle: isChatClosed
-            ? 'Đoạn chat đang đóng nên tạm khóa'
-            : 'Mở bảng sticker nhanh của SoulLocket',
+            ? context.tr('ui_chat_the_chat_is_closed_so_temporarily_locked_12a24f')
+            : context.tr('ui_chat_open_soullocket_s_quick_sticker_panel_e832a6'),
         color: const Color(0xFF14B8A6),
         enabled: !isChatClosed,
         closeDrawerBeforeAction: true,
@@ -90,10 +90,10 @@ extension _ChatDetailHelpersPart on _ChatDetailScreenState {
         _ChatInfoShortcut(
           id: 'audio_call',
           icon: Icons.call_rounded,
-          title: 'Gọi thoại',
+          title: context.tr('p4_soul_voice_call'),
           subtitle: isChatClosed
-              ? 'Mở lại đoạn chat để gọi thoại'
-              : 'Bắt đầu cuộc gọi thoại ngay',
+              ? context.tr('ui_chat_open_the_chat_again_to_make_a_b632f1')
+              : context.tr('ui_chat_start_a_voice_call_now_00f66d'),
           color: const Color(0xFF2563EB),
           enabled: !isChatClosed,
           closeDrawerBeforeAction: true,
@@ -103,10 +103,10 @@ extension _ChatDetailHelpersPart on _ChatDetailScreenState {
         _ChatInfoShortcut(
           id: 'video_call',
           icon: Icons.videocam_rounded,
-          title: 'Gọi video',
+          title: context.tr('p4_soul_video_call'),
           subtitle: isChatClosed
-              ? 'Mở lại đoạn chat để gọi video'
-              : 'Bắt đầu video call ngay',
+              ? context.tr('ui_chat_reopen_the_chat_to_make_a_video_b14b0f')
+              : context.tr('chat_start_video_call_hint'),
           color: const Color(0xFF0891B2),
           enabled: !isChatClosed,
           closeDrawerBeforeAction: true,
@@ -116,10 +116,10 @@ extension _ChatDetailHelpersPart on _ChatDetailScreenState {
         _ChatInfoShortcut(
           id: 'watch_together',
           icon: Icons.ondemand_video_rounded,
-          title: 'Xem chung',
+          title: context.tr('ui_chat_watch_together_7223de'),
           subtitle: isChatClosed
-              ? 'Đoạn chat đang đóng nên tạm khóa'
-              : 'Tạo phòng xem chung từ cuộc chat này',
+              ? context.tr('ui_chat_the_chat_is_closed_so_temporarily_locked_12a24f')
+              : context.tr('ui_chat_create_a_watch_room_from_this_chat_7b9396'),
           color: const Color(0xFFEA580C),
           enabled: !isChatClosed,
           closeDrawerBeforeAction: true,
@@ -129,8 +129,8 @@ extension _ChatDetailHelpersPart on _ChatDetailScreenState {
         _ChatInfoShortcut(
           id: 'create_group',
           icon: Icons.group_add_outlined,
-          title: 'Tạo nhóm',
-          subtitle: 'Chọn thêm bạn bè và tạo nhóm từ cuộc chat này',
+          title: context.tr('ui_chat_create_groups_5b7194'),
+          subtitle: context.tr('ui_chat_select_more_friends_and_create_a_group_bbe529'),
           color: const Color(0xFF16A34A),
           enabled: true,
           closeDrawerBeforeAction: true,
@@ -139,10 +139,10 @@ extension _ChatDetailHelpersPart on _ChatDetailScreenState {
       _ChatInfoShortcut(
         id: 'delete_chat',
         icon: Icons.delete_outline_rounded,
-        title: 'Xóa đoạn chat',
+        title: context.tr('ui_chat_delete_chat_7ebcf4'),
         subtitle: _isInternal
-            ? 'Xóa lịch sử trò chuyện trong không gian riêng'
-            : 'Xóa lịch sử nhắn tin của cuộc chat này',
+            ? context.tr('ui_chat_delete_chat_history_in_private_space_521ff6')
+            : context.tr('ui_chat_delete_the_messaging_history_of_this_chat_471b9c'),
         color: const Color(0xFFD97706),
         enabled: true,
         closeDrawerBeforeAction: true,
@@ -152,8 +152,8 @@ extension _ChatDetailHelpersPart on _ChatDetailScreenState {
         _ChatInfoShortcut(
           id: 'block_user',
           icon: Icons.block_rounded,
-          title: 'Chặn người dùng',
-          subtitle: 'Ngăn người này nhắn tin và tương tác với bạn',
+          title: context.tr('ui_chat_block_users_a37d68'),
+          subtitle: context.tr('ui_chat_prevent_this_person_from_texting_and_interacting_b04045'),
           color: const Color(0xFFDC2626),
           enabled: true,
           closeDrawerBeforeAction: true,
@@ -164,7 +164,7 @@ extension _ChatDetailHelpersPart on _ChatDetailScreenState {
           id: 'report_user',
           icon: Icons.report_gmailerrorred_rounded,
           title: 'Báo cáo',
-          subtitle: 'Gửi báo cáo tới quản trị viên',
+          subtitle: context.tr('home_gibocotiqu_e68d16'),
           color: const Color(0xFFBE123C),
           enabled: true,
           closeDrawerBeforeAction: true,

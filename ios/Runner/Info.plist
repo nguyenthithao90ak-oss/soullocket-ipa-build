@@ -239,6 +239,7 @@
 		<string>????</string>
 		<key>CFBundleURLTypes</key>
 		<array>
+			<dict><key>CFBundleURLSchemes</key><array><string>soullocket</string></array></dict>
 			<dict>
 				<key>CFBundleURLSchemes</key>
 				<array>
@@ -406,7 +407,7 @@
 		<key>NSSupportsLiveActivities</key>
 		<true/>
 		<key>NSHealthShareUsageDescription</key>
-		<string>SoulLocket needs access to your sleep data to automatically detect when you are sleeping and update your status for your partner.</string>
+		<string>SoulLocket reads recorded sleep from Apple Health when you enable sleep tracking. Sleep summaries are shared with your partner; these records do not detect live sleep.</string>
 		<key>NSHealthUpdateUsageDescription</key>
 		<string>SoulLocket needs access to your health data to synchronize your sleep schedule.</string>
 		<key>NSUserTrackingUsageDescription</key>
@@ -416,6 +417,7 @@
 		<key>BGTaskSchedulerPermittedIdentifiers</key>
 		<array>
 			<string>workmanager.background.task</string>
+			<string>com.soullocket.app.sleep.refresh</string>
 		</array>
 		<key>UIBackgroundModes</key>
 		<array>

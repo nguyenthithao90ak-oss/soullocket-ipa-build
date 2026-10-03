@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="160" viewBox="0 0 220 160">
+<path d="M198,21 a11,11 0,1 0,22,0 a11,11 0,1 0,-22,0" fill="#ADA4C4" fill-opacity="0.533"/>
+<path d="M186,27 Q210,8 225,16 Q232,24 202,29 Q183,32 186,27Z" fill="#000000" fill-opacity="0.000" stroke="#D8B5A8" stroke-opacity="0.600" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M3,142 Q11,128 30,135 Q35,139 38,151" fill="#000000" fill-opacity="0.000" stroke="#B4ACD6" stroke-opacity="0.549" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M7,9 L24,18 L43,8 L61,17" fill="#000000" fill-opacity="0.000" stroke="#AA9BCE" stroke-opacity="0.400" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M21,15 Q21.5,16.5 23,17 Q21.5,17.5 21,19 Q20.5,17.5 19,17 Q20.5,16.5 21,15Z" fill="#FFFFFF" fill-opacity="0.867"/>
+<path d="M41.8,8 a1.2,1.2 0,1 0,2.4,0 a1.2,1.2 0,1 0,-2.4,0" fill="#FADABF" fill-opacity="0.867"/>
+<path d="M147,12 L170,23" fill="#000000" fill-opacity="0.000" stroke="#CDE0FF" stroke-opacity="0.851" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M170,20.5 Q170.625,22.375 172.5,23 Q170.625,23.625 170,25.5 Q169.375,23.625 167.5,23 Q169.375,22.375 170,20.5Z" fill="#FFFFFF" fill-opacity="0.933"/>
+<path d="M195,142 a1,1 0,1 0,2,0 a1,1 0,1 0,-2,0" fill="#FFFFFF" fill-opacity="0.667"/>
+<path d="M201.7,136 a1.3,1.3 0,1 0,2.6,0 a1.3,1.3 0,1 0,-2.6,0" fill="#D9C4FF" fill-opacity="0.667"/>
+</svg>

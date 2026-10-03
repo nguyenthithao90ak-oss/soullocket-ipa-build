@@ -565,7 +565,7 @@ class SecurityService {
         _showSpamWarningDialog(
           context,
           message:
-              'Bạn đang thao tác quá nhanh. Vui lòng chờ một lát rồi thử lại.',
+              context.tr('ui_common_you_are_taking_actions_too_quickly_please_cd9ccc'),
         );
         return false;
       }
@@ -573,7 +573,7 @@ class SecurityService {
         _showSpamWarningDialog(
           context,
           message:
-              'Bạn đang bấm quá nhanh. Hãy chờ ${_formatMilliseconds(throttle.remainingCooldown.inMilliseconds.clamp(250, 5000))} rồi thử lại.',
+              L10nScope.of(context).format('ui_common_you_re_clicking_too_fast_wait_for_742ca8', {'value1': _formatMilliseconds(throttle.remainingCooldown.inMilliseconds.clamp(250, 5000))}),
         );
       }
       return false;
@@ -656,15 +656,15 @@ class SecurityService {
               ),
             ),
             SLSpacing.w12,
-            const Expanded(child: Text('PHÁT HIỆN RỦI RO')),
+            Expanded(child: Text(context.tr('ui_common_risk_detected_da0856'))),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Hệ thống phát hiện VPN/Proxy kèm thao tác gửi dữ liệu bất thường.\n\nĐể bảo vệ tài khoản và dữ liệu chung, vui lòng tắt VPN/Proxy rồi thử lại.',
+            Text(
+              context.tr('ui_common_the_system_detected_vpn_proxy_use_with_1cf89e'),
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,

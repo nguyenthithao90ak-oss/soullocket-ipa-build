@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:flutter/material.dart';
@@ -11,20 +12,20 @@ class CollageLimitUiHelper {
         return await showDialog<bool>(
               context: context,
               builder: (context) => SLAlertDialog(
-                title: const Text('Hết lượt tạo ảnh'),
+                title: Text(L10nService().translate('ui_utilities_image_creation_limit_reached_11f7b6')),
                 content: Text(
-                  'Bạn đã hết lượt tạo ảnh hôm nay ($currentLimit lượt).\nHãy xem 1 quảng cáo để nhận thêm $dailyLimit lượt tạo ảnh nữa nhé!',
+                  L10nService().format('ui_utilities_you_have_run_out_of_attempts_to_20b825', {'value1': currentLimit, 'value2': dailyLimit}),
                 ),
                 actions: [
                   SLDialogAction(
                     onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Hủy'),
+                    child: Text(L10nService().translate('core_cancel')),
                   ),
                   SLDialogAction.icon(
                     primary: true,
                     onPressed: () => Navigator.pop(context, true),
                     icon: const Icon(Icons.play_circle_fill),
-                    label: Text('Nhận $dailyLimit lượt'),
+                    label: Text(L10nService().format('ui_utilities_get_value1_turns_009697', {'value1': dailyLimit})),
                   ),
                 ],
               ),

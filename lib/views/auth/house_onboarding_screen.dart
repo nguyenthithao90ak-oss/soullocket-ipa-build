@@ -774,7 +774,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     final email = (user?.email ?? '').trim();
     if (email.isEmpty) {
       _setAutoCreateFailureMessage(
-        'Tài khoản cần có Gmail hợp lệ để nhận mã xác minh.',
+        context.tr('ui_auth_the_account_needs_a_valid_gmail_to_d8c4c6'),
         error: gate,
       );
       return null;
@@ -818,7 +818,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              Expanded(child: Text('Xác minh Gmail')),
+              Expanded(child: Text(context.tr('ui_auth_verify_gmail_6f83fb'))),
             ],
           ),
           content: SingleChildScrollView(
@@ -827,7 +827,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Nhập mã xác nhận đã gửi về ${gate.maskedEmail.isNotEmpty ? gate.maskedEmail : email} để tiếp tục tạo nhà.',
+                  L10nScope.of(context).format('ui_auth_enter_the_confirmation_code_sent_to_value1_5204f5', {'value1': gate.maskedEmail.isNotEmpty ? gate.maskedEmail : email}),
                   style: SLTheme.quicksand(
                     color: SLColors.textSecondary,
                     fontWeight: FontWeight.w700,
@@ -850,8 +850,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                     textInputAction: TextInputAction.done,
                     maxLength: 6,
                     autofocus: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Mã Gmail 6 số',
+                    decoration: InputDecoration(
+                      labelText: context.tr('ui_auth_gmail_6_digit_code_e509b3'),
                       counterText: '',
                       border: InputBorder.none,
                     ),
@@ -874,7 +874,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
           actions: [
             SLDialogAction(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text('Để sau'),
+              child: Text(context.tr('p5_later')),
             ),
             SLDialogAction(
               primary: true,
@@ -885,7 +885,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                 }
               },
 
-              child: Text('Xác nhận'),
+              child: Text(context.tr('auth_refresh_verify_action')),
             ),
           ],
         );
@@ -937,7 +937,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
           AppErrorMapper.resolve(
             e,
             fallbackMessage:
-                'Không tạo được ngôi nhà: hãy kiểm tra trạng thái đăng nhập và kết nối mạng.',
+                context.tr('ui_auth_unable_to_create_house_check_login_status_9fac00'),
           ).message,
           error: e,
         );
@@ -947,7 +947,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         AppErrorMapper.resolve(
           e,
           fallbackMessage:
-              'Không đăng xuất được: hãy kiểm tra kết nối mạng hoặc trạng thái đăng nhập hiện tại.',
+              context.tr('ui_auth_can_t_log_out_check_your_network_802fd2'),
         ).message,
       );
     } finally {
@@ -979,7 +979,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       if (widget.autoCreateOnly) {
         _setAutoCreateFailureMessage(missingSetupMessage);
       } else {
-        _showError(missingSetupMessage, title: 'Thiếu thông tin');
+        _showError(missingSetupMessage, title: context.tr('ui_auth_missing_information_70b9b0'));
       }
       return;
     }
@@ -991,7 +991,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       if (widget.autoCreateOnly) {
         _setAutoCreateFailureMessage(expiredSessionMessage);
       } else {
-        _showError(expiredSessionMessage, title: 'Phiên đăng nhập hết hạn');
+        _showError(expiredSessionMessage, title: context.tr('ui_auth_login_session_expired_3e7dfd'));
       }
       return;
     }
@@ -1027,7 +1027,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     if (_enableRecovery &&
         (recoveryQuestion.isEmpty || recoveryAnswer.isEmpty)) {
       _showError(
-        'Nếu bật câu hỏi bảo mật thì bạn cần nhập đủ câu hỏi và câu trả lời.',
+        context.tr('ui_auth_if_security_questions_are_enabled_you_need_b0c9ba'),
       );
       return;
     }
@@ -1147,14 +1147,14 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       );
     } on HouseCreationOtpRequiredException catch (e) {
       debugPrint(
-        '[HouseOnboarding] house creation OTP required: ${AppErrorMapper.resolve(e, fallbackMessage: 'Cần xác minh Gmail để tiếp tục tạo nhà.').message}',
+        '[HouseOnboarding] house creation OTP required: ${AppErrorMapper.resolve(e, fallbackMessage: context.tr('ui_auth_gmail_verification_is_required_to_continue_creating_982f13')).message}',
       );
       if (!mounted) return;
       final otp = await _promptHouseCreationOtp(e);
       if (!mounted) return;
       if (otp == null || otp.trim().isEmpty) {
         _setAutoCreateFailureMessage(
-          'Cần nhập mã Gmail để tiếp tục tạo ngôi nhà này.',
+          context.tr('ui_auth_need_to_enter_gmail_code_to_continue_61d746'),
           error: e,
         );
         return;
@@ -1451,7 +1451,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                   size: 20,
                 ),
                 label: Text(
-                  'Đăng xuất',
+                  context.tr('logout'),
                   style: SLTheme.quicksand(
                     color: const Color(0xFFD81B60),
                     fontWeight: FontWeight.w900,
@@ -1562,7 +1562,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'Tạo Tổ Ấm Của Hai Bạn',
+                              context.tr('ui_auth_create_a_home_for_the_two_of_40548c'),
                               textAlign: TextAlign.center,
                               style: SLTheme.quicksand(
                                 fontSize: 22,
@@ -1572,7 +1572,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                             ),
                             const SizedBox(height: 10),
                             Text(
-                              'Thiết lập một Mã Nhà (ID) duy nhất để đối phương có thể kết nối với bạn nhé.',
+                              context.tr('ui_auth_set_up_a_unique_house_code_id_ccb46e'),
                               textAlign: TextAlign.center,
                               style: SLTheme.quicksand(
                                 fontSize: 14,
@@ -1608,7 +1608,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                                 ),
                                 decoration: InputDecoration(
                                   labelText:
-                                      'Mã nhà của bạn (Ví dụ: NHATHUONG_99)',
+                                      context.tr('ui_auth_your_house_code_example_nhathuong_99_f3653e'),
                                   labelStyle: SLTheme.quicksand(
                                     fontWeight: FontWeight.w800,
                                     color: const Color(0xFF8C7381),
@@ -1657,7 +1657,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                                   const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
-                                      'Mã nhà khả dụng và hợp lệ!',
+                                      context.tr('Mã nhà khả dụng và hợp lệ!'),
                                       style: SLTheme.quicksand(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w800,
@@ -1694,7 +1694,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                             if (_idSuggestions.isNotEmpty) ...[
                               const SizedBox(height: 16),
                               Text(
-                                'Gợi ý mã nhà chưa tồn tại cho bạn:',
+                                context.tr('ui_auth_available_house_codes_72f312'),
                                 style: SLTheme.quicksand(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w900,
@@ -1760,7 +1760,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                                       ),
                                     )
                                   : Text(
-                                      'Thiết lập & Tạo nhà',
+                                      context.tr('ui_auth_setup_create_home_e46c99'),
                                       style: SLTheme.quicksand(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w900,
@@ -1887,7 +1887,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'Không thể chuẩn bị ngôi nhà',
+                                context.tr('ui_auth_unable_to_prepare_the_house_178f61'),
                                 textAlign: TextAlign.center,
                                 style: SLTheme.quicksand(
                                   fontSize: 22,
@@ -1916,7 +1916,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: Text(
-                                    'Chi tiết: $_autoCreateFailureDetail',
+                                    L10nScope.of(context).format('ui_auth_details_value1_c31893', {'value1': _autoCreateFailureDetail}),
                                     textAlign: TextAlign.center,
                                     style: SLTheme.quicksand(
                                       height: 1.35,
@@ -1945,7 +1945,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                                   ),
                                 ),
                                 child: Text(
-                                  'Thử lại',
+                                  context.tr('Thử lại'),
                                   style: SLTheme.quicksand(
                                     fontWeight: FontWeight.w900,
                                   ),
@@ -1964,7 +1964,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                                     Icons.mark_email_read_rounded,
                                   ),
                                   label: Text(
-                                    'Xác minh Gmail',
+                                    context.tr('ui_auth_verify_gmail_6f83fb'),
                                     style: SLTheme.quicksand(
                                       fontWeight: FontWeight.w900,
                                     ),
@@ -2043,7 +2043,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Vuốt xuống để xem tiếp',
+              context.tr('ui_auth_swipe_down_to_see_more_bc188d'),
               style: SLTheme.quicksand(
                 fontSize: 12,
                 fontWeight: FontWeight.w900,

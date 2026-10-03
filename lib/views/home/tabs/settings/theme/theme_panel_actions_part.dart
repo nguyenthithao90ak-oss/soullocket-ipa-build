@@ -585,7 +585,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
 
   Future<void> _pickAnniversaryDate() async {
     final initialDate = _draftAnniversaryDate ?? DateTime.now();
-    final picked = await showDatePicker(
+    final picked = await showSLDatePicker(
       context: context,
       initialDate: initialDate,
       firstDate: DateTime(2020),

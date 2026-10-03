@@ -73,7 +73,7 @@ class _AuroraSupportDialogContentState
     if (description.isEmpty) {
       AuthFeedbackDialogs.showError(
         context,
-        'Vui lòng mô tả vấn đề bạn đang gặp phải.',
+        context.tr('ui_auth_please_describe_the_problem_you_are_having_6278f7'),
       );
       return;
     }
@@ -138,14 +138,14 @@ class _AuroraSupportDialogContentState
       Navigator.pop(context);
       SLNotice.showSuccess(
         context,
-        'Đã gửi yêu cầu hỗ trợ thành công! SoulLocket sẽ liên hệ lại sớm nhất 💌',
+        context.tr('support_request_sent_message'),
       );
     } catch (_) {
       if (!mounted) return;
       setState(() => _isSubmitting = false);
       AuthFeedbackDialogs.showError(
         context,
-        'Gửi yêu cầu thất bại, vui lòng thử lại hoặc kiểm tra kết nối mạng.',
+        context.tr('ui_auth_sending_request_failed_please_try_again_or_4def20'),
       );
     }
   }
@@ -229,8 +229,8 @@ class _AuroraSupportDialogContentState
                               ),
                             ),
                             const SizedBox(height: 2),
-                            const Text(
-                              'Đội ngũ hỗ trợ luôn đồng hành cùng bạn 💕',
+                            Text(
+                              context.tr('support_team_intro'),
                               style: TextStyle(
                                 fontFamily: 'Quicksand',
                                 fontWeight: FontWeight.w700,
@@ -259,8 +259,8 @@ class _AuroraSupportDialogContentState
                   const SizedBox(height: 16),
 
                   // Category Selector Chips
-                  const Text(
-                    'Bạn cần hỗ trợ điều gì?',
+                  Text(
+                    context.tr('support_ui_welcome'),
                     style: TextStyle(
                       fontFamily: 'Quicksand',
                       fontSize: 12.5,
@@ -324,7 +324,7 @@ class _AuroraSupportDialogContentState
                   // Email Field
                   _buildSoftInput(
                     controller: _emailController,
-                    hintText: L10nService().translate('Email liên hệ (để nhận phản hồi)'),
+                    hintText: L10nService().translate('support_contact_email_label'),
                     icon: Icons.alternate_email_rounded,
                     keyboardType: TextInputType.emailAddress,
                   ),
@@ -334,7 +334,7 @@ class _AuroraSupportDialogContentState
                   // Description Field
                   _buildSoftInput(
                     controller: _descriptionController,
-                    hintText: L10nService().translate('Mô tả chi tiết vấn đề bạn đang gặp phải...'),
+                    hintText: L10nService().translate('support_description_hint'),
                     icon: Icons.chat_bubble_outline_rounded,
                     maxLines: 4,
                   ),

@@ -1,5 +1,6 @@
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:flutter/material.dart';
+import '../widgets/keepsake_design.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/models/soul_event.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
@@ -83,38 +84,21 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
   }
 
   Widget _buildDDayBadge(BuildContext context, int? diff, Color color) {
-    final isPast = diff == null || diff < 0;
-    final badgeColor = isPast
-        ? SLColors.textSecond.withValues(alpha: 0.15)
-        : color.withValues(alpha: diff == 0 ? 1 : 0.92);
-    final textColor = isPast ? SLColors.textPrimary : Colors.white;
-
     return Semantics(
       label: _dDayText(context, diff),
       child: Container(
-        constraints: const BoxConstraints(minHeight: 36),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: badgeColor,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: isPast
-              ? null
-              : <BoxShadow>[
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.20),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
+          color: KeepsakeStyle.accentSurface(context),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Text(
           _dDayText(context, diff),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: SLTypography.labelMedium.copyWith(
-            color: textColor,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0.3,
+          style: KeepsakeStyle.text(
+            context,
+            size: 12,
+            weight: FontWeight.w600,
+            color: KeepsakeStyle.accent(context),
           ),
         ),
       ),
@@ -162,53 +146,38 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
+      backgroundColor: KeepsakeStyle.canvas(context),
+      appBar: KeepsakeStyle.appBar(
+        context,
         title: Text(
           context.tr('p8_events_title'),
-          style: SLTypography.titleLarge.copyWith(
-            color: SLColors.primary,
-            fontWeight: FontWeight.w900,
-          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         leading: IconButton(
           tooltip: context.tr('p8_events_back'),
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: SLColors.primary,
-            size: 20,
-          ),
+          icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: <Widget>[
+        actions: [
           IconButton(
             tooltip: context.tr('p8_events_pin_widget'),
             onPressed: _isPinningWidget ? null : _pinWidget,
             icon: _isPinningWidget
-                ? const SizedBox.square(
+                ? SizedBox.square(
                     dimension: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: KeepsakeStyle.accent(context),
+                    ),
                   )
-                : const Icon(
-                    Icons.add_to_home_screen_rounded,
-                    color: SLColors.secondary,
-                  ),
+                : const Icon(Icons.add_to_home_screen_outlined),
           ),
-          IconButton(
-            tooltip: context.tr('p8_events_add'),
-            icon: const Icon(
-              Icons.add_circle_rounded,
-              color: SLColors.primary,
-              size: 28,
-            ),
-            onPressed: () => _openEditor(null),
-          ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 10),
         ],
       ),
-      body: SLTheme.background(
+      body: SafeArea(
+        top: false,
         child: LayoutBuilder(
           builder: (context, constraints) {
             final maxWidth = SLResponsive.maxContentWidthForWidth(
@@ -237,7 +206,7 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
                     if (!snapshot.hasData) {
                       return const Center(
                         child: CircularProgressIndicator(
-                          color: SLColors.primary,
+                          color: KeepsakeStyle.rosewood,
                         ),
                       );
                     }
@@ -302,6 +271,10 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
           },
         ),
       ),
+      bottomNavigationBar: KeepsakeActionBar(
+        label: context.tr('p8_events_add'),
+        onPressed: () => _openEditor(null),
+      ),
     );
   }
 
@@ -309,59 +282,15 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
     BuildContext context, {
     required int totalCount,
     required int upcomingCount,
-  }) {
-    return SLTheme.softPanel(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-      borderColor: SLColors.primary.withValues(alpha: 0.30),
-      child: Row(
-        children: <Widget>[
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              gradient: const LinearGradient(
-                colors: <Color>[SLColors.primary, SLColors.secondary],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: const Icon(
-              Icons.auto_awesome_rounded,
-              color: Colors.white,
-              size: 26,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  context
-                      .tr('p8_events_overview_title')
-                      .replaceAll('{count}', totalCount.toString()),
-                  style: SLTypography.titleSmall.copyWith(
-                    color: SLColors.textPrimary,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  context
-                      .tr('p8_events_overview_subtitle')
-                      .replaceAll('{count}', upcomingCount.toString()),
-                  style: SLTypography.bodySmall.copyWith(
-                    color: SLColors.textSecond,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  }) => KeepsakeHeader(
+    title: context
+        .tr('p8_events_overview_title')
+        .replaceAll('{count}', totalCount.toString()),
+    subtitle: context
+        .tr('p8_events_overview_subtitle')
+        .replaceAll('{count}', upcomingCount.toString()),
+    icon: Icons.calendar_today_outlined,
+  );
 
   Widget _buildLoadFailure(BuildContext context) {
     return Center(
@@ -378,51 +307,29 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
   }
 
   Widget _buildEmptyState(BuildContext context, double horizontalPadding) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(
-          horizontalPadding,
-          32,
-          horizontalPadding,
-          32,
+    return ListView(
+      physics: SLResponsive.scrollPhysicsForPlatform(),
+      padding: EdgeInsets.fromLTRB(horizontalPadding, 8, horizontalPadding, 24),
+      children: [
+        _buildOverview(context, totalCount: 0, upcomingCount: 0),
+        KeepsakeEmptyPanel(
+          kind: KeepsakeKind.events,
+          title: context.tr('p8_events_empty_title'),
+          subtitle: context.tr('p8_events_empty_subtitle'),
         ),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 440),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              SLTheme.emptyStatePanel(
-                icon: Icons.event_available_rounded,
-                title: context.tr('p8_events_empty_title'),
-                subtitle: context.tr('p8_events_empty_subtitle'),
-                accentColor: SLColors.primary,
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () => _openEditor(null),
-                  icon: const Icon(Icons.add_rounded),
-                  label: Text(context.tr('p8_events_add')),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: SLColors.primary,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(48),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      ],
     );
   }
 
   Widget _buildEventCard(BuildContext context, SoulEvent event) {
     final diff = _calculateDaysDiff(event);
-    final accentColor = Color(
-      int.tryParse(event.colorHex.replaceFirst('#', '0xFF')) ?? 0xFFFF4D94,
-    );
+    final accentColor = Color.lerp(
+      Color(
+        int.tryParse(event.colorHex.replaceFirst('#', '0xFF')) ?? 0xFF864758,
+      ),
+      KeepsakeStyle.ink(context),
+      0.28,
+    )!;
     final date = event.calculateNextOccurrence(DateTime.now());
     final dateText = date == null
         ? context.tr('event_no_next_date')
@@ -439,9 +346,10 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
                 Expanded(
                   child: Text(
                     event.title,
-                    style: SLTypography.titleSmall.copyWith(
-                      color: SLColors.textPrimary,
-                      fontWeight: FontWeight.w900,
+                    style: KeepsakeStyle.text(
+                      context,
+                      size: 16,
+                      weight: FontWeight.w600,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -451,9 +359,9 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
                   const SizedBox(width: 6),
                   Tooltip(
                     message: context.tr('p8_events_pinned'),
-                    child: const Icon(
+                    child: Icon(
                       Icons.push_pin_rounded,
-                      color: SLColors.warningGold,
+                      color: KeepsakeStyle.accent(context),
                       size: 16,
                     ),
                   ),
@@ -468,8 +376,10 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
               children: <Widget>[
                 Text(
                   dateText,
-                  style: SLTypography.bodySmall.copyWith(
-                    color: SLColors.textSecondary,
+                  style: KeepsakeStyle.text(
+                    context,
+                    size: 12,
+                    color: KeepsakeStyle.muted(context),
                   ),
                 ),
                 if (event.isLunar)
@@ -493,23 +403,9 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
             color: Colors.transparent,
             child: Ink(
               decoration: BoxDecoration(
-                color: SLColors.bgCard.withValues(alpha: 0.94),
+                color: KeepsakeStyle.surface(context),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: event.isPinned
-                      ? SLColors.warningGold.withValues(alpha: 0.55)
-                      : accentColor.withValues(alpha: 0.18),
-                  width: event.isPinned ? 1.4 : 1,
-                ),
-                boxShadow: <BoxShadow>[
-                  BoxShadow(
-                    color: (event.isPinned ? SLColors.warningGold : accentColor)
-                        .withValues(alpha: 0.10),
-                    blurRadius: 18,
-                    spreadRadius: -8,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
+                border: Border.all(color: KeepsakeStyle.line(context)),
               ),
               child: InkWell(
                 borderRadius: BorderRadius.circular(24),
@@ -596,7 +492,7 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
             context.tr('p8_events_lunar'),
             style: SLTypography.labelSmall.copyWith(
               color: color,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],

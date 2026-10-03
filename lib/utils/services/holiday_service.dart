@@ -2,63 +2,9 @@ import 'package:flutter/widgets.dart';
 import 'l10n_service.dart';
 import 'market_service.dart';
 import '../../core/constants/market_catalog.dart';
+import '../calendar/holiday_occurrence_resolver.dart';
 
-/// Đại diện cho một ngày lễ định nghĩa sẵn trong hệ thống
-class PresetHoliday {
-  final String id;
-  final int month;
-  final int day;
-  final String i18nKey;
-  final String defaultName;
-
-  /// Danh sách mã quốc gia áp dụng:
-  /// - `['ALL']`: Sự kiện Quốc tế (hiển thị cho tất cả quốc gia & ngôn ngữ).
-  /// - `['VN']`: Sự kiện đặc thù Việt Nam (chỉ hiển thị khi ngôn ngữ là tiếng Việt 'vi').
-  /// - `['DE']`, `['US']`, `['FR']`, `['JP']`, `['KR']`,...: Sẵn sàng cho giai đoạn bổ sung lễ hội từng nước.
-  final List<String> countries;
-
-  /// Key icon / hoạt cảnh sticker hiển thị
-  final String? stickerKey;
-
-  /// Lễ âm lịch chỉ dùng các ngày đã đối chiếu, không lặp ngày dương lịch mẫu.
-  final Map<int, (int, int)>? datesByYear;
-
-  const PresetHoliday({
-    required this.id,
-    required this.month,
-    required this.day,
-    required this.i18nKey,
-    required this.defaultName,
-    this.countries = const ['ALL'],
-    this.stickerKey,
-    this.datesByYear,
-  });
-
-  DateTime? dateInYear(int year) {
-    if (datesByYear == null) return DateTime(year, month, day);
-    final date = datesByYear![year];
-    return date == null ? null : DateTime(year, date.$1, date.$2);
-  }
-
-  DateTime? nextOccurrence(DateTime from) {
-    final today = DateTime(from.year, from.month, from.day);
-    if (datesByYear == null) {
-      final date = dateInYear(today.year)!;
-      return date.isBefore(today) ? dateInYear(today.year + 1) : date;
-    }
-    final dates =
-        datesByYear!.keys
-            .map(dateInYear)
-            .whereType<DateTime>()
-            .where((date) => !date.isBefore(today))
-            .toList()
-          ..sort();
-    return dates.isEmpty ? null : dates.first;
-  }
-
-  bool get isInternational => countries.contains('ALL');
-  bool get isVietnamOnly => countries.length == 1 && countries.contains('VN');
-}
+export '../calendar/holiday_occurrence_resolver.dart' show PresetHoliday;
 
 /// Dịch vụ quản lý và phân loại ngày lễ Quốc tế & theo từng Quốc gia
 class HolidayService {
@@ -257,6 +203,11 @@ class HolidayService {
         2029: (8, 16),
         2030: (8, 5),
       },
+      sourceReferences: [
+        'https://www.hko.gov.hk/en/gts/time/conversion1_text.htm',
+      ],
+      verifiedAt: '2026-10-03',
+      verificationStatus: 'verified',
     ),
 
     // ── 6. THÁI LAN (TH) ────────────────────────────────────────────────
@@ -268,9 +219,15 @@ class HolidayService {
       defaultName: 'Lễ Hội Thả Hoa Đăng Loy Krathong 🪔🌊',
       countries: ['TH'],
       stickerKey: 'holiday_th_loy_krathong',
-      // TAT 2025 và Thai PBS 2569; bổ sung năm mới sau khi đối chiếu lịch Thái.
+      // TAT 2025 và Thai PBS 2569; thiếu năm không tự sinh ngày dương.
       // https://www.thaipbs.or.th/now/content/3498
       datesByYear: {2025: (11, 5), 2026: (11, 24)},
+      sourceReferences: [
+        'https://www.thaipbs.or.th/now/content/3498',
+        'https://www.tatnews.org/2025/11/thailand-showcases-senses-of-siam-a-journey-to-total-well-being-at-wtm-2025/',
+      ],
+      verifiedAt: '2026-10-03',
+      verificationStatus: 'verified',
     ),
 
     // ── 7. TÂY BAN NHA (ES) ─────────────────────────────────────────────
@@ -326,16 +283,16 @@ class HolidayService {
             .toLowerCase();
     Set<String> packs;
     if (holidayPackCodes != null) {
-      packs = holidayPackCodes.map((code) => code.toUpperCase()).toSet();
+      packs = holidayPackCodes.map((code) => code.trim().toUpperCase()).toSet();
     } else if (marketCode != null) {
       packs = MarketCatalog.defaultHolidayPacks(
-        marketCode.toUpperCase(),
+        marketCode.trim().toUpperCase(),
       ).toSet();
     } else if (currentLocale != null) {
       packs = MarketCatalog.defaultHolidayPacks(
         currentLocale.countryCode?.toUpperCase() ?? 'ALL',
       ).toSet();
-      // Tương thích lời gọi locale cũ; chọn gói rõ ràng có thể đổi quy tắc này.
+      // Tương thích lời gọi locale cũ; gói rõ ràng vẫn qua điều kiện vi bên dưới.
       packs.remove('VN');
       if (language == 'vi') packs.add('VN');
     } else {
@@ -344,7 +301,11 @@ class HolidayService {
           .toSet();
     }
     return allHolidays
-        .where((holiday) => holiday.countries.any(packs.contains))
+        .where(
+          (holiday) =>
+              (!holiday.isVietnamOnly || language == 'vi') &&
+              holiday.countries.any(packs.contains),
+        )
         .toList(growable: false);
   }
 

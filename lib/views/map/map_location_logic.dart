@@ -361,7 +361,7 @@ extension _MapLocationLogicExt on _MapScreenState {
       key: 'partner_nearby',
       title: context.tr('map_haibnanggn_b5a8a9'),
       body:
-          'Khoảng cách hiện tại chỉ còn ${_formatDistanceMeters(partnerDistanceMeters)}.',
+          L10nScope.of(context).format('ui_map_the_current_distance_is_only_value1_078bcc', {'value1': _formatDistanceMeters(partnerDistanceMeters)}),
     );
   }
 
@@ -399,9 +399,9 @@ extension _MapLocationLogicExt on _MapScreenState {
     _setActiveNearbyPinKeyForRole(role, nextKey);
     _dispatchMapProximityNotice(
       key: '${role}_$nextKey',
-      title: '$actorLabel đang tới gần địa điểm ghim',
+      title: L10nScope.of(context).format('ui_map_value1_is_approaching_the_pinning_location_068809', {'value1': actorLabel}),
       body:
-          '${nearestPin.displayTitle} chỉ còn cách khoảng ${_formatDistanceMeters(nearestPin.distanceMeters)}.',
+          L10nScope.of(context).format('ui_map_value1_is_only_about_value2_away_e49f17', {'value1': nearestPin.displayTitle, 'value2': _formatDistanceMeters(nearestPin.distanceMeters)}),
     );
   }
 

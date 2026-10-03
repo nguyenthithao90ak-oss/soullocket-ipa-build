@@ -1,7 +1,12 @@
 /// Chờ cả settings và members trước khi kết luận chưa ghép.
 class PairingShortcutState {
-  PairingShortcutState({Map? cachedSettings}) {
-    if (cachedSettings?['isPaired'] == true) {
+  PairingShortcutState({Map? cachedSettings, Map? cachedSnapshot}) {
+    if (cachedSnapshot?['paired'] is bool &&
+        cachedSnapshot?['settings'] is Map) {
+      settings = Map.of(cachedSnapshot!['settings'] as Map);
+      paired = cachedSnapshot['paired'] as bool;
+      ready = true;
+    } else if (cachedSettings?['isPaired'] == true) {
       settings = Map.of(cachedSettings!);
       paired = true;
       ready = true;
@@ -15,6 +20,27 @@ class PairingShortcutState {
   bool _settingsReceived = false;
   bool _membersReceived = false;
   bool _membersPaired = false;
+
+  bool get confirmed =>
+      _settingsReceived && (_membersReceived || settings['isPaired'] == true);
+
+  Map<String, dynamic>? toCache() => ready
+      ? {
+          'paired': paired,
+          'settings': {
+            for (final key in const [
+              'isPaired',
+              'nameU1',
+              'nameU2',
+              'avatarU1',
+              'avatarU2',
+              'avtUser1',
+              'avtUser2',
+            ])
+              if (settings.containsKey(key)) key: settings[key],
+          },
+        }
+      : null;
 
   void applySettings(Map value) {
     settings = Map.of(value);

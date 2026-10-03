@@ -248,7 +248,7 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
                             children: [
                               Text(
                                 hasPages
-                                    ? 'Trang ${safeIndex + 1}/${_pages.length}'
+                                    ? L10nScope.of(context).format('ui_utilities_page_value1_value2_349ac0', {'value1': safeIndex + 1, 'value2': _pages.length})
                                     : context.tr('util_stayringca_d5d3c4'),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -670,7 +670,7 @@ class _DiaryPageCard extends StatelessWidget {
                     ),
                     SLSpacing.h4,
                     Text(
-                      '${DateFormat('dd/MM/yyyy').format(page.createdAt)} • ${page.wordCount} chữ',
+                      L10nScope.of(context).format('ui_utilities_value1_value2_words_a27aaf', {'value1': DateFormat('dd/MM/yyyy').format(page.createdAt), 'value2': page.wordCount}),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: SLTheme.quicksand(
@@ -948,7 +948,7 @@ class _DiaryExportPageCard extends StatelessWidget {
                     borderRadius: SLRadius.pillAll,
                   ),
                   child: Text(
-                    'Trang $pageNumber/$totalPages',
+                    L10nScope.of(context).format('ui_utilities_page_value1_value2_349ac0', {'value1': pageNumber, 'value2': totalPages}),
                     style: SLTheme.quicksand(
                       fontSize: 11,
                       fontWeight: FontWeight.w900,

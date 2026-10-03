@@ -54,7 +54,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                     ),
                     child: Text(
                       hasPhotos
-                          ? '${photos.length} ảnh'
+                          ? L10nScope.of(context).format('ui_utilities_value1_photos_df06c7', {'value1': photos.length})
                           : context.tr('util_0nh_e58f05'),
                       style: SLTheme.quicksand(
                         fontWeight: FontWeight.w800,

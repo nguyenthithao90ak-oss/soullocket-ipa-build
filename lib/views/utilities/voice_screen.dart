@@ -49,7 +49,7 @@ class _VoiceScreenState extends State<VoiceScreen>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
-      tooltip: 'Hướng dẫn',
+      tooltip: context.tr('auth_guide_short'),
       icon: const Icon(
         Icons.info_outline_rounded,
         color: Colors.white,
@@ -63,25 +63,25 @@ class _VoiceScreenState extends State<VoiceScreen>
     showDialog<void>(
       context: context,
       builder: (context) => SLAlertDialog(
-        title: Text('Ghi âm giọng nói'),
-        content: const SingleChildScrollView(
+        title: Text(context.tr('ui_utilities_voice_recording_74d3a2')),
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(context.tr('vault_features_label'), style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
               Text(
-                '- Ghi lại các lời chúc, giọng hát, hoặc tiếng ngáy của người ấy để lưu giữ.\n- Lưu trữ trên mây, không lo mất file khi đổi điện thoại.',
+                context.tr('voice_help_features'),
               ),
               SizedBox(height: 12),
               Text(
-                'Cách sử dụng:',
+                context.tr('p3_help_how_to_label'),
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 4),
               Text(
-                '- Bấm và giữ biểu tượng Micro để bắt đầu ghi âm.\n- Đặt tên cho bản ghi và lưu lại.\n- Bấm nút Phát để nghe lại bất cứ lúc nào, âm thanh sẽ đồng bộ sang máy người kia.',
+                context.tr('voice_help_steps'),
               ),
             ],
           ),
@@ -91,7 +91,7 @@ class _VoiceScreenState extends State<VoiceScreen>
             primary: true,
 
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu'),
+            child: Text(context.tr('Đã hiểu')),
           ),
         ],
       ),
@@ -270,7 +270,7 @@ class _VoiceScreenState extends State<VoiceScreen>
       }
       if (durationMs > remainingMs) {
         _showMessage(
-          'Kho ghi âm còn ${_formatDuration(remainingMs)} nên không đủ cho file này.',
+          L10nScope.of(context).format('ui_utilities_the_recording_store_still_has_value1_so_c10203', {'value1': _formatDuration(remainingMs)}),
         );
         return;
       }
@@ -824,7 +824,7 @@ class _VoiceScreenState extends State<VoiceScreen>
                 primary: true,
 
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('OK'),
+                child: Text(context.tr('OK')),
               ),
             ],
           ),
@@ -1226,7 +1226,7 @@ class _VoiceScreenState extends State<VoiceScreen>
                   child: Column(
                     children: [
                       Text(
-                        _isRecording ? 'TRANSMITTING...' : 'STANDBY 📻',
+                        _isRecording ? context.tr('voice_recording_status') : context.tr('voice_ready_status'),
                         style: SLTheme.quicksand(
                           fontSize: 10,
                           fontWeight: FontWeight.w900,
@@ -1311,7 +1311,7 @@ class _VoiceScreenState extends State<VoiceScreen>
                 ),
                 SLSpacing.h6,
                 Text(
-                  _isRecording ? 'BẤM ĐỂ DỪNG' : 'PTT BUTTON',
+                  _isRecording ? context.tr('voice_stop_action') : context.tr('voice_record_action'),
                   style: SLTheme.quicksand(
                     fontSize: 9,
                     fontWeight: FontWeight.w900,
@@ -1341,7 +1341,7 @@ class _VoiceScreenState extends State<VoiceScreen>
                       size: 18,
                     ),
                     label: Text(
-                      'Tải lên file audio',
+                      context.tr('ui_utilities_upload_an_audio_file_4bc04e'),
                       style: SLTheme.quicksand(
                         color: SLColors.primary,
                         fontWeight: FontWeight.w900,

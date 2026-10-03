@@ -1119,8 +1119,8 @@ class _InteractionSuccessDialog extends StatelessWidget {
                     ),
                     child: Text(
                       partnerOnline
-                          ? '$partnerName đang online, nên người ấy sẽ thấy ngay trên màn hình chính luôn đó.'
-                          : '$partnerName chưa mở nhà, nhưng lời nhắn này đã được giữ lại thật cẩn thận.',
+                          ? L10nScope.of(context).format('ui_home_value1_is_online_so_he_or_she_13297f', {'value1': partnerName})
+                          : L10nScope.of(context).format('ui_home_value1_has_not_opened_the_house_yet_ccc1a7', {'value1': partnerName}),
                       textAlign: TextAlign.center,
                       style: SLTheme.quicksand(
                         fontSize: 14,

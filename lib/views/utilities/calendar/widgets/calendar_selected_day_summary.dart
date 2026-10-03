@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
-
-import 'calendar_info_pill.dart';
+import 'calendar_design.dart';
 
 class CalendarSelectedDaySummary extends StatelessWidget {
   final double horizontalInset;
@@ -14,6 +12,7 @@ class CalendarSelectedDaySummary extends StatelessWidget {
   final String badgeLabel;
   final String shortDateLabel;
   final int eventCount;
+  final int holidayCount;
 
   const CalendarSelectedDaySummary({
     super.key,
@@ -26,128 +25,59 @@ class CalendarSelectedDaySummary extends StatelessWidget {
     required this.badgeLabel,
     required this.shortDateLabel,
     required this.eventCount,
+    this.holidayCount = 0,
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: horizontalInset),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        padding: EdgeInsets.all(compact ? 16 : 18),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFFFFEFF), Color(0xFFF7FBFF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+  Widget build(BuildContext context) => Padding(
+    padding: EdgeInsets.symmetric(horizontal: horizontalInset + 4),
+    child: SizedBox(
+      width: double.infinity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 10,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                badgeLabel,
+                style: CalendarDesign.text(
+                  context,
+                  size: 13,
+                  weight: FontWeight.w700,
+                  color: CalendarDesign.primary(context),
+                ),
+              ),
+              Text(
+                L10nService().format('calendar_plan_count', {
+                  'count': eventCount,
+                }),
+                style: CalendarDesign.text(
+                  context,
+                  size: 13,
+                  color: CalendarDesign.muted(context),
+                ),
+              ),
+              if (holidayCount > 0)
+                Text(
+                  L10nService().format('calendar_holiday_count', {'count': holidayCount}),
+                  style: CalendarDesign.text(context, size: 13, color: CalendarDesign.holidayAccent(context)),
+                ),
+            ],
           ),
-          borderRadius: BorderRadius.circular(26),
-          border: Border.all(color: const Color(0xFFE6EAF9)),
-          boxShadow: [
-            BoxShadow(
-              color: accent.withValues(alpha: 0.08),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
+          const SizedBox(height: 6),
+          Text(
+            displayDate,
+            style: CalendarDesign.text(
+              context,
+              size: 19,
+              weight: FontWeight.w700,
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: compact ? 46 : 50,
-                  height: compact ? 46 : 50,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        accent.withValues(alpha: 0.16),
-                        accent.withValues(alpha: 0.08),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(leadingIcon, color: accent, size: 24),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        displayDate,
-                        style: SLTheme.quicksand(
-                          fontSize: compact ? 15.5 : 16.5,
-                          fontWeight: FontWeight.w900,
-                          color: SLTheme.textMain,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        description,
-                        style: SLTheme.quicksand(
-                          fontSize: compact ? 11.5 : 12,
-                          fontWeight: FontWeight.w700,
-                          color: SLTheme.textMuted,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    badgeLabel,
-                    style: SLTheme.quicksand(
-                      fontSize: compact ? 10 : 11,
-                      fontWeight: FontWeight.w900,
-                      color: accent,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: compact ? 12 : 14),
-            Wrap(
-              spacing: compact ? 6 : 8,
-              runSpacing: compact ? 6 : 8,
-              children: [
-                CalendarInfoPill(
-                  icon: Icons.calendar_today_rounded,
-                  label: shortDateLabel,
-                  accent: accent,
-                  compact: compact,
-                ),
-                CalendarInfoPill(
-                  icon: Icons.event_note_rounded,
-                  label: L10nService().format('calendar_plan_count', {
-                    'count': eventCount,
-                  }),
-                  accent: accent,
-                  compact: compact,
-                ),
-                CalendarInfoPill(
-                  icon: Icons.notifications_active_rounded,
-                  label: context.tr('calendar_reminder_at_nine'),
-                  accent: accent,
-                  compact: compact,
-                ),
-              ],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }

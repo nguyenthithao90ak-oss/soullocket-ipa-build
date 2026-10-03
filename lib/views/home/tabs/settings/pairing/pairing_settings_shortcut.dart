@@ -8,6 +8,7 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import 'pairing_connection_widgets.dart';
 import 'pairing_shortcut_state.dart';
+import 'pairing_display_cache.dart';
 import '../../../../../utils/services/offline_cache_service.dart';
 
 /// Ô ghép nối chỉ đọc hai nhánh cần thiết; không suy trạng thái từ chế độ couple.
@@ -64,15 +65,28 @@ class _PairingSettingsShortcutState extends State<PairingSettingsShortcut> {
     }
     final prefs = OfflineCacheService.getPrefsSync();
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid != null &&
-        prefs?.getString('il_auth_uid') == uid &&
-        prefs?.getString('il_house_id') == houseId) {
-      final cache = OfflineCacheService.loadCacheSync('home_settings_$houseId');
-      _snapshot = PairingShortcutState(
-        cachedSettings: cache is Map ? cache : null,
+    _snapshot = PairingDisplayCache.restore(
+      uid: uid,
+      houseId: houseId,
+      prefs: prefs,
+    );
+    void remember() {
+      if (uid == null || FirebaseAuth.instance.currentUser?.uid != uid) return;
+      unawaited(
+        PairingDisplayCache.remember(
+          uid: uid,
+          houseId: houseId,
+          state: _snapshot,
+        ).catchError((Object error) {
+          debugPrint('[Pairing] Display cache unavailable: $error');
+        }),
       );
     }
-    bool current() => mounted && generation == _generation;
+
+    bool current() =>
+        mounted &&
+        generation == _generation &&
+        FirebaseAuth.instance.currentUser?.uid == uid;
     _loadTimer = Timer(const Duration(seconds: 8), () {
       if (current() && !_snapshot.ready) setState(_snapshot.markFailed);
     });
@@ -89,6 +103,7 @@ class _PairingSettingsShortcutState extends State<PairingSettingsShortcut> {
                     : const {},
               ),
             );
+            remember();
           },
           onError: (Object error) {
             if (current()) setState(_snapshot.markFailed);
@@ -104,6 +119,7 @@ class _PairingSettingsShortcutState extends State<PairingSettingsShortcut> {
             setState(
               () => _snapshot.applyMembers(members is Map ? members : const {}),
             );
+            remember();
           },
           onError: (Object error) {
             if (current()) setState(_snapshot.markFailed);
@@ -183,6 +199,9 @@ class _PairingSettingsShortcutState extends State<PairingSettingsShortcut> {
                                   left: 0,
                                   top: 0,
                                   child: PairingAvatar(
+                                    key: ValueKey(
+                                      '${FirebaseAuth.instance.currentUser?.uid}:${widget.houseId}:user1',
+                                    ),
                                     url: pairingAvatarUrl(_settings, 'user1'),
                                     size: 39,
                                   ),
@@ -191,6 +210,9 @@ class _PairingSettingsShortcutState extends State<PairingSettingsShortcut> {
                                   right: 0,
                                   top: 0,
                                   child: PairingAvatar(
+                                    key: ValueKey(
+                                      '${FirebaseAuth.instance.currentUser?.uid}:${widget.houseId}:user2',
+                                    ),
                                     url: pairingAvatarUrl(_settings, 'user2'),
                                     size: 39,
                                     second: true,

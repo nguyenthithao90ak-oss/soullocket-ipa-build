@@ -275,7 +275,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       _bodyCtrl.clear();
       _targetHouseIdCtrl.clear();
       ScaffoldMessenger.of(context).showSnackBar(
-        SLSnackBar(content: Text('Đã gửi thông báo đến ${houseIds.length} nhà!')),
+        SLSnackBar(content: Text(L10nScope.of(context).format('ui_admin_notification_sent_to_value1_home_4d187c', {'value1': houseIds.length}))),
       );
     } catch (e) {
       if (!mounted) return;

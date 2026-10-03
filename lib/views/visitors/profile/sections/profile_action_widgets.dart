@@ -32,8 +32,8 @@ class VisitorProfileAppBarActions extends StatelessWidget {
             child: Icon(
               Icons.settings_rounded,
               color: isUpdatingProfileAppearance
-                  ? Colors.white54
-                  : Colors.white,
+                  ? SLColors.textTertiary
+                  : SLColors.ink,
               size: 18,
             ),
           ),
@@ -46,7 +46,7 @@ class VisitorProfileAppBarActions extends StatelessWidget {
       child: PopupMenuButton<String>(
         tooltip: context.tr('p5_profile_more_actions'),
         icon: const _ActionCircle(
-          child: Icon(Icons.more_vert, color: Colors.white, size: 18),
+          child: Icon(Icons.more_vert, color: SLColors.ink, size: 18),
         ),
         shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
         onSelected: onSelected,
@@ -155,8 +155,8 @@ class _ActionCircle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: SLSpacing.all8,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.18),
+      decoration: const BoxDecoration(
+        color: SLColors.paper,
         shape: BoxShape.circle,
       ),
       child: child,

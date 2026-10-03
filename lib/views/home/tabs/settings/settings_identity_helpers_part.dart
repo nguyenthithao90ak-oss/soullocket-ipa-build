@@ -2,8 +2,11 @@ part of '../settings_tab.dart';
 
 extension _SettingsTabIdentityHelpers on _SettingsTabState {
   Future<void> _loadLocalSettings() async {
+    final sessionUid = _auth.currentUser?.uid;
+    final sessionHouseId = _houseId;
     final prefs = await SharedPreferences.getInstance();
     await UiPrefs.ensureLoaded();
+    if (!mounted || _auth.currentUser?.uid != sessionUid || _houseId != sessionHouseId) return;
     final ui = UiPrefs.notifier.value;
     final currentUid = _auth.currentUser?.uid ?? 'guest';
     final houseIdKey = _houseId ?? 'local';
@@ -15,7 +18,7 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
             .trim();
     final localLoveUnit = (prefs.getString('il_love_unit_text') ?? '').trim();
     final localGpsMode = await LocationService.getGpsUpdateMode();
-    if (!mounted) return;
+    if (!mounted || _auth.currentUser?.uid != sessionUid || _houseId != sessionHouseId) return;
     setState(() {
       _gpsMode = localGpsMode;
       _musicAutoplay = prefs.getBool('il_music_autoplay') ?? false;

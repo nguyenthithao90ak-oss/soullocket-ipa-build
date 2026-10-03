@@ -64,7 +64,7 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
           ),
           const SizedBox(height: 10),
           Text(
-            '${_pendingResetRequesterLabel()} đã xác nhận reset qua email. Toàn bộ dữ liệu sẽ bị xoá vào ${_formatResetSchedule(scheduledAt)} nếu không thu hồi kịp thời.',
+            L10nScope.of(context).format('ui_utilities_value1_has_confirmed_the_reset_via_email_8737e3', {'value1': _pendingResetRequesterLabel(), 'value2': _formatResetSchedule(scheduledAt)}),
             style: SLTheme.quicksand(
               color: Colors.white70,
               fontWeight: FontWeight.w600,
@@ -177,7 +177,7 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                     const SizedBox(width: 10),
                     Flexible(
                       child: Text(
-                        'Kho lưu trữ riêng tư được mã hóa an toàn. 🔐',
+                        context.tr('ui_utilities_secure_encrypted_private_storage_04d8a5'),
                         textAlign: TextAlign.center,
                         style: SLTheme.quicksand(
                           color: Colors.white.withValues(alpha: 0.9),
@@ -190,7 +190,7 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Chỉ hai bạn mới có thể xem được nội dung.',
+                  context.tr('ui_utilities_only_the_two_of_you_can_view_429942'),
                   textAlign: TextAlign.center,
                   style: SLTheme.quicksand(
                     color: Colors.white60,
@@ -280,8 +280,8 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                   ),
                   child: Text(
                     Platform.isIOS || Platform.isMacOS
-                        ? 'Tối đa ${StorageService.maxSecretVaultSelectionPerBatch} ảnh/lần  •  Giới hạn ${StorageService.secretVaultDailyLimitFree} ảnh/ngày'
-                        : 'Tối đa ${StorageService.maxSecretVaultSelectionPerBatch} ảnh/lần  •  Thường: ${StorageService.secretVaultDailyLimitFree}  •  PRO: ${StorageService.secretVaultDailyLimitVip} ảnh/ngày',
+                        ? L10nScope.of(context).format('ui_utilities_maximum_value1_photos_time_limit_value2_photos_c7539e', {'value1': StorageService.maxSecretVaultSelectionPerBatch, 'value2': StorageService.secretVaultDailyLimitFree})
+                        : L10nScope.of(context).format('ui_utilities_maximum_value1_photos_time_regular_value2_pro_abac62', {'value1': StorageService.maxSecretVaultSelectionPerBatch, 'value2': StorageService.secretVaultDailyLimitFree, 'value3': StorageService.secretVaultDailyLimitVip}),
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
                       color: Colors.white54,
@@ -377,7 +377,7 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
             ),
             const SizedBox(height: 16),
             Text(
-              'Kho mật đang trống.',
+              context.tr('ui_utilities_the_vault_is_empty_33d92f'),
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 color: Colors.white60,
@@ -387,7 +387,7 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
             ),
             const SizedBox(height: 4),
             Text(
-              'Thêm ảnh đầu tiên để bắt đầu bảo mật!',
+              context.tr('vault_empty_add_photo'),
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 color: Colors.white38,
@@ -419,8 +419,8 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                 ),
                 child: Text(
                   _hasMorePhotos
-                      ? '${_photos.length} ảnh gần nhất'
-                      : '${_photos.length} ảnh',
+                      ? L10nScope.of(context).format('ui_utilities_value1_most_recent_photo_5ba47b', {'value1': _photos.length})
+                      : L10nScope.of(context).format('ui_utilities_value1_photos_df06c7', {'value1': _photos.length}),
                   style: SLTheme.quicksand(
                     color: const Color(0xFFCE93D8),
                     fontWeight: FontWeight.w700,

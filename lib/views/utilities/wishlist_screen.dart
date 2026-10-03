@@ -24,7 +24,7 @@ class WishlistScreen extends StatefulWidget {
 class _WishlistScreenState extends State<WishlistScreen> {
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
-      tooltip: 'Hướng dẫn',
+      tooltip: context.tr('auth_guide_short'),
       icon: const Icon(Icons.info_outline_rounded,
           color: SLColors.primary, size: 22),
       onPressed: () => _showInfoDialog(context),
@@ -35,25 +35,25 @@ class _WishlistScreenState extends State<WishlistScreen> {
     showDialog<void>(
       context: context,
       builder: (context) => SLAlertDialog(
-        title: Text('Danh sách Ước nguyện'),
-        content: const SingleChildScrollView(
+        title: Text(context.tr('util_danhschcng_153531')),
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(context.tr('vault_features_label'), style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
               Text(
-                '- Lưu lại những món quà hoặc những nơi bạn muốn đi để người ấy biết.\n- Tạo bất ngờ bằng cách âm thầm đánh dấu "Đã mua tặng".',
+                context.tr('ui_utilities_save_gifts_or_places_you_want_to_5c0a33'),
               ),
               SizedBox(height: 12),
               Text(
-                'Cách sử dụng:',
+                context.tr('p3_help_how_to_label'),
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 4),
               Text(
-                '- Bấm Thêm điều ước, nhập tên món quà, đính kèm hình ảnh và link mua hàng.\n- Nửa kia có thể vào xem và bấm nút Thực hiện điều ước để tặng bạn một sự bất ngờ.',
+                context.tr('ui_utilities_click_add_wish_enter_gift_name_attach_dc8dc8'),
               ),
             ],
           ),
@@ -63,7 +63,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
             primary: true,
 
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu'),
+            child: Text(context.tr('Đã hiểu')),
           ),
         ],
       ),
@@ -148,8 +148,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
 
     if (_data != null && _data!.length >= 50) {
       ScaffoldMessenger.of(context).showSnackBar(SLSnackBar(
-        content: const Text(
-            'Danh sách điều ước đã đạt giới hạn (tối đa 50 mục). Vui lòng xoá bớt trước khi thêm mới.'),
+        content: Text(
+            context.tr('ui_utilities_wish_list_has_reached_its_limit_maximum_f8e2ef')),
         backgroundColor: SLColors.danger,
       ));
       return;
@@ -191,12 +191,12 @@ class _WishlistScreenState extends State<WishlistScreen> {
     showDialog(
       context: context,
       builder: (ctx) => SLAlertDialog(
-        title: const Text('Xoá điều ước'),
-        content: const Text('Bạn có chắc chắn muốn xoá điều ước này?'),
+        title: Text(context.tr('ui_utilities_delete_the_wish_7675cb')),
+        content: Text(context.tr('ui_utilities_are_you_sure_you_want_to_delete_62ee99')),
         actions: [
           SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Huỷ'),
+            child: Text(context.tr('Huỷ')),
           ),
           SLDialogAction(
             primary: true,
@@ -207,7 +207,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
               _dbRef.child('houses/${widget.houseId}/wishlist/$key').remove();
             },
 
-            child: const Text('Xoá'),
+            child: Text(context.tr('ui_utilities_delete_82339c')),
           ),
         ],
       ),
@@ -348,14 +348,14 @@ class _WishlistScreenState extends State<WishlistScreen> {
           ),
           SLSpacing.h12,
           _buildWishOptionRow(
-            title: 'Nhóm',
+            title: context.tr('p5_notif_detail_category'),
             options: _categoryLabels,
             selectedValue: _selectedCategory,
             onSelected: (value) => setState(() => _selectedCategory = value),
           ),
           SLSpacing.h10,
           _buildWishOptionRow(
-            title: 'Ưu tiên',
+            title: context.tr('home_utin_52f79f'),
             options: _priorityLabels,
             selectedValue: _selectedPriority,
             onSelected: (value) => setState(() => _selectedPriority = value),
@@ -680,7 +680,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      'Wishlist đang có $totalCount món',
+                      L10nScope.of(context).format('ui_utilities_value1_wishes_in_the_list_e88ad5', {'value1': totalCount}),
                       style: SLTheme.quicksand(
                         fontSize: 17,
                         fontWeight: FontWeight.w900,
@@ -689,7 +689,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     ),
                     SLSpacing.h4,
                     Text(
-                      'Hoàn thành $doneCount món • ${_currencyFormat.format(totalPrice)}',
+                      L10nScope.of(context).format('ui_utilities_value1_items_completed_value2_7b816b', {'value1': doneCount, 'value2': _currencyFormat.format(totalPrice)}),
                       style: SLTheme.quicksand(
                         fontSize: 12.2,
                         fontWeight: FontWeight.w700,
@@ -715,7 +715,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
           ),
           SLSpacing.h8,
           Text(
-            'Ưu tiên cao sẽ được đưa lên trước để dễ quyết định mua/làm trước.',
+            context.tr('ui_utilities_high_priority_will_be_given_first_to_f4b6ce'),
             style: SLTheme.quicksand(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,

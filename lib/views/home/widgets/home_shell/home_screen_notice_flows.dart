@@ -35,7 +35,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
         context,
         title: context.tr('home_thitbangch_91f2dd'),
         message:
-            'Thiết bị này đang ở chế độ chờ duyệt. Bạn chưa thể thay đổi tên nhà, bảo mật, thông báo hay widget cho đến khi được duyệt trên thiết bị tin cậy hoặc đến ${_formatPendingDeviceUnlockAt(trustState.autoApproveAtMs)}. Avatar vẫn có thể đổi ở màn hình chính.',
+            L10nScope.of(context).format('ui_home_this_device_is_in_standby_mode_you_cba650', {'value1': _formatPendingDeviceUnlockAt(trustState.autoApproveAtMs)}),
         confirmText: context.tr('home_hiu_93c4c0'),
         cancelText: context.tr('home_ng_f63d1e'),
       );
@@ -262,7 +262,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Cảm ơn bạn đã tạo tài khoản và trở thành một trong những người dùng đầu tiên của ứng dụng.\n\nĐây vẫn là phiên bản đầu tiên nên có thể còn xuất hiện lỗi nhỏ, tính năng chưa hoàn thiện hoặc đôi lúc hoạt động chưa thật sự ổn định. Mong bạn thông cảm và tiếp tục đồng hành cùng tụi mình trong giai đoạn đầu này.\n\nTài khoản mới cũng đang được tặng Pro dùng thử 1 ngày để bạn khám phá thêm nhiều tính năng. Chúc bạn có thật nhiều trải nghiệm dễ thương với SoulLocket 💖',
+                  context.tr('ui_home_thank_you_for_creating_an_account_and_63c6e4'),
                   style: SLTheme.quicksand(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w600,
@@ -273,19 +273,19 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
                 SLSpacing.h12,
                 _buildNewUserChecklistItem(
                   icon: Icons.cloud_done_rounded,
-                  text: 'Kiểm tra đồng bộ để yên tâm khi đổi máy.',
+                  text: context.tr('ui_home_check_synchronization_for_peace_of_mind_when_e76602'),
                 ),
                 _buildNewUserChecklistItem(
                   icon: Icons.photo_camera_rounded,
-                  text: 'Tạo kỷ niệm đầu tiên cho hai bạn.',
+                  text: context.tr('ui_home_create_your_first_memories_for_the_two_e504e3'),
                 ),
                 _buildNewUserChecklistItem(
                   icon: Icons.notifications_active_rounded,
-                  text: 'Bật nhắc ngày kỷ niệm và lời nhắn yêu thương.',
+                  text: context.tr('ui_home_turn_on_anniversary_reminders_and_love_messages_f3a849'),
                 ),
                 _buildNewUserChecklistItem(
                   icon: Icons.palette_rounded,
-                  text: 'Chọn theme hoặc chế độ hiệu năng phù hợp máy.',
+                  text: context.tr('ui_home_choose_a_theme_or_performance_mode_suitable_83448a'),
                 ),
                 SLSpacing.h16,
                 SizedBox(
@@ -598,7 +598,7 @@ class _InactivityCountdownDialogState
             child: Text(
               context.tr('home_khonghd_inactivity') != 'home_khonghd_inactivity'
                   ? context.tr('home_khonghd_inactivity')
-                  : 'Không có hoạt động',
+                  : context.tr('ui_home_no_activity_3061c3'),
             ),
           ),
         ],
@@ -786,16 +786,16 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
               ),
             ),
             const SizedBox(width: 10),
-            Expanded(child: Text('Gói PRO đã hết hạn')),
+            Expanded(child: Text(context.tr('ui_home_pro_package_has_expired_fbc43c'))),
           ],
         ),
         content: Text(
-          'Tài khoản PRO của bạn đã hết hạn. Bạn hiện đang có $activeCount liên kết album hoạt động (tối đa 5 đối với tài khoản thường).\n\nVui lòng chọn giữ lại tối đa 5 liên kết trong vòng $daysRemaining ngày nữa, nếu không hệ thống sẽ tự động khóa các liên kết cũ.',
+          L10nScope.of(context).format('ui_home_your_pro_account_has_expired_you_currently_206a5e', {'value1': activeCount, 'value2': daysRemaining}),
         ),
         actions: [
           SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Để sau'),
+            child: Text(context.tr('p5_later')),
           ),
           SLDialogAction(
             primary: true,
@@ -809,7 +809,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
                 ),
               );
             },
-            child: Text('Chọn ngay'),
+            child: Text(context.tr('ui_home_choose_now_3496ee')),
           ),
         ],
       ),
@@ -836,18 +836,18 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
               ),
             ),
             const SizedBox(width: 10),
-            Expanded(child: Text('Tự động khóa liên kết')),
+            Expanded(child: Text(context.tr('ui_home_automatically_lock_the_link_7f54de'))),
           ],
         ),
         content: Text(
-          'Đã quá 1 ngày kể từ khi hết hạn PRO, hệ thống đã tự động khóa các liên kết cũ và giữ lại 5 liên kết Memory Share mới nhất của bạn để đảm bảo giới hạn tài khoản thường.',
+          context.tr('ui_home_it_s_been_more_than_1_day_0944c5'),
         ),
         actions: [
           SLDialogAction(
             primary: true,
 
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Đồng ý'),
+            child: Text(context.tr('ui_home_agreed_f2d7bd')),
           ),
         ],
       ),

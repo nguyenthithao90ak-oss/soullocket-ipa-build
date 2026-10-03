@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:audioplayers/audioplayers.dart';
@@ -293,7 +294,7 @@ class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
                     ? '${_formatDuration(_position)} / ${_formatDuration(_duration)}'
                     : (_duration > Duration.zero
                           ? _formatDuration(_duration)
-                          : 'Voice note'),
+                          : context.tr('ui_common_voice_note_ddc07a')),
                 style: SLTheme.quicksand(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,

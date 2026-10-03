@@ -14,6 +14,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../core/constants/app_config.dart';
 import '../../utils/app_error_mapper.dart';
 import '../calendar_widget_snapshot.dart';
+import '../sleep_tracking_math.dart';
 import 'storage/storage_service.dart';
 import 'package:soullocket_app/utils/flexible_date_input.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -29,9 +30,26 @@ import 'package:soullocket_app/models/soul_event.dart';
 
 class WidgetService {
   static bool get supportsAndroidWidgets => !kIsWeb && Platform.isAndroid;
+  static bool get supportsMobileWidgets =>
+      !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
   static const String appGroupId = AppConfig.iOSAppGroupId;
   static const String iOSWidgetName = 'WidgetCoupleProvider';
+  static const String iOSWidgetCycleName = 'WidgetCycleProvider';
+  static const String iOSWidgetCalendarName = 'WidgetCalendarProvider';
+  static const String iOSWidgetSoulEventName = 'WidgetSoulEventProvider';
+  static const String iOSWidgetSleepName = 'WidgetSleepProvider';
+  static const List<String> _iOSCoupleWidgetKinds = <String>[
+    iOSWidgetName,
+    'WidgetCoupleAccessoryAvatarProvider',
+    'WidgetSoulMergeAccessoryProvider',
+  ];
+  static const List<String> _iOSUtilityWidgetKinds = <String>[
+    iOSWidgetCycleName,
+    iOSWidgetCalendarName,
+    iOSWidgetSoulEventName,
+    iOSWidgetSleepName,
+  ];
   static const String androidWidgetName = 'WidgetCoupleProvider';
   static const String qualifiedAndroidWidgetName =
       'com.soullocket.app.WidgetCoupleProvider';
@@ -65,6 +83,7 @@ class WidgetService {
   static const int widgetImageQuality = 78; // 78% chất lượng JPEG
 
   static bool _didBootstrap = false;
+  static int _sleepSyncRevision = 0;
   static final Map<String, Object?> _runtimeWidgetData = <String, Object?>{};
   static final StorageService _storageService = StorageService();
   static Future<void> ensureInitialized({bool forceUpdate = false}) async {
@@ -122,21 +141,107 @@ class WidgetService {
     await _dispatchWidgetUpdate();
   }
 
-  static Future<void> _dispatchWidgetUpdate() async {
+  static Future<void> _dispatchWidgetUpdate({
+    bool includeUtilities = false,
+  }) async {
     if (kIsWeb) return;
     if (Platform.isIOS) {
-      await HomeWidget.updateWidget(iOSName: iOSWidgetName);
+      for (final kind in <String>[
+        ..._iOSCoupleWidgetKinds,
+        if (includeUtilities) ..._iOSUtilityWidgetKinds,
+      ]) {
+        await HomeWidget.updateWidget(iOSName: kind);
+      }
       return;
     }
     await HomeWidget.updateWidget(
       androidName: androidWidgetName,
       qualifiedAndroidName: qualifiedAndroidWidgetName,
     );
+    if (includeUtilities) {
+      for (final pair in <({String name, String qualified})>[
+        (
+          name: androidWidgetCycleName,
+          qualified: qualifiedAndroidWidgetCycleName,
+        ),
+        (
+          name: androidWidgetCalendarName,
+          qualified: qualifiedAndroidWidgetCalendarName,
+        ),
+        (
+          name: androidWidgetSoulEventName,
+          qualified: qualifiedAndroidWidgetSoulEventName,
+        ),
+        (
+          name: androidWidgetSleepName,
+          qualified: qualifiedAndroidWidgetSleepName,
+        ),
+      ]) {
+        await HomeWidget.updateWidget(
+          androidName: pair.name,
+          qualifiedAndroidName: pair.qualified,
+        );
+      }
+    }
+  }
+
+  // Chỉ đổi tên provider theo nền tảng; App Group được khởi tạo trước khi ghi dữ liệu.
+  static Future<void> _updateAuxiliaryWidget({
+    required String androidName,
+    required String qualifiedAndroidName,
+    required String iOSName,
+  }) async {
+    if (!supportsMobileWidgets) return;
+    if (Platform.isIOS) {
+      await HomeWidget.updateWidget(iOSName: iOSName);
+    } else {
+      await HomeWidget.updateWidget(
+        androidName: androidName,
+        qualifiedAndroidName: qualifiedAndroidName,
+      );
+    }
+  }
+
+  static Future<void> _refreshSoulEventWidgets() async {
+    await _updateAuxiliaryWidget(
+      androidName: androidWidgetSoulEventName,
+      qualifiedAndroidName: qualifiedAndroidWidgetSoulEventName,
+      iOSName: iOSWidgetSoulEventName,
+    );
+    // Widget Cặp đôi cũng có thể đang chọn tab Kỷ niệm.
+    if (Platform.isIOS) {
+      await HomeWidget.updateWidget(iOSName: iOSWidgetName);
+    }
   }
 
   static Future<void> resetWidgetState({bool refresh = true}) async {
     if (kIsWeb) return;
 
+    _sleepSyncRevision++;
+    await ensureInitialized();
+    await HomeWidget.saveWidgetData<String>(
+      'sleep_snapshot_v2',
+      jsonEncode({
+        'version': 2,
+        'people': [
+          const SleepPersonSnapshot(
+            state: 'unknown',
+            source: 'unknown',
+          ).toMap(''),
+          const SleepPersonSnapshot(
+            state: 'unknown',
+            source: 'unknown',
+          ).toMap(''),
+        ],
+      }),
+    );
+    await HomeWidget.saveWidgetData<bool>('se_has_event', false);
+    await _updateAuxiliaryWidget(
+      androidName: androidWidgetSleepName,
+      qualifiedAndroidName: qualifiedAndroidWidgetSleepName,
+      iOSName: iOSWidgetSleepName,
+    );
+    await _refreshSoulEventWidgets();
     _runtimeWidgetData.clear();
     _didBootstrap = false;
     await ensureInitialized(forceUpdate: refresh);
@@ -267,13 +372,14 @@ class WidgetService {
     return value;
   }
 
-  static Future<void> _saveWidgetDataIfChanged<T>(String key, T value) async {
+  static Future<bool> _saveWidgetDataIfChanged<T>(String key, T value) async {
     final existing = _runtimeWidgetData.containsKey(key)
         ? _runtimeWidgetData[key]
         : await HomeWidget.getWidgetData<T>(key);
-    if (existing == value) return;
+    if (existing == value) return false;
     await HomeWidget.saveWidgetData<T>(key, value);
     _runtimeWidgetData[key] = value;
+    return true;
   }
 
   static Future<void> _seedDefaultWidgetData() async {
@@ -515,6 +621,14 @@ class WidgetService {
         heartAnimated: heartAnimated,
       );
       final normalizedHeartStyleKey = normalizeHeartStyleKey(heartStyleKey);
+      final themeChanged = await _saveWidgetDataIfChanged<String>(
+        'bgTheme',
+        bgTheme,
+      );
+      final motionChanged = await _saveWidgetDataIfChanged<bool>(
+        'heartAnimated',
+        displayMode.heartAnimated,
+      );
       await _saveWidgetDataIfChanged<String>('name1', name1);
       await _saveWidgetDataIfChanged<String>('name2', name2);
       await _saveWidgetDataIfChanged<String>('daysText', daysText);
@@ -526,7 +640,6 @@ class WidgetService {
       await _saveWidgetDataIfChanged<String>('weather2', weather2);
       await _saveWidgetDataIfChanged<String>('stars1', stars1);
       await _saveWidgetDataIfChanged<String>('stars2', stars2);
-      await _saveWidgetDataIfChanged<String>('bgTheme', bgTheme);
       await _saveWidgetDataIfChanged<String>(
         'widgetStyleKey',
         normalizedWidgetStyleKey,
@@ -534,10 +647,6 @@ class WidgetService {
       await _saveWidgetDataIfChanged<bool>(
         'showDiaryOnWidget',
         displayMode.showDiaryOnWidget,
-      );
-      await _saveWidgetDataIfChanged<bool>(
-        'heartAnimated',
-        displayMode.heartAnimated,
       );
       await _saveWidgetDataIfChanged<String>(
         'heartStyleKey',
@@ -571,7 +680,7 @@ class WidgetService {
       await _saveWidgetDataIfChanged<String>(
         'dayUnitText',
         daysText.trim().replaceFirst(RegExp(r'^\d+\s*'), '').trim().isEmpty
-            ? 'ngày'
+            ? L10nService().translate('comm_ngy_41ec10')
             : daysText.trim().replaceFirst(RegExp(r'^\d+\s*'), '').trim(),
       );
       // Battery of each user (partner perspective)
@@ -655,7 +764,9 @@ class WidgetService {
         enabled: displayMode.showDiaryOnWidget,
       );
 
-      await _dispatchWidgetUpdate();
+      await _dispatchWidgetUpdate(
+        includeUtilities: themeChanged || motionChanged,
+      );
     } catch (e) {
       debugPrint(
         'Error updating widget: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể cập nhật widget lúc này.').message}',
@@ -667,7 +778,7 @@ class WidgetService {
     try {
       await ensureInitialized();
       await _saveWidgetDataIfChanged<String>('bgTheme', bgTheme);
-      await _dispatchWidgetUpdate();
+      await _dispatchWidgetUpdate(includeUtilities: true);
     } catch (e) {
       debugPrint(
         'Error updating widget theme: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể cập nhật giao diện widget lúc này.').message}',
@@ -744,7 +855,7 @@ class WidgetService {
         diaryImageUrls,
         enabled: displayMode.showDiaryOnWidget,
       );
-      await _dispatchWidgetUpdate();
+      await _dispatchWidgetUpdate(includeUtilities: true);
     } catch (e) {
       debugPrint(
         'Error updating widget appearance: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể cập nhật giao diện widget lúc này.').message}',
@@ -1080,16 +1191,18 @@ class WidgetService {
   static Future<void> _syncCycleWidgetData(
     Future<CycleSettings?> Function() loadSettings,
   ) async {
-    if (!supportsAndroidWidgets) return;
+    if (!supportsMobileWidgets) return;
     try {
+      await ensureInitialized();
       final hasConsent = await SharedPreferences.getInstance().then(
         (prefs) => prefs.getBool('il_health_consent') ?? false,
       );
       if (!hasConsent) {
         await _saveWidgetDataIfChanged<bool>('cycle_enabled', false);
-        await HomeWidget.updateWidget(
+        await _updateAuxiliaryWidget(
           androidName: androidWidgetCycleName,
           qualifiedAndroidName: qualifiedAndroidWidgetCycleName,
+          iOSName: iOSWidgetCycleName,
         );
         return;
       }
@@ -1097,9 +1210,10 @@ class WidgetService {
       final settings = await loadSettings();
       if (settings == null) {
         await _saveWidgetDataIfChanged<bool>('cycle_enabled', false);
-        await HomeWidget.updateWidget(
+        await _updateAuxiliaryWidget(
           androidName: androidWidgetCycleName,
           qualifiedAndroidName: qualifiedAndroidWidgetCycleName,
+          iOSName: iOSWidgetCycleName,
         );
         return;
       }
@@ -1114,9 +1228,16 @@ class WidgetService {
       );
       await _saveWidgetDataIfChanged<String>(
         'cycle_next_period_in',
-        state.nextPeriodIn == 0
-            ? 'Kỳ sau: Hôm nay'
-            : 'Kỳ sau: Còn ${state.nextPeriodIn} ngày',
+        '${L10nService().translate('p3_health_next_period')}: '
+            '${state.nextPeriodIn == 0 ? L10nService().translate('milestone_today') : L10nService().format('milestone_days_left', {'days': state.nextPeriodIn})}',
+      );
+      await _saveWidgetDataIfChanged<String>(
+        'cycle_next_period_days',
+        state.nextPeriodIn.toString(),
+      );
+      await _saveWidgetDataIfChanged<String>(
+        'cycle_days_label',
+        L10nService().translate('p3_health_days_remaining'),
       );
       await _saveWidgetDataIfChanged<String>('cycle_tip', state.tip);
       await _saveWidgetDataIfChanged<String>(
@@ -1124,9 +1245,10 @@ class WidgetService {
         (state.progressPercent / 100.0).toStringAsFixed(3),
       );
 
-      await HomeWidget.updateWidget(
+      await _updateAuxiliaryWidget(
         androidName: androidWidgetCycleName,
         qualifiedAndroidName: qualifiedAndroidWidgetCycleName,
+        iOSName: iOSWidgetCycleName,
       );
     } catch (e) {
       debugPrint(
@@ -1151,8 +1273,9 @@ class WidgetService {
     required String houseId,
     Object? calendarData,
   }) async {
-    if (!supportsAndroidWidgets) return;
+    if (!supportsMobileWidgets) return;
     try {
+      await ensureInitialized();
       final today = DateTime.now();
       final todayMidnight = DateTime(today.year, today.month, today.day);
       final nextEvent = await CalendarWidgetSnapshot.resolve(
@@ -1174,9 +1297,10 @@ class WidgetService {
 
       if (nextEvent == null) {
         await _saveWidgetDataIfChanged<bool>('calendar_enabled', false);
-        await HomeWidget.updateWidget(
+        await _updateAuxiliaryWidget(
           androidName: androidWidgetCalendarName,
           qualifiedAndroidName: qualifiedAndroidWidgetCalendarName,
+          iOSName: iOSWidgetCalendarName,
         );
         return;
       }
@@ -1208,9 +1332,10 @@ class WidgetService {
         eventsText,
       );
 
-      await HomeWidget.updateWidget(
+      await _updateAuxiliaryWidget(
         androidName: androidWidgetCalendarName,
         qualifiedAndroidName: qualifiedAndroidWidgetCalendarName,
+        iOSName: iOSWidgetCalendarName,
       );
     } catch (e) {
       debugPrint(
@@ -1255,6 +1380,11 @@ class WidgetService {
         );
 
         var displayDate = customDate.isEmpty ? '--/--/----' : customDate;
+        var targetDateKey = '';
+        await _saveWidgetDataIfChanged<bool>(
+          'se_has_event',
+          parsedDate != null,
+        );
         String daysStr = '0';
         String labelStr = L10nService().translate(
           'p8_events_days_remaining_label',
@@ -1270,6 +1400,7 @@ class WidgetService {
             createdAt: 0,
             isAnniversary: true,
           ).calculateNextOccurrence(today)!;
+          targetDateKey = SoulEvent.dateKey(nextDate);
           displayDate = await _formatCalendarDate(nextDate);
           final diff = SoulEvent.daysBetween(nextDate, today);
           final isToday = SoulEvent.daysBetween(nextDate, today) == 0;
@@ -1290,17 +1421,13 @@ class WidgetService {
               ? L10nService().translate('p8_events_title')
               : customTitle,
         );
+        await _saveWidgetDataIfChanged('se_target_date', targetDateKey);
         await _saveWidgetDataIfChanged('se_date', displayDate);
         await _saveWidgetDataIfChanged('se_days', daysStr);
         await _saveWidgetDataIfChanged('se_label', labelStr);
         await _saveWidgetDataIfChanged('se_color', customColor);
 
-        if (Platform.isAndroid) {
-          await HomeWidget.updateWidget(
-            androidName: androidWidgetSoulEventName,
-            qualifiedAndroidName: qualifiedAndroidWidgetSoulEventName,
-          );
-        }
+        await _refreshSoulEventWidgets();
         return;
       }
 
@@ -1340,8 +1467,13 @@ class WidgetService {
         }
       }
 
+      await _saveWidgetDataIfChanged<bool>('se_has_event', topEvent != null);
       if (topEvent != null) {
         final nextDate = topEvent.calculateNextOccurrence(today)!;
+        await _saveWidgetDataIfChanged(
+          'se_target_date',
+          SoulEvent.dateKey(nextDate),
+        );
         final isToday = SoulEvent.daysBetween(nextDate, today) == 0;
 
         await _saveWidgetDataIfChanged('se_title', topEvent.title);
@@ -1373,6 +1505,7 @@ class WidgetService {
           'se_title',
           L10nService().translate('p8_events_title'),
         );
+        await _saveWidgetDataIfChanged('se_target_date', '');
         await _saveWidgetDataIfChanged('se_date', '--/--/----');
         await _saveWidgetDataIfChanged('se_days', '0');
         await _saveWidgetDataIfChanged(
@@ -1382,12 +1515,7 @@ class WidgetService {
         await _saveWidgetDataIfChanged('se_color', '#FF4D94');
       }
 
-      if (Platform.isAndroid) {
-        await HomeWidget.updateWidget(
-          androidName: androidWidgetSoulEventName,
-          qualifiedAndroidName: qualifiedAndroidWidgetSoulEventName,
-        );
-      }
+      await _refreshSoulEventWidgets();
     } catch (e) {
       debugPrint(
         'Error syncing soul event widget: \${AppErrorMapper.resolve(e).message}',
@@ -1427,6 +1555,63 @@ class WidgetService {
     }
   }
 
+  /// Bản ghi v2 nguyên khối: UI/native không suy trạng thái từ text cũ.
+  static Future<void> syncSleepWidgetData({
+    required String houseId,
+    Map<dynamic, dynamic>? presenceData,
+  }) async {
+    if (!supportsMobileWidgets || houseId.isEmpty) return;
+    final revision = ++_sleepSyncRevision;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || await HouseService().getCurrentHouseId() != houseId) {
+      return;
+    }
+    final raw =
+        presenceData ??
+        (await FirebaseDatabase.instance.ref('houses/$houseId/presence').get())
+            .value;
+    final data = raw is Map ? raw : <dynamic, dynamic>{};
+    await ensureInitialized();
+    if (revision != _sleepSyncRevision ||
+        FirebaseAuth.instance.currentUser?.uid != uid ||
+        await HouseService().getCurrentHouseId() != houseId) {
+      return;
+    }
+    final name1 =
+        await HomeWidget.getWidgetData<String>('name1') ??
+        L10nService().translate('p3_sleep_default_me');
+    final name2 =
+        await HomeWidget.getWidgetData<String>('name2') ??
+        L10nService().translate('p3_sleep_default_partner');
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final snapshot = jsonEncode({
+      'version': 2,
+      'houseId': houseId,
+      'uid': uid,
+      'people': [
+        SleepPersonSnapshot.fromPresence(
+          sleepRoleData(data, 'user1'),
+          now,
+        ).toMap(name1),
+        SleepPersonSnapshot.fromPresence(
+          sleepRoleData(data, 'user2'),
+          now,
+        ).toMap(name2),
+      ],
+    });
+    if (revision != _sleepSyncRevision ||
+        FirebaseAuth.instance.currentUser?.uid != uid ||
+        await HouseService().getCurrentHouseId() != houseId) {
+      return;
+    }
+    await _saveWidgetDataIfChanged<String>('sleep_snapshot_v2', snapshot);
+    await _updateAuxiliaryWidget(
+      androidName: androidWidgetSleepName,
+      qualifiedAndroidName: qualifiedAndroidWidgetSleepName,
+      iOSName: iOSWidgetSleepName,
+    );
+  }
+
   static Future<void> updateSleepWidgetData({
     required String myName,
     required String partnerName,
@@ -1450,13 +1635,11 @@ class WidgetService {
       await _saveWidgetDataIfChanged<String>('sleep_partner_time', partnerTime);
       await _saveWidgetDataIfChanged<String>('sleep_summary', summary);
 
-      if (Platform.isAndroid) {
-        await HomeWidget.updateWidget(
-          name: androidWidgetSleepName,
-          androidName: androidWidgetSleepName,
-          qualifiedAndroidName: qualifiedAndroidWidgetSleepName,
-        );
-      }
+      await _updateAuxiliaryWidget(
+        androidName: androidWidgetSleepName,
+        qualifiedAndroidName: qualifiedAndroidWidgetSleepName,
+        iOSName: iOSWidgetSleepName,
+      );
     } catch (e) {
       debugPrint('[WidgetService] updateSleepWidgetData error: $e');
     }

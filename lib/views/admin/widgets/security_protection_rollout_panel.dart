@@ -194,7 +194,7 @@ class _SecurityProtectionRolloutPanelState
               HighlightChip(
                 icon: Icons.shield_outlined,
                 label:
-                    '$_enabledCount/${SecurityProtectionReason.values.length} lý do đang bật',
+                    L10nScope.of(context).format('ui_admin_value1_value2_reason_is_on_bd8eb1', {'value1': _enabledCount, 'value2': SecurityProtectionReason.values.length}),
               ),
             ],
           ),
@@ -433,7 +433,7 @@ class _SecurityProtectionRolloutPanelState
                             ),
                             SLSpacing.h6,
                             Text(
-                              'Tổng ${item.totalCount} sự kiện',
+                              L10nScope.of(context).format('ui_admin_total_value1_events_f5fe47', {'value1': item.totalCount}),
                               style: SLTheme.quicksand(
                                 color: SLColors.textMuted,
                                 fontSize: 12,
@@ -444,17 +444,17 @@ class _SecurityProtectionRolloutPanelState
                         ),
                       ),
                       _TrendChip(
-                        label: 'Allow ${item.allowCount}',
+                        label: L10nScope.of(context).format('ui_admin_allow_value1_cc4ff5', {'value1': item.allowCount}),
                         color: const Color(0xFF00C896),
                       ),
                       SLSpacing.w8,
                       _TrendChip(
-                        label: 'Warn ${item.warnCount}',
+                        label: L10nScope.of(context).format('ui_admin_warn_value1_20b488', {'value1': item.warnCount}),
                         color: const Color(0xFFFFB020),
                       ),
                       SLSpacing.w8,
                       _TrendChip(
-                        label: 'Block ${item.blockCount}',
+                        label: L10nScope.of(context).format('ui_admin_block_value1_9deee5', {'value1': item.blockCount}),
                         color: const Color(0xFFFF5A5F),
                       ),
                     ],
@@ -521,7 +521,7 @@ class _SecurityProtectionRolloutPanelState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Checklist cho CSKH',
+          context.tr('ui_admin_support_checklist_ab6b23'),
           style: SLTheme.quicksand(
             color: Colors.white,
             fontSize: 16,
@@ -597,7 +597,7 @@ class _SecurityProtectionRolloutPanelState
         ),
         SLSpacing.h16,
         Text(
-          'Đường dẫn rollout: ${SecurityProtectionRolloutService.configPath}',
+          L10nScope.of(context).format('ui_admin_rollout_path_value1_e81de8', {'value1': SecurityProtectionRolloutService.configPath}),
           style: SLTheme.quicksand(
             color: SLColors.textMuted,
             fontSize: 13,
@@ -642,7 +642,7 @@ class _SecurityProtectionRolloutPanelState
           ),
           SLSpacing.h6,
           Text(
-            'Người cập nhật: ${_config.updatedBy.isEmpty ? widget.actorId : _config.updatedBy}',
+            L10nScope.of(context).format('ui_admin_updated_by_value1_23e7c8', {'value1': _config.updatedBy.isEmpty ? widget.actorId : _config.updatedBy}),
             style: SLTheme.quicksand(
               color: SLColors.textMuted,
               fontSize: 12.5,

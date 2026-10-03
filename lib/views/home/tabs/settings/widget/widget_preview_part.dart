@@ -3,44 +3,8 @@ part of '../../settings_tab.dart';
 extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
   ({List<Color> colors, Color textColor, Color borderColor, bool premium})
   _widgetPreviewThemeSpec(String themeKey) {
-    final colors = switch (themeKey) {
-      'pink' => const [Color(0xFFFFF3E5), Color(0xFFFFDDE7), Color(0xFFDAD8FF)],
-      'white' => const [
-        Color(0xFFFFFFFF),
-        Color(0xFFF4F0FF),
-        Color(0xFFE2F0F6),
-      ],
-      'dark' => const [Color(0xFF202338), Color(0xFF35324F), Color(0xFF2B4754)],
-      'blue' => const [Color(0xFFF5FBFF), Color(0xFFD8EAFF), Color(0xFFDDDFFA)],
-      'orange' => const [
-        Color(0xFFFFF7DE),
-        Color(0xFFFFDFBF),
-        Color(0xFFF5D3DC),
-      ],
-      'purple' => const [
-        Color(0xFFFFF1FA),
-        Color(0xFFE8D8F7),
-        Color(0xFFD7E8FA),
-      ],
-      'green' => const [
-        Color(0xFFFFF9DF),
-        Color(0xFFDDF2DF),
-        Color(0xFFC8E8E2),
-      ],
-      'red' => const [Color(0xFFFFF1E5), Color(0xFFFFD3DC), Color(0xFFE6D3F4)],
-      'cosmic' => const [
-        Color(0xFF17142F),
-        Color(0xFF322952),
-        Color(0xFF514563),
-      ],
-      'premium' => const [
-        Color(0xFFFF5FA2),
-        Color(0xFFFFB86B),
-        Color(0xFF67E8F9),
-        Color(0xFF7C3AED),
-      ],
-      _ => const [Color(0xFFFFF3E5), Color(0xFFFFDDE7), Color(0xFFDAD8FF)],
-    };
+    final colors =
+        WidgetThemeDesign.palettes[WidgetThemeDesign.normalize(themeKey)]!;
     final textColor = switch (themeKey) {
       'pink' => const Color(0xFF333333),
       'white' => const Color(0xFF333333),
@@ -49,7 +13,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
       'orange' => const Color(0xFFE65100),
       'purple' => const Color(0xFF6A1B9A),
       'green' => const Color(0xFF1B5E20),
-      'red' => const Color(0xFFB71C1C),
+      'red' => const Color(0xFFFFF0DC),
       'cosmic' => const Color(0xFFFFF0BD),
       'premium' => Colors.white,
       _ => const Color(0xFF333333),
@@ -146,43 +110,15 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
     },
   );
 
-  Widget _buildWidgetHeartStylePicker() => LayoutBuilder(
-    builder: (context, constraints) {
-      final columns = constraints.maxWidth >= 400 ? 6 : 4;
-      final width = (constraints.maxWidth - (columns - 1) * 8) / columns;
-      return Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: _widgetHeartStyleKeys
-            .asMap()
-            .entries
-            .map(
-              (entry) => SizedBox(
-                width: width,
-                child: WidgetVisualChoiceTile(
-                  key: ValueKey('widget-heart-${entry.value}'),
-                  showLabel: false,
-                  label: context
-                      .tr('p7_heart_style_option')
-                      .replaceAll('{index}', (entry.key + 1).toString()),
-                  selected:
-                      _widgetHeartStyleKey == entry.value &&
-                      _widgetStickerKey == 'none' &&
-                      !_showDiaryOnWidget,
-                  onTap: () =>
-                      unawaited(_handleWidgetHeartStyleChanged(entry.value)),
-                  artwork: Center(
-                    child: Text(
-                      entry.value,
-                      style: const TextStyle(fontSize: 30),
-                    ),
-                  ),
-                ),
-              ),
-            )
-            .toList(growable: false),
-      );
-    },
+  Widget _buildWidgetHeartStylePicker() => WidgetHeartStylePicker(
+    selectedKey: _widgetHeartStyleKey,
+    active: _widgetStickerKey == 'none' && !_showDiaryOnWidget,
+    colorLabel: context.tr('widget_heart_colors'),
+    symbolLabel: context.tr('widget_heart_symbols'),
+    optionLabel: (index) => context
+        .tr('p7_heart_style_option')
+        .replaceAll('{index}', index.toString()),
+    onChanged: (key) => unawaited(_handleWidgetHeartStyleChanged(key)),
   );
 
   Widget _buildWidgetHeartPreview(Color textColor, {double size = 72}) =>
@@ -360,6 +296,60 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
     );
   }
 
+  Widget _buildIOSWidgetStatusPreview(String name1, String name2, Color color) {
+    return StableFutureBuilder<List<String>>(
+      requestKey: (_auth.currentUser?.uid, _houseId, _widgetMediaRevision),
+      load: () async {
+        if (kIsWeb || !Platform.isIOS) return ['', ''];
+        return [
+          await HomeWidget.getWidgetData<String>('status1') ?? '',
+          await HomeWidget.getWidgetData<String>('status2') ?? '',
+        ];
+      },
+      builder: (context, snapshot) {
+        final values = snapshot.data ?? ['', ''];
+        Widget person(String name, String status) => Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: SLTheme.quicksand(
+                  fontSize: 11,
+                  color: color,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                status.isEmpty ? context.tr('home_angoffline_bbb3d5') : status,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: SLTheme.quicksand(
+                  fontSize: 10,
+                  color: color.withValues(alpha: .8),
+                ),
+              ),
+            ],
+          ),
+        );
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              person(name1, values[0]),
+              const SizedBox(width: 8),
+              person(name2, values[1]),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildWidgetPreview() {
     return ValueListenableBuilder<int>(
       valueListenable: _widgetPreviewTickNotifier,
@@ -373,14 +363,19 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
         final accentColor = seasonKey == 'none'
             ? heartPalette.first
             : seasonPalette.first;
-        final dark = const ['dark', 'premium', 'cosmic'].contains(themeKey);
+        final dark = const [
+          'dark',
+          'premium',
+          'cosmic',
+          'red',
+        ].contains(themeKey);
         final daysBase = switch (themeKey) {
           'white' => const Color(0xFF9B335E),
           'blue' => const Color(0xFF0F52BA),
           'orange' => const Color(0xFFF97316),
           'purple' => const Color(0xFF8B5CF6),
           'green' => const Color(0xFF16A34A),
-          'red' => const Color(0xFFE11D48),
+          'red' => const Color(0xFFFFE1AB),
           'dark' || 'premium' => Colors.white,
           'cosmic' => const Color(0xFFFFE396),
           _ => const Color(0xFFFF4D73),
@@ -420,6 +415,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                 requestKey: (
                   _auth.currentUser?.uid,
                   _houseId,
+                  _widgetMediaRevision,
                   Localizations.localeOf(context).toLanguageTag(),
                   DateTime.now().year,
                   DateTime.now().month,
@@ -454,139 +450,16 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                   final eventDays = data['days']!;
                   final eventLabel = data['label']!;
 
-                  return Center(
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 850),
-                      curve: Curves.easeInOut,
-                      width: cardWidth,
-                      height: widgetHeight,
-                      clipBehavior: Clip.antiAlias,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [
-                            Color(0xFFFFF7DA),
-                            Color(0xFFFFE0D2),
-                            Color(0xFFF4D6E7),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: eventColor.withValues(alpha: 0.35),
-                          width: 1.8,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: eventColor.withValues(alpha: 0.08),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            bottom: -30,
-                            right: -30,
-                            child: Container(
-                              width: 120,
-                              height: 120,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: eventColor.withValues(alpha: 0.05),
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.fromLTRB(
-                              isCompact ? 16 : 20,
-                              16,
-                              isCompact ? 16 : 20,
-                              16,
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFFFF0F5),
-                                        borderRadius: BorderRadius.circular(12),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.03,
-                                            ),
-                                            blurRadius: 4,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: const SizedBox(
-                                        width: 40,
-                                        height: 34,
-                                        child: WidgetStickerArtwork(
-                                          stickerKey: 'gift',
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            eventTitle,
-                                            style: SLTheme.quicksand(
-                                              color: const Color(0xFF2C1B22),
-                                              fontSize: isCompact ? 16 : 18,
-                                              fontWeight: FontWeight.w900,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            eventDate,
-                                            style: SLTheme.quicksand(
-                                              color: const Color(0xFF8C7381),
-                                              fontSize: isCompact ? 11 : 12,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  eventDays,
-                                  style: SLTheme.quicksand(
-                                    color: eventColor,
-                                    fontSize: isCompact ? 38 : 44,
-                                    fontWeight: FontWeight.w900,
-                                    height: 1,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  eventLabel,
-                                  style: SLTheme.quicksand(
-                                    color: eventColor.withValues(alpha: 0.8),
-                                    fontSize: isCompact ? 12 : 13,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  return WidgetIOSEventPreview(
+                    sizeKey: _widgetPreviewSizeKey,
+                    heading: context.tr('p8_events_title'),
+                    title: eventTitle,
+                    days: eventDays,
+                    label: eventLabel,
+                    date: eventDate,
+                    accent: eventColor,
+                    themeKey: themeKey,
+                    animated: _widgetHeartAnimated,
                   );
                 },
               );
@@ -608,21 +481,17 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
               avatar2: _avatarUrl2,
               countdown: isCountdownStyle,
               loveDate: _loveDate,
-              backgroundOverlay: theme.premium
-                  ? _buildPremiumWidgetPreviewAurora(
-                      _widgetPreviewSizeKey == 'small'
-                          ? 140
-                          : _widgetPreviewSizeKey == 'large'
-                          ? 320
-                          : 220,
-                      _widgetPreviewSizeKey == 'small'
-                          ? 120
-                          : _widgetPreviewSizeKey == 'large'
-                          ? 240
-                          : 160,
-                    )
+              themeKey: themeKey,
+              themeAnimated: _widgetHeartAnimated,
+              footer: Theme.of(context).platform == TargetPlatform.iOS
+                  ? _buildIOSWidgetStatusPreview(label1, label2, textColor)
                   : null,
-              dark: const ['dark', 'premium', 'cosmic'].contains(themeKey),
+              dark: const [
+                'dark',
+                'premium',
+                'cosmic',
+                'red',
+              ].contains(themeKey),
               center: showDiaryPreview && !isCountdownStyle
                   ? _buildWidgetDiaryPreview(
                       textColor,
@@ -647,6 +516,38 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
     }
 
     try {
+      // Mobile xem đúng snapshot native, gồm cả sự kiện tùy chỉnh đã lưu.
+      // Không tạo thêm truy vấn mạng chỉ để dựng lại mẫu trong Cài đặt.
+      if (WidgetService.supportsMobileWidgets) {
+        await WidgetService.ensureInitialized();
+        final hasEvent =
+            await HomeWidget.getWidgetData<bool>('se_has_event') ?? false;
+        if (!hasEvent) return emptyData;
+        final targetKey =
+            await HomeWidget.getWidgetData<String>('se_target_date') ?? '';
+        final target = DateTime.tryParse(targetKey);
+        final remaining = target == null
+            ? null
+            : SoulEvent.daysBetween(target, DateTime.now());
+        return {
+          'title':
+              await HomeWidget.getWidgetData<String>('se_title') ??
+              emptyData['title']!,
+          'date':
+              await HomeWidget.getWidgetData<String>('se_date') ??
+              emptyData['date']!,
+          'days': remaining == null || remaining < 0
+              ? '—'
+              : remaining == 0
+              ? context.tr('p8_events_today_upper')
+              : '$remaining',
+          'label': remaining == 0
+              ? '✦'
+              : context.tr('p8_events_days_remaining_label'),
+          'color':
+              await HomeWidget.getWidgetData<String>('se_color') ?? '#984C36',
+        };
+      }
       final events = await SoulEventService().getEvents(houseId);
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
@@ -772,7 +673,7 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
   }
 
   Future<List<String>> _loadPreviewImages() async {
-    if (!kIsWeb && Platform.isAndroid) {
+    if (WidgetService.supportsMobileWidgets) {
       final raw = await HomeWidget.getWidgetData<String>(
         'diaryImagePaths',
         defaultValue: '[]',
@@ -794,7 +695,7 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
     builder: (context, snapshot) {
       final paths = snapshot.data ?? const <String>[];
       if (paths.isEmpty) return _buildEmptyPreview();
-      Widget image(String path) => !kIsWeb && Platform.isAndroid
+      Widget image(String path) => WidgetService.supportsMobileWidgets
           ? Image.file(
               File(path),
               fit: BoxFit.cover,

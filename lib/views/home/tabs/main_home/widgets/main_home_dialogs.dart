@@ -67,7 +67,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                       child: Center(
                         child: stepIndex == 1
                             ? Text(
-                                '520\nngày yêu',
+                                context.tr('home_countdown_guide_example'),
                                 textAlign: TextAlign.center,
                                 style: SLTheme.quicksand(
                                   fontWeight: FontWeight.w900,
@@ -150,7 +150,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                       setDialogState(() => stepIndex += 1);
                     },
                     child: Text(
-                      isLastStep ? 'Xong' : context.tr('home_tiptc_555f1f'),
+                      isLastStep ? context.tr('core_done') : context.tr('home_tiptc_555f1f'),
                     ),
                   ),
               ],
@@ -388,7 +388,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                                   const SizedBox(width: 9),
                                   Expanded(
                                     child: Text(
-                                      context.tr('Gửi một tín hiệu yêu thương'),
+                                      context.tr('home_signal_send'),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: SLTheme.quicksand(
@@ -731,20 +731,11 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
     if (!mounted) return;
     final scaffoldMessenger = ScaffoldMessenger.maybeOf(context);
 
-    final picked = await showDatePicker(
+    final picked = await showSLDatePicker(
       context: context,
       initialDate: initialDate,
       firstDate: DateTime(1950),
       lastDate: DateTime.now(),
-      builder: (ctx, child) => Theme(
-        data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: Color(0xFFD81B60),
-            onPrimary: Colors.white,
-          ),
-        ),
-        child: child!,
-      ),
     );
 
     if (!mounted) return;

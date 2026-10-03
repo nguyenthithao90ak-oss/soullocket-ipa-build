@@ -100,7 +100,9 @@ Future<void> _initializeNativeFirebaseAppCheck() async {
         .activate(
           providerAndroid: kDebugMode
               ? const AndroidDebugProvider(
-                  debugToken: AppConfig.androidAppCheckDebugToken,
+        debugToken: AppConfig.androidAppCheckDebugToken == ''
+            ? null
+            : AppConfig.androidAppCheckDebugToken,
                 )
               : const AndroidPlayIntegrityProvider(),
           providerApple: kDebugMode

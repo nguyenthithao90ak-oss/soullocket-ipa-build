@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/material.dart';
 
 class BentoMemoryGridItem {
@@ -35,10 +36,10 @@ class BentoMemoryGrid extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(left: 4, bottom: 12),
             child: Text(
-              'Góc Kỷ Niệm (Bento)',
+              context.tr('ui_home_memory_corner_06e755'),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,

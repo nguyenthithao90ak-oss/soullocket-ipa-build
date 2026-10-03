@@ -140,7 +140,7 @@ class PasswordResetOtpDialog {
                           letterSpacing: 4,
                         ),
                         decoration: InputDecoration(
-                          labelText: 'Mã xác nhận',
+                          labelText: L10nService().translate('home_mxcnhn_ef70d2'),
                           counterText: '',
                           border: OutlineInputBorder(
                             borderRadius: SLRadius.mdAll,
@@ -159,8 +159,8 @@ class PasswordResetOtpDialog {
                         },
                         style: SLTheme.quicksand(),
                         decoration: InputDecoration(
-                          labelText: 'Mật khẩu mới',
-                          helperText: 'Tối thiểu 6 ký tự',
+                          labelText: L10nService().translate('auth_action_new_password_label'),
+                          helperText: L10nService().translate('Tối thiểu 6 ký tự'),
                           border: OutlineInputBorder(
                             borderRadius: SLRadius.mdAll,
                           ),
@@ -184,12 +184,12 @@ class PasswordResetOtpDialog {
                 actions: [
                   SLDialogAction(
                     onPressed: () => Navigator.pop(dialogContext, false),
-                    child: Text('Hủy'),
+                    child: Text(L10nService().translate('core_cancel')),
                   ),
                   if (sendError != null || verifyError != null)
                     SLDialogAction(
                       onPressed: () => startSend(dialogContext, setDialogState),
-                      child: Text('Gửi lại'),
+                      child: Text(L10nService().translate('home_gili_11a40e')),
                     ),
                   SLDialogAction(
                     primary: true,
@@ -201,8 +201,8 @@ class PasswordResetOtpDialog {
                             if (otp.length != 6) {
                               ScaffoldMessenger.of(dialogContext).showSnackBar(
                                 SLSnackBar(
-                                  content: const Text(
-                                    'Vui lòng nhập đủ 6 số mã xác nhận.',
+                                  content: Text(
+                                    L10nService().translate('home_vuilngnhp6_526103'),
                                   ),
                                 ),
                               );
@@ -211,8 +211,8 @@ class PasswordResetOtpDialog {
                             if (newPassword.length < 6) {
                               ScaffoldMessenger.of(dialogContext).showSnackBar(
                                 SLSnackBar(
-                                  content: const Text(
-                                    'Mật khẩu mới phải có ít nhất 6 ký tự.',
+                                  content: Text(
+                                    L10nService().translate('auth_action_weak_password_snack'),
                                   ),
                                 ),
                               );
@@ -240,10 +240,10 @@ class PasswordResetOtpDialog {
                         : null,
                     child: Text(
                       isSending
-                          ? 'Đang gửi...'
+                          ? L10nService().translate('home_anggi_6b22c8')
                           : isVerifying
-                          ? 'Đang kiểm tra...'
-                          : 'Đổi mật khẩu',
+                          ? L10nService().translate('Đang kiểm tra...')
+                          : L10nService().translate('change_password'),
                     ),
                   ),
                 ],

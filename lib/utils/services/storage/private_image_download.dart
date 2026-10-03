@@ -11,6 +11,7 @@ Future<Uint8List> downloadPrivateImage(
   required bool Function() isCurrent,
   int? width,
   http.Client? client,
+  void Function(int bytes)? onDownloadedBytes,
 }) async {
   final transport = client ?? http.Client();
   final elapsed = Stopwatch()..start();
@@ -50,6 +51,7 @@ Future<Uint8List> downloadPrivateImage(
     }
     remaining();
     final bytes = buffer.takeBytes();
+    onDownloadedBytes?.call(bytes.length);
     if (width == null) return bytes;
     final codec = await ui.instantiateImageCodec(
       bytes,

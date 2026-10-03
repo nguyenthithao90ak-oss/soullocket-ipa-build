@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -71,8 +72,9 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
             ? Map<String, dynamic>.from(securitySnap.value as Map)
             : <String, dynamic>{};
 
-        final bannedSnap =
-            await FirebaseDatabase.instance.ref('houses/$houseId/banned').get();
+        final bannedSnap = await FirebaseDatabase.instance
+            .ref('houses/$houseId/banned')
+            .get();
         final isBannedSnap = await FirebaseDatabase.instance
             .ref('houses/$houseId/isBanned')
             .get();
@@ -87,7 +89,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
             .get();
         final bannedUntil =
             ((bannedUntilSnap.value ?? banUntilSnap.value) as num?)?.toInt() ??
-                0;
+            0;
 
         final houseNameSnap = await FirebaseDatabase.instance
             .ref('houses/$houseId/settings/houseName')
@@ -141,11 +143,11 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
     final contact = _contactCtrl.text.trim();
 
     if (user == null) {
-      _showSnack('Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại.');
+      _showSnack(context.tr('ui_auth_the_login_session_is_no_longer_valid_e99183'));
       return;
     }
     if (contact.isEmpty || reason.isEmpty) {
-      _showSnack('Vui lòng nhập đủ liên hệ và lý do kháng nghị.');
+      _showSnack(context.tr('ui_auth_please_enter_complete_contact_and_reason_for_8bab7c'));
       return;
     }
 
@@ -171,9 +173,9 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
       await showDialog<void>(
         context: context,
         builder: (context) => SLAlertDialog(
-          title: Text('Đã gửi kháng nghị'),
+          title: Text(context.tr('ui_auth_appeal_sent_2eac3a')),
           content: Text(
-            'Yêu cầu của bạn đã được chuyển tới quản trị viên. Bạn có thể theo dõi trạng thái ở phần lịch sử phía dưới.',
+            context.tr('ui_auth_your_request_has_been_forwarded_to_the_5bfaf5'),
           ),
           actions: [
             SLDialogAction(
@@ -186,7 +188,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
         ),
       );
     } catch (e) {
-      _showSnack('Chưa thể gửi kháng nghị lúc này. Vui lòng thử lại sau.');
+      _showSnack(context.tr('ui_auth_an_appeal_cannot_be_submitted_at_this_7c7848'));
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -195,9 +197,9 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
   }
 
   void _showSnack(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SLSnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SLSnackBar(content: Text(message)));
   }
 
   String _lockTitle() {
@@ -234,13 +236,11 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF7FB),
-      appBar: AppBar(
+      appBar: SLTheme.pageAppBar(
         title: Text(
-          'Kháng nghị mở khóa',
+          context.tr('ui_auth_unlock_appeal_b5c6e5'),
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
-        backgroundColor: const Color(0xFFD81B60),
-        foregroundColor: Colors.white,
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -308,7 +308,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
           ),
           SLSpacing.h16,
           Text(
-            'YÊU CẦU XEM XÉT LẠI',
+            context.tr('ui_auth_review_request_9c764f'),
             style: SLTheme.quicksand(
               fontSize: 19,
               fontWeight: FontWeight.w900,
@@ -318,7 +318,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
           ),
           SLSpacing.h8,
           Text(
-            'Nếu bạn cho rằng trạng thái khóa hiện tại chưa chính xác, hãy gửi lý do rõ ràng và một kênh liên hệ đang hoạt động để admin phản hồi.',
+            context.tr('ui_auth_if_you_think_the_current_lock_status_2f8e37'),
             style: SLTheme.quicksand(
               fontSize: 14,
               height: 1.55,
@@ -332,7 +332,9 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
             children: [
               _buildHeroChip(Icons.lock_clock_rounded, _lockTitle()),
               _buildHeroChip(
-                  Icons.mark_email_read_rounded, 'Theo dõi ở lịch sử'),
+                Icons.mark_email_read_rounded,
+                'Theo dõi ở lịch sử',
+              ),
             ],
           ),
         ],
@@ -368,21 +370,20 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
 
   Widget _buildIdentityCard() {
     return _buildGlassCard(
-      title: 'Thông tin đính kèm',
-      subtitle: 'SoulLocket sẽ gửi các thông tin này cùng đơn kháng nghị.',
+      title: context.tr('ui_auth_attached_information_08c532'),
+      subtitle: context.tr('ui_auth_soullocket_will_send_this_information_with_the_3f9313'),
       child: Column(
         children: [
           _buildInfoRow('Nhà hiện tại', _houseName),
           _buildInfoRow(
-              'Mã nhà', _houseId.isEmpty ? 'Chưa xác định' : _houseId),
+            'Mã nhà',
+            _houseId.isEmpty ? 'Chưa xác định' : _houseId,
+          ),
           _buildInfoRow(
             'Login ID',
             _loginId.isEmpty ? 'Chưa có dữ liệu' : _loginId,
           ),
-          _buildInfoRow(
-            'Email',
-            _email.isEmpty ? 'Chưa có dữ liệu' : _email,
-          ),
+          _buildInfoRow('Email', _email.isEmpty ? 'Chưa có dữ liệu' : _email),
           _buildInfoRow(
             'Loại khóa',
             _lockType == 'temporary' ? 'Tạm khóa' : 'Khóa thủ công',
@@ -394,14 +395,14 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
 
   Widget _buildFormCard() {
     return _buildGlassCard(
-      title: 'Nội dung kháng nghị',
+      title: context.tr('ui_auth_content_of_appeal_f12517'),
       subtitle:
-          'Viết ngắn gọn, rõ vấn đề, và cho biết vì sao bạn muốn được mở lại tài khoản.',
+          context.tr('ui_auth_write_briefly_clearly_state_the_problem_and_2e1944'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Liên hệ phản hồi',
+            context.tr('ui_auth_contact_for_a_reply_29f418'),
             style: SLTheme.quicksand(
               fontWeight: FontWeight.w800,
               color: const Color(0xFF111827),
@@ -421,7 +422,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
           ),
           SLSpacing.h16,
           Text(
-            'Lý do kháng nghị',
+            context.tr('ui_auth_reason_for_appeal_77859c'),
             style: SLTheme.quicksand(
               fontWeight: FontWeight.w800,
               color: const Color(0xFF111827),
@@ -451,12 +452,14 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.tips_and_updates_rounded,
-                    color: Color(0xFFE59C00)),
+                const Icon(
+                  Icons.tips_and_updates_rounded,
+                  color: Color(0xFFE59C00),
+                ),
                 SLSpacing.w8,
                 Expanded(
                   child: Text(
-                    'Nêu rõ thời điểm xảy ra vấn đề, thiết bị bạn dùng và cách admin có thể kiểm tra lại nhanh nhất. Đơn càng rõ ràng thì thời gian phản hồi càng ngắn.',
+                    context.tr('ui_auth_include_when_the_issue_happened_your_device_6bfa8e'),
                     style: SLTheme.quicksand(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
@@ -477,9 +480,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
                 backgroundColor: const Color(0xFFD81B60),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: SLRadius.lgAll,
-                ),
+                shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
                 elevation: 0,
               ),
               child: _isSubmitting
@@ -492,7 +493,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
                       ),
                     )
                   : Text(
-                      'GỬI KHÁNG NGHỊ',
+                      context.tr('ui_auth_send_an_appeal_0f9b20'),
                       style: SLTheme.quicksand(
                         fontWeight: FontWeight.w900,
                         fontSize: 15,
@@ -509,11 +510,11 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
   Widget _buildHistoryCard() {
     final stream = _appealsStream;
     return _buildGlassCard(
-      title: 'Lịch sử yêu cầu',
-      subtitle: 'Theo dõi phản hồi từ admin mà không cần rời khỏi màn này.',
+      title: context.tr('ui_auth_request_history_61736d'),
+      subtitle: context.tr('ui_auth_monitor_feedback_from_admins_without_leaving_this_84a086'),
       child: stream == null
           ? Text(
-              'Không đọc được lịch sử kháng nghị lúc này.',
+              context.tr('ui_auth_can_t_read_the_appeal_history_at_cde76f'),
               style: SLTheme.quicksand(
                 color: const Color(0xFF6B7280),
                 fontWeight: FontWeight.w700,
@@ -538,25 +539,27 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
                   return _buildEmptyHistory();
                 }
 
-                final items = docs
-                    .map((doc) {
-                      final map = doc.data() as Map<String, dynamic>;
-                      map['id'] = doc.id;
-                      if (map['ts'] is Timestamp) {
-                        map['ts'] =
-                            (map['ts'] as Timestamp).millisecondsSinceEpoch;
-                      }
-                      return map;
-                    })
-                    .where(
-                      (item) =>
-                          item['type']?.toString() == 'account_lock_appeal',
-                    )
-                    .toList()
-                  ..sort(
-                    (a, b) => ((b['ts'] as num?)?.toInt() ?? 0)
-                        .compareTo((a['ts'] as num?)?.toInt() ?? 0),
-                  );
+                final items =
+                    docs
+                        .map((doc) {
+                          final map = doc.data() as Map<String, dynamic>;
+                          map['id'] = doc.id;
+                          if (map['ts'] is Timestamp) {
+                            map['ts'] =
+                                (map['ts'] as Timestamp).millisecondsSinceEpoch;
+                          }
+                          return map;
+                        })
+                        .where(
+                          (item) =>
+                              item['type']?.toString() == 'account_lock_appeal',
+                        )
+                        .toList()
+                      ..sort(
+                        (a, b) => ((b['ts'] as num?)?.toInt() ?? 0).compareTo(
+                          (a['ts'] as num?)?.toInt() ?? 0,
+                        ),
+                      );
 
                 if (items.isEmpty) {
                   return _buildEmptyHistory();
@@ -575,8 +578,9 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
     final reply = item['adminReply']?.toString().trim() ?? '';
     final ts = (item['ts'] as num?)?.toInt() ?? 0;
     final dt = ts > 0
-        ? DateFormat('HH:mm - dd/MM/yyyy')
-            .format(DateTime.fromMillisecondsSinceEpoch(ts))
+        ? DateFormat(
+            'HH:mm - dd/MM/yyyy',
+          ).format(DateTime.fromMillisecondsSinceEpoch(ts))
         : 'Đang đồng bộ thời gian';
 
     return Container(
@@ -593,8 +597,10 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: _statusColor(status).withValues(alpha: 0.12),
                   borderRadius: SLRadius.pillAll,
@@ -639,8 +645,10 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.support_agent_rounded,
-                      color: Color(0xFF4F46E5)),
+                  const Icon(
+                    Icons.support_agent_rounded,
+                    color: Color(0xFF4F46E5),
+                  ),
                   SLSpacing.w8,
                   Expanded(
                     child: Text(
@@ -683,7 +691,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
           SLSpacing.w12,
           Expanded(
             child: Text(
-              'Bạn chưa gửi yêu cầu nào trong tài khoản này.',
+              context.tr('ui_auth_you_have_not_submitted_any_requests_in_aff1ac'),
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.w700,
                 color: const Color(0xFF6B7280),

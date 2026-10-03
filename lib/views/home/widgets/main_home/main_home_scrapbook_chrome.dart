@@ -1144,7 +1144,7 @@ class _HomeStoryLetterhead extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'SOULLOCKET',
+                          context.tr('auth_refresh_brand'),
                           style: SLTheme.quicksand(
                             fontSize: 10,
                             fontWeight: FontWeight.w900,

@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
@@ -131,7 +132,7 @@ class _AdminAuditLogsScreenState extends State<AdminAuditLogsScreen> {
               child: Column(
                 children: [
                   AdminTopBar(
-                    title: 'Lịch sử thao tác (Audit Logs)',
+                    title: context.tr('admin_lchsthaotc_dcff6f'),
                     user: widget.user,
                     isRefreshing: _isRefreshing,
                     lastUpdatedAt: _lastUpdatedAt,
@@ -148,8 +149,8 @@ class _AdminAuditLogsScreenState extends State<AdminAuditLogsScreen> {
                         : AdminGlassCard(
                             padding: const EdgeInsets.all(0),
                             child: _logs.isEmpty
-                                ? const Center(
-                                    child: Text('Chưa có lịch sử thao tác nào.',
+                                ? Center(
+                                    child: Text(context.tr('admin_chaclchsth_453420'),
                                         style: TextStyle(color: Colors.grey)),
                                   )
                                 : ListView.separated(
@@ -195,14 +196,14 @@ class _AdminAuditLogsScreenState extends State<AdminAuditLogsScreen> {
                                           children: [
                                             SLSpacing.h4,
                                             Text(
-                                              'Thời gian: $timeStr | Actor: ${log['actorRole'] ?? 'unknown'}',
+                                              L10nScope.of(context).format('ui_admin_time_value1_actor_value2_a4197e', {'value1': timeStr, 'value2': log['actorRole'] ?? 'unknown'}),
                                               style: const TextStyle(
                                                   color: Colors.grey,
                                                   fontSize: 12),
                                             ),
                                             if (log['targetId'] != null)
                                               Text(
-                                                  'Target ID: ${log['targetId']}',
+                                                  L10nScope.of(context).format('ui_admin_target_id_value1_2ccd89', {'value1': log['targetId']}),
                                                   style: const TextStyle(
                                                       color: Colors.grey,
                                                       fontSize: 12)),
@@ -210,13 +211,13 @@ class _AdminAuditLogsScreenState extends State<AdminAuditLogsScreen> {
                                                 log['reason']
                                                     .toString()
                                                     .isNotEmpty)
-                                              Text('Lý do: ${log['reason']}',
+                                              Text(L10nScope.of(context).format('ui_admin_reason_value1_4442c8', {'value1': log['reason']}),
                                                   style: const TextStyle(
                                                       color: Colors.grey,
                                                       fontSize: 12)),
                                             if (log['title'] != null)
                                               Text(
-                                                  'Tiêu đề TB: ${log['title']}',
+                                                  L10nScope.of(context).format('ui_admin_notification_title_value1_8026a6', {'value1': log['title']}),
                                                   style: const TextStyle(
                                                       color: Colors.grey,
                                                       fontSize: 12)),

@@ -26,7 +26,7 @@ extension MainHomeAvatarController on _MainHomeTabState {
             cropStyle: CropStyle.circle,
           ),
           IOSUiSettings(
-            title: isUser1 ? 'Cắt avatar bạn nam' : 'Cắt avatar người ấy',
+            title: isUser1 ? context.tr('home_ctavatarbn_f914c9') : context.tr('home_ctavatarng_30711f'),
             aspectRatioLockEnabled: true,
             aspectRatioPickerButtonHidden: true,
             resetAspectRatioEnabled: false,
@@ -69,12 +69,12 @@ extension MainHomeAvatarController on _MainHomeTabState {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
-          content: const Text(
-            'Lần đổi avatar trang chủ trước đã bị gián đoạn.',
+          content: Text(
+            context.tr('home_lniavatart_37d3af'),
           ),
           behavior: SnackBarBehavior.floating,
           action: SnackBarAction(
-            label: 'Thử lại',
+            label: context.tr('Thử lại'),
             onPressed: () {
               unawaited(_retryPendingAvatarUpload());
             },
@@ -112,7 +112,7 @@ extension MainHomeAvatarController on _MainHomeTabState {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: const Text('Không tìm thấy ảnh avatar cũ để thử lại.'),
+            content: Text(context.tr('home_khngtmthyn_e7acea')),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -132,7 +132,7 @@ extension MainHomeAvatarController on _MainHomeTabState {
     try {
       file = presetFile ?? await _storageService.pickImage();
     } catch (e) {
-      if (mounted) SLNotice.showInfo(context, 'Lỗi chọn ảnh: $e');
+      if (mounted) SLNotice.showInfo(context, L10nScope.of(context).format('ui_home_error_selecting_photo_value1_f81600', {'value1': e}));
     }
     if (file == null) return;
     if (!mounted) return;
@@ -206,8 +206,8 @@ extension MainHomeAvatarController on _MainHomeTabState {
           SLSnackBar(
             content: Text(
               isUser1
-                  ? 'Đã cập nhật avatar cho bạn nam.'
-                  : 'Đã cập nhật avatar cho bạn nữ.',
+                  ? context.tr('home_cpnhtavata_af1e5c')
+                  : context.tr('home_cpnhtavata_182b34'),
             ),
             behavior: SnackBarBehavior.floating,
           ),
@@ -217,8 +217,8 @@ extension MainHomeAvatarController on _MainHomeTabState {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: const Text(
-              'Chưa thể đổi ảnh đại diện lúc này. Vui lòng thử lại.',
+            content: Text(
+              context.tr('home_chathinhid_401e49'),
             ),
             behavior: SnackBarBehavior.floating,
           ),

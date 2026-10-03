@@ -56,7 +56,7 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
       builder: (ctx) => SLAlertDialog(
         title: Text(context.tr('util_resetkhonh_7d2128')),
         content: Text(
-          'Yêu cầu này sẽ xóa toàn bộ ảnh mật, ghi chú mã hóa và khóa hiện tại sau 24 giờ.\n\nBạn phải xác nhận bằng OTP gửi về email chính. Trong thời gian chờ, cả hai người trong nhà đều có thể thu hồi yêu cầu này.',
+          context.tr('ui_utilities_this_request_will_delete_all_confidential_photos_7ede3a'),
         ),
         actions: [
           SLDialogAction(

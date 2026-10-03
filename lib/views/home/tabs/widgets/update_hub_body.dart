@@ -62,6 +62,7 @@ class UpdateHubBody extends StatefulWidget {
     required this.feedback,
     this.onWebsite,
     this.onGuide,
+    this.invitation,
   });
   final String? version;
   final VoidCallback onSettings;
@@ -73,6 +74,7 @@ class UpdateHubBody extends StatefulWidget {
   final VoidCallback? onWebsite;
   final VoidCallback? onGuide;
   final Widget feedback;
+  final Widget? invitation;
 
   @override
   State<UpdateHubBody> createState() => _UpdateHubBodyState();
@@ -222,6 +224,10 @@ class _UpdateHubBodyState extends State<UpdateHubBody> {
                   children: [
                     _scroll('explore', [
                       _hero(),
+                      if (widget.invitation != null) ...[
+                        const SizedBox(height: 20),
+                        widget.invitation!,
+                      ],
                       const SizedBox(height: 24),
                       _heading(context.tr('update_hub_shortcuts')),
                       const SizedBox(height: 12),

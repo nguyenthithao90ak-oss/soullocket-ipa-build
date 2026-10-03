@@ -1,110 +1,145 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 
 import 'activity_history_service.dart';
 import 'drawing_studio_service.dart';
-import 'offline_cache_service.dart';
 import 'settings_sync_service.dart';
 
 class CriticalDataSyncService {
   static final CriticalDataSyncService _instance =
       CriticalDataSyncService._internal();
-
   factory CriticalDataSyncService() => _instance;
-  CriticalDataSyncService._internal();
 
-  final DrawingStudioService _drawingStudioService = DrawingStudioService();
-  bool _isSyncing = false;
+  CriticalDataSyncService._internal()
+    : _currentUid = (() => FirebaseAuth.instance.currentUser?.uid),
+      _resolveHouse = _readHouse,
+      _backup = (() =>
+          SettingsSyncService().backupSettingsToCloud(immediate: true)),
+      _migrateHistory = ((house) => ActivityHistoryService.instance
+          .migrateLegacyLocalData(houseId: house)),
+      _migrateGallery = DrawingStudioService().migrateLegacyLocalGallery,
+      _syncGallery = DrawingStudioService().syncPendingLocalGallery;
+
+  @visibleForTesting
+  CriticalDataSyncService.forTesting({
+    required String? Function() uidProvider,
+    required Future<String?> Function(String) houseResolver,
+    required Future<void> Function() settingsBackup,
+    required Future<void> Function(String?) historyMigration,
+    required Future<void> Function(String) galleryMigration,
+    required Future<void> Function(String) gallerySync,
+  }) : _currentUid = uidProvider,
+       _resolveHouse = houseResolver,
+       _backup = settingsBackup,
+       _migrateHistory = historyMigration,
+       _migrateGallery = galleryMigration,
+       _syncGallery = gallerySync;
+
+  final String? Function() _currentUid;
+  final Future<String?> Function(String) _resolveHouse;
+  final Future<void> Function() _backup;
+  final Future<void> Function(String?) _migrateHistory;
+  final Future<void> Function(String) _migrateGallery;
+  final Future<void> Function(String) _syncGallery;
   String? _lastSyncedUserId;
   String? _lastSyncedHouseId;
   DateTime? _lastSyncedAt;
   Future<void>? _syncInFlight;
-
+  String? _inFlightUid;
+  String? _inFlightHouse;
   static const Duration _syncCooldown = Duration(seconds: 20);
 
-  Future<void> syncCurrentUserData(
-      {String? houseId, bool force = false}) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      return;
+  static Future<String?> _readHouse(String uid) async {
+    final snapshot = await FirebaseDatabase.instance
+        .ref('users/$uid/houseId')
+        .get()
+        .timeout(const Duration(seconds: 8));
+    return snapshot.value is String &&
+            (snapshot.value as String).trim().isNotEmpty
+        ? (snapshot.value as String).trim()
+        : null;
+  }
+
+  void _guard(String uid) {
+    if (_currentUid() != uid) {
+      throw FirebaseException(
+        plugin: 'critical_data_sync',
+        code: 'unauthenticated',
+      );
     }
-    final resolvedHouseId = await _resolveHouseId(houseId);
-    if (_syncInFlight != null) {
-      return _syncInFlight!;
+  }
+
+  Future<void> _guardScope(String uid, String? house) async {
+    _guard(uid);
+    final currentHouse = await _resolveHouse(uid);
+    _guard(uid);
+    if (currentHouse != house) {
+      throw FirebaseException(plugin: 'critical_data_sync', code: 'cancelled');
     }
-    if (!force && _shouldSkipSync(user.uid, resolvedHouseId)) {
+  }
+
+  Future<void> syncCurrentUserData({
+    String? houseId,
+    bool force = false,
+  }) async {
+    final uid = _currentUid();
+    if (uid == null) {
+      throw FirebaseException(
+        plugin: 'critical_data_sync',
+        code: 'unauthenticated',
+      );
+    }
+    final house = await _resolveHouse(uid);
+    _guard(uid);
+    if (houseId?.trim().isNotEmpty == true && houseId!.trim() != house) {
+      throw FirebaseException(plugin: 'critical_data_sync', code: 'cancelled');
+    }
+    while (_syncInFlight != null) {
+      final pending = _syncInFlight!;
+      if (_inFlightUid == uid && _inFlightHouse == house) return pending;
+      try {
+        await pending;
+      } catch (_) {}
+      await _guardScope(uid, house);
+    }
+    if (!force &&
+        _lastSyncedUserId == uid &&
+        _lastSyncedHouseId == house &&
+        _lastSyncedAt != null &&
+        DateTime.now().difference(_lastSyncedAt!) < _syncCooldown) {
       return;
     }
 
-    final future = _runSync(
-      userId: user.uid,
-      houseId: resolvedHouseId,
-    );
+    _inFlightUid = uid;
+    _inFlightHouse = house;
+    final future = _runSync(uid, house);
     _syncInFlight = future;
     try {
       await future;
     } finally {
       if (identical(_syncInFlight, future)) {
         _syncInFlight = null;
+        _inFlightUid = null;
+        _inFlightHouse = null;
       }
     }
   }
 
-  bool _shouldSkipSync(String userId, String? houseId) {
-    if (_isSyncing) {
-      return true;
+  Future<void> _runSync(String uid, String? house) async {
+    _guard(uid);
+    await _backup();
+    await _guardScope(uid, house);
+    if (house != null) {
+      await _migrateHistory(house);
+      await _guardScope(uid, house);
+      await _migrateGallery(house);
+      await _guardScope(uid, house);
+      await _syncGallery(house);
+      await _guardScope(uid, house);
     }
-    if (_lastSyncedUserId != userId) {
-      return false;
-    }
-    if ((_lastSyncedHouseId ?? '') != (houseId ?? '')) {
-      return false;
-    }
-    final lastSyncedAt = _lastSyncedAt;
-    if (lastSyncedAt == null) {
-      return false;
-    }
-    return DateTime.now().difference(lastSyncedAt) < _syncCooldown;
-  }
-
-  Future<void> _runSync({
-    required String userId,
-    required String? houseId,
-  }) async {
-    _isSyncing = true;
-    try {
-      await SettingsSyncService().backupSettingsToCloud();
-      await ActivityHistoryService.instance
-          .migrateLegacyLocalData(houseId: houseId);
-      if (houseId != null && houseId.isNotEmpty) {
-        await _drawingStudioService.migrateLegacyLocalGallery(houseId);
-        await _drawingStudioService.syncPendingLocalGallery(houseId);
-      }
-      _lastSyncedUserId = userId;
-      _lastSyncedHouseId = houseId;
-      _lastSyncedAt = DateTime.now();
-    } finally {
-      _isSyncing = false;
-    }
-  }
-
-  Future<String?> _resolveHouseId(String? houseId) async {
-    final trimmed = houseId?.trim() ?? '';
-    if (trimmed.isNotEmpty) {
-      return trimmed;
-    }
-    final prefs = OfflineCacheService.getPrefsSync() ??
-        await SharedPreferences.getInstance();
-    final cached = prefs.getString('il_house_id')?.trim() ?? '';
-    final cachedAuthUid = prefs.getString('il_auth_uid')?.trim() ?? '';
-    if (cached.isNotEmpty) {
-      final currentUid = FirebaseAuth.instance.currentUser?.uid;
-      if (currentUid != null && cachedAuthUid == currentUid) {
-        return cached;
-      }
-      await prefs.remove('il_house_id');
-      await prefs.remove('il_role');
-    }
-    return null;
+    _lastSyncedUserId = uid;
+    _lastSyncedHouseId = house;
+    _lastSyncedAt = DateTime.now();
   }
 }

@@ -379,7 +379,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           resolvedMessage.contains('không tồn tại')) {
         _showErrorDialog(context.tr('forgot_pwd_err_email_not_found'));
       } else {
-        _showErrorDialog('Lỗi gửi mã khôi phục: $resolvedMessage');
+        _showErrorDialog(L10nScope.of(context).format('ui_auth_error_sending_recovery_code_value1_1221f3', {'value1': resolvedMessage}));
       }
     }
   }
