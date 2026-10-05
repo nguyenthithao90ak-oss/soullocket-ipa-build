@@ -1,5 +1,6 @@
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/sl_settings_kit.dart';
 import 'package:soullocket_app/widgets/getting_started_guide.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
@@ -350,13 +351,13 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
               margin: const EdgeInsets.symmetric(horizontal: 32),
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(32),
+                color: SLSettingsColors.surface,
+                borderRadius: BorderRadius.circular(SLSettingsRadius.sheet),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFD81B60).withValues(alpha: 0.2),
+                    color: SLSettingsColors.ink.withValues(alpha: 0.16),
                     blurRadius: 32,
-                    spreadRadius: 8,
+                    offset: const Offset(0, 12),
                   ),
                 ],
               ),
@@ -366,57 +367,36 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: const BoxDecoration(
-                      color: Color(0xFFFFF0F5),
+                      color: SLSettingsColors.accentSoft,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.favorite_rounded,
-                      color: Color(0xFFD81B60),
-                      size: 64,
+                      color: SLSettingsColors.accent,
+                      size: 56,
                     ),
                   ),
                   const SizedBox(height: 24),
                   Text(
                     _t('pairing_ui_congrats_title'),
+                    textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFFD81B60),
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: SLSettingsColors.ink,
                     ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     _t('pairing_ui_congrats_body'),
                     textAlign: TextAlign.center,
-                    style: SLTheme.quicksand(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.grey.shade700,
-                      height: 1.4,
-                    ),
+                    style: SLSettingsText.body(SLSettingsColors.inkSecondary),
                   ),
                   const SizedBox(height: 32),
-                  ElevatedButton(
+                  SLSettingsButton(
+                    label: _t('pairing_ui_congrats_action'),
+                    icon: Icons.favorite_rounded,
                     onPressed: () => Navigator.of(context).pop(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFD81B60),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      _t('pairing_ui_congrats_action'),
-                      style: SLTheme.quicksand(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -451,22 +431,24 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
             color: colors.ink,
           ),
         ),
-        leading: IconButton(
-          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-          icon: Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: colors.ink,
-            size: 19,
+        leadingWidth: 64,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: Center(
+            child: SLSettingsBackButton(
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              isDark: colors.dark,
+              onPressed: () => Navigator.pop(context),
+            ),
           ),
-          onPressed: () => Navigator.pop(context),
         ),
         actions: [
           if (!_isLoading && !_loadError && !_isPaired)
             IconButton(
               tooltip: _t('pairing_ui_dashboard_help'),
-              icon: const Icon(
+              icon: Icon(
                 Icons.help_outline_rounded,
-                color: SLColors.textSecond,
+                color: colors.muted,
                 size: 22,
               ),
               onPressed: _showDetailedGuide,
@@ -478,9 +460,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
         child: SafeArea(
           top: false,
           child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(color: SLColors.primary),
-                )
+              ? const Center(child: CircularProgressIndicator())
               : _loadError
               ? _buildLoadError()
               : _isPaired
@@ -498,17 +478,25 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.cloud_off_outlined, color: SLColors.textSecond),
+            const SLSettingsIconTile(
+              icon: Icons.cloud_off_outlined,
+              color: SLSettingsColors.slate,
+              filled: false,
+              size: 52,
+            ),
             const SizedBox(height: 16),
             Text(
               _t('pairing_ui_state_load_error'),
               textAlign: TextAlign.center,
-              style: SLTheme.quicksand(color: SLColors.textSecond, height: 1.4),
+              style: SLSettingsText.body(SLSettingsColors.inkSecondary),
             ),
-            const SizedBox(height: 12),
-            TextButton(
+            const SizedBox(height: 16),
+            SLSettingsButton(
+              label: _t('pairing_ui_state_retry'),
+              icon: Icons.refresh_rounded,
+              variant: SLSettingsButtonVariant.tonal,
+              expand: false,
               onPressed: _loadHouseId,
-              child: Text(_t('pairing_ui_state_retry')),
             ),
           ],
         ),
@@ -525,54 +513,39 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           children: [
             _buildPairingIntro(),
             const SizedBox(height: 26),
-            Material(
-              color: Colors.white,
-              clipBehavior: Clip.antiAlias,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: const BorderSide(color: Color(0xFFEEE5E4)),
-              ),
-              child: Column(
-                children: [
-                  _buildActionRow(
-                    title: _t('pairing_ui_dashboard_create_action'),
-                    subtitle: _t('pairing_ui_dashboard_create_subtitle'),
-                    icon: Icons.add_link_rounded,
-                    onTap: _showCreateCodeSheet,
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.only(left: 74, right: 16),
-                    child: Divider(height: 1, color: Color(0xFFF1EBE9)),
-                  ),
-                  _buildActionRow(
-                    title: _t('pairing_ui_dashboard_enter_action'),
-                    subtitle: _t('pairing_ui_dashboard_enter_subtitle'),
-                    icon: Icons.qr_code_scanner_rounded,
-                    onTap: _showEnterCodeSheet,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 14),
-            _buildSecurityNote(),
-            const SizedBox(height: 32),
-            Row(
+            SLSettingsGroup(
+              margin: EdgeInsets.zero,
+              autoDividers: true,
               children: [
-                Text(
-                  _t('pairing_ui_dashboard_requests_title'),
-                  style: SLTheme.quicksand(
-                    color: SLColors.ink,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
+                _buildActionRow(
+                  title: _t('pairing_ui_dashboard_create_action'),
+                  subtitle: _t('pairing_ui_dashboard_create_subtitle'),
+                  icon: Icons.add_link_rounded,
+                  color: SLSettingsColors.rose,
+                  onTap: _showCreateCodeSheet,
                 ),
-                const SizedBox(width: 14),
-                const Expanded(
-                  child: Divider(height: 1, color: Color(0xFFECE3E1)),
+                _buildActionRow(
+                  title: _t('pairing_ui_dashboard_enter_action'),
+                  subtitle: _t('pairing_ui_dashboard_enter_subtitle'),
+                  icon: Icons.qr_code_scanner_rounded,
+                  color: SLSettingsColors.teal,
+                  onTap: _showEnterCodeSheet,
                 ),
               ],
             ),
             const SizedBox(height: 14),
+            _buildSecurityNote(),
+            const SizedBox(height: 32),
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Text(
+                _t('pairing_ui_dashboard_requests_title').toUpperCase(),
+                style: SLSettingsText.sectionLabel(
+                  SLSettingsColors.inkTertiary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
             _buildRequestsList(),
           ],
         ),
@@ -596,13 +569,16 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                     width: 52,
                     height: 52,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFBE8EB),
+                      color: SLSettingsColors.accentSoft,
                       shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFF4D9DF)),
+                      border: Border.all(
+                        color: SLSettingsColors.surface,
+                        width: 2,
+                      ),
                     ),
                     child: const Icon(
                       Icons.person_outline_rounded,
-                      color: Color(0xFFAD516B),
+                      color: SLSettingsColors.accentStrong,
                       size: 27,
                     ),
                   ),
@@ -613,13 +589,16 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                     width: 52,
                     height: 52,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF3ECE7),
+                      color: SLSettingsColors.surfaceMuted,
                       shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFE8DDD5)),
+                      border: Border.all(
+                        color: SLSettingsColors.surface,
+                        width: 2,
+                      ),
                     ),
                     child: const Icon(
                       Icons.person_outline_rounded,
-                      color: Color(0xFF947568),
+                      color: SLSettingsColors.inkSecondary,
                       size: 27,
                     ),
                   ),
@@ -628,12 +607,12 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                   width: 30,
                   height: 30,
                   decoration: const BoxDecoration(
-                    color: Color(0xFFFCFAF9),
+                    color: SLSettingsColors.surface,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.favorite_rounded,
-                    color: Color(0xFFC5637C),
+                    color: SLSettingsColors.accent,
                     size: 17,
                   ),
                 ),
@@ -646,9 +625,9 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           _t('pairing_ui_dashboard_title'),
           textAlign: TextAlign.center,
           style: SLTheme.quicksand(
-            color: SLColors.ink,
+            color: SLSettingsColors.ink,
             fontSize: 22,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w800,
             height: 1.3,
           ),
         ),
@@ -658,12 +637,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           child: Text(
             _t('pairing_ui_dashboard_subtitle'),
             textAlign: TextAlign.center,
-            style: SLTheme.quicksand(
-              color: SLColors.textSecond,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              height: 1.5,
-            ),
+            style: SLSettingsText.caption(SLSettingsColors.inkSecondary),
           ),
         ),
       ],
@@ -676,7 +650,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       children: [
         const Icon(
           Icons.lock_outline_rounded,
-          color: Color(0xFF927C82),
+          color: SLSettingsColors.inkTertiary,
           size: 14,
         ),
         const SizedBox(width: 6),
@@ -684,12 +658,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           child: Text(
             _t('pairing_ui_dashboard_security_short'),
             textAlign: TextAlign.center,
-            style: SLTheme.quicksand(
-              color: SLColors.textSecond,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w500,
-              height: 1.4,
-            ),
+            style: SLSettingsText.caption(SLSettingsColors.inkTertiary),
           ),
         ),
       ],
@@ -810,62 +779,20 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     required String subtitle,
     required IconData icon,
     required VoidCallback onTap,
+    Color color = SLSettingsColors.rose,
   }) {
     return Semantics(
       button: true,
       excludeSemantics: true,
       label: '$title. $subtitle',
       onTap: onTap,
-      child: InkWell(
+      child: SLSettingsRow(
+        icon: icon,
+        iconColor: color,
+        title: title,
+        subtitle: subtitle,
+        padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 12, 14),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFCEDF0),
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: Icon(icon, color: const Color(0xFFB9516D), size: 23),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: SLTheme.quicksand(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: SLColors.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: SLColors.textSecond,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: Color(0xFFAE969E),
-                size: 20,
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -877,36 +804,10 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       stream: _incomingRequestsStream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: SLColors.dangerLight,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: SLColors.danger.withValues(alpha: 0.32),
-              ),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.cloud_off_outlined,
-                  size: 19,
-                  color: SLColors.danger,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    _t('pairing_ui_requests_error'),
-                    style: SLTheme.quicksand(
-                      color: const Color(0xFF9A344C),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      height: 1.35,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          return SLSettingsNotice(
+            tone: SLSettingsTone.danger,
+            icon: Icons.cloud_off_outlined,
+            message: _t('pairing_ui_requests_error'),
           );
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -929,62 +830,18 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   }
 
   Widget _buildEmptyRequestsView() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF5F1EE),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: const BoxDecoration(
-              color: Color(0xFFFFFDFC),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.mark_email_read_outlined,
-              color: SLColors.textSecond,
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Text(
-              _t('pairing_ui_requests_empty_title'),
-              style: SLTheme.quicksand(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w700,
-                color: SLColors.textSecond,
-              ),
-            ),
-          ),
-        ],
-      ),
+    return SLSettingsNotice(
+      tone: SLSettingsTone.neutral,
+      icon: Icons.mark_email_read_outlined,
+      message: _t('pairing_ui_requests_empty_title'),
     );
   }
 
   Widget _buildRequestTile(PairingRequest request) {
     final isResponding = _respondingRequestId == request.requestId;
     final hasActiveResponse = _respondingRequestId != null;
-    return Container(
+    return SLSettingsCard(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: SLColors.paper,
-        borderRadius: BorderRadius.circular(21),
-        border: Border.all(color: const Color(0xFFE8CBD4)),
-        boxShadow: [
-          BoxShadow(
-            color: SLColors.primary.withValues(alpha: 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 7),
-          ),
-        ],
-      ),
       child: Column(
         children: [
           Row(
@@ -995,13 +852,13 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: const Color(0xFFEAB4C1),
+                        color: SLSettingsColors.accentSoft,
                         width: 2,
                       ),
                     ),
                     child: CircleAvatar(
                       radius: 26,
-                      backgroundColor: Colors.pink.shade50,
+                      backgroundColor: SLSettingsColors.accentSoft,
                       child: request.guestAvatar.isNotEmpty
                           ? ClipOval(
                               child: CachedNetworkImage(
@@ -1015,7 +872,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                             )
                           : const Icon(
                               Icons.person_rounded,
-                              color: Color(0xFFD81B60),
+                              color: SLSettingsColors.accent,
                               size: 30,
                             ),
                     ),
@@ -1032,31 +889,26 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: SLTheme.quicksand(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF2C1B22),
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.w800,
+                        color: SLSettingsColors.ink,
                       ),
                     ),
                     const SizedBox(height: 3),
                     if (request.guestEmail.isNotEmpty) ...[
                       Text(
                         request.guestEmail,
-                        style: SLTheme.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: SLColors.textSecond,
+                        style: SLSettingsText.caption(
+                          SLSettingsColors.inkSecondary,
                         ),
                       ),
                       const SizedBox(height: 5),
                     ] else
                       const SizedBox(height: 5),
-                    Text(
-                      _t('pairing_ui_request_from'),
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        color: SLColors.primary,
-                      ),
+                    SLSettingsPill(
+                      label: _t('pairing_ui_request_from'),
+                      tone: SLSettingsTone.accent,
+                      dense: true,
                     ),
                   ],
                 ),
@@ -1067,50 +919,22 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: SLSettingsButton(
+                  label: _t('pairing_ui_request_reject'),
+                  variant: SLSettingsButtonVariant.secondary,
                   onPressed: isResponding || hasActiveResponse
                       ? null
                       : () => _respondToRequest(request, accept: false),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(46),
-                    foregroundColor: SLColors.textSecond,
-                    side: const BorderSide(color: SLColors.border),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                  child: Text(
-                    _t('pairing_ui_request_reject'),
-                    style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-                  ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
-                child: FilledButton(
+                child: SLSettingsButton(
+                  label: _t('pairing_ui_request_accept'),
+                  loading: isResponding,
                   onPressed: isResponding || hasActiveResponse
                       ? null
                       : () => _respondToRequest(request, accept: true),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(46),
-                    backgroundColor: SLColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                  child: isResponding
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          _t('pairing_ui_request_accept'),
-                          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-                        ),
                 ),
               ),
             ],
