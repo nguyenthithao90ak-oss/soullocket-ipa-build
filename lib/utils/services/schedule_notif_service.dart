@@ -4,8 +4,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 
+import '../calendar/calendar_civil_date.dart';
 import '../calendar_widget_snapshot.dart';
 import 'core/cloud_functions_helper.dart';
+import 'l10n_service.dart';
 import 'schedule_notification_presenter.dart';
 
 class ScheduleNotifService {
@@ -191,9 +193,10 @@ class ScheduleNotifService {
         final eventId = eventSnapshot.key;
         if (eventId == null) continue;
         final eventRaw = eventSnapshot.value;
-        final title = eventRaw is Map
-            ? eventRaw['title']?.toString() ?? 'Sự kiện'
-            : 'Sự kiện';
+        final rawTitle = eventRaw is Map
+            ? eventRaw['title']?.toString().trim() ?? ''
+            : '';
+        final title = rawTitle.isNotEmpty ? rawTitle : _t('sched_event_default');
         events.add(
           UpcomingEvent(
             eventKey: 'cal:$dateKey:$eventId',
@@ -232,7 +235,7 @@ class ScheduleNotifService {
           dateKey:
               '${eventDate.year}-${_pad(eventDate.month)}-${_pad(eventDate.day)}',
           dateMs: resolvedMs,
-          title: value['name']?.toString() ?? 'Sự kiện',
+          title: _nonEmpty(value['name'], _t('sched_event_default')),
           source: 'custom',
           daysUntil: _daysUntil(resolvedMs, today),
         ),
@@ -332,17 +335,22 @@ class ScheduleNotifService {
       for (final event in events) {
         if (!isCurrentScope()) return;
         if (event.daysUntil < 0 || event.daysUntil > 3) continue;
+        // Nhắc trước 7 ngày chỉ gửi đúng ngày nhắc, không đếm ngược thêm.
+        if (event.eventKey.contains(':pre7:') && event.daysUntil != 0) {
+          continue;
+        }
 
         final notifId = _notificationIdFor(event);
         final presentation = describeScheduleNotification(
           notificationId: notifId,
-          fallbackTitle: _fallbackScheduleTitle(event.daysUntil),
-          fallbackMessage: _fallbackScheduleMessage(
+          fallbackTitle: scheduleGenericTitle(event.daysUntil),
+          fallbackMessage: scheduleGenericMessage(
             event.daysUntil,
             event.title,
           ),
           eventTitle: event.title,
           eventDate: event.dateKey,
+          eventKey: event.eventKey,
           identity: identity,
         );
 
@@ -414,35 +422,12 @@ class ScheduleNotifService {
     }
   }
 
-  String _fallbackScheduleTitle(int daysUntil) {
-    switch (daysUntil) {
-      case 3:
-        return '🎉 Sắp tới rồi!';
-      case 2:
-        return '⏳ Còn 2 ngày nữa!';
-      case 1:
-        return '⏰ Ngày mai là tới rồi!';
-      case 0:
-        return '🔔 Hôm nay là ngày đặc biệt!';
-      default:
-        return 'Thông báo mới';
-    }
-  }
+  static String _t(String key, [Map<String, Object?> params = const {}]) =>
+      L10nService().format(key, params);
 
-  String _fallbackScheduleMessage(int daysUntil, String eventTitle) {
-    final label = eventTitle.trim().isEmpty ? 'sự kiện này' : eventTitle.trim();
-    switch (daysUntil) {
-      case 3:
-        return 'Chỉ còn 3 ngày nữa là đến $label nè! Chuẩn bị điều gì đó thật vui nhé! 🎁';
-      case 2:
-        return 'Chỉ còn 2 ngày nữa là đến $label thôi nha! 💖';
-      case 1:
-        return 'Hồi hộp quá! Chỉ còn 1 ngày nữa là đến $label rồi đó! 🥰';
-      case 0:
-        return 'Tèn ten! Hôm nay là $label nè! Chúc một ngày thật vui vẻ nhé! 🥳';
-      default:
-        return 'Đừng quên $label nhé!';
-    }
+  static String _nonEmpty(Object? value, String fallback) {
+    final text = value?.toString().trim() ?? '';
+    return text.isEmpty ? fallback : text;
   }
 
   List<UpcomingEvent> _buildSystemEvents(
@@ -456,7 +441,7 @@ class ScheduleNotifService {
       events: events,
       eventKey: 'sys:anniversary:yearly',
       rawDate: identity.startDate,
-      title: 'Ngày yêu của ${identity.fallbackSource}',
+      title: _t('sched_event_love_day', {'couple': identity.fallbackSource}),
       source: 'system',
       now: now,
       todayMs: todayMs,
@@ -465,9 +450,9 @@ class ScheduleNotifService {
       events: events,
       eventKey: 'sys:birthday:user1',
       rawDate: identity.dobU1,
-      title: identity.nameU1.trim().isEmpty
-          ? 'Sinh nhật người thương'
-          : 'Sinh nhật ${identity.nameU1.trim()}',
+      title: _t('sched_event_birthday', {
+        'name': _nonEmpty(identity.nameU1, _t('sched_partner_default')),
+      }),
       source: 'system',
       now: now,
       todayMs: todayMs,
@@ -476,9 +461,7 @@ class ScheduleNotifService {
       events: events,
       eventKey: 'sys:birthday:user1:pre7',
       rawDate: identity.dobU1,
-      name: identity.nameU1.trim().isEmpty
-          ? 'người thương'
-          : identity.nameU1.trim(),
+      name: _nonEmpty(identity.nameU1, _t('sched_partner_default')),
       advanceDays: 7,
       now: now,
       todayMs: todayMs,
@@ -487,9 +470,9 @@ class ScheduleNotifService {
       events: events,
       eventKey: 'sys:birthday:user2',
       rawDate: identity.dobU2,
-      title: identity.nameU2.trim().isEmpty
-          ? 'Sinh nhật người thương'
-          : 'Sinh nhật ${identity.nameU2.trim()}',
+      title: _t('sched_event_birthday', {
+        'name': _nonEmpty(identity.nameU2, _t('sched_partner_default')),
+      }),
       source: 'system',
       now: now,
       todayMs: todayMs,
@@ -498,9 +481,7 @@ class ScheduleNotifService {
       events: events,
       eventKey: 'sys:birthday:user2:pre7',
       rawDate: identity.dobU2,
-      name: identity.nameU2.trim().isEmpty
-          ? 'người thương'
-          : identity.nameU2.trim(),
+      name: _nonEmpty(identity.nameU2, _t('sched_partner_default')),
       advanceDays: 7,
       now: now,
       todayMs: todayMs,
@@ -509,9 +490,11 @@ class ScheduleNotifService {
     final anchor = _parseFlexibleDate(identity.startDate);
     if (anchor != null) {
       for (final milestone in const [30, 100, 365]) {
-        final milestoneDate = _startOfDay(
-          anchor,
-        ).add(Duration(days: milestone));
+        // Cộng theo ngày lịch: Duration(days: n) lệch 1 ngày khi qua DST.
+        final milestoneDate = CalendarCivilDate.addDays(
+          _startOfDay(anchor),
+          milestone,
+        );
         final dateKey = _formatDateKey(milestoneDate);
         final dateMs = milestoneDate.millisecondsSinceEpoch;
         events.add(
@@ -519,7 +502,7 @@ class ScheduleNotifService {
             eventKey: 'sys:milestone:$milestone:$dateKey',
             dateKey: dateKey,
             dateMs: dateMs,
-            title: 'Kỷ niệm $milestone ngày yêu',
+            title: _t('sched_event_milestone', {'days': milestone}),
             source: 'system',
             daysUntil: _daysUntil(dateMs, todayMs),
           ),
@@ -562,29 +545,6 @@ class ScheduleNotifService {
     );
   }
 
-  static const List<String> _giftSuggestions = [
-    '🎁 Handmade viết tay lời yêu thương',
-    '💐 Một bó hoa tươi kèm thiệp nhỏ xinh',
-    '🎂 Bất ngờ với bánh kem và nến lung linh',
-    '🍫 Hộp socola tình yêu và một cái ôm thật chặt',
-    '💍 Trang sức nhỏ xinh đính tên 2 đứa',
-    '🧸 Thú bông ôm tay dễ thương to đùng',
-    '🎫 Vé xem phim đôi hoặc concert cả 2 thích',
-    '📸 Album ảnh kỷ niệm tự thiết kế',
-    '🌹 Một bữa tối lãng mạn với đèn nến và hoa',
-    '✈️ Chuyến đi chơi 2 ngày 1 đêm bất ngờ',
-    '🛍️ Set quà chăm sóc da hoặc nước hoa',
-    '🎧 Tai nghe bluetooth cùng playlist tặng riêng',
-    '🖼️ Khung ảnh điện tử quay vòng kỷ niệm',
-    '🌸 Cây cảnh nhỏ xinh để cùng chăm sóc',
-    '☕ Bộ ly sứ đôi khắc tên 2 đứa',
-    '🎮 Game hoặc boardgame có thể chơi cùng nhau',
-    '🧦 Đồ đôi: áo, mũ hoặc vớ dễ thương',
-    '📖 Cuốn sổ nhỏ ghi lại lời yêu mỗi ngày',
-    '🎵 Đàn hộp nhỏ (ukulele) và bài hát tặng riêng',
-    '🌟 Bộ đèn sao trần phòng ngủ lãng mạn',
-  ];
-
   void _addAdvanceNoticeBirthdayEvent({
     required List<UpcomingEvent> events,
     required String eventKey,
@@ -599,19 +559,17 @@ class ScheduleNotifService {
     var bd = DateTime(now.year, parsed.month, parsed.day);
     final td = DateTime(now.year, now.month, now.day);
     if (bd.isBefore(td)) bd = DateTime(now.year + 1, parsed.month, parsed.day);
-    final rd = bd.subtract(Duration(days: advanceDays));
+    final rd = CalendarCivilDate.addDays(bd, -advanceDays);
     final rk = _formatDateKey(rd);
     final rms = rd.millisecondsSinceEpoch;
     if (rms < todayMs) return;
-    final g =
-        _giftSuggestions[(parsed.day + parsed.month + advanceDays) %
-            _giftSuggestions.length];
+    final g = scheduleGiftSuggestion(scheduleGiftSeed('$eventKey:$rk'));
     events.add(
       UpcomingEvent(
         eventKey: '$eventKey:$rk',
         dateKey: rk,
         dateMs: rms,
-        title: '🎂 Sinh nhật $name sắp tới! Gợi ý quà: $g',
+        title: _t('sched_event_birthday_soon', {'name': name, 'gift': g}),
         source: 'system',
         daysUntil: _daysUntil(rms, todayMs),
       ),

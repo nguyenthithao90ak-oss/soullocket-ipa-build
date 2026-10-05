@@ -140,8 +140,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                     },
                     style: slSettingsInputTextStyle(),
                     decoration: slSettingsInputDecoration(
-                      hint: context.tr('home_ngythngnm_03da5a'),
-                      helperText: context.tr('home_angnhpngyt_a0800e'),
+                      hint: DateInputUtils.formatHint(),
+                      helperText: L10nService().format('date_input_helper', {'format': DateInputUtils.formatHint()}),
                       errorText: errorText,
                       prefixIcon: const Icon(
                         Icons.calendar_month_rounded,

@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'dart:async';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:io';
@@ -9,7 +10,6 @@ import 'package:flutter/services.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/services/purchase_service.dart';
 import '../../utils/services/pending_upload_service.dart';
@@ -68,7 +68,6 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
   final VaultMediaUrlService _vaultMediaUrlService =
       VaultMediaUrlService.instance;
   int _vaultMediaGeneration = 0;
-  final DateFormat _resetTimeFormat = DateFormat('HH:mm • dd/MM/yyyy');
   StreamSubscription<DatabaseEvent>? _photosSub;
   StreamSubscription<bool>? _networkSub;
   StreamSubscription<SecretVaultResetRequestInfo?>? _resetRequestSub;

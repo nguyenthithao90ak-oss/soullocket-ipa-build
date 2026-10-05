@@ -319,10 +319,7 @@ class _CountdownModeEditorScreenState
   }
 
   int _daysSince(DateTime startDate) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final normalized = DateTime(startDate.year, startDate.month, startDate.day);
-    final days = today.difference(normalized).inDays;
+    final days = CalendarCivilDate.daysBetween(startDate, DateTime.now());
     return days < 0 ? 0 : days;
   }
 

@@ -15,7 +15,7 @@
 "sleep_tracking_consent" = "Activer le suivi et partager vos heures de repos avec votre partenaire ?";
 "sleep_sync_hint" = "Ouvrir pour actualiser";
 "sleep_duration" = "{hours} h {minutes} min";
-"comm_ngy_41ec10" = "jour";
+"comm_ngy_41ec10" = "jours";
 "core_presence_online" = "Actif";
 "home_angoffline_bbb3d5" = "Hors ligne maintenant";
 "home_cpi_d525b0" = "couple";
@@ -42,3 +42,7 @@
 "p3_health_next_period" = "until your next period";
 "milestone_today" = "📍Aujourd'hui";
 "milestone_days_left" = "🌸 {days} jours restants";
+"widget_avatar_days_name" = "SoulLocket : avatars et jours";
+"widget_avatar_days_desc" = "Affiche vos jours ensemble au centre avec vos deux avatars.";
+"widget_soul_merge_name" = "SoulLocket : Soul Merge";
+"widget_soul_merge_desc" = "Affiche le dernier message Soul Merge de votre partenaire.";

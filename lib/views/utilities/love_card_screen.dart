@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
@@ -10,7 +11,6 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/services/activity_history_service.dart';
@@ -1034,7 +1034,8 @@ int _timestampFromValue(dynamic value) {
 }
 
 String _formatTime(int timestampMs) {
-  return DateFormat(
-    'HH:mm - dd/MM/yyyy',
-  ).format(DateTime.fromMillisecondsSinceEpoch(timestampMs));
+  return LocaleDateFormat.timeAndDate(
+    DateTime.fromMillisecondsSinceEpoch(timestampMs),
+    separator: ' - ',
+  );
 }

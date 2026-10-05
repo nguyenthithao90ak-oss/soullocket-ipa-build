@@ -142,7 +142,7 @@ extension _InsightTimelineSectionExt on LoveInsightsView {
 
   Widget _buildTimelineItem(_TimelineDisplayEntry item, {bool isLast = false}) {
     final entry = item.entry;
-    final dateText = DateFormat('dd/MM/yyyy').format(entry.date);
+    final dateText = LocaleDateFormat.date(entry.date);
     final isCurrent = item.state == _TimelineEntryState.current;
     final isUpcoming = item.state == _TimelineEntryState.upcoming;
     final accent = isCurrent

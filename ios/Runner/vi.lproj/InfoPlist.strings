@@ -1,2 +1,14 @@
+/* Lời xin quyền & tên app (vi). Đồng bộ với Info.plist. */
 "CFBundleDisplayName" = "SoulLocket: Đếm Ngày Yêu";
 "CFBundleName" = "SoulLocket";
+"NSCameraUsageDescription" = "Ứng dụng cần quyền camera để chụp ảnh kỷ niệm, quét mã QR kết nối hoặc đăng nhập và dùng cuộc gọi video khi bạn chủ động bật tính năng đó.";
+"NSFaceIDUsageDescription" = "Ứng dụng cần quyền Face ID để mở khóa nhanh và bảo vệ nội dung riêng tư của bạn.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "SoulLocket dùng vị trí của bạn, kể cả khi chạy nền, để chia sẻ với người ấy, cập nhật bản đồ đôi và giúp bạn tìm bạn bè ở gần.";
+"NSLocationAlwaysUsageDescription" = "SoulLocket dùng vị trí của bạn, kể cả khi chạy nền, để chia sẻ với người ấy, cập nhật bản đồ đôi và giúp bạn tìm bạn bè ở gần.";
+"NSLocationWhenInUseUsageDescription" = "Ứng dụng cần quyền vị trí khi đang sử dụng để hiển thị bản đồ đôi, vị trí hiện tại, nhật ký có gắn địa điểm và gợi ý địa điểm gần bạn.";
+"NSMicrophoneUsageDescription" = "Ứng dụng cần quyền microphone để tham gia cuộc gọi âm thanh hoặc video và ghi nội dung âm thanh khi bạn chủ động sử dụng các tính năng đó.";
+"NSPhotoLibraryAddUsageDescription" = "Ứng dụng cần quyền thêm ảnh vào thư viện để lưu ảnh kỷ niệm, ảnh ghép và nội dung bạn tạo từ ứng dụng về máy.";
+"NSPhotoLibraryUsageDescription" = "Ứng dụng cần quyền truy cập thư viện ảnh để chọn ảnh hoặc video cho hồ sơ, bài đăng, nhật ký, ảnh ghép và các kỷ niệm trong ứng dụng.";
+"NSHealthShareUsageDescription" = "SoulLocket đọc dữ liệu giấc ngủ đã ghi trong Apple Health khi bạn bật theo dõi giấc ngủ. Bản tóm tắt giấc ngủ được chia sẻ với người ấy; dữ liệu này không theo dõi giấc ngủ theo thời gian thực.";
+"NSHealthUpdateUsageDescription" = "SoulLocket cần quyền truy cập dữ liệu sức khỏe để đồng bộ lịch ngủ của bạn.";
+"NSUserTrackingUsageDescription" = "Dữ liệu của bạn được ẩn danh và dùng để cải thiện trải nghiệm ứng dụng, hiển thị quảng cáo phù hợp mà không bán cho bên thứ ba.";

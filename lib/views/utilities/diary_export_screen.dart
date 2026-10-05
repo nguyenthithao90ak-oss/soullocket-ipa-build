@@ -1,10 +1,10 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 import 'dart:io' as io;
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -524,7 +524,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
 
   Widget _buildHistoryTile(int index) {
     final record = _history[index];
-    final dateStr = DateFormat('dd/MM/yyyy HH:mm').format(record.exportedAt);
+    final dateStr = LocaleDateFormat.dateTime(record.exportedAt);
     final isHtml = record.type == 'html';
     final icon = isHtml ? Icons.language_rounded : Icons.folder_zip_rounded;
     final color = isHtml ? const Color(0xFF5DA9FF) : const Color(0xFFD81B60);

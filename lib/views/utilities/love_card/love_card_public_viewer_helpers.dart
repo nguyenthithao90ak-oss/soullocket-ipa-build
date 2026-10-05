@@ -704,7 +704,8 @@ class _ActionPillButton extends StatelessWidget {
 }
 
 String _formatTime(int timestampMs) {
-  return DateFormat(
-    'HH:mm - dd/MM/yyyy',
-  ).format(DateTime.fromMillisecondsSinceEpoch(timestampMs));
+  return LocaleDateFormat.timeAndDate(
+    DateTime.fromMillisecondsSinceEpoch(timestampMs),
+    separator: ' - ',
+  );
 }

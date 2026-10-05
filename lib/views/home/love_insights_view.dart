@@ -1,5 +1,5 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../core/sl_theme.dart';
 import '../../utils/services/l10n_service.dart';

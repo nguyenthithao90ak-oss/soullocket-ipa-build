@@ -5,11 +5,10 @@ extension _MainHomeFormatters on _MainHomeTabState {
     if (dateString == null || dateString.isEmpty) return '0';
     try {
       final startDate = DateTime.parse(dateString);
-      final now = DateTime.now();
-      final current = DateTime(now.year, now.month, now.day);
-      final difference = current
-          .difference(DateTime(startDate.year, startDate.month, startDate.day))
-          .inDays;
+      // Đếm theo ngày lịch (không theo 24 giờ) để không hụt 1 ngày khi đổi
+      // giờ mùa hè ở Mỹ/châu Âu/Úc.
+      final difference =
+          CalendarCivilDate.daysBetween(startDate, DateTime.now());
       return difference >= 0 ? difference.toString() : '0';
     } catch (e) {
       return '0';
@@ -23,7 +22,28 @@ extension _MainHomeFormatters on _MainHomeTabState {
     try {
       final startDate = DateTime.parse(dateString);
       final now = DateTime.now();
-      final difference = now.difference(startDate);
+      // So theo giờ đồng hồ (wall clock) để giờ/phút/giây không lệch 1 tiếng
+      // sau khi đổi giờ mùa hè.
+      final difference = DateTime.utc(
+        now.year,
+        now.month,
+        now.day,
+        now.hour,
+        now.minute,
+        now.second,
+      ).difference(
+        DateTime.utc(
+          startDate.year,
+          startDate.month,
+          startDate.day,
+          startDate.hour,
+          startDate.minute,
+          startDate.second,
+        ),
+      );
+      if (difference.isNegative) {
+        return {'h': '00', 'm': '00', 's': '00'};
+      }
 
       final hours = difference.inHours % 24;
       final minutes = difference.inMinutes % 60;
@@ -83,8 +103,14 @@ extension _MainHomeFormatters on _MainHomeTabState {
     if (hour >= 5 && hour < 11) {
       return L10nService().translate('home_chobuisngn_6aa536');
     }
-    if (hour >= 11 && hour < 23) {
+    if (hour >= 11 && hour < 14) {
       return L10nService().translate('home_buitrarinh_cf8692');
+    }
+    if (hour >= 14 && hour < 18) {
+      return L10nService().translate('home_greeting_afternoon');
+    }
+    if (hour >= 18 && hour < 23) {
+      return L10nService().translate('home_greeting_evening');
     }
     return L10nService().translate('home_khuyaringn_0cca53');
   }
@@ -103,10 +129,7 @@ extension _MainHomeFormatters on _MainHomeTabState {
   }
 
   String _extractAgeDays(String dob) {
-    final ageText = ZodiacUtils.getAgeInDays(dob);
-    if (ageText == null || ageText.isEmpty) return '0';
-    final match = RegExp(r'\d+').firstMatch(ageText);
-    return match?.group(0) ?? '0';
+    return (ZodiacUtils.getAgeDayCount(dob) ?? 0).toString();
   }
 
   String _resolveCountdownLabel(String? customLabel, String fallback) {

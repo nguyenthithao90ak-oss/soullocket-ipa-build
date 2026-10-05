@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'dart:convert';
 import 'dart:io' as io;
 import 'package:archive/archive.dart';
@@ -247,7 +248,7 @@ class ExportService {
   }
 
   String _buildHtml(List<Map<String, dynamic>> entries, String houseName) {
-    final formatter = DateFormat('dd/MM/yyyy HH:mm');
+    final formatter = LocaleDateFormat.dateTimeFormat();
     final buffer = StringBuffer()
       ..writeln('<!DOCTYPE html>')
       ..writeln('<html lang="vi">')

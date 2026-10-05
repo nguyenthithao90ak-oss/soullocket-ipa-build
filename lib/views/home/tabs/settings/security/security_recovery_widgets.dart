@@ -99,9 +99,9 @@ class SecurityRecoveryQuestion extends StatelessWidget {
               onSubmitted: birthQuestion ? (_) => onNormalizeDate() : null,
               decoration: _inputDecoration(
                 context,
-                hint: context.tr(
-                  birthQuestion ? 'home_ngythngnm_a697d0' : 'enter_answer',
-                ),
+                hint: birthQuestion
+                    ? DateInputUtils.formatHint(allowMissingYear: true)
+                    : context.tr('enter_answer'),
                 suffix: birthQuestion
                     ? IconButton(
                         tooltip: context.tr('select_your_dob'),

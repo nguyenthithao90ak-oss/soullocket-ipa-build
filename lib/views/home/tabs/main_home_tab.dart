@@ -291,10 +291,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     if (dateStr == null) return 0;
     try {
       final DateTime start = DateTime.parse(dateStr.toString());
-      final DateTime now = DateTime.now();
-      final DateTime current = DateTime(now.year, now.month, now.day);
-      final int diff = current.difference(start).inDays;
-      return diff < 0 ? 0 : diff + 1;
+      // Cùng quy ước với vòng đếm chính: ngày bắt đầu là ngày 0.
+      final int diff = CalendarCivilDate.daysBetween(start, DateTime.now());
+      return diff < 0 ? 0 : diff;
     } catch (e) {
       return 0;
     }

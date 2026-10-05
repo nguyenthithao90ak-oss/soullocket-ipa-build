@@ -15,7 +15,7 @@
 "sleep_tracking_consent" = "هل تريد تفعيل التسجيل ومشاركة حالة وأوقات الراحة مع شريكك؟";
 "sleep_sync_hint" = "افتح التطبيق للتحديث";
 "sleep_duration" = "{hours} س {minutes} د";
-"comm_ngy_41ec10" = "يوم";
+"comm_ngy_41ec10" = "يومًا";
 "core_presence_online" = "نشط";
 "home_angoffline_bbb3d5" = "غير متصل الآن";
 "home_cpi_d525b0" = "زوجان";
@@ -42,3 +42,7 @@
 "p3_health_next_period" = "until your next period";
 "milestone_today" = "📍اليوم";
 "milestone_days_left" = "🌸بقي {days} أيام";
+"widget_avatar_days_name" = "SoulLocket: الصور الرمزية والأيام";
+"widget_avatar_days_desc" = "يعرض عدد أيامكما معًا في المنتصف مع صورتيكما الرمزيتين.";
+"widget_soul_merge_name" = "SoulLocket: Soul Merge";
+"widget_soul_merge_desc" = "يعرض أحدث رسالة Soul Merge من شريكك.";

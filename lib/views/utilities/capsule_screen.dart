@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/widgets/sl_date_picker.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
@@ -14,7 +15,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
-import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../utils/services/pending_upload_service.dart';
@@ -418,7 +418,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                       const SizedBox(height: 4),
                       Text(
                         L10nService().format('util_capsule_open_date', {
-                          'date': DateFormat('dd/MM/yyyy').format(
+                          'date': LocaleDateFormat.date(
                             DateTime.fromMillisecondsSinceEpoch(
                               updated['unlock_time_ms'] ?? 0,
                             ),
@@ -1051,7 +1051,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
             const Spacer(),
             Text(
               hasDate
-                  ? DateFormat('dd/MM/yyyy').format(_unlockDate!)
+                  ? LocaleDateFormat.date(_unlockDate!)
                   : context.tr('util_chnngym_02d57f'),
               style: SLTheme.quicksand(
                 color: hasDate ? const Color(0xFF5B2B6F) : _textPrimary,
@@ -1262,8 +1262,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                             L10nService().format(
                                               'util_capsule_open_short',
                                               {
-                                                'date': DateFormat('dd/MM/yyyy')
-                                                    .format(
+                                                'date': LocaleDateFormat.date(
                                                       DateTime.fromMillisecondsSinceEpoch(
                                                         unlockDate,
                                                       ),

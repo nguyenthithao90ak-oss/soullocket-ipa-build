@@ -20,6 +20,31 @@
 		<true/>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
+		<key>CFBundleLocalizations</key>
+		<array>
+			<string>en</string>
+			<string>vi</string>
+			<string>zh-Hans</string>
+			<string>zh-Hant</string>
+			<string>ja</string>
+			<string>ko</string>
+			<string>th</string>
+			<string>id</string>
+			<string>es</string>
+			<string>pt</string>
+			<string>fr</string>
+			<string>de</string>
+			<string>it</string>
+			<string>ru</string>
+			<string>hi</string>
+			<string>tr</string>
+			<string>ar</string>
+			<string>ms</string>
+			<string>fil</string>
+			<string>tl</string>
+			<string>nl</string>
+			<string>pl</string>
+		</array>
 		<key>CFBundleDisplayName</key>
 		<string>SoulLocket: Couple Love Days</string>
 		<key>CFBundleExecutable</key>
@@ -273,21 +298,21 @@
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
 		<key>NSCameraUsageDescription</key>
-		<string>Ứng dụng cần quyền camera để chụp ảnh kỷ niệm, quét mã QR kết nối hoặc đăng nhập và dùng cuộc gọi video khi bạn chủ động bật tính năng đó.</string>
+		<string>SoulLocket uses the camera to take memory photos, scan QR codes to connect or sign in, and for video calls when you start one.</string>
 		<key>NSFaceIDUsageDescription</key>
-		<string>Ứng dụng cần quyền Face ID để mở khóa nhanh và bảo vệ nội dung riêng tư của bạn.</string>
+		<string>SoulLocket uses Face ID to unlock quickly and protect your private content.</string>
 		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-		<string>SoulLocket needs location access even when in background to share location with your partner, update couple map, and help you find nearby friends.</string>
+		<string>SoulLocket uses your location, even in the background, to share it with your partner, keep your couple map up to date and help you find nearby friends.</string>
 		<key>NSLocationAlwaysUsageDescription</key>
-		<string>SoulLocket needs location access even when in background to share location with your partner, update couple map, and help you find nearby friends.</string>
+		<string>SoulLocket uses your location, even in the background, to share it with your partner, keep your couple map up to date and help you find nearby friends.</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
-		<string>Ứng dụng cần quyền vị trí khi đang sử dụng để hiển thị bản đồ đôi, vị trí hiện tại, nhật ký có gắn địa điểm và gợi ý địa điểm gần bạn.</string>
+		<string>SoulLocket uses your location while you use the app to show your couple map, your current location, location-tagged diary entries and nearby places.</string>
 		<key>NSMicrophoneUsageDescription</key>
-		<string>Ứng dụng cần quyền microphone để tham gia cuộc gọi âm thanh hoặc video và ghi nội dung âm thanh khi bạn chủ động sử dụng các tính năng đó.</string>
+		<string>SoulLocket uses the microphone for voice and video calls and to record audio when you choose to use those features.</string>
 		<key>NSPhotoLibraryAddUsageDescription</key>
-		<string>Ứng dụng cần quyền thêm ảnh vào thư viện để lưu ảnh kỷ niệm, ảnh ghép và nội dung bạn tạo từ ứng dụng về máy.</string>
+		<string>SoulLocket saves memory photos, collages and other content you create in the app to your photo library.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
-		<string>Ứng dụng cần quyền truy cập thư viện ảnh để chọn ảnh hoặc video cho hồ sơ, bài đăng, nhật ký, ảnh ghép và các kỷ niệm trong ứng dụng.</string>
+		<string>SoulLocket accesses your photo library so you can choose photos or videos for your profile, posts, diary, collages and memories.</string>
 		<key>SKAdNetworkItems</key>
 		<array>
 			<dict>
@@ -411,7 +436,7 @@
 		<key>NSHealthUpdateUsageDescription</key>
 		<string>SoulLocket needs access to your health data to synchronize your sleep schedule.</string>
 		<key>NSUserTrackingUsageDescription</key>
-		<string>Dữ liệu của bạn được ẩn danh và dùng để cải thiện trải nghiệm ứng dụng, hiển thị quảng cáo phù hợp mà không bán cho bên thứ ba.</string>
+		<string>Your data is anonymized and used to improve the app and show relevant ads. It is never sold to third parties.</string>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
 		<key>BGTaskSchedulerPermittedIdentifiers</key>

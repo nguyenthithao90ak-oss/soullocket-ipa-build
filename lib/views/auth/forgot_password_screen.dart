@@ -695,13 +695,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               onSubmitted: (_) => isBusy ? null : handleAnswerVerify(),
               decoration: _recoveryInputDecoration(
                 hintText: _isBirthRecoveryQuestion
-                    ? context.tr('forgot_pwd_hint_date')
+                    ? DateInputUtils.formatHint()
                     : context.tr('forgot_pwd_hint_answer'),
                 icon: _isBirthRecoveryQuestion
                     ? Icons.calendar_month_rounded
                     : Icons.key_rounded,
                 helperText: _isBirthRecoveryQuestion
-                    ? context.tr('forgot_pwd_helper_date')
+                    ? L10nService().format('date_input_helper', {'format': DateInputUtils.formatHint()})
                     : null,
               ),
             ),

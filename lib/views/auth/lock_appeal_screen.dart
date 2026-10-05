@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
@@ -205,7 +206,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
   String _lockTitle() {
     if (_lockType == 'temporary' &&
         _lockedUntil > DateTime.now().millisecondsSinceEpoch) {
-      return L10nService().format('ui_auth_temporarily_locked_to_value1_6554bb', {'value1': DateFormat('HH:mm - dd/MM/yyyy').format(DateTime.fromMillisecondsSinceEpoch(_lockedUntil))});
+      return L10nService().format('ui_auth_temporarily_locked_to_value1_6554bb', {'value1': LocaleDateFormat.timeAndDate(DateTime.fromMillisecondsSinceEpoch(_lockedUntil), separator: ' - ')});
     }
     return L10nService().translate('ui_auth_locked_until_reviewed_9bad7c');
   }

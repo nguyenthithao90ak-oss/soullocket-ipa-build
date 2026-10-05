@@ -568,14 +568,7 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
     if (_loveDate.isEmpty) return 0;
     try {
       final startDate = DateTime.parse(_loveDate);
-      final today = DateTime.now();
-      final normalizedToday = DateTime(today.year, today.month, today.day);
-      final normalizedStart = DateTime(
-        startDate.year,
-        startDate.month,
-        startDate.day,
-      );
-      final days = normalizedToday.difference(normalizedStart).inDays;
+      final days = CalendarCivilDate.daysBetween(startDate, DateTime.now());
       return days < 0 ? 0 : days;
     } catch (_) {
       return 0;

@@ -7,6 +7,7 @@ import 'package:soullocket_app/utils/services/ai_counselor_service.dart';
 import 'package:soullocket_app/utils/services/offline_cache_service.dart';
 import 'package:soullocket_app/utils/services/push_notification_helper.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/utils/calendar/calendar_civil_date.dart';
 
 class LoveInsightTimelineEntry {
   final DateTime date;
@@ -695,7 +696,7 @@ class LoveInsightService {
     final startDate = _parseFlexibleDate(_string(settings['startDate']));
     final loveDays = startDate == null
         ? 0
-        : max(0, _startOfDay(now).difference(_startOfDay(startDate)).inDays);
+        : max(0, CalendarCivilDate.daysBetween(startDate, now));
     final positivity = moodTotal > 0
         ? ((positiveMoodTotal / moodTotal) * 100).round().clamp(0, 100)
         : 74;
@@ -941,20 +942,19 @@ class LoveInsightService {
     DateTime currentDay = DateTime(now.year, now.month, now.day);
     if (sortedDays.isNotEmpty) {
       String todayStr = currentDay.toIso8601String().split('T').first;
-      String yesterdayStr = currentDay
-          .subtract(const Duration(days: 1))
+      String yesterdayStr = CalendarCivilDate.addDays(currentDay, -1)
           .toIso8601String()
           .split('T')
           .first;
       if (sortedDays.first == todayStr) {
         // Start from today
       } else if (sortedDays.first == yesterdayStr) {
-        currentDay = currentDay.subtract(const Duration(days: 1));
+        currentDay = CalendarCivilDate.addDays(currentDay, -1);
       }
       for (final d in sortedDays) {
         if (d == currentDay.toIso8601String().split('T').first) {
           currentStreak++;
-          currentDay = currentDay.subtract(const Duration(days: 1));
+          currentDay = CalendarCivilDate.addDays(currentDay, -1);
         } else {
           break;
         }
@@ -1152,7 +1152,10 @@ class LoveInsightService {
     }
 
     if (nearestUpcoming != null) {
-      final daysUntil = nearestUpcoming.date.difference(today).inDays;
+      final daysUntil = CalendarCivilDate.daysBetween(
+        today,
+        nearestUpcoming.date,
+      );
       if (daysUntil <= 7) {
         if (daysUntil <= 0) {
           return isSingle
@@ -1172,9 +1175,10 @@ class LoveInsightService {
     }
 
     if (nearestRecentPast != null) {
-      final daysSince = today
-          .difference(_startOfDay(nearestRecentPast.date))
-          .inDays;
+      final daysSince = CalendarCivilDate.daysBetween(
+        nearestRecentPast.date,
+        today,
+      );
       if (daysSince <= 7) {
         return isSingle
             ? _tr('love_insight_suggest_milestone_past_single', {
@@ -1341,7 +1345,7 @@ class LoveInsightService {
     if (thisYearDate.isBefore(today)) {
       thisYearDate = DateTime(now.year + 1, startDate.month, startDate.day);
     }
-    return thisYearDate.difference(today).inDays;
+    return CalendarCivilDate.daysBetween(today, thisYearDate);
   }
 
   String? _resolveQuietRole(
@@ -1407,7 +1411,7 @@ class LoveInsightService {
     }
 
     for (final days in _dayMilestones) {
-      final d = anchor.add(Duration(days: days));
+      final d = CalendarCivilDate.addDays(anchor, days);
       if (d.isAfter(limitDate) || d.isBefore(pastDate)) continue;
       entries.add(
         LoveInsightTimelineEntry(

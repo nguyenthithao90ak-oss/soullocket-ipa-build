@@ -688,7 +688,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                                     );
                                   },
                                   decoration: slSettingsInputDecoration(
-                                    hint: context.tr('home_ngythngnm_a697d0'),
+                                    hint: DateInputUtils.formatHint(),
                                     errorText: _anniversaryDateErrorText,
                                     prefixIcon: const Icon(
                                       Icons.calendar_month_rounded,

@@ -8,6 +8,7 @@
 // BẠN BỊ NGHIÊM CẤM DỊCH NGƯỢC HOẶC BÓC TÁCH MÃ NGUỒN NÀY BẰNG BẤT CỨ GIÁ NÀO!
 // =============================================================================
 
+import 'package:intl/date_symbol_data_local.dart';
 import 'dart:async';
 import 'package:soullocket_app/core/bootstrap/app_bootstrap.dart';
 import 'package:soullocket_app/core/bootstrap/deferred_bootstrap_tasks.dart';
@@ -289,6 +290,9 @@ void main() {
         registerSoulLocketLicenses();
         await UiPrefs.ensureLoaded();
         await L10nService().init();
+        // Nạp mẫu định dạng ngày của mọi ngôn ngữ (dữ liệu có sẵn trong app)
+        // để hiển thị ngày theo vùng thay vì cố định dd/MM/yyyy.
+        await initializeDateFormatting();
         await BuildSignatureService.verifyOfficialBuildSignature();
         unawaited(OfflineSyncQueue.instance.startListening());
 

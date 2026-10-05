@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -620,7 +621,7 @@ class ActivityHistoryService {
   .row{padding:6px 0;border-bottom:1px dashed #eee;font-size:13px;line-height:1.5}
 </style></head><body>
 <h1>Lịch sử hoạt động</h1>
-<div class="meta">${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())} • ${list.length}/$_max</div>
+<div class="meta">${LocaleDateFormat.dateTime(DateTime.now())} • ${list.length}/$_max</div>
 $rows
 </body></html>''';
   }

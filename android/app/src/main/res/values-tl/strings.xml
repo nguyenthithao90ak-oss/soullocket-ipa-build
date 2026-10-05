@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_days_unit">araw</string>
+    <string name="widget_since_date">Mula %1$s</string>
+    <string name="widget_default_me">Ikaw</string>
+    <string name="widget_default_partner">Iyong mahal</string>
+    <string name="widget_label_couple">Couple</string>
+    <string name="widget_label_cycle">Cycle</string>
+    <string name="widget_label_calendar">Iskedyul</string>
+    <string name="widget_label_soul_event">Mga Event at Anibersaryo</string>
+    <string name="widget_label_sleep">Tulog ☁️💤</string>
+    <string name="widget_sleep_title">TULOG NG MAGKASINTAHAN ☁️✨</string>
+    <string name="widget_sleep_summary_default">Parehong gising ☀️</string>
+    <string name="widget_sleep_status_awake">☀️ Gising</string>
+    <string name="widget_sleep_time_active">Aktibo</string>
+</resources>

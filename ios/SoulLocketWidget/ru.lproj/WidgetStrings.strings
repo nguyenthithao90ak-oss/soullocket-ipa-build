@@ -15,7 +15,7 @@
 "sleep_tracking_consent" = "Включить запись и делиться статусом и временем отдыха с партнёром?";
 "sleep_sync_hint" = "Откройте для обновления";
 "sleep_duration" = "{hours} ч {minutes} мин";
-"comm_ngy_41ec10" = "день";
+"comm_ngy_41ec10" = "дней";
 "core_presence_online" = "Активный";
 "home_angoffline_bbb3d5" = "Сейчас офлайн";
 "home_cpi_d525b0" = "Пара";
@@ -42,3 +42,7 @@
 "p3_health_next_period" = "until your next period";
 "milestone_today" = "📍Сегодня";
 "milestone_days_left" = "🌸 осталось {days} дней";
+"widget_avatar_days_name" = "SoulLocket: аватары и дни";
+"widget_avatar_days_desc" = "Показывает в центре число дней вместе и аватары вас обоих.";
+"widget_soul_merge_name" = "SoulLocket: Soul Merge";
+"widget_soul_merge_desc" = "Показывает последнее сообщение Soul Merge от партнёра.";

@@ -1,4 +1,5 @@
 import 'package:firebase_database/firebase_database.dart';
+import '../calendar/calendar_civil_date.dart';
 
 /// ============================================================
 ///  HealthCycleService — GRA (Phase 35)
@@ -105,7 +106,9 @@ class HealthCycleService {
     // Dự đoán 3 kỳ tiếp theo
     final predictions = <DateTime>[];
     for (int i = 1; i <= 3; i++) {
-      predictions.add(lastDate.add(Duration(days: (length * i).round())));
+      predictions.add(
+        CalendarCivilDate.addDays(lastDate, (length * i).round()),
+      );
     }
 
     return CycleState(

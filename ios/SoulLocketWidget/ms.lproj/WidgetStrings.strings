@@ -15,7 +15,7 @@
 "sleep_tracking_consent" = "Aktifkan rakaman dan kongsi status serta masa rehat dengan pasangan?";
 "sleep_sync_hint" = "Buka aplikasi untuk mengemas kini";
 "sleep_duration" = "{hours} j {minutes} m";
-"comm_ngy_41ec10" = "day";
+"comm_ngy_41ec10" = "hari";
 "core_presence_online" = "Actif";
 "home_angoffline_bbb3d5" = "Offline now";
 "home_cpi_d525b0" = "Couple";
@@ -42,3 +42,7 @@
 "p3_health_next_period" = "until your next period";
 "milestone_today" = "📍 Hari ini";
 "milestone_days_left" = "🌸 {days} hari lagi";
+"widget_avatar_days_name" = "SoulLocket: Avatar & Hari";
+"widget_avatar_days_desc" = "Memaparkan bilangan hari bersama di tengah dengan avatar kalian berdua.";
+"widget_soul_merge_name" = "SoulLocket: Soul Merge";
+"widget_soul_merge_desc" = "Memaparkan mesej Soul Merge terkini daripada pasangan.";

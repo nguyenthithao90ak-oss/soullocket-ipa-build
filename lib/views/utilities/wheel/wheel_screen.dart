@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -9,7 +10,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:intl/intl.dart';
 import '../../../core/sl_theme.dart';
 import '../../../utils/services/location_service.dart';
 import '../../../utils/app_error_mapper.dart';
@@ -1043,8 +1043,9 @@ class _WheelHistoryEntry {
     if (spinnedAt <= 0) {
       return '';
     }
-    return DateFormat('HH:mm  dd/MM/yyyy').format(
+    return LocaleDateFormat.timeAndDate(
       DateTime.fromMillisecondsSinceEpoch(spinnedAt),
+      separator: '  ',
     );
   }
 

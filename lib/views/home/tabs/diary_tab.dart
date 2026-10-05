@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import '../../../utils/services/custom_mood_sticker_service.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'diary/widgets/diary_memory_video_player.dart';
@@ -320,7 +321,7 @@ class _DiaryTabState extends State<DiaryTab>
       Navigator.of(context).pop();
       _memoryController.exitSelectionMode();
       final expiresAt = DateTime.fromMillisecondsSinceEpoch(result.expiresAt);
-      final expiryLabel = DateFormat('dd/MM/yyyy').format(expiresAt);
+      final expiryLabel = LocaleDateFormat.date(expiresAt);
       ShareBottomSheet.show(
         context: context,
         myHouseId: houseId,
@@ -892,7 +893,7 @@ class _DiaryTabState extends State<DiaryTab>
         photos: photos,
       );
       _showDiarySnackBar(
-        L10nScope.of(context).format('ui_home_changed_album_date_to_value1_4e2baf', {'value1': DateFormat('dd/MM/yyyy').format(selectedDate)}),
+        L10nScope.of(context).format('ui_home_changed_album_date_to_value1_4e2baf', {'value1': LocaleDateFormat.date(selectedDate)}),
       );
     } catch (error) {
       _showDiarySnackBar(

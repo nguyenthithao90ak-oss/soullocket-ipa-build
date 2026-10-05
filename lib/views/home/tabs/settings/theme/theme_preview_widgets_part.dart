@@ -188,10 +188,7 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
     if (raw.isEmpty) return 0;
     try {
       final birth = DateTime.parse(raw);
-      final today = DateTime.now();
-      final start = DateTime(birth.year, birth.month, birth.day);
-      final current = DateTime(today.year, today.month, today.day);
-      final diff = current.difference(start).inDays;
+      final diff = CalendarCivilDate.daysBetween(birth, DateTime.now());
       return diff < 0 ? 0 : diff;
     } catch (_) {
       return 0;

@@ -57,7 +57,8 @@
         android:allowBackup="true"
         android:largeHeap="true"
         android:fullBackupContent="@xml/backup_rules"
-        android:dataExtractionRules="@xml/data_extraction_rules">
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:localeConfig="@xml/locales_config">
         <!-- FCM Default Notification Settings -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
@@ -203,10 +204,14 @@
 
         <receiver android:name=".WidgetCoupleProvider" android:exported="true"
             android:icon="@mipmap/ic_launcher"
-            android:label="Widget Cặp Đôi">
+            android:label="@string/widget_label_couple">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="com.soullocket.app.action.WIDGET_CLICK" />
+                <!-- Cập nhật số ngày/nhãn khi đổi giờ, múi giờ hoặc ngôn ngữ. -->
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
@@ -214,7 +219,7 @@
         </receiver>
         <receiver android:name=".WidgetCycleProvider" android:exported="true"
             android:icon="@mipmap/ic_launcher"
-            android:label="Widget Chu Kỳ">
+            android:label="@string/widget_label_cycle">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -224,7 +229,7 @@
         </receiver>
         <receiver android:name=".WidgetCalendarProvider" android:exported="true"
             android:icon="@mipmap/ic_launcher"
-            android:label="Widget Lịch Trình">
+            android:label="@string/widget_label_calendar">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -234,7 +239,7 @@
         </receiver>
         <receiver android:name=".WidgetSoulEventProvider" android:exported="true"
             android:icon="@mipmap/ic_launcher"
-            android:label="Widget Sự Kiện &amp; Kỷ Niệm">
+            android:label="@string/widget_label_soul_event">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -244,7 +249,7 @@
         </receiver>
         <receiver android:name=".WidgetSleepProvider" android:exported="true"
             android:icon="@mipmap/ic_launcher"
-            android:label="Widget Giấc Ngủ ☁️💤">
+            android:label="@string/widget_label_sleep">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

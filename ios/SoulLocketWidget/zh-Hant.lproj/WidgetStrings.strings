@@ -15,7 +15,7 @@
 "sleep_tracking_consent" = "啟用記錄並與伴侶分享休息狀態和時間？";
 "sleep_sync_hint" = "開啟應用程式更新";
 "sleep_duration" = "{hours}小時{minutes}分鐘";
-"comm_ngy_41ec10" = "日";
+"comm_ngy_41ec10" = "天";
 "core_presence_online" = "活躍";
 "home_angoffline_bbb3d5" = "現已離線";
 "home_cpi_d525b0" = "情侶";
@@ -42,3 +42,7 @@
 "p3_health_next_period" = "until your next period";
 "milestone_today" = "📍今天";
 "milestone_days_left" = "還剩{days}天";
+"widget_avatar_days_name" = "SoulLocket：頭像與天數";
+"widget_avatar_days_desc" = "在中間顯示相愛天數和兩人的頭像。";
+"widget_soul_merge_name" = "SoulLocket：Soul Merge";
+"widget_soul_merge_desc" = "顯示對方最新的 Soul Merge 訊息。";

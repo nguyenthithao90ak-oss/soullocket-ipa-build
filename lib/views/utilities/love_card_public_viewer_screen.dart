@@ -1,9 +1,9 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/sl_theme.dart';

@@ -1,0 +1,12 @@
+/* Lời xin quyền & tên app (ko). Đồng bộ với Info.plist. */
+"NSCameraUsageDescription" = "SoulLocket은 추억 사진 촬영, 연결 또는 로그인을 위한 QR 코드 스캔, 영상 통화를 시작할 때 카메라를 사용합니다.";
+"NSFaceIDUsageDescription" = "SoulLocket은 빠른 잠금 해제와 개인 콘텐츠 보호를 위해 Face ID를 사용합니다.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "SoulLocket은 백그라운드를 포함해 위치를 사용하여 연인과 위치를 공유하고, 커플 지도를 업데이트하며, 근처 친구를 찾도록 도와줍니다.";
+"NSLocationAlwaysUsageDescription" = "SoulLocket은 백그라운드를 포함해 위치를 사용하여 연인과 위치를 공유하고, 커플 지도를 업데이트하며, 근처 친구를 찾도록 도와줍니다.";
+"NSLocationWhenInUseUsageDescription" = "SoulLocket은 앱을 사용하는 동안 위치를 사용하여 커플 지도, 현재 위치, 위치가 태그된 일기와 주변 장소를 보여줍니다.";
+"NSMicrophoneUsageDescription" = "SoulLocket은 음성·영상 통화 및 녹음 기능을 사용할 때 마이크를 사용합니다.";
+"NSPhotoLibraryAddUsageDescription" = "SoulLocket은 추억 사진, 콜라주, 앱에서 만든 콘텐츠를 사진 보관함에 저장합니다.";
+"NSPhotoLibraryUsageDescription" = "SoulLocket은 프로필, 게시물, 일기, 콜라주, 추억에 사용할 사진이나 동영상을 고를 수 있도록 사진 보관함에 접근합니다.";
+"NSHealthShareUsageDescription" = "수면 추적을 켜면 SoulLocket이 건강 앱에 기록된 수면 데이터를 읽습니다. 수면 요약은 연인과 공유되며, 이 기록은 실시간으로 수면을 감지하지 않습니다.";
+"NSHealthUpdateUsageDescription" = "SoulLocket은 수면 일정을 동기화하기 위해 건강 데이터에 접근해야 합니다.";
+"NSUserTrackingUsageDescription" = "데이터는 익명화되어 앱 개선과 관련 광고 표시에 사용되며, 제3자에게 판매되지 않습니다.";

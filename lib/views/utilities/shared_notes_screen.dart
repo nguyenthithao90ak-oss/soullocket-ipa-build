@@ -1,9 +1,9 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
@@ -240,7 +240,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
         ? <String, dynamic>{
             'a': widget.myName,
             'ts': createdAt.millisecondsSinceEpoch,
-            'time': DateFormat('dd/MM/yyyy HH:mm').format(createdAt),
+            'time': LocaleDateFormat.dateTime(createdAt),
             'done': false,
             'pinned': false,
           }

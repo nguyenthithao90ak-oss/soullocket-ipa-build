@@ -1,0 +1,12 @@
+/* Lời xin quyền & tên app (es). Đồng bộ với Info.plist. */
+"NSCameraUsageDescription" = "SoulLocket usa la cámara para tomar fotos de recuerdos, escanear códigos QR para conectarte o iniciar sesión y para videollamadas cuando inicias una.";
+"NSFaceIDUsageDescription" = "SoulLocket usa Face ID para desbloquear rápidamente y proteger tu contenido privado.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "SoulLocket usa tu ubicación, incluso en segundo plano, para compartirla con tu pareja, actualizar el mapa de pareja y ayudarte a encontrar amigos cercanos.";
+"NSLocationAlwaysUsageDescription" = "SoulLocket usa tu ubicación, incluso en segundo plano, para compartirla con tu pareja, actualizar el mapa de pareja y ayudarte a encontrar amigos cercanos.";
+"NSLocationWhenInUseUsageDescription" = "SoulLocket usa tu ubicación mientras usas la app para mostrar el mapa de pareja, tu ubicación actual, entradas del diario con ubicación y lugares cercanos.";
+"NSMicrophoneUsageDescription" = "SoulLocket usa el micrófono para llamadas de voz y video, y para grabar audio cuando eliges usar esas funciones.";
+"NSPhotoLibraryAddUsageDescription" = "SoulLocket guarda en tu fototeca las fotos de recuerdos, collages y otros contenidos que creas en la app.";
+"NSPhotoLibraryUsageDescription" = "SoulLocket accede a tu fototeca para que elijas fotos o videos para tu perfil, publicaciones, diario, collages y recuerdos.";
+"NSHealthShareUsageDescription" = "Al activar el seguimiento del sueño, SoulLocket lee el sueño registrado en Apple Health. Los resúmenes se comparten con tu pareja; estos registros no detectan el sueño en tiempo real.";
+"NSHealthUpdateUsageDescription" = "SoulLocket necesita acceder a tus datos de salud para sincronizar tu horario de sueño.";
+"NSUserTrackingUsageDescription" = "Tus datos se anonimizan y se usan para mejorar la app y mostrar anuncios relevantes. Nunca se venden a terceros.";
