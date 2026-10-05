@@ -9888,5 +9888,13 @@
   "utilities_action_unpin": "Открепить с главной",
   "utilities_pinned_toast": "Закреплено на главной",
   "utilities_unpinned_toast": "Откреплено с главной",
-  "utilities_long_press_hint": "Нажмите и удерживайте инструмент, чтобы закрепить его на главной"
+  "utilities_long_press_hint": "Нажмите и удерживайте инструмент, чтобы закрепить его на главной",
+  "home_compact_upcoming_title": "Скоро",
+  "home_compact_see_all": "Смотреть все",
+  "home_compact_upcoming_empty": "Пока ничего не запланировано",
+  "home_compact_add_pin": "Закрепить ещё",
+  "home_compact_pin_sheet_title": "Закрепить на главной",
+  "home_compact_pin_sheet_hint": "Нажмите на инструмент, чтобы закрепить или открепить его",
+  "home_compact_this_month": "В этом месяце",
+  "home_compact_memories_unit": "воспоминаний"
 }

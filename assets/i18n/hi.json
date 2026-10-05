@@ -9888,5 +9888,13 @@
   "utilities_action_unpin": "होम से अनपिन करें",
   "utilities_pinned_toast": "होम पर पिन किया गया",
   "utilities_unpinned_toast": "होम से अनपिन किया गया",
-  "utilities_long_press_hint": "किसी टूल को होम पर पिन करने के लिए उसे दबाकर रखें"
+  "utilities_long_press_hint": "किसी टूल को होम पर पिन करने के लिए उसे दबाकर रखें",
+  "home_compact_upcoming_title": "आगे क्या है",
+  "home_compact_see_all": "सभी देखें",
+  "home_compact_upcoming_empty": "अभी कुछ आने वाला नहीं है",
+  "home_compact_add_pin": "और पिन करें",
+  "home_compact_pin_sheet_title": "होम पर पिन करें",
+  "home_compact_pin_sheet_hint": "किसी टूल को पिन या अनपिन करने के लिए टैप करें",
+  "home_compact_this_month": "इस महीने",
+  "home_compact_memories_unit": "यादें"
 }

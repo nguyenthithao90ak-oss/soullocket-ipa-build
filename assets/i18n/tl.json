@@ -9888,5 +9888,13 @@
   "utilities_action_unpin": "Alisin sa Home",
   "utilities_pinned_toast": "Na-pin sa Home",
   "utilities_unpinned_toast": "Inalis sa Home",
-  "utilities_long_press_hint": "Pindutin nang matagal ang isang tool para i-pin ito sa Home"
+  "utilities_long_press_hint": "Pindutin nang matagal ang isang tool para i-pin ito sa Home",
+  "home_compact_upcoming_title": "Paparating",
+  "home_compact_see_all": "Tingnan lahat",
+  "home_compact_upcoming_empty": "Wala pang paparating",
+  "home_compact_add_pin": "Mag-pin pa",
+  "home_compact_pin_sheet_title": "I-pin sa Home",
+  "home_compact_pin_sheet_hint": "I-tap ang isang tool para i-pin o alisin ito",
+  "home_compact_this_month": "Ngayong buwan",
+  "home_compact_memories_unit": "alaala"
 }

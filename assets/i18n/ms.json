@@ -9888,5 +9888,13 @@
   "utilities_action_unpin": "Nyahsemat dari Laman Utama",
   "utilities_pinned_toast": "Disemat ke Laman Utama",
   "utilities_unpinned_toast": "Dinyahsemat dari Laman Utama",
-  "utilities_long_press_hint": "Tekan lama sesuatu alat untuk menyematnya ke Laman Utama"
+  "utilities_long_press_hint": "Tekan lama sesuatu alat untuk menyematnya ke Laman Utama",
+  "home_compact_upcoming_title": "Akan datang",
+  "home_compact_see_all": "Lihat semua",
+  "home_compact_upcoming_empty": "Belum ada acara akan datang",
+  "home_compact_add_pin": "Semat lagi",
+  "home_compact_pin_sheet_title": "Semat ke Laman Utama",
+  "home_compact_pin_sheet_hint": "Ketik alat untuk menyemat atau menyahsemat",
+  "home_compact_this_month": "Bulan ini",
+  "home_compact_memories_unit": "kenangan"
 }

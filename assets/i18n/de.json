@@ -9888,5 +9888,13 @@
   "utilities_action_unpin": "Von Startseite lösen",
   "utilities_pinned_toast": "An Startseite angeheftet",
   "utilities_unpinned_toast": "Von Startseite gelöst",
-  "utilities_long_press_hint": "Halte ein Tool gedrückt, um es an die Startseite anzuheften"
+  "utilities_long_press_hint": "Halte ein Tool gedrückt, um es an die Startseite anzuheften",
+  "home_compact_upcoming_title": "Demnächst",
+  "home_compact_see_all": "Alle ansehen",
+  "home_compact_upcoming_empty": "Noch nichts geplant",
+  "home_compact_add_pin": "Mehr anheften",
+  "home_compact_pin_sheet_title": "An Startseite anheften",
+  "home_compact_pin_sheet_hint": "Tippe auf ein Tool, um es anzuheften oder zu lösen",
+  "home_compact_this_month": "Diesen Monat",
+  "home_compact_memories_unit": "Erinnerungen"
 }

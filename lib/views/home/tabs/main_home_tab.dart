@@ -146,8 +146,12 @@ import 'package:soullocket_app/views/home/widgets/companion/home_companion_paint
 import 'package:soullocket_app/views/home/widgets/companion/home_companion_journey_card.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/home_daily_activity_card.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/home_upcoming_plans.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/home_compact_sections.dart';
+import 'package:soullocket_app/views/home/tabs/widgets/utilities_hub_tile.dart';
+import 'package:soullocket_app/views/utilities/utility_launcher.dart';
 
 part 'main_home/widgets/main_home_dialogs.dart';
+part 'main_home/widgets/main_home_compact_layout.dart';
 part 'main_home/widgets/main_home_soul_merge_sticker.dart';
 part 'main_home/widgets/main_home_countdown_quick_customize_sheet.dart';
 part '../widgets/main_home/main_home_hero_section.dart';

@@ -9888,5 +9888,13 @@
   "utilities_action_unpin": "ホームからピン留めを外す",
   "utilities_pinned_toast": "ホームにピン留めしました",
   "utilities_unpinned_toast": "ホームからピン留めを外しました",
-  "utilities_long_press_hint": "ツールを長押しするとホームにピン留めできます"
+  "utilities_long_press_hint": "ツールを長押しするとホームにピン留めできます",
+  "home_compact_upcoming_title": "もうすぐ",
+  "home_compact_see_all": "すべて見る",
+  "home_compact_upcoming_empty": "まだ予定はありません",
+  "home_compact_add_pin": "ピン留めを追加",
+  "home_compact_pin_sheet_title": "ホームにピン留め",
+  "home_compact_pin_sheet_hint": "ツールをタップしてピン留め・解除",
+  "home_compact_this_month": "今月",
+  "home_compact_memories_unit": "件の思い出"
 }

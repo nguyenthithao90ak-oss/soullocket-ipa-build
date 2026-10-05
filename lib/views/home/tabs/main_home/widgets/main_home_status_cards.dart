@@ -41,16 +41,17 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     return L10nService().format('home_updated_days_ago', {'n': diff.inDays});
   }
 
-  Widget _buildModernHighlightCard({
+  /// Kỷ niệm, sinh nhật, ngày lễ (và lịch ở chế độ một người), chưa lọc.
+  ({
+    List<HomeUpcomingEvent> events,
+    int totalDays,
+    String nameU1,
+    String nameU2,
+  })
+  _collectHomeUpcomingEvents({
     required String? startDate,
-    required bool isSingle,
-    Widget? dragHandle,
+    required DateTime todayMidnight,
   }) {
-    final today = CalendarTimeZone.fromMilliseconds(
-      DateTime.now().millisecondsSinceEpoch,
-      MarketService.instance.preferences.timeZoneId,
-    );
-    final todayMidnight = DateTime(today.year, today.month, today.day);
     final List<HomeUpcomingEvent> upcomingEvents = [];
 
     // 1. Kỷ niệm ngày yêu
@@ -63,7 +64,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
           startDt.month,
           startDt.day,
         );
-        final daysToday = CalendarCivilDate.daysBetween(startDtMidnight, todayMidnight) + 1;
+        final daysToday =
+            CalendarCivilDate.daysBetween(startDtMidnight, todayMidnight) + 1;
         totalDays = daysToday;
 
         int? nextMilestone;
@@ -160,7 +162,10 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
         if (nextBday.isBefore(todayMidnight)) {
           nextBday = DateTime(todayMidnight.year + 1, bday.month, bday.day);
         }
-        final daysUntil = CalendarCivilDate.daysBetween(todayMidnight, nextBday);
+        final daysUntil = CalendarCivilDate.daysBetween(
+          todayMidnight,
+          nextBday,
+        );
         final giftHint = daysUntil <= 7 && daysUntil >= 0
             ? _MainHomeTabState._giftSuggestionsForBirthday(
                 bday.month,
@@ -201,9 +206,11 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     }
 
     // Mode đôi đã xem kế hoạch ở thẻ hằng ngày; thẻ này giữ kỷ niệm/ngày lễ.
-    for (final event in _homeCalendarSnapshotMatchesScope &&
-        _homeToolRelationshipMode() != 'couple'
-        ? _homeCalendarEvents : const <Map<String, dynamic>>[]) {
+    for (final event
+        in _homeCalendarSnapshotMatchesScope &&
+                _homeToolRelationshipMode() != 'couple'
+            ? _homeCalendarEvents
+            : const <Map<String, dynamic>>[]) {
       final dateKey = event['dateKey']?.toString() ?? '';
       final evTitle = event['title']?.toString() ?? '';
       if (dateKey.isEmpty || evTitle.isEmpty) continue;
@@ -222,6 +229,35 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
         HomeUpcomingEvent(title: evTitle, date: eventDate, type: 'calendar'),
       );
     }
+
+    return (
+      events: upcomingEvents,
+      totalDays: totalDays,
+      nameU1: nameU1,
+      nameU2: nameU2,
+    );
+  }
+
+  // Thẻ lớn cũ, trang Nhà gọn dùng home_compact_sections.dart.
+  // ignore: unused_element
+  Widget _buildModernHighlightCard({
+    required String? startDate,
+    required bool isSingle,
+    Widget? dragHandle,
+  }) {
+    final today = CalendarTimeZone.fromMilliseconds(
+      DateTime.now().millisecondsSinceEpoch,
+      MarketService.instance.preferences.timeZoneId,
+    );
+    final todayMidnight = DateTime(today.year, today.month, today.day);
+    final collected = _collectHomeUpcomingEvents(
+      startDate: startDate,
+      todayMidnight: todayMidnight,
+    );
+    final upcomingEvents = collected.events;
+    final totalDays = collected.totalDays;
+    final nameU1 = collected.nameU1;
+    final nameU2 = collected.nameU2;
 
     // Sắp xếp tăng dần & lọc trùng (chỉ lấy sự kiện trong 7 ngày tới)
     upcomingEvents.sort((a, b) => a.date.compareTo(b.date));
@@ -435,7 +471,10 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                       ),
                       const SizedBox(height: 8),
                       ...uniqueEvents.take(5).map((e) {
-                        final daysUntil = CalendarCivilDate.daysBetween(todayMidnight, e.date);
+                        final daysUntil = CalendarCivilDate.daysBetween(
+                          todayMidnight,
+                          e.date,
+                        );
                         final String timeStr = daysUntil <= 0
                             ? context.tr('home_hmnay_d87b33')
                             : (daysUntil == 1
@@ -671,6 +710,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     );
   }
 
+  // Thẻ lớn cũ, trang Nhà gọn dùng home_compact_sections.dart.
+  // ignore: unused_element
   Widget _buildModernMapCard({
     required String nameU1,
     required String nameU2,
@@ -918,6 +959,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     );
   }
 
+  // Thẻ lớn cũ, trang Nhà gọn dùng home_compact_sections.dart.
+  // ignore: unused_element
   Widget _buildModernInsightCard({
     required bool isSingle,
     required String nameU1,

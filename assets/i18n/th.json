@@ -9888,5 +9888,13 @@
   "utilities_action_unpin": "เลิกปักหมุดจากหน้าแรก",
   "utilities_pinned_toast": "ปักหมุดที่หน้าแรกแล้ว",
   "utilities_unpinned_toast": "เลิกปักหมุดจากหน้าแรกแล้ว",
-  "utilities_long_press_hint": "กดค้างที่เครื่องมือเพื่อปักหมุดไว้ที่หน้าแรก"
+  "utilities_long_press_hint": "กดค้างที่เครื่องมือเพื่อปักหมุดไว้ที่หน้าแรก",
+  "home_compact_upcoming_title": "เร็ว ๆ นี้",
+  "home_compact_see_all": "ดูทั้งหมด",
+  "home_compact_upcoming_empty": "ยังไม่มีอะไรเร็ว ๆ นี้",
+  "home_compact_add_pin": "ปักหมุดเพิ่ม",
+  "home_compact_pin_sheet_title": "ปักหมุดที่หน้าแรก",
+  "home_compact_pin_sheet_hint": "แตะเครื่องมือเพื่อปักหมุดหรือเลิกปักหมุด",
+  "home_compact_this_month": "เดือนนี้",
+  "home_compact_memories_unit": "ความทรงจำ"
 }

@@ -9888,5 +9888,13 @@
   "utilities_action_unpin": "Ana sayfadan kaldır",
   "utilities_pinned_toast": "Ana sayfaya sabitlendi",
   "utilities_unpinned_toast": "Ana sayfadan kaldırıldı",
-  "utilities_long_press_hint": "Ana sayfaya sabitlemek için bir araca basılı tut"
+  "utilities_long_press_hint": "Ana sayfaya sabitlemek için bir araca basılı tut",
+  "home_compact_upcoming_title": "Yaklaşanlar",
+  "home_compact_see_all": "Tümünü gör",
+  "home_compact_upcoming_empty": "Henüz yaklaşan bir şey yok",
+  "home_compact_add_pin": "Daha fazla sabitle",
+  "home_compact_pin_sheet_title": "Ana sayfaya sabitle",
+  "home_compact_pin_sheet_hint": "Sabitlemek veya kaldırmak için bir araca dokun",
+  "home_compact_this_month": "Bu ay",
+  "home_compact_memories_unit": "anı"
 }

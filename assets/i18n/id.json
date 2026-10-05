@@ -9888,5 +9888,13 @@
   "utilities_action_unpin": "Lepas dari Beranda",
   "utilities_pinned_toast": "Disematkan ke Beranda",
   "utilities_unpinned_toast": "Dilepas dari Beranda",
-  "utilities_long_press_hint": "Tekan lama sebuah alat untuk menyematkannya ke Beranda"
+  "utilities_long_press_hint": "Tekan lama sebuah alat untuk menyematkannya ke Beranda",
+  "home_compact_upcoming_title": "Akan datang",
+  "home_compact_see_all": "Lihat semua",
+  "home_compact_upcoming_empty": "Belum ada acara mendatang",
+  "home_compact_add_pin": "Sematkan lagi",
+  "home_compact_pin_sheet_title": "Sematkan ke Beranda",
+  "home_compact_pin_sheet_hint": "Ketuk alat untuk menyematkan atau melepasnya",
+  "home_compact_this_month": "Bulan ini",
+  "home_compact_memories_unit": "kenangan"
 }

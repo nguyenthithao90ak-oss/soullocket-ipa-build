@@ -9888,5 +9888,13 @@
   "utilities_action_unpin": "홈에서 고정 해제",
   "utilities_pinned_toast": "홈에 고정했어요",
   "utilities_unpinned_toast": "홈에서 고정을 해제했어요",
-  "utilities_long_press_hint": "도구를 길게 눌러 홈에 고정하세요"
+  "utilities_long_press_hint": "도구를 길게 눌러 홈에 고정하세요",
+  "home_compact_upcoming_title": "다가오는 일정",
+  "home_compact_see_all": "모두 보기",
+  "home_compact_upcoming_empty": "아직 다가오는 일정이 없어요",
+  "home_compact_add_pin": "더 고정하기",
+  "home_compact_pin_sheet_title": "홈에 고정",
+  "home_compact_pin_sheet_hint": "도구를 눌러 고정하거나 해제하세요",
+  "home_compact_this_month": "이번 달",
+  "home_compact_memories_unit": "개의 추억"
 }

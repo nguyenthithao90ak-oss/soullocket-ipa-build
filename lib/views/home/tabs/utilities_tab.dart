@@ -52,6 +52,7 @@ import '../../utilities/local_album_screen.dart';
 import '../../utilities/soul_events/soul_events_screen.dart';
 import 'package:soullocket_app/core/sl_route.dart';
 import 'package:soullocket_app/views/home/tabs/settings/settings_links_manager_screen.dart';
+import 'package:soullocket_app/views/utilities/utility_launcher.dart';
 // import '../../utils/sl_notice.dart';
 
 // ─── Web-parity: Map ID -> Icon & Colors ───
@@ -409,111 +410,13 @@ class _UtilitiesTabState extends State<UtilitiesTab>
 
     unawaited(_checkAndShowAppReviewForUtility());
 
-    Widget? screen;
-    switch (id) {
-      case 'note':
-        screen = NotebookHubScreen(houseId: houseId, myName: _myName);
-        break;
-      case 'friendly_chat':
-        screen = FriendlyChatScreen(houseId: houseId, myName: _myName);
-        break;
-      case 'finance':
-        screen = FinanceScreen(houseId: houseId, myName: _myName);
-        break;
-      case 'habit':
-        screen = HabitScreen(houseId: houseId, myName: _myName);
-        break;
-      case 'drawing':
-        screen = DrawingStudioScreen(houseId: houseId, myName: _myName);
-        break;
-      case 'voice':
-        screen = VoiceScreen(houseId: houseId, myName: _myName);
-        break;
-      case 'calendar':
-        screen = CalendarScreen(houseId: houseId, myName: _myName);
-        break;
-      case 'capsule':
-        screen = CapsuleScreen(houseId: houseId, myName: _myName);
-        break;
-      case 'cinema':
-        screen = CinemaScreen(houseId: houseId, myName: _myName);
-        break;
-      case 'wheel':
-        screen = WheelScreen(houseId: houseId);
-        break;
-      case 'vault':
-        if (!mounted) return;
-        if (kIsWeb) {
-          // Buộc khóa lại trước khi vào để yêu cầu mật khẩu mỗi lần F5 hoặc thoát
-          _militaryLockService.lockScope(LockScope.privateArea);
-        }
-        final unlocked = await _militaryLockService.requestUnlock(
-          context: context,
-          scope: LockScope.privateArea,
-          houseId: houseId,
-          title: MilitaryLockService.getScopeTitle(LockScope.privateArea),
-          reason: MilitaryLockService.scopeReason(LockScope.privateArea),
-        );
-        if (!unlocked || !mounted) {
-          return;
-        }
-        screen = SecretVaultScreen(houseId: houseId);
-        break;
-      case 'surprise_maker':
-        screen = LoveCardScreen(
-          houseId: houseId,
-          myUid: _auth.currentUser!.uid,
-        );
-        break;
-      case 'giftcode':
-        screen = houseId.isEmpty
-            ? null
-            : GiftcodeScreen(houseId: houseId, myName: _myName);
-        break;
-      case 'diary_export':
-        screen = DiaryExportScreen(houseId: houseId);
-        break;
-      case 'tarot':
-        screen = TarotScreen(
-          houseId: houseId,
-          relationshipMode: _relationshipMode,
-          myName: _myName,
-        );
-        break;
-      case 'collage':
-        screen = CollageMakerScreen(houseId: houseId);
-        break;
-      case 'store':
-        screen = const RewardStoreScreen();
-        break;
-      case 'creative_diary':
-        screen = CreativeDiaryScreen(houseId: houseId);
-        break;
-      case 'local_album':
-        screen = const LocalAlbumScreen();
-        break;
-      case 'health':
-        screen = HealthScreen(houseId: houseId);
-        break;
-      case 'sleep_tracker':
-        screen = SleepTrackerScreen(houseId: houseId, myName: _myName);
-        break;
-      case 'soul_events':
-        screen = const SoulEventsScreen();
-        break;
-    }
-    if (screen != null) {
-      if (!mounted) {
-        return;
-      }
-      slPush(context, screen);
-    } else {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SLSnackBar(content: Text(context.tr('home_tinchnyang_612f3d'))),
-      );
-    }
+    if (!mounted) return;
+    await UtilityLauncher.openScreen(
+      context,
+      id: id,
+      houseId: houseId,
+      myName: _myName,
+      relationshipMode: _relationshipMode,
+    );
   }
 }

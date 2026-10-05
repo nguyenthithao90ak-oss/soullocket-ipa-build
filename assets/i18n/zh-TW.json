@@ -9888,5 +9888,13 @@
   "utilities_action_unpin": "從首頁取消釘選",
   "utilities_pinned_toast": "已釘選到首頁",
   "utilities_unpinned_toast": "已從首頁取消釘選",
-  "utilities_long_press_hint": "長按工具即可釘選到首頁"
+  "utilities_long_press_hint": "長按工具即可釘選到首頁",
+  "home_compact_upcoming_title": "即將到來",
+  "home_compact_see_all": "查看全部",
+  "home_compact_upcoming_empty": "暫時沒有即將到來的事",
+  "home_compact_add_pin": "釘選更多",
+  "home_compact_pin_sheet_title": "釘選到首頁",
+  "home_compact_pin_sheet_hint": "點按工具即可釘選或取消釘選",
+  "home_compact_this_month": "本月",
+  "home_compact_memories_unit": "個回憶"
 }

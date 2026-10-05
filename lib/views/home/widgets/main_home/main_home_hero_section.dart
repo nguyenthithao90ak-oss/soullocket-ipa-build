@@ -179,18 +179,6 @@ class _ModernHomeBody extends StatelessWidget {
                 return _HomeHeroStage(isSingle: isSingle, child: countdown);
               }
 
-              Widget buildInsight(bool isSwiping) {
-                return RepaintBoundary(
-                  child: state._buildModernInsightCard(
-                    isSingle: isSingle,
-                    nameU1: nameU1,
-                    nameU2: nameU2,
-                    avatarU1: avtUser1,
-                    avatarU2: avtUser2,
-                  ),
-                );
-              }
-
               return NotificationListener<ScrollNotification>(
                 onNotification: (notification) {
                   if (notification is ScrollStartNotification) {
@@ -219,24 +207,45 @@ class _ModernHomeBody extends StatelessWidget {
                                   )
                                 : MediaQuery.paddingOf(context).top + 62,
                           ),
-                          _HomeStoryLetterhead(
-                            smartGreeting: smartGreeting,
-                            houseName: houseName,
-                            showHouseName: homeShowHouseName,
-                            isSingle: isSingle,
+                          HomeCompactHeader(
+                            title:
+                                homeShowHouseName && houseName.trim().isNotEmpty
+                                ? houseName
+                                : smartGreeting,
+                            subtitle:
+                                homeShowHouseName && houseName.trim().isNotEmpty
+                                ? smartGreeting
+                                : null,
                           ),
-                          SLSpacing.h24,
+                          SLSpacing.h16,
                           state._buildGettingStartedChecklist(
                             isSingle: isSingle,
                           ),
-                          state.widget.isSwipingListenable == null
-                              ? buildCountdown(false)
-                              : ValueListenableBuilder<bool>(
-                                  valueListenable:
-                                      state.widget.isSwipingListenable!,
-                                  builder: (context, isSwiping, _) =>
-                                      buildCountdown(isSwiping),
+                          SizedBox(
+                            width: double.infinity,
+                            child: Stack(
+                              alignment: Alignment.topCenter,
+                              clipBehavior: Clip.none,
+                              children: [
+                                state.widget.isSwipingListenable == null
+                                    ? buildCountdown(false)
+                                    : ValueListenableBuilder<bool>(
+                                        valueListenable:
+                                            state.widget.isSwipingListenable!,
+                                        builder: (context, isSwiping, _) =>
+                                            buildCountdown(isSwiping),
+                                      ),
+                                PositionedDirectional(
+                                  top: 0,
+                                  end: 0,
+                                  child: _HomeCounterCustomizeButton(
+                                    onTap:
+                                        state._showCountdownQuickCustomizeSheet,
+                                  ),
                                 ),
+                              ],
+                            ),
+                          ),
                           SLSpacing.h12,
                           RepaintBoundary(
                             child: state._buildModernAvatarSection(
@@ -247,68 +256,29 @@ class _ModernHomeBody extends StatelessWidget {
                               avtUser2: avtUser2,
                             ),
                           ),
-                          TextButton.icon(
-                            onPressed: state._showCountdownQuickCustomizeSheet,
-                            icon: const Icon(Icons.tune_rounded, size: 18),
-                            label: Text(context.tr('home_tychnhvngm_09a3bd')),
-                          ),
-                          SLSpacing.h12,
-                          RepaintBoundary(
-                            child: state._buildHomeToolSlotSection(
-                              isSingle: isSingle,
-                            ),
-                          ),
-                          SLSpacing.h12,
-                          // Removed manual sleep mode button
-                          // state._buildSleepModeButton(),
-                          // SLSpacing.h12,
+                          SLSpacing.h16,
                           RepaintBoundary(
                             child: _ChatReminderBanner(
                               state: state,
                               isSingle: isSingle,
                             ),
                           ),
-                          if (state._pinnedApps.isNotEmpty) ...[
-                            const _HomeScrapbookDivider(
-                              color: SLColors.secondary,
+                          RepaintBoundary(
+                            child: state._buildCompactQuickActions(
+                              isSingle: isSingle,
                             ),
-                            RepaintBoundary(
-                              child: state._buildShortcutDock(
-                                state._pinnedApps,
-                              ),
-                            ),
-                          ],
-                          if (!isSingle) ...[
-                            const _HomeScrapbookDivider(),
-                            RepaintBoundary(
-                              child: state._buildModernHighlightCard(
-                                startDate: startDate,
-                                isSingle: isSingle,
-                              ),
-                            ),
-                          ],
-                          if (!isSingle) ...[
-                            const _HomeScrapbookDivider(
-                              color: SLColors.secondary,
-                            ),
-                            RepaintBoundary(
-                              child: state._buildModernMapCard(
-                                nameU1: nameU1,
-                                nameU2: nameU2,
-                              ),
-                            ),
-                          ],
-                          const _HomeScrapbookDivider(
-                            color: SLColors.accentPurple,
                           ),
-                          state.widget.isSwipingListenable == null
-                              ? buildInsight(false)
-                              : ValueListenableBuilder<bool>(
-                                  valueListenable:
-                                      state.widget.isSwipingListenable!,
-                                  builder: (context, isSwiping, _) =>
-                                      buildInsight(isSwiping),
-                                ),
+                          SLSpacing.h20,
+                          RepaintBoundary(
+                            child: state._buildCompactUpcoming(
+                              startDate: startDate,
+                              isSingle: isSingle,
+                            ),
+                          ),
+                          SLSpacing.h16,
+                          RepaintBoundary(
+                            child: state._buildCompactBento(isSingle: isSingle),
+                          ),
                           SLSpacing.gapH(
                             uiState.homeCompanionEnabled ? 100 : 86,
                           ),

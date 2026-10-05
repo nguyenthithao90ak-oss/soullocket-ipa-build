@@ -9888,5 +9888,13 @@
   "utilities_action_unpin": "从首页取消固定",
   "utilities_pinned_toast": "已固定到首页",
   "utilities_unpinned_toast": "已从首页取消固定",
-  "utilities_long_press_hint": "长按工具即可固定到首页"
+  "utilities_long_press_hint": "长按工具即可固定到首页",
+  "home_compact_upcoming_title": "即将到来",
+  "home_compact_see_all": "查看全部",
+  "home_compact_upcoming_empty": "暂时没有即将到来的事",
+  "home_compact_add_pin": "固定更多",
+  "home_compact_pin_sheet_title": "固定到首页",
+  "home_compact_pin_sheet_hint": "点按工具即可固定或取消固定",
+  "home_compact_this_month": "本月",
+  "home_compact_memories_unit": "个回忆"
 }

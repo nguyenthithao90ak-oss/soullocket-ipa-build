@@ -9888,5 +9888,13 @@
   "utilities_action_unpin": "Rimuovi dalla Home",
   "utilities_pinned_toast": "Fissato nella Home",
   "utilities_unpinned_toast": "Rimosso dalla Home",
-  "utilities_long_press_hint": "Tieni premuto uno strumento per fissarlo nella Home"
+  "utilities_long_press_hint": "Tieni premuto uno strumento per fissarlo nella Home",
+  "home_compact_upcoming_title": "In arrivo",
+  "home_compact_see_all": "Vedi tutto",
+  "home_compact_upcoming_empty": "Ancora niente in arrivo",
+  "home_compact_add_pin": "Fissa altro",
+  "home_compact_pin_sheet_title": "Fissa nella Home",
+  "home_compact_pin_sheet_hint": "Tocca uno strumento per fissarlo o rimuoverlo",
+  "home_compact_this_month": "Questo mese",
+  "home_compact_memories_unit": "ricordi"
 }

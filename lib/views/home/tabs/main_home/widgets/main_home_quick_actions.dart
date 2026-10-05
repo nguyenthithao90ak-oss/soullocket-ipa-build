@@ -1,11 +1,17 @@
 part of '../../main_home_tab.dart';
 
 extension _MainHomeTabQuickActions on _MainHomeTabState {
+  /// Mở giống hệt tab Tiện ích (cùng màn hình, cùng bước mở khóa).
   void _onPinnedAppTap(UtilityApp app) {
-    final screen = _buildEmbeddedHomeTool(app.id);
-    if (screen != null) {
-      slPush(context, screen);
-    }
+    unawaited(
+      UtilityLauncher.open(
+        context,
+        id: app.id,
+        houseId: _houseId,
+        myName: _resolveMyName(),
+        relationshipMode: _homeToolRelationshipMode(),
+      ),
+    );
   }
 
   // ignore: unused_element

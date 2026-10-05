@@ -9888,5 +9888,13 @@
   "utilities_action_unpin": "إلغاء التثبيت من الرئيسية",
   "utilities_pinned_toast": "تم التثبيت في الرئيسية",
   "utilities_unpinned_toast": "تمت الإزالة من الرئيسية",
-  "utilities_long_press_hint": "اضغط مطولًا على أداة لتثبيتها في الرئيسية"
+  "utilities_long_press_hint": "اضغط مطولًا على أداة لتثبيتها في الرئيسية",
+  "home_compact_upcoming_title": "القادم",
+  "home_compact_see_all": "عرض الكل",
+  "home_compact_upcoming_empty": "لا شيء قادم بعد",
+  "home_compact_add_pin": "تثبيت المزيد",
+  "home_compact_pin_sheet_title": "تثبيت في الرئيسية",
+  "home_compact_pin_sheet_hint": "اضغط على أداة لتثبيتها أو إلغاء تثبيتها",
+  "home_compact_this_month": "هذا الشهر",
+  "home_compact_memories_unit": "ذكرى"
 }

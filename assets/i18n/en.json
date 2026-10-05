@@ -9888,5 +9888,13 @@
   "utilities_action_unpin": "Unpin from Home",
   "utilities_pinned_toast": "Pinned to Home",
   "utilities_unpinned_toast": "Unpinned from Home",
-  "utilities_long_press_hint": "Press and hold a tool to pin it to Home"
+  "utilities_long_press_hint": "Press and hold a tool to pin it to Home",
+  "home_compact_upcoming_title": "Coming up",
+  "home_compact_see_all": "See all",
+  "home_compact_upcoming_empty": "Nothing coming up yet",
+  "home_compact_add_pin": "Pin more",
+  "home_compact_pin_sheet_title": "Pin to Home",
+  "home_compact_pin_sheet_hint": "Tap a tool to pin or unpin it",
+  "home_compact_this_month": "This month",
+  "home_compact_memories_unit": "memories"
 }

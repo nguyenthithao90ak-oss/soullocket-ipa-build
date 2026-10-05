@@ -22,6 +22,47 @@ String utilityHubStickerAsset(String utilityId) {
   );
 }
 
+/// Ảnh sticker 3D theo ID tiện ích hoặc tên ảnh trong `utility_stickers`.
+class UtilityStickerImage extends StatelessWidget {
+  const UtilityStickerImage({
+    super.key,
+    required this.stickerId,
+    required this.size,
+    required this.fallbackIcon,
+    this.fallbackColor = SLColors.primary,
+  });
+
+  final String stickerId;
+  final double size;
+  final IconData fallbackIcon;
+  final Color fallbackColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final cacheSize = math.max(
+      1,
+      (size * MediaQuery.devicePixelRatioOf(context)).round(),
+    );
+    return SizedBox.square(
+      dimension: size,
+      child: Image(
+        image: ResizeImage.resizeIfNeeded(
+          cacheSize,
+          cacheSize,
+          AssetImage(utilityHubStickerAsset(stickerId)),
+        ),
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.medium,
+        gaplessPlayback: true,
+        excludeFromSemantics: true,
+        errorBuilder: (_, _, _) => Center(
+          child: Icon(fallbackIcon, size: size * 0.6, color: fallbackColor),
+        ),
+      ),
+    );
+  }
+}
+
 /// Sticker 3D của tiện ích, không khung nền.
 class UtilityHubSticker extends StatelessWidget {
   const UtilityHubSticker({super.key, required this.app, required this.size});
@@ -31,29 +72,13 @@ class UtilityHubSticker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cacheSize = math.max(
-      1,
-      (size * MediaQuery.devicePixelRatioOf(context)).round(),
-    );
-    final fallbackColor = app.colors.isNotEmpty
-        ? app.colors.first
-        : SLColors.primary;
-    return SizedBox.square(
-      dimension: size,
-      child: Image(
-        image: ResizeImage.resizeIfNeeded(
-          cacheSize,
-          cacheSize,
-          AssetImage(utilityHubStickerAsset(app.id)),
-        ),
-        fit: BoxFit.contain,
-        filterQuality: FilterQuality.medium,
-        gaplessPlayback: true,
-        excludeFromSemantics: true,
-        errorBuilder: (_, _, _) => Center(
-          child: Icon(app.icon, size: size * 0.6, color: fallbackColor),
-        ),
-      ),
+    return UtilityStickerImage(
+      stickerId: app.id,
+      size: size,
+      fallbackIcon: app.icon,
+      fallbackColor: app.colors.isNotEmpty
+          ? app.colors.first
+          : SLColors.primary,
     );
   }
 }

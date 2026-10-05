@@ -9888,5 +9888,13 @@
   "utilities_action_unpin": "Bỏ ghim khỏi trang Nhà",
   "utilities_pinned_toast": "Đã ghim lên trang Nhà",
   "utilities_unpinned_toast": "Đã bỏ ghim khỏi trang Nhà",
-  "utilities_long_press_hint": "Nhấn giữ một tiện ích để ghim lên trang Nhà"
+  "utilities_long_press_hint": "Nhấn giữ một tiện ích để ghim lên trang Nhà",
+  "home_compact_upcoming_title": "Sắp tới",
+  "home_compact_see_all": "Xem tất cả",
+  "home_compact_upcoming_empty": "Chưa có sự kiện nào sắp tới",
+  "home_compact_add_pin": "Ghim thêm",
+  "home_compact_pin_sheet_title": "Ghim lên trang Nhà",
+  "home_compact_pin_sheet_hint": "Chạm vào tiện ích để ghim hoặc bỏ ghim",
+  "home_compact_this_month": "Tháng này",
+  "home_compact_memories_unit": "kỷ niệm"
 }

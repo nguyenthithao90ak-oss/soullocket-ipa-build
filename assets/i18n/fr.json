@@ -9888,5 +9888,13 @@
   "utilities_action_unpin": "Retirer de l'accueil",
   "utilities_pinned_toast": "Épinglé à l'accueil",
   "utilities_unpinned_toast": "Retiré de l'accueil",
-  "utilities_long_press_hint": "Appuyez longuement sur un outil pour l'épingler à l'accueil"
+  "utilities_long_press_hint": "Appuyez longuement sur un outil pour l'épingler à l'accueil",
+  "home_compact_upcoming_title": "À venir",
+  "home_compact_see_all": "Tout voir",
+  "home_compact_upcoming_empty": "Rien de prévu pour l'instant",
+  "home_compact_add_pin": "Épingler plus",
+  "home_compact_pin_sheet_title": "Épingler à l'accueil",
+  "home_compact_pin_sheet_hint": "Touchez un outil pour l'épingler ou le retirer",
+  "home_compact_this_month": "Ce mois-ci",
+  "home_compact_memories_unit": "souvenirs"
 }

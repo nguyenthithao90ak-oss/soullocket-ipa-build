@@ -9888,5 +9888,13 @@
   "utilities_action_unpin": "Odepnij od ekranu głównego",
   "utilities_pinned_toast": "Przypięto do ekranu głównego",
   "utilities_unpinned_toast": "Odpięto od ekranu głównego",
-  "utilities_long_press_hint": "Przytrzymaj narzędzie, aby przypiąć je do ekranu głównego"
+  "utilities_long_press_hint": "Przytrzymaj narzędzie, aby przypiąć je do ekranu głównego",
+  "home_compact_upcoming_title": "Wkrótce",
+  "home_compact_see_all": "Zobacz wszystko",
+  "home_compact_upcoming_empty": "Na razie nic nie zaplanowano",
+  "home_compact_add_pin": "Przypnij więcej",
+  "home_compact_pin_sheet_title": "Przypnij do ekranu głównego",
+  "home_compact_pin_sheet_hint": "Dotknij narzędzia, aby je przypiąć lub odpiąć",
+  "home_compact_this_month": "W tym miesiącu",
+  "home_compact_memories_unit": "wspomnień"
 }

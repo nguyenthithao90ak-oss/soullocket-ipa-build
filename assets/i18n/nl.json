@@ -9888,5 +9888,13 @@
   "utilities_action_unpin": "Losmaken van Home",
   "utilities_pinned_toast": "Vastgezet op Home",
   "utilities_unpinned_toast": "Losgemaakt van Home",
-  "utilities_long_press_hint": "Houd een tool ingedrukt om hem op Home vast te zetten"
+  "utilities_long_press_hint": "Houd een tool ingedrukt om hem op Home vast te zetten",
+  "home_compact_upcoming_title": "Binnenkort",
+  "home_compact_see_all": "Alles bekijken",
+  "home_compact_upcoming_empty": "Nog niets gepland",
+  "home_compact_add_pin": "Meer vastzetten",
+  "home_compact_pin_sheet_title": "Vastzetten op Home",
+  "home_compact_pin_sheet_hint": "Tik op een tool om hem vast te zetten of los te maken",
+  "home_compact_this_month": "Deze maand",
+  "home_compact_memories_unit": "herinneringen"
 }

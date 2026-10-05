@@ -9888,5 +9888,13 @@
   "utilities_action_unpin": "Quitar de Inicio",
   "utilities_pinned_toast": "Fijado en Inicio",
   "utilities_unpinned_toast": "Quitado de Inicio",
-  "utilities_long_press_hint": "Mantén pulsada una herramienta para fijarla en Inicio"
+  "utilities_long_press_hint": "Mantén pulsada una herramienta para fijarla en Inicio",
+  "home_compact_upcoming_title": "Próximamente",
+  "home_compact_see_all": "Ver todo",
+  "home_compact_upcoming_empty": "Aún no hay nada próximo",
+  "home_compact_add_pin": "Fijar más",
+  "home_compact_pin_sheet_title": "Fijar en Inicio",
+  "home_compact_pin_sheet_hint": "Toca una herramienta para fijarla o quitarla",
+  "home_compact_this_month": "Este mes",
+  "home_compact_memories_unit": "recuerdos"
 }

@@ -1021,6 +1021,8 @@ class _HomeThreadKnotPainter extends CustomPainter {
   }
 }
 
+// Thẻ tiêu đề cũ, nay dùng HomeCompactHeader.
+// ignore: unused_element
 class _HomeStoryLetterhead extends StatelessWidget {
   final String smartGreeting;
   final String houseName;
@@ -1407,9 +1409,11 @@ class _HomeDoodleStamp extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _HomeScrapbookDivider extends StatelessWidget {
   final Color color;
 
+  // ignore: unused_element_parameter
   const _HomeScrapbookDivider({this.color = SLColors.thread});
 
   @override
