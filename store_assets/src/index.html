@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>SoulLocket Play Store</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></symbol>
+    <symbol id="i-video" viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="m22 8-6 4 6 4z"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="17" rx="3"/><path d="M16 2.5v4M8 2.5v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01"/></symbol>
+    <symbol id="i-widget" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="8" rx="2.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2.5"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3c.6 4.2 2.8 6.4 7 7-4.2.6-6.4 2.8-7 7-.6-4.2-2.8-6.4-7-7 4.2-.6 6.4-2.8 7-7Z"/><path d="M19 15.5c.25 1.6 1 2.35 2.5 2.5-1.5.25-2.25 1-2.5 2.5-.25-1.5-1-2.25-2.5-2.5 1.5-.15 2.25-.9 2.5-2.5Z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="3"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><path d="M12 15v2"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7.5 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.5z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+  </defs>
+</svg>
+
+<div id="root"></div>
+
+<script>
+/* ─────────────────────────────────────────────────────────────
+   Nội dung từng ảnh. Ảnh chụp thật đặt ở shots/01.png … shots/08.png
+   (chấp nhận .png hoặc .jpg). "zoom" = phóng to 1 vùng của chính ảnh chụp:
+   rect = [x, y, w, h] tính theo tỉ lệ 0–1 của ảnh gốc.
+   ───────────────────────────────────────────────────────────── */
+const SLIDES = [
+  { id: '01', out: '01_dem_ngay_yeu', tag: 'ĐẾM NGÀY YÊU',
+    h: 'Đếm từng ngày<br>ta <em>yêu nhau</em>', p: 'Năm, tháng, ngày — đến từng giây bên nhau',
+    hint: 'Tab <b>Nhà</b> — bộ đếm ngày yêu và ảnh hai bạn',
+    device: { x: '50%', top: 640, s: 1.9 }, glow: ['#FF8FA6', '#F4A37A'],
+    float: { icon: 'i-heart', t: 'Tự nhắc ngày kỷ niệm', s: '100 ngày · 1 năm · 1000 ngày', left: 46, top: 1690 } },
+  { id: '02', out: '02_nhat_ky_ky_niem', tag: 'NHẬT KÝ KỶ NIỆM',
+    h: 'Cất giữ mọi<br><em>khoảnh khắc</em>', p: 'Ảnh, tâm trạng và lời nhắn của hai bạn',
+    hint: 'Tab <b>Nhật ký</b> — danh sách kỷ niệm có ảnh',
+    device: { x: '54%', top: 640, s: 1.9 }, glow: ['#F4A37A', '#B7A1E6'],
+    float: { icon: 'i-image', t: 'Nhật ký chung', s: 'Hai bạn cùng viết, cùng xem', left: 40, top: 1520 } },
+  { id: '03', out: '03_tro_chuyen_rieng', tag: 'TRÒ CHUYỆN RIÊNG',
+    h: 'Thế giới nhỏ<br><em>chỉ hai ta</em>', p: 'Nhắn tin, ghi âm và gọi video riêng tư',
+    hint: 'Màn hình <b>chat</b> giữa hai bạn',
+    device: { x: '46%', top: 640, s: 1.9 }, glow: ['#B7A1E6', '#FF8FA6'],
+    float: { icon: 'i-video', t: 'Gọi video', s: 'Chỉ hai bạn với nhau', right: 40, top: 1450 } },
+  { id: '04', out: '04_ban_do_khoang_cach', tag: 'BẢN ĐỒ & KHOẢNG CÁCH',
+    h: 'Dù xa vẫn thấy<br><em>gần nhau</em>', p: 'Xem khoảng cách, vị trí và đường về với nhau',
+    hint: 'Màn hình <b>Bản đồ</b> — khoảng cách hai bạn',
+    device: { x: '50%', top: 640, s: 1.9 }, glow: ['#C7E4EA', '#FF8FA6'],
+    float: { icon: 'i-pin', t: 'Khoảng cách', s: 'Bản đồ · Lịch sử di chuyển', left: 40, top: 1600 } },
+  { id: '05', out: '05_lich_chung', tag: 'LỊCH CHUNG',
+    h: 'Không quên<br><em>ngày đặc biệt</em>', p: 'Nhắc ngày kỷ niệm, sinh nhật, hẹn hò',
+    hint: '<b>Lịch chung</b> hoặc <b>Sự kiện &amp; Kỷ niệm</b>',
+    device: { x: '54%', top: 640, s: 1.9 }, glow: ['#FF8FA6', '#F4A37A'],
+    float: { icon: 'i-cal', t: 'Sự kiện & Kỷ niệm', s: 'Đếm ngược từng dịp', left: 40, top: 1560 } },
+  { id: '06', out: '06_widget_man_hinh_chinh', tag: 'WIDGET',
+    h: 'Tình yêu trên<br><em>màn hình chính</em>', p: 'Đếm ngày yêu ngay ngoài màn hình chính',
+    hint: 'Màn hình chính điện thoại có <b>widget SoulLocket</b>',
+    device: { x: '50%', top: 640, s: 1.9 }, glow: ['#F4A37A', '#FF8FA6'],
+    float: { icon: 'i-widget', t: '5 kiểu widget', s: 'Cặp đôi · Sự kiện · Giấc ngủ', right: 40, top: 1640 } },
+  { id: '07', out: '07_tien_ich_cap_doi', tag: 'TIỆN ÍCH',
+    h: 'Hơn 20 tiện ích<br><em>cho cặp đôi</em>', p: 'Tài chính, giấc ngủ, thiệp tình yêu…',
+    hint: 'Tab <b>Tiện ích</b> — lưới các tiện ích',
+    device: { x: '46%', top: 640, s: 1.9 }, glow: ['#B7A1E6', '#F4A37A'],
+    float: { icon: 'i-spark', t: 'Thiệp tình yêu', s: 'Rạp phim · Hộp thư · Ghép ảnh', right: 40, top: 1540 } },
+  { id: '08', out: '08_bao_mat_rieng_tu', tag: 'BẢO MẬT',
+    h: 'Riêng tư<br><em>tuyệt đối</em>', p: 'Khoá PIN, sinh trắc học, kho ảnh mật',
+    hint: '<b>Kho Ảnh Mật</b> hoặc màn hình khoá PIN',
+    device: { x: '50%', top: 640, s: 1.9 }, glow: ['#FF8FA6', '#B7A1E6'],
+    float: { icon: 'i-lock', t: 'Kho ảnh mật', s: 'Ảnh được mã hoá', left: 40, top: 1600 } },
+];
+
+/* ───────── Họa tiết vector vẽ mới ───────── */
+const heartOutline = (size, color, rot = 0, sw = 2.2) =>
+  `<svg class="deco" style="width:${size}px;height:${size}px;transform:rotate(${rot}deg)" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linejoin="round"><use href="#i-heart"/></svg>`;
+const sparkle = (size, color) =>
+  `<svg class="deco" style="width:${size}px;height:${size}px" viewBox="0 0 24 24" fill="${color}"><path d="M12 1c.9 6.2 4.8 10.1 11 11-6.2.9-10.1 4.8-11 11-.9-6.2-4.8-10.1-11-11 6.2-.9 10.1-4.8 11-11Z"/></svg>`;
+const at = (html, css) => html.replace('class="deco" style="', `class="deco" style="${css};`);
+
+// Sợi chỉ nhịp tim: vào/ra ở cùng độ cao để nối liền các slide cạnh nhau
+function threadPath(flip) {
+  const d = 'M -40 596 C 120 596, 170 566, 270 566 L 312 566 l 14 -42 l 18 78 l 16 -60 l 12 24 L 404 566 C 560 566, 640 624, 800 620 C 950 616, 1000 596, 1120 596';
+  return `<svg class="thread" viewBox="0 0 1080 1920" style="left:0;width:1080px;${flip ? 'transform:scaleX(-1)' : ''}">
+    <path d="${d}" fill="none" stroke="rgba(217,107,124,.42)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+function shotImg(id) {
+  // thử .png rồi .jpg; nếu không có thì để ô chờ
+  return `<img class="shot" data-id="${id}" src="shots/${id}.png" alt=""
+    onerror="if(!this.dataset.tried){this.dataset.tried=1;this.src='shots/${id}.jpg'}else{this.remove()}"
+    onload="this.parentElement.classList.add('has-shot');this.closest('[data-out]').classList.add('has-shot');window.applyZoom&&applyZoom(this)">`;
+}
+
+function placeholder(s) {
+  return `<div class="ph"><svg viewBox="0 0 24 24"><use href="#i-camera"/></svg>
+    <b>Ảnh chụp thật ${s.id}</b><span>${s.hint}</span><code>shots/${s.id}.png</code></div>`;
+}
+
+function device(s, extra = '') {
+  const d = s.device;
+  return `<div class="device" style="--x:${d.x};--top:${d.top}px;--s:${d.s};${d.r ? `--r:${d.r}deg;` : ''}${extra}">
+    <div class="screen">${placeholder(s)}${shotImg(s.id)}<div class="punch"></div></div></div>`;
+}
+
+function floatChip(f) {
+  const pos = (f.left != null ? `left:${f.left}px;` : `right:${f.right}px;`) + `top:${f.top}px`;
+  return `<div class="float" style="${pos}"><span class="ic"><svg viewBox="0 0 24 24"><use href="#${f.icon}"/></svg></span>
+    <span>${f.t}<small>${f.s}</small></span></div>`;
+}
+
+function zoomBox(s) {
+  if (!s.zoom) return '';
+  const z = s.zoom;
+  return `<div class="zoom" data-rect="${z.rect.join(',')}" style="left:${z.left}px;top:${z.top}px;width:${z.w}px;height:${z.h}px"></div>`;
+}
+
+const root = document.getElementById('root');
+SLIDES.forEach((s, i) => {
+  const [g1, g2] = s.glow;
+  root.insertAdjacentHTML('beforeend', `
+  <section class="slide phone" data-out="phone/${s.out}.png">
+    <div class="bg">
+      <i style="width:760px;height:760px;right:-260px;top:-180px;background:${g1}"></i>
+      <i style="width:820px;height:820px;left:-360px;top:900px;background:${g2}"></i>
+      <i style="width:600px;height:600px;right:-200px;bottom:-260px;background:${g1};opacity:.35"></i>
+    </div>
+    ${threadPath(i % 2 === 1)}
+    <header class="cap">
+      <span class="eyebrow"><b>${s.id}</b>${s.tag}</span>
+      <h1>${s.h}</h1>
+      <p>${s.p}</p>
+    </header>
+    ${at(heartOutline(46, 'rgba(230,83,114,.55)', -14), 'left:70px;top:610px')}
+    ${at(sparkle(30, '#F4A37A'), 'right:96px;top:640px')}
+    ${at(sparkle(18, '#E65372'), 'right:60px;top:720px')}
+    ${device(s)}
+    ${zoomBox(s)}
+    ${floatChip(s.float)}
+  </section>`);
+});
+
+/* ───────── Feature graphic 1024×500 ───────── */
+root.insertAdjacentHTML('beforeend', `
+<section class="slide feature" data-out="feature_graphic_1024x500.png">
+  <div class="bg">
+    <i style="width:520px;height:520px;right:-120px;top:-200px;background:#FF8FA6"></i>
+    <i style="width:480px;height:480px;left:-220px;bottom:-260px;background:#F4A37A"></i>
+  </div>
+  <svg class="thread" viewBox="0 0 1024 500" style="left:0;width:1024px;height:500px">
+    <path d="M -20 470 C 120 470, 180 456, 250 456 L 280 456 l 10 -26 l 13 46 l 12 -36 l 9 16 L 350 456 C 470 456, 520 486, 640 484 C 760 482, 900 466, 1044 466" fill="none" stroke="rgba(217,107,124,.38)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <div class="fg-left">
+    <img class="fg-icon" src="../../icons/icon-512.png" alt="">
+    <h2>SoulLocket</h2>
+    <p>Đếm ngày yêu &amp; nhật ký kỷ niệm<br>dành cho các cặp đôi</p>
+    <div class="fg-tags"><span>Đếm ngày</span><span>Nhật ký</span><span>Bản đồ</span><span>Widget</span></div>
+  </div>
+  ${device({ id: '02', hint: 'Tab Nhật ký', device: { x: '660px', top: 92, s: .74, r: -7 } })}
+  ${device({ id: '01', hint: 'Tab Nhà', device: { x: '868px', top: 44, s: .84, r: 5 } })}
+  ${at(sparkle(22, '#F4A37A'), 'left:470px;top:60px')}
+  ${at(heartOutline(30, 'rgba(230,83,114,.5)', 12), 'left:500px;top:300px')}
+</section>`);
+
+/* Đặt vùng phóng to theo đúng kích thước ảnh gốc */
+window.applyZoom = (img) => {
+  const slide = img.closest('[data-out]');
+  slide.querySelectorAll('.zoom').forEach((z) => {
+    const [x, y, w, h] = z.dataset.rect.split(',').map(Number);
+    const bw = z.clientWidth, bh = z.clientHeight;
+    const sx = bw / (w * img.naturalWidth), sy = bh / (h * img.naturalHeight);
+    const k = Math.max(sx, sy);
+    z.style.backgroundImage = `url('${img.getAttribute('src')}')`;
+    z.style.backgroundSize = `${img.naturalWidth * k}px ${img.naturalHeight * k}px`;
+    z.style.backgroundPosition = `${-x * img.naturalWidth * k}px ${-y * img.naturalHeight * k}px`;
+  });
+};
+</script>
+
+<style>
+  .fg-left { position: absolute; left: 64px; top: 0; bottom: 0; width: 470px; display: flex; flex-direction: column; justify-content: center; z-index: 5; }
+  .fg-icon { width: 104px; height: 104px; border-radius: 26px; box-shadow: 0 18px 34px -16px rgba(128,102,184,.7); }
+  .feature h2 { margin-top: 22px; font: 800 66px/1 'BVP'; letter-spacing: -.03em;
+    background: linear-gradient(100deg, #E65372, #F4A37A); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .feature p { margin-top: 14px; font: 600 24px/1.4 'BVP'; color: var(--ink); }
+  .fg-tags { margin-top: 22px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .fg-tags span { padding: 8px 14px; border-radius: 999px; font: 700 15px/1 'BVP'; color: var(--primary-d);
+    background: rgba(255,253,248,.95); border: 1.5px solid rgba(230,83,114,.18); }
+  .feature .device { box-shadow: inset 0 0 0 1.5px #6b5860, inset 0 0 0 4px #1b1416, 0 40px 60px -30px rgba(59,40,48,.7); }
+  .feature .ph { padding-top: 90px; }
+</style>
+</body>
+</html>
