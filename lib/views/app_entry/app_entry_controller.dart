@@ -41,18 +41,13 @@ class AppEntryResumeResult {
   final bool shouldResetToHome;
   final AppEntryAuthState? authState;
 
-  const AppEntryResumeResult({
-    this.shouldResetToHome = false,
-    this.authState,
-  });
+  const AppEntryResumeResult({this.shouldResetToHome = false, this.authState});
 }
 
 class AppEntryHouseSessionResult {
   final bool didScheduleInitialAppOpenAd;
 
-  const AppEntryHouseSessionResult({
-    this.didScheduleInitialAppOpenAd = false,
-  });
+  const AppEntryHouseSessionResult({this.didScheduleInitialAppOpenAd = false});
 }
 
 class AppEntryController {
@@ -65,16 +60,16 @@ class AppEntryController {
     CriticalDataSyncService? criticalDataSyncService,
     LoveInsightService? loveInsightService,
     InteractionMetricsService? interactionMetricsService,
-  })  : _houseService = houseService ?? HouseService(),
-        _militaryLockService = militaryLockService ?? MilitaryLockService(),
-        _presenceService = presenceService ?? PresenceService(),
-        _deviceManagerService = deviceManagerService ?? DeviceManagerService(),
-        _adMobService = adMobService ?? AdMobService(),
-        _criticalDataSyncService =
-            criticalDataSyncService ?? CriticalDataSyncService(),
-        _loveInsightService = loveInsightService ?? LoveInsightService(),
-        _interactionMetricsService =
-            interactionMetricsService ?? InteractionMetricsService();
+  }) : _houseService = houseService ?? HouseService(),
+       _militaryLockService = militaryLockService ?? MilitaryLockService(),
+       _presenceService = presenceService ?? PresenceService(),
+       _deviceManagerService = deviceManagerService ?? DeviceManagerService(),
+       _adMobService = adMobService ?? AdMobService(),
+       _criticalDataSyncService =
+           criticalDataSyncService ?? CriticalDataSyncService(),
+       _loveInsightService = loveInsightService ?? LoveInsightService(),
+       _interactionMetricsService =
+           interactionMetricsService ?? InteractionMetricsService();
 
   static const Duration _deviceRegistrationCooldown = Duration(seconds: 15);
 
@@ -89,9 +84,7 @@ class AppEntryController {
   final AppBackgroundSessionTracker _backgroundSessionTracker =
       const AppBackgroundSessionTracker();
   late final SessionConnectivityCoordinator _sessionConnectivityCoordinator =
-      SessionConnectivityCoordinator(
-    presenceService: _presenceService,
-  );
+      SessionConnectivityCoordinator(presenceService: _presenceService);
 
   SharedPreferences? _prefs;
   DateTime? _lastPausedAt;
@@ -106,7 +99,8 @@ class AppEntryController {
   bool get hasPendingResume => _lastPausedAt != null;
 
   Future<SharedPreferences> getPrefs() async {
-    return _prefs ??= OfflineCacheService.getPrefsSync() ??
+    return _prefs ??=
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
   }
 
@@ -114,9 +108,7 @@ class AppEntryController {
     _sessionConnectivityCoordinator.dispose();
   }
 
-  void scheduleDeferredStartupTasks({
-    required bool Function() isMounted,
-  }) {
+  void scheduleDeferredStartupTasks({required bool Function() isMounted}) {
     Future.delayed(const Duration(milliseconds: 100), () async {
       if (!isMounted()) return;
       try {
@@ -124,17 +116,16 @@ class AppEntryController {
       } catch (e) {
         final errorInfo = AppErrorMapper.resolve(
           e,
-          fallbackMessage:
-              L10nService().translate('app_entry_khngthkhit_1be321'),
+          fallbackMessage: L10nService().translate(
+            'app_entry_khngthkhit_1be321',
+          ),
         );
         debugPrint('[AppEntry] Notification init failed: ${errorInfo.message}');
       }
     });
   }
 
-  Future<AppEntryAuthState> bootstrap({
-    required BuildContext context,
-  }) async {
+  Future<AppEntryAuthState> bootstrap({required BuildContext context}) async {
     try {
       debugPrint('[AppEntry] bootstrap start');
       final preResults = await Future.wait<dynamic>([
@@ -154,21 +145,21 @@ class AppEntryController {
         );
       }
 
-      final lockState = await checkAppLock(context: context, isResuming: false)
-          .timeout(const Duration(seconds: 8));
+      final lockState = await checkAppLock(
+        context: context,
+        isResuming: false,
+      ).timeout(const Duration(seconds: 8));
       debugPrint('[AppEntry] bootstrap finished');
       return lockState ??
-          const AppEntryAuthState(
-            isAuthenticated: true,
-            isCheckingAuth: false,
-          );
+          const AppEntryAuthState(isAuthenticated: true, isCheckingAuth: false);
     } catch (e, _) {
       final errorInfo = AppErrorMapper.resolve(
         e,
         fallbackMessage: L10nService().translate('app_entry_khngthkhin_190761'),
       );
       debugPrint(
-          '[AppEntry] Bootstrap failed or timed out: ${errorInfo.message}');
+        '[AppEntry] Bootstrap failed or timed out: ${errorInfo.message}',
+      );
       return const AppEntryAuthState(
         isAuthenticated: true,
         isCheckingAuth: false,
@@ -191,8 +182,9 @@ class AppEntryController {
           .getEffectiveLockSettings(houseId: houseId)
           .timeout(const Duration(seconds: 8));
       final isAppLockEnabled = effectiveLockSettings.enabled;
-      final isScopeAppEnabled =
-          effectiveLockSettings.isScopeEnabled(LockScope.app);
+      final isScopeAppEnabled = effectiveLockSettings.isScopeEnabled(
+        LockScope.app,
+      );
       final lockTimeoutMins = effectiveLockSettings.timeoutMinutes;
 
       if (!isAppLockEnabled ||
@@ -223,16 +215,19 @@ class AppEntryController {
       if (!context.mounted) return null;
       final authSuccess = await _militaryLockService
           .requestUnlock(
-        context: context,
-        scope: LockScope.app,
-        houseId: houseId,
-        title: context.tr('app_entry_khangdng_a0f538'),
-        reason: MilitaryLockService.scopeReason(LockScope.app),
-      )
-          .timeout(const Duration(seconds: 8), onTimeout: () {
-        debugPrint('[AppEntry] requestUnlock timed out, fail-closed');
-        return false;
-      });
+            context: context,
+            scope: LockScope.app,
+            houseId: houseId,
+            title: context.tr('app_entry_khangdng_a0f538'),
+            reason: MilitaryLockService.scopeReason(LockScope.app),
+          )
+          .timeout(
+            const Duration(seconds: 8),
+            onTimeout: () {
+              debugPrint('[AppEntry] requestUnlock timed out, fail-closed');
+              return false;
+            },
+          );
       debugPrint('[AppEntry] checkAppLock resolved: $authSuccess');
       return AppEntryAuthState(
         isAuthenticated: authSuccess,
@@ -256,14 +251,10 @@ class AppEntryController {
   void didHaveMemoryPressure() {
     PaintingBinding.instance.imageCache.clear();
     PaintingBinding.instance.imageCache.clearLiveImages();
-    debugPrint(
-      L10nService().translate('app_entry_appentryht_a627df'),
-    );
+    debugPrint(L10nService().translate('app_entry_appentryht_a627df'));
   }
 
-  Future<void> handleAppBackgrounded({
-    bool keepPresenceOnline = false,
-  }) async {
+  Future<void> handleAppBackgrounded({bool keepPresenceOnline = false}) async {
     final pausedAt = DateTime.now();
     _lastPausedAt = pausedAt;
     await _persistBackgroundTimestamp(pausedAt);
@@ -335,10 +326,15 @@ class AppEntryController {
     try {
       final isCompromised = await SecurityService()
           .isDeviceCompromised()
-          .timeout(const Duration(seconds: 2), onTimeout: () {
-        debugPrint('[AppEntry] isDeviceCompromised timed out, assume safe');
-        return false;
-      });
+          .timeout(
+            const Duration(seconds: 2),
+            onTimeout: () {
+              debugPrint(
+                '[AppEntry] isDeviceCompromised timed out, assume safe',
+              );
+              return false;
+            },
+          );
       if (!isCompromised) {
         return null;
       }
@@ -359,18 +355,22 @@ class AppEntryController {
   }
 
   Future<void> handleSignedOutSession() async {
+    if (_houseService.currentUser != null) return;
     await _runGuarded(
       'stop sleep tracking after sign out',
       BackgroundTrackingService.stop,
     );
+    if (_houseService.currentUser != null) return;
     await _runGuarded(
       'reset widget state after sign out',
       () => WidgetService.resetWidgetState(),
     );
+    if (_houseService.currentUser != null) return;
     await _runGuarded(
       'stop auto interstitial scheduler after sign out',
       () => _adMobService.stopAutoInterstitialScheduler(clearPersisted: true),
     );
+    if (_houseService.currentUser != null) return;
     await _runGuarded(
       'clear presence session after sign out',
       clearPresenceSession,
@@ -410,10 +410,7 @@ class AppEntryController {
     );
 
     Future<void>.delayed(const Duration(seconds: 45), () async {
-      await _runGuarded(
-        'initialize AdMob',
-        () => _adMobService.initialize(),
-      );
+      await _runGuarded('initialize AdMob', () => _adMobService.initialize());
     });
 
     Future<void>.delayed(const Duration(seconds: 60), () async {
@@ -527,7 +524,8 @@ class AppEntryController {
 
   Future<void> _initPresence(String houseId) async {
     final prefs = await getPrefs();
-    final role = RoleUtils.normalizeNullable(prefs.getString('il_role')) ??
+    final role =
+        RoleUtils.normalizeNullable(prefs.getString('il_role')) ??
         RoleUtils.normalizeNullable(_currentRole);
     // Không fallback cứng về 'user1' nếu role chưa xác định.
     // Tránh 2 thiết bị cùng lúc online với user1.
@@ -544,13 +542,15 @@ class AppEntryController {
 
   Future<void> _refreshPresenceContext() async {
     final prefs = await getPrefs();
-    final role = _normalizeRole(prefs.getString('il_role')) ??
+    final role =
+        _normalizeRole(prefs.getString('il_role')) ??
         _normalizeRole(_currentRole);
     // Không fallback cứng về 'user1' — giữ nguyên _currentRole cũ nếu không có role hợp lệ.
     final houseId = await _houseService.getCurrentHouseId();
     _currentHouseId = houseId;
-    _currentRole =
-        (houseId == null || houseId.isEmpty) ? null : (role ?? _currentRole);
+    _currentRole = (houseId == null || houseId.isEmpty)
+        ? null
+        : (role ?? _currentRole);
     _sessionConnectivityCoordinator.updatePresenceTarget(
       houseId: _currentHouseId,
       role: _currentRole,
@@ -558,16 +558,14 @@ class AppEntryController {
     );
   }
 
-  Future<void> _recordAppOpenMetric({
-    String? houseId,
-    String? role,
-  }) async {
+  Future<void> _recordAppOpenMetric({String? houseId, String? role}) async {
     final resolvedHouseId = (houseId ?? _currentHouseId ?? '').trim();
     if (resolvedHouseId.isEmpty) {
       return;
     }
 
-    final resolvedRole = _normalizeRole(role) ??
+    final resolvedRole =
+        _normalizeRole(role) ??
         _normalizeRole(_currentRole) ??
         await _prefsRole;
     if (resolvedRole == null) {
@@ -619,10 +617,7 @@ class AppEntryController {
     });
   }
 
-  Future<void> _runGuarded(
-    String label,
-    Future<void> Function() action,
-  ) async {
+  Future<void> _runGuarded(String label, Future<void> Function() action) async {
     try {
       await action();
     } catch (e, _) {

@@ -75,6 +75,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   String? _lastUserId;
   String? _restoreNoticeCheckedUserId;
   Future<AppEntryAccessState>? _accessStateFuture;
+  Future<void>? _signedOutCleanup;
   AppEntryAccessState? _initialAccessState;
   OverlayEntry? _privacyGuardEntry;
 
@@ -110,7 +111,9 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
           return;
         }
         _showRootSnackBar(
-          context.tr('ui_app_the_previously_selected_photo_has_been_restored_635a59'),
+          context.tr(
+            'ui_app_the_previously_selected_photo_has_been_restored_635a59',
+          ),
         );
       }());
 
@@ -251,7 +254,11 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     required String? userId,
     required String? cachedHouseId,
   }) {
-    if (!mounted || _lastUserId != userId) return;
+    if (!mounted ||
+        _lastUserId != userId ||
+        FirebaseAuth.instance.currentUser?.uid != userId) {
+      return;
+    }
     setState(() {
       _accessStateFuture = Future.value(state);
     });
@@ -371,6 +378,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
 
     _removeSplashOnce();
     return ConsentGate(
+      key: ValueKey('house-session:$uid:$houseId'),
       onReady: () async {
         unawaited(() async {
           try {
@@ -454,11 +462,11 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.security_rounded, color: Colors.white, size: 64),
-              SizedBox(height: 16),
+              const Icon(Icons.security_rounded, color: Colors.white, size: 64),
+              const SizedBox(height: 16),
               Text(
                 context.tr('ui_app_anti_peeping_is_on_ba6788'),
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w900,
@@ -529,8 +537,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     if (_isMaintenance) {
       return BlockedScaffold(
         title: context.tr('under_maintenance'),
-        message:
-            context.tr('app_maintenance_message'),
+        message: context.tr('app_maintenance_message'),
         showActions: false,
       );
     }
@@ -549,8 +556,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     if (_isCompromised) {
       return BlockedScaffold(
         title: context.tr('ui_app_the_device_is_not_safe_397490'),
-        message:
-            context.tr('ui_app_your_device_is_in_root_state_or_4f580d'),
+        message: context.tr('ui_app_your_device_is_in_root_state_or_4f580d'),
         showActions: false,
       );
     }
@@ -573,22 +579,36 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
           return BlockedScaffold(
             title: context.tr('ui_app_authentication_error_71555a'),
             message: kDebugMode
-                ? L10nScope.of(context).format('ui_app_unable_to_connect_authentication_system_please_try_f0c743', {'value1': AppErrorMapper.resolve(snapshot.error).message})
-                : context.tr('ui_app_unable_to_check_login_please_check_the_bd9c62'),
+                ? L10nScope.of(context).format(
+                    'ui_app_unable_to_connect_authentication_system_please_try_f0c743',
+                    {'value1': AppErrorMapper.resolve(snapshot.error).message},
+                  )
+                : context.tr(
+                    'ui_app_unable_to_check_login_please_check_the_bd9c62',
+                  ),
             onSignOut: () async {},
           );
         }
 
         final user = snapshot.data;
         if (user == null) {
-          unawaited(_appEntryController.handleSignedOutSession());
+          _signedOutCleanup ??= _appEntryController.handleSignedOutSession();
           _lastUserId = null;
           _restoreNoticeCheckedUserId = null;
           _hasTriggeredInitialAppOpenAd = false;
           _initialAccessState = null;
           _accessStateFuture = null;
-          return const ConsentGate(child: LoginScreen());
+          return FutureBuilder<void>(
+            future: _signedOutCleanup,
+            builder: (context, cleanup) {
+              if (cleanup.connectionState != ConnectionState.done) {
+                return const LoadingScaffold();
+              }
+              return const ConsentGate(child: LoginScreen());
+            },
+          );
         }
+        _signedOutCleanup = null;
 
         if (_accessStateFuture == null || _lastUserId != user.uid) {
           _lastUserId = user.uid;
@@ -596,6 +616,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
         }
 
         return FutureBuilder<AppEntryAccessState>(
+          key: ValueKey(user.uid),
           initialData: _initialAccessState,
           future: _accessStateFuture,
           builder: (context, accessSnap) {
@@ -616,8 +637,10 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
             if (accessSnap.hasError) {
               return BlockedScaffold(
                 title: context.tr('ui_app_system_error_b3af2f'),
-                message:
-                    L10nScope.of(context).format('ui_app_unable_to_load_account_information_value1_4c7679', {'value1': AppErrorMapper.resolve(accessSnap.error).message}),
+                message: L10nScope.of(context).format(
+                  'ui_app_unable_to_load_account_information_value1_4c7679',
+                  {'value1': AppErrorMapper.resolve(accessSnap.error).message},
+                ),
                 onSignOut: () async {
                   await _authService.signOut();
                 },
@@ -627,8 +650,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
             if (accessState?.isMaintenance == true) {
               return BlockedScaffold(
                 title: context.tr('under_maintenance'),
-                message:
-                    context.tr('app_maintenance_message'),
+                message: context.tr('app_maintenance_message'),
                 showActions: false,
               );
             }
@@ -660,6 +682,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                   );
                 },
                 child: HouseChoiceScreen(
+                  key: ValueKey(user.uid),
                   onHouseCreated: _refreshCurrentUserAccess,
                   onSignedOut: _refreshCurrentUserAccess,
                 ),

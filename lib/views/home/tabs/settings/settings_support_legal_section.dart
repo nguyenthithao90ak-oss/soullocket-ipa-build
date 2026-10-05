@@ -2,10 +2,14 @@ part of '../settings_tab.dart';
 
 extension _SettingsTabSupportLegalSection on _SettingsTabState {
   Future<void> _openPrivacyChoices() async {
+    final initialChoice = await ConsentService().getCookieConsentLevel();
+    if (!mounted) return;
     await showDialog<String>(
       context: context,
       builder: (ctx) => StartupPrivacyDialog(
         allowDismiss: true,
+        showCollectionChoices: true,
+        initialChoice: initialChoice ?? 'essential',
         onContinue: (value) async {
           await ConsentService().recordStartupConsent(value);
           await PrivacyCollectionService.instance.settled;
@@ -21,7 +25,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   }
 
   Future<void> _openAdPrivacyChoices() async {
-    if (!ConsentService.optionalCollectionAllowed.value) {
+    if (!ConsentService.adRequestsAllowed.value) {
       SLNotice.showInfo(context, context.tr('privacy_ads_disabled'));
       return;
     }
@@ -197,6 +201,8 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   }
 
   void _logout() async {
+    if (_logoutInProgress || _accountDeletionActionBusy) return;
+    _logoutInProgress = true;
     const logoutAccent = Color(0xFFD81B60);
     bool? confirm;
     try {
@@ -219,7 +225,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
                 ),
               ),
               const SizedBox(width: 8),
-              Expanded(child: Text(context.tr('logout_confirm_btn'))),
+              Expanded(child: Text(context.tr('logout'))),
             ],
           ),
           content: Text(context.tr('confirm_logout')),
@@ -239,8 +245,13 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
         ),
       );
     } catch (_) {
+      _logoutInProgress = false;
       if (!mounted) return;
       SLNotice.showError(context, context.tr('home_chathmxcnh_20e6af'));
+      return;
+    }
+    if (confirm != true) {
+      _logoutInProgress = false;
       return;
     }
     if (confirm == true) {
@@ -249,45 +260,46 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
 
       final navigator = Navigator.of(context, rootNavigator: true);
 
-      showDialog(
+      final loadingRoute = DialogRoute<void>(
         context: context,
         barrierDismissible: false,
-        builder: (_) =>
-            const Center(child: CircularProgressIndicator(color: Colors.white)),
+        builder: (_) => const PopScope(
+          canPop: false,
+          child: Center(child: CircularProgressIndicator(color: Colors.white)),
+        ),
       );
+      unawaited(navigator.push(loadingRoute));
 
       try {
-        // Cho phép dialog hiển thị một chút để người dùng nhận thấy phản hồi
-        await Future.delayed(const Duration(milliseconds: 500));
         await _authService.signOut();
         debugPrint('[LOGOUT] signOut success');
         // Reset App Check cooldown & signature cache để tài khoản mới không bị chặn
         StorageAppCheckHelper.resetCooldown();
         AppCheckHttpHeaders.invalidateSignatureCache();
 
-        // Đóng loading dialog
-        if (navigator.canPop()) {
-          navigator.pop();
+        if (loadingRoute.isActive) {
+          navigator.removeRoute(loadingRoute);
         }
 
-        // Đóng toàn bộ các màn hình được push (như SettingsTab) để quay về Home/Login
-        while (navigator.canPop()) {
-          navigator.pop();
+        if (navigator.mounted && _auth.currentUser == null) {
+          navigator.popUntil((route) => route.isFirst);
         }
       } catch (e, st) {
-        if (navigator.canPop()) {
-          navigator.pop();
+        if (loadingRoute.isActive) {
+          navigator.removeRoute(loadingRoute);
         }
         debugPrint('[LOGOUT] signOut error: $e\n$st');
         if (!mounted) return;
         SLNotice.showError(context, context.tr('home_chathngxut_9630af'));
         return;
+      } finally {
+        _logoutInProgress = false;
       }
     }
   }
 
   void _deleteAccount() async {
-    if (_accountDeletionActionBusy) return;
+    if (_accountDeletionActionBusy || _logoutInProgress) return;
     setState(() => _accountDeletionActionBusy = true);
     try {
       await _runDeleteAccount();

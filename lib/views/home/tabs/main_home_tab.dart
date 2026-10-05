@@ -3,6 +3,8 @@ import '../../../models/widget_appearance.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import '../../../utils/services/market_service.dart';
+import '../../../utils/calendar/calendar_time_zone.dart';
+import '../../../utils/calendar/calendar_civil_date.dart';
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'package:lottie/lottie.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
@@ -37,8 +39,6 @@ import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:latlong2/latlong.dart' as ll;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
-import 'package:soullocket_app/views/chat/messenger_screen.dart';
-import 'package:soullocket_app/views/chat/chat_detail_screen.dart';
 import 'package:soullocket_app/views/map/map_screen.dart';
 import 'package:soullocket_app/views/relationship/couple_connect_screen.dart';
 import 'package:soullocket_app/views/single_match/single_match_hub_screen.dart';
@@ -111,6 +111,7 @@ import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/widgets/legacy_web_ui.dart';
 import 'package:soullocket_app/widgets/keepsake_frame.dart';
 import '../widgets/main_home/hero/main_home_countdown_visual_spec.dart';
+import '../widgets/main_home/hero/relationship_day_counter_content.dart';
 import '../widgets/main_home/hero/countdown_studio_widgets.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
 import 'package:soullocket_app/utils/services/admob_service.dart';
@@ -135,6 +136,8 @@ import 'package:soullocket_app/views/home/widgets/home_sticker_motion.dart';
 import 'package:soullocket_app/widgets/soul_merge_mascot.dart';
 import 'package:soullocket_app/utils/services/sound_service.dart';
 import 'package:soullocket_app/views/home/widgets/companion/home_companion_painter.dart';
+import 'package:soullocket_app/views/home/widgets/companion/home_companion_journey_card.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/home_daily_activity_card.dart';
 
 part 'main_home/widgets/main_home_dialogs.dart';
 part 'main_home/widgets/main_home_soul_merge_sticker.dart';
@@ -236,7 +239,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         ..showSnackBar(
           SLSnackBar(
             content: Text(
-              context.tr('ui_home_the_settings_button_has_been_blurred_you_241a2c'),
+              context.tr(
+                'ui_home_the_settings_button_has_been_blurred_you_241a2c',
+              ),
             ),
             behavior: SnackBarBehavior.floating,
             duration: Duration(seconds: 3),
@@ -363,31 +368,18 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     return 'assets/images/interaction_stickers/custom/numbered/sticker_$num.png';
   });
 
-  static const List<String> _kGiftSuggestions = [
-    '🎁 Handmade viết tay lời yêu thương',
-    '💐 Một bó hoa tươi kèm thiệp nhỏ xinh',
-    '🎂 Bất ngờ với bánh kem và nến lung linh',
-    '🍫 Hộp socola tình yêu và một cái ôm thật chặt',
-    '💍 Trang sức nhỏ xinh đính tên 2 đứa',
-    '🧸 Thú bông ôm tay dễ thương to đùng',
-    '🎫 Vé xem phim đôi hoặc concert cả 2 thích',
-    '📸 Album ảnh kỷ niệm tự thiết kế',
-    '🌹 Một bữa tối lãng mạn với đèn nến và hoa',
-    '✈️ Chuyến đi chơi 2 ngày 1 đêm bất ngờ',
-    '🛍️ Set quà chăm sóc da hoặc nước hoa',
-    '🎧 Tai nghe bluetooth cùng playlist tặng riêng',
-    '🖼️ Khung ảnh điện tử quay vòng kỷ niệm',
-    '🌸 Cây cảnh nhỏ xinh để cùng chăm sóc',
-    '☕ Bộ ly sứ đôi khắc tên 2 đứa',
-    '🎮 Game hoặc boardgame có thể chơi cùng nhau',
-    '🧦 Đồ đôi: áo, mũ hoặc vớ dễ thương',
-    '📖 Cuốn sổ nhỏ ghi lại lời yêu mỗi ngày',
-    '🎵 Đàn hộp nhỏ (ukulele) và bài hát tặng riêng',
-    '🌟 Bộ đèn sao trần phòng ngủ lãng mạn',
+  static List<String> get _kGiftSuggestions => [
+    for (var i = 1; i <= 20; i++)
+      L10nService().translate(
+        'home_gift_suggestion_${i.toString().padLeft(2, '0')}',
+      ),
   ];
 
   static String _giftSuggestionsForBirthday(int month, int day) {
-    return 'Gợi ý quà: ${_kGiftSuggestions[(month + day) % _kGiftSuggestions.length]}';
+    final suggestions = _kGiftSuggestions;
+    return L10nService().format('home_gift_suggestion_prefix', {
+      'value1': suggestions[(month + day) % suggestions.length],
+    });
   }
 
   void _safeSetState(VoidCallback fn) {
@@ -430,7 +422,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   String? _uploadingAvatarRole;
   bool _didPromptPendingAvatarRetry = false;
   final ValueNotifier<String> _homeDistanceTextNotifier = ValueNotifier<String>(
-    'Đang định vị...',
+    L10nService().translate('home_location_searching'),
   );
   final ValueNotifier<String?> _homeMapAlertNotifier = ValueNotifier<String?>(
     null,
@@ -448,7 +440,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   Timer? _delayedListenersTimer;
   Timer? _delayedMapWeatherTimer;
   Timer? _presenceSnapshotFallbackTimer;
-  Timer? _calendarWidgetSyncDebounce;
   Timer? _healthCycleWidgetSyncDebounce;
   Timer? _fetchHouseDataDebounceTimer;
   Future<void>? _activeFetchFuture;
@@ -551,15 +542,14 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
 
   static const Duration _kHomeMotionWarmupDelay = Duration(milliseconds: 650);
 
-  bool get _showLegacyMessengerButton => false;
   String get _partnerRole => _currentRole == 'user1' ? 'user2' : 'user1';
 
   Map<String, dynamic> _buildDefaultHomeSettings() {
     return {
-      'houseName': 'Ngôi Nhà Của Tôi',
+      'houseName': L10nService().translate('home_default_house_name'),
       'startDate': DateTime.now().toIso8601String().split('T')[0],
-      'nameU1': 'Bạn',
-      'nameU2': 'Người ấy',
+      'nameU1': L10nService().translate('home_default_name_you'),
+      'nameU2': L10nService().translate('home_default_name_partner'),
       'relationshipMode': 'couple',
     };
   }
@@ -676,12 +666,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     if (!mounted) return;
     _lastLoveWidgetSignature = '';
     final houseId = _houseId;
-    if (houseId != null && houseId.trim().isNotEmpty && WidgetService.supportsMobileWidgets) {
-      _calendarWidgetSyncDebounce?.cancel();
-      _calendarWidgetSyncDebounce = Timer(const Duration(milliseconds: 250), () {
-        if (!mounted || _houseId != houseId) return;
-        unawaited(WidgetService.syncCalendarWidgetData(houseId: houseId));
-      });
+    if (houseId != null && houseId.trim().isNotEmpty) {
+      _listenHomeCalendarEvents(houseId);
     }
     setState(() {});
   }
@@ -1297,7 +1283,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     if (name != null && name.isNotEmpty) {
       return name;
     }
-    return role == 'user1' ? 'Nam' : 'Nữ';
+    return role == 'user1'
+        ? L10nService().translate('home_default_male')
+        : L10nService().translate('home_default_female');
   }
 
   @override

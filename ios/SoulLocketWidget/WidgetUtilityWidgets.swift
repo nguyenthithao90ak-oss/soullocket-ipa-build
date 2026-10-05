@@ -102,10 +102,36 @@ struct UtilityWidgetData {
     var calendarEnabled = false
     var calendarPayloadVersion = 0
     var calendarDateKey = ""
+    var calendarUid = ""
+    var calendarHouseId = ""
+    var calendarTimeZone = ""
+    var calendarLocale = "en"
     var animated = false
     var sleepers = [SleepWidgetPerson(), SleepWidgetPerson()]
     var hasEvent = false
     func text(_ key: String) -> String { values[key] ?? "" }
+    func calendarDaysRemaining(at date: Date) -> Int? {
+        guard calendarDateKey.range(of: "^\\d{4}-\\d{2}-\\d{2}$", options: .regularExpression) != nil else { return nil }
+        let parts = calendarDateKey.split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 3, (1900...2100).contains(parts[0]),
+              calendarTimeZone.isEmpty || TimeZone(identifier: calendarTimeZone) != nil else { return nil }
+        var local = Calendar(identifier: .gregorian)
+        local.timeZone = calendarTimeZone.isEmpty ? .current : TimeZone(identifier: calendarTimeZone)!
+        let today = local.dateComponents([.year, .month, .day], from: date)
+        var civil = Calendar(identifier: .gregorian)
+        civil.timeZone = TimeZone(secondsFromGMT: 0)!
+        guard let target = civil.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2])),
+              let start = civil.date(from: today) else { return nil }
+        let check = civil.dateComponents([.year, .month, .day], from: target)
+        guard check.year == parts[0], check.month == parts[1], check.day == parts[2] else { return nil }
+        return civil.dateComponents([.day], from: start, to: target).day
+    }
+    func calendarCountdown(at date: Date) -> String {
+        guard let days = calendarDaysRemaining(at: date), days >= 0 else { return "" }
+        if days == 0 { return text("calendar_today_label") }
+        if days == 1 { return text("calendar_tomorrow_label") }
+        return text("calendar_days_left_template").replacingOccurrences(of: "{days}", with: String(days))
+    }
     static func load() -> UtilityWidgetData {
         let defaults = UserDefaults(suiteName: appGroupID)
         let keys = ["cycle_phase_label", "cycle_next_period_in", "cycle_tip", "cycle_progress",
@@ -123,6 +149,24 @@ struct UtilityWidgetData {
         data.calendarEnabled = defaults?.bool(forKey: "calendar_enabled") ?? false
         data.calendarPayloadVersion = defaults?.integer(forKey: "calendar_payload_version") ?? 0
         data.calendarDateKey = defaults?.string(forKey: "calendar_next_date_key") ?? ""
+        if let snapshotText = defaults?.string(forKey: "calendar_snapshot_v2"),
+           let bytes = snapshotText.data(using: .utf8),
+           let snapshot = (try? JSONSerialization.jsonObject(with: bytes)) as? [String: Any],
+           snapshot["version"] as? Int == 2 {
+            data.calendarPayloadVersion = 2
+            data.calendarEnabled = snapshot["enabled"] as? Bool ?? false
+            data.calendarDateKey = snapshot["dateKey"] as? String ?? ""
+            data.calendarUid = snapshot["uid"] as? String ?? ""
+            data.calendarHouseId = snapshot["houseId"] as? String ?? ""
+            data.calendarTimeZone = snapshot["timeZone"] as? String ?? ""
+            data.calendarLocale = snapshot["locale"] as? String ?? "en"
+            data.values["calendar_today_label"] = snapshot["todayLabel"] as? String ?? ""
+            data.values["calendar_tomorrow_label"] = snapshot["tomorrowLabel"] as? String ?? ""
+            data.values["calendar_days_left_template"] = snapshot["daysLeftTemplate"] as? String ?? ""
+            data.values["calendar_countdown"] = snapshot["countdown"] as? String ?? ""
+            data.values["calendar_next_date"] = snapshot["nextDate"] as? String ?? ""
+            data.values["calendar_events_text"] = snapshot["events"] as? String ?? ""
+        }
         data.animated = defaults?.bool(forKey: "heartAnimated") ?? false
         return data
     }
@@ -135,6 +179,12 @@ struct UtilityWidgetData {
         data.themeKey = "pink"
         data.cycleEnabled = true
         data.calendarEnabled = true
+        data.calendarPayloadVersion = 2
+        let gregorian = Calendar(identifier: .gregorian)
+        let calendarCivil = gregorian.dateComponents([.year, .month, .day], from: tomorrow)
+        data.calendarDateKey = String(format: "%04d-%02d-%02d", calendarCivil.year ?? 2026, calendarCivil.month ?? 1, calendarCivil.day ?? 1)
+        data.calendarUid = "preview-user"
+        data.calendarHouseId = "preview-house"
         data.hasEvent = true
         data.sleepers = [SleepWidgetPerson(name: widgetText("p3_sleep_default_me"), state: "recorded", source: "healthkit", start: Date().timeIntervalSince1970 * 1000 - 30000000, end: Date().timeIntervalSince1970 * 1000 - 600000, duration: 27300000),
             SleepWidgetPerson(name: widgetText("p3_sleep_default_partner"), state: "unknown", source: "unknown")]
@@ -142,6 +192,9 @@ struct UtilityWidgetData {
             "cycle_next_period_in": widgetText("p3_health_next_period"),
             "cycle_next_period_days": "12",
             "cycle_progress": "0.65", "calendar_countdown": widgetText("milestone_tomorrow"),
+            "calendar_today_label": widgetText("milestone_today"),
+            "calendar_tomorrow_label": widgetText("milestone_tomorrow"),
+            "calendar_days_left_template": widgetText("milestone_days_left"),
             "calendar_next_date": DateFormatter.localizedString(from: tomorrow, dateStyle: .medium, timeStyle: .none),
             "calendar_events_text": widgetText("p8_events_title"),
             "se_title": widgetText("home_knim_4f6aeb"), "se_days": "12",
@@ -179,6 +232,10 @@ struct UtilityWidgetProvider: TimelineProvider {
         }
         let midnight = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: now)) ?? now.addingTimeInterval(86400)
         if midnight < now.addingTimeInterval(21600) { dates.append(midnight) }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: data.calendarTimeZone) ?? .current
+        if let zoneMidnight = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)),
+           zoneMidnight < now.addingTimeInterval(21600) { dates.append(zoneMidnight) }
         let entries = dates.sorted().map { UtilityWidgetEntry(date: $0, data: data) }
         completion(Timeline(entries: entries, policy: .atEnd))
     }
@@ -190,12 +247,14 @@ struct WidgetUtilityView: View {
     let date: Date
     @Environment(\.widgetFamily) private var family
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.layoutDirection) private var layoutDirection
     private var small: Bool { family == .systemSmall }
     private var large: Bool { family == .systemLarge }
     private var alternate: Bool { WidgetAppearanceDesign.alternate(at: date, enabled: data.animated && !reduceMotion) }
     private var enabled: Bool {
-        kind == .cycle ? data.cycleEnabled : data.calendarPayloadVersion >= 2 &&
-            data.calendarDateKey.range(of: "^\\d{4}-\\d{2}-\\d{2}$", options: .regularExpression) != nil &&
+        kind == .cycle ? data.cycleEnabled : data.calendarPayloadVersion == 2 &&
+            !data.calendarUid.isEmpty && !data.calendarHouseId.isEmpty &&
+            (data.calendarDaysRemaining(at: date) ?? -1) >= 0 &&
             data.calendarEnabled && !data.text("calendar_next_date").isEmpty
     }
     private var progress: Double {
@@ -232,7 +291,7 @@ struct WidgetUtilityView: View {
                         line(data.text("cycle_tip"), size: 12, lines: 2).opacity(0.8)
                     }
                 } else {
-                    line(data.text("calendar_countdown"), size: large ? 26 : small ? 15 : 20, lines: 2)
+                    line(data.calendarCountdown(at: date), size: large ? 26 : small ? 15 : 20, lines: 2)
                     line(data.text("calendar_next_date"), size: 11).opacity(0.8)
                     line(data.text("calendar_events_text"), size: large ? 14 : 10, lines: large ? 3 : 2)
                 }
@@ -261,6 +320,8 @@ struct WidgetUtilityView: View {
                 .modifier(WidgetUtilityBackground(kind: kind, themeKey: data.themeKey, alternate: alternate))
                 .animation(data.animated && !reduceMotion ? .easeInOut(duration: 0.4) : nil, value: alternate)
                 .widgetURL(URL(string: "soullocket://widget?action=" + kind.action)).privacySensitive()
+                .environment(\.layoutDirection, kind == .calendar ?
+                    (data.calendarLocale.hasPrefix("ar") ? .rightToLeft : .leftToRight) : layoutDirection)
         }
     }
 }

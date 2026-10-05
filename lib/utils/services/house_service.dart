@@ -33,6 +33,12 @@ class HouseCreationOtpRequiredException implements Exception {
 }
 
 class HouseService {
+  HouseService({
+    DatabaseReference? databaseRef,
+    firebase_auth.FirebaseAuth? firebaseAuth,
+  }) : _dbRef = databaseRef ?? FirebaseDatabase.instance.ref(),
+       _auth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance;
+
   static DateTime? _lastFetchTime;
   static Map<String, dynamic>? _cachedSettings;
   static String? _lastFirestoreMembershipSyncKey;
@@ -45,8 +51,8 @@ class HouseService {
 
   static const String _authUidPrefsKey = 'il_auth_uid';
 
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
-  final firebase_auth.FirebaseAuth _auth = firebase_auth.FirebaseAuth.instance;
+  final DatabaseReference _dbRef;
+  final firebase_auth.FirebaseAuth _auth;
 
   Map<String, dynamic>? _asStringDynamicMap(Object? raw) {
     if (raw is! Map) {
@@ -655,34 +661,28 @@ class HouseService {
     final prefs =
         OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    await SecureStorageService.instance.migrateFromPrefs(
-      SecureStorageService.keyHouseId,
-      prefs.getString('il_house_id'),
-    );
-    await SecureStorageService.instance.migrateFromPrefs(
-      SecureStorageService.keyAuthUid,
-      prefs.getString(_authUidPrefsKey),
-    );
-    final cachedHouseId =
-        (await SecureStorageService.instance.read(
-          SecureStorageService.keyHouseId,
-        ))?.trim() ??
-        '';
-    final cachedAuthUid =
-        (await SecureStorageService.instance.read(
-          SecureStorageService.keyAuthUid,
-        ))?.trim() ??
-        '';
+    if (_auth.currentUser?.uid != user.uid) return null;
+    final prefsHouseId = prefs.getString('il_house_id')?.trim() ?? '';
+    final prefsAuthUid = prefs.getString(_authUidPrefsKey)?.trim() ?? '';
+    final usePrefs = prefsHouseId.isNotEmpty && prefsAuthUid == user.uid;
+    final cachedHouseId = usePrefs
+        ? prefsHouseId
+        : (await SecureStorageService.instance.read(
+                SecureStorageService.keyHouseId,
+              ))?.trim() ??
+              '';
+    final cachedAuthUid = usePrefs
+        ? prefsAuthUid
+        : (await SecureStorageService.instance.read(
+                SecureStorageService.keyAuthUid,
+              ))?.trim() ??
+              '';
+    if (_auth.currentUser?.uid != user.uid) return null;
 
     if (cachedHouseId.isNotEmpty) {
       if (cachedAuthUid != user.uid) {
-        await SecureStorageService.instance.delete(
-          SecureStorageService.keyHouseId,
-        );
-        await SecureStorageService.instance.delete(
-          SecureStorageService.keyRole,
-        );
         await prefs.remove('il_house_id');
+        if (_auth.currentUser?.uid != user.uid) return null;
         await prefs.remove('il_role');
       } else if (preferFresh) {
         final fresh = await _fetchAndCacheHouseId(
@@ -690,12 +690,18 @@ class HouseService {
           prefs,
           validateMembership: true,
         );
+        if (_auth.currentUser?.uid != user.uid) return null;
         if (fresh != null && fresh.isNotEmpty) {
           _syncHouseIdToFirestore(user.uid, fresh).catchError((_) => null);
           return fresh;
         }
 
-        if (await _validateHouseMembership(user.uid, cachedHouseId)) {
+        final isMember = await _validateHouseMembership(
+          user.uid,
+          cachedHouseId,
+        );
+        if (_auth.currentUser?.uid != user.uid) return null;
+        if (isMember) {
           _syncHouseIdToFirestore(
             user.uid,
             cachedHouseId,
@@ -706,6 +712,7 @@ class HouseService {
         await SecureStorageService.instance.delete(
           SecureStorageService.keyHouseId,
         );
+        if (_auth.currentUser?.uid != user.uid) return null;
         await prefs.remove('il_house_id');
       } else {
         final now = DateTime.now();
@@ -725,6 +732,7 @@ class HouseService {
       }
     }
 
+    if (_auth.currentUser?.uid != user.uid) return null;
     final resolved = await _fetchAndCacheHouseId(
       user.uid,
       prefs,
@@ -766,6 +774,7 @@ class HouseService {
             .get()
             .timeout(const Duration(seconds: 4)),
       ]);
+      if (_auth.currentUser?.uid != uid) return null;
 
       final primarySnap = results[0];
       final primaryValue = primarySnap.value?.toString().trim();
@@ -774,16 +783,9 @@ class HouseService {
           primaryValue.isNotEmpty &&
           (!validateMembership ||
               await _validateHouseMembership(uid, primaryValue))) {
-        await SecureStorageService.instance.write(
-          SecureStorageService.keyHouseId,
-          primaryValue,
-        );
-        await SecureStorageService.instance.write(
-          SecureStorageService.keyAuthUid,
-          uid,
-        );
-        await prefs.remove('il_house_id');
-        await prefs.remove(_authUidPrefsKey);
+        if (!await _cacheHouseIdForSession(uid, primaryValue, prefs)) {
+          return null;
+        }
         _syncHouseIdToFirestore(uid, primaryValue).catchError((_) => null);
         return primaryValue;
       }
@@ -795,17 +797,11 @@ class HouseService {
           legacyValue.isNotEmpty &&
           (!validateMembership ||
               await _validateHouseMembership(uid, legacyValue))) {
+        if (_auth.currentUser?.uid != uid) return null;
         await _dbRef.child('users/$uid').update({'houseId': legacyValue});
-        await SecureStorageService.instance.write(
-          SecureStorageService.keyHouseId,
-          legacyValue,
-        );
-        await SecureStorageService.instance.write(
-          SecureStorageService.keyAuthUid,
-          uid,
-        );
-        await prefs.remove('il_house_id');
-        await prefs.remove(_authUidPrefsKey);
+        if (!await _cacheHouseIdForSession(uid, legacyValue, prefs)) {
+          return null;
+        }
         _syncHouseIdToFirestore(uid, legacyValue).catchError((_) => null);
         return legacyValue;
       }
@@ -817,6 +813,7 @@ class HouseService {
             .doc(uid)
             .get()
             .timeout(const Duration(seconds: 4));
+        if (_auth.currentUser?.uid != uid) return null;
         if (firestoreDoc.exists && firestoreDoc.data() != null) {
           final fsHouseId =
               (firestoreDoc.data()!['houseId'] ??
@@ -827,17 +824,11 @@ class HouseService {
               fsHouseId.isNotEmpty &&
               (!validateMembership ||
                   await _validateHouseMembership(uid, fsHouseId))) {
+            if (_auth.currentUser?.uid != uid) return null;
             await _dbRef.child('users/$uid').update({'houseId': fsHouseId});
-            await SecureStorageService.instance.write(
-              SecureStorageService.keyHouseId,
-              fsHouseId,
-            );
-            await SecureStorageService.instance.write(
-              SecureStorageService.keyAuthUid,
-              uid,
-            );
-            await prefs.remove('il_house_id');
-            await prefs.remove(_authUidPrefsKey);
+            if (!await _cacheHouseIdForSession(uid, fsHouseId, prefs)) {
+              return null;
+            }
             return fsHouseId;
           }
         }
@@ -853,20 +844,14 @@ class HouseService {
             .limitToFirst(1)
             .get()
             .timeout(const Duration(seconds: 4));
+        if (_auth.currentUser?.uid != uid) return null;
         if (ownerQuerySnap.exists && ownerQuerySnap.children.isNotEmpty) {
           final foundHouseId = ownerQuerySnap.children.first.key?.trim() ?? '';
           if (foundHouseId.isNotEmpty) {
             await _dbRef.child('users/$uid').update({'houseId': foundHouseId});
-            await SecureStorageService.instance.write(
-              SecureStorageService.keyHouseId,
-              foundHouseId,
-            );
-            await SecureStorageService.instance.write(
-              SecureStorageService.keyAuthUid,
-              uid,
-            );
-            await prefs.remove('il_house_id');
-            await prefs.remove(_authUidPrefsKey);
+            if (!await _cacheHouseIdForSession(uid, foundHouseId, prefs)) {
+              return null;
+            }
             return foundHouseId;
           }
         }
@@ -881,15 +866,22 @@ class HouseService {
       );
     }
 
+    if (_auth.currentUser?.uid != uid) return null;
+    final fallbackUid = await SecureStorageService.instance.read(
+      SecureStorageService.keyAuthUid,
+    );
     final fallback =
         (await SecureStorageService.instance.read(
           SecureStorageService.keyHouseId,
         ))?.trim() ??
         '';
-    if (fallback.isEmpty) {
+    if (fallback.isEmpty ||
+        fallbackUid != uid ||
+        _auth.currentUser?.uid != uid) {
       return null;
     }
     if (!validateMembership || await _validateHouseMembership(uid, fallback)) {
+      if (_auth.currentUser?.uid != uid) return null;
       await SecureStorageService.instance.write(
         SecureStorageService.keyAuthUid,
         uid,
@@ -898,6 +890,28 @@ class HouseService {
       return fallback;
     }
     return null;
+  }
+
+  Future<bool> _cacheHouseIdForSession(
+    String uid,
+    String houseId,
+    SharedPreferences prefs,
+  ) async {
+    if (_auth.currentUser?.uid != uid) return false;
+    await SecureStorageService.instance.write(
+      SecureStorageService.keyHouseId,
+      houseId,
+    );
+    if (_auth.currentUser?.uid != uid) return false;
+    await SecureStorageService.instance.write(
+      SecureStorageService.keyAuthUid,
+      uid,
+    );
+    if (_auth.currentUser?.uid != uid) return false;
+    await prefs.remove('il_house_id');
+    if (_auth.currentUser?.uid != uid) return false;
+    await prefs.remove(_authUidPrefsKey);
+    return _auth.currentUser?.uid == uid;
   }
 
   Future<bool> _validateHouseMembership(String uid, String houseId) async {

@@ -1,17 +1,17 @@
 /* Widget extension: cùng bản dịch với assets/i18n/de.json. */
 "p3_health_days_remaining" = "days remaining";
 "sleep_state_unknown" = "Noch keine Daten";
-"sleep_state_disabled" = "Aufzeichnung aus";
+"sleep_state_disabled" = "Schlaftracking ist aus";
 "sleep_state_estimated" = "Ruhst möglicherweise";
 "sleep_state_manual" = "Ruhe wird erfasst";
 "sleep_state_recorded" = "Erfasster Schlaf";
 "sleep_source_estimate" = "Bildschirm-Schätzung";
 "sleep_source_manual" = "Selbst erfasst";
-"sleep_manual_start" = "Ruhe starten";
-"sleep_manual_stop" = "Ruhe beenden";
+"sleep_manual_start" = "Ich gehe schlafen";
+"sleep_manual_stop" = "Ich bin aufgewacht";
 "sleep_tracking_failed" = "Aktualisierung fehlgeschlagen. Bitte erneut versuchen.";
-"sleep_tracking_info_ios" = "Apple Health liefert erfassten Schlaf, keine Live-Erkennung. Beim Aktivieren werden Daten mit deinem Partner geteilt.";
-"sleep_tracking_info_android" = "Ein ausgeschalteter Bildschirm ist nur eine Schätzung, kein Schlafnachweis. Ruhezeiten können selbst erfasst werden.";
+"sleep_tracking_info_ios" = "Importiert in Apple Health aufgezeichneten Schlaf. Erkennt nicht, ob du gerade schläfst.";
+"sleep_tracking_info_android" = "Die App schätzt Schlaf, wenn der Bildschirm nachts lange aus bleibt. Das ist keine Schlafmessung.";
 "sleep_tracking_consent" = "Aufzeichnung aktivieren und Ruhezeiten mit deinem Partner teilen?";
 "sleep_sync_hint" = "App zum Aktualisieren öffnen";
 "sleep_duration" = "{hours} Std. {minutes} Min.";
@@ -40,3 +40,5 @@
 "widget_title_sleep" = "Couple Sleep";
 "p3_health_phase_period" = "Period phase";
 "p3_health_next_period" = "until your next period";
+"milestone_today" = "📍 Heute";
+"milestone_days_left" = "🌸 {days} verbleibende Tage";

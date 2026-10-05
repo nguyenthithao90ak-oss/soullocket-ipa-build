@@ -9,6 +9,8 @@ import '../../core/sl_page_physics.dart';
 import '../../widgets/living_sticker_scene.dart';
 import '../../utils/services/holiday_service.dart';
 import '../../utils/calendar/holiday_occurrence_resolver.dart';
+import '../../utils/calendar/calendar_time_zone.dart';
+import '../../utils/calendar/calendar_civil_date.dart';
 import 'milestone_sticker_gallery_screen.dart';
 
 class MilestoneEvent {
@@ -51,6 +53,11 @@ class _MilestonesScreenState extends State<MilestonesScreen>
   List<MilestoneEvent> _upcomingList = [];
   List<MilestoneEvent> _pastList = [];
 
+  DateTime get _calendarNow => CalendarTimeZone.fromMilliseconds(
+    DateTime.now().millisecondsSinceEpoch,
+    MarketService.instance.preferences.timeZoneId,
+  );
+
   @override
   void initState() {
     super.initState();
@@ -80,11 +87,11 @@ class _MilestonesScreenState extends State<MilestonesScreen>
       0,
     ).day;
     final safeDay = preferredDay > lastDay ? lastDay : preferredDay;
-    return DateTime(normalizedMonth.year, normalizedMonth.month, safeDay);
+    return DateTime.utc(normalizedMonth.year, normalizedMonth.month, safeDay);
   }
 
   void _calculateEvents() {
-    final today = DateTime.now();
+    final today = _calendarNow;
     final todayMidnight = DateTime(today.year, today.month, today.day);
     final List<MilestoneEvent> allEvents = [];
     DateTime? startDt;
@@ -101,7 +108,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
 
     // 1. Cột mốc kỷ niệm ngày yêu
     if (startDt != null) {
-      final startDtMidnight = DateTime(
+      final startDtMidnight = DateTime.utc(
         startDt.year,
         startDt.month,
         startDt.day,
@@ -129,7 +136,10 @@ class _MilestonesScreenState extends State<MilestonesScreen>
       ];
       for (final m in milestoneDays) {
         final milestoneDate = startDtMidnight.add(Duration(days: m - 1));
-        final diff = milestoneDate.difference(todayMidnight).inDays;
+        final diff = CalendarCivilDate.daysBetween(
+          todayMidnight,
+          milestoneDate,
+        );
         allEvents.add(
           MilestoneEvent(
             title: L10nService().format('milestone_anniversary_days', {
@@ -151,7 +161,10 @@ class _MilestonesScreenState extends State<MilestonesScreen>
           startDtMidnight.month + m,
           startDtMidnight.day,
         );
-        final diff = milestoneDate.difference(todayMidnight).inDays;
+        final diff = CalendarCivilDate.daysBetween(
+          todayMidnight,
+          milestoneDate,
+        );
         final title = L10nService().format('p4_milestone_anniversary_months', {
           'months': m.toString(),
         });
@@ -173,7 +186,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
           startDtMidnight.month,
           startDtMidnight.day,
         );
-        final diff = annivDate.difference(todayMidnight).inDays;
+        final diff = CalendarCivilDate.daysBetween(todayMidnight, annivDate);
         allEvents.add(
           MilestoneEvent(
             title: L10nService().format('milestone_anniversary_years', {
@@ -213,7 +226,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
             if (!isLeap) day = 28;
           }
           final bdayDate = DateTime(targetYear, bday.month, day);
-          final diff = bdayDate.difference(todayMidnight).inDays;
+          final diff = CalendarCivilDate.daysBetween(todayMidnight, bdayDate);
           allEvents.add(
             MilestoneEvent(
               title: L10nService().format('milestone_birthday', {'name': name}),
@@ -270,7 +283,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
       if (year == null || month == null || day == null) continue;
 
       final eventDate = DateTime(year, month, day);
-      final diff = eventDate.difference(todayMidnight).inDays;
+      final diff = CalendarCivilDate.daysBetween(todayMidnight, eventDate);
       allEvents.add(
         MilestoneEvent(
           title: evTitle,
@@ -344,7 +357,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
 
   @override
   Widget build(BuildContext context) {
-    final today = DateTime.now();
+    final today = _calendarNow;
     final todayMidnight = DateTime(today.year, today.month, today.day);
 
     int daysLove = 0;
@@ -356,7 +369,10 @@ class _MilestonesScreenState extends State<MilestonesScreen>
           startDt.month,
           startDt.day,
         );
-        daysLove = todayMidnight.difference(startDtMidnight).inDays;
+        daysLove = CalendarCivilDate.daysBetween(
+          startDtMidnight,
+          todayMidnight,
+        );
       } catch (error) {
         debugPrint(
           '[SuppressedError] lib/views/home/milestones_screen.dart: $error',

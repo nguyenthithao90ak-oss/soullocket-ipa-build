@@ -116,7 +116,7 @@ class _RewardProExchangeState extends State<RewardProExchange> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : Text(
-                      '${context.tr('redeem')} · ${context.tr(_selected.titleKey)}',
+                    '${context.tr('reward_store_redeem')} · ${context.tr(_selected.titleKey)}',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,

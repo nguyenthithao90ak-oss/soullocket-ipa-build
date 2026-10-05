@@ -1,17 +1,17 @@
 /* Widget extension: cùng bản dịch với assets/i18n/ko.json. */
 "p3_health_days_remaining" = "days remaining";
 "sleep_state_unknown" = "아직 데이터 없음";
-"sleep_state_disabled" = "기록 꺼짐";
+"sleep_state_disabled" = "수면 추적이 꺼져 있어요";
 "sleep_state_estimated" = "휴식 중일 수 있음";
 "sleep_state_manual" = "휴식 기록 중";
 "sleep_state_recorded" = "기록된 수면";
 "sleep_source_estimate" = "화면 기반 추정";
 "sleep_source_manual" = "직접 기록";
-"sleep_manual_start" = "휴식 시작";
-"sleep_manual_stop" = "휴식 종료";
+"sleep_manual_start" = "이제 잘게요";
+"sleep_manual_stop" = "일어났어요";
 "sleep_tracking_failed" = "업데이트하지 못했습니다. 다시 시도하세요.";
-"sleep_tracking_info_ios" = "Apple Health는 실시간 감지가 아닌 수면 기록을 제공합니다. 활성화하면 파트너와 공유됩니다.";
-"sleep_tracking_info_android" = "화면 꺼짐은 추정일 뿐 수면의 증거가 아닙니다. 휴식 시작과 종료를 직접 기록할 수 있습니다.";
+"sleep_tracking_info_ios" = "Apple Health에 이미 기록된 수면을 가져와요. 지금 자고 있는지는 알 수 없어요.";
+"sleep_tracking_info_android" = "밤에 화면이 오랫동안 꺼져 있으면 수면을 추정해요. 실제 수면을 측정하는 것은 아니에요.";
 "sleep_tracking_consent" = "기록을 켜고 휴식 상태와 시간을 파트너와 공유할까요?";
 "sleep_sync_hint" = "앱을 열어 업데이트";
 "sleep_duration" = "{hours}시간 {minutes}분";
@@ -40,3 +40,5 @@
 "widget_title_sleep" = "Couple Sleep";
 "p3_health_phase_period" = "Period phase";
 "p3_health_next_period" = "until your next period";
+"milestone_today" = "📍 오늘";
+"milestone_days_left" = "🌸 {days}일 남음";

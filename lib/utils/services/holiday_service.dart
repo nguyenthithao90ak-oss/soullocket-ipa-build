@@ -3,6 +3,7 @@ import 'l10n_service.dart';
 import 'market_service.dart';
 import '../../core/constants/market_catalog.dart';
 import '../calendar/holiday_occurrence_resolver.dart';
+import '../calendar/holiday_catalog_snapshot.dart';
 
 export '../calendar/holiday_occurrence_resolver.dart' show PresetHoliday;
 
@@ -23,6 +24,12 @@ class HolidayService {
       defaultName: 'Tết Dương Lịch 🎆',
       countries: ['ALL'],
       stickerKey: 'holiday_new_year',
+      category: 'cultural',
+      sourceReferences: [
+        'https://www.cs.ny.gov/attendance_leave/2025_legal_holidays.cfm',
+      ],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
     ),
     PresetHoliday(
       id: 'valentine',
@@ -32,6 +39,12 @@ class HolidayService {
       defaultName: 'Lễ Tình Nhân (Valentine) 💝',
       countries: ['ALL'],
       stickerKey: 'holiday_valentine',
+      category: 'couple_cultural',
+      sourceReferences: [
+        'https://web.mit.edu/jpnet/holidays/Feb/valentine.shtml',
+      ],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
     ),
     PresetHoliday(
       id: 'womens_day',
@@ -41,6 +54,10 @@ class HolidayService {
       defaultName: 'Quốc tế Phụ nữ 💐',
       countries: ['ALL'],
       stickerKey: 'holiday_international_women',
+      category: 'international_observance',
+      sourceReferences: ['https://www.unesco.org/en/days/women'],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
     ),
     PresetHoliday(
       id: 'white_valentine',
@@ -50,6 +67,12 @@ class HolidayService {
       defaultName: 'Valentine Trắng 🤍',
       countries: ['ALL'],
       stickerKey: 'holiday_white_valentine',
+      category: 'couple_cultural',
+      sourceReferences: [
+        'https://web.mit.edu/jpnet/holidays/Mar/whiteday.shtml',
+      ],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
     ),
     PresetHoliday(
       id: 'halloween',
@@ -59,6 +82,12 @@ class HolidayService {
       defaultName: 'Lễ Halloween 🎃',
       countries: ['ALL'],
       stickerKey: 'holiday_halloween',
+      category: 'cultural',
+      sourceReferences: [
+        'https://americanart.si.edu/blog/eye-level/2010/28/881/final-chance-ghosts-chance',
+      ],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
     ),
     PresetHoliday(
       id: 'christmas_eve',
@@ -68,6 +97,12 @@ class HolidayService {
       defaultName: 'Đêm Giáng sinh 🎄',
       countries: ['ALL'],
       stickerKey: 'holiday_christmas_eve',
+      category: 'religious',
+      sourceReferences: [
+        'https://www.vatican.va/content/francesco/en/angelus/2023/documents/20231224-angelus.html',
+      ],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
     ),
     PresetHoliday(
       id: 'christmas',
@@ -77,6 +112,12 @@ class HolidayService {
       defaultName: 'Lễ Giáng sinh ❄️',
       countries: ['ALL'],
       stickerKey: 'holiday_christmas_day',
+      category: 'religious',
+      sourceReferences: [
+        'https://www.cs.ny.gov/attendance_leave/2025_legal_holidays.cfm',
+      ],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
     ),
     PresetHoliday(
       id: 'new_years_eve',
@@ -86,6 +127,10 @@ class HolidayService {
       defaultName: 'Đêm Giao thừa ✨',
       countries: ['ALL'],
       stickerKey: 'holiday_new_year_eve',
+      category: 'cultural',
+      sourceReferences: ['https://www.timessquarenyc.org/nye/nye-faq'],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
     ),
 
     // ── 2. VIỆT NAM (VN) ────────────────────────────────────────────────
@@ -97,6 +142,12 @@ class HolidayService {
       defaultName: 'Ngày Phụ nữ Việt Nam 🌸',
       countries: ['VN'],
       stickerKey: 'holiday_vietnamese_women',
+      category: 'international_observance',
+      sourceReferences: [
+        'https://laichau.gov.vn/upload/2000066/20221003/y-nghia-ngay-20-thang-10_c1225.pdf',
+      ],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
     ),
 
     // ── 3. HÀN QUỐC (KR) ────────────────────────────────────────────
@@ -108,6 +159,10 @@ class HolidayService {
       defaultName: 'Rose Day (Ngày Hoa Hồng) 🌹',
       countries: ['KR'],
       stickerKey: 'holiday_kr_rose_day',
+      category: 'couple_cultural',
+      sourceReferences: ['https://www.yna.co.kr/view/AKR20170616154500797'],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
     ),
     PresetHoliday(
       id: 'kr_kiss_day',
@@ -117,6 +172,10 @@ class HolidayService {
       defaultName: 'Kiss Day (Ngày Trao Nụ Hôn) 💋',
       countries: ['KR'],
       stickerKey: 'holiday_kr_kiss_day',
+      category: 'couple_cultural',
+      sourceReferences: ['https://www.yna.co.kr/view/AKR20170616154500797'],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
     ),
     PresetHoliday(
       id: 'kr_silver_day',
@@ -126,6 +185,10 @@ class HolidayService {
       defaultName: 'Silver Day (Ngày Nhẫn Bạc) 💍',
       countries: ['KR'],
       stickerKey: 'holiday_kr_silver_day',
+      category: 'couple_cultural',
+      sourceReferences: ['https://www.yna.co.kr/view/AKR20170616154500797'],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
     ),
     PresetHoliday(
       id: 'kr_wine_day',
@@ -135,6 +198,10 @@ class HolidayService {
       defaultName: 'Wine Day (Ngày Rượu Vang Hẹn Hò) 🍷',
       countries: ['KR'],
       stickerKey: 'holiday_kr_wine_day',
+      category: 'couple_cultural',
+      sourceReferences: ['https://www.yna.co.kr/view/AKR20170616154500797'],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
     ),
     PresetHoliday(
       id: 'kr_pepero_day',
@@ -144,6 +211,10 @@ class HolidayService {
       defaultName: 'Pepero Day (Ngày Bánh Pepero) 🍫',
       countries: ['KR'],
       stickerKey: 'holiday_kr_pepero_day',
+      category: 'couple_cultural',
+      sourceReferences: ['https://blog.lotte.co.kr/45122'],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
     ),
     PresetHoliday(
       id: 'kr_hug_day',
@@ -153,6 +224,10 @@ class HolidayService {
       defaultName: 'Hug Day (Ngày Ôm Nhau Ấm Áp) 🤗',
       countries: ['KR'],
       stickerKey: 'holiday_kr_hug_day',
+      category: 'couple_cultural',
+      sourceReferences: ['https://www.yna.co.kr/view/AKR20170616154500797'],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
     ),
 
     // ── 4. NHẬT BẢN (JP) ────────────────────────────────────────────
@@ -164,6 +239,12 @@ class HolidayService {
       defaultName: 'Lễ Thất Tịch Tanabata 🎋✨',
       countries: ['JP'],
       stickerKey: 'holiday_jp_tanabata',
+      category: 'couple_cultural',
+      sourceReferences: [
+        'https://www.gotokyo.org/en/story/guide/july/index.html',
+      ],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
     ),
     PresetHoliday(
       id: 'jp_good_couples_day',
@@ -173,6 +254,10 @@ class HolidayService {
       defaultName: 'Ngày Vợ Chồng Hạnh Phúc (Ii Fufu no Hi) 💑',
       countries: ['JP'],
       stickerKey: 'holiday_jp_good_couples_day',
+      category: 'couple_cultural',
+      sourceReferences: ['https://fufu1122.com/'],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
     ),
 
     // ── 5. TRUNG QUỐC & ĐÀI LOAN (CN / TW) ──────────────────────────
@@ -184,6 +269,10 @@ class HolidayService {
       defaultName: 'Ngày Tình Nhân 520 (Anh Yêu Em) 💖',
       countries: ['CN', 'TW'],
       stickerKey: 'holiday_cn_520_love_day',
+      category: 'couple_cultural',
+      sourceReferences: ['https://www.bjwmb.gov.cn/wmpl/10127378.html'],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
     ),
     PresetHoliday(
       id: 'cn_qixi',
@@ -191,9 +280,9 @@ class HolidayService {
       day: 19,
       i18nKey: 'holiday_cn_qixi',
       defaultName: 'Lễ Thất Tịch (Valentine Phương Đông) 🌌🎋',
-      countries: ['CN', 'TW'],
+      countries: ['CN', 'TW', 'HK', 'MO'],
       stickerKey: 'holiday_cn_qixi',
-      // HKO: ngày 7 tháng 7 âm lịch, bảng chuyển đổi 2025–2030.
+      // HKO: ngày 7 tháng 7 âm lịch, bảng chuyển đổi 2025–2035.
       // https://www.hko.gov.hk/en/gts/time/conversion1_text.htm
       datesByYear: {
         2025: (8, 29),
@@ -202,11 +291,26 @@ class HolidayService {
         2028: (8, 26),
         2029: (8, 16),
         2030: (8, 5),
+        2031: (8, 24),
+        2032: (8, 12),
+        2033: (8, 1),
+        2034: (8, 20),
+        2035: (8, 10),
       },
       sourceReferences: [
-        'https://www.hko.gov.hk/en/gts/time/conversion1_text.htm',
+        'https://www.hko.gov.hk/en/gts/time/calendar/text/files/T2025e.txt',
+        'https://www.hko.gov.hk/en/gts/time/calendar/text/files/T2026e.txt',
+        'https://www.hko.gov.hk/en/gts/time/calendar/text/files/T2027e.txt',
+        'https://www.hko.gov.hk/en/gts/time/calendar/text/files/T2028e.txt',
+        'https://www.hko.gov.hk/en/gts/time/calendar/text/files/T2029e.txt',
+        'https://www.hko.gov.hk/en/gts/time/calendar/text/files/T2030e.txt',
+        'https://www.hko.gov.hk/en/gts/time/calendar/text/files/T2031e.txt',
+        'https://www.hko.gov.hk/en/gts/time/calendar/text/files/T2032e.txt',
+        'https://www.hko.gov.hk/en/gts/time/calendar/text/files/T2033e.txt',
+        'https://www.hko.gov.hk/en/gts/time/calendar/text/files/T2034e.txt',
+        'https://www.hko.gov.hk/en/gts/time/calendar/text/files/T2035e.txt',
       ],
-      verifiedAt: '2026-10-03',
+      verifiedAt: '2026-10-04',
       verificationStatus: 'verified',
     ),
 
@@ -239,6 +343,12 @@ class HolidayService {
       defaultName: 'Ngày Thánh Jordi (Hoa Hồng & Sách) 🌹📚',
       countries: ['ES'],
       stickerKey: 'holiday_es_sant_jordi',
+      category: 'couple_cultural',
+      sourceReferences: ['https://patrimoni.gencat.cat/en/node/1421'],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
+      subdivisionCodes: ['ES-CT'],
+      selectionPolicy: 'optional',
     ),
 
     // ── 8. BRAZIL (BR) ─────────────────────────────────────────────
@@ -250,6 +360,12 @@ class HolidayService {
       defaultName: 'Ngày Tình Nhân Brazil (Dia dos Namorados) 💘',
       countries: ['BR'],
       stickerKey: 'holiday_br_namorados',
+      category: 'couple_cultural',
+      sourceReferences: [
+        'https://www.ba.gov.br/comunicacao/noticias/2025-06/369651/dia-dos-namorados-procon-protege-direitos-de-apaixonados-baianos-em',
+      ],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
     ),
 
     // ── 9. NGA (RU) ─────────────────────────────────────────────────────
@@ -261,8 +377,19 @@ class HolidayService {
       defaultName: 'Ngày Tình Yêu & Lòng Thủy Chung 🌼❤️',
       countries: ['RU'],
       stickerKey: 'holiday_ru_family_love_day',
+      category: 'couple_cultural',
+      sourceReferences: [
+        'https://ethnomuseum.ru/collections/ethnocalendar/july/vserossijskij-den-semi-lyubvi-i-vernosti/',
+      ],
+      verifiedAt: '2026-10-04',
+      verificationStatus: 'verified',
     ),
   ];
+
+  static const datasetVersion = '2026.10.04.1';
+  static final catalogStore = HolidayCatalogStore(
+    HolidayCatalogSnapshot(version: datasetVersion, holidays: allHolidays),
+  );
 
   /// Xác định người dùng có thuộc ngữ cảnh Việt Nam hay không.
   static bool isVietnamUser({Locale? currentLocale}) {
@@ -300,7 +427,7 @@ class HolidayService {
           .holidayPacks(languageCode: language)
           .toSet();
     }
-    return allHolidays
+    return catalogStore.current.holidays
         .where(
           (holiday) =>
               (!holiday.isVietnamOnly || language == 'vi') &&

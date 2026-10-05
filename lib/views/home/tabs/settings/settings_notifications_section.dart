@@ -83,6 +83,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
           });
           await _persistNotificationPrefs();
           unawaited(SoulEventReminderService.instance.refresh());
+          unawaited(CalendarReminderService.instance.refresh());
           _showToast(permissionRequiredMessage, success: false);
           _showDisableNotificationsOutsideAppNotice();
           return;
@@ -91,6 +92,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
 
       await _persistNotificationPrefs();
       unawaited(SoulEventReminderService.instance.refresh());
+      unawaited(CalendarReminderService.instance.refresh());
       await _syncNotificationTopics(value);
       if (value) {
         await NotificationService().syncDailySleepReminder();

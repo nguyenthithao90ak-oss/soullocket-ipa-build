@@ -1,17 +1,17 @@
 /* Widget extension: cùng bản dịch với assets/i18n/fr.json. */
 "p3_health_days_remaining" = "days remaining";
 "sleep_state_unknown" = "Pas encore de données";
-"sleep_state_disabled" = "Suivi désactivé";
+"sleep_state_disabled" = "Suivi du sommeil désactivé";
 "sleep_state_estimated" = "Repos possible";
 "sleep_state_manual" = "Repos en cours";
 "sleep_state_recorded" = "Sommeil enregistré";
 "sleep_source_estimate" = "Estimation écran";
 "sleep_source_manual" = "Saisie personnelle";
-"sleep_manual_start" = "Commencer le repos";
-"sleep_manual_stop" = "Terminer le repos";
+"sleep_manual_start" = "Je vais dormir";
+"sleep_manual_stop" = "Je suis réveillé·e";
 "sleep_tracking_failed" = "Échec de mise à jour. Réessayez.";
-"sleep_tracking_info_ios" = "Apple Health fournit du sommeil enregistré, sans détection en direct. Activer partage ces données avec votre partenaire.";
-"sleep_tracking_info_android" = "Un écran éteint ne prouve pas le sommeil. Vous pouvez saisir le début et la fin du repos.";
+"sleep_tracking_info_ios" = "Importe le sommeil déjà enregistré dans Apple Health. Ne sait pas si vous dormez en ce moment.";
+"sleep_tracking_info_android" = "L’app estime le sommeil si l’écran reste éteint longtemps la nuit. Ce n’est pas une mesure du sommeil.";
 "sleep_tracking_consent" = "Activer le suivi et partager vos heures de repos avec votre partenaire ?";
 "sleep_sync_hint" = "Ouvrir pour actualiser";
 "sleep_duration" = "{hours} h {minutes} min";
@@ -40,3 +40,5 @@
 "widget_title_sleep" = "Couple Sleep";
 "p3_health_phase_period" = "Period phase";
 "p3_health_next_period" = "until your next period";
+"milestone_today" = "📍Aujourd'hui";
+"milestone_days_left" = "🌸 {days} jours restants";

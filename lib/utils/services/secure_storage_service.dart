@@ -13,6 +13,17 @@ class SecureStorageService {
 
   SecureStorageService._internal();
 
+  Future<void> _pendingOperations = Future<void>.value();
+
+  Future<Result> _serialize<Result>(Future<Result> Function() operation) {
+    final pending = _pendingOperations.then((_) => operation());
+    _pendingOperations = pending.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace _) {},
+    );
+    return pending;
+  }
+
   // Keys for sensitive data
   static const String keyAuthToken = 'il_auth_token';
   static const String keyUserPin = 'il_custom_lock';
@@ -23,9 +34,9 @@ class SecureStorageService {
   static const String keyRelMode = 'il_rel_mode';
   Future<void> write(String key, String value) async {
     try {
-      await _storage
-          .write(key: key, value: value)
-          .timeout(const Duration(seconds: 2));
+      await _serialize(
+        () => _storage.write(key: key, value: value),
+      ).timeout(const Duration(seconds: 2));
     } catch (error) {
       debugPrint('[SecureStorage] write thất bại: $error');
     }
@@ -33,7 +44,9 @@ class SecureStorageService {
 
   Future<String?> read(String key) async {
     try {
-      return await _storage.read(key: key).timeout(const Duration(seconds: 2));
+      return await _serialize(
+        () => _storage.read(key: key),
+      ).timeout(const Duration(seconds: 2));
     } catch (error) {
       debugPrint('[SecureStorage] read thất bại: $error');
       return null;
@@ -42,7 +55,9 @@ class SecureStorageService {
 
   Future<void> delete(String key) async {
     try {
-      await _storage.delete(key: key).timeout(const Duration(seconds: 2));
+      await _serialize(
+        () => _storage.delete(key: key),
+      ).timeout(const Duration(seconds: 2));
     } catch (error) {
       debugPrint('[SecureStorage] delete thất bại: $error');
     }
@@ -50,11 +65,15 @@ class SecureStorageService {
 
   Future<void> deleteAll() async {
     try {
-      await _storage.deleteAll().timeout(const Duration(seconds: 2));
+      await _serialize(
+        () => _storage.deleteAll(),
+      ).timeout(const Duration(seconds: 2));
     } catch (error) {
       debugPrint('[SecureStorage] deleteAll thất bại: $error');
     }
   }
+
+  Future<void> clearForSignOut() => _serialize(() => _storage.deleteAll());
 
   /// Migrates a key from SharedPreferences to SecureStorage if it exists
   Future<void> migrateFromPrefs(String key, String? value) async {

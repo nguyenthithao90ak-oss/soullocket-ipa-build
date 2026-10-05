@@ -6,6 +6,7 @@ import 'package:soullocket_app/utils/services/companion_journey_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
 import 'package:soullocket_app/views/utilities/reward_store_screen.dart';
+import 'package:soullocket_app/views/utilities/widgets/keepsake_design.dart';
 import 'home_companion_motion.dart';
 import 'home_companion_painter.dart';
 
@@ -41,14 +42,61 @@ class _HomeCompanionJourneyCardState extends State<HomeCompanionJourneyCard> {
         final state = service.state;
         if (state?.enabled == false) return const SizedBox.shrink();
         return Card(
-          margin: const EdgeInsets.symmetric(vertical: 8),
+          margin: const EdgeInsets.only(top: 12, bottom: 8),
+          elevation: 0,
+          color: KeepsakeStyle.surface(context),
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: BorderSide(color: KeepsakeStyle.line(context)),
+          ),
           child: ListTile(
-            leading: const Icon(Icons.auto_awesome_rounded),
-            title: Text(context.tr('companion_journey_title')),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 10,
+            ),
+            leading: Icon(
+              Icons.pets_outlined,
+              color: KeepsakeStyle.accent(context),
+            ),
+            title: Text(
+              context.tr('companion_journey_title'),
+              style: KeepsakeStyle.text(
+                context,
+                size: 14,
+                weight: FontWeight.w700,
+              ),
+            ),
+            subtitleTextStyle: KeepsakeStyle.text(
+              context,
+              size: 12,
+              color: KeepsakeStyle.muted(context),
+            ),
             subtitle: state == null
                 ? service.loading
-                      ? const LinearProgressIndicator()
-                      : Text(context.tr('companion_wardrobe_error'))
+                      ? Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: LinearProgressIndicator(
+                            color: KeepsakeStyle.accent(context),
+                            backgroundColor: KeepsakeStyle.line(context),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(context.tr('companion_wardrobe_error')),
+                            Text(
+                              context.tr('core_retry'),
+                              style: KeepsakeStyle.text(
+                                context,
+                                size: 12,
+                                weight: FontWeight.w600,
+                                color: KeepsakeStyle.accent(context),
+                              ),
+                            ),
+                          ],
+                        )
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -65,11 +113,19 @@ class _HomeCompanionJourneyCardState extends State<HomeCompanionJourneyCard> {
                       ),
                       LinearProgressIndicator(
                         value: state.progress,
+                        color: KeepsakeStyle.accent(context),
+                        backgroundColor: KeepsakeStyle.line(context),
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ],
                   ),
-            trailing: const Icon(Icons.chevron_right_rounded),
+            trailing: Icon(
+              state == null && !service.loading
+                  ? Icons.refresh_rounded
+                  : Icons.chevron_right_rounded,
+              color: KeepsakeStyle.muted(context),
+              textDirection: Directionality.of(context),
+            ),
             onTap: service.loading && state == null
                 ? null
                 : () async {
@@ -79,7 +135,15 @@ class _HomeCompanionJourneyCardState extends State<HomeCompanionJourneyCard> {
                     }
                     await showModalBottomSheet<void>(
                       context: context,
+                      useSafeArea: true,
+                      showDragHandle: true,
                       isScrollControlled: true,
+                      backgroundColor: KeepsakeStyle.canvas(context),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(24),
+                        ),
+                      ),
                       builder: (_) => _JourneySheet(service: service),
                     );
                   },

@@ -19,10 +19,13 @@ extension _MainHomeListeners on _MainHomeTabState {
   void _listenHomeCalendarEvents(String houseId) {
     _homeCalendarSubscription?.cancel();
     // Chỉ query 30 ngày tới thay vì toàn bộ lịch sử calendar
-    final now = DateTime.now();
+    final now = CalendarTimeZone.fromMilliseconds(
+      DateTime.now().millisecondsSinceEpoch,
+      MarketService.instance.preferences.timeZoneId,
+    );
     final todayStr =
         '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    final end = now.add(const Duration(days: 30));
+    final end = DateTime.utc(now.year, now.month, now.day + 30);
     final endStr =
         '${end.year}-${end.month.toString().padLeft(2, '0')}-${end.day.toString().padLeft(2, '0')}';
     final calendarRef = _dbRef
@@ -39,20 +42,6 @@ extension _MainHomeListeners on _MainHomeTabState {
               _homeCalendarEvents = [];
             });
           }
-          if (!WidgetService.supportsMobileWidgets) return;
-          _calendarWidgetSyncDebounce?.cancel();
-          _calendarWidgetSyncDebounce = Timer(
-            const Duration(milliseconds: 500),
-            () {
-              if (!mounted || _houseId != houseId) return;
-              unawaited(
-                WidgetService.syncCalendarWidgetData(
-                  houseId: houseId,
-                  calendarData: const <String, dynamic>{},
-                ),
-              );
-            },
-          );
           return;
         }
 
@@ -82,21 +71,6 @@ extension _MainHomeListeners on _MainHomeTabState {
               _homeCalendarEvents = parsedEvents;
             });
           }
-          if (!WidgetService.supportsMobileWidgets) return;
-          // Debounce 500ms trước khi sync calendar widget
-          _calendarWidgetSyncDebounce?.cancel();
-          _calendarWidgetSyncDebounce = Timer(
-            const Duration(milliseconds: 500),
-            () {
-              if (!mounted || _houseId != houseId) return;
-              unawaited(
-                WidgetService.syncCalendarWidgetData(
-                  houseId: houseId,
-                  calendarData: data,
-                ),
-              );
-            },
-          );
         } catch (e) {
           debugPrint('[MainHomeListeners] Calendar events parse error: $e');
         }
@@ -137,26 +111,38 @@ extension _MainHomeListeners on _MainHomeTabState {
 
   void _listenInteractionSignals(String houseId) {
     _chatSignalSubscription?.cancel();
-    final partnerSenderId = _currentRole == 'user1' ? 'U2' : 'U1';
+    _chatSignalSubscription = null;
+    _recentChatSignals.clear();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final sessionId = _liveWorkSessionId;
+    final currentRole = _currentRole;
+    if (uid == null ||
+        houseId != _houseId ||
+        _isLiveWorkSessionStaleImpl(sessionId)) {
+      return;
+    }
+    final partnerSenderRole = currentRole == 'user1' ? 'user2' : 'user1';
 
-    // Use onChildAdded with limitToLast(12) to save bandwidth and prevent sorting a large map
+    // Keep Home signals on the same chat as Soul Merge, with a bounded page.
     _chatSignalSubscription = _dbRef
-        .child('houses/$houseId/chat_room/messages')
-        .orderByChild('ts')
+        .child('houses/$houseId/soul_merge/chat')
+        .orderByChild('timestamp')
         .limitToLast(12)
         .onChildAdded
         .listen(
           (event) {
+            if (_isLiveWorkSessionStaleImpl(sessionId) ||
+                FirebaseAuth.instance.currentUser?.uid != uid ||
+                _houseId != houseId ||
+                _currentRole != currentRole) {
+              return;
+            }
             if (!event.snapshot.exists || event.snapshot.value == null) return;
 
             final item = _toStringDynamicMap(event.snapshot.value);
 
-            if ((item['type'] ?? 'text').toString() == 'text' &&
-                item['senderId'] == partnerSenderId &&
-                item['isRead'] != true) {
-              final text = (item['text'] ?? item['content'] ?? '')
-                  .toString()
-                  .trim();
+            if (item['sender'] == partnerSenderRole) {
+              final text = (item['text'] ?? '').toString().trim();
               if (text.isNotEmpty) {
                 if (!_recentChatSignals.contains(text)) {
                   _recentChatSignals.insert(0, text);

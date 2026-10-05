@@ -4,7 +4,6 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'consent_service.dart';
 import 'security_service.dart';
@@ -12,6 +11,8 @@ import 'core/cloud_functions_helper.dart';
 import 'offline_cache_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'secure_storage_service.dart';
+import 'device_manager_client.dart';
+import 'device_registration_queue.dart';
 
 class DeviceTrustState {
   static const Duration autoTrustDelay = Duration(hours: 12);
@@ -62,7 +63,7 @@ class DeviceTrustState {
 ///  2. Lấy danh sách thiết bị của user từ Firebase
 ///  3. Chặn / Duyệt / Xóa thiết bị lạ
 /// ============================================================
-class DeviceManagerService {
+class DeviceManagerService implements DeviceManagerClient {
   static const Duration pendingAutoTrustDelay = DeviceTrustState.autoTrustDelay;
   static const int autoTrustedDeviceLimit = 3;
   static const Duration _houseIdCacheTtl = Duration(minutes: 10);
@@ -94,7 +95,16 @@ class DeviceManagerService {
   DeviceTrustState? _cachedTrustState;
   String? _cachedTrustStateUid;
   int _cachedTrustStateAtMs = 0;
+  final _registrationQueue = DeviceRegistrationQueue();
 
+  @override
+  String? get sessionUid => _auth.currentUser?.uid;
+
+  @override
+  Stream<String?> get sessionChanges =>
+      _auth.authStateChanges().map((user) => user?.uid).distinct();
+
+  @override
   Future<bool> isSecurityDeviceSignalsAllowed() async {
     return _consentService.isSecurityDeviceSignalsAllowed();
   }
@@ -103,11 +113,13 @@ class DeviceManagerService {
     await _consentService.setSecurityDeviceSignalsAllowed(value);
   }
 
+  @override
   Future<String> getCurrentDeviceIdentifier() async {
     final deviceInfo = await _getDeviceInfo();
     return deviceInfo['deviceId'] ?? 'unknown';
   }
 
+  @override
   Future<Map<String, String>> getCurrentDeviceSnapshot() async {
     return _getDeviceInfo();
   }
@@ -115,9 +127,6 @@ class DeviceManagerService {
   Future<DeviceTrustState> getCurrentDeviceTrustState({
     bool autoApprove = true,
   }) async {
-    // Device trust is intentionally advisory until the native sign-out flow
-    // is verified on Android and iOS. The manager screen enforces server-side
-    // permissions independently when changing another device.
     final uid = _auth.currentUser?.uid.trim() ?? '';
     if (uid.isEmpty) {
       return _unknownTrustState;
@@ -224,45 +233,33 @@ class DeviceManagerService {
   }
 
   /// Ghi thông tin thiết bị hiện tại vào Firebase khi đăng nhập
-  Future<void> registerCurrentDevice() async {
-    if (!await isSecurityDeviceSignalsAllowed()) {
-      return;
-    }
-
+  @override
+  Future<void> registerCurrentDevice({bool throwOnError = false}) async {
+    final uid = _auth.currentUser?.uid.trim() ?? '';
+    if (uid.isEmpty) return;
     try {
-      await _registerCurrentDeviceWithFunction();
-    } catch (e) {
+      if (!await isSecurityDeviceSignalsAllowed()) return;
+      _requireSession(uid);
+      await _registrationQueue.run(uid, () async {
+        final deviceInfo = await _getDeviceInfo();
+        if (!await isSecurityDeviceSignalsAllowed()) {
+          throw StateError('Device signals consent revoked');
+        }
+        _requireSession(uid);
+        await CloudFunctionsHelper.callSecure<dynamic>(
+          'registerCurrentDeviceSecure',
+          payload: deviceInfo,
+          timeout: const Duration(seconds: 10),
+          requireAppCheck: true,
+          throwOriginalException: true,
+        );
+        _requireSession(uid);
+      });
+    } catch (error) {
+      if (throwOnError) rethrow;
       debugPrint(
-        'registerCurrentDevice ignored: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể đăng ký thiết bị hiện tại.').message}',
+        'registerCurrentDeviceSecure ignored: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể đăng ký thiết bị qua máy chủ bảo mật.').message}',
       );
-    }
-  }
-
-  Future<bool> _registerCurrentDeviceWithFunction() async {
-    try {
-      final deviceInfo = await _getDeviceInfo();
-      await CloudFunctionsHelper.callSecure<dynamic>(
-        'registerCurrentDeviceSecure',
-        payload: {
-          'deviceId': deviceInfo['deviceId'],
-          'model': deviceInfo['model'],
-          'os': deviceInfo['os'],
-          'platform': deviceInfo['platform'],
-        },
-        timeout: const Duration(seconds: 15),
-        throwOriginalException: true,
-      );
-      return true;
-    } on FirebaseFunctionsException catch (e) {
-      debugPrint(
-        'registerCurrentDeviceSecure fallback to legacy DB write: ${e.code}',
-      );
-      return false;
-    } catch (e) {
-      debugPrint(
-        'registerCurrentDeviceSecure fallback to legacy DB write: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể đăng ký thiết bị qua máy chủ bảo mật.').message}',
-      );
-      return false;
     }
   }
 
@@ -428,53 +425,94 @@ class DeviceManagerService {
 
   /// Load danh sách tất cả thiết bị của user
   Future<List<Map<String, dynamic>>> loadDevices() async {
-    return _loadDevicesFromFunction();
+    return (await loadDeviceListing()).devices;
   }
 
-  Future<List<Map<String, dynamic>>> _loadDevicesFromFunction() async {
+  @override
+  Future<DeviceManagerListing> loadDeviceListing() async {
+    final uid = _auth.currentUser?.uid ?? '';
+    _requireSession(uid);
     final currentDeviceId = await getCurrentDeviceIdentifier();
+    _requireSession(uid);
     final result = await CloudFunctionsHelper.callSecure<dynamic>(
       'getDeviceListSecure',
       payload: {'currentDeviceId': currentDeviceId},
       timeout: const Duration(seconds: 10),
+      requireAppCheck: true,
       throwOriginalException: true,
     );
+    _requireSession(uid);
     final rawDevices = result.data is Map ? result.data['devices'] : null;
     if (rawDevices is! List) {
-      return const [];
+      throw const FormatException('Invalid device list response');
     }
-    return rawDevices
+    final devices = rawDevices
         .whereType<Map>()
         .map((device) => Map<String, dynamic>.from(device))
         .toList(growable: false);
+    return DeviceManagerListing(
+      houseId: result.data['houseId']?.toString() ?? '',
+      devices: devices,
+    );
   }
 
   /// Duyệt thiết bị đang ở trạng thái pending
-  Future<void> approveDevice(String deviceId) async {
-    await _callDeviceActionFunction('approveDeviceSecure', deviceId);
+  @override
+  Future<void> approveDevice(String deviceId, {String? expectedHouseId}) async {
+    await _callDeviceActionFunction(
+      'approveDeviceSecure',
+      deviceId,
+      expectedHouseId: expectedHouseId,
+    );
   }
 
   /// Chặn thiết bị lạ (Vĩnh viễn)
-  Future<void> blockDevice(String deviceId) async {
-    await _callDeviceActionFunction('blockDeviceSecure', deviceId);
+  @override
+  Future<void> blockDevice(String deviceId, {String? expectedHouseId}) async {
+    await _callDeviceActionFunction(
+      'blockDeviceSecure',
+      deviceId,
+      expectedHouseId: expectedHouseId,
+    );
   }
 
-  /// Xóa thiết bị khỏi danh sách (Không thể đăng nhập trong 1 giờ)
-  Future<void> deleteDevice(String deviceId) async {
-    await _callDeviceActionFunction('deleteDeviceSecure', deviceId);
+  @override
+  Future<void> deleteDevice(String deviceId, {String? expectedHouseId}) async {
+    await _callDeviceActionFunction(
+      'deleteDeviceSecure',
+      deviceId,
+      expectedHouseId: expectedHouseId,
+    );
   }
 
   Future<void> _callDeviceActionFunction(
     String functionName,
-    String deviceId,
-  ) async {
+    String deviceId, {
+    String? expectedHouseId,
+  }) async {
+    final uid = _auth.currentUser?.uid ?? '';
+    _requireSession(uid);
     final currentDeviceId = await getCurrentDeviceIdentifier();
+    _requireSession(uid);
+    final payload = <String, dynamic>{
+      'deviceId': deviceId,
+      'currentDeviceId': currentDeviceId,
+    };
+    if (expectedHouseId != null) payload['houseId'] = expectedHouseId;
     await CloudFunctionsHelper.callSecure<dynamic>(
       functionName,
-      payload: {'deviceId': deviceId, 'currentDeviceId': currentDeviceId},
+      payload: payload,
       timeout: const Duration(seconds: 10),
+      requireAppCheck: true,
       throwOriginalException: true,
     );
+    _requireSession(uid);
+  }
+
+  void _requireSession(String uid) {
+    if (uid.isEmpty || _auth.currentUser?.uid != uid) {
+      throw FirebaseAuthException(code: 'user-token-expired');
+    }
   }
 
   /// Lấy thông tin thiết bị hiện tại
@@ -661,42 +699,29 @@ class DeviceManagerService {
     }
 
     final plugin = DeviceInfoPlugin();
-    String deviceId = 'unknown';
+    String deviceId = (await SecurityService().getDeviceId()).trim();
+    if (deviceId.isEmpty) {
+      throw StateError('Stable device identifier unavailable');
+    }
     String model = 'Unknown';
     String os = 'Unknown';
     String platform = 'unknown';
-    String stableDeviceId = '';
-
-    try {
-      stableDeviceId = (await SecurityService().getDeviceId()).trim();
-    } catch (error) {
-      debugPrint('[DeviceManager] Không lấy được mã thiết bị ổn định: $error');
-    }
-
     try {
       if (kIsWeb) {
+        platform = 'web';
         final info = await plugin.webBrowserInfo;
-        deviceId = stableDeviceId.isNotEmpty
-            ? stableDeviceId
-            : (info.userAgent ?? 'web_browser');
-        // Clean user agent string to avoid invalid characters for Firebase path
-        deviceId = deviceId
-            .replaceAll(RegExp(r'[.#$\[\]]'), '_')
-            .replaceAll(RegExp(r'[/]'), '-');
         model = '${info.browserName.name} on ${info.platform}';
         os = info.platform ?? 'web';
         platform = 'web';
       } else if (defaultTargetPlatform == TargetPlatform.android) {
+        platform = 'android';
         final info = await plugin.androidInfo;
-        deviceId = stableDeviceId.isNotEmpty ? stableDeviceId : info.id;
         model = '${info.brand} ${info.model}';
         os = 'Android ${info.version.release}';
         platform = 'android';
       } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+        platform = 'ios';
         final info = await plugin.iosInfo;
-        deviceId = stableDeviceId.isNotEmpty
-            ? stableDeviceId
-            : (info.identifierForVendor ?? 'ios_unknown');
         model = info.model;
         os = 'iOS ${info.systemVersion}';
         platform = 'ios';

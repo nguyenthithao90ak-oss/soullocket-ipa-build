@@ -24,6 +24,7 @@ import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'house_service.dart';
 import '../../views/utilities/soul_events/soul_events_screen.dart';
 import '../../views/utilities/soul_events/soul_event_detail_screen.dart';
+import '../../views/utilities/calendar_screen.dart';
 import 'soul_event_service.dart';
 import 'offline_cache_service.dart';
 import 'role_utils.dart';
@@ -223,7 +224,8 @@ class NotificationService {
         // Xóa ở đường dẫn chính nơi token được lưu
         await FirebaseDatabase.instance
             .ref('users/${user.uid}/fcmToken')
-            .remove();
+            .remove()
+            .timeout(const Duration(seconds: 2));
       }
     } catch (e) {
       debugPrint('[NotificationService] clearTokenOnSignOut error: $e');
@@ -328,7 +330,11 @@ class NotificationService {
       final decoded = jsonDecode(payload);
       if (decoded is! Map) return;
       final data = Map<String, dynamic>.from(decoded);
-      if (eventsOnly && data['type'] != 'soul_event_reminder_v1') return;
+      if (eventsOnly &&
+          data['type'] != 'soul_event_reminder_v1' &&
+          data['type'] != 'calendar_reminder_v2') {
+        return;
+      }
       await _navigateFromData(data);
     } catch (error) {
       debugPrint(AppErrorMapper.resolve(error).message);
@@ -445,6 +451,36 @@ class NotificationService {
         destination = event == null
             ? const SoulEventsScreen()
             : SoulEventDetailScreen(houseId: myHouseId, event: event);
+        break;
+      case 'calendar':
+        // Thông báo cũ không được mở lịch sau khi UID/House đã thay đổi.
+        if (requestUid == null ||
+            myHouseId == null ||
+            data['accountUid']?.toString() != requestUid ||
+            data['houseId']?.toString() != myHouseId ||
+            FirebaseAuth.instance.currentUser?.uid != requestUid) {
+          return;
+        }
+        final currentHouse = await houseService.getCurrentHouseId(
+          preferFresh: true,
+        );
+        if (FirebaseAuth.instance.currentUser?.uid != requestUid ||
+            currentHouse != myHouseId) {
+          return;
+        }
+        final calendarName = await _resolveCurrentUserCinemaName(
+          houseService,
+          myHouseId,
+        );
+        if (FirebaseAuth.instance.currentUser?.uid != requestUid ||
+            await houseService.getCurrentHouseId() != myHouseId) {
+          return;
+        }
+        destination = CalendarScreen(
+          houseId: myHouseId,
+          myName: calendarName,
+          initialDateKey: data['dateKey']?.toString(),
+        );
         break;
       case 'diary':
         destination = const HomeScreen(initialTab: 2);
@@ -672,8 +708,8 @@ class NotificationService {
     final name = user?.displayName ?? 'Người ấy';
     await sendPartnerNotification(
       houseId: houseId,
-      title: '💕 $name nhớ bạn!',
-      body: '$name vừa gửi một khoảnh khắc nhớ nhung đến bạn...',
+      title: L10nService().format('notif_miss_you_title', {'value1': name}),
+      body: L10nService().format('notif_miss_you_body', {'value1': name}),
       data: {'screen': 'home', 'type': 'miss_you'},
     );
   }
@@ -684,8 +720,8 @@ class NotificationService {
     final name = user?.displayName ?? 'Người ấy';
     await sendPartnerNotification(
       houseId: houseId,
-      title: '📸 $name vừa đăng ảnh mới!',
-      body: 'Xem ngay khoảnh khắc mới nhất của người ấy 💖',
+      title: L10nService().format('notif_new_post_title', {'value1': name}),
+      body: L10nService().translate('notif_new_post_body'),
       data: {'screen': 'feed', 'post_id': postId, 'type': 'new_post'},
     );
   }
@@ -953,9 +989,9 @@ class NotificationService {
       targetMinute: nightMinute,
       windowEndHour: 23,
       windowEndMinute: 59,
-      title: '🌙✨ $displayName ngủ ngon nha 💖',
+      title: L10nService().format('notif_auto_good_night_title', {'value1': displayName}),
       body:
-          '🌙🧸✨ $displayName ơi, đêm nay nhớ ngủ thật ngoan nha. Mong chiếc ôm dịu dàng, ánh sao nhỏ và trái tim mềm này sẽ ru bạn vào một giấc mơ thật êm, thật sâu và thật ngọt ngào 💕💤',
+          L10nService().format('notif_auto_good_night_body', {'value1': displayName}),
     );
 
     await _maybeSendAutoTimedGreeting(
@@ -965,9 +1001,9 @@ class NotificationService {
       targetMinute: morningMinute,
       windowEndHour: 9,
       windowEndMinute: 0,
-      title: '☀️🌷 Chào buổi sáng, $displayName 💛',
+      title: L10nService().format('notif_auto_good_morning_title', {'value1': displayName}),
       body:
-          '☀️🐣🌷 Chào buổi sáng $displayName nha. Chúc bạn thức dậy với thật nhiều năng lượng, lòng nhẹ tênh và cả ngày được yêu thương, dịu dàng ôm lấy 💛✨',
+          L10nService().format('notif_auto_good_morning_body', {'value1': displayName}),
     );
   }
 
@@ -1063,9 +1099,10 @@ class NotificationService {
   ) async {
     await sendPartnerNotification(
       houseId: houseId,
-      title: '✅ Nhắc nhở thói quen',
-      body:
-          'Đến giờ thực hiện thói quen "$habitName" cùng nhau rồi, đừng quên check-in nhé! 💧',
+      title: L10nService().translate('notif_habit_reminder_title'),
+      body: L10nService().format('notif_habit_reminder_body', {
+        'value1': habitName,
+      }),
       data: {'screen': 'utilities', 'type': 'habit'},
     );
   }
@@ -1075,10 +1112,12 @@ class NotificationService {
     final user = FirebaseAuth.instance.currentUser;
     final name = user?.displayName ?? 'Người ấy';
 
-    final title = isWakeUp ? '☀️ Chào buổi sáng!' : '🌙 Chúc ngủ ngon!';
+    final title = L10nService().translate(
+      isWakeUp ? 'notif_sleep_wake_title' : 'notif_sleep_bed_title',
+    );
     final body = isWakeUp
-        ? '$name vừa thức dậy, hãy gửi một lời chào buổi sáng thật ngọt ngào nhé!'
-        : '$name đã bắt đầu đi ngủ, chúc bạn cũng có một giấc mơ đẹp!';
+        ? L10nService().format('notif_sleep_wake_body', {'value1': name})
+        : L10nService().format('notif_sleep_bed_body', {'value1': name});
 
     await sendPartnerNotification(
       houseId: houseId,
@@ -1095,8 +1134,8 @@ class NotificationService {
 
     await sendPartnerNotification(
       houseId: houseId,
-      title: '🏠 Về nhà an toàn',
-      body: '$name đã về đến nhà an toàn rồi nhé!',
+      title: L10nService().translate('notif_safe_arrival_title'),
+      body: L10nService().format('notif_safe_arrival_body', {'value1': name}),
       data: {'screen': 'map', 'type': 'safe_arrival'},
     );
   }
@@ -1110,9 +1149,8 @@ class NotificationService {
 
     await sendPartnerNotification(
       houseId: houseId,
-      title: '📸 Ngày này năm xưa',
-      body:
-          'Ngày này $years năm trước, hai bạn đã đăng một kỷ niệm rất tuyệt. Cùng ôn lại nào!',
+      title: L10nService().translate('notif_on_this_day_title'),
+      body: L10nService().format('notif_on_this_day_body', {'value1': years}),
       data: {'screen': 'diary', 'type': 'on_this_day'},
     );
   }
@@ -1127,9 +1165,11 @@ class NotificationService {
 
     await sendPartnerNotification(
       houseId: houseId,
-      title: '💭 Cập nhật tâm trạng',
-      body:
-          'Hôm nay tâm trạng của $name đang là $moodIcon. Hãy vào xem và gửi lời động viên nhé!',
+      title: L10nService().translate('notif_mood_title'),
+      body: L10nService().format('notif_mood_body', {
+        'value1': name,
+        'value2': moodIcon,
+      }),
       data: {'screen': 'utilities', 'type': 'mood'},
     );
   }
@@ -1170,9 +1210,8 @@ class NotificationService {
 
           if (!(prefs.getBool(key) ?? false)) {
             await showLocalNotification(
-              title: '🚀 Hộp thư tương lai đã đến hẹn!',
-              body:
-                  'Bạn có một hộp thư tương lai đã sẵn sàng để mở trong ứng dụng.',
+              title: L10nService().translate('notif_time_capsule_title'),
+              body: L10nService().translate('notif_time_capsule_body'),
               data: {'screen': 'utilities', 'type': 'time_capsule'},
             );
             await prefs.setBool(key, true);
@@ -1193,9 +1232,8 @@ class NotificationService {
   ) async {
     await sendPartnerNotification(
       houseId: houseId,
-      title: '💸 Cảnh báo ngân sách',
-      body:
-          'Chú ý: Quỹ chung tháng này của hai bạn đã sử dụng vượt $percent% ngân sách dự kiến!',
+      title: L10nService().translate('notif_budget_title'),
+      body: L10nService().format('notif_budget_body', {'value1': percent}),
       data: {'screen': 'utilities', 'type': 'finance'},
     );
   }
@@ -1204,9 +1242,8 @@ class NotificationService {
   Future<void> sendFundContributionNotification(String houseId) async {
     await sendPartnerNotification(
       houseId: houseId,
-      title: '💰 Nhắc nhở đóng quỹ',
-      body:
-          'Đã đến hạn đóng quỹ tình yêu tháng mới rồi, hãy nạp "năng lượng" cho quỹ nhé!',
+      title: L10nService().translate('notif_fund_title'),
+      body: L10nService().translate('notif_fund_body'),
       data: {'screen': 'utilities', 'type': 'finance'},
     );
   }
@@ -1233,32 +1270,29 @@ class NotificationService {
     if (diff == 3) {
       await sendPartnerNotification(
         houseId: houseId,
-        title: '🎉 Sắp tới ngày kỷ niệm rồi!',
-        body:
-            'Chỉ còn 3 ngày nữa là đến ngày kỷ niệm của hai bạn nè! Chuẩn bị quà gì chưa đó? 🎁',
+        title: L10nService().translate('notif_anniversary_3_title'),
+        body: L10nService().translate('notif_anniversary_3_body'),
         data: {'screen': 'home', 'type': 'anniversary'},
       );
     } else if (diff == 2) {
       await sendPartnerNotification(
         houseId: houseId,
-        title: '⏳ Nhắc lịch: Còn 2 ngày!',
-        body:
-            'Chỉ còn 2 ngày nữa là đến ngày kỷ niệm thôi nha! Nhanh quá đi mất! 💖',
+        title: L10nService().translate('notif_anniversary_2_title'),
+        body: L10nService().translate('notif_anniversary_2_body'),
         data: {'screen': 'home', 'type': 'anniversary'},
       );
     } else if (diff == 1) {
       await sendPartnerNotification(
         houseId: houseId,
-        title: '⏰ Ngày mai là tới rồi!',
-        body: 'Hồi hộp quá! Chỉ còn 1 ngày nữa là đến ngày kỷ niệm rùi đó! 🥰',
+        title: L10nService().translate('notif_anniversary_1_title'),
+        body: L10nService().translate('notif_anniversary_1_body'),
         data: {'screen': 'home', 'type': 'anniversary'},
       );
     } else if (diff == 0) {
       await sendPartnerNotification(
         houseId: houseId,
-        title: '🔔 Chúc mừng kỷ niệm!',
-        body:
-            'Tèn ten! Hôm nay là ngày kỷ niệm của hai bạn nè! Chúc hai bạn luôn hạnh phúc nhé! 🥳',
+        title: L10nService().translate('notif_anniversary_0_title'),
+        body: L10nService().translate('notif_anniversary_0_body'),
         data: {'screen': 'home', 'type': 'anniversary'},
       );
     }

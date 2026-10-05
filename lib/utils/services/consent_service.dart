@@ -12,6 +12,7 @@ class ConsentService {
   static final ValueNotifier<bool> optionalCollectionAllowed = ValueNotifier(
     false,
   );
+  static final ValueNotifier<bool> adRequestsAllowed = ValueNotifier(false);
   static Future<void>? _pendingChoiceWrite;
   static int _choiceRevision = 0;
   static const String tosAcceptedKey = 'il_tos_accepted';
@@ -28,7 +29,7 @@ class ConsentService {
   }
 
   Future<void> setTosAccepted(bool value) async {
-    if (!value) optionalCollectionAllowed.value = false;
+    if (!value) _disableCollection();
     final prefs =
         OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
@@ -44,7 +45,7 @@ class ConsentService {
   }
 
   Future<void> setPrivacyAccepted(bool value) async {
-    if (!value) optionalCollectionAllowed.value = false;
+    if (!value) _disableCollection();
     final prefs =
         OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
@@ -62,7 +63,7 @@ class ConsentService {
   }
 
   Future<void> setCookieConsentLevel(String level) async {
-    optionalCollectionAllowed.value = false;
+    _disableCollection();
     final prefs =
         OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
@@ -79,7 +80,7 @@ class ConsentService {
   Future<void> recordStartupConsent(String level) {
     final normalized = _normalizeCookieLevel(level);
     if (normalized == null) throw ArgumentError.value(level, 'level');
-    optionalCollectionAllowed.value = false;
+    _disableCollection();
     final revision = ++_choiceRevision;
     final previous = _pendingChoiceWrite;
     final completed = Completer<void>();
@@ -125,11 +126,13 @@ class ConsentService {
       final prefs =
           OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
+      final valid = _hasValidConsent(prefs);
+      final level = _normalizeCookieLevel(prefs.getString(cookieConsentKey));
       optionalCollectionAllowed.value =
-          _hasValidConsent(prefs) &&
-          _normalizeCookieLevel(prefs.getString(cookieConsentKey)) == 'all';
+          valid && (level == 'all' || level == 'analytics');
+      adRequestsAllowed.value = valid && (level == 'all' || level == 'ads');
     } catch (_) {
-      optionalCollectionAllowed.value = false;
+      _disableCollection();
       rethrow;
     }
   }
@@ -201,7 +204,7 @@ class ConsentService {
   }
 
   Future<void> clearAll() async {
-    optionalCollectionAllowed.value = false;
+    _disableCollection();
     final prefs =
         OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
@@ -215,7 +218,14 @@ class ConsentService {
 
   String? _normalizeCookieLevel(String? value) {
     final normalized = _normalizeConsentValue(value);
-    return normalized == 'essential' || normalized == 'all' ? normalized : null;
+    return const {'essential', 'ads', 'analytics', 'all'}.contains(normalized)
+        ? normalized
+        : null;
+  }
+
+  void _disableCollection() {
+    optionalCollectionAllowed.value = false;
+    adRequestsAllowed.value = false;
   }
 
   String? _normalizeConsentValue(String? value) {

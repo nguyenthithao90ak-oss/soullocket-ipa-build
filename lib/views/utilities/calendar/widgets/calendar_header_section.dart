@@ -13,6 +13,7 @@ class CalendarHeaderSection extends StatelessWidget {
   final CalendarFormat calendarFormat;
   final DateTime focusedDay;
   final DateTime? selectedDay;
+  final DateTime? currentDay;
   final String locale;
   final MarketCalendarProfile calendarProfile;
   final List<dynamic> Function(DateTime day) eventLoader;
@@ -31,6 +32,7 @@ class CalendarHeaderSection extends StatelessWidget {
     required this.calendarFormat,
     required this.focusedDay,
     required this.selectedDay,
+    this.currentDay,
     required this.locale,
     required this.calendarProfile,
     required this.eventLoader,
@@ -174,9 +176,10 @@ class CalendarHeaderSection extends StatelessWidget {
                   ),
                 ),
                 TableCalendar<dynamic>(
-                  firstDay: DateTime.utc(2020, 1, 1),
-                  lastDay: DateTime.utc(2030, 12, 31),
+                  firstDay: DateTime.utc(1900, 1, 1),
+                  lastDay: DateTime.utc(2100, 12, 31),
                   focusedDay: focusedDay,
+                  currentDay: currentDay,
                   locale: locale,
                   calendarFormat: calendarFormat,
                   startingDayOfWeek: calendarProfile.firstWeekday,

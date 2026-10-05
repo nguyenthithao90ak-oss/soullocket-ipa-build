@@ -163,7 +163,7 @@ extension AuthSignInServiceSocial on AuthSignInService {
       throw AppErrorMapper.resolve(
         error,
         fallbackMessage:
-            'Không liên kết Google được: hãy kiểm tra tài khoản Google, trạng thái đăng nhập và kết nối mạng.',
+            L10nService().translate('auth_fallback_google_link'),
       ).message;
     }
   }
@@ -250,7 +250,7 @@ extension AuthSignInServiceSocial on AuthSignInService {
       throw AppErrorMapper.resolve(
         error,
         fallbackMessage:
-            'Không liên kết Apple được: hãy kiểm tra Apple ID, quyền đăng nhập và kết nối mạng.',
+            L10nService().translate('auth_fallback_apple_link'),
       ).message;
     }
   }
@@ -302,7 +302,7 @@ extension AuthSignInServiceSocial on AuthSignInService {
       throw AppErrorMapper.resolve(
         error,
         fallbackMessage:
-            'Không tạo được mật khẩu đăng nhập: hãy kiểm tra mật khẩu mới, trạng thái đăng nhập và kết nối mạng.',
+            L10nService().translate('auth_fallback_password_create'),
       ).message;
     }
 
@@ -433,7 +433,7 @@ extension AuthSignInServiceSocial on AuthSignInService {
       throw AppErrorMapper.resolve(
         error,
         fallbackMessage:
-            'Không xác minh lại Google được: hãy chọn đúng tài khoản Google đang liên kết và kiểm tra cấu hình chữ ký SHA-1.',
+            L10nService().translate('auth_fallback_google_reauthenticate'),
       ).message;
     }
   }

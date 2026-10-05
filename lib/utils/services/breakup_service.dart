@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -182,7 +183,7 @@ class BreakupActionResult {
   final String message;
   final BreakupRequestData? request;
 
-  const BreakupActionResult({
+  BreakupActionResult({
     required this.success,
     required this.message,
     this.request,
@@ -294,7 +295,7 @@ class BreakupService {
     if (existing != null && existing.isPending) {
       return BreakupActionResult(
         success: false,
-        message: 'Yêu cầu hiện đang chờ xác nhận từ thiết bị bên kia.',
+        message: L10nService().translate('breakup_pending'),
         request: existing,
       );
     }
@@ -302,14 +303,14 @@ class BreakupService {
       return BreakupActionResult(
         success: false,
         message:
-            'Dữ liệu đã được lên lịch xóa vào ${_formatDateTime(existing.deleteAt)}.',
+            L10nService().format('breakup_scheduled', {'value1': _formatDateTime(existing.deleteAt)}),
         request: existing,
       );
     }
     if (existing != null && existing.isProcessing) {
       return BreakupActionResult(
         success: false,
-        message: 'Hệ thống đang xử lý xóa dữ liệu. Không thể tạo yêu cầu mới.',
+        message: L10nService().translate('breakup_processing'),
         request: existing,
       );
     }
@@ -353,10 +354,10 @@ class BreakupService {
     final request = BreakupRequestData.fromMap(payload);
 
     final message = isSingleRelationship
-        ? 'Tài khoản độc thân không cần chờ bạn kia xác nhận. Dữ liệu đã được lên lịch xóa vào ${_formatDateTime(deleteAt)} và bạn vẫn có thể rút lại trước mốc này.'
+        ? L10nService().format('breakup_single_scheduled', {'value1': _formatDateTime(deleteAt)})
         : deviceMeta.hasOtherTrusted
-            ? 'Yêu cầu đã được gửi. Một thiết bị tin cậy khác có thể xác nhận ngay. Sau khi được xác nhận, hệ thống sẽ chờ thêm 1 ngày trước khi xóa hoàn toàn và bạn vẫn có thể rút lại trong khoảng này.'
-            : 'Yêu cầu đã được ghi nhận. Nếu không có thiết bị tin cậy khác xác nhận, hệ thống sẽ chờ đến ${_formatDateOnly(expireAt)}, sau đó lên lịch xóa thêm 1 ngày để bạn kịp rút lại.';
+            ? L10nService().translate('breakup_sent_trusted')
+            : L10nService().format('breakup_sent_waiting', {'value1': _formatDateOnly(expireAt)});
 
     return BreakupActionResult(
       success: true,
@@ -373,9 +374,9 @@ class BreakupService {
   }) async {
     final request = await getBreakupRequest(houseId);
     if (request == null || !request.isPending) {
-      return const BreakupActionResult(
+      return BreakupActionResult(
         success: false,
-        message: 'Không còn yêu cầu chia tay đang chờ xác nhận.',
+        message: L10nService().translate('breakup_no_pending'),
       );
     }
 
@@ -384,21 +385,21 @@ class BreakupService {
       currentUid: currentUid,
     );
     if (!meta.isCurrentTrusted) {
-      return const BreakupActionResult(
+      return BreakupActionResult(
         success: false,
-        message: 'Thiết bị hiện tại chưa được tin cậy để xác nhận.',
+        message: L10nService().translate('breakup_device_untrusted'),
       );
     }
     if (meta.currentDeviceId == request.requestedByDevice) {
-      return const BreakupActionResult(
+      return BreakupActionResult(
         success: false,
-        message: 'Không thể tự xác nhận bằng chính thiết bị đã gửi yêu cầu.',
+        message: L10nService().translate('breakup_same_device'),
       );
     }
     if (request.isApprovedBy(meta.currentDeviceId)) {
-      return const BreakupActionResult(
+      return BreakupActionResult(
         success: false,
-        message: 'Thiết bị này đã xác nhận trước đó.',
+        message: L10nService().translate('breakup_already_approved'),
       );
     }
 
@@ -423,7 +424,7 @@ class BreakupService {
     return BreakupActionResult(
       success: true,
       message:
-          'Đã xác nhận chia tay. Dữ liệu sẽ bị xóa vào ${_formatDateTime(deleteAt)} nếu không rút lại trước hạn.',
+          L10nService().format('breakup_approved', {'value1': _formatDateTime(deleteAt)}),
       request: next,
     );
   }
@@ -436,21 +437,21 @@ class BreakupService {
   }) async {
     final request = await getBreakupRequest(houseId);
     if (request == null || request.status == BreakupStatus.none) {
-      return const BreakupActionResult(
+      return BreakupActionResult(
         success: false,
-        message: 'Không có yêu cầu nào để rút lại.',
+        message: L10nService().translate('breakup_no_request'),
       );
     }
     if (request.isCanceled) {
-      return const BreakupActionResult(
+      return BreakupActionResult(
         success: false,
-        message: 'Yêu cầu này đã được rút lại trước đó.',
+        message: L10nService().translate('breakup_already_canceled'),
       );
     }
     if (request.isProcessing) {
-      return const BreakupActionResult(
+      return BreakupActionResult(
         success: false,
-        message: 'Hệ thống đang xử lý xóa, không thể rút lại.',
+        message: L10nService().translate('breakup_cancel_processing'),
       );
     }
 
@@ -458,9 +459,9 @@ class BreakupService {
     if (request.isScheduled &&
         request.deleteAt > 0 &&
         request.deleteAt <= now) {
-      return const BreakupActionResult(
+      return BreakupActionResult(
         success: false,
-        message: 'Đã qua thời điểm được phép rút lại.',
+        message: L10nService().translate('breakup_cancel_expired'),
       );
     }
 
@@ -479,7 +480,7 @@ class BreakupService {
     final next = await getBreakupRequest(houseId);
     return BreakupActionResult(
       success: true,
-      message: 'Đã rút lại yêu cầu chia tay.',
+      message: L10nService().translate('breakup_canceled'),
       request: next,
     );
   }

@@ -178,6 +178,26 @@ class AppErrorMapper {
     final code = error.code.toLowerCase();
     final message = cleanMessage(error.message);
 
+    if (error.plugin == 'firebase_app_check' &&
+        code != 'network-request-failed' &&
+        code != 'unavailable') {
+      return AppErrorInfo(
+        kind: AppErrorKind.server,
+        message: L10nService().translate(
+          kDebugMode
+              ? 'err_appcheck_debug_blocked'
+              : 'err_appcheck_verifying_device',
+        ),
+      );
+    }
+
+    if (code == 'resource-exhausted' || code == 'too-many-requests') {
+      return AppErrorInfo(
+        kind: AppErrorKind.user,
+        message: L10nService().translate('core_err_try_again_later'),
+      );
+    }
+
     if (code == 'requires-recent-login') {
       return AppErrorInfo(kind: AppErrorKind.user, message: recentLoginMessage);
     }

@@ -297,12 +297,8 @@ class ScheduleNotifService {
         now.month,
         now.day,
       ).millisecondsSinceEpoch;
-      final calSnap = await _calendarQuery(
-        houseId,
-        now,
-        reminderOnly: true,
-      ).get();
-      if (!isCurrentScope()) return;
+      // Lịch chung do CalendarReminderService nhắc theo múi giờ từng người.
+      // Không gửi thêm House push cho cùng kế hoạch.
       final customSnap = await _root
           .child('houses/$houseId/settings/customEvents')
           .get();
@@ -312,29 +308,6 @@ class ScheduleNotifService {
 
       final events = <UpcomingEvent>[];
 
-      for (final daySnapshot in calSnap.children) {
-        final dateKey = daySnapshot.key ?? '';
-        final dateMs = _parseDateKey(dateKey);
-        if (dateMs == null) continue;
-        for (final eventSnapshot in daySnapshot.children) {
-          final eventId = eventSnapshot.key;
-          if (eventId == null) continue;
-          final eventRaw = eventSnapshot.value;
-          final title = eventRaw is Map
-              ? eventRaw['title']?.toString() ?? ''
-              : '';
-          events.add(
-            UpcomingEvent(
-              eventKey: 'cal:$dateKey:$eventId',
-              dateKey: dateKey.toString(),
-              dateMs: dateMs,
-              title: title,
-              source: 'calendar',
-              daysUntil: _daysUntil(dateMs, today),
-            ),
-          );
-        }
-      }
       for (final customSnapshot in customSnap.children) {
         final key = customSnapshot.key;
         if (key == null) continue;
@@ -393,23 +366,12 @@ class ScheduleNotifService {
     return 'sched_d${event.daysUntil}_${event.eventKey.hashCode.toUnsigned(32).toRadixString(16)}';
   }
 
-  Query _calendarQuery(
-    String houseId,
-    DateTime now, {
-    bool reminderOnly = false,
-  }) {
+  Query _calendarQuery(String houseId, DateTime now) {
     final today = DateTime(now.year, now.month, now.day);
-    final query = _root
+    return _root
         .child('houses/$houseId/calendar')
         .orderByKey()
         .startAt(CalendarWidgetSnapshot.dateKeyFor(today));
-    return reminderOnly
-        ? query.endAt(
-            CalendarWidgetSnapshot.dateKeyFor(
-              DateTime(today.year, today.month, today.day + 3),
-            ),
-          )
-        : query;
   }
 
   static bool _validHouseId(String houseId) =>

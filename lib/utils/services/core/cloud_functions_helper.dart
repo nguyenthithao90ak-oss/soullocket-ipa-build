@@ -71,7 +71,7 @@ class CloudFunctionsHelper {
         },
       );
     } on CallableAppCheckException catch (error) {
-      if (throwOriginalException && error.cause != null) throw error.cause!;
+      if (throwOriginalException) throw error.cause ?? error;
       throw AppErrorInfo(
         kind: AppErrorKind.server,
         message: L10nService().translate(
@@ -112,8 +112,10 @@ class CloudFunctionsHelper {
       if (throwOriginalException) rethrow;
       throw Exception(AppErrorMapper.resolve(error).message);
     } on TimeoutException catch (error) {
+      if (throwOriginalException) rethrow;
       throw Exception(AppErrorMapper.resolve(error).message);
     } catch (error) {
+      if (throwOriginalException) rethrow;
       throw Exception(
         AppErrorMapper.resolve(
           error,

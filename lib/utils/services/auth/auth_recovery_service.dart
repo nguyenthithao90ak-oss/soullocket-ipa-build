@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
@@ -364,7 +365,7 @@ class AuthRecoveryService {
       throw AppErrorMapper.resolve(
         error,
         fallbackMessage:
-            'Không gửi được link khôi phục: hãy kiểm tra email, kết nối mạng và cấu hình Firebase Auth.',
+            L10nService().translate('auth_fallback_reset_link_send'),
       ).message;
     }
   }
@@ -387,7 +388,7 @@ class AuthRecoveryService {
       if (error is FirebaseFunctionsException) {
         throw _messageFromFunctionsError(
           error,
-          fallbackMessage: 'Không gửi được mã xác nhận.',
+          fallbackMessage: L10nService().translate('auth_fallback_verification_code_send'),
           permissionDeniedMessage: 'Yêu cầu bị từ chối. Thử lại sau.',
           failedPreconditionMessage: 'Máy chủ OTP chưa được cấu hình xong.',
           resourceExhaustedMessage:
@@ -403,7 +404,7 @@ class AuthRecoveryService {
       }
       throw AppErrorMapper.resolve(
         error,
-        fallbackMessage: 'Không gửi được mã xác nhận.',
+        fallbackMessage: L10nService().translate('auth_fallback_verification_code_send'),
       ).message;
     }
   }
@@ -436,7 +437,7 @@ class AuthRecoveryService {
         throw _messageFromFunctionsError(
           error,
           fallbackMessage:
-              'Không xác nhận được mã OTP: hãy kiểm tra mã vừa nhập, thời hạn mã và kết nối mạng.',
+              L10nService().translate('auth_fallback_verification_code_check'),
           appCheckMessage: kDebugMode
               ? 'Phiên App Check chưa sẵn sàng. Vui lòng chờ vài giây rồi thử xác nhận lại.'
               : 'Phiên bảo mật chưa sẵn sàng. Hãy chờ vài giây rồi xác nhận lại.',
@@ -482,7 +483,7 @@ class AuthRecoveryService {
         throw _messageFromFunctionsError(
           error,
           fallbackMessage:
-              'Không xác thực được email chính: hãy kiểm tra email, mã xác thực và kết nối mạng.',
+              L10nService().translate('auth_fallback_primary_email_verify'),
           appCheckMessage: kDebugMode
               ? 'Phiên App Check chưa sẵn sàng. Vui lòng chờ vài giây rồi thử lại.'
               : 'Phiên bảo mật chưa sẵn sàng. Hãy chờ vài giây rồi thử lại.',
@@ -493,17 +494,36 @@ class AuthRecoveryService {
     }
   }
 
-  Future<void> validateEmailOTP(String email, String otp) async {
+  Future<void> validateEmailOTP(
+    String email,
+    String otp, {
+    String? aliasExpectedUid,
+  }) async {
     try {
-      final result = await _callOtpFunction(
-        () => CloudFunctionsHelper.callSecure<dynamic>(
+      final result = await _callOtpFunction(() {
+        if (aliasExpectedUid != null) _assertAliasSession(aliasExpectedUid);
+        return CloudFunctionsHelper.callSecure<dynamic>(
           'validateEmailOTP',
-          payload: {'email': email.trim(), 'otp': otp.trim()},
+          payload: {
+            'email': email.trim(),
+            'otp': otp.trim(),
+            if (aliasExpectedUid != null) ...{
+              'purpose': 'login_alias',
+              'expectedUid': aliasExpectedUid,
+            },
+          },
           throwOriginalException: true,
-        ),
-        allowUnauthenticatedWithoutMarkers: true,
-      );
+        );
+      }, allowUnauthenticatedWithoutMarkers: true);
+      if (aliasExpectedUid != null) _assertAliasSession(aliasExpectedUid);
       final data = _asStringDynamicMap(result.data);
+      if (aliasExpectedUid != null &&
+          (data == null || data['success'] != true)) {
+        throw FirebaseFunctionsException(
+          code: 'failed-precondition',
+          message: 'login_alias_verification_required',
+        );
+      }
       if (data == null) {
         throw 'Mã không hợp lệ hoặc đã hết hạn.';
       }
@@ -511,10 +531,11 @@ class AuthRecoveryService {
         throw 'Mã không hợp lệ hoặc đã hết hạn.';
       }
     } catch (error) {
+      if (aliasExpectedUid != null) rethrow;
       if (error is FirebaseFunctionsException) {
         throw _messageFromFunctionsError(
           error,
-          fallbackMessage: 'Mã không hợp lệ hoặc đã hết hạn.',
+          fallbackMessage: L10nService().translate('auth_fallback_verification_code_expired'),
           appCheckMessage: kDebugMode
               ? 'Phiên App Check chưa sẵn sàng. Vui lòng chờ vài giây rồi thử lại.'
               : 'Phiên bảo mật chưa sẵn sàng. Hãy chờ vài giây rồi thử lại.',
@@ -522,6 +543,62 @@ class AuthRecoveryService {
         );
       }
       throw 'Mã không hợp lệ hoặc đã hết hạn.';
+    }
+  }
+
+  void _assertAliasSession(String expectedUid) {
+    if (expectedUid.isEmpty || _auth.currentUser?.uid != expectedUid) {
+      throw firebase_auth.FirebaseAuthException(code: 'user-token-expired');
+    }
+  }
+
+  Future<String> getLoginAliasForCurrentUser({
+    required String expectedUid,
+  }) async {
+    _assertAliasSession(expectedUid);
+    final result = await _callOtpFunction(() {
+      _assertAliasSession(expectedUid);
+      return CloudFunctionsHelper.callSecure<dynamic>(
+        'getLoginAlias',
+        payload: {'expectedUid': expectedUid},
+        throwOriginalException: true,
+      );
+    });
+    _assertAliasSession(expectedUid);
+    final data = _asStringDynamicMap(result.data);
+    if (data == null || data['email'] is! String) {
+      throw FirebaseFunctionsException(
+        code: 'internal',
+        message: 'login_alias_response_invalid',
+      );
+    }
+    return (data['email'] as String).trim().toLowerCase();
+  }
+
+  Future<void> setLoginAliasForCurrentUser(
+    String email, {
+    required String expectedUid,
+  }) async {
+    _assertAliasSession(expectedUid);
+    final normalizedEmail = email.trim().toLowerCase();
+    await _refreshCurrentUserSession(forceRefreshIdToken: true);
+    final result = await _callOtpFunction(() {
+      _assertAliasSession(expectedUid);
+      return CloudFunctionsHelper.callSecure<dynamic>(
+        'setLoginAlias',
+        payload: {'email': normalizedEmail, 'expectedUid': expectedUid},
+        throwOriginalException: true,
+      );
+    });
+    _assertAliasSession(expectedUid);
+    final data = _asStringDynamicMap(result.data);
+    if (data == null ||
+        data['success'] != true ||
+        data['email'] != normalizedEmail) {
+      throw FirebaseFunctionsException(
+        code: 'internal',
+        message: 'login_alias_response_invalid',
+      );
     }
   }
 
@@ -576,7 +653,7 @@ class AuthRecoveryService {
       throw AppErrorMapper.resolve(
         error,
         fallbackMessage:
-            'Không kiểm tra được link đặt lại mật khẩu: link có thể hết hạn, sai mã hoặc mạng đang lỗi.',
+            L10nService().translate('auth_fallback_reset_link_check'),
       ).message;
     }
   }
@@ -610,7 +687,7 @@ class AuthRecoveryService {
       throw AppErrorMapper.resolve(
         error,
         fallbackMessage:
-            'Không cập nhật được mật khẩu mới: hãy kiểm tra link đặt lại, độ mạnh mật khẩu và kết nối mạng.',
+            L10nService().translate('auth_fallback_password_update'),
       ).message;
     }
   }

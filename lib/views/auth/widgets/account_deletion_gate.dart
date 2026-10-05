@@ -55,10 +55,14 @@ class _AccountDeletionGateState extends State<AccountDeletionGate> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _error = AppErrorMapper.resolve(
-          error,
-          fallbackMessage: context.tr('account_deletion_status_unavailable'),
-        ).message;
+        _error = _status == null
+            ? context.tr('ui_app_unable_to_check_login_please_check_the_bd9c62')
+            : AppErrorMapper.resolve(
+                error,
+                fallbackMessage: context.tr(
+                  'account_deletion_status_unavailable',
+                ),
+              ).message;
       });
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -102,10 +106,19 @@ class _AccountDeletionGateState extends State<AccountDeletionGate> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(Icons.manage_accounts_outlined, size: 42),
+                  Icon(
+                    status == null
+                        ? Icons.verified_user_outlined
+                        : Icons.manage_accounts_outlined,
+                    size: 42,
+                  ),
                   const SizedBox(height: 16),
                   Text(
-                    context.tr('account_deletion_title'),
+                    context.tr(
+                      status == null
+                          ? 'account_deletion_checking'
+                          : 'account_deletion_title',
+                    ),
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
@@ -113,10 +126,11 @@ class _AccountDeletionGateState extends State<AccountDeletionGate> {
                   if (_busy) ...[
                     const Center(child: CircularProgressIndicator()),
                     const SizedBox(height: 16),
-                    Text(
-                      context.tr('account_deletion_checking'),
-                      textAlign: TextAlign.center,
-                    ),
+                    if (status != null)
+                      Text(
+                        context.tr('account_deletion_checking'),
+                        textAlign: TextAlign.center,
+                      ),
                   ] else ...[
                     if (status != null)
                       Text(
@@ -152,7 +166,7 @@ class _AccountDeletionGateState extends State<AccountDeletionGate> {
                     ),
                     TextButton(
                       onPressed: _signOut,
-                      child: Text(context.tr('account_deletion_sign_out')),
+                      child: Text(context.tr('logout')),
                     ),
                   ],
                 ],

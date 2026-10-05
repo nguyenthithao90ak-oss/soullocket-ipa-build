@@ -5,7 +5,6 @@ import 'calendar_civil_date.dart';
 import 'calendar_reminder_times.dart';
 import 'calendar_time_zone.dart';
 import 'calendar_timed_event.dart';
-import '../../models/soul_event.dart';
 import 'holiday_occurrence_resolver.dart';
 
 class CalendarLocalReminder {
@@ -24,8 +23,8 @@ abstract final class CalendarLocalReminderPlanner {
     required Object? calendarData, required Iterable<HolidayOccurrence> holidays,
     required String Function(PresetHoliday) holidayName, String? timeZoneId}) {
     final result = <CalendarLocalReminder>[];
-    void add(String key, DateTime date, String title, String source, DateTime? start) {
-      final times = CalendarReminderTimes.forDate(date, timeZone: CalendarTimeZone.locationFor(timeZoneId));
+    void add(String key, DateTime date, String title, String source, DateTime? start, String? zone) {
+      final times = CalendarReminderTimes.forDate(date, timeZone: CalendarTimeZone.locationFor(zone));
       for (final previous in [false, true]) {
         final time = previous ? times.dayBefore : start ?? times.onEventDay;
         if (!time.isAfter(now)) continue;
@@ -47,12 +46,12 @@ abstract final class CalendarLocalReminderPlanner {
           final timed = CalendarTimedEvent.fromJson(raw['timing'], dateKey: dateKey);
           // Timing sai không tự biến thành sự kiện cả ngày.
           if (raw['timing'] != null && timed == null) continue;
-          add('$dateKey:${event.key}', date, title, 'calendar', timed?.start);
+          add('$dateKey:${event.key}', date, title, 'calendar', timed?.start, timed?.timeZoneId ?? timeZoneId);
         }
       }
     }
     for (final holiday in holidays) {
-      add(holiday.occurrenceId, holiday.date, holidayName(holiday.holiday), 'holiday', null);
+      add(holiday.occurrenceId, holiday.date, holidayName(holiday.holiday), 'holiday', null, timeZoneId);
     }
     return result..sort((a, b) {
       final byTime = a.time.compareTo(b.time);
@@ -86,9 +85,13 @@ class CalendarReminderReconciler {
     required bool Function() active, required String Function(CalendarLocalReminder) title,
     required String Function(CalendarLocalReminder) body}) async {
     final existing = await pending();
-    if (!active()) return false;
+      if (!active()) {
+        return false;
+      }
     final owned = {for (final item in existing)
-      if (payload(item.payload)?['type'] == payloadType) item.id: item};
+      if (payload(item.payload)?['type'] == payloadType ||
+          (payload(item.payload)?['type'] == 'scheduled_local' &&
+            item.id >= 0x40000000 && item.id <= 0x7fffffff)) item.id: item};
     final others = {for (final item in existing) if (!owned.containsKey(item.id)) item.id};
     final budget = (60 - others.length).clamp(0, maxReminders);
     final planned = <int, ({CalendarLocalReminder item, String title, String body, Map<String, dynamic> data})>{};
@@ -106,18 +109,27 @@ class CalendarReminderReconciler {
       }
     }
     await cancel(owned.keys.where((id) => !planned.containsKey(id)));
-    if (!active()) return false;
+    if (!active()) {
+      return false;
+    }
     for (final entry in planned.entries) {
       final plan = entry.value;
       final old = owned[entry.key];
       final data = payload(old?.payload);
       if (old?.title == plan.title && old?.body == plan.body && data?['accountUid'] == uid &&
           data?['houseId'] == houseId && data?['reminderKey'] == plan.item.key &&
-          data?['scheduledMs'] == plan.data['scheduledMs']) continue;
+          data?['scheduledMs'] == plan.data['scheduledMs']) {
+        continue;
+      }
       final saved = await schedule(id: entry.key, title: plan.title, body: plan.body,
         scheduledDate: plan.item.time, data: plan.data);
-      if (!active()) { await cancel([entry.key]); return false; }
-      if (!saved) return false;
+      if (!active()) {
+        await cancel([entry.key]);
+        return false;
+      }
+      if (!saved) {
+        return false;
+      }
     }
     return true;
   }

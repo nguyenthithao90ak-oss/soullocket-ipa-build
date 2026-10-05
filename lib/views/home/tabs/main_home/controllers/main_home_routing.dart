@@ -73,40 +73,17 @@ extension _MainHomeRouting on _MainHomeTabState {
     });
   }
 
-  Future<void> _openDirectChat() async {
-    final houseId = _houseId;
-    if (houseId == null || houseId.isEmpty) return;
-
-    final currentRole = _currentRole;
-    final targetRole = currentRole == 'user1' ? 'user2' : 'user1';
-    var targetName = targetRole == 'user1'
-        ? L10nService().translate('male_role_default')
-        : L10nService().translate('female_role_default');
-    var targetAvatar = '';
-
-    final data = _houseSettings;
-    if (data != null) {
-      final nameKey = targetRole == 'user1' ? 'nameU1' : 'nameU2';
-      final avatarKey = targetRole == 'user1' ? 'avtUser1' : 'avtUser2';
-      final name = data[nameKey]?.toString().trim() ?? '';
-      final avatar = data[avatarKey]?.toString().trim() ?? '';
-      if (name.isNotEmpty) targetName = name;
-      if (avatar.isNotEmpty) targetAvatar = avatar;
+  Future<void> _openSoulMergeChat() async {
+    final houseId = _houseId?.trim() ?? '';
+    if (!mounted ||
+        houseId.isEmpty ||
+        FirebaseAuth.instance.currentUser == null) {
+      return;
     }
 
     await Navigator.push(
       context,
-      SLRoute(
-        builder: (_) => ChatDetailScreen(
-          myHouseId: houseId,
-          targetHouseId: houseId,
-          targetName: targetName,
-          targetAvatar: targetAvatar,
-          isInternal: true,
-          currentRole: currentRole,
-          targetRole: targetRole,
-        ),
-      ),
+      SLRoute(builder: (_) => const SoulMergeScreen()),
     );
   }
 }

@@ -143,7 +143,11 @@ class DiaryService {
     }
 
     try {
-      return await query.get(const GetOptions(source: Source.server));
+      // Mạng yếu nhưng chưa được xác định là offline: không để UI chờ vô hạn,
+      // quá hạn thì dùng bản cache đã lưu trên máy.
+      return await query
+          .get(const GetOptions(source: Source.server))
+          .timeout(const Duration(seconds: 6));
     } catch (_) {
       return await query.get(const GetOptions(source: Source.cache));
     }

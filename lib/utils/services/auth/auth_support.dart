@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -157,7 +158,7 @@ String handleFirebaseAuthError(firebase_auth.FirebaseAuthException error) {
       return AppErrorMapper.resolve(
         error,
         fallbackMessage:
-            'Máy chủ xác thực đang bận hoặc gặp sự cố. Vui lòng thử lại sau.',
+            L10nService().translate('err_auth_server_busy'),
       ).message;
   }
 }

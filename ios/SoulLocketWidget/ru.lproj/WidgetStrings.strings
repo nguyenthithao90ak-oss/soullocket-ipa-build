@@ -1,17 +1,17 @@
 /* Widget extension: cùng bản dịch với assets/i18n/ru.json. */
 "p3_health_days_remaining" = "days remaining";
 "sleep_state_unknown" = "Пока нет данных";
-"sleep_state_disabled" = "Запись выключена";
+"sleep_state_disabled" = "Отслеживание сна выключено";
 "sleep_state_estimated" = "Возможно, отдыхает";
 "sleep_state_manual" = "Запись отдыха";
 "sleep_state_recorded" = "Записанный сон";
 "sleep_source_estimate" = "Оценка по экрану";
 "sleep_source_manual" = "Записано вручную";
-"sleep_manual_start" = "Начать отдых";
-"sleep_manual_stop" = "Завершить отдых";
+"sleep_manual_start" = "Я ложусь спать";
+"sleep_manual_stop" = "Я проснулся/проснулась";
 "sleep_tracking_failed" = "Не удалось обновить. Попробуйте снова.";
-"sleep_tracking_info_ios" = "Apple Health предоставляет записи сна, а не отслеживание в реальном времени. При включении данные передаются партнёру.";
-"sleep_tracking_info_android" = "Выключенный экран — только оценка, не доказательство сна. Начало и конец отдыха можно записать вручную.";
+"sleep_tracking_info_ios" = "Загружает сон, уже записанный в Apple Health. Не определяет, спите ли вы прямо сейчас.";
+"sleep_tracking_info_android" = "Приложение предполагает сон, если экран долго выключен ночью. Это не измерение сна.";
 "sleep_tracking_consent" = "Включить запись и делиться статусом и временем отдыха с партнёром?";
 "sleep_sync_hint" = "Откройте для обновления";
 "sleep_duration" = "{hours} ч {minutes} мин";
@@ -40,3 +40,5 @@
 "widget_title_sleep" = "Couple Sleep";
 "p3_health_phase_period" = "Period phase";
 "p3_health_next_period" = "until your next period";
+"milestone_today" = "📍Сегодня";
+"milestone_days_left" = "🌸 осталось {days} дней";

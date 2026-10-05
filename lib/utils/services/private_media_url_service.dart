@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'core/callable_app_check_guard.dart';
 import 'core/cloud_functions_helper.dart';
 
 class PrivateMediaUrlResult {
@@ -50,6 +51,7 @@ class PrivateMediaUrlService {
 
   static const Duration _cacheSafetyWindow = Duration(seconds: 5);
   static const Duration _maximumCacheLifetime = Duration(seconds: 90);
+  static const Duration _appCheckFailureCooldown = Duration(seconds: 30);
 
   final String? Function() _currentUid;
   final Stream<String?> Function() _authChanges;
@@ -64,11 +66,17 @@ class PrivateMediaUrlService {
   Timer? _batchTimer;
   StreamSubscription<String?>? _authSubscription;
   String? _uid;
+  FirebaseFunctionsException? _appCheckFailure;
+  int? _appCheckFailureAt;
+  Stopwatch? _appCheckFailureAge;
   int _generation = 0;
   bool _disposed = false;
 
   void clear() {
     _generation++;
+    _appCheckFailure = null;
+    _appCheckFailureAt = null;
+    _appCheckFailureAge = null;
     _pending.clear();
     _batchTimer?.cancel();
     _batchTimer = null;
@@ -148,6 +156,8 @@ class PrivateMediaUrlService {
     }
     final cached = _getCached(cacheKey);
     if (cached != null) return cached;
+    final blocked = _recentAppCheckFailure();
+    if (blocked != null) throw blocked;
     final generation = _generation;
     _ensureAuthSubscription();
     final pending =
@@ -187,6 +197,44 @@ class PrivateMediaUrlService {
       onError: (Object _) => clear(),
       onDone: clear,
     );
+  }
+
+  FirebaseFunctionsException? _recentAppCheckFailure() {
+    final failure = _appCheckFailure;
+    if (failure == null) return null;
+    final elapsed = _now().millisecondsSinceEpoch - _appCheckFailureAt!;
+    if (elapsed >= _appCheckFailureCooldown.inMilliseconds ||
+        _appCheckFailureAge!.elapsed >= _appCheckFailureCooldown) {
+      _appCheckFailure = null;
+      _appCheckFailureAt = null;
+      _appCheckFailureAge = null;
+      return null;
+    }
+    return failure;
+  }
+
+  FirebaseFunctionsException _rejectAppCheck(
+    Object? cause,
+    String uid,
+    int generation,
+  ) {
+    final throttled =
+        cause is FirebaseException &&
+        (const {
+              'resource-exhausted',
+              'too-many-requests',
+            }.contains(cause.code) ||
+            (cause.message ?? '').toLowerCase().contains('too many attempts'));
+    final failure = FirebaseFunctionsException(
+      code: throttled ? 'resource-exhausted' : 'failed-precondition',
+      message: '',
+    );
+    if (!_disposed && uid == _currentUid() && generation == _generation) {
+      _appCheckFailure = failure;
+      _appCheckFailureAt = _now().millisecondsSinceEpoch;
+      _appCheckFailureAge = Stopwatch()..start();
+    }
+    return failure;
   }
 
   PrivateMediaUrlResult? _getCached(String cacheKey) {
@@ -358,6 +406,30 @@ class PrivateMediaUrlService {
     } on FirebaseFunctionsException catch (error) {
       // Không chuyển message/details có thể chứa bearer URL ra UI hoặc log.
       throw FirebaseFunctionsException(code: error.code, message: '');
+    } on CallableAppCheckException catch (error) {
+      throw _rejectAppCheck(error.cause, uid, generation);
+    } on CallableVerificationException catch (error) {
+      throw FirebaseFunctionsException(code: error.cause.code, message: '');
+    } on FirebaseAuthException catch (error) {
+      throw FirebaseFunctionsException(
+        code: error.code == 'network-request-failed'
+            ? 'unavailable'
+            : error.code == 'too-many-requests'
+            ? 'resource-exhausted'
+            : 'unauthenticated',
+        message: '',
+      );
+    } on FirebaseException catch (error) {
+      if (error.plugin == 'firebase_app_check' &&
+          !const {
+            'network-request-failed',
+            'unavailable',
+          }.contains(error.code)) {
+        throw _rejectAppCheck(error, uid, generation);
+      }
+      throw FirebaseFunctionsException(code: 'unavailable', message: '');
+    } on TimeoutException {
+      throw FirebaseFunctionsException(code: 'deadline-exceeded', message: '');
     } catch (_) {
       throw FirebaseFunctionsException(code: 'unavailable', message: '');
     }

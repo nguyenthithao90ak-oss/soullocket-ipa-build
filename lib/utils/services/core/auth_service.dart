@@ -355,6 +355,34 @@ class AuthService {
     return _recoveryService.validateEmailOTP(email, otp);
   }
 
+  Future<void> validateLoginAliasOTP(
+    String email,
+    String otp, {
+    required String expectedUid,
+  }) {
+    return _recoveryService.validateEmailOTP(
+      email,
+      otp,
+      aliasExpectedUid: expectedUid,
+    );
+  }
+
+  Future<String> getLoginAliasForCurrentUser({required String expectedUid}) {
+    return _recoveryService.getLoginAliasForCurrentUser(
+      expectedUid: expectedUid,
+    );
+  }
+
+  Future<void> setLoginAliasForCurrentUser(
+    String email, {
+    required String expectedUid,
+  }) {
+    return _recoveryService.setLoginAliasForCurrentUser(
+      email,
+      expectedUid: expectedUid,
+    );
+  }
+
   Future<bool> warmUpPlayIntegrity({bool force = false}) {
     return _playIntegrityService.warmUp(force: force);
   }
@@ -378,8 +406,9 @@ class AuthService {
   Future<void> signInWithCustomTokenAndSetPassword(
     String token,
     String newPassword,
-  ) {
-    return _recoveryService.signInWithCustomTokenAndSetPassword(
+  ) async {
+    await _signInService.waitForPendingSignOut();
+    await _recoveryService.signInWithCustomTokenAndSetPassword(
       token,
       newPassword,
     );

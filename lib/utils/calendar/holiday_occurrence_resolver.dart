@@ -26,6 +26,9 @@ class PresetHoliday {
     this.sourceReferences = const [],
     this.verifiedAt,
     this.verificationStatus = 'pending',
+    this.category = 'couple_cultural',
+    this.subdivisionCodes = const [],
+    this.selectionPolicy = 'legacy_default',
   });
 
   final String id;
@@ -42,6 +45,18 @@ class PresetHoliday {
   final List<String> sourceReferences;
   final String? verifiedAt;
   final String verificationStatus;
+  final String category;
+  final List<String> subdivisionCodes;
+  final String selectionPolicy;
+
+  static const categories = {
+    'couple_cultural',
+    'cultural',
+    'religious',
+    'international_observance',
+    'public_holiday',
+  };
+  static const selectionPolicies = {'legacy_default', 'optional'};
 
   bool get isInternational => countries.contains('ALL');
   bool get isVietnamOnly => countries.length == 1 && countries.contains('VN');

@@ -680,6 +680,8 @@ class PresenceService {
     required String role,
     int? lastSeenMs,
   }) async {
+    final uid = _currentUid;
+    final sessionId = _mySessionId;
     debugPrint(
       '[Presence] goOffline start role=$role house=$houseId session=${_mySessionId ?? '-'} lastSeen=${lastSeenMs ?? '-'}',
     );
@@ -691,6 +693,7 @@ class PresenceService {
       markOfflineIfEmpty: true,
       lastSeenMs: lastSeenMs,
     );
+    if (_currentUid != uid || _mySessionId != sessionId) return;
     _myPresenceRef = null;
     _mySessionId = null;
     _lastOnlineFingerprint = null;

@@ -56,7 +56,15 @@ abstract final class MarketCatalog {
     'ES',
     'BR',
     'RU',
+    'HK',
+    'MO',
   ];
+
+  static const subdivisionCodes = <String, Set<String>>{
+    'ES': {'ES-CT'},
+  };
+
+  static const holidayDefaultsVersion = 2;
 
   static MarketProfile? find(String? code) {
     final normalized = code?.trim().toUpperCase();
@@ -68,9 +76,14 @@ abstract final class MarketCatalog {
 
   static List<String> defaultHolidayPacks(String code) => [
     'ALL',
-    if (code == 'HK' || code == 'MO')
-      'CN'
-    else if (code != 'ALL' && holidayPackCodes.contains(code))
+    if (code != 'ALL' && code != 'ES' && holidayPackCodes.contains(code))
       code,
   ];
+
+  static List<String>? previousImplicitHolidayPacks(String? code) =>
+      switch (code) {
+        'ES' => const ['ALL', 'ES'],
+        'HK' || 'MO' => const ['ALL', 'CN'],
+        _ => null,
+      };
 }

@@ -13,8 +13,10 @@ class AdUnitConfig {
       'ca-app-pub-6165771694697009/3441513253';
   static String androidRewardedCheckinId =
       'ca-app-pub-6165771694697009/9710840883';
+  // Console Android chưa có unit Soul Game riêng (đối chiếu 05/10/2026).
+  // Dùng rewarded đã tồn tại; remote config vẫn có thể đặt unit riêng.
   static String androidRewardedSoulGameId =
-      'ca-app-pub-6165771694697009/5113438527';
+      'ca-app-pub-6165771694697009/3441513253';
   static String androidBannerId = 'ca-app-pub-6165771694697009/5949757521';
   static String androidInterstitialId =
       'ca-app-pub-6165771694697009/6283299015';

@@ -251,8 +251,36 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
     }
   }
 
-  Widget _buildHomeToolSlotSection() {
-    return const SizedBox.shrink();
+  Widget _buildHomeToolSlotSection({required bool isSingle}) {
+    final houseId = (_houseId ?? '').trim();
+    final uid = _auth.currentUser?.uid;
+    if (houseId.isEmpty || uid == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        HomeDailyActivityCard(
+          key: ValueKey('home-daily-$uid-$houseId'),
+          isSingle: isSingle,
+          onOpenDiary: widget.onOpenDiary,
+          onOpenChat: () => unawaited(_openSoulMergeChat()),
+          onOpenCalendar: () {
+            final tool = _buildEmbeddedHomeTool('calendar');
+            if (tool == null) return;
+            Navigator.of(context).push(SLRoute(builder: (_) => tool));
+          },
+          onOpenPairing: () => Navigator.of(context).push(
+            SLRoute(builder: (_) => const PairingDashboardScreen()),
+          ),
+        ),
+        if (!isSingle)
+          HomeCompanionJourneyCard(
+            key: ValueKey('home-journey-$uid-$houseId'),
+          ),
+      ],
+    );
   }
 
   Widget _buildEmbeddedHomeToolSurface(UtilityApp app) {

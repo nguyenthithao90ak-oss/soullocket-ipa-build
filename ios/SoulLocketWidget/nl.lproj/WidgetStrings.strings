@@ -1,17 +1,17 @@
 /* Widget extension: cùng bản dịch với assets/i18n/nl.json. */
 "p3_health_days_remaining" = "days remaining";
 "sleep_state_unknown" = "Nog geen gegevens";
-"sleep_state_disabled" = "Registratie uit";
+"sleep_state_disabled" = "Slaapregistratie staat uit";
 "sleep_state_estimated" = "Rust mogelijk";
 "sleep_state_manual" = "Rust registreren";
 "sleep_state_recorded" = "Geregistreerde slaap";
 "sleep_source_estimate" = "Schermschatting";
 "sleep_source_manual" = "Zelf geregistreerd";
-"sleep_manual_start" = "Rust starten";
-"sleep_manual_stop" = "Rust beëindigen";
+"sleep_manual_start" = "Ik ga slapen";
+"sleep_manual_stop" = "Ik ben wakker";
 "sleep_tracking_failed" = "Bijwerken mislukt. Probeer opnieuw.";
-"sleep_tracking_info_ios" = "Apple Health geeft slaapregistraties, geen live detectie. Inschakelen deelt dit met je partner.";
-"sleep_tracking_info_android" = "Een uitgeschakeld scherm is slechts een schatting, geen bewijs van slaap. Je kunt rust zelf registreren.";
+"sleep_tracking_info_ios" = "Importeert slaap die al in Apple Health is vastgelegd. Weet niet of je nu slaapt.";
+"sleep_tracking_info_android" = "De app schat slaap wanneer het scherm ’s nachts lang uit blijft. Dit is geen slaapmeting.";
 "sleep_tracking_consent" = "Registratie inschakelen en ruststatus en tijden delen met je partner?";
 "sleep_sync_hint" = "Open app om bij te werken";
 "sleep_duration" = "{hours} u {minutes} min";
@@ -21,7 +21,7 @@
 "home_cpi_d525b0" = "Couple";
 "home_knim_4f6aeb" = "Celebrate";
 "home_lchchung_ac8882" = "General calendar";
-"milestone_tomorrow" = "📅 Tomorrow";
+"milestone_tomorrow" = "📅 Morgen";
 "p3_health_header_cycle" = "Tracker";
 "p3_sleep_both_sleeping" = "Both are sleeping 😴";
 "p3_sleep_default_me" = "You";
@@ -40,3 +40,5 @@
 "widget_title_sleep" = "Couple Sleep";
 "p3_health_phase_period" = "Period phase";
 "p3_health_next_period" = "until your next period";
+"milestone_today" = "📍 Vandaag";
+"milestone_days_left" = "🌸 Nog {days} dagen";

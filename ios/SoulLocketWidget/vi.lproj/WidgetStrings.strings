@@ -1,17 +1,17 @@
 /* Widget extension: cùng bản dịch với assets/i18n/vi.json. */
 "p3_health_days_remaining" = "ngày nữa";
 "sleep_state_unknown" = "Chưa có dữ liệu";
-"sleep_state_disabled" = "Chưa bật ghi nhận";
+"sleep_state_disabled" = "Chưa bật theo dõi";
 "sleep_state_estimated" = "Có thể đang nghỉ";
 "sleep_state_manual" = "Đang ghi nhận";
 "sleep_state_recorded" = "Giấc ngủ đã ghi";
 "sleep_source_estimate" = "Ước tính từ màn hình";
 "sleep_source_manual" = "Bạn ghi nhận";
-"sleep_manual_start" = "Bắt đầu nghỉ";
-"sleep_manual_stop" = "Kết thúc nghỉ";
+"sleep_manual_start" = "Tôi bắt đầu ngủ";
+"sleep_manual_stop" = "Tôi đã thức dậy";
 "sleep_tracking_failed" = "Không thể cập nhật. Vui lòng thử lại.";
-"sleep_tracking_info_ios" = "Apple Health cung cấp giấc ngủ đã ghi, không xác định đang ngủ trực tiếp. Dữ liệu được chia sẻ với người ấy khi bạn bật.";
-"sleep_tracking_info_android" = "Màn hình tắt chỉ là ước tính, không chứng minh đã ngủ. Bạn có thể tự ghi giờ bắt đầu và kết thúc nghỉ.";
+"sleep_tracking_info_ios" = "Lấy giấc ngủ đã ghi trong Apple Health, không xác định bạn đang ngủ ngay lúc này.";
+"sleep_tracking_info_android" = "App ước tính khi màn hình tắt lâu vào ban đêm. Đây không phải phép đo giấc ngủ.";
 "sleep_tracking_consent" = "Bật ghi nhận và chia sẻ trạng thái cùng giờ nghỉ với người ấy?";
 "sleep_sync_hint" = "Mở app để cập nhật";
 "sleep_duration" = "{hours} giờ {minutes} phút";
@@ -40,3 +40,5 @@
 "widget_title_sleep" = "Giấc ngủ đôi";
 "p3_health_phase_period" = "Đang trong kỳ";
 "p3_health_next_period" = "bắt đầu kỳ tiếp theo";
+"milestone_today" = "📍 Hôm nay";
+"milestone_days_left" = "🌸 Còn {days} ngày";

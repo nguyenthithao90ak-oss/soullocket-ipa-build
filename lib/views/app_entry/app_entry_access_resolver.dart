@@ -39,13 +39,23 @@ class AppEntryAccessResolver {
   AppEntryAccessResolver({
     AuthService? authService,
     HouseService? houseService,
+    String? Function()? currentUid,
     required this._getPrefs,
   }) : _authService = authService ?? AuthService(),
-       _houseService = houseService ?? HouseService();
+       _houseService = houseService ?? HouseService(),
+       _currentUid =
+           currentUid ?? (() => FirebaseAuth.instance.currentUser?.uid);
 
   final AuthService _authService;
   final HouseService _houseService;
   final Future<SharedPreferences> Function() _getPrefs;
+  final String? Function() _currentUid;
+
+  void _requireCurrentSession(String? userId) {
+    if (userId == null || _currentUid() != userId) {
+      throw StateError('auth_session_changed');
+    }
+  }
 
   AppEntryAccessResolution createResolution({
     required User user,
@@ -57,6 +67,7 @@ class AppEntryAccessResolver {
     })
     onBackgroundState,
   }) {
+    _requireCurrentSession(user.uid);
     if (cachedHouseId != null && cachedHouseId.isNotEmpty) {
       final initialState = AppEntryAccessState(
         houseId: cachedHouseId,
@@ -104,6 +115,7 @@ class AppEntryAccessResolver {
     required String? userId,
     required void Function(AppEntryAccessState state) onBackgroundState,
   }) async {
+    _requireCurrentSession(userId);
     final prefs =
         OfflineCacheService.getPrefsSync() ??
         await (() async {
@@ -116,18 +128,10 @@ class AppEntryAccessResolver {
             return null;
           }
         }());
+    _requireCurrentSession(userId);
 
     final cachedHouseId = prefs?.getString('il_house_id');
-    var cachedAuthUid = prefs?.getString('il_auth_uid');
-
-    // Tự động gán lại il_auth_uid cho các máy cài phiên bản cũ bị thiếu
-    if (cachedHouseId != null &&
-        cachedHouseId.isNotEmpty &&
-        cachedAuthUid == null &&
-        userId != null) {
-      cachedAuthUid = userId;
-      unawaited(prefs?.setString('il_auth_uid', userId));
-    }
+    final cachedAuthUid = prefs?.getString('il_auth_uid');
 
     if (cachedHouseId != null &&
         cachedHouseId.isNotEmpty &&
@@ -167,13 +171,15 @@ class AppEntryAccessResolver {
         cachedHouseId.isNotEmpty &&
         cachedAuthUid != userId) {
       await prefs?.remove('il_house_id');
+      _requireCurrentSession(userId);
       await prefs?.remove('il_role');
+      _requireCurrentSession(userId);
     }
 
     final isAdminFuture = _authService
         .isUserAdmin(user)
         .timeout(_adminTimeout, onTimeout: () => false);
-    final remoteStateFuture = fetchRemoteAccessState(false);
+    final remoteStateFuture = fetchRemoteAccessState(false, userId: userId);
 
     try {
       final results = await Future.wait([isAdminFuture, remoteStateFuture])
@@ -181,6 +187,7 @@ class AppEntryAccessResolver {
             _remoteTimeout,
             onTimeout: () => throw Exception('Remote auth checks timed out'),
           );
+      _requireCurrentSession(userId);
       final isAdmin = results[0] as bool;
       final remoteState = results[1] as AppEntryAccessState;
       if (remoteState.houseId != null &&
@@ -188,12 +195,16 @@ class AppEntryAccessResolver {
           userId != null) {
         try {
           final prefs = await _getPrefs();
+          _requireCurrentSession(userId);
           await prefs.setString('il_house_id', remoteState.houseId!);
+          _requireCurrentSession(userId);
           await prefs.setString('il_auth_uid', userId);
+          _requireCurrentSession(userId);
           await SecureStorageService.instance.write(
             SecureStorageService.keyHouseId,
             remoteState.houseId!,
           );
+          _requireCurrentSession(userId);
           await SecureStorageService.instance.write(
             SecureStorageService.keyAuthUid,
             userId,
@@ -204,6 +215,7 @@ class AppEntryAccessResolver {
           );
         }
       }
+      _requireCurrentSession(userId);
       return AppEntryAccessState(
         houseId: remoteState.houseId,
         blockReason: remoteState.blockReason,
@@ -211,17 +223,24 @@ class AppEntryAccessResolver {
         isMaintenance: remoteState.isMaintenance,
       );
     } catch (e) {
+      _requireCurrentSession(userId);
       debugPrint(
         '[AppEntry] Offline fallback triggered: ${AppErrorMapper.resolve(e).message}',
       );
       final isAdmin = await isAdminFuture.catchError((_) => false);
+      final fallbackAuthUid = await SecureStorageService.instance.read(
+        SecureStorageService.keyAuthUid,
+      );
       final fallbackHouseId =
           (await SecureStorageService.instance.read(
             SecureStorageService.keyHouseId,
           ))?.trim() ??
           '';
+      _requireCurrentSession(userId);
       return AppEntryAccessState(
-        houseId: fallbackHouseId.isNotEmpty ? fallbackHouseId : null,
+        houseId: fallbackAuthUid == userId && fallbackHouseId.isNotEmpty
+            ? fallbackHouseId
+            : null,
         isAdmin: isAdmin,
         isMaintenance: false,
       );
@@ -239,10 +258,11 @@ class AppEntryAccessResolver {
     })
     onResolved,
   }) {
-    return fetchRemoteAccessState(isAdmin)
+    return fetchRemoteAccessState(isAdmin, userId: userId)
         .timeout(_remoteTimeout)
         .then<void>(
           (state) {
+            if (_currentUid() != userId) return;
             final sameHouseId = (state.houseId ?? '') == (cachedHouseId ?? '');
             if (sameHouseId &&
                 state.blockReason == null &&
@@ -278,13 +298,33 @@ class AppEntryAccessResolver {
         );
   }
 
-  Future<AppEntryAccessState> fetchRemoteAccessState(bool isAdmin) async {
+  Future<AppEntryAccessState> fetchRemoteAccessState(
+    bool isAdmin, {
+    String? userId,
+  }) async {
+    final uid = userId ?? _currentUid();
+    _requireCurrentSession(uid);
     final isMaintenanceFuture = _authService.isMaintenanceModeEnabled();
     final blockReasonFuture = _authService.getCurrentUserBlockReason();
-    final houseIdFuture = _houseService.getCurrentHouseId();
+    Object? houseError;
+    StackTrace? houseStackTrace;
+    final houseIdFuture = _houseService.getCurrentHouseId().then<String?>(
+      (houseId) => houseId,
+      onError: (Object error, StackTrace stackTrace) {
+        houseError = error;
+        houseStackTrace = stackTrace;
+        return null;
+      },
+    );
 
-    final isMaintenance = await isMaintenanceFuture;
-    final blockReason = await blockReasonFuture;
+    final results = await Future.wait<Object?>([
+      isMaintenanceFuture,
+      blockReasonFuture,
+      houseIdFuture,
+    ]);
+    final isMaintenance = results[0] as bool;
+    final blockReason = results[1] as String?;
+    _requireCurrentSession(uid);
     if (blockReason != null) {
       return AppEntryAccessState(
         blockReason: blockReason,
@@ -293,7 +333,11 @@ class AppEntryAccessResolver {
       );
     }
 
-    final houseId = await houseIdFuture;
+    if (houseError != null) {
+      Error.throwWithStackTrace(houseError!, houseStackTrace!);
+    }
+    final houseId = results[2] as String?;
+    _requireCurrentSession(uid);
     return AppEntryAccessState(
       houseId: houseId,
       isAdmin: isAdmin,

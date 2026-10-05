@@ -760,11 +760,11 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
         SLSnackBar(
           content: Text(
             errorInfo.message,
-            
+
           ),
           backgroundColor: Colors.red.shade800,
           behavior: SnackBarBehavior.floating,
-          
+
         ),
       );
     } finally {

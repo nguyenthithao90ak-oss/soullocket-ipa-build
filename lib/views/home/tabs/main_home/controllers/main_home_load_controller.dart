@@ -30,8 +30,6 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _delayedMapWeatherTimer = null;
     _presenceSnapshotFallbackTimer?.cancel();
     _presenceSnapshotFallbackTimer = null;
-    _calendarWidgetSyncDebounce?.cancel();
-    _calendarWidgetSyncDebounce = null;
     _healthCycleWidgetSyncDebounce?.cancel();
     _healthCycleWidgetSyncDebounce = null;
     _settingsSubscription?.cancel();
@@ -60,6 +58,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _healthCycleSyncSubscription = null;
     _chatSignalSubscription?.cancel();
     _chatSignalSubscription = null;
+    _recentChatSignals.clear();
     _reactionFlightSubscription?.cancel();
     _reactionFlightSubscription = null;
     _gpsSubscription?.cancel();

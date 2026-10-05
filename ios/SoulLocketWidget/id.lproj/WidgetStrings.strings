@@ -1,17 +1,17 @@
 /* Widget extension: cùng bản dịch với assets/i18n/id.json. */
 "p3_health_days_remaining" = "days remaining";
 "sleep_state_unknown" = "Belum ada data";
-"sleep_state_disabled" = "Pencatatan mati";
+"sleep_state_disabled" = "Pelacakan tidur belum aktif";
 "sleep_state_estimated" = "Mungkin beristirahat";
 "sleep_state_manual" = "Mencatat istirahat";
 "sleep_state_recorded" = "Tidur tercatat";
 "sleep_source_estimate" = "Perkiraan layar";
 "sleep_source_manual" = "Dicatat sendiri";
-"sleep_manual_start" = "Mulai istirahat";
-"sleep_manual_stop" = "Akhiri istirahat";
+"sleep_manual_start" = "Aku mulai tidur";
+"sleep_manual_stop" = "Aku sudah bangun";
 "sleep_tracking_failed" = "Gagal memperbarui. Coba lagi.";
-"sleep_tracking_info_ios" = "Apple Health menyediakan catatan tidur, bukan deteksi langsung. Mengaktifkan akan membagikannya ke pasangan.";
-"sleep_tracking_info_android" = "Layar mati hanya perkiraan, bukan bukti tidur. Anda bisa mencatat awal dan akhir istirahat.";
+"sleep_tracking_info_ios" = "Mengambil tidur yang sudah tercatat di Apple Health. Tidak mengetahui apakah kamu sedang tidur saat ini.";
+"sleep_tracking_info_android" = "Aplikasi memperkirakan tidur saat layar lama mati pada malam hari. Ini bukan pengukuran tidur.";
 "sleep_tracking_consent" = "Aktifkan pencatatan dan bagikan status serta waktu istirahat ke pasangan?";
 "sleep_sync_hint" = "Buka aplikasi untuk memperbarui";
 "sleep_duration" = "{hours} j {minutes} m";
@@ -40,3 +40,5 @@
 "widget_title_sleep" = "Couple Sleep";
 "p3_health_phase_period" = "Period phase";
 "p3_health_next_period" = "until your next period";
+"milestone_today" = "📍 Hari ini";
+"milestone_days_left" = "🌸 {days} hari tersisa";

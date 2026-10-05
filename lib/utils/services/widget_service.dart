@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import '../../core/constants/app_locale_registry.dart';
 import 'market_service.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -15,6 +16,9 @@ import '../../core/constants/app_config.dart';
 import '../../utils/app_error_mapper.dart';
 import '../calendar_widget_snapshot.dart';
 import '../calendar/holiday_occurrence_resolver.dart';
+import '../calendar/calendar_time_zone.dart';
+import '../calendar/calendar_display_format.dart';
+import '../calendar/calendar_widget_payload.dart';
 import '../sleep_tracking_math.dart';
 import 'storage/storage_service.dart';
 import 'package:soullocket_app/utils/flexible_date_input.dart';
@@ -87,6 +91,7 @@ class WidgetService {
   static bool _didBootstrap = false;
   static int _sleepSyncRevision = 0;
   static int _calendarSyncRevision = 0;
+  static final _calendarWrites = CalendarWidgetWriteQueue();
   static final Map<String, Object?> _runtimeWidgetData = <String, Object?>{};
   static final StorageService _storageService = StorageService();
   static Future<void> ensureInitialized({bool forceUpdate = false}) async {
@@ -221,6 +226,7 @@ class WidgetService {
     if (kIsWeb) return;
 
     _sleepSyncRevision++;
+    _calendarSyncRevision++;
     await ensureInitialized();
     await HomeWidget.saveWidgetData<String>(
       'sleep_snapshot_v2',
@@ -239,6 +245,7 @@ class WidgetService {
       }),
     );
     await HomeWidget.saveWidgetData<bool>('se_has_event', false);
+    await clearCalendarWidgetData();
     await _updateAuxiliaryWidget(
       androidName: androidWidgetSleepName,
       qualifiedAndroidName: qualifiedAndroidWidgetSleepName,
@@ -430,6 +437,7 @@ class WidgetService {
     await _saveIfMissing<String>('calendar_countdown', '');
     await _saveIfMissing<String>('calendar_next_date', '');
     await _saveIfMissing<String>('calendar_events_text', '');
+    await _saveIfMissing<String>('calendar_snapshot_v2', '{}');
   }
 
   static String normalizeHeartStyleKey(String? value) =>
@@ -1277,6 +1285,34 @@ class WidgetService {
     return full ? strings.formatFullDate(date) : strings.formatMediumDate(date);
   }
 
+  static Future<void> clearCalendarWidgetData() {
+    _calendarSyncRevision++;
+    if (!supportsMobileWidgets) return Future.value();
+    return _calendarWrites.enqueue(() async {
+      await ensureInitialized();
+      await _saveWidgetDataIfChanged<String>(
+        'calendar_snapshot_v2',
+        jsonEncode(CalendarWidgetPayload.empty()),
+      );
+      await _saveWidgetDataIfChanged<bool>('calendar_enabled', false);
+      for (final key in [
+        'calendar_next_date_key',
+        'calendar_countdown',
+        'calendar_next_date',
+        'calendar_events_text',
+      ]) {
+        await _saveWidgetDataIfChanged<String>(key, '');
+      }
+      await _updateAuxiliaryWidget(
+        androidName: androidWidgetCalendarName,
+        qualifiedAndroidName: qualifiedAndroidWidgetCalendarName,
+        iOSName: iOSWidgetCalendarName,
+      );
+    }).catchError((Object error) {
+      debugPrint('[WidgetService] Calendar clear failed: ${AppErrorMapper.resolve(error).message}');
+    });
+  }
+
   static Future<void> syncCalendarWidgetData({
     required String houseId,
     Object? calendarData,
@@ -1284,19 +1320,36 @@ class WidgetService {
     if (!supportsMobileWidgets) return;
     final revision = ++_calendarSyncRevision;
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    final initialScope = '$uid\u0000$houseId';
-    bool active() => revision == _calendarSyncRevision &&
+    if (uid == null) return;
+    final selection = MarketService.instance.preferences;
+    final locale = L10nService().locale;
+    final market = MarketService.instance.marketCode;
+    final selectionKey = jsonEncode(selection.toJson());
+    bool active() =>
+        revision == _calendarSyncRevision &&
         FirebaseAuth.instance.currentUser?.uid == uid &&
-        '$uid\u0000$houseId' == initialScope;
+        jsonEncode(MarketService.instance.preferences.toJson()) ==
+            selectionKey &&
+        L10nService().locale == locale;
+    Future<bool> scopeStillActive() async {
+      if (!active()) return false;
+      final currentHouse = await HouseService().getCurrentHouseId();
+      return active() && currentHouse == houseId;
+    }
+
     try {
       await ensureInitialized();
-      if (!active()) return;
-      final today = DateTime.now();
-      final todayMidnight = DateTime(today.year, today.month, today.day);
+      if (!await scopeStillActive()) return;
+      final today = CalendarTimeZone.fromMilliseconds(
+        DateTime.now().millisecondsSinceEpoch,
+        selection.timeZoneId,
+      );
+      final todayCivil = DateTime.utc(today.year, today.month, today.day);
       final planEvent = await CalendarWidgetSnapshot.resolve(
         now: today,
         calendarData: calendarData,
         loadPage: (afterKey, limit) async {
+          if (!active()) return <String, dynamic>{};
           final query = FirebaseDatabase.instance
               .ref('houses/$houseId/calendar')
               .orderByKey();
@@ -1309,80 +1362,80 @@ class WidgetService {
               : <String, dynamic>{};
         },
       );
-      if (!active()) return;
-
-      final todayDate = DateTime(today.year, today.month, today.day);
-      final nextHoliday = _nextHolidayWidgetSnapshot(todayDate);
-      final nextEvent = _mergeCalendarWidgetSnapshots(planEvent, nextHoliday);
-
-      if (nextEvent == null) {
-        if (!active()) return;
-        await _saveWidgetDataIfChanged<bool>('calendar_enabled', false);
+      if (!await scopeStillActive()) return;
+      final nextEvent = CalendarWidgetPayload.merge(
+        planEvent,
+        _nextHolidayWidgetSnapshot(todayCivil),
+      );
+      await initializeDateFormatting();
+      final dateLabel = nextEvent == null
+          ? ''
+          : CalendarDisplayFormat.forLocale(
+              locale,
+              market,
+            ).longDate(nextEvent.date);
+      final days = nextEvent == null
+          ? 0
+          : DateTime.utc(
+              nextEvent.date.year,
+              nextEvent.date.month,
+              nextEvent.date.day,
+            ).difference(todayCivil).inDays;
+      final l10n = L10nService();
+      final countdown = days == 0
+          ? l10n.translate('milestone_today')
+          : days == 1
+          ? l10n.translate('milestone_tomorrow')
+          : l10n.format('milestone_days_left', {'days': days});
+      final payload = CalendarWidgetPayload.create(
+        uid: uid,
+        houseId: houseId,
+        event: nextEvent,
+        locale: locale.toLanguageTag(),
+        marketCode: market,
+        timeZone: selection.timeZoneId,
+        dateLabel: dateLabel,
+        countdown: countdown,
+        todayLabel: l10n.translate('milestone_today'),
+        tomorrowLabel: l10n.translate('milestone_tomorrow'),
+        daysLeftTemplate: l10n.translate('milestone_days_left'),
+      );
+      await _calendarWrites.enqueue(() async {
+        if (!await scopeStillActive()) return;
+        // Các key cũ phục vụ gallery/tương thích; native chỉ đọc JSON cuối cùng.
+        await _saveWidgetDataIfChanged<bool>(
+          'calendar_enabled',
+          nextEvent != null,
+        );
         await _saveWidgetDataIfChanged<int>('calendar_payload_version', 2);
-        await _saveWidgetDataIfChanged<String>('calendar_next_date_key', '');
-        await _saveWidgetDataIfChanged<String>('calendar_events_text', '');
+        final strings = <String, String>{
+          'calendar_next_date_key': payload['dateKey']! as String,
+          'calendar_countdown': nextEvent == null ? '' : countdown,
+          'calendar_next_date': dateLabel,
+          'calendar_events_text': payload['events']! as String,
+          'calendar_locale': locale.toLanguageTag(),
+          'calendar_market_code': market,
+          'calendar_time_zone': selection.timeZoneId ?? '',
+        };
+        for (final entry in strings.entries) {
+          if (!active()) return;
+          await _saveWidgetDataIfChanged<String>(entry.key, entry.value);
+        }
+        if (!await scopeStillActive()) return;
+        await _saveWidgetDataIfChanged<String>(
+          'calendar_snapshot_v2',
+          jsonEncode(payload),
+        );
+        if (!active()) return;
         await _updateAuxiliaryWidget(
           androidName: androidWidgetCalendarName,
           qualifiedAndroidName: qualifiedAndroidWidgetCalendarName,
           iOSName: iOSWidgetCalendarName,
         );
-        return;
-      }
-
-      final diffDays = SoulEvent.daysBetween(nextEvent.date, todayMidnight);
-      String countdownText = '';
-      if (diffDays == 0) {
-        countdownText = L10nService().translate('milestone_today');
-      } else if (diffDays == 1) {
-        countdownText = L10nService().translate('milestone_tomorrow');
-      } else {
-        countdownText = L10nService().format('milestone_days_left', {
-          'days': diffDays,
-        });
-      }
-
-      final dateLabel = await _formatCalendarDate(nextEvent.date, full: true);
-      if (!active()) return;
-
-      final eventsText = nextEvent.titles.map((title) => '• $title').join('\n');
-
-      await _saveWidgetDataIfChanged<bool>('calendar_enabled', true);
-      await _saveWidgetDataIfChanged<int>('calendar_payload_version', 2);
-      await _saveWidgetDataIfChanged<String>(
-        'calendar_countdown',
-        countdownText,
-      );
-      await _saveWidgetDataIfChanged<String>('calendar_next_date', dateLabel);
-      await _saveWidgetDataIfChanged<String>(
-        'calendar_next_date_key',
-        CalendarWidgetSnapshot.dateKeyFor(nextEvent.date),
-      );
-      await _saveWidgetDataIfChanged<String>(
-        'calendar_locale',
-        L10nService().locale.toLanguageTag(),
-      );
-      await _saveWidgetDataIfChanged<String>(
-        'calendar_market_code',
-        MarketService.instance.marketCode,
-      );
-      await _saveWidgetDataIfChanged<String>(
-        'calendar_time_zone',
-        MarketService.instance.preferences.timeZoneId ?? '',
-      );
-      await _saveWidgetDataIfChanged<String>(
-        'calendar_events_text',
-        eventsText,
-      );
-      if (!active()) return;
-
-      await _updateAuxiliaryWidget(
-        androidName: androidWidgetCalendarName,
-        qualifiedAndroidName: qualifiedAndroidWidgetCalendarName,
-        iOSName: iOSWidgetCalendarName,
-      );
-    } catch (e) {
+      });
+    } catch (error) {
       debugPrint(
-        'Error syncing calendar widget: ${AppErrorMapper.resolve(e).message}',
+        'Error syncing calendar widget: ${AppErrorMapper.resolve(error).message}',
       );
     }
   }
@@ -1397,23 +1450,11 @@ class WidgetService {
     final date = occurrences.first.date;
     final titles = occurrences
         .where((occurrence) => occurrence.date == date)
-        .map((occurrence) => HolidayService.getLocalizedName(occurrence.holiday))
+        .map(
+          (occurrence) => HolidayService.getLocalizedName(occurrence.holiday),
+        )
         .toList(growable: false);
     return CalendarWidgetSnapshot(date: date, titles: titles);
-  }
-
-  static CalendarWidgetSnapshot? _mergeCalendarWidgetSnapshots(
-    CalendarWidgetSnapshot? plan,
-    CalendarWidgetSnapshot? holiday,
-  ) {
-    if (plan == null) return holiday;
-    if (holiday == null) return plan;
-    if (holiday.date.isBefore(plan.date)) return holiday;
-    if (holiday.date.isAfter(plan.date)) return plan;
-    return CalendarWidgetSnapshot(
-      date: plan.date,
-      titles: List.unmodifiable([...plan.titles, ...holiday.titles]),
-    );
   }
 
   static Future<void> requestPinCalendarWidget() async {

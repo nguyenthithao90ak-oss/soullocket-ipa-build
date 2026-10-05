@@ -181,7 +181,7 @@ extension _MapCheckinSheetExt on _MapScreenState {
                                             e,
                                           ).message,
                                         }),
-                                    
+
                                   ),
                                   backgroundColor: _kMapPinkDeep,
                                 ),

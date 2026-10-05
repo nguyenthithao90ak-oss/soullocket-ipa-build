@@ -1230,9 +1230,9 @@ class LoveInsightService {
         await PushNotificationHelper.systemEvent(
           toHouseId: houseId,
           type: 'upcoming_anniversary_reminder',
-          title: '💞 Sắp tới ngày kỷ niệm rồi',
+          title: L10nService().translate('notif_insight_anniversary_title'),
           content:
-              'Còn 7 ngày nữa là tới ngày đặc biệt của hai bạn, chuẩn bị một bất ngờ nhỏ nha.',
+              L10nService().translate('notif_insight_anniversary_body'),
         );
         return;
       }
@@ -1254,7 +1254,7 @@ class LoveInsightService {
         await PushNotificationHelper.systemEvent(
           toHouseId: houseId,
           type: 'ai_interaction_reminder',
-          title: 'Gửi một chút yêu thương ❤️',
+          title: L10nService().translate('notif_insight_interaction_title'),
           content: message,
         );
         return;
@@ -1273,9 +1273,9 @@ class LoveInsightService {
         await PushNotificationHelper.systemEvent(
           toHouseId: houseId,
           type: 'long_time_no_checkin',
-          title: '🌙 Dạo này hơi vắng nhịp',
+          title: L10nService().translate('notif_insight_quiet_title'),
           content:
-              'Lâu rồi chưa thấy $name ghé app, thử gửi một lời hỏi han dịu dàng nhé.',
+              L10nService().format('notif_insight_quiet_body', {'value1': name}),
         );
       }
     } catch (error) {

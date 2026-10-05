@@ -1,17 +1,17 @@
 /* Widget extension: cùng bản dịch với assets/i18n/ms.json. */
 "p3_health_days_remaining" = "days remaining";
 "sleep_state_unknown" = "Belum ada data";
-"sleep_state_disabled" = "Rakaman dimatikan";
+"sleep_state_disabled" = "Penjejakan tidur dimatikan";
 "sleep_state_estimated" = "Mungkin berehat";
 "sleep_state_manual" = "Merekod rehat";
 "sleep_state_recorded" = "Tidur direkod";
 "sleep_source_estimate" = "Anggaran skrin";
 "sleep_source_manual" = "Direkod sendiri";
-"sleep_manual_start" = "Mula rehat";
-"sleep_manual_stop" = "Tamat rehat";
+"sleep_manual_start" = "Saya mula tidur";
+"sleep_manual_stop" = "Saya sudah bangun";
 "sleep_tracking_failed" = "Gagal mengemas kini. Cuba lagi.";
-"sleep_tracking_info_ios" = "Apple Health memberikan rekod tidur, bukan pengesanan langsung. Mengaktifkan berkongsi data dengan pasangan.";
-"sleep_tracking_info_android" = "Skrin padam hanya anggaran, bukan bukti tidur. Anda boleh merekod mula dan tamat rehat.";
+"sleep_tracking_info_ios" = "Mengambil tidur yang telah direkodkan dalam Apple Health. Tidak mengetahui sama ada anda sedang tidur sekarang.";
+"sleep_tracking_info_android" = "Aplikasi menganggarkan tidur apabila skrin lama padam pada waktu malam. Ini bukan ukuran tidur.";
 "sleep_tracking_consent" = "Aktifkan rakaman dan kongsi status serta masa rehat dengan pasangan?";
 "sleep_sync_hint" = "Buka aplikasi untuk mengemas kini";
 "sleep_duration" = "{hours} j {minutes} m";
@@ -21,7 +21,7 @@
 "home_cpi_d525b0" = "Couple";
 "home_knim_4f6aeb" = "Celebrate";
 "home_lchchung_ac8882" = "General calendar";
-"milestone_tomorrow" = "📅 Tomorrow";
+"milestone_tomorrow" = "📅 Esok";
 "p3_health_header_cycle" = "Tracker";
 "p3_sleep_both_sleeping" = "Both are sleeping 😴";
 "p3_sleep_default_me" = "You";
@@ -40,3 +40,5 @@
 "widget_title_sleep" = "Couple Sleep";
 "p3_health_phase_period" = "Period phase";
 "p3_health_next_period" = "until your next period";
+"milestone_today" = "📍 Hari ini";
+"milestone_days_left" = "🌸 {days} hari lagi";

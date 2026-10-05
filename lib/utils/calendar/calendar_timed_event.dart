@@ -26,16 +26,22 @@ class CalendarTimedEvent {
   };
 
   static CalendarTimedEvent? fromJson(Object? raw, {String? dateKey}) {
-    if (raw is! Map || raw['schemaVersion'] != 1) return null;
+    if (raw is! Map || raw['schemaVersion'] != 1) {
+      return null;
+    }
     final start = raw['startUtcMs'];
     final end = raw['endUtcMs'];
     final zone = raw['timeZoneId'];
     if (start is! int || end is! int || zone is! String ||
         !CalendarTimeZone.isValidId(zone) || end <= start ||
-        end - start > const Duration(days: 7).inMilliseconds) return null;
+        end - start > const Duration(days: 7).inMilliseconds) {
+      return null;
+    }
     final event = CalendarTimedEvent(startUtcMs: start, endUtcMs: end, timeZoneId: zone);
     try {
-      if (dateKey != null && CalendarCivilDate.key(event.start) != dateKey) return null;
+      if (dateKey != null && CalendarCivilDate.key(event.start) != dateKey) {
+        return null;
+      }
       return event;
     } catch (_) {
       return null;
@@ -50,7 +56,9 @@ class CalendarTimedEvent {
     required int minute,
     required String timeZoneId,
   }) {
-    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return const [];
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+      return const [];
+    }
     final location = CalendarTimeZone.locationFor(timeZoneId)!;
     final wall = DateTime.utc(date.year, date.month, date.day, hour, minute);
     final offsets = location.zones.map((zone) => zone.offset.inMilliseconds).toSet();

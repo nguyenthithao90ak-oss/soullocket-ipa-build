@@ -12,6 +12,7 @@ abstract final class CalendarTimeZone {
 
   static bool isValidId(String? id) {
     if (id == null || id.isEmpty || id != id.trim()) return false;
+    if (id == 'UTC') return true;
     ensureInitialized();
     return tz.timeZoneDatabase.locations.containsKey(id);
   }
@@ -20,6 +21,7 @@ abstract final class CalendarTimeZone {
     final normalized = id?.trim();
     // null nghĩa là giờ thiết bị của Dart, không phải tz.local mặc định UTC.
     if (normalized == null || normalized.isEmpty) return null;
+    if (normalized == 'UTC') return tz.UTC;
     if (!isValidId(normalized)) throw ArgumentError.value(id, 'timeZoneId');
     return tz.getLocation(normalized);
   }

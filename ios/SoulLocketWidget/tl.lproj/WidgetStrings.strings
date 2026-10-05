@@ -1,17 +1,17 @@
 /* Widget extension: cùng bản dịch với assets/i18n/tl.json. */
 "p3_health_days_remaining" = "days remaining";
 "sleep_state_unknown" = "Wala pang datos";
-"sleep_state_disabled" = "Naka-off ang pagtatala";
+"sleep_state_disabled" = "Naka-off ang pagsubaybay sa tulog";
 "sleep_state_estimated" = "Maaaring nagpapahinga";
 "sleep_state_manual" = "Itinatala ang pahinga";
 "sleep_state_recorded" = "Naitalang tulog";
 "sleep_source_estimate" = "Tantiya mula sa screen";
 "sleep_source_manual" = "Sariling tala";
-"sleep_manual_start" = "Simulan ang pahinga";
-"sleep_manual_stop" = "Tapusin ang pahinga";
+"sleep_manual_start" = "Matutulog na ako";
+"sleep_manual_stop" = "Gising na ako";
 "sleep_tracking_failed" = "Hindi ma-update. Subukan muli.";
-"sleep_tracking_info_ios" = "Nagbibigay ang Apple Health ng naitalang tulog, hindi live detection. Kapag binuksan, ibinabahagi sa iyong partner.";
-"sleep_tracking_info_android" = "Ang screen na patay ay tantiya lamang, hindi patunay ng tulog. Maaari mong itala ang simula at pagtatapos ng pahinga.";
+"sleep_tracking_info_ios" = "Kinukuha ang tulog na naitala na sa Apple Health. Hindi nito alam kung natutulog ka ngayon.";
+"sleep_tracking_info_android" = "Tinatantiya ng app ang tulog kapag matagal na naka-off ang screen sa gabi. Hindi ito pagsukat ng tulog.";
 "sleep_tracking_consent" = "Buksan ang pagtatala at ibahagi ang estado at oras ng pahinga sa iyong partner?";
 "sleep_sync_hint" = "Buksan ang app para i-update";
 "sleep_duration" = "{hours} oras {minutes} min";
@@ -21,7 +21,7 @@
 "home_cpi_d525b0" = "Couple";
 "home_knim_4f6aeb" = "Celebrate";
 "home_lchchung_ac8882" = "General calendar";
-"milestone_tomorrow" = "📅 Tomorrow";
+"milestone_tomorrow" = "📅 Bukas";
 "p3_health_header_cycle" = "Tracker";
 "p3_sleep_both_sleeping" = "Both are sleeping 😴";
 "p3_sleep_default_me" = "You";
@@ -40,3 +40,5 @@
 "widget_title_sleep" = "Couple Sleep";
 "p3_health_phase_period" = "Period phase";
 "p3_health_next_period" = "until your next period";
+"milestone_today" = "📍 Ngayon";
+"milestone_days_left" = "🌸 {days} araw na lang";

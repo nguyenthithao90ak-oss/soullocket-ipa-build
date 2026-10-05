@@ -38,6 +38,29 @@ abstract final class HolidayCatalogValidator {
       if (markets.contains('ALL') && markets.length > 1) {
         issue('mixed_global_market');
       }
+      if (!PresetHoliday.categories.contains(holiday.category)) {
+        issue('invalid_category');
+      }
+      if (!PresetHoliday.selectionPolicies.contains(holiday.selectionPolicy)) {
+        issue('invalid_selection_policy');
+      }
+      final subdivisions = <String>{};
+      for (final subdivision in holiday.subdivisionCodes) {
+        if (!subdivisions.add(subdivision)) issue('duplicate_subdivision');
+        if (!markets.any(
+          (market) =>
+              MarketCatalog.subdivisionCodes[market]?.contains(subdivision) ==
+              true,
+        )) {
+          issue('invalid_subdivision');
+        }
+      }
+      if (subdivisions.isNotEmpty && holiday.selectionPolicy != 'optional') {
+        issue('regional_default');
+      }
+      if (holiday.category == 'public_holiday' && !holiday.hasVerifiedSource) {
+        issue('unverified_public_holiday');
+      }
       // Năm nhuận làm mốc để chấp nhận 29/2, vẫn từ chối 30/2, 31/4.
       if (!HolidayOccurrenceResolver.isValidDate(
         2000,

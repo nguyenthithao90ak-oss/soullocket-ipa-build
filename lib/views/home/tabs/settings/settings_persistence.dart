@@ -554,25 +554,32 @@ extension _SettingsTabPersistence on _SettingsTabState {
   }
 
   Future<void> _loadSecurityDetails() async {
-    if (_houseId == null) return;
+    final houseId = _houseId;
+    final expectedUid = _auth.currentUser?.uid;
+    if (houseId == null || expectedUid == null) return;
+    bool isCurrentScope() =>
+        mounted && _houseId == houseId && _auth.currentUser?.uid == expectedUid;
     try {
       try {
         await _auth.currentUser?.reload();
       } catch (error) {
         debugPrint('[Settings] Không tải lại được tài khoản: $error');
       }
+      if (!isCurrentScope()) return;
       final currentUser = _auth.currentUser;
-      final security = await _authService.getHouseSecurityData(_houseId!);
+      final security = await _authService.getHouseSecurityData(houseId);
+      if (!isCurrentScope()) return;
       final snaps = await Future.wait([
         _dbRef
-            .child('houses/$_houseId/security')
+            .child('houses/$houseId/security')
             .get()
             .timeout(const Duration(seconds: 3)),
         _dbRef
-            .child('houses/$_houseId/settings')
+            .child('houses/$houseId/settings')
             .get()
             .timeout(const Duration(seconds: 3)),
       ]);
+      if (!isCurrentScope()) return;
       final securitySnap = snaps[0];
       final settingsSnap = snaps[1];
 
@@ -597,12 +604,8 @@ extension _SettingsTabPersistence on _SettingsTabState {
       var secondaryEmail = legacySecondaryEmail;
       if (currentUser != null) {
         try {
-          final loginAliasSnap = await _dbRef
-              .child('users/${currentUser.uid}/loginAliasEmail')
-              .get()
-              .timeout(const Duration(seconds: 3));
-          final loginAliasEmail =
-              loginAliasSnap.value?.toString().trim().toLowerCase() ?? '';
+          final loginAliasEmail = await _authService
+              .getLoginAliasForCurrentUser(expectedUid: currentUser.uid);
           if (loginAliasEmail.isNotEmpty) {
             secondaryEmail = loginAliasEmail;
           }
@@ -610,15 +613,18 @@ extension _SettingsTabPersistence on _SettingsTabState {
           debugPrint('[Settings] Không đọc được email đăng nhập phụ: $error');
         }
       }
+      if (!isCurrentScope()) return;
       final recoveryAnswerHash =
           (effectiveSecurity['answerHash'] ?? effectiveSecurity['answer'] ?? '')
               .toString()
               .trim();
       final linkedGoogle = await _authService.isGoogleLinkedCurrentUser();
+      if (!isCurrentScope()) return;
       final googleLinkedEmail = linkedGoogle
           ? (_authService.getGoogleLinkedEmail() ?? '')
           : '';
       final linkedPassword = await _authService.isPasswordLinkedCurrentUser();
+      if (!isCurrentScope()) return;
       final settingsMap = settingsSnap.exists && settingsSnap.value is Map
           ? Map<dynamic, dynamic>.from(settingsSnap.value as Map)
           : <dynamic, dynamic>{};
@@ -637,16 +643,17 @@ extension _SettingsTabPersistence on _SettingsTabState {
         try {
           await _authService.syncSecurityEmailForCurrentUser(
             user: currentUser,
-            houseId: _houseId,
+            houseId: houseId,
           );
         } catch (error) {
           debugPrint('[Settings] Không đồng bộ được email bảo mật: $error');
         }
       }
+      if (!isCurrentScope()) return;
       if (legacyHousePin.isNotEmpty) {
         unawaited(
           _migrateLegacyHousePinToPrivate(
-            houseId: _houseId!,
+            houseId: houseId,
             rawPin: legacyHousePin,
           ).catchError(
             (error) =>
@@ -656,7 +663,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
       }
       if (hasLegacyRemoteLockArtifacts) {
         unawaited(
-          _clearRemoteAppLockSyncArtifacts(houseId: _houseId).catchError(
+          _clearRemoteAppLockSyncArtifacts(houseId: houseId).catchError(
             (error) => debugPrint(
               '[Settings] Không xóa được lock artifact legacy: $error',
             ),
@@ -664,7 +671,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
         );
       }
 
-      if (!mounted) return;
+      if (!isCurrentScope()) return;
       setState(() {
         _securityEmail =
             (effectiveSecurity['email'] ?? currentUser?.email ?? '')
@@ -694,19 +701,30 @@ extension _SettingsTabPersistence on _SettingsTabState {
   }
 
   Future<void> _saveSecondaryEmail() async {
-    if (_houseId == null) return;
+    final houseId = _houseId;
+    if (houseId == null) return;
     final logInReq = context.tr('home_bncnngnhpl_1c2e72');
     final enterEmailReq = context.tr('home_hynhpemail_7509cc');
     final invalidEmailErr = context.tr('home_emailphkhn_2e049e');
     final duplicateEmailErr = context.tr('home_emailphkhn_ca4585');
     final supportedEmailsOnlyMsg = context.tr('settings_supported_emails_only');
 
-    if (!await _ensureCanModifySharedInfo()) return;
     final currentUser = _auth.currentUser;
     if (currentUser == null) {
       _showToast(logInReq, success: false);
       return;
     }
+    bool isCurrentScope() =>
+        mounted &&
+        _houseId == houseId &&
+        _auth.currentUser?.uid == currentUser.uid;
+    void requireCurrentScope() {
+      if (!isCurrentScope()) {
+        throw FirebaseAuthException(code: 'user-token-expired');
+      }
+    }
+
+    if (!await _ensureCanModifySharedInfo() || !isCurrentScope()) return;
     final value = _secondaryEmailCtrl.text.trim();
     if (value.isEmpty) {
       _showToast(enterEmailReq, success: false);
@@ -741,7 +759,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
     try {
       await _authService.validateLoginEmailAliasForCurrentUser(normalized);
     } catch (e) {
-      if (mounted) {
+      if (mounted && isCurrentScope()) {
         _showToast(
           AppErrorMapper.resolve(
             e,
@@ -754,38 +772,48 @@ extension _SettingsTabPersistence on _SettingsTabState {
     }
 
     try {
-      if (!mounted) return;
+      if (!mounted || !isCurrentScope()) return;
       final canContinue = await _securityFlowGuard.guard(
         context,
         action: SensitiveActionType.saveSecondaryEmail,
-        houseId: _houseId,
+        houseId: houseId,
       );
       if (!canContinue) {
         return;
       }
-      if (!mounted) return;
+      if (!mounted || !isCurrentScope()) return;
       final success = await showSettingsEmailOtpDialog(
         context: context,
         title: context.tr('home_xcthcemail_292ed5'),
         email: normalized,
-        sendCode: () => _authService.sendOtpEmail(normalized),
-        verifyCode: (otpCode) =>
-            _authService.validateEmailOTP(normalized, otpCode),
+        sendCode: () {
+          requireCurrentScope();
+          return _authService.sendOtpEmail(normalized);
+        },
+        verifyCode: (otpCode) {
+          requireCurrentScope();
+          return _authService.validateLoginAliasOTP(
+            normalized,
+            otpCode,
+            expectedUid: currentUser.uid,
+          );
+        },
       );
 
-      if (success) {
+      if (success && isCurrentScope()) {
         try {
-          await _dbRef.update({
-            'users/${currentUser.uid}/loginAliasEmail': normalized,
-            'users/${currentUser.uid}/loginAliasUpdatedAt':
-                ServerValue.timestamp,
-          });
-          if (mounted) {
+          // OTP proof được tiêu thụ một lần ở server; client không còn tự ghi
+          // alias nên không thể thắng race bằng hai tài khoản cùng một email.
+          await _authService.setLoginAliasForCurrentUser(
+            normalized,
+            expectedUid: currentUser.uid,
+          );
+          if (mounted && isCurrentScope()) {
             setState(() => _secondaryEmail = normalized);
             _showToast(context.tr('home_xcthcvluem_038a4a'), success: true);
           }
         } catch (e) {
-          if (mounted) {
+          if (mounted && isCurrentScope()) {
             _showToast(
               AppErrorMapper.resolve(
                 e,
@@ -797,7 +825,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
         }
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && isCurrentScope()) {
         _showToast(
           AppErrorMapper.resolve(
             e,

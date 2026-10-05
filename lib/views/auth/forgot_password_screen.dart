@@ -631,7 +631,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           SLSnackBar(
                             content: Text(
                               context.tr('forgot_pwd_snack_otp_resent'),
-                              
+
                             ),
                             backgroundColor: Colors.green,
                           ),

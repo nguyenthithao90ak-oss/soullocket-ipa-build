@@ -11,10 +11,14 @@ class StartupPrivacyDialog extends StatefulWidget {
     required this.onContinue,
     required this.onOpenDocument,
     this.allowDismiss = false,
+    this.showCollectionChoices = false,
+    this.initialChoice = 'ads',
   });
 
   final FutureOr<void> Function(String) onContinue;
   final bool allowDismiss;
+  final bool showCollectionChoices;
+  final String initialChoice;
   final Future<void> Function(String title, String assetPath) onOpenDocument;
 
   @override
@@ -24,6 +28,17 @@ class StartupPrivacyDialog extends StatefulWidget {
 class _StartupPrivacyDialogState extends State<StartupPrivacyDialog> {
   bool _submitted = false;
   bool _saveFailed = false;
+  late bool _adsAllowed;
+  late bool _analyticsAllowed;
+
+  @override
+  void initState() {
+    super.initState();
+    _adsAllowed =
+        widget.initialChoice == 'ads' || widget.initialChoice == 'all';
+    _analyticsAllowed =
+        widget.initialChoice == 'analytics' || widget.initialChoice == 'all';
+  }
 
   static const _background = Color(0xFFFAF7F2);
   static const _panel = Color(0xFFFFFDFC);
@@ -325,14 +340,42 @@ class _StartupPrivacyDialogState extends State<StartupPrivacyDialog> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                context.tr('consent_review_cookie_title'),
+                context.tr(
+                  widget.showCollectionChoices
+                      ? 'privacy_choices_title'
+                      : 'privacy_ads_options_title',
+                ),
                 style: _textStyle(size: 17, weight: FontWeight.w600),
               ),
             ),
           ],
         ),
         const SizedBox(height: 12),
-        _paragraph(context.tr('consent_review_cookie_notice')),
+        _paragraph(context.tr('consent_review_ads_notice')),
+        if (widget.showCollectionChoices) ...[
+          const SizedBox(height: 16),
+          SwitchListTile.adaptive(
+            key: const ValueKey('consent-ads-switch'),
+            contentPadding: EdgeInsets.zero,
+            title: Text(context.tr('privacy_preferences_ads_title')),
+            subtitle: Text(context.tr('privacy_preferences_ads_body')),
+            value: _adsAllowed,
+            onChanged: _submitted
+                ? null
+                : (value) => setState(() => _adsAllowed = value),
+          ),
+          const Divider(height: 24),
+          SwitchListTile.adaptive(
+            key: const ValueKey('consent-analytics-switch'),
+            contentPadding: EdgeInsets.zero,
+            title: Text(context.tr('privacy_preferences_analytics_title')),
+            subtitle: Text(context.tr('privacy_preferences_analytics_body')),
+            value: _analyticsAllowed,
+            onChanged: _submitted
+                ? null
+                : (value) => setState(() => _analyticsAllowed = value),
+          ),
+        ],
         const SizedBox(height: 14),
         Align(
           alignment: AlignmentDirectional.centerStart,
@@ -354,26 +397,14 @@ class _StartupPrivacyDialogState extends State<StartupPrivacyDialog> {
           ),
           const SizedBox(height: 16),
         ],
-        if (wide)
-          Row(
-            children: [
-              Expanded(child: _agreementButton(context, 'essential')),
-              const SizedBox(width: 12),
-              Expanded(child: _agreementButton(context, 'all')),
-            ],
-          )
-        else ...[
-          _agreementButton(context, 'essential'),
-          const SizedBox(height: 12),
-          _agreementButton(context, 'all'),
-        ],
+        _agreementButton(context),
       ],
     ),
   );
 
-  Widget _agreementButton(BuildContext context, String level) => OutlinedButton(
-    key: ValueKey('consent-agree-$level'),
-    onPressed: _submitted ? null : () => _continue(level),
+  Widget _agreementButton(BuildContext context) => OutlinedButton(
+    key: const ValueKey('consent-agree'),
+    onPressed: _submitted ? null : () => _continue(_selectedChoice),
     style: OutlinedButton.styleFrom(
       foregroundColor: _accent,
       backgroundColor: _wash,
@@ -385,11 +416,17 @@ class _StartupPrivacyDialogState extends State<StartupPrivacyDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
     child: Text(
-      context.tr('consent_review_agree_$level'),
+      context.tr('consent_review_agree'),
       textAlign: TextAlign.center,
       style: _textStyle(size: 14, color: _accent, weight: FontWeight.w600),
     ),
   );
+
+  String get _selectedChoice {
+    if (!widget.showCollectionChoices) return 'ads';
+    if (_adsAllowed) return _analyticsAllowed ? 'all' : 'ads';
+    return _analyticsAllowed ? 'analytics' : 'essential';
+  }
 
   Widget _documentLink(BuildContext context, String titleKey, String path) {
     final title = context.tr(titleKey);

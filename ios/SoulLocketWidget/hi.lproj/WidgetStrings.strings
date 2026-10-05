@@ -1,17 +1,17 @@
 /* Widget extension: cùng bản dịch với assets/i18n/hi.json. */
 "p3_health_days_remaining" = "days remaining";
 "sleep_state_unknown" = "अभी डेटा नहीं";
-"sleep_state_disabled" = "रिकॉर्डिंग बंद";
+"sleep_state_disabled" = "नींद की निगरानी बंद है";
 "sleep_state_estimated" = "शायद आराम कर रहे हैं";
 "sleep_state_manual" = "आराम दर्ज हो रहा है";
 "sleep_state_recorded" = "दर्ज नींद";
 "sleep_source_estimate" = "स्क्रीन से अनुमान";
 "sleep_source_manual" = "खुद दर्ज किया";
-"sleep_manual_start" = "आराम शुरू करें";
-"sleep_manual_stop" = "आराम समाप्त करें";
+"sleep_manual_start" = "मैं सोने जा रहा/रही हूँ";
+"sleep_manual_stop" = "मैं जाग गया/गई हूँ";
 "sleep_tracking_failed" = "अपडेट नहीं हुआ। फिर कोशिश करें।";
-"sleep_tracking_info_ios" = "Apple Health दर्ज नींद देता है, लाइव पहचान नहीं। चालू करने पर साथी के साथ साझा होता है।";
-"sleep_tracking_info_android" = "स्क्रीन बंद होना केवल अनुमान है, नींद का प्रमाण नहीं। आप आराम की शुरुआत और अंत दर्ज कर सकते हैं।";
+"sleep_tracking_info_ios" = "Apple Health में दर्ज नींद लेता है। यह नहीं बता सकता कि आप अभी सो रहे हैं या नहीं।";
+"sleep_tracking_info_android" = "रात में स्क्रीन लंबे समय तक बंद रहने पर ऐप नींद का अनुमान लगाता है। यह नींद का मापन नहीं है।";
 "sleep_tracking_consent" = "रिकॉर्डिंग चालू करके आराम की स्थिति और समय साथी के साथ साझा करें?";
 "sleep_sync_hint" = "अपडेट के लिए ऐप खोलें";
 "sleep_duration" = "{hours} घं {minutes} मि";
@@ -40,3 +40,5 @@
 "widget_title_sleep" = "Couple Sleep";
 "p3_health_phase_period" = "Period phase";
 "p3_health_next_period" = "until your next period";
+"milestone_today" = "📍आज";
+"milestone_days_left" = "🌸 {days} दिन बचे हैं";

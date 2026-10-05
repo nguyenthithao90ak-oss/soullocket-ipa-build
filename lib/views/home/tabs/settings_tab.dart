@@ -55,6 +55,7 @@ import '../../../utils/services/offline_cache_service.dart';
 import 'dart:io';
 import '../../../utils/services/notification_service.dart';
 import '../../../utils/services/soul_event_reminder_service.dart';
+import '../../../utils/services/calendar_reminder_service.dart';
 import '../../../utils/services/push_notification_helper.dart';
 import '../../../utils/services/core/presence_service.dart';
 import 'package:home_widget/home_widget.dart';
@@ -446,6 +447,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   String? _accountDeletionStatusError;
   bool _accountDeletionStatusLoading = false;
   bool _accountDeletionActionBusy = false;
+  bool _logoutInProgress = false;
   String? _draftThemeKey;
   String? _draftEffectKey;
   double? _draftAvatarSizePx;

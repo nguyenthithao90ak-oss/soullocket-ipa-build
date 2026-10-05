@@ -253,6 +253,12 @@ class _ModernHomeBody extends StatelessWidget {
                             label: Text(context.tr('home_tychnhvngm_09a3bd')),
                           ),
                           SLSpacing.h12,
+                          RepaintBoundary(
+                            child: state._buildHomeToolSlotSection(
+                              isSingle: isSingle,
+                            ),
+                          ),
+                          SLSpacing.h12,
                           // Removed manual sleep mode button
                           // state._buildSleepModeButton(),
                           // SLSpacing.h12,
@@ -303,9 +309,6 @@ class _ModernHomeBody extends StatelessWidget {
                                   builder: (context, isSwiping, _) =>
                                       buildInsight(isSwiping),
                                 ),
-                          RepaintBoundary(
-                            child: state._buildHomeToolSlotSection(),
-                          ),
                           SLSpacing.gapH(
                             uiState.homeCompanionEnabled ? 100 : 86,
                           ),
@@ -403,7 +406,7 @@ class _ChatReminderBanner extends StatelessWidget {
                 color: SLColors.primary,
                 borderRadius: BorderRadius.circular(999),
                 child: InkWell(
-                  onTap: state._openDirectChat,
+                  onTap: state._openSoulMergeChat,
                   borderRadius: BorderRadius.circular(999),
                   child: const SizedBox(
                     width: 42,

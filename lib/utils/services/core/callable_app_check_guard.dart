@@ -33,6 +33,12 @@ class CallableAppCheckGuard {
       } on TimeoutException {
         rethrow;
       } on FirebaseException catch (error) {
+        if (forceRefresh &&
+            error.plugin == 'firebase_app_check' &&
+            (error.message ?? '').toLowerCase().contains('too many attempts')) {
+          await prepareToken(false);
+          return;
+        }
         if (error.code == 'network-request-failed' ||
             error.code == 'unavailable') {
           rethrow;

@@ -393,8 +393,7 @@ class _MainHomeHeroCountdownCircle extends StatefulWidget {
 }
 
 class _MainHomeHeroCountdownCircleState
-    extends State<_MainHomeHeroCountdownCircle>
-    with SingleTickerProviderStateMixin {
+    extends State<_MainHomeHeroCountdownCircle> {
   final List<HomeExplodingPhoto> _activeExplosions = [];
   List<String> _cachedPhotoUrls = [];
   bool _isFetchingPhotos = false;
@@ -405,24 +404,9 @@ class _MainHomeHeroCountdownCircleState
   Timer? _hintDismissTimer;
   DateTime? _lastExplosionAt;
 
-  late AnimationController _countController;
-  late Animation<double> _countAnimation;
-  int _targetValue = 0;
-
   @override
   void initState() {
     super.initState();
-    _targetValue = int.tryParse(widget.circleValue) ?? 0;
-    _countController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1600),
-    );
-    _countAnimation = Tween<double>(begin: 0.0, end: _targetValue.toDouble())
-        .animate(
-          CurvedAnimation(parent: _countController, curve: Curves.easeOutCubic),
-        );
-    _countController.forward();
-
     unawaited(_ensurePhotosLoaded());
 
     PurchaseService().isVip().then((isVip) {
@@ -470,33 +454,8 @@ class _MainHomeHeroCountdownCircleState
   }
 
   @override
-  void didUpdateWidget(covariant _MainHomeHeroCountdownCircle oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.circleValue != oldWidget.circleValue) {
-      final oldVal = int.tryParse(oldWidget.circleValue) ?? 0;
-      final newVal = int.tryParse(widget.circleValue) ?? 0;
-      if (oldVal != newVal) {
-        _targetValue = newVal;
-        final currentVal = _countAnimation.value;
-        _countAnimation =
-            Tween<double>(
-              begin: currentVal,
-              end: _targetValue.toDouble(),
-            ).animate(
-              CurvedAnimation(
-                parent: _countController,
-                curve: Curves.easeOutCubic,
-              ),
-            );
-        _countController.forward(from: 0.0);
-      }
-    }
-  }
-
-  @override
   void dispose() {
     _hintDismissTimer?.cancel();
-    _countController.dispose();
     super.dispose();
   }
 
@@ -727,53 +686,23 @@ class _MainHomeHeroCountdownCircleState
       Color(0xFF00C6FF),
     ];
 
-    final topClean = widget.circleTopLabel.trim();
-    final topLen = topClean.length;
-    final int topMaxLines =
-        (topLen > 12 || (topLen > 8 && topClean.contains(' '))) ? 2 : 1;
-    final double topFontSize = useKeepsakeSurface
-        ? (widget.circleSize * (topMaxLines > 1 ? .075 : .095)).clamp(
-            14.0,
-            32.0,
-          )
-        : topLen <= 8
-        ? (widget.circleSize * 0.14).clamp(22.0, 50.0)
-        : topLen <= 14
-        ? (widget.circleSize * 0.11).clamp(17.0, 38.0)
-        : (widget.circleSize * 0.09).clamp(14.0, 28.0);
-
-    final bottomClean = widget.circleBottomLabel.trim();
-    final bottomLen = bottomClean.length;
-    final int bottomMaxLines =
-        (bottomLen > 12 || (bottomLen > 8 && bottomClean.contains(' ')))
-        ? 2
-        : 1;
-    final double bottomFontSize = useKeepsakeSurface
-        ? (widget.circleSize * (bottomMaxLines > 1 ? .075 : .095)).clamp(
-            14.0,
-            32.0,
-          )
-        : bottomLen <= 8
-        ? (widget.circleSize * 0.14).clamp(22.0, 50.0)
-        : bottomLen <= 14
-        ? (widget.circleSize * 0.11).clamp(17.0, 38.0)
-        : (widget.circleSize * 0.09).clamp(14.0, 28.0);
-
-    final labelHeight = (widget.circleSize * (topMaxLines > 1 ? 0.22 : 0.18))
-        .clamp(28.0, 84.0)
-        .toDouble();
-    final bottomLabelHeight =
-        (widget.circleSize * (bottomMaxLines > 1 ? 0.22 : 0.18))
-            .clamp(28.0, 84.0)
-            .toDouble();
-    final numberHeight = (widget.circleSize * (useKeepsakeSurface ? .36 : .44))
-        .clamp(70.0, 180.0)
-        .toDouble();
-    final topLabelWidth = widget.circleSize * 0.58;
-    final bottomLabelWidth = widget.circleSize * 0.58;
-    final numberWidth = widget.circleSize * (useKeepsakeSurface ? .70 : .82);
-    final topGap = (widget.circleSize * 0.04).clamp(6.0, 20.0).toDouble();
-    final bottomGap = (widget.circleSize * 0.03).clamp(4.0, 16.0).toDouble();
+    final labelShadows = [
+      ...countdownVisual.labelShadows,
+      if (widget.isMilestone)
+        Shadow(color: Colors.white.withValues(alpha: .6), blurRadius: 12),
+    ];
+    // Giữ lại tỉ lệ chữ lớn của giao diện đếm ngày trước đây. Nhãn ngắn như
+    // "BÊN NHAU" và "ngày yêu" cần nổi bật gần bằng bản cũ, còn nhãn dài sẽ
+    // tự giảm nhẹ để không bị tràn trên màn hình điện thoại nhỏ.
+    final topLabelLength = widget.circleTopLabel.trim().length;
+    final bottomLabelLength = widget.circleBottomLabel.trim().length;
+    double labelFontSize(int length) => length <= 8
+        ? (widget.circleSize * .14).clamp(22.0, 50.0).toDouble()
+        : length <= 14
+        ? (widget.circleSize * .11).clamp(17.0, 38.0).toDouble()
+        : (widget.circleSize * .09).clamp(14.0, 28.0).toDouble();
+    final topLabelFontSize = labelFontSize(topLabelLength);
+    final bottomLabelFontSize = labelFontSize(bottomLabelLength);
 
     // Milestone glow border colour
     final BorderSide milestoneBorderSide = widget.isMilestone
@@ -968,268 +897,67 @@ class _MainHomeHeroCountdownCircleState
                           },
                         ),
                       ),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: widget.circleSize * 0.18,
+                    RelationshipDayCounterContent(
+                      key: ValueKey(widget.state._houseId),
+                      value: widget.circleValue,
+                      topLabel: widget.circleTopLabel,
+                      bottomLabel: widget.circleBottomLabel,
+                      size: widget.circleSize,
+                      enableMotion: widget.enableMotionBase,
+                      onEditValue: widget.isSingle
+                          ? null
+                          : widget.onEditStartDate,
+                      onEditTopLabel: widget.isSingle
+                          ? null
+                          : widget.onEditTopLabel,
+                      onEditBottomLabel: widget.isSingle
+                          ? null
+                          : widget.onEditBottomLabel,
+                      onLongPress: _handleLongPressHint,
+                      labelColors: isMultiColor ? multiColorGradient : null,
+                      numberColors: isMultiColor
+                          ? multiColorGradient
+                          : customTextColor != null
+                          ? [customTextColor, customTextColor]
+                          : countdownVisual.numberGradient,
+                      topLabelStyle: SLTheme.textStyleForKey(
+                        labelFont,
+                        fontSize: topLabelFontSize,
+                        fontWeight: FontWeight.w900,
+                        color: customTextColor ?? countdownVisual.topLabelColor,
+                        letterSpacing: topLabelLength > 10 ? .4 : .8,
+                      ).copyWith(shadows: labelShadows),
+                      bottomLabelStyle: SLTheme.textStyleForKey(
+                        labelFont,
+                        fontSize: bottomLabelFontSize,
+                        fontWeight: FontWeight.w900,
+                        color:
+                            customTextColor ?? countdownVisual.bottomLabelColor,
+                        letterSpacing: bottomLabelLength > 10 ? .4 : .8,
+                      ).copyWith(shadows: labelShadows),
+                      numberStyle: widget.state
+                          ._uiTextStyle(
+                            fontSize:
+                                (widget.circleSize *
+                                        (useKeepsakeSurface ? .34 : .44))
+                                    .clamp(64.0, 180.0),
+                            fontWeight: useKeepsakeSurface
+                                ? FontWeight.w700
+                                : FontWeight.w800,
+                            color: Colors.white,
+                            height: .96,
+                            letterSpacing: -2,
+                          )
+                          .copyWith(
+                            shadows: [
+                              ...countdownVisual.numberShadows,
+                              if (widget.isMilestone)
+                                Shadow(
+                                  color: Colors.white.withValues(alpha: .7),
+                                  blurRadius: 16,
+                                ),
+                            ],
                           ),
-                          child: _MainHomeHeroCountdownTapTarget(
-                            circleSize: widget.circleSize,
-                            onTap: widget.isSingle
-                                ? null
-                                : widget.onEditTopLabel,
-                            onLongPress: _handleLongPressHint,
-                            constraints: BoxConstraints(
-                              minWidth: topLabelWidth,
-                              maxWidth: topLabelWidth,
-                              minHeight: labelHeight,
-                              maxHeight: labelHeight,
-                            ),
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: isMultiColor
-                                  ? ShaderMask(
-                                      shaderCallback: (bounds) =>
-                                          const LinearGradient(
-                                            colors: multiColorGradient,
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ).createShader(bounds),
-                                      blendMode: BlendMode.srcIn,
-                                      child: Text(
-                                        widget.circleTopLabel,
-                                        maxLines: topMaxLines,
-                                        softWrap: true,
-                                        textAlign: TextAlign.center,
-                                        style:
-                                            SLTheme.textStyleForKey(
-                                              labelFont,
-                                              fontSize: topFontSize,
-                                              fontWeight: useKeepsakeSurface
-                                                  ? FontWeight.w700
-                                                  : FontWeight.w900,
-                                              letterSpacing: topLen > 10
-                                                  ? 0.4
-                                                  : 0.8,
-                                              color: Colors.white,
-                                            ).copyWith(
-                                              shadows: [
-                                                ...countdownVisual.labelShadows,
-                                                if (widget.isMilestone)
-                                                  Shadow(
-                                                    color: Colors.white
-                                                        .withValues(alpha: 0.6),
-                                                    blurRadius: 12,
-                                                  ),
-                                              ],
-                                            ),
-                                      ),
-                                    )
-                                  : Text(
-                                      widget.circleTopLabel,
-                                      maxLines: topMaxLines,
-                                      softWrap: true,
-                                      textAlign: TextAlign.center,
-                                      style:
-                                          SLTheme.textStyleForKey(
-                                            labelFont,
-                                            fontSize: topFontSize,
-                                            fontWeight: useKeepsakeSurface
-                                                ? FontWeight.w700
-                                                : FontWeight.w900,
-                                            letterSpacing: topLen > 10
-                                                ? 0.4
-                                                : 0.8,
-                                            color:
-                                                customTextColor ??
-                                                countdownVisual
-                                                    .bottomLabelColor,
-                                          ).copyWith(
-                                            shadows: [
-                                              ...countdownVisual.labelShadows,
-                                              if (widget.isMilestone)
-                                                Shadow(
-                                                  color: Colors.white
-                                                      .withValues(alpha: 0.6),
-                                                  blurRadius: 12,
-                                                ),
-                                            ],
-                                          ),
-                                    ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: topGap),
-                        _MainHomeHeroCountdownTapTarget(
-                          circleSize: widget.circleSize,
-                          onTap: widget.isSingle
-                              ? null
-                              : widget.onEditStartDate,
-                          onLongPress: _handleLongPressHint,
-                          constraints: BoxConstraints(
-                            minWidth: numberWidth,
-                            maxWidth: numberWidth,
-                            minHeight: numberHeight,
-                            maxHeight: numberHeight,
-                          ),
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: ShaderMask(
-                              shaderCallback: (bounds) => LinearGradient(
-                                colors: isMultiColor
-                                    ? multiColorGradient
-                                    : customTextColor != null
-                                    ? [customTextColor, customTextColor]
-                                    : countdownVisual.numberGradient,
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ).createShader(bounds),
-                              blendMode: BlendMode.srcIn,
-                              child: AnimatedBuilder(
-                                animation: _countAnimation,
-                                builder: (context, child) {
-                                  final parsed = int.tryParse(
-                                    widget.circleValue,
-                                  );
-                                  final displayVal = parsed == null
-                                      ? widget.circleValue
-                                      : _countAnimation.value
-                                            .round()
-                                            .toString();
-                                  return Text(
-                                    displayVal,
-                                    maxLines: 1,
-                                    textAlign: TextAlign.center,
-                                    style: widget.state
-                                        ._uiTextStyle(
-                                          fontSize:
-                                              (widget.circleSize *
-                                                      (useKeepsakeSurface
-                                                          ? .36
-                                                          : .44))
-                                                  .clamp(64.0, 180.0),
-                                          fontWeight: useKeepsakeSurface
-                                              ? FontWeight.w700
-                                              : FontWeight.w900,
-                                          color: Colors.white,
-                                          height: 0.96,
-                                          letterSpacing: useKeepsakeSurface
-                                              ? -1.5
-                                              : 2.0,
-                                        )
-                                        .copyWith(
-                                          shadows: [
-                                            ...countdownVisual.numberShadows,
-                                            if (widget.isMilestone)
-                                              Shadow(
-                                                color: Colors.white.withValues(
-                                                  alpha: 0.7,
-                                                ),
-                                                blurRadius: 16,
-                                              ),
-                                          ],
-                                        ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: bottomGap),
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: widget.circleSize * 0.18,
-                          ),
-                          child: _MainHomeHeroCountdownTapTarget(
-                            circleSize: widget.circleSize,
-                            onTap: widget.isSingle
-                                ? null
-                                : widget.onEditBottomLabel,
-                            onLongPress: _handleLongPressHint,
-                            constraints: BoxConstraints(
-                              minWidth: bottomLabelWidth,
-                              maxWidth: bottomLabelWidth,
-                              minHeight: bottomLabelHeight,
-                              maxHeight: bottomLabelHeight,
-                            ),
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: isMultiColor
-                                  ? ShaderMask(
-                                      shaderCallback: (bounds) =>
-                                          const LinearGradient(
-                                            colors: multiColorGradient,
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ).createShader(bounds),
-                                      blendMode: BlendMode.srcIn,
-                                      child: Text(
-                                        widget.circleBottomLabel,
-                                        maxLines: bottomMaxLines,
-                                        softWrap: true,
-                                        textAlign: TextAlign.center,
-                                        style:
-                                            SLTheme.textStyleForKey(
-                                              labelFont,
-                                              fontSize: bottomFontSize,
-                                              fontWeight: useKeepsakeSurface
-                                                  ? FontWeight.w700
-                                                  : FontWeight.w900,
-                                              letterSpacing: bottomLen > 10
-                                                  ? 0.4
-                                                  : 0.8,
-                                              color: Colors.white,
-                                            ).copyWith(
-                                              shadows: [
-                                                ...countdownVisual.labelShadows,
-                                                if (widget.isMilestone)
-                                                  Shadow(
-                                                    color: Colors.white
-                                                        .withValues(alpha: 0.6),
-                                                    blurRadius: 12,
-                                                  ),
-                                              ],
-                                            ),
-                                      ),
-                                    )
-                                  : Text(
-                                      widget.circleBottomLabel,
-                                      maxLines: bottomMaxLines,
-                                      softWrap: true,
-                                      textAlign: TextAlign.center,
-                                      style:
-                                          SLTheme.textStyleForKey(
-                                            labelFont,
-                                            fontSize: bottomFontSize,
-                                            fontWeight: useKeepsakeSurface
-                                                ? FontWeight.w700
-                                                : FontWeight.w900,
-                                            letterSpacing: bottomLen > 10
-                                                ? 0.4
-                                                : 0.8,
-                                            color:
-                                                customTextColor ??
-                                                countdownVisual
-                                                    .bottomLabelColor,
-                                          ).copyWith(
-                                            shadows: [
-                                              ...countdownVisual.labelShadows,
-                                              if (widget.isMilestone)
-                                                Shadow(
-                                                  color: Colors.white
-                                                      .withValues(alpha: 0.6),
-                                                  blurRadius: 12,
-                                                ),
-                                            ],
-                                          ),
-                                    ),
-                            ),
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),
@@ -1331,46 +1059,6 @@ class _MainHomeHeroCountdownCircleState
               ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _MainHomeHeroCountdownTapTarget extends StatelessWidget {
-  final double circleSize;
-  final Widget child;
-  final VoidCallback? onTap;
-  final VoidCallback? onLongPress;
-  final BoxConstraints? constraints;
-
-  const _MainHomeHeroCountdownTapTarget({
-    required this.circleSize,
-    required this.child,
-    this.onTap,
-    this.onLongPress,
-    this.constraints,
-  });
-
-  double _countdownTapWidth(double circleSize) =>
-      (circleSize * 0.56).clamp(132.0, 240.0);
-
-  double _countdownTapHeight(double circleSize) =>
-      (circleSize * 0.16).clamp(46.0, 72.0);
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      onLongPress: onLongPress,
-      child: ConstrainedBox(
-        constraints:
-            constraints ??
-            BoxConstraints(
-              minWidth: _countdownTapWidth(circleSize),
-              minHeight: _countdownTapHeight(circleSize),
-            ),
-        child: Center(child: child),
       ),
     );
   }

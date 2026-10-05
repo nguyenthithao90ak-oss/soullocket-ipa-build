@@ -1,17 +1,17 @@
 /* Widget extension: cùng bản dịch với assets/i18n/ja.json. */
 "p3_health_days_remaining" = "days remaining";
 "sleep_state_unknown" = "データなし";
-"sleep_state_disabled" = "記録オフ";
+"sleep_state_disabled" = "睡眠の記録はオフです";
 "sleep_state_estimated" = "休息中かもしれません";
 "sleep_state_manual" = "休息を記録中";
 "sleep_state_recorded" = "記録された睡眠";
 "sleep_source_estimate" = "画面からの推定";
 "sleep_source_manual" = "自己記録";
-"sleep_manual_start" = "休息を開始";
-"sleep_manual_stop" = "休息を終了";
+"sleep_manual_start" = "これから寝ます";
+"sleep_manual_stop" = "起きました";
 "sleep_tracking_failed" = "更新できませんでした。再試行してください。";
-"sleep_tracking_info_ios" = "Apple Healthは睡眠の記録を提供し、リアルタイムの検知ではありません。有効にするとパートナーと共有されます。";
-"sleep_tracking_info_android" = "画面オフは推定であり、睡眠の証明ではありません。休息の開始と終了を自分で記録できます。";
+"sleep_tracking_info_ios" = "Apple Healthに記録済みの睡眠を取り込みます。今眠っているかは判定できません。";
+"sleep_tracking_info_android" = "夜間に画面が長くオフになると睡眠を推定します。睡眠を測定する機能ではありません。";
 "sleep_tracking_consent" = "記録を有効にし、休息の状態と時刻をパートナーと共有しますか？";
 "sleep_sync_hint" = "アプリを開いて更新";
 "sleep_duration" = "{hours}時間{minutes}分";
@@ -40,3 +40,5 @@
 "widget_title_sleep" = "Couple Sleep";
 "p3_health_phase_period" = "Period phase";
 "p3_health_next_period" = "until your next period";
+"milestone_today" = "📍 今日";
+"milestone_days_left" = "🌸残り {days} 日";

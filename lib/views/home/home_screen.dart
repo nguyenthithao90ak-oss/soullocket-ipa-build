@@ -46,7 +46,6 @@ import '../../utils/services/local_action_throttle_service.dart';
 import '../../widgets/legacy_falling_effect.dart';
 import '../../widgets/touch_effect_overlay.dart';
 import '../notifications/notification_center_screen.dart';
-import '../chat/chat_detail_screen.dart';
 import '../relationship/couple_connect_screen.dart';
 import 'package:soullocket_app/views/utilities/health_screen.dart';
 import '../relationship/video_call_screen.dart';
@@ -1370,59 +1369,6 @@ class _HomeScreenState extends State<HomeScreen>
     // Không lưu tab hiện tại vào cache nữa
     // final prefs = await SharedPreferences.getInstance();
     // await prefs.setInt(_lastTabPrefsKey, index);
-  }
-
-  Future<void> _openHomeMessenger() async {
-    // Throttle: chống double-tap liên tục
-    final throttle = LocalActionThrottleService.instance.registerAttempt(
-      'home_messenger_open',
-      minInterval: const Duration(milliseconds: 800),
-      maxAttempts: 3,
-      burstWindow: const Duration(seconds: 5),
-    );
-    if (!throttle.isAllowed) return;
-    if (!mounted) return;
-    final houseId = (await _houseService.getCurrentHouseId() ?? '').trim();
-    if (houseId.isEmpty) return;
-
-    final currentRole = await RoleUtils.currentRole();
-    final targetRole = currentRole == 'user1' ? 'user2' : 'user1';
-    var targetName = targetRole == 'user1'
-        ? L10nService().translate('male_role_default')
-        : L10nService().translate('female_role_default');
-    var targetAvatar = '';
-
-    try {
-      final snap = await FirebaseDatabase.instance
-          .ref('houses/$houseId/settings')
-          .get();
-      final raw = snap.value;
-      if (raw is Map) {
-        final data = Map<dynamic, dynamic>.from(raw);
-        final nameKey = targetRole == 'user1' ? 'nameU1' : 'nameU2';
-        final avatarKey = targetRole == 'user1' ? 'avtUser1' : 'avtUser2';
-        final name = data[nameKey]?.toString().trim() ?? '';
-        final avatar = data[avatarKey]?.toString().trim() ?? '';
-        if (name.isNotEmpty) targetName = name;
-        if (avatar.isNotEmpty) targetAvatar = avatar;
-      }
-    } catch (error) {
-      debugPrint('[SuppressedError] lib/views/home/home_screen.dart: $error');
-    }
-
-    if (!mounted) return;
-    await slPush(
-      context,
-      ChatDetailScreen(
-        myHouseId: houseId,
-        targetHouseId: houseId,
-        targetName: targetName,
-        targetAvatar: targetAvatar,
-        isInternal: true,
-        currentRole: currentRole,
-        targetRole: targetRole,
-      ),
-    );
   }
 
   Widget _buildShellBody({

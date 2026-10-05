@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'dart:async';
 
 import 'dart:convert';
@@ -8,7 +9,7 @@ import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 import 'local_database_service.dart';
 
 class CountdownSpaceRequestResult {
-  const CountdownSpaceRequestResult({
+  CountdownSpaceRequestResult({
     required this.success,
     required this.message,
     this.requestId,
@@ -203,16 +204,16 @@ class CountdownSpaceService {
     final normalizedFromHouseName = fromHouseName.trim();
 
     if (normalizedFromHouseId.isEmpty || normalizedToHouseId.isEmpty) {
-      return const CountdownSpaceRequestResult(
+      return CountdownSpaceRequestResult(
         success: false,
-        message: 'Không xác định được mã nhà để ghép nối.',
+        message: L10nService().translate('countdown_invalid_house'),
       );
     }
 
     if (normalizedFromHouseId == normalizedToHouseId) {
-      return const CountdownSpaceRequestResult(
+      return CountdownSpaceRequestResult(
         success: false,
-        message: 'Không thể ghép nối với chính nhà hiện tại.',
+        message: L10nService().translate('countdown_same_house'),
       );
     }
 
@@ -224,7 +225,7 @@ class CountdownSpaceService {
         return CountdownSpaceRequestResult(
           success: false,
           message:
-              'Không tìm thấy mã nhà "$normalizedToHouseId". Hãy kiểm tra lại.',
+              L10nService().format('countdown_house_not_found', {'value1': normalizedToHouseId}),
         );
       }
 
@@ -239,10 +240,10 @@ class CountdownSpaceService {
       );
       if (!occupiedHouseIds.contains(normalizedToHouseId) &&
           occupiedHouseIds.length >= maxSpacesPerHouse) {
-        return const CountdownSpaceRequestResult(
+        return CountdownSpaceRequestResult(
           success: false,
           message:
-              'Bạn đã dùng đủ 5 không gian. Hãy xóa bớt một không gian trước khi tạo thêm.',
+              L10nService().translate('countdown_limit_reached'),
         );
       }
       for (final existing in existingSpaces) {
@@ -251,9 +252,9 @@ class CountdownSpaceService {
           continue;
         }
         if (existing.status == 'active') {
-          return const CountdownSpaceRequestResult(
+          return CountdownSpaceRequestResult(
             success: false,
-            message: 'Hai nhà này đã ghép chung một không gian đếm rồi.',
+            message: L10nService().translate('countdown_already_connected'),
           );
         }
       }
@@ -263,10 +264,10 @@ class CountdownSpaceService {
           continue;
         }
         if (request.status == 'pending') {
-          return const CountdownSpaceRequestResult(
+          return CountdownSpaceRequestResult(
             success: false,
             message:
-                'Đã có một yêu cầu ghép nối đang chờ xử lý giữa hai nhà này.',
+                L10nService().translate('countdown_pending_request'),
           );
         }
       }
@@ -285,20 +286,20 @@ class CountdownSpaceService {
       if (responseData['success'] != true ||
           requestId.isEmpty ||
           spaceId.isEmpty) {
-        return const CountdownSpaceRequestResult(
+        return CountdownSpaceRequestResult(
           success: false,
-          message: 'Không thể tạo yêu cầu ghép nối lúc này.',
+          message: L10nService().translate('countdown_create_failed'),
         );
       }
       return CountdownSpaceRequestResult(
         success: true,
-        message: 'Đã gửi yêu cầu ghép nối đến nhà "$normalizedToHouseId".',
+        message: L10nService().format('countdown_request_sent', {'value1': normalizedToHouseId}),
         requestId: requestId,
       );
     } catch (e) {
-      return const CountdownSpaceRequestResult(
+      return CountdownSpaceRequestResult(
         success: false,
-        message: 'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.',
+        message: L10nService().translate('countdown_try_later'),
       );
     }
   }
@@ -319,9 +320,9 @@ class CountdownSpaceService {
       }
 
       if (finalRequest == null) {
-        return const CountdownSpaceRequestResult(
+        return CountdownSpaceRequestResult(
           success: false,
-          message: 'Không tìm thấy yêu cầu ghép nối.',
+          message: L10nService().translate('countdown_request_not_found'),
         );
       }
 
@@ -338,17 +339,17 @@ class CountdownSpaceService {
           success: false,
           message: responseData['message']?.toString().trim().isNotEmpty == true
               ? responseData['message'].toString().trim()
-              : 'Không thể chấp nhận yêu cầu ghép nối.',
+              : L10nService().translate('countdown_accept_failed'),
         );
       }
-      return const CountdownSpaceRequestResult(
+      return CountdownSpaceRequestResult(
         success: true,
-        message: 'Đã chấp nhận yêu cầu ghép nối.',
+        message: L10nService().translate('countdown_accepted'),
       );
     } catch (e) {
-      return const CountdownSpaceRequestResult(
+      return CountdownSpaceRequestResult(
         success: false,
-        message: 'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.',
+        message: L10nService().translate('countdown_try_later'),
       );
     }
   }
@@ -357,9 +358,9 @@ class CountdownSpaceService {
     try {
       final normalizedRequestId = requestId.trim();
       if (normalizedRequestId.isEmpty) {
-        return const CountdownSpaceRequestResult(
+        return CountdownSpaceRequestResult(
           success: false,
-          message: 'Không xác định được yêu cầu ghép nối.',
+          message: L10nService().translate('countdown_request_unknown'),
         );
       }
       final response = await CloudFunctionsHelper.callSecure<dynamic>(
@@ -375,17 +376,17 @@ class CountdownSpaceService {
           success: false,
           message: responseData['message']?.toString().trim().isNotEmpty == true
               ? responseData['message'].toString().trim()
-              : 'Không thể từ chối yêu cầu ghép nối.',
+              : L10nService().translate('countdown_reject_failed'),
         );
       }
-      return const CountdownSpaceRequestResult(
+      return CountdownSpaceRequestResult(
         success: true,
-        message: 'Đã từ chối yêu cầu ghép nối.',
+        message: L10nService().translate('countdown_rejected'),
       );
     } catch (e) {
-      return const CountdownSpaceRequestResult(
+      return CountdownSpaceRequestResult(
         success: false,
-        message: 'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.',
+        message: L10nService().translate('countdown_try_later'),
       );
     }
   }
@@ -394,9 +395,9 @@ class CountdownSpaceService {
     try {
       final normalizedRequestId = requestId.trim();
       if (normalizedRequestId.isEmpty) {
-        return const CountdownSpaceRequestResult(
+        return CountdownSpaceRequestResult(
           success: false,
-          message: 'Không xác định được yêu cầu ghép nối.',
+          message: L10nService().translate('countdown_request_unknown'),
         );
       }
       final response = await CloudFunctionsHelper.callSecure<dynamic>(
@@ -409,17 +410,17 @@ class CountdownSpaceService {
           success: false,
           message: responseData['message']?.toString().trim().isNotEmpty == true
               ? responseData['message'].toString().trim()
-              : 'Không thể hủy yêu cầu ghép nối.',
+              : L10nService().translate('countdown_cancel_failed'),
         );
       }
-      return const CountdownSpaceRequestResult(
+      return CountdownSpaceRequestResult(
         success: true,
-        message: 'Đã hủy yêu cầu ghép nối.',
+        message: L10nService().translate('countdown_canceled'),
       );
     } catch (e) {
-      return const CountdownSpaceRequestResult(
+      return CountdownSpaceRequestResult(
         success: false,
-        message: 'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.',
+        message: L10nService().translate('countdown_try_later'),
       );
     }
   }
@@ -604,17 +605,17 @@ class CountdownSpaceService {
           success: false,
           message: responseData['message']?.toString().trim().isNotEmpty == true
               ? responseData['message'].toString().trim()
-              : 'Không thể gửi yêu cầu xóa không gian.',
+              : L10nService().translate('countdown_delete_request_failed'),
         );
       }
-      return const CountdownSpaceRequestResult(
+      return CountdownSpaceRequestResult(
         success: true,
-        message: 'Đã gửi yêu cầu xóa không gian.',
+        message: L10nService().translate('countdown_delete_requested'),
       );
     } catch (e) {
-      return const CountdownSpaceRequestResult(
+      return CountdownSpaceRequestResult(
         success: false,
-        message: 'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.',
+        message: L10nService().translate('countdown_try_later'),
       );
     }
   }
@@ -634,17 +635,17 @@ class CountdownSpaceService {
           success: false,
           message: responseData['message']?.toString().trim().isNotEmpty == true
               ? responseData['message'].toString().trim()
-              : 'Không thể xác nhận xóa không gian.',
+              : L10nService().translate('countdown_delete_confirm_failed'),
         );
       }
-      return const CountdownSpaceRequestResult(
+      return CountdownSpaceRequestResult(
         success: true,
-        message: 'Đã xóa không gian đếm.',
+        message: L10nService().translate('countdown_deleted'),
       );
     } catch (e) {
-      return const CountdownSpaceRequestResult(
+      return CountdownSpaceRequestResult(
         success: false,
-        message: 'Chưa thể hoàn tất thao tác này lúc này. Bạn thử lại sau.',
+        message: L10nService().translate('countdown_try_later'),
       );
     }
   }

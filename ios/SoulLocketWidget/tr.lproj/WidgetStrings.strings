@@ -1,17 +1,17 @@
 /* Widget extension: cùng bản dịch với assets/i18n/tr.json. */
 "p3_health_days_remaining" = "days remaining";
 "sleep_state_unknown" = "Henüz veri yok";
-"sleep_state_disabled" = "Kayıt kapalı";
+"sleep_state_disabled" = "Uyku takibi kapalı";
 "sleep_state_estimated" = "Dinleniyor olabilir";
 "sleep_state_manual" = "Dinlenme kaydediliyor";
 "sleep_state_recorded" = "Kaydedilen uyku";
 "sleep_source_estimate" = "Ekran tahmini";
 "sleep_source_manual" = "Kişisel kayıt";
-"sleep_manual_start" = "Dinlenmeyi başlat";
-"sleep_manual_stop" = "Dinlenmeyi bitir";
+"sleep_manual_start" = "Uyumaya başlıyorum";
+"sleep_manual_stop" = "Uyandım";
 "sleep_tracking_failed" = "Güncellenemedi. Tekrar deneyin.";
-"sleep_tracking_info_ios" = "Apple Health canlı algılama değil, uyku kayıtları sağlar. Açıldığında partnerinizle paylaşılır.";
-"sleep_tracking_info_android" = "Ekranın kapanması yalnızca tahmindir, uyku kanıtı değildir. Başlangıç ve bitişi kendiniz kaydedebilirsiniz.";
+"sleep_tracking_info_ios" = "Apple Health’te kaydedilmiş uykuyu alır. Şu anda uyuyup uyumadığını bilemez.";
+"sleep_tracking_info_android" = "Uygulama, gece ekran uzun süre kapalı kaldığında uykuyu tahmin eder. Bu bir uyku ölçümü değildir.";
 "sleep_tracking_consent" = "Kaydı açıp dinlenme durumu ve saatlerini partnerinizle paylaşmak ister misiniz?";
 "sleep_sync_hint" = "Güncellemek için uygulamayı açın";
 "sleep_duration" = "{hours} sa {minutes} dk";
@@ -40,3 +40,5 @@
 "widget_title_sleep" = "Couple Sleep";
 "p3_health_phase_period" = "Period phase";
 "p3_health_next_period" = "until your next period";
+"milestone_today" = "📍Bugün";
+"milestone_days_left" = "🌸 {days} gün kaldı";

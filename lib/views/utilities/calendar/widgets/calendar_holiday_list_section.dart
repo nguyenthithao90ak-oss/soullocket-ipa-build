@@ -11,10 +11,12 @@ class CalendarHolidayListSection extends StatelessWidget {
     super.key,
     required this.occurrences,
     required this.horizontalInset,
+    this.onExport,
   });
 
   final List<HolidayOccurrence> occurrences;
   final double horizontalInset;
+  final ValueChanged<HolidayOccurrence>? onExport;
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +72,11 @@ class CalendarHolidayListSection extends StatelessWidget {
                         weight: FontWeight.w600,
                       ),
                     ),
+                  ),
+                  if (onExport != null) IconButton(
+                    tooltip: context.tr('event_export_calendar'),
+                    onPressed: () => onExport!(occurrence),
+                    icon: const Icon(Icons.ios_share_rounded),
                   ),
                 ],
               ),

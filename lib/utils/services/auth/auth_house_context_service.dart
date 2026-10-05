@@ -33,20 +33,37 @@ class AuthHouseContextService {
 
   // --- Static in-memory houseId cache (dùng chung toàn app) ---
   static String? _memHouseId;
+  static String? _memAuthUid;
   static DateTime? _memHouseIdTime;
   static const _kMemHouseIdTtl = Duration(minutes: 5);
 
   /// Ghi nhớ houseId vào memory cache — gọi sau khi resolve thành công.
-  static void setMemHouseId(String houseId) {
-    if (houseId.isEmpty) return;
+  static void setMemHouseId(String houseId, {required String uid}) {
+    if (houseId.isEmpty || uid.isEmpty) return;
     _memHouseId = houseId;
+    _memAuthUid = uid;
     _memHouseIdTime = DateTime.now();
   }
 
+  static void clearMemHouseId() {
+    _memHouseId = null;
+    _memAuthUid = null;
+    _memHouseIdTime = null;
+  }
+
   /// Đọc houseId nhanh: memory → SharedPrefs → SecureStorage → null (caller tự fallback RTDB).
-  static Future<String?> quickHouseId() async {
+  static Future<String?> quickHouseId({
+    firebase_auth.FirebaseAuth? firebaseAuth,
+  }) async {
+    final auth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance;
+    final uid = auth.currentUser?.uid;
+    if (uid == null) {
+      clearMemHouseId();
+      return null;
+    }
     // 1. Memory cache
     if (_memHouseId != null &&
+        _memAuthUid == uid &&
         _memHouseIdTime != null &&
         DateTime.now().difference(_memHouseIdTime!) < _kMemHouseIdTtl) {
       return _memHouseId;
@@ -55,16 +72,23 @@ class AuthHouseContextService {
     try {
       final prefs = await SharedPreferences.getInstance();
       String cached = prefs.getString('il_house_id')?.trim() ?? '';
+      String ownerUid = prefs.getString(_authUidPrefsKey)?.trim() ?? '';
       if (cached.isEmpty) {
         cached =
             (await SecureStorageService.instance.read(
               SecureStorageService.keyHouseId,
             ))?.trim() ??
             '';
+        ownerUid =
+            (await SecureStorageService.instance.read(
+              SecureStorageService.keyAuthUid,
+            ))?.trim() ??
+            '';
       }
-      if (cached.isNotEmpty) {
-        _memHouseId = cached;
-        _memHouseIdTime = DateTime.now();
+      if (cached.isNotEmpty &&
+          ownerUid == uid &&
+          auth.currentUser?.uid == uid) {
+        setMemHouseId(cached, uid: uid);
         return cached;
       }
     } catch (error) {
@@ -127,11 +151,13 @@ class AuthHouseContextService {
   }) async {
     final resolvedUser = user ?? _auth.currentUser;
     final email = resolvedUser?.email?.trim().toLowerCase() ?? '';
-    if (email.isEmpty) return null;
+    if (email.isEmpty || _auth.currentUser?.uid != resolvedUser?.uid) {
+      return null;
+    }
 
     String? resolvedHouseId = houseId?.trim();
     if (resolvedHouseId == null || resolvedHouseId.isEmpty) {
-      resolvedHouseId = await quickHouseId();
+      resolvedHouseId = await quickHouseId(firebaseAuth: _auth);
     }
     String? remoteMode;
     String? pendingMode;
@@ -179,6 +205,7 @@ class AuthHouseContextService {
     }
 
     final finalRemoteMode = remoteMode ?? pendingMode;
+    if (_auth.currentUser?.uid != resolvedUser?.uid) return null;
     if (finalRemoteMode != null) {
       await cacheRelationshipModeForEmail(email, finalRemoteMode);
       return finalRemoteMode;
@@ -187,6 +214,7 @@ class AuthHouseContextService {
     final cachedMode = await getCachedRelationshipModeForEmail(email);
     if (cachedMode != null) {
       final prefs = await _prefs;
+      if (_auth.currentUser?.uid != resolvedUser?.uid) return null;
       await prefs.setString('il_rel_mode', cachedMode);
     }
     return cachedMode;
@@ -200,6 +228,8 @@ class AuthHouseContextService {
     String? houseId, {
     required Future<void> Function() onForcedSignOut,
   }) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
     if (houseId != null && houseId.trim().isNotEmpty) {
       try {
         final token = await _auth.currentUser?.getIdTokenResult();
@@ -217,6 +247,7 @@ class AuthHouseContextService {
             (field) => _db.child('houses/${houseId.trim()}/$field').get(),
           ),
         );
+        if (_auth.currentUser?.uid != uid) return;
         final house = <String, dynamic>{
           for (var i = 0; i < fields.length; i++) fields[i]: snapshots[i].value,
         };
@@ -249,6 +280,7 @@ class AuthHouseContextService {
           final securitySnapshot = await _db
               .child('houses/$houseId/security/devices/$deviceId')
               .get();
+          if (_auth.currentUser?.uid != uid) return;
           if (securitySnapshot.exists) {
             final data = _asStringDynamicMap(securitySnapshot.value);
             if (data != null) {
@@ -349,18 +381,21 @@ class AuthHouseContextService {
     String uid,
     SharedPreferences prefs,
   ) async {
+    if (_auth.currentUser?.uid != uid) return;
     final localRole = prefs.getString('il_role');
     if (localRole != null && (localRole == 'user1' || localRole == 'user2')) {
       return;
     }
     try {
       final memberSnap = await _db.child('houses/$houseId/members/$uid').get();
+      if (_auth.currentUser?.uid != uid) return;
       if (memberSnap.exists) {
         final data = memberSnap.value;
         if (data is Map) {
           final role = data['role']?.toString().trim();
           if (role == 'user1' || role == 'user2') {
             await prefs.setString('il_role', role!);
+            if (_auth.currentUser?.uid != uid) return;
             await SecureStorageService.instance.write(
               SecureStorageService.keyRole,
               role,
@@ -370,9 +405,11 @@ class AuthHouseContextService {
         }
       }
       final ownerUidSnap = await _db.child('houses/$houseId/owner_uid').get();
+      if (_auth.currentUser?.uid != uid) return;
       String? ownerUid = ownerUidSnap.value?.toString().trim();
       if (ownerUid == null || ownerUid.isEmpty) {
         final ownerUidSnap2 = await _db.child('houses/$houseId/ownerUid').get();
+        if (_auth.currentUser?.uid != uid) return;
         ownerUid = ownerUidSnap2.value?.toString().trim();
       }
       if (ownerUid != null && ownerUid.isNotEmpty) {
@@ -390,6 +427,7 @@ class AuthHouseContextService {
 
         final resolvedRole = (ownerUid == uid) ? 'user1' : 'user2';
         await prefs.setString('il_role', resolvedRole);
+        if (_auth.currentUser?.uid != uid) return;
         await SecureStorageService.instance.write(
           SecureStorageService.keyRole,
           resolvedRole,
@@ -401,26 +439,29 @@ class AuthHouseContextService {
   }
 
   Future<String?> resolveCurrentHouseId({firebase_auth.User? user}) async {
+    final resolvedUser = user ?? _auth.currentUser;
+    if (resolvedUser == null || _auth.currentUser?.uid != resolvedUser.uid) {
+      return null;
+    }
     final prefs = await _prefs;
+    if (_auth.currentUser?.uid != resolvedUser.uid) return null;
     String cachedHouseId = prefs.getString('il_house_id')?.trim() ?? '';
+    String cachedAuthUid = prefs.getString(_authUidPrefsKey)?.trim() ?? '';
     if (cachedHouseId.isEmpty) {
       cachedHouseId =
           (await SecureStorageService.instance.read(
             SecureStorageService.keyHouseId,
           ))?.trim() ??
           '';
-    }
-    String cachedAuthUid = prefs.getString(_authUidPrefsKey)?.trim() ?? '';
-    if (cachedAuthUid.isEmpty) {
       cachedAuthUid =
           (await SecureStorageService.instance.read(
             SecureStorageService.keyAuthUid,
           ))?.trim() ??
           '';
     }
-    final resolvedUser = user ?? _auth.currentUser;
+    if (_auth.currentUser?.uid != resolvedUser.uid) return null;
     if (cachedHouseId.isNotEmpty) {
-      if (resolvedUser != null && cachedAuthUid == resolvedUser.uid) {
+      if (cachedAuthUid == resolvedUser.uid) {
         final localRole = prefs.getString('il_role');
         if (localRole == null ||
             (localRole != 'user1' && localRole != 'user2')) {
@@ -430,63 +471,59 @@ class AuthHouseContextService {
             prefs,
           );
         }
+        if (_auth.currentUser?.uid != resolvedUser.uid) return null;
+        setMemHouseId(cachedHouseId, uid: resolvedUser.uid);
         return cachedHouseId;
       }
       await prefs.remove('il_house_id');
+      if (_auth.currentUser?.uid != resolvedUser.uid) return null;
       await prefs.remove('il_role');
-      await SecureStorageService.instance.delete(
-        SecureStorageService.keyHouseId,
-      );
-      await SecureStorageService.instance.delete(SecureStorageService.keyRole);
     }
 
-    if (resolvedUser == null) return null;
+    if (_auth.currentUser?.uid != resolvedUser.uid) return null;
 
     try {
       final primarySnap = await _db
           .child('users/${resolvedUser.uid}/houseId')
           .get();
+      if (_auth.currentUser?.uid != resolvedUser.uid) return null;
       final primaryValue = primarySnap.value?.toString().trim() ?? '';
       if (primaryValue.isNotEmpty) {
-        await prefs.setString('il_house_id', primaryValue);
-        setMemHouseId(primaryValue);
-        await prefs.setString(_authUidPrefsKey, resolvedUser.uid);
-        await SecureStorageService.instance.write(
-          SecureStorageService.keyHouseId,
-          primaryValue,
-        );
-        await SecureStorageService.instance.write(
-          SecureStorageService.keyAuthUid,
+        if (!await _cacheResolvedHouseId(
           resolvedUser.uid,
-        );
+          primaryValue,
+          prefs,
+        )) {
+          return null;
+        }
         await _restoreRoleFromDatabase(primaryValue, resolvedUser.uid, prefs);
+        if (_auth.currentUser?.uid != resolvedUser.uid) return null;
         return primaryValue;
       }
     } catch (error) {
       debugPrint('[AuthHouseContext] Không đọc được houseId chính: $error');
     }
 
+    if (_auth.currentUser?.uid != resolvedUser.uid) return null;
     try {
       final legacySnap = await _db
           .child('users/${resolvedUser.uid}/house_id')
           .get();
+      if (_auth.currentUser?.uid != resolvedUser.uid) return null;
       final legacyValue = legacySnap.value?.toString().trim() ?? '';
       if (legacyValue.isNotEmpty) {
         await _db.child('users/${resolvedUser.uid}').update({
           'houseId': legacyValue,
         });
-        await prefs.setString('il_house_id', legacyValue);
-        setMemHouseId(legacyValue);
-        await prefs.setString(_authUidPrefsKey, resolvedUser.uid);
-        await SecureStorageService.instance.write(
-          SecureStorageService.keyHouseId,
-          legacyValue,
-        );
-        await SecureStorageService.instance.write(
-          SecureStorageService.keyAuthUid,
+        if (!await _cacheResolvedHouseId(
           resolvedUser.uid,
-        );
+          legacyValue,
+          prefs,
+        )) {
+          return null;
+        }
         await _restoreRoleFromDatabase(legacyValue, resolvedUser.uid, prefs);
+        if (_auth.currentUser?.uid != resolvedUser.uid) return null;
         return legacyValue;
       }
     } catch (error) {
@@ -494,6 +531,30 @@ class AuthHouseContextService {
     }
 
     return null;
+  }
+
+  Future<bool> _cacheResolvedHouseId(
+    String uid,
+    String houseId,
+    SharedPreferences prefs,
+  ) async {
+    if (_auth.currentUser?.uid != uid) return false;
+    await prefs.setString('il_house_id', houseId);
+    if (_auth.currentUser?.uid != uid) return false;
+    await prefs.setString(_authUidPrefsKey, uid);
+    if (_auth.currentUser?.uid != uid) return false;
+    await SecureStorageService.instance.write(
+      SecureStorageService.keyHouseId,
+      houseId,
+    );
+    if (_auth.currentUser?.uid != uid) return false;
+    await SecureStorageService.instance.write(
+      SecureStorageService.keyAuthUid,
+      uid,
+    );
+    if (_auth.currentUser?.uid != uid) return false;
+    setMemHouseId(houseId, uid: uid);
+    return true;
   }
 
   Future<void> syncSecurityEmailForCurrentUser({

@@ -209,7 +209,7 @@ class _MessengerScreenState extends State<MessengerScreen>
       }
 
       if (houseId != null && houseId.isNotEmpty) {
-        AuthHouseContextService.setMemHouseId(houseId);
+        AuthHouseContextService.setMemHouseId(houseId, uid: uid);
       }
     }
 

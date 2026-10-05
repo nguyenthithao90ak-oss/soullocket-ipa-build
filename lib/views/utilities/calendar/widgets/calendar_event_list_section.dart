@@ -17,6 +17,8 @@ class CalendarEventListSection extends StatelessWidget {
   final String statusLabel;
   final String Function(int timestamp) formatCreatedTime;
   final ValueChanged<String> onDelete;
+  final ValueChanged<Map<String, dynamic>>? onExport;
+  final String? Function(Map<String, dynamic>)? formatEventTime;
 
   const CalendarEventListSection({
     super.key,
@@ -32,6 +34,8 @@ class CalendarEventListSection extends StatelessWidget {
     required this.statusLabel,
     required this.formatCreatedTime,
     required this.onDelete,
+    this.onExport,
+    this.formatEventTime,
   });
 
   static int _parseTimestamp(dynamic value) {
@@ -88,6 +92,8 @@ class CalendarEventListSection extends StatelessWidget {
                 ),
                 index: index,
                 statusLabel: statusLabel,
+                timeLabel: formatEventTime?.call(sorted[index]),
+                onExport: onExport == null ? null : () => onExport!(sorted[index]),
                 onDelete: sorted[index]['key']?.toString().isNotEmpty == true
                     ? () => onDelete(sorted[index]['key'].toString())
                     : null,

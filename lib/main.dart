@@ -220,7 +220,7 @@ void main() {
                 const Icon(Icons.favorite, color: SLColors.primary, size: 44),
                 const SizedBox(height: 12),
                 Text(
-                  'Có lỗi nhỏ xảy ra, vui lòng thử lại 💕',
+                  L10nService().translate('runtime_error_retry'),
                   textAlign: TextAlign.center,
                   style: GoogleFonts.quicksand(
                     fontSize: 12,
@@ -236,7 +236,7 @@ void main() {
                   },
                   icon: const Icon(Icons.refresh_rounded),
                   label: Text(
-                    'Thử lại',
+                    L10nService().translate('retry'),
                     style: GoogleFonts.quicksand(fontWeight: FontWeight.w600),
                   ),
                 ),

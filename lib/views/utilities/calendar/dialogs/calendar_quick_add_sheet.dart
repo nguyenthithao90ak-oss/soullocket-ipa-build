@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/utils/calendar/calendar_timed_event.dart';
+import 'package:soullocket_app/utils/calendar/calendar_time_zone.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:soullocket_app/utils/calendar/calendar_display_format.dart';
+import 'package:soullocket_app/utils/services/market_service.dart';
 import '../widgets/calendar_design.dart';
 
 Future<bool> showCalendarQuickAddSheet({
@@ -9,33 +14,61 @@ Future<bool> showCalendarQuickAddSheet({
   required int eventCount,
   required String formattedDate,
   required Future<bool> Function(String text) onSubmit,
-}) async =>
-    await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      isDismissible: false,
-      enableDrag: false,
-      useSafeArea: true,
-      backgroundColor: CalendarDesign.surface(context),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (_) => CalendarQuickAddSheet(
-        formattedDate: formattedDate,
-        onSubmit: onSubmit,
-      ),
-    ) ??
-    false;
+  DateTime? eventDate,
+  String? preferredTimeZone,
+  bool? use24HourFormat,
+  Future<bool> Function(String text, CalendarTimedEvent? timing)? onSubmitTimed,
+}) async {
+  var zone = preferredTimeZone;
+  if (onSubmitTimed != null && zone == null) {
+    try {
+      final device = (await FlutterTimezone.getLocalTimezone()).identifier;
+      if (CalendarTimeZone.isValidId(device)) zone = device;
+    } catch (_) {
+      // Người dùng vẫn có thể nhập múi giờ IANA khi plugin chưa sẵn sàng.
+    }
+  }
+  if (!context.mounted) return false;
+  return await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        isDismissible: false,
+        enableDrag: false,
+        useSafeArea: true,
+        backgroundColor: CalendarDesign.surface(context),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        builder: (_) => CalendarQuickAddSheet(
+          formattedDate: formattedDate,
+          onSubmit: onSubmit,
+          eventDate: eventDate,
+          preferredTimeZone: zone,
+          use24HourFormat: use24HourFormat,
+          onSubmitTimed: onSubmitTimed,
+        ),
+      ) ??
+      false;
+}
 
 /// Dùng cùng một composer cho nút thêm và thao tác nhấn giữ ngày.
 class CalendarQuickAddSheet extends StatefulWidget {
   final String formattedDate;
   final Future<bool> Function(String text) onSubmit;
+  final DateTime? eventDate;
+  final String? preferredTimeZone;
+  final bool? use24HourFormat;
+  final Future<bool> Function(String text, CalendarTimedEvent? timing)?
+  onSubmitTimed;
 
   const CalendarQuickAddSheet({
     super.key,
     required this.formattedDate,
     required this.onSubmit,
+    this.eventDate,
+    this.preferredTimeZone,
+    this.use24HourFormat,
+    this.onSubmitTimed,
   });
 
   @override
@@ -44,24 +77,62 @@ class CalendarQuickAddSheet extends StatefulWidget {
 
 class _CalendarQuickAddSheetState extends State<CalendarQuickAddSheet> {
   final _controller = TextEditingController();
+  late final _zone = TextEditingController(
+    text: widget.preferredTimeZone ?? '',
+  );
+  bool _allDay = true;
+  TimeOfDay _time = const TimeOfDay(hour: 9, minute: 0);
+  int? _selectedCandidate;
   bool _saving = false;
   String? _error;
 
   @override
   void dispose() {
     _controller.dispose();
+    _zone.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     final text = _controller.text.trim();
     if (_saving || text.isEmpty) return;
+    CalendarTimedEvent? timing;
+    if (!_allDay && widget.eventDate != null) {
+      final id = _zone.text.trim();
+      if (!CalendarTimeZone.isValidId(id)) {
+        setState(() => _error = context.tr('region_timezone_invalid'));
+        return;
+      }
+      final candidates = CalendarTimedEvent.candidates(
+        date: widget.eventDate!,
+        hour: _time.hour,
+        minute: _time.minute,
+        timeZoneId: id,
+      );
+      if (candidates.isEmpty) {
+        setState(() => _error = context.tr('calendar_dst_missing'));
+        return;
+      }
+      if (candidates.length > 1 && _selectedCandidate == null) {
+        setState(() => _error = context.tr('calendar_dst_ambiguous'));
+        return;
+      }
+      final selected =
+          candidates[candidates.length == 1 ? 0 : _selectedCandidate!];
+      timing = CalendarTimedEvent(
+        startUtcMs: selected.millisecondsSinceEpoch,
+        endUtcMs: selected.add(const Duration(hours: 1)).millisecondsSinceEpoch,
+        timeZoneId: id,
+      );
+    }
     setState(() {
       _saving = true;
       _error = null;
     });
     try {
-      final added = await widget.onSubmit(text);
+      final added = widget.onSubmitTimed == null
+          ? await widget.onSubmit(text)
+          : await widget.onSubmitTimed!(text, timing);
       if (!mounted) return;
       if (added) {
         Navigator.of(context).pop(true);
@@ -80,6 +151,117 @@ class _CalendarQuickAddSheetState extends State<CalendarQuickAddSheet> {
         });
       }
     }
+  }
+
+  Future<void> _pickTime() async {
+    final value = await showTimePicker(
+      context: context,
+      initialTime: _time,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          alwaysUse24HourFormat:
+              widget.use24HourFormat ??
+              MediaQuery.alwaysUse24HourFormatOf(context),
+        ),
+        child: child!,
+      ),
+    );
+    if (!mounted || value == null) return;
+    setState(() {
+      _time = value;
+      _selectedCandidate = null;
+      _error = null;
+    });
+  }
+
+  Widget _timingFields(BuildContext context) {
+    final zone = _zone.text.trim();
+    final candidates = !_allDay && CalendarTimeZone.isValidId(zone)
+        ? CalendarTimedEvent.candidates(
+            date: widget.eventDate!,
+            hour: _time.hour,
+            minute: _time.minute,
+            timeZoneId: zone,
+          )
+        : <DateTime>[];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SwitchListTile.adaptive(
+          contentPadding: EdgeInsets.zero,
+          title: Text(context.tr('calendar_all_day')),
+          value: _allDay,
+          onChanged: _saving
+              ? null
+              : (value) => setState(() {
+                  _allDay = value;
+                  _error = null;
+                }),
+        ),
+        if (!_allDay) ...[
+          OutlinedButton.icon(
+            onPressed: _saving ? null : _pickTime,
+            icon: const Icon(Icons.schedule),
+            label: Text(
+              _displayTime(DateTime(2000, 1, 1, _time.hour, _time.minute)),
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _zone,
+            enabled: !_saving,
+            textDirection: TextDirection.ltr,
+            autocorrect: false,
+            decoration: InputDecoration(
+              labelText: context.tr('region_timezone'),
+              hintText: context.tr('region_timezone_hint'),
+            ),
+            onChanged: (_) => setState(() {
+              _selectedCandidate = null;
+              _error = null;
+            }),
+          ),
+          const SizedBox(height: 8),
+          Text(context.tr('calendar_timed_hint')),
+          if (candidates.length > 1) ...[
+            const SizedBox(height: 8),
+            Text(context.tr('calendar_dst_ambiguous')),
+            for (var i = 0; i < candidates.length; i++)
+              OutlinedButton.icon(
+                onPressed: _saving
+                    ? null
+                    : () => setState(() => _selectedCandidate = i),
+                icon: Icon(
+                  _selectedCandidate == i
+                      ? Icons.check_circle
+                      : Icons.radio_button_unchecked,
+                ),
+                label: Text(
+                  '${_displayTime(candidates[i])} · ${_utcOffset(candidates[i])}',
+                  textDirection: TextDirection.ltr,
+                ),
+              ),
+          ],
+        ],
+      ],
+    );
+  }
+
+  String _displayTime(DateTime date) =>
+      CalendarDisplayFormat.forLocale(
+        L10nService().locale,
+        MarketService.instance.marketCode,
+      ).time(
+        date,
+        alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
+        use24HourFormat: widget.use24HourFormat,
+      );
+
+  String _utcOffset(DateTime date) {
+    final minutes = date.timeZoneOffset.inMinutes;
+    final hours = (minutes.abs() ~/ 60).toString().padLeft(2, '0');
+    final remainder = (minutes.abs() % 60).toString().padLeft(2, '0');
+    return 'UTC${minutes < 0 ? '−' : '+'}$hours:$remainder';
   }
 
   @override
@@ -184,6 +366,8 @@ class _CalendarQuickAddSheetState extends State<CalendarQuickAddSheet> {
                 ),
               ),
               const SizedBox(height: 14),
+              if (widget.onSubmitTimed != null && widget.eventDate != null)
+                _timingFields(context),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

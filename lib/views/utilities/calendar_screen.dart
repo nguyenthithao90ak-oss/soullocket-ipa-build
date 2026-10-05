@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:soullocket_app/utils/services/house_service.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:soullocket_app/utils/services/notification_service.dart';
@@ -11,8 +13,12 @@ import 'package:soullocket_app/utils/services/widget_service.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/core/constants/market_calendar_profiles.dart';
 import 'package:soullocket_app/utils/calendar/calendar_display_format.dart';
-import 'package:soullocket_app/utils/calendar/calendar_reminder_times.dart';
 import 'package:soullocket_app/utils/calendar/calendar_time_zone.dart';
+import 'package:soullocket_app/utils/calendar/calendar_civil_date.dart';
+import 'package:soullocket_app/utils/calendar/calendar_timed_event.dart';
+import 'package:soullocket_app/utils/calendar/calendar_event_export.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:soullocket_app/utils/services/calendar_reminder_service.dart';
 import 'package:soullocket_app/utils/calendar/calendar_secondary_date.dart';
 import 'package:soullocket_app/utils/calendar/holiday_occurrence_resolver.dart';
 import 'package:soullocket_app/utils/services/holiday_service.dart';
@@ -30,11 +36,13 @@ import 'package:soullocket_app/views/utilities/calendar/widgets/calendar_design.
 class CalendarScreen extends StatefulWidget {
   final String houseId;
   final String myName;
+  final String? initialDateKey;
 
   const CalendarScreen({
     super.key,
     required this.houseId,
     required this.myName,
+    this.initialDateKey,
   });
 
   @override
@@ -50,10 +58,24 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Map<DateTime, List<dynamic>> _events = {};
   StreamSubscription<DatabaseEvent>? _calendarSubscription;
+  StreamSubscription<User?>? _authSubscription;
   int _calendarQueryGeneration = 0;
   bool _isQuickAddSheetOpen = false;
   bool _isCalendarLoading = true;
   String? _calendarErrorMessage;
+  String? _accountUid;
+
+  DateTime get _calendarNow => CalendarTimeZone.fromMilliseconds(
+    DateTime.now().millisecondsSinceEpoch,
+    MarketService.instance.preferences.timeZoneId,
+  );
+
+  bool _sameScope(String? uid, String houseId) =>
+      mounted &&
+      uid != null &&
+      uid == _accountUid &&
+      FirebaseAuth.instance.currentUser?.uid == uid &&
+      widget.houseId == houseId;
 
   static int _parseTimestamp(dynamic value) {
     if (value is int) return value;
@@ -75,6 +97,23 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   void initState() {
     super.initState();
+    _accountUid = FirebaseAuth.instance.currentUser?.uid;
+    final initial = CalendarCivilDate.parse(widget.initialDateKey ?? '');
+    _focusedDay =
+        initial != null && initial.year >= 1900 && initial.year <= 2100
+        ? initial
+        : _calendarNow;
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user?.uid != _accountUid && mounted) {
+        _calendarQueryGeneration++;
+        unawaited(_calendarSubscription?.cancel());
+        _calendarSubscription = null;
+        setState(() {
+          _events = {};
+          _isCalendarLoading = false;
+        });
+      }
+    });
     // Nạp CLDR trước frame đầu tiên để TableCalendar hiển thị đúng locale.
     unawaited(initializeDateFormatting());
     MarketService.instance.addListener(_onCalendarPreferencesChanged);
@@ -120,6 +159,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   );
 
   Future<void> _loadEvents() async {
+    if (!_sameScope(_accountUid, widget.houseId)) return;
     final queryGeneration = ++_calendarQueryGeneration;
     final previousSubscription = _calendarSubscription;
     _calendarSubscription = null;
@@ -162,8 +202,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   setState(() {
                     _events = {};
                     _isCalendarLoading = false;
-                    _calendarErrorMessage =
-                        'Dữ liệu lịch không đúng định dạng mong đợi.';
+                    _calendarErrorMessage = L10nService().translate(
+                      'calendar_data_invalid',
+                    );
                   });
                 }
                 return;
@@ -173,18 +214,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
               final Map<DateTime, List<dynamic>> newEvents = {};
 
               data.forEach((dateKey, dateEvents) {
-                final parts = dateKey.toString().split('-');
-                if (parts.length != 3) {
-                  return;
-                }
-                final year = int.tryParse(parts[0]);
-                final month = int.tryParse(parts[1]);
-                final day = int.tryParse(parts[2]);
-                if (year == null || month == null || day == null) {
-                  return;
-                }
-
-                final date = DateTime.utc(year, month, day);
+                final date = CalendarCivilDate.parse(dateKey.toString());
+                if (date == null) return;
                 if (dateEvents is! Map) {
                   newEvents[date] = const [];
                   return;
@@ -210,10 +241,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 });
               }
             } catch (e) {
+              debugPrint('[Calendar] Unable to process calendar data: $e');
               if (mounted) {
                 setState(() {
                   _isCalendarLoading = false;
-                  _calendarErrorMessage = 'Không thể xử lý dữ liệu lịch: $e';
+                  _calendarErrorMessage = L10nService().translate(
+                    'calendar_data_processing_error',
+                  );
                 });
               }
             }
@@ -222,7 +256,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
             if (mounted && queryGeneration == _calendarQueryGeneration) {
               setState(() {
                 _isCalendarLoading = false;
-                _calendarErrorMessage = error.toString();
+                _calendarErrorMessage = L10nService().translate(
+                  'calendar_data_processing_error',
+                );
               });
             }
           },
@@ -248,16 +284,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   bool _isPastDate(DateTime date) {
-    final now = DateTime.now();
+    final now = _calendarNow;
     final today = DateTime(now.year, now.month, now.day);
     final target = DateTime(date.year, date.month, date.day);
     return target.isBefore(today);
   }
 
-  bool _isToday(DateTime date) => isSameDay(date, DateTime.now());
+  bool _isToday(DateTime date) => isSameDay(date, _calendarNow);
 
   bool _isTomorrow(DateTime date) {
-    final now = DateTime.now();
+    final now = _calendarNow;
     final tomorrow = DateTime(now.year, now.month, now.day + 1);
     final target = DateTime(date.year, date.month, date.day);
     return isSameDay(tomorrow, target);
@@ -282,10 +318,65 @@ class _CalendarScreenState extends State<CalendarScreen> {
         timestamp,
         MarketService.instance.preferences.timeZoneId,
       ),
-      alwaysUse24HourFormat:
-          MediaQuery.alwaysUse24HourFormatOf(context),
+      alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
       use24HourFormat: MarketService.instance.preferences.use24HourFormat,
     );
+  }
+
+  String? _formatEventTime(Map<String, dynamic> raw) {
+    final timing = CalendarTimedEvent.fromJson(
+      raw['timing'],
+      dateKey: _getDateKey(_selectedDay ?? _focusedDay),
+    );
+    if (timing == null) return null;
+    return '${_displayFormat.time(timing.start, alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context), use24HourFormat: MarketService.instance.preferences.use24HourFormat)} · ${timing.timeZoneId}';
+  }
+
+  Future<void> _exportCalendarEvent({
+    required String identity,
+    required String title,
+    required DateTime occurrence,
+    CalendarTimedEvent? timing,
+  }) async {
+    final uid = _accountUid;
+    final houseId = widget.houseId;
+    try {
+      if (!_sameScope(uid, houseId) ||
+          await HouseService().getCurrentHouseId() != houseId ||
+          !mounted ||
+          !_sameScope(uid, houseId)) {
+        return;
+      }
+      final bytes = CalendarEventExport.create(
+        identity: identity,
+        title: title,
+        occurrence: occurrence,
+        generatedAt: DateTime.now(),
+        timing: timing,
+      );
+      final box = context.findRenderObject() as RenderBox?;
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [
+            XFile.fromData(
+              bytes,
+              mimeType: 'text/calendar',
+              name: 'soullocket-${_getDateKey(occurrence)}.ics',
+            ),
+          ],
+          fileNameOverrides: ['soullocket-${_getDateKey(occurrence)}.ics'],
+          sharePositionOrigin: box == null
+              ? null
+              : box.localToGlobal(Offset.zero) & box.size,
+        ),
+      );
+    } catch (_) {
+      if (mounted && _sameScope(uid, houseId)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SLSnackBar(content: Text(context.tr('event_export_error'))),
+        );
+      }
+    }
   }
 
   String _selectedDayBadge(DateTime date) {
@@ -333,7 +424,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Future<bool> _saveEventForDay({
     required DateTime day,
     required String text,
+    CalendarTimedEvent? timing,
+    required String? expectedUid,
+    required String expectedHouseId,
   }) async {
+    if (!_sameScope(expectedUid, expectedHouseId) ||
+        await HouseService().getCurrentHouseId() != expectedHouseId ||
+        !_sameScope(expectedUid, expectedHouseId)) {
+      return false;
+    }
     final cleanText = text.trim();
     if (cleanText.isEmpty) {
       return false;
@@ -341,15 +440,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
     final dateKey = _getDateKey(day);
     final eventRef = _dbRef
-        .child('houses/${widget.houseId}/calendar/$dateKey')
+        .child('houses/$expectedHouseId/calendar/$dateKey')
         .push();
     final eventId = eventRef.key;
     if (eventId == null || eventId.isEmpty) {
-      throw StateError('Không thể tạo mã sự kiện lịch.');
+      throw StateError(L10nService().translate('calendar_event_id_error'));
     }
 
     final notificationIds = CalendarNotificationIds.forEvent(
-      houseId: widget.houseId,
+      houseId: expectedHouseId,
       dateKey: dateKey,
       eventId: eventId,
     );
@@ -357,6 +456,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       'title': cleanText,
       'author': widget.myName,
       'ts': DateTime.now().millisecondsSinceEpoch,
+      if (timing != null) 'timing': timing.toJson(),
       'notificationIds': {
         'onEventDay': notificationIds.onEventDay,
         'dayBefore': notificationIds.dayBefore,
@@ -364,11 +464,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     });
 
     try {
-      await _scheduleEventNotifications(
-        eventDate: day,
-        eventTitle: cleanText,
-        notificationIds: notificationIds,
-      );
+      await CalendarReminderService.instance.refresh();
     } catch (error) {
       // Sự kiện đã lưu thành công; lỗi local notification không được làm mất lịch.
       debugPrint('[Calendar] Không thể đặt thông báo cho $eventId: $error');
@@ -382,6 +478,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
 
     _isQuickAddSheetOpen = true;
+    final uid = _accountUid;
+    final houseId = widget.houseId;
     try {
       final mediaSize = MediaQuery.sizeOf(context);
       final added = await showCalendarQuickAddSheet(
@@ -390,9 +488,24 @@ class _CalendarScreenState extends State<CalendarScreen> {
         accent: _selectedAccent(day),
         eventCount: _eventsForDay(day).length,
         formattedDate: _formatShortDate(day),
-        onSubmit: (text) => _saveEventForDay(day: day, text: text),
+        onSubmit: (text) => _saveEventForDay(
+          day: day,
+          text: text,
+          expectedUid: uid,
+          expectedHouseId: houseId,
+        ),
+        eventDate: day,
+        preferredTimeZone: MarketService.instance.preferences.timeZoneId,
+        use24HourFormat: MarketService.instance.preferences.use24HourFormat,
+        onSubmitTimed: (text, timing) => _saveEventForDay(
+          day: day,
+          text: text,
+          timing: timing,
+          expectedUid: uid,
+          expectedHouseId: houseId,
+        ),
       );
-      if (added && mounted) {
+      if (added && mounted && _sameScope(uid, houseId)) {
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
             content: Text(
@@ -431,47 +544,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
     });
   }
 
-  Future<void> _scheduleEventNotifications({
-    required DateTime eventDate,
-    required String eventTitle,
-    required CalendarNotificationIds notificationIds,
-  }) async {
-    final now = DateTime.now();
-    final reminderTimes = CalendarReminderTimes.forDate(
-      eventDate,
-      timeZone: CalendarTimeZone.locationFor(
-        MarketService.instance.preferences.timeZoneId,
-      ),
-    );
-    final scheduleTime = reminderTimes.onEventDay;
-
-    // Nếu ngày sự kiện là hôm nay và chưa qua 9h sáng
-    if (scheduleTime.isAfter(now)) {
-      await NotificationService().scheduleLocalNotification(
-        id: notificationIds.onEventDay,
-        title: L10nService().translate('calendar_notification_today_title'),
-        body: L10nService().format('calendar_notification_body', {
-          'title': eventTitle,
-        }),
-        scheduledDate: scheduleTime,
-      );
-    }
-
-    // Thông báo trước 1 ngày
-    final dayBefore = reminderTimes.dayBefore;
-    if (dayBefore.isAfter(now)) {
-      await NotificationService().scheduleLocalNotification(
-        id: notificationIds.dayBefore,
-        title: L10nService().translate('calendar_notification_tomorrow_title'),
-        body: L10nService().format('calendar_notification_upcoming_body', {
-          'title': eventTitle,
-        }),
-        scheduledDate: dayBefore,
-      );
-    }
-  }
-
   Future<void> _requestDeleteEvent(String dateKey, String eventId) async {
+    final uid = _accountUid;
+    final houseId = widget.houseId;
     final entry = _eventsForDay(
       _selectedDay ?? _focusedDay,
     ).where((event) => event['key']?.toString() == eventId);
@@ -496,14 +571,24 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ],
       ),
     );
-    if (confirmed == true && mounted) await _deleteEvent(dateKey, eventId);
+    if (confirmed == true && _sameScope(uid, houseId)) {
+      await _deleteEvent(dateKey, eventId, uid: uid, houseId: houseId);
+    }
   }
 
-  Future<void> _deleteEvent(String dateKey, String eventId) async {
+  Future<void> _deleteEvent(
+    String dateKey,
+    String eventId, {
+    required String? uid,
+    required String houseId,
+  }) async {
     try {
-      await _dbRef
-          .child('houses/${widget.houseId}/calendar/$dateKey/$eventId')
-          .remove();
+      if (!_sameScope(uid, houseId) ||
+          await HouseService().getCurrentHouseId() != houseId ||
+          !_sameScope(uid, houseId)) {
+        return;
+      }
+      await _dbRef.child('houses/$houseId/calendar/$dateKey/$eventId').remove();
     } catch (error) {
       debugPrint('[Calendar] Không thể xóa sự kiện $eventId: $error');
       if (mounted) {
@@ -515,7 +600,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
 
     final ids = CalendarNotificationIds.forEvent(
-      houseId: widget.houseId,
+      houseId: houseId,
       dateKey: dateKey,
       eventId: eventId,
     );
@@ -525,6 +610,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ...ids.values,
         ...legacyIds,
       });
+      await CalendarReminderService.instance.refresh();
     } catch (error) {
       debugPrint('[Calendar] Không thể hủy thông báo cho $eventId: $error');
     }
@@ -639,6 +725,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   void dispose() {
     _calendarQueryGeneration++;
+    unawaited(_authSubscription?.cancel());
     unawaited(_calendarSubscription?.cancel());
     MarketService.instance.removeListener(_onCalendarPreferencesChanged);
     L10nService().removeListener(_onCalendarPreferencesChanged);
@@ -799,13 +886,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       calendarFormat: _calendarFormat,
                       focusedDay: _focusedDay,
                       selectedDay: selectedDay,
+                      currentDay: _calendarNow,
                       locale: _displayFormat.intlLocale,
                       calendarProfile: _calendarProfile,
                       eventLoader: (day) =>
                           _events[_normalizeDate(day)] ?? const <dynamic>[],
                       holidayLoader: holidaysForDay,
                       onTodayPressed: () {
-                        final today = DateTime.now();
+                        final today = _calendarNow;
                         _selectDay(today, today);
                       },
                       onDaySelected: _selectDay,
@@ -843,13 +931,23 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         shortDateLabel: _formatShortDate(selectedDay),
                         eventCount: eventCount,
                         holidayCount: holidaysForDay(selectedDay).length,
-                        secondaryDateLabel: secondaryCalendar == null ? null :
-                          '${context.tr(secondaryCalendar == 'buddhist' ? 'region_buddhist' : 'region_islamic_civil')}: '
-                          '${CalendarSecondaryDate.format(selectedDay, secondaryCalendar)}',
+                        secondaryDateLabel: secondaryCalendar == null
+                            ? null
+                            : '${context.tr(secondaryCalendar == 'buddhist' ? 'region_buddhist' : 'region_islamic_civil')}: '
+                                  '${CalendarSecondaryDate.format(selectedDay, secondaryCalendar)}',
                       ),
                       CalendarHolidayListSection(
                         occurrences: holidaysForDay(selectedDay),
                         horizontalInset: horizontalInset,
+                        onExport: (occurrence) => unawaited(
+                          _exportCalendarEvent(
+                            identity: occurrence.occurrenceId,
+                            title: HolidayService.getLocalizedName(
+                              occurrence.holiday,
+                            ),
+                            occurrence: occurrence.date,
+                          ),
+                        ),
                       ),
                       SizedBox(height: compact ? 12 : 16),
                       CalendarEventListSection(
@@ -866,6 +964,23 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         itemCount: eventCount,
                         statusLabel: _selectedDayBadge(selectedDay),
                         formatCreatedTime: _formatCreatedTime,
+                        formatEventTime: _formatEventTime,
+                        onExport: (event) {
+                          final timing = CalendarTimedEvent.fromJson(
+                            event['timing'],
+                            dateKey: _getDateKey(selectedDay),
+                          );
+                          if (event['timing'] != null && timing == null) return;
+                          unawaited(
+                            _exportCalendarEvent(
+                              identity:
+                                  'calendar/${widget.houseId}/${event['key']}',
+                              title: event['title']?.toString() ?? '',
+                              occurrence: selectedDay,
+                              timing: timing,
+                            ),
+                          );
+                        },
                         onDelete: (eventId) {
                           unawaited(
                             _requestDeleteEvent(

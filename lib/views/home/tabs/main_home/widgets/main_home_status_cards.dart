@@ -46,7 +46,10 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     required bool isSingle,
     Widget? dragHandle,
   }) {
-    final today = DateTime.now();
+    final today = CalendarTimeZone.fromMilliseconds(
+      DateTime.now().millisecondsSinceEpoch,
+      MarketService.instance.preferences.timeZoneId,
+    );
     final todayMidnight = DateTime(today.year, today.month, today.day);
     final List<HomeUpcomingEvent> upcomingEvents = [];
 
@@ -55,12 +58,12 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     if (startDate != null && startDate.isNotEmpty) {
       try {
         final startDt = DateTime.parse(startDate);
-        final startDtMidnight = DateTime(
+        final startDtMidnight = DateTime.utc(
           startDt.year,
           startDt.month,
           startDt.day,
         );
-        final daysToday = todayMidnight.difference(startDtMidnight).inDays + 1;
+        final daysToday = CalendarCivilDate.daysBetween(startDtMidnight, todayMidnight) + 1;
         totalDays = daysToday;
 
         int? nextMilestone;
@@ -157,7 +160,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
         if (nextBday.isBefore(todayMidnight)) {
           nextBday = DateTime(todayMidnight.year + 1, bday.month, bday.day);
         }
-        final daysUntil = nextBday.difference(todayMidnight).inDays;
+        final daysUntil = CalendarCivilDate.daysBetween(todayMidnight, nextBday);
         final giftHint = daysUntil <= 7 && daysUntil >= 0
             ? _MainHomeTabState._giftSuggestionsForBirthday(
                 bday.month,
@@ -430,9 +433,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                       ),
                       const SizedBox(height: 8),
                       ...uniqueEvents.take(5).map((e) {
-                        final daysUntil = e.date
-                            .difference(todayMidnight)
-                            .inDays;
+                        final daysUntil = CalendarCivilDate.daysBetween(todayMidnight, e.date);
                         final String timeStr = daysUntil <= 0
                             ? context.tr('home_hmnay_d87b33')
                             : (daysUntil == 1

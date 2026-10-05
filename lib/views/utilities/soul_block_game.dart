@@ -680,6 +680,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         tray: nextTray,
         recommendedMove: _recommendMoveFor(nextBoard, nextTray),
         sessionId: DateTime.now().microsecondsSinceEpoch,
+        boardSize: _boardSize,
       );
     } finally {
       _turn = oldTurn;
@@ -729,6 +730,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     setState(() {
       _explosionParticles = <_ExplosionParticle>[];
       _draggedPieceOverlay = null;
+      _boardSize = nextRun.boardSize;
       _board = _cloneBoard(nextRun.board);
       _tray = List<_SoulPieceOption>.from(nextRun.tray);
       _recommendedMove = nextRun.recommendedMove;
@@ -1058,10 +1060,11 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   }
 
   List<List<_SoulTile?>> _cloneBoard(List<List<_SoulTile?>> board) {
-    return List<List<_SoulTile?>>.generate(
-      _boardSize,
-      (int row) => List<_SoulTile?>.from(board[row]),
-    );
+    // Sao chép theo snapshot, không theo kích thước của ván đang hiển thị.
+    // Khi khôi phục bàn 9×9, state ban đầu vẫn đang dùng kích thước 8×8.
+    return board
+        .map((row) => List<_SoulTile?>.from(row))
+        .toList(growable: false);
   }
 
   void _updateBoardMetrics() {

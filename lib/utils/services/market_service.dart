@@ -54,6 +54,12 @@ class MarketPreferences {
     if (schema != 1 && schema != 2) return const MarketPreferences();
     final code = MarketCatalog.find(raw['marketCode']?.toString())?.code;
     final packs = raw['holidayPacks'];
+    // Chỉ chuyển mặc định cũ đã lưu theo vùng thành lựa chọn rõ ràng.
+    // Người chưa chọn vùng dùng gợi ý mới, không sao chép cấu hình guest.
+    final previousDefaults =
+        raw['holidayDefaultsVersion'] == MarketCatalog.holidayDefaultsVersion
+        ? null
+        : MarketCatalog.previousImplicitHolidayPacks(code);
     final rawWeekday = raw['firstWeekday'];
     final weekday = int.tryParse(rawWeekday?.toString() ?? '');
     final normalizedWeekday = supportedFirstWeekdays.contains(weekday)
@@ -75,7 +81,7 @@ class MarketPreferences {
             )
           : raw['useDefaultHolidayPacks'] == false
           ? const []
-          : null,
+          : previousDefaults,
       firstWeekday: normalizedWeekday,
       use24HourFormat: raw['use24HourFormat'] is bool
           ? raw['use24HourFormat'] as bool
@@ -88,6 +94,7 @@ class MarketPreferences {
 
   Map<String, Object?> toJson() => {
     'schemaVersion': 2,
+    'holidayDefaultsVersion': MarketCatalog.holidayDefaultsVersion,
     'useDefaultHolidayPacks': holidayPacks == null,
     if (marketCode != null) 'marketCode': marketCode,
     if (holidayPacks != null) 'holidayPacks': holidayPacks,
@@ -98,7 +105,8 @@ class MarketPreferences {
     'holidayRemindersEnabled': holidayRemindersEnabled,
   };
 
-  static bool isValidTimeZoneId(String? value) => CalendarTimeZone.isValidId(value);
+  static bool isValidTimeZoneId(String? value) =>
+      CalendarTimeZone.isValidId(value);
 }
 
 enum MarketSyncState { localOnly, syncing, synced, pending }

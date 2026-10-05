@@ -217,7 +217,7 @@ class _PreparedSoulRun {
     required this.recommendedMove,
     required this.sessionId,
     this.holdPiece,
-    this.boardSize,
+    required this.boardSize,
   });
 
   final List<List<_SoulTile?>> board;
@@ -225,7 +225,7 @@ class _PreparedSoulRun {
   final _RecommendedMove? recommendedMove;
   final int sessionId;
   final _SoulPieceOption? holdPiece;
-  final int? boardSize;
+  final int boardSize;
 }
 
 class _LeaderboardEntry {

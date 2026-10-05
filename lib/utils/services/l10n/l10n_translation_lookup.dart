@@ -7,11 +7,17 @@ class _L10nTranslationLookup {
   static const int _cacheMax = 1024;
   final LinkedHashMap<String, String> _resultCache =
       LinkedHashMap<String, String>();
+  final Map<String, Map<String, String>> _resolvedAssets = {};
+  final Map<String, Map<String, String>> _resolvedMaps = {};
 
   /// Bỏ các giá trị fallback đã tra trước khi file dịch từ assets tải xong.
   /// Nếu giữ cache cũ, một key mới có thể bị hiển thị nguyên tên key cho đến
   /// khi ứng dụng được khởi động lại.
-  void clearCache() => _resultCache.clear();
+  void clearCache() {
+    _resultCache.clear();
+    _resolvedAssets.clear();
+    _resolvedMaps.clear();
+  }
 
   String _cacheKey(String lang, String rawKey, bool isSingle) =>
       '$lang|$rawKey|$isSingle';
@@ -38,8 +44,11 @@ class _L10nTranslationLookup {
 
     // ⚡ Cache hit
     final ck = _cacheKey(lang, rawKey, isSingle);
-    final cached = _resultCache[ck];
-    if (cached != null) return cached;
+    final cached = _resultCache.remove(ck);
+    if (cached != null) {
+      _resultCache[ck] = cached;
+      return cached;
+    }
 
     final isVietnamese = lang == 'vi';
 
@@ -180,14 +189,25 @@ class _L10nTranslationLookup {
   };
 
   Map<String, String> _resolvedVi(Map<String, String> assetVi) {
-    return assetVi.isEmpty
-        ? _L10nStaticData._vi
-        : {..._L10nStaticData._vi, ...assetVi};
+    return _resolveMap('vi', assetVi, _L10nStaticData._vi);
   }
 
   Map<String, String> _resolvedEn(Map<String, String> assetEn) {
-    return assetEn.isEmpty
-        ? _L10nStaticData._en
-        : {..._L10nStaticData._en, ...assetEn};
+    return _resolveMap('en', assetEn, _L10nStaticData._en);
+  }
+
+  Map<String, String> _resolveMap(
+    String localeCode,
+    Map<String, String> assets,
+    Map<String, String> fallback,
+  ) {
+    if (assets.isEmpty) return fallback;
+    if (identical(_resolvedAssets[localeCode], assets)) {
+      return _resolvedMaps[localeCode]!;
+    }
+    final resolved = {...fallback, ...assets};
+    _resolvedAssets[localeCode] = assets;
+    _resolvedMaps[localeCode] = resolved;
+    return resolved;
   }
 }

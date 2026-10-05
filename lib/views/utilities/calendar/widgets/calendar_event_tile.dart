@@ -10,6 +10,8 @@ class CalendarEventTile extends StatelessWidget {
   final int index;
   final String statusLabel;
   final VoidCallback? onDelete;
+  final VoidCallback? onExport;
+  final String? timeLabel;
 
   const CalendarEventTile({
     super.key,
@@ -20,6 +22,8 @@ class CalendarEventTile extends StatelessWidget {
     required this.index,
     required this.statusLabel,
     required this.onDelete,
+    this.onExport,
+    this.timeLabel,
   });
 
   @override
@@ -55,6 +59,7 @@ class CalendarEventTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
+              if (timeLabel != null) Text(timeLabel!, style: CalendarDesign.text(context, size: 13)),
               Text(
                 author?.isNotEmpty == true
                     ? L10nService().format('calendar_created_by', {
@@ -78,6 +83,13 @@ class CalendarEventTile extends StatelessWidget {
             ],
           ),
         ),
+        Column(mainAxisSize: MainAxisSize.min, children: [
+        if (onExport != null) IconButton(
+          onPressed: onExport,
+          tooltip: context.tr('event_export_calendar'),
+          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+          icon: Icon(Icons.ios_share_rounded, size: 21, color: CalendarDesign.muted(context)),
+        ),
         IconButton(
           onPressed: onDelete,
           tooltip: context.tr('p3_delete'),
@@ -88,6 +100,7 @@ class CalendarEventTile extends StatelessWidget {
             color: CalendarDesign.muted(context),
           ),
         ),
+        ]),
       ],
     ),
   );
