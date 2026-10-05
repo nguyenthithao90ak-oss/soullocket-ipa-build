@@ -54,11 +54,11 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
     final fillColor = dark
         ? const Color(0xFF162136)
         : Colors.white.withValues(alpha: 0.88);
-    final labelColor = dark ? Colors.white70 : const Color(0xFF8A5B76);
-    final hintColor = dark ? Colors.white38 : const Color(0xFFB9A6B3);
+    final labelColor = dark ? Colors.white70 : SLSettingsColors.inkSecondary;
+    final hintColor = dark ? Colors.white38 : SLSettingsColors.inkTertiary;
     final borderColor = dark
         ? Colors.white.withValues(alpha: 0.12)
-        : const Color(0xFFF3CBDD);
+        : SLSettingsColors.border;
     return InputDecoration(
       labelText: label,
       hintText: hint,
@@ -82,7 +82,7 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
       ),
       focusedBorder: const OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(16)),
-        borderSide: BorderSide(color: Color(0xFFD81B60), width: 1.4),
+        borderSide: BorderSide(color: SLSettingsColors.accentStrong, width: 1.4),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     );
@@ -259,7 +259,7 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
                         errorText: errorText,
                         prefixIcon: const Icon(
                           Icons.calendar_month_rounded,
-                          color: Color(0xFFD81B60),
+                          color: SLSettingsColors.accentStrong,
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),

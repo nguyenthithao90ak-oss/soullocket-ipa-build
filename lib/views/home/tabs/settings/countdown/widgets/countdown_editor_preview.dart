@@ -17,7 +17,7 @@ extension PreviewEditorExt on _CountdownModeEditorScreenState {
             style: TextButton.styleFrom(
               foregroundColor: themeData.isDark
                   ? Colors.white
-                  : const Color(0xFFD81B60),
+                  : SLSettingsColors.accentStrong,
               backgroundColor: Colors.white.withValues(
                 alpha: themeData.isDark ? 0.12 : 0.85,
               ),
