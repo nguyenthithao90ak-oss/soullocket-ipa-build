@@ -2,6 +2,7 @@ import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/sl_settings_kit.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
@@ -236,7 +237,7 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
     final sheetHeight = MediaQuery.sizeOf(context).height * 0.92;
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFFFCFAF9),
+        color: SLSettingsColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SafeArea(
@@ -296,12 +297,12 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: const Color(0xFFFCEDF0),
+                color: SLSettingsColors.accentSoft,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
                 Icons.add_link_rounded,
-                color: Color(0xFFB9516D),
+                color: SLSettingsColors.accentStrong,
                 size: 22,
               ),
             ),
@@ -345,7 +346,7 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF4EEED),
+        color: SLSettingsColors.surfaceMuted,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -410,7 +411,7 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
           onPressed: _isLoading ? null : _createCode,
           style: FilledButton.styleFrom(
             minimumSize: const Size.fromHeight(50),
-            backgroundColor: const Color(0xFFB9516D),
+            backgroundColor: SLSettingsColors.accentStrong,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(13),
@@ -455,7 +456,7 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFEEE5E4)),
+            border: Border.all(color: SLSettingsColors.border),
           ),
           child: Column(
             children: [
@@ -531,7 +532,7 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
               ),
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),
-                backgroundColor: const Color(0xFFB9516D),
+                backgroundColor: SLSettingsColors.accentStrong,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(13),
@@ -548,7 +549,7 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),
                 foregroundColor: SLColors.ink,
-                side: const BorderSide(color: Color(0xFFE8DDDC)),
+                side: const BorderSide(color: SLSettingsColors.border),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(13),
                 ),
@@ -670,7 +671,7 @@ class _ErrorNotice extends StatelessWidget {
             child: Text(
               message,
               style: SLTheme.quicksand(
-                color: const Color(0xFF9A344C),
+                color: SLSettingsColors.danger,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
                 height: 1.35,

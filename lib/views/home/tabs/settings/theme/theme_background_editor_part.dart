@@ -8,9 +8,9 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFF3D9E6)),
+        color: SLSettingsColors.surface,
+        borderRadius: BorderRadius.circular(SLSettingsRadius.card),
+        border: Border.all(color: SLSettingsColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -19,39 +19,17 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
             children: [
               const Icon(
                 Icons.phone_iphone_rounded,
-                size: 16,
-                color: Color(0xFFD81B60),
+                size: 17,
+                color: SLSettingsColors.inkSecondary,
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   context.tr('theme_preview'),
-                  style: SLTheme.quicksand(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFFD81B60),
-                  ),
+                  style: SLSettingsText.title(SLSettingsColors.ink),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFEEF5),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: const Color(0xFFF7BDD3)),
-                ),
-                child: Text(
-                  '9:16',
-                  style: SLTheme.quicksand(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFFD81B60),
-                  ),
-                ),
-              ),
+              const SLSettingsPill(label: '9:16', dense: true),
             ],
           ),
           const SizedBox(height: 12),
@@ -64,7 +42,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFD81B60).withValues(alpha: 0.14),
+                    color: SLSettingsColors.ink.withValues(alpha: 0.16),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -114,7 +92,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
                                 style: SLTheme.quicksand(
                                   fontSize: 9,
                                   fontWeight: FontWeight.w900,
-                                  color: const Color(0xFFD81B60),
+                                  color: SLSettingsColors.accentStrong,
                                 ),
                               ),
                             ),
@@ -255,7 +233,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
                                 height: 6,
                                 decoration: BoxDecoration(
                                   color: index == 0
-                                      ? const Color(0xFFD81B60)
+                                      ? SLSettingsColors.accentStrong
                                       : const Color(0xFFE8AFC6),
                                   shape: BoxShape.circle,
                                 ),
@@ -273,12 +251,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
           const SizedBox(height: 10),
           Text(
             context.tr('theme_preview_desc'),
-            style: SLTheme.quicksand(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF8A5B76),
-              height: 1.4,
-            ),
+            style: SLSettingsText.caption(SLSettingsColors.inkSecondary),
           ),
         ],
       ),
@@ -305,7 +278,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
             child: const Icon(
               Icons.image_outlined,
               size: 24,
-              color: Color(0xFFD81B60),
+              color: SLSettingsColors.accentStrong,
             ),
           ),
         ),
@@ -330,7 +303,9 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
         child: Center(
           child: CircularProgressIndicator(
             strokeWidth: 2.2,
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD81B60)),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              SLSettingsColors.accentStrong,
+            ),
           ),
         ),
       ),
@@ -339,7 +314,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
         alignment: Alignment.center,
         child: const Icon(
           Icons.image_not_supported_outlined,
-          color: Color(0xFFD81B60),
+          color: SLSettingsColors.accentStrong,
         ),
       ),
     );

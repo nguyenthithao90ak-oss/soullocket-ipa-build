@@ -38,87 +38,29 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
 
     _markSecurityWarningShownThisSession();
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(15, 0, 15, 14),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFEBEE),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFEF9A9A), width: 1.2),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: const Color(0xFFC62828).withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.warning_amber_rounded,
-              color: Color(0xFFC62828),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final stacked = constraints.maxWidth < 220;
-                    final dismiss = GestureDetector(
-                      onTap: _dismissSecurityWarning,
-                      child: Padding(
-                        padding: EdgeInsets.only(left: stacked ? 0 : 8),
-                        child: Text(
-                          context.tr('home_bqua_a3b533'),
-                          style: SLTheme.quicksand(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF9E9E9E),
-                          ),
-                        ),
-                      ),
-                    );
-                    final title = Text(
-                      context.tr('home_cnhbobomt_a092b6'),
-                      style: SLTheme.quicksand(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFFC62828),
-                      ),
-                    );
-                    if (stacked) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [title, const SizedBox(height: 4), dismiss],
-                      );
-                    }
-                    return Row(
-                      children: [
-                        Expanded(child: title),
-                        dismiss,
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  message,
-                  style: SLTheme.quicksand(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    height: 1.45,
-                    color: const Color(0xFF5F2120),
-                  ),
-                ),
-              ],
+    return SLSettingsNotice(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+      tone: SLSettingsTone.warning,
+      icon: Icons.shield_outlined,
+      title: context.tr('home_cnhbobomt_a092b6'),
+      message: message,
+      trailing: Semantics(
+        button: true,
+        child: InkWell(
+          onTap: _dismissSecurityWarning,
+          borderRadius: BorderRadius.circular(10),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            child: Text(
+              context.tr('home_bqua_a3b533'),
+              style: SLTheme.quicksand(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: SLSettingsColors.inkSecondary,
+              ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -237,477 +179,69 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     required String tooltip,
     required VoidCallback onTap,
   }) {
-    return Semantics(
-      button: true,
-      label: tooltip,
-      child: Tooltip(
-        message: tooltip,
-        excludeFromSemantics: true,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(12),
-            child: Ink(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: _kSettingsHeaderSurface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _kSettingsHeaderBorder),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Icon(icon, color: const Color(0xFFFF78A8), size: 18),
-            ),
-          ),
-        ),
-      ),
-    );
+    return SettingsHeaderAction(icon: icon, tooltip: tooltip, onTap: onTap);
   }
 
-  Widget _buildControlCard({
-    required IconData icon,
-    required String label,
-    required String desc,
-    required List<Color> gradient,
-    required Color border,
-    required Color textColor,
-    required VoidCallback onTap,
-    Key? key,
-    String? badgeText,
-    Widget? footer,
-  }) {
-    final uiState = UiPrefs.notifier.value;
-    final isDark =
-        uiState.themeKey == 'theme-night' ||
-        uiState.themeKey == 'theme-dark' ||
-        uiState.themeKey == 'theme-true-black';
-
-    final accent = gradient.first;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF282128) : SLColors.paper,
-        borderRadius: BorderRadius.circular(21),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.10)
-              : border.withValues(alpha: 0.36),
-          width: 1.15,
-        ),
-        boxShadow: isDark ? null : SLShadow.subtle,
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(21),
-        child: InkWell(
-          key: key,
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: isDark ? 0.18 : 0.11),
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: accent.withValues(alpha: 0.28)),
-                  ),
-                  child: Icon(icon, color: accent, size: 21),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              label,
-                              style: SLTheme.quicksand(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w800,
-                                color: isDark ? Colors.white : SLColors.ink,
-                              ),
-                            ),
-                          ),
-                          if (badgeText != null)
-                            Container(
-                              margin: const EdgeInsets.only(left: 6),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFF5252),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                badgeText,
-                                style: SLTheme.quicksand(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        desc,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: SLTheme.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? Colors.grey[500]
-                              : SLColors.textSecond,
-                          height: 1.3,
-                        ),
-                      ),
-                      if (footer != null) ...[
-                        const SizedBox(height: 6),
-                        footer,
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.08),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 13,
-                    color: accent.withValues(alpha: 0.82),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionBlock({
-    required Widget child,
-    required Color colorTint,
-    EdgeInsetsGeometry padding = const EdgeInsets.all(16),
-  }) {
-    final uiState = UiPrefs.notifier.value;
-    final isDark =
-        uiState.themeKey == 'theme-night' ||
-        uiState.themeKey == 'theme-dark' ||
-        uiState.themeKey == 'theme-true-black';
-
-    return Container(
-      padding: padding,
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF282128) : SLColors.paper,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.10)
-              : colorTint.withValues(alpha: 0.22),
-        ),
-        boxShadow: isDark ? null : SLShadow.subtle,
-      ),
-      child: child,
-    );
-  }
-
-  Widget _buildSectionTitle(String title, {double topPadding = 20}) {
-    final uiState = UiPrefs.notifier.value;
-    final isDark =
-        uiState.themeKey == 'theme-night' ||
-        uiState.themeKey == 'theme-dark' ||
-        uiState.themeKey == 'theme-true-black';
-    return SettingsMenuHeading(
+  Widget _buildSectionTitle(String title, {double topPadding = 24}) {
+    return SLSettingsSectionLabel(
       title: title,
-      isDark: isDark,
+      isDark: SLSettingsPalette.isNightTheme,
       topPadding: topPadding,
-    );
-  }
-
-  Widget _buildSubCard({
-    required List<Widget> children,
-    Color? backgroundColor,
-    Color? borderColor,
-  }) {
-    final uiState = UiPrefs.notifier.value;
-    final isDark =
-        uiState.themeKey == 'theme-night' ||
-        uiState.themeKey == 'theme-dark' ||
-        uiState.themeKey == 'theme-true-black';
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color:
-            backgroundColor ??
-            (isDark ? const Color(0xFF2C252D) : SLColors.bgSubtle),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color:
-              borderColor ??
-              (isDark ? Colors.white.withValues(alpha: 0.10) : SLColors.border),
-          width: 1.05,
-        ),
-        boxShadow: isDark ? null : SLShadow.subtle,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: children,
-      ),
     );
   }
 
   Widget _buildPanel({
     required String id,
     required String title,
-    Color? borderColor,
     required Widget child,
     bool hideBackButton = false,
     Widget? titleBadge,
-    bool flatMode = false,
   }) {
-    final uiState = UiPrefs.notifier.value;
-    final isDark =
-        uiState.themeKey == 'theme-night' ||
-        uiState.themeKey == 'theme-dark' ||
-        uiState.themeKey == 'theme-true-black';
-
     final isStandalone = Navigator.of(context).canPop();
     final showBack = isStandalone && !hideBackButton;
     final showExpand = !isStandalone;
-    if (const {'vip', 'identity', 'language', 'security', 'lock'}.contains(id)) {
-      return AccountSettingsSection(
-        title: title,
-        icon: switch (id) {
-          'vip' => Icons.diamond_outlined,
-          'identity' => Icons.person_outline_rounded,
-          'language' => Icons.language_rounded,
-          'lock' => Icons.lock_outline_rounded,
-          _ => Icons.shield_outlined,
-        },
-        onBack: showBack ? () => Navigator.pop(context) : null,
-        backLabel: context.tr('p6_back'),
-        onClose: showExpand ? () => _togglePanel(id) : null,
-        closeLabel: context.tr('p6_close_panel'),
-        child: child,
-      );
-    }
-    final shortestSide = MediaQuery.sizeOf(context).shortestSide;
-    final isMobile = shortestSide < 600;
-
-    final margin = flatMode
-        ? const EdgeInsets.symmetric(horizontal: 0, vertical: 0)
-        : const EdgeInsets.symmetric(horizontal: 16, vertical: 8);
-
-    final borderRadius = BorderRadius.circular(26);
-    final accent = borderColor ?? SLColors.thread;
-
-    final border = flatMode
-        ? null
-        : Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.10)
-                : accent.withValues(alpha: 0.24),
-            width: 1.15,
-          );
-
-    return Container(
-      margin: margin,
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF211A20) : SLColors.paper,
-        borderRadius: borderRadius,
-        border: border,
-        boxShadow: flatMode
-            ? null
-            : [
-                BoxShadow(
-                  color: isDark
-                      ? Colors.black26
-                      : SLColors.ink.withValues(alpha: 0.08),
-                  blurRadius: 24,
-                  offset: const Offset(0, 12),
-                ),
-              ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 5,
-            margin: const EdgeInsets.symmetric(horizontal: 28),
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: isDark ? 0.34 : 0.18),
-              borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(999),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-            child: Row(
-              children: [
-                if (showBack) ...[
-                  Semantics(
-                    button: true,
-                    label: context.tr('p6_back'),
-                    child: Tooltip(
-                      message: context.tr('p6_back'),
-                      excludeFromSemantics: true,
-                      child: InkWell(
-                        onTap: () => Navigator.pop(context),
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          width: 38,
-                          height: 38,
-                          decoration: BoxDecoration(
-                            color: accent.withValues(alpha: 0.10),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: accent.withValues(alpha: 0.20),
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            size: 15,
-                            color: accent,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                ],
-                Container(
-                  width: 38,
-                  height: 38,
-                  margin: const EdgeInsets.only(right: 11),
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: isDark ? 0.16 : 0.10),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: accent.withValues(alpha: 0.20)),
-                  ),
-                  child: Icon(Icons.favorite_rounded, size: 18, color: accent),
-                ),
-                Expanded(
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Text(
-                        title,
-                        style: SLTheme.textStyleForKey(
-                          'dancingScript',
-                          fontSize: isMobile ? 21 : 23,
-                          fontWeight: FontWeight.w700,
-                          color: isDark ? Colors.white : SLColors.ink,
-                          height: 1.05,
-                        ),
-                      ),
-                      ?titleBadge,
-                    ],
-                  ),
-                ),
-                if (showExpand)
-                  Semantics(
-                    button: true,
-                    label: context.tr('p6_close_panel'),
-                    child: Tooltip(
-                      message: context.tr('p6_close_panel'),
-                      excludeFromSemantics: true,
-                      child: InkWell(
-                        onTap: () => _togglePanel(id),
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: accent.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Icon(
-                            Icons.close_rounded,
-                            size: 18,
-                            color: accent,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Divider(
-              color: accent.withValues(alpha: isDark ? 0.22 : 0.16),
-              height: 1,
-              thickness: 1,
-            ),
-          ),
-          Padding(
-            padding: flatMode
-                ? const EdgeInsets.fromLTRB(10, 10, 10, 14)
-                : const EdgeInsets.fromLTRB(16, 12, 16, 18),
-            child: child,
-          ),
-        ],
-      ),
+    return AccountSettingsSection(
+      title: title,
+      icon: switch (id) {
+        'vip' => Icons.workspace_premium_outlined,
+        'identity' => Icons.person_outline_rounded,
+        'language' => Icons.translate_rounded,
+        'lock' => Icons.lock_outline_rounded,
+        'security' => Icons.verified_user_outlined,
+        'relationship' => Icons.favorite_border_rounded,
+        'supportLegal' => Icons.support_agent_rounded,
+        _ => Icons.tune_rounded,
+      },
+      iconColor: switch (id) {
+        'vip' => SLSettingsColors.amber,
+        'identity' => SLSettingsColors.rose,
+        'language' => SLSettingsColors.sky,
+        'lock' => SLSettingsColors.indigo,
+        'security' => SLSettingsColors.sage,
+        'relationship' => SLSettingsColors.rose,
+        'supportLegal' => SLSettingsColors.teal,
+        _ => SLSettingsColors.slate,
+      },
+      badge: titleBadge,
+      onBack: showBack ? () => Navigator.pop(context) : null,
+      backLabel: context.tr('p6_back'),
+      onClose: showExpand ? () => _togglePanel(id) : null,
+      closeLabel: context.tr('p6_close_panel'),
+      child: child,
     );
   }
 
   Widget _buildLabel(String label) {
-    final uiState = UiPrefs.notifier.value;
-    final isDark =
-        uiState.themeKey == 'theme-night' ||
-        uiState.themeKey == 'theme-dark' ||
-        uiState.themeKey == 'theme-true-black';
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8, top: 9, left: 2),
-      child: Row(
-        children: [
-          Container(
-            width: 5,
-            height: 5,
-            margin: const EdgeInsets.only(right: 8),
-            decoration: const BoxDecoration(
-              color: SLColors.thread,
-              shape: BoxShape.circle,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              label,
-              style: SLTheme.quicksand(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: isDark ? SLColors.darkTextPrimary : SLColors.ink,
-                letterSpacing: 0.15,
-              ),
-            ),
-          ),
-        ],
+      padding: const EdgeInsets.only(bottom: 8, top: 12, left: 2),
+      child: Text(
+        label,
+        style: SLTheme.quicksand(
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
+          height: 1.35,
+          color: SLSettingsColors.ink,
+        ),
       ),
     );
   }
@@ -716,183 +250,34 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     TextEditingController ctrl,
     String hint, {
     int? maxLength,
-    Color? accentColor,
   }) {
-    final uiState = UiPrefs.notifier.value;
-    final isDark =
-        uiState.themeKey == 'theme-night' ||
-        uiState.themeKey == 'theme-dark' ||
-        uiState.themeKey == 'theme-true-black';
-    final accent = accentColor ?? SLColors.primary;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
       child: TextField(
         controller: ctrl,
         maxLength: maxLength,
-        decoration: InputDecoration(
-          hintText: hint,
-          counterStyle: SLTheme.quicksand(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: isDark ? SLColors.darkTextSecond : SLColors.textTertiary,
-          ),
-          hintStyle: SLTheme.quicksand(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: isDark ? SLColors.darkTextSecond : SLColors.textTertiary,
-          ),
-          filled: true,
-          fillColor: isDark ? const Color(0xFF211A20) : SLColors.paper,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 15,
-            vertical: 14,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(17),
-            borderSide: BorderSide(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.10)
-                  : SLColors.border,
-            ),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(17),
-            borderSide: BorderSide(color: accent, width: 1.5),
-          ),
-        ),
-        style: SLTheme.quicksand(
-          fontSize: 14,
-          fontWeight: FontWeight.w800,
-          color: isDark ? SLColors.darkTextPrimary : SLColors.ink,
-        ),
+        style: slSettingsInputTextStyle(),
+        decoration: slSettingsInputDecoration(hint: hint),
       ),
     );
   }
 
+  /// Nút hành động chuẩn. `gradient` cũ được giữ trong chữ ký để không phải
+  /// đổi các nơi gọi; màu thật lấy theo `variant` của bộ Cài đặt.
   Widget _buildGradientBtn({
     required String label,
     required List<Color> gradient,
-    Color textColor = Colors.white,
     required VoidCallback onTap,
+    SLSettingsButtonVariant variant = SLSettingsButtonVariant.primary,
+    IconData? icon,
+    bool loading = false,
   }) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: gradient,
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.circular(19),
-        boxShadow: [
-          BoxShadow(
-            color: gradient.last.withValues(alpha: 0.25),
-            blurRadius: 15,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: ElevatedButton(
-        onPressed: onTap,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          padding: const EdgeInsets.symmetric(vertical: 15),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(19),
-          ),
-        ),
-        child: Text(
-          label,
-          style: SLTheme.quicksand(
-            fontSize: 14,
-            fontWeight: FontWeight.w900,
-            color: textColor,
-            letterSpacing: 0.1,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionBtn({
-    required IconData icon,
-    required String label,
-    required List<Color> gradient,
-    required Color textColor,
-    Color? contentColor,
-    required VoidCallback onTap,
-  }) {
-    final effectiveLabel = icon == Icons.heart_broken
-        ? (_isBreakupBusy
-              ? context.tr('home_angxlyucu_0b316c')
-              : _breakupActionLabel)
-        : label;
-    final color = contentColor ?? Colors.white;
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: gradient,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: textColor.withValues(alpha: 0.32),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: gradient.first.withValues(alpha: 0.20),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              child: Row(
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(icon, color: color, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      effectiveLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: color,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    color: color.withValues(alpha: 0.8),
-                    size: 13,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+    return SLSettingsButton(
+      label: label,
+      icon: icon,
+      variant: variant,
+      loading: loading,
+      onPressed: onTap,
     );
   }
 
@@ -905,21 +290,17 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     }
     final error = _accountDeletionStatusError;
     if (error != null) {
-      return Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              error,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-            TextButton.icon(
-              onPressed: _loadPendingAccountDeletionState,
-              icon: const Icon(Icons.refresh),
-              label: Text(context.tr('account_deletion_refresh')),
-            ),
-          ],
+      return SLSettingsNotice(
+        margin: const EdgeInsets.only(top: 10),
+        tone: SLSettingsTone.danger,
+        message: error,
+        action: SLSettingsButton(
+          label: context.tr('account_deletion_refresh'),
+          icon: Icons.refresh_rounded,
+          variant: SLSettingsButtonVariant.secondary,
+          expand: false,
+          compact: true,
+          onPressed: _loadPendingAccountDeletionState,
         ),
       );
     }
@@ -930,118 +311,80 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     final dateLabel = deletion.scheduledAtMs > 0
         ? _formatPendingAccountDeletionDate(deletion.scheduledAtMs)
         : '';
-    return Container(
-      width: double.infinity,
+    return SLSettingsNotice(
       margin: const EdgeInsets.only(top: 10),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF5F5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFFCDD2)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFB71C1C).withValues(alpha: 0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      tone: SLSettingsTone.danger,
+      icon: Icons.schedule_rounded,
+      title: context.tr('account_deletion_title'),
+      message: L10nService().format(deletion.messageKey(isMine: isMine), {
+        'date': dateLabel,
+      }),
+      action: Wrap(
+        spacing: 8,
+        runSpacing: 8,
         children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.schedule_rounded,
-                color: Color(0xFFC62828),
-                size: 18,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  context.tr('account_deletion_title'),
-                  style: SLTheme.quicksand(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFFC62828),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            L10nService().format(deletion.messageKey(isMine: isMine), {
-              'date': dateLabel,
-            }),
-            style: SLTheme.quicksand(
-              fontSize: 11.8,
-              fontWeight: FontWeight.w700,
-              height: 1.35,
-              color: const Color(0xFF6B2B2B),
-            ),
-          ),
           if (deletion.canApproveFor(currentUid))
-            TextButton.icon(
+            SLSettingsButton(
+              label: context.tr('account_deletion_approve'),
+              icon: Icons.check_circle_outline,
+              variant: SLSettingsButtonVariant.danger,
+              expand: false,
+              compact: true,
               onPressed: _accountDeletionActionBusy
                   ? null
                   : () => _approvePartnerAccountDeletion(deletion),
-              icon: const Icon(Icons.check_circle_outline, size: 16),
-              label: Text(context.tr('account_deletion_approve')),
             ),
-          if (isMine && deletion.canCancel) ...[
-            const SizedBox(height: 10),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: _accountDeletionActionBusy
-                    ? null
-                    : () async {
-                        setState(() => _accountDeletionActionBusy = true);
-                        try {
-                          SLNotice.showInfo(
-                            context,
-                            context.tr('home_anghontc_b7c262'),
-                          );
-                          await _authService.undoScheduledDeletion();
-                          if (!mounted) return;
-                          setState(() {
-                            _accountDeletionStatus = null;
-                          });
-                          SLNotice.showSuccess(
-                            context,
-                            context.tr('home_hontcxathn_58b732'),
-                          );
-                        } catch (e) {
-                          if (!mounted) return;
-                          SLNotice.showError(
-                            context,
-                            AppErrorMapper.resolve(
-                              e,
-                              fallbackMessage: context.tr(
-                                'home_chathhontc_cd8493',
-                              ),
-                            ).message,
-                          );
-                          await _loadPendingAccountDeletionState();
-                        } finally {
-                          if (mounted) {
-                            setState(() => _accountDeletionActionBusy = false);
-                          }
+          if (isMine && deletion.canCancel)
+            SLSettingsButton(
+              label: context.tr('home_hontc_96ce27'),
+              icon: Icons.undo_rounded,
+              expand: false,
+              compact: true,
+              loading: _accountDeletionActionBusy,
+              onPressed: _accountDeletionActionBusy
+                  ? null
+                  : () async {
+                      setState(() => _accountDeletionActionBusy = true);
+                      try {
+                        SLNotice.showInfo(
+                          context,
+                          context.tr('home_anghontc_b7c262'),
+                        );
+                        await _authService.undoScheduledDeletion();
+                        if (!mounted) return;
+                        setState(() {
+                          _accountDeletionStatus = null;
+                        });
+                        SLNotice.showSuccess(
+                          context,
+                          context.tr('home_hontcxathn_58b732'),
+                        );
+                      } catch (e) {
+                        if (!mounted) return;
+                        SLNotice.showError(
+                          context,
+                          AppErrorMapper.resolve(
+                            e,
+                            fallbackMessage: context.tr(
+                              'home_chathhontc_cd8493',
+                            ),
+                          ).message,
+                        );
+                        await _loadPendingAccountDeletionState();
+                      } finally {
+                        if (mounted) {
+                          setState(() => _accountDeletionActionBusy = false);
                         }
-                      },
-                icon: const Icon(Icons.undo_rounded, size: 16),
-                label: Text(
-                  context.tr('home_hontc_96ce27'),
-                  style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-                ),
-              ),
+                      }
+                    },
             ),
-          ],
-          TextButton.icon(
+          SLSettingsButton(
+            label: context.tr('account_deletion_refresh'),
+            icon: Icons.refresh_rounded,
+            variant: SLSettingsButtonVariant.secondary,
+            expand: false,
+            compact: true,
             onPressed: _loadPendingAccountDeletionState,
-            icon: const Icon(Icons.refresh, size: 16),
-            label: Text(context.tr('account_deletion_refresh')),
           ),
         ],
       ),
@@ -1055,29 +398,19 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     Widget? trailing,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(
-            width: 82,
-            child: Text(
-              '$label:',
-              style: SLTheme.quicksand(
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFF6D4C41),
-              ),
-            ),
+          Text(
+            label,
+            style: SLSettingsText.caption(SLSettingsColors.inkSecondary),
           ),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               value,
-              style: SLTheme.quicksand(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: valueColor ?? const Color(0xFF424242),
-              ),
+              style: SLSettingsText.body(valueColor ?? SLSettingsColors.ink),
             ),
           ),
           ?trailing,
@@ -1124,195 +457,9 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
   //     );
   //   }
 
-  Widget _buildLegalBtn({
-    required IconData icon,
-    required String label,
-    required Color color,
-    VoidCallback? onTap,
-  }) {
-    final tileBg = Color.alphaBlend(
-      color.withValues(alpha: 0.045),
-      SLColors.paper,
-    );
-    final tileBorder = color.withValues(alpha: 0.22);
-
-    return Semantics(
-      button: true,
-      label: label,
-      excludeSemantics: true,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap ?? () => _showToast(context.tr('home_angm_1441cf')),
-          borderRadius: BorderRadius.circular(20),
-          child: Ink(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-            decoration: BoxDecoration(
-              color: tileBg,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: tileBorder),
-              boxShadow: SLShadow.subtle,
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(icon, color: color, size: 20),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: SLTheme.quicksand(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w900,
-                      color: _kSettingsActionTileText,
-                    ),
-                  ),
-                ),
-                Icon(
-                  Icons.open_in_new_rounded,
-                  color: color.withValues(alpha: 0.9),
-                  size: 18,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSwitchRow(
-    String label,
-    bool value,
-    ValueChanged<bool> onChanged, {
-    String? helperText,
-    VoidCallback? onTap,
-    bool ignoreDirectSwitchTap = false,
-  }) {
-    final uiState = UiPrefs.notifier.value;
-    final isDark =
-        uiState.themeKey == 'theme-night' ||
-        uiState.themeKey == 'theme-dark' ||
-        uiState.themeKey == 'theme-true-black';
-
-    final switchWidget = Switch(
-      value: value,
-      onChanged: onChanged,
-      activeThumbColor: Colors.white,
-      activeTrackColor: SLColors.primary,
-      inactiveTrackColor: isDark
-          ? const Color(0xFF39393D)
-          : const Color(0xFFE9E9EB),
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-    );
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF282128) : SLColors.paper,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.10)
-                  : SLColors.border,
-              width: 1.0,
-            ),
-            boxShadow: isDark ? null : SLShadow.subtle,
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: SLTheme.quicksand(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                        color: isDark ? Colors.white : SLColors.ink,
-                      ),
-                    ),
-                    if (helperText != null && helperText.trim().isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        helperText.trim(),
-                        style: SLTheme.quicksand(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                          height: 1.35,
-                          color: isDark
-                              ? Colors.grey[500]
-                              : SLColors.textSecond,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              if (ignoreDirectSwitchTap)
-                IgnorePointer(child: switchWidget)
-              else
-                switchWidget,
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Renders một dòng bước hướng dẫn có số thứ tự tròn màu hồng
+  /// Một bước hướng dẫn có số thứ tự.
   Widget _buildStepRow(String step, String text) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 22,
-          height: 22,
-          decoration: const BoxDecoration(
-            color: Color(0xFFD81B60),
-            shape: BoxShape.circle,
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            step,
-            style: SLTheme.quicksand(
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: SLTheme.quicksand(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF5F4C58),
-              height: 1.45,
-            ),
-          ),
-        ),
-      ],
-    );
+    return SLSettingsStep(index: step, text: text);
   }
 }
 
@@ -1321,53 +468,16 @@ class _SparkleBetaBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFF3B0), Color(0xFFFF78A8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.88),
-          width: 0.8,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFF78A8).withValues(alpha: 0.2),
-            blurRadius: 10,
-            spreadRadius: 0.2,
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(
-            Icons.auto_awesome_rounded,
-            size: 10,
-            color: Color(0xFF8EBBFF),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            'BETA',
-            style: SLTheme.quicksand(
-              fontSize: 9,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 0.8,
-              color: const Color(0xFF7FB3FF),
-            ),
-          ),
-        ],
-      ),
+    return const SLSettingsPill(
+      label: 'BETA',
+      tone: SLSettingsTone.info,
+      icon: Icons.auto_awesome_rounded,
+      dense: true,
     );
   }
 }
 
-/// Widget compact row cho toggle (Switch/Checkbox) bên trong các card cài đặt.
-/// Thay thế layout Container dài dòng cũ: chỉ icon + label + control.
+/// Dòng gọn có công tắc hoặc ô chọn bên trong các thẻ cài đặt.
 class _SettingsToggleRow extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
@@ -1395,66 +505,44 @@ class _SettingsToggleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final uiState = UiPrefs.notifier.value;
-    final isDark =
-        uiState.themeKey == 'theme-night' ||
-        uiState.themeKey == 'theme-dark' ||
-        uiState.themeKey == 'theme-true-black';
+    final isDark = SLSettingsPalette.isNightTheme;
+    final palette = SLSettingsPalette.resolve(isDark);
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 5),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF282128) : SLColors.paper,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.10)
-              : SLColors.border,
-        ),
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(SLSettingsRadius.control + 2),
+        border: Border.all(color: palette.border),
       ),
       child: Row(
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.11),
-              borderRadius: BorderRadius.circular(13),
-              border: Border.all(color: iconColor.withValues(alpha: 0.18)),
-            ),
-            child: Icon(icon, size: 17, color: iconColor),
+          SLSettingsIconTile(
+            icon: icon,
+            color: iconColor,
+            filled: false,
+            size: 34,
+            isDark: isDark,
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              label,
-              style: SLTheme.quicksand(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: isDark ? SLColors.darkTextPrimary : SLColors.ink,
-              ),
-            ),
-          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(label, style: SLSettingsText.body(palette.ink))),
           if (useCheckbox)
             Checkbox(
               value: checkValue ?? false,
-              activeColor: iconColor,
+              activeColor: SLSettingsColors.accent,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(5),
+                borderRadius: BorderRadius.circular(6),
               ),
-              side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.5),
+              side: BorderSide(color: palette.border, width: 1.6),
               onChanged: onCheckChanged,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               visualDensity: VisualDensity.compact,
             )
           else
-            Transform.scale(
-              scale: 0.85,
-              child: Switch.adaptive(
-                value: switchValue ?? false,
-                activeThumbColor: iconColor,
-                onChanged: onSwitchChanged,
-              ),
+            SLSettingsSwitch(
+              value: switchValue ?? false,
+              onChanged: onSwitchChanged,
+              isDark: isDark,
             ),
         ],
       ),

@@ -49,6 +49,7 @@ import 'settings/settings_initial_content.dart';
 import 'settings/settings_menu_widgets.dart';
 import 'settings/settings_gps_mode_dialog.dart';
 import '../../../widgets/sl_detail_widgets.dart';
+import '../../../widgets/sl_settings_kit.dart';
 import '../../../widgets/stable_future_builder.dart';
 import '../../../utils/services/offline_cache_service.dart';
 
@@ -210,11 +211,6 @@ part 'settings/settings_support_legal_section.dart';
 part 'settings/settings_data_health_section.dart';
 part 'settings/settings_shell.dart';
 
-const Color _kSettingsBgTop = SLColors.paperCanvas;
-
-const Color _kSettingsHeaderSurface = SLColors.paper;
-const Color _kSettingsHeaderBorder = SLColors.border;
-const Color _kSettingsActionTileText = SLColors.ink;
 const String _defaultWidgetHeartStyleKey = '❤️';
 
 const List<String> _widgetPreviewSizeKeys = <String>[
@@ -289,15 +285,7 @@ class _SettingsBackgroundLayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RepaintBoundary(
-      child: SLTheme.softCanvasBackdrop(
-        baseColor: _kSettingsBgTop,
-        accentColor: SLColors.thread,
-        secondaryAccent: SLColors.secondary,
-        motif: SLCanvasBackdropMotif.journal,
-        child: const SizedBox.expand(),
-      ),
-    );
+    return const RepaintBoundary(child: SLSettingsBackdrop());
   }
 }
 
@@ -881,7 +869,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
         fit: StackFit.expand,
         children: [
           _SettingsBackgroundLayer(),
-          Center(child: CircularProgressIndicator(color: Color(0xFFFF78A8))),
+          Center(child: CircularProgressIndicator()),
         ],
       );
     }
@@ -1067,172 +1055,98 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
 
   // ─── HELPERS ──────────────────────────────────────────────────────────────
   Widget _buildDevicePendingScreen(BuildContext context) {
+    final unlockDate = _formatManagedPendingUnlockDate(
+      _devicePendingUnlockAtMs,
+    );
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.96),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFF8BBD0)),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFD81B60).withValues(alpha: 0.12),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.devices_rounded,
-              size: 56,
-              color: Color(0xFFD81B60),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              L10nService().translate('home_thitbangch_1e00c8'),
-              style: SLTheme.quicksand(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFFD81B60),
-              ),
-            ),
-            const SizedBox(height: 8),
-            // Prefer the computed pending message so the unlock date is visible.
-            Text(
-              _devicePendingMessage.isNotEmpty
-                  ? _devicePendingMessage
-                  : context.tr('p6_device_trust_pending_description'),
-              textAlign: TextAlign.center,
-              style: SLTheme.quicksand(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: Colors.grey[700],
-                height: 1.45,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF3F7),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFF8BBD0)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.info_outline_rounded,
-                        size: 16,
-                        color: Color(0xFFD81B60),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        L10nService().translate('home_hngdncduyt_35af24'),
-                        style: SLTheme.quicksand(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFFD81B60),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  _buildStepRow(
-                    '1',
-                    L10nService().translate('home_msoullocke_b59902'),
-                  ),
-                  const SizedBox(height: 6),
-                  _buildStepRow(
-                    '2',
-                    L10nService().translate('home_vocitbomtq_b29ae5'),
-                  ),
-                  const SizedBox(height: 6),
-                  _buildStepRow(
-                    '3',
-                    context
-                        .tr('p6_device_trust_approve_step')
-                        .replaceAll(
-                          '{approve}',
-                          context.tr('home_duyt_a4db4d'),
-                        ),
-                  ),
-                  const SizedBox(height: 6),
-                  _buildStepRow(
-                    '4',
-                    _formatManagedPendingUnlockDate(
-                          _devicePendingUnlockAtMs,
-                        ).isNotEmpty
-                        ? context
-                              .tr('p6_device_trust_wait_until')
-                              .replaceAll(
-                                '{date}',
-                                _formatManagedPendingUnlockDate(
-                                  _devicePendingUnlockAtMs,
-                                ),
-                              )
-                        : L10nService().translate('home_nukhngcthi_6bcda1'),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 18),
-            _buildGradientBtn(
-              label: L10nService().translate('home_quaylicitc_3d387a'),
-              gradient: const [Color(0xFFFF6F91), Color(0xFFD81B60)],
-              onTap: () {
-                if (Navigator.canPop(context)) {
-                  Navigator.pop(context);
-                }
-              },
-            ),
-            const SizedBox(height: 10),
-            _buildGradientBtn(
-              label: L10nService().translate('home_yucuhtr_60da9e'),
-              gradient: const [Color(0xFF7B61FF), Color(0xFF5C4DCC)],
-              onTap: () async {
-                await _openSupportContact();
-              },
-            ),
-            const SizedBox(height: 10),
-            OutlinedButton.icon(
-              onPressed: () async {
-                await _authService.signOut();
-                if (!context.mounted) return;
-                Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                  (_) => false,
-                );
-              },
-              icon: const Icon(
-                Icons.logout_rounded,
-                color: Colors.redAccent,
-                size: 18,
-              ),
-              label: Text(
-                L10nService().translate('home_ngxut_0b3c82'),
-                style: SLTheme.quicksand(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.redAccent,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SLSettingsPageHeader(
+            title: L10nService().translate('home_thitbangch_1e00c8'),
+            description: _devicePendingMessage.isNotEmpty
+                ? _devicePendingMessage
+                : context.tr('p6_device_trust_pending_description'),
+            icon: Icons.devices_rounded,
+            iconColor: SLSettingsColors.amber,
+            backLabel: context.tr('p6_back'),
+            onBack: Navigator.canPop(context)
+                ? () => Navigator.pop(context)
+                : null,
+          ),
+          SLSettingsCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SLSettingsBlockHeading(
+                  icon: Icons.info_outline_rounded,
+                  iconColor: SLSettingsColors.sky,
+                  title: L10nService().translate('home_hngdncduyt_35af24'),
                 ),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Colors.redAccent, width: 1.5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                const SizedBox(height: 14),
+                _buildStepRow(
+                  '1',
+                  L10nService().translate('home_msoullocke_b59902'),
                 ),
-                minimumSize: const Size(double.infinity, 44),
-              ),
+                const SizedBox(height: 10),
+                _buildStepRow(
+                  '2',
+                  L10nService().translate('home_vocitbomtq_b29ae5'),
+                ),
+                const SizedBox(height: 10),
+                _buildStepRow(
+                  '3',
+                  context
+                      .tr('p6_device_trust_approve_step')
+                      .replaceAll('{approve}', context.tr('home_duyt_a4db4d')),
+                ),
+                const SizedBox(height: 10),
+                _buildStepRow(
+                  '4',
+                  unlockDate.isNotEmpty
+                      ? context
+                            .tr('p6_device_trust_wait_until')
+                            .replaceAll('{date}', unlockDate)
+                      : L10nService().translate('home_nukhngcthi_6bcda1'),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 18),
+          SLSettingsButton(
+            label: L10nService().translate('home_quaylicitc_3d387a'),
+            icon: Icons.arrow_back_rounded,
+            onPressed: () {
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+            },
+          ),
+          const SizedBox(height: 10),
+          SLSettingsButton(
+            label: L10nService().translate('home_yucuhtr_60da9e'),
+            icon: Icons.support_agent_rounded,
+            variant: SLSettingsButtonVariant.secondary,
+            onPressed: () async {
+              await _openSupportContact();
+            },
+          ),
+          const SizedBox(height: 10),
+          SLSettingsButton(
+            label: L10nService().translate('home_ngxut_0b3c82'),
+            icon: Icons.logout_rounded,
+            variant: SLSettingsButtonVariant.danger,
+            onPressed: () async {
+              await _authService.signOut();
+              if (!context.mounted) return;
+              Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (_) => false,
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -1280,9 +1194,10 @@ class _PromptEmailDialogWidgetState extends State<_PromptEmailDialogWidget> {
         controller: _controller,
         keyboardType: TextInputType.emailAddress,
         autofocus: true,
-        decoration: InputDecoration(
-          hintText: widget.hint,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        style: slSettingsInputTextStyle(),
+        decoration: slSettingsInputDecoration(
+          hint: widget.hint,
+          prefixIcon: const Icon(Icons.alternate_email_rounded, size: 20),
         ),
       ),
       actions: [

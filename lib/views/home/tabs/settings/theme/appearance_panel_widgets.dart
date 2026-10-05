@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/sl_theme.dart';
 import '../../../../../utils/services/l10n_service.dart';
+import '../../../../../widgets/sl_settings_kit.dart';
 
 abstract final class AppearancePanelStyle {
-  static const canvas = Color(0xFFFAF6F4);
-  static const paper = Color(0xFFFFFDFC);
-  static const ink = Color(0xFF46363D);
-  static const muted = Color(0xFF82727A);
-  static const rose = Color(0xFFAA5E79);
-  static const blush = Color(0xFFF7E9EE);
-  static const line = Color(0xFFEDE2E5);
+  static const canvas = SLSettingsColors.canvas;
+  static const paper = SLSettingsColors.surface;
+  static const ink = SLSettingsColors.ink;
+  static const muted = SLSettingsColors.inkSecondary;
+  static const rose = SLSettingsColors.accentStrong;
+  static const blush = SLSettingsColors.accentSoft;
+  static const line = SLSettingsColors.border;
 }
 
 class AppearancePanelHeader extends StatelessWidget {
@@ -20,69 +20,14 @@ class AppearancePanelHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(20, 8, 20, 22),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (onBack != null) ...[
-          IconButton.filledTonal(
-            onPressed: onBack,
-            tooltip: context.tr('p7_back'),
-            style: IconButton.styleFrom(
-              backgroundColor: AppearancePanelStyle.paper,
-              foregroundColor: AppearancePanelStyle.ink,
-              side: const BorderSide(color: AppearancePanelStyle.line),
-              minimumSize: const Size(48, 48),
-            ),
-            icon: const BackButtonIcon(),
-          ),
-          const SizedBox(height: 18),
-        ],
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Text(
-                context.tr('appearance_page_title'),
-                style: SLTheme.quicksand(
-                  fontSize: MediaQuery.sizeOf(context).width < 360 ? 24 : 29,
-                  fontWeight: FontWeight.w800,
-                  height: 1.2,
-                  color: AppearancePanelStyle.ink,
-                ),
-              ),
-            ),
-            if (MediaQuery.textScalerOf(context).scale(14) < 22) ...[
-              const SizedBox(width: 16),
-              ExcludeSemantics(
-                child: Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: AppearancePanelStyle.blush,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Icon(
-                    Icons.palette_outlined,
-                    size: 29,
-                    color: AppearancePanelStyle.rose,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-        const SizedBox(height: 10),
-        Text(
-          context.tr('theme_preview_desc'),
-          style: SLTheme.quicksand(
-            fontSize: 13,
-            height: 1.55,
-            fontWeight: FontWeight.w500,
-            color: AppearancePanelStyle.muted,
-          ),
-        ),
-      ],
+    padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+    child: SLSettingsPageHeader(
+      title: context.tr('appearance_page_title'),
+      description: context.tr('theme_preview_desc'),
+      icon: Icons.palette_outlined,
+      iconColor: SLSettingsColors.violet,
+      onBack: onBack,
+      backLabel: context.tr('p7_back'),
     ),
   );
 }
@@ -115,22 +60,16 @@ class _AppearanceSectionCardState extends State<AppearanceSectionCard> {
     margin: const EdgeInsets.only(bottom: 10),
     decoration: BoxDecoration(
       color: AppearancePanelStyle.paper,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(SLSettingsRadius.card),
       border: Border.all(
         color: _expanded
-            ? AppearancePanelStyle.rose.withValues(alpha: 0.45)
+            ? SLSettingsColors.accent.withValues(alpha: 0.4)
             : AppearancePanelStyle.line,
       ),
-      boxShadow: [
-        BoxShadow(
-          color: AppearancePanelStyle.ink.withValues(alpha: 0.025),
-          blurRadius: 12,
-          offset: const Offset(0, 3),
-        ),
-      ],
+      boxShadow: SLSettingsPalette.light.shadow,
     ),
     child: ClipRRect(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(SLSettingsRadius.card),
       child: Material(
         color: Colors.transparent,
         child: ExpansionTile(
@@ -140,26 +79,21 @@ class _AppearanceSectionCardState extends State<AppearanceSectionCard> {
             _opened = _opened || value;
           }),
           tilePadding: const EdgeInsetsDirectional.fromSTEB(14, 10, 12, 10),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
           shape: const Border(),
           collapsedShape: const Border(),
-          minTileHeight: 76,
+          minTileHeight: 72,
           title: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               if (MediaQuery.textScalerOf(context).scale(14) < 22) ...[
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppearancePanelStyle.blush,
-                    borderRadius: BorderRadius.circular(13),
-                  ),
-                  child: Icon(
-                    widget.icon,
-                    size: 21,
-                    color: AppearancePanelStyle.rose,
-                  ),
+                SLSettingsIconTile(
+                  icon: widget.icon,
+                  color: _expanded
+                      ? SLSettingsColors.accent
+                      : SLSettingsColors.violet,
+                  filled: _expanded,
+                  size: 40,
                 ),
                 const SizedBox(width: 12),
               ],
@@ -169,22 +103,12 @@ class _AppearanceSectionCardState extends State<AppearanceSectionCard> {
                   children: [
                     Text(
                       widget.title,
-                      style: SLTheme.quicksand(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        height: 1.35,
-                        color: AppearancePanelStyle.ink,
-                      ),
+                      style: SLSettingsText.title(AppearancePanelStyle.ink),
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 3),
                     Text(
                       widget.description,
-                      style: SLTheme.quicksand(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w500,
-                        height: 1.5,
-                        color: AppearancePanelStyle.muted,
-                      ),
+                      style: SLSettingsText.caption(AppearancePanelStyle.muted),
                     ),
                   ],
                 ),
@@ -198,12 +122,12 @@ class _AppearanceSectionCardState extends State<AppearanceSectionCard> {
                 : const Duration(milliseconds: 180),
             child: const Icon(
               Icons.expand_more_rounded,
-              size: 20,
-              color: AppearancePanelStyle.muted,
+              size: 22,
+              color: SLSettingsColors.inkTertiary,
             ),
           ),
           children: [
-            const Divider(height: 24, color: AppearancePanelStyle.line),
+            const Divider(height: 20, color: SLSettingsColors.divider),
             if (_opened) widget.child,
           ],
         ),

@@ -82,7 +82,7 @@ extension DateEditorExt on _CountdownModeEditorScreenState {
                         ? () => _pickAvatarImage(isLeft: false)
                         : null,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFD81B60),
+                      foregroundColor: SLSettingsColors.accentStrong,
                       side: const BorderSide(color: Color(0xFFF2C3D7)),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(

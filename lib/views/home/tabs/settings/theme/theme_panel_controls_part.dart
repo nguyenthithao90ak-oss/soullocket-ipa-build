@@ -455,10 +455,10 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
                 decoration: BoxDecoration(
                   color: selected
                       ? item.$4.withValues(alpha: 0.16)
-                      : Colors.white.withValues(alpha: 0.9),
+                      : SLSettingsColors.surface,
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
-                    color: selected ? item.$4 : const Color(0xFFF1D4E1),
+                    color: selected ? item.$4 : SLSettingsColors.border,
                     width: selected ? 1.8 : 1.1,
                   ),
                   boxShadow: selected
@@ -482,7 +482,9 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
                       style: SLTheme.quicksand(
                         fontSize: 11,
                         fontWeight: FontWeight.w900,
-                        color: selected ? item.$4 : const Color(0xFF6C5A66),
+                        color: selected
+                            ? item.$4
+                            : SLSettingsColors.inkSecondary,
                       ),
                     ),
                   ],
@@ -552,27 +554,27 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: SLColors.paper,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: SLColors.border),
-        boxShadow: SLShadow.subtle,
+        color: SLSettingsColors.surfaceMuted,
+        borderRadius: BorderRadius.circular(SLSettingsRadius.control),
+        border: Border.all(color: SLSettingsColors.border),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: safeValue,
           isExpanded: true,
-          borderRadius: BorderRadius.circular(18),
+          dropdownColor: SLSettingsColors.surface,
+          borderRadius: BorderRadius.circular(SLSettingsRadius.control),
+          icon: const Icon(
+            Icons.expand_more_rounded,
+            color: SLSettingsColors.inkTertiary,
+          ),
           items: options
               .map(
                 (item) => DropdownMenuItem<String>(
                   value: item.$2,
                   child: Text(
                     item.$1,
-                    style: SLTheme.quicksand(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: SLColors.ink,
-                    ),
+                    style: SLSettingsText.title(SLSettingsColors.ink),
                   ),
                 ),
               )
@@ -596,10 +598,9 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: SLColors.paper,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: SLColors.border),
-        boxShadow: SLShadow.subtle,
+        color: SLSettingsColors.surfaceMuted,
+        borderRadius: BorderRadius.circular(SLSettingsRadius.control),
+        border: Border.all(color: SLSettingsColors.border),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -607,7 +608,12 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
           isExpanded: true,
           itemHeight: null,
           menuMaxHeight: 420,
-          borderRadius: BorderRadius.circular(18),
+          dropdownColor: SLSettingsColors.surface,
+          borderRadius: BorderRadius.circular(SLSettingsRadius.control),
+          icon: const Icon(
+            Icons.expand_more_rounded,
+            color: SLSettingsColors.inkTertiary,
+          ),
           selectedItemBuilder: (context) => fonts
               .map(
                 (font) => Padding(
@@ -642,14 +648,14 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
     final titleStyle = _themeFontStyle(
       font.key,
       fontSize: compact ? 14 : 15,
-      fontWeight: FontWeight.w900,
-      color: const Color(0xFF454545),
+      fontWeight: FontWeight.w700,
+      color: SLSettingsColors.ink,
     );
     final sampleStyle = _themeFontStyle(
       font.key,
       fontSize: compact ? 11.5 : 12.5,
-      fontWeight: FontWeight.w700,
-      color: const Color(0xFF8A5B76),
+      fontWeight: FontWeight.w500,
+      color: SLSettingsColors.inkSecondary,
     );
 
     return Column(

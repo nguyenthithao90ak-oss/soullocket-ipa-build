@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/sl_settings_kit.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import 'package:soullocket_app/core/sl_theme.dart';
@@ -267,7 +268,7 @@ class _PairingQrScannerScreenState extends State<PairingQrScannerScreen> {
                 textAlign: TextAlign.center,
               ),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFB9516D),
+                backgroundColor: SLSettingsColors.accentStrong,
                 foregroundColor: Colors.white,
                 minimumSize: const Size(48, 48),
                 padding: const EdgeInsets.symmetric(
@@ -346,7 +347,7 @@ class _CircleAction extends StatelessWidget {
       enabled: onTap != null,
       child: Material(
         color: active
-            ? const Color(0xFFB9516D)
+            ? SLSettingsColors.accentStrong
             : Colors.white.withValues(alpha: 0.14),
         shape: const CircleBorder(),
         child: InkWell(

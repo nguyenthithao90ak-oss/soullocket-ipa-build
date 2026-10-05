@@ -249,55 +249,18 @@ extension _SettingsTabSecurityLockHelpersPart on _SettingsTabState {
   Widget _buildModernSettingsRow({
     required IconData icon,
     required String label,
+    String? subtitle,
     Widget? trailing,
     VoidCallback? onTap,
   }) {
-    final uiState = UiPrefs.notifier.value;
-    final isDark =
-        uiState.themeKey == 'theme-night' ||
-        uiState.themeKey == 'theme-dark' ||
-        uiState.themeKey == 'theme-true-black';
-    return InkWell(
+    return SLSettingsRow(
+      icon: icon,
+      iconColor: SLSettingsColors.sky,
+      filledIcon: false,
+      title: label,
+      subtitle: subtitle,
+      trailing: trailing,
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 7),
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 11),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF282128) : SLColors.paper,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.10)
-                : SLColors.border,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: SLColors.primary.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(13),
-              ),
-              child: Icon(icon, color: SLColors.primary, size: 19),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                label,
-                style: SLTheme.quicksand(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: isDark ? SLColors.darkTextPrimary : SLColors.ink,
-                ),
-              ),
-            ),
-            ?trailing,
-          ],
-        ),
-      ),
     );
   }
 
@@ -306,34 +269,13 @@ extension _SettingsTabSecurityLockHelpersPart on _SettingsTabState {
     required VoidCallback onTap,
     bool isPrimary = false,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isPrimary ? SLColors.primary : SLColors.paper,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: SLColors.primary, width: 1.1),
-          boxShadow: isPrimary
-              ? [
-                  BoxShadow(
-                    color: SLColors.primary.withValues(alpha: 0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : null,
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: SLTheme.quicksand(
-            fontSize: 13,
-            fontWeight: FontWeight.w900,
-            color: isPrimary ? Colors.white : SLColors.primary,
-          ),
-        ),
-      ),
+    return SLSettingsButton(
+      label: label,
+      compact: true,
+      variant: isPrimary
+          ? SLSettingsButtonVariant.tonal
+          : SLSettingsButtonVariant.secondary,
+      onPressed: onTap,
     );
   }
 

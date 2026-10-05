@@ -96,7 +96,7 @@ extension BackgroundEditorExt on _CountdownModeEditorScreenState {
             SwitchListTile.adaptive(
               value: _transparentMode,
               contentPadding: EdgeInsets.zero,
-              activeThumbColor: const Color(0xFFD81B60),
+              activeThumbColor: SLSettingsColors.accentStrong,
               title: Text(
                 context.tr('home_knhm_33b8ab'),
                 style: SLTheme.quicksand(
@@ -135,7 +135,7 @@ extension BackgroundEditorExt on _CountdownModeEditorScreenState {
                     Slider(
                       min: 200,
                       max: UiPrefs.maxCountdownSizePx,
-                      activeColor: const Color(0xFFD81B60),
+                      activeColor: SLSettingsColors.accentStrong,
                       inactiveColor: const Color(0xFFF2C3D7),
                       value: _sizePx.clamp(200.0, UiPrefs.maxCountdownSizePx),
                       onChanged: (value) {

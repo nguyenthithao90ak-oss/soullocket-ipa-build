@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/sl_settings_kit.dart';
 import 'package:flutter/services.dart';
 
 import 'package:soullocket_app/core/sl_theme.dart';
@@ -250,7 +251,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
     final maxHeight = MediaQuery.sizeOf(context).height * 0.90;
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFFFCFAF9),
+        color: SLSettingsColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SafeArea(
@@ -345,8 +346,8 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
           onPressed: _isLoading ? null : _scanCode,
           style: OutlinedButton.styleFrom(
             minimumSize: const Size.fromHeight(48),
-            foregroundColor: const Color(0xFFB9516D),
-            side: const BorderSide(color: Color(0xFFEACDD5)),
+            foregroundColor: SLSettingsColors.accentStrong,
+            side: const BorderSide(color: SLSettingsColors.border),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(13),
             ),
@@ -381,7 +382,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
                 ),
               ),
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFFB9516D),
+                foregroundColor: SLSettingsColors.accentStrong,
                 minimumSize: const Size(48, 48),
               ),
             ),
@@ -428,12 +429,12 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(13),
-                borderSide: const BorderSide(color: Color(0xFFE8DDDC)),
+                borderSide: const BorderSide(color: SLSettingsColors.border),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(13),
                 borderSide: const BorderSide(
-                  color: Color(0xFFB9516D),
+                  color: SLSettingsColors.accentStrong,
                   width: 1.5,
                 ),
               ),
@@ -445,7 +446,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
           onPressed: _isLoading ? null : _sendRequest,
           style: FilledButton.styleFrom(
             minimumSize: const Size.fromHeight(50),
-            backgroundColor: const Color(0xFFB9516D),
+            backgroundColor: SLSettingsColors.accentStrong,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(13),
@@ -484,10 +485,10 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: const Color(0xFFFCEDF0),
+                color: SLSettingsColors.accentSoft,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: const Color(0xFFB9516D), size: 22),
+              child: Icon(icon, color: SLSettingsColors.accentStrong, size: 22),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -529,13 +530,17 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF4EEED),
+        color: SLSettingsColors.surfaceMuted,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.shield_outlined, color: Color(0xFF714352), size: 20),
+          const Icon(
+            Icons.shield_outlined,
+            color: SLSettingsColors.inkSecondary,
+            size: 20,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -557,7 +562,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
     return _StatusPanel(
       key: const ValueKey<String>('waiting'),
       icon: Icons.mark_email_read_outlined,
-      iconColor: const Color(0xFF714352),
+      iconColor: SLSettingsColors.inkSecondary,
       title: _t('pairing_ui_wait_title'),
       body: _t('pairing_ui_wait_body'),
       footer: Column(
@@ -567,7 +572,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
             height: 30,
             child: CircularProgressIndicator(
               strokeWidth: 2.8,
-              color: Color(0xFF714352),
+              color: SLSettingsColors.inkSecondary,
             ),
           ),
           const SizedBox(height: 20),
@@ -604,7 +609,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
     return _StatusPanel(
       key: const ValueKey<String>('accepted'),
       icon: Icons.sync_rounded,
-      iconColor: const Color(0xFF4C9A79),
+      iconColor: SLSettingsColors.success,
       title: _t('pairing_ui_accepting_title'),
       body: _t('pairing_ui_accepting_body'),
       footer: const Padding(
@@ -614,7 +619,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
           height: 32,
           child: CircularProgressIndicator(
             strokeWidth: 3,
-            color: Color(0xFF4C9A79),
+            color: SLSettingsColors.success,
           ),
         ),
       ),
@@ -625,7 +630,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
     return _StatusPanel(
       key: const ValueKey<String>('rejected'),
       icon: Icons.person_off_outlined,
-      iconColor: const Color(0xFFC9576E),
+      iconColor: SLSettingsColors.accent,
       title: _t('pairing_ui_rejected_title'),
       body: _t('pairing_ui_rejected_body'),
       footer: FilledButton(
@@ -762,7 +767,7 @@ class _EntryErrorNotice extends StatelessWidget {
             child: Text(
               message,
               style: SLTheme.quicksand(
-                color: const Color(0xFF9A344C),
+                color: SLSettingsColors.danger,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
                 height: 1.35,

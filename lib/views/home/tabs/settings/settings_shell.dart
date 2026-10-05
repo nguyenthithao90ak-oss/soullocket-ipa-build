@@ -169,7 +169,9 @@ extension _SettingsTabShell on _SettingsTabState {
     });
     _showToast(
       L10nService().format('settings_my_gender_updated', {
-        'gender': context.tr(wantsFemale ? 'auth_gender_female' : 'auth_gender_male'),
+        'gender': context.tr(
+          wantsFemale ? 'auth_gender_female' : 'auth_gender_male',
+        ),
       }),
     );
   }
@@ -351,22 +353,23 @@ extension _SettingsTabShell on _SettingsTabState {
     return _buildResponsiveSettingsScaffold();
   }
 
-  Widget _buildResponsiveSettingsScaffold() {
-    final uiState = UiPrefs.notifier.value;
-    final isDark =
-        uiState.themeKey == 'theme-night' ||
-        uiState.themeKey == 'theme-dark' ||
-        uiState.themeKey == 'theme-true-black';
+  bool get _settingsIsDark => SLSettingsPalette.isNightTheme;
 
-    final double headerHeight = MediaQuery.paddingOf(context).top + 66;
+  Widget _buildResponsiveSettingsScaffold() {
+    final isDark = _settingsIsDark;
+    final palette = SLSettingsPalette.resolve(isDark);
+    final double headerHeight =
+        MediaQuery.paddingOf(context).top +
+        SettingsHomeHeader.contentHeight +
+        1;
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF120F11) : SLColors.paperCanvas,
+      backgroundColor: palette.canvas,
       body: SafeArea(
         top: false,
         bottom: false,
         child: Stack(
           children: [
-            const Positioned.fill(child: _SettingsBackgroundLayer()),
+            Positioned.fill(child: SLSettingsBackdrop(isDark: isDark)),
             Positioned.fill(
               child: Material(
                 color: Colors.transparent,
@@ -379,15 +382,15 @@ extension _SettingsTabShell on _SettingsTabState {
                           maxWidth: SLResponsive.maxContentWidthForWidth(
                             constraints.maxWidth,
                             handsetMax: 560,
-                            tabletMax: 980,
-                            desktopMax: 1080,
+                            tabletMax: 720,
+                            desktopMax: 760,
                           ),
                         ),
                         child: ListView(
                           physics: SLResponsive.scrollPhysicsForPlatform(),
                           padding: EdgeInsets.only(
                             top: headerHeight,
-                            bottom: MediaQuery.paddingOf(context).bottom + 16,
+                            bottom: MediaQuery.paddingOf(context).bottom + 20,
                           ),
                           children: [
                             _buildSettingsSyncBanner(),
@@ -410,7 +413,7 @@ extension _SettingsTabShell on _SettingsTabState {
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   ..._buildNewSettingsList(isDark),
-                                  const SizedBox(height: 16),
+                                  const SizedBox(height: 24),
                                   _buildSettingsFooter(),
                                 ],
                               ),
@@ -436,155 +439,47 @@ extension _SettingsTabShell on _SettingsTabState {
   }
 
   Widget _buildSettingsHeader() {
-    final uiState = UiPrefs.notifier.value;
-    final isDark =
-        uiState.themeKey == 'theme-night' ||
-        uiState.themeKey == 'theme-dark' ||
-        uiState.themeKey == 'theme-true-black';
-
-    // Bề mặt giấy đặc giúp cuộn mượt mà nhưng vẫn giữ cá tính Love Journal.
-    final headerBgColor = isDark
-        ? const Color(0xFF211A1E).withValues(alpha: 0.98)
-        : SLColors.paper.withValues(alpha: 0.98);
-
-    return RepaintBoundary(
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.fromLTRB(
-          16,
-          MediaQuery.paddingOf(context).top + 8,
-          16,
-          12,
-        ),
-        decoration: BoxDecoration(
-          color: headerBgColor,
-          boxShadow: [
-            BoxShadow(
-              color: SLColors.ink.withValues(alpha: isDark ? 0.28 : 0.08),
-              blurRadius: 18,
-              offset: const Offset(0, 6),
-            ),
-          ],
-          border: Border(
-            bottom: BorderSide(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : SLColors.border,
-              width: 1,
-            ),
-          ),
-        ),
-        child: Row(
-          children: [
-            if (!widget.embedded)
-              Semantics(
-                button: true,
-                label: context.tr('p6_back'),
-                child: Tooltip(
-                  message: context.tr('p6_back'),
-                  excludeFromSemantics: true,
-                  child: InkWell(
-                    onTap: () => Navigator.pop(context),
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.08)
-                            : _kSettingsHeaderSurface,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.12)
-                              : _kSettingsHeaderBorder,
-                        ),
-                        boxShadow: SLShadow.subtle,
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: SLColors.primaryActive,
-                        size: 15,
-                      ),
-                    ),
-                  ),
-                ),
-              )
-            else
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: SLColors.primarySoft,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.favorite_rounded,
-                  color: SLColors.primary,
-                  size: 20,
-                ),
+    final isDark = _settingsIsDark;
+    return SettingsHomeHeader(
+      title: context.tr('settings'),
+      isDark: isDark,
+      backLabel: context.tr('p6_back'),
+      onBack: widget.embedded ? null : () => Navigator.pop(context),
+      actions: [
+        SettingsHeaderAction(
+          icon: Icons.search_rounded,
+          tooltip: context.tr('settings_search_tooltip'),
+          isDark: isDark,
+          onTap: () {
+            final houseId = _houseId?.trim() ?? '';
+            if (houseId.isEmpty) {
+              return;
+            }
+            slPush(
+              context,
+              GlobalSearchScreen(
+                houseId: houseId,
+                relationshipMode: _relationshipMode,
+                allowedUtilityIds: _settingsSearchableUtilityIds(),
+                onResultSelected: (result) async {
+                  Navigator.of(context).pop();
+                  await _openSearchResultFromSettings(result);
+                },
               ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    context.tr('settings'),
-                    style: SLTheme.textStyleForKey(
-                      'dancingScript',
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white : SLColors.ink,
-                    ),
-                  ),
-                  Text(
-                    context.tr('settings_footer_tagline'),
-                    style: SLTheme.quicksand(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white60 : SLColors.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            _buildHeaderAction(
-              icon: Icons.search_rounded,
-              tooltip: context.tr('settings_search_tooltip'),
-              onTap: () {
-                final houseId = _houseId?.trim() ?? '';
-                if (houseId.isEmpty) {
-                  return;
-                }
-                slPush(
-                  context,
-                  GlobalSearchScreen(
-                    houseId: houseId,
-                    relationshipMode: _relationshipMode,
-                    allowedUtilityIds: _settingsSearchableUtilityIds(),
-                    onResultSelected: (result) async {
-                      Navigator.of(context).pop();
-                      await _openSearchResultFromSettings(result);
-                    },
-                  ),
-                );
-              },
-            ),
-          ],
+            );
+          },
         ),
-      ),
+      ],
     );
   }
 
   Widget _buildSettingsSyncBanner() {
-    return const SizedBox(height: 8);
+    return const SizedBox(height: 14);
   }
 
   Widget _buildiOSSectionCard(List<Widget> children, bool isDark) =>
       RepaintBoundary(
-        child: SettingsMenuCard(isDark: isDark, children: children),
+        child: SLSettingsGroup(isDark: isDark, children: children),
       );
 
   Widget _buildiOSRow({
@@ -594,20 +489,24 @@ extension _SettingsTabShell on _SettingsTabState {
     required String title,
     required VoidCallback onTap,
     String? subtitle,
+    String? value,
+    Widget? trailing,
     bool isDark = false,
     bool isDestructive = false,
-  }) => SettingsMenuTile(
+  }) => SLSettingsRow(
     key: guideKey,
     icon: icon,
-    accent: iconBgColor,
+    iconColor: iconBgColor,
     title: title,
     subtitle: subtitle,
+    value: value,
+    trailing: trailing,
     isDark: isDark,
-    isDestructive: isDestructive,
+    destructive: isDestructive,
     onTap: onTap,
   );
 
-  Widget _buildDivider(bool isDark) => SettingsMenuDivider(isDark: isDark);
+  Widget _buildDivider(bool isDark) => SLSettingsDivider(isDark: isDark);
 
   Widget _buildSettingsAccountHero(bool isDark) {
     final avatarUrl = (_activeRoleKey == 'user2' ? _avatarUrl2 : _avatarUrl1)
@@ -618,112 +517,20 @@ extension _SettingsTabShell on _SettingsTabState {
     final displayName = _resolveSettingsMyName().trim();
     final email = FirebaseAuth.instance.currentUser?.email?.trim() ?? '';
 
-    return SLTheme.paperCard(
-      margin: EdgeInsets.zero,
-      padding: const EdgeInsets.fromLTRB(18, 22, 16, 18),
-      radius: 28,
-      showTape: true,
-      color: isDark ? const Color(0xFF261F23) : SLColors.paper,
-      accentColor: SLColors.primary,
-      child: InkWell(
-        onTap: () => _togglePanel('account'),
-        borderRadius: BorderRadius.circular(22),
-        child: Row(
-          children: [
-            Container(
-              width: 62,
-              height: 62,
-              padding: const EdgeInsets.all(3),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: SLColors.paperBlush,
-                border: Border.all(color: SLColors.thread, width: 1.6),
-              ),
-              child: SettingsAccountAvatar(
-                key: ValueKey(
-                  '${_auth.currentUser?.uid}:$_houseId:$_activeRoleKey',
-                ),
-                backgroundColor: SLColors.primarySoft,
-                foregroundColor: SLColors.primary,
-                image: avatarProvider,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          displayName.isEmpty
-                              ? context.tr('settings_account_label')
-                              : displayName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: SLTheme.quicksand(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w900,
-                            color: isDark ? Colors.white : SLColors.ink,
-                          ),
-                        ),
-                      ),
-                      if (_isVipActive || _vipBadgeHint == true) ...[
-                        const SizedBox(width: 7),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: SLColors.washi,
-                            borderRadius: BorderRadius.circular(999),
-                            border: Border.all(
-                              color: SLColors.secondary.withValues(alpha: 0.5),
-                            ),
-                          ),
-                          child: Text(
-                            'PRO',
-                            style: SLTheme.quicksand(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              color: SLColors.ink,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    email.isEmpty ? context.tr('settings_account_desc') : email,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: SLTheme.quicksand(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white60 : SLColors.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: SLColors.primarySoft,
-                borderRadius: BorderRadius.circular(13),
-              ),
-              child: const Icon(
-                Icons.edit_rounded,
-                color: SLColors.primary,
-                size: 18,
-              ),
-            ),
-          ],
-        ),
+    return SettingsProfileCard(
+      isDark: isDark,
+      name: displayName.isEmpty
+          ? context.tr('settings_account_label')
+          : displayName,
+      detail: email.isEmpty ? context.tr('settings_account_desc') : email,
+      footerLabel: context.tr('settings_profile_manage'),
+      isPro: _isVipActive || _vipBadgeHint == true,
+      onTap: () => _togglePanel('account'),
+      avatar: SettingsAccountAvatar(
+        key: ValueKey('${_auth.currentUser?.uid}:$_houseId:$_activeRoleKey'),
+        backgroundColor: SLSettingsColors.accentSoft,
+        foregroundColor: SLSettingsColors.accent,
+        image: avatarProvider,
       ),
     );
   }
@@ -766,7 +573,7 @@ extension _SettingsTabShell on _SettingsTabState {
               child: _buildSettingsQuickAction(
                 icon: Icons.timelapse_rounded,
                 guideKey: _countdownGuideKey,
-                color: SLColors.secondary,
+                color: SLSettingsColors.coral,
                 title: context.tr('settings_countdown_space_label'),
                 isDark: isDark,
                 onTap: () => _togglePanel('countdownMode'),
@@ -777,7 +584,7 @@ extension _SettingsTabShell on _SettingsTabState {
               child: _buildSettingsQuickAction(
                 icon: Icons.palette_outlined,
                 guideKey: _themeGuideKey,
-                color: SLColors.accentPurple,
+                color: SLSettingsColors.violet,
                 title: context.tr('theme'),
                 isDark: isDark,
                 onTap: () => _togglePanel('theme'),
@@ -797,82 +604,51 @@ extension _SettingsTabShell on _SettingsTabState {
     required bool isDark,
     required VoidCallback onTap,
   }) {
-    return Material(
+    return KeyedSubtree(
       key: guideKey,
-      color: Colors.transparent,
-      child: InkWell(
+      child: SettingsQuickTile(
+        icon: icon,
+        color: color,
+        title: title,
+        isDark: isDark,
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 112),
-          padding: const EdgeInsets.fromLTRB(10, 14, 10, 12),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF261F23) : SLColors.paper,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : SLColors.border,
-            ),
-            boxShadow: SLShadow.subtle,
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: isDark ? 0.2 : 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 22),
-              ),
-              const SizedBox(height: 9),
-              Text(
-                title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: SLTheme.quicksand(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white : SLColors.ink,
-                  height: 1.2,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
+    );
+  }
+
+  /// Trạng thái khóa ứng dụng hiển thị ngay trên dòng Bảo mật.
+  Widget? _buildSecurityStatusPill(bool isDark) {
+    if (!_appLockSettingsLoaded) return null;
+    return SLSettingsPill(
+      label: context.tr(
+        _isAppLockEnabled ? 'settings_app_lock_on' : 'settings_app_lock_off',
+      ),
+      tone: _isAppLockEnabled ? SLSettingsTone.success : SLSettingsTone.warning,
+      icon: _isAppLockEnabled ? Icons.lock_rounded : Icons.lock_open_rounded,
+      isDark: isDark,
+      dense: true,
     );
   }
 
   List<Widget> _buildNewSettingsList(bool isDark) {
     return [
       Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: KeyedSubtree(
           key: _accountGuideKey,
           child: _buildSettingsAccountHero(isDark),
         ),
       ),
-      _buildSectionTitle(
-        context.tr('settings_categories_title'),
-        topPadding: 18,
-      ),
+      _buildSectionTitle(context.tr('settings_categories_title')),
       _buildSettingsQuickActions(isDark),
-      _buildSectionTitle(
-        context.tr('settings_menu_preferences'),
-        topPadding: 22,
-      ),
+      _buildSectionTitle(context.tr('settings_menu_preferences')),
       _buildiOSSectionCard([
         if (_relationshipMode != 'single') ...[
           _buildiOSRow(
             icon: Icons.wc_rounded,
-            iconBgColor: SettingsMenuStyle.blue,
+            iconBgColor: SLSettingsColors.sky,
             title: context.tr('settings_my_gender_title'),
-            subtitle: context.tr(
+            value: context.tr(
               _myGenderIsFemale ? 'auth_gender_female' : 'auth_gender_male',
             ),
             isDark: isDark,
@@ -883,7 +659,7 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildiOSRow(
           icon: Icons.widgets_outlined,
           guideKey: _widgetGuideKey,
-          iconBgColor: SettingsMenuStyle.sage,
+          iconBgColor: SLSettingsColors.teal,
           title: context.tr('settings_menu_widget_title'),
           subtitle: kIsWeb
               ? context.tr('settings_menu_widget_web')
@@ -894,7 +670,7 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildDivider(isDark),
         _buildiOSRow(
           icon: Icons.notifications_none_rounded,
-          iconBgColor: SettingsMenuStyle.sage,
+          iconBgColor: SLSettingsColors.amber,
           title: context.tr('settings_notifications_interactions'),
           subtitle: context.tr('settings_menu_notifications_desc'),
           isDark: isDark,
@@ -903,7 +679,7 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildDivider(isDark),
         _buildiOSRow(
           icon: Icons.chat_bubble_outline_rounded,
-          iconBgColor: SettingsMenuStyle.rose,
+          iconBgColor: SLSettingsColors.rose,
           title: context.tr('util_chatthnthi_c39699'),
           subtitle: L10nService().translate('settings_menu_chat_desc'),
           isDark: isDark,
@@ -917,17 +693,15 @@ extension _SettingsTabShell on _SettingsTabState {
           },
         ),
       ], isDark),
-      _buildSectionTitle(
-        context.tr('settings_menu_security_group'),
-        topPadding: 22,
-      ),
+      _buildSectionTitle(context.tr('settings_menu_security_group')),
       _buildiOSSectionCard([
         _buildiOSRow(
           icon: Icons.shield_outlined,
           guideKey: _securityGuideKey,
-          iconBgColor: SettingsMenuStyle.rose,
+          iconBgColor: SLSettingsColors.sage,
           title: context.tr('settings_menu_security_title'),
           subtitle: context.tr('settings_menu_security_desc'),
+          trailing: _buildSecurityStatusPill(isDark),
           isDark: isDark,
           onTap: () => _togglePanel('security'),
         ),
@@ -935,7 +709,7 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildiOSRow(
           icon: Icons.cloud_sync_outlined,
           guideKey: _dataGuideKey,
-          iconBgColor: SettingsMenuStyle.blue,
+          iconBgColor: SLSettingsColors.sky,
           title: context.tr('settings_menu_data_title'),
           subtitle: context.tr('settings_menu_data_desc'),
           isDark: isDark,
@@ -944,9 +718,9 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildDivider(isDark),
         _buildiOSRow(
           icon: Icons.location_on_outlined,
-          iconBgColor: SettingsMenuStyle.blue,
+          iconBgColor: SLSettingsColors.indigo,
           title: context.tr('settings_gps_mode_title'),
-          subtitle: _gpsMode == LocationService.kGpsModeAlways
+          value: _gpsMode == LocationService.kGpsModeAlways
               ? context.tr('settings_gps_mode_always')
               : context.tr('settings_gps_mode_foreground'),
           isDark: isDark,
@@ -955,21 +729,24 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildDivider(isDark),
         _buildiOSRow(
           icon: Icons.verified_user_outlined,
-          iconBgColor: SettingsMenuStyle.lavender,
+          iconBgColor: SLSettingsColors.violet,
           title: context.tr('settings_menu_permissions_title'),
           subtitle: context.tr('settings_menu_permissions_desc'),
+          trailing: _isGrantingPermissions
+              ? const SizedBox.square(
+                  dimension: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : null,
           isDark: isDark,
           onTap: _isGrantingPermissions ? () {} : _requestAllPermissions,
         ),
       ], isDark),
-      _buildSectionTitle(
-        context.tr('settings_menu_support_group'),
-        topPadding: 22,
-      ),
+      _buildSectionTitle(context.tr('settings_menu_support_group')),
       _buildiOSSectionCard([
         _buildiOSRow(
           icon: Icons.history_rounded,
-          iconBgColor: SettingsMenuStyle.blue,
+          iconBgColor: SLSettingsColors.slate,
           title: context.tr('settings_activity_history'),
           subtitle: context.tr('settings_menu_history_desc'),
           isDark: isDark,
@@ -984,7 +761,7 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildiOSRow(
           icon: Icons.support_agent_rounded,
           guideKey: _supportGuideKey,
-          iconBgColor: SettingsMenuStyle.sage,
+          iconBgColor: SLSettingsColors.teal,
           title: context.tr('settings_menu_support_title'),
           subtitle: context.tr('settings_menu_support_desc'),
           isDark: isDark,
@@ -993,7 +770,7 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildDivider(isDark),
         _buildiOSRow(
           icon: Icons.menu_book_outlined,
-          iconBgColor: SettingsMenuStyle.rose,
+          iconBgColor: SLSettingsColors.coral,
           title: context.tr('settings_menu_guide_title'),
           subtitle: context.tr('settings_menu_guide_desc'),
           isDark: isDark,
@@ -1002,7 +779,7 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildDivider(isDark),
         _buildiOSRow(
           icon: Icons.tune_rounded,
-          iconBgColor: SettingsMenuStyle.blue,
+          iconBgColor: SLSettingsColors.sky,
           title: context.tr('settings_menu_replay_settings'),
           isDark: isDark,
           onTap: () => _maybeShowSettingsGuideOnOpen(replay: true),
@@ -1010,7 +787,7 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildDivider(isDark),
         _buildiOSRow(
           icon: Icons.explore_outlined,
-          iconBgColor: SettingsMenuStyle.rose,
+          iconBgColor: SLSettingsColors.rose,
           title: context.tr('starter_title'),
           isDark: isDark,
           onTap: () {
@@ -1020,11 +797,18 @@ extension _SettingsTabShell on _SettingsTabState {
               context: context,
               isScrollControlled: true,
               useSafeArea: true,
+              backgroundColor: SLSettingsColors.surface,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(SLSettingsRadius.sheet),
+                ),
+              ),
+              showDragHandle: true,
               builder: (_) => FractionallySizedBox(
                 heightFactor: .85,
                 child: SafeArea(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                     child: GettingStartedChecklist(
                       uid: uid,
                       houseId: houseId,
@@ -1045,7 +829,7 @@ extension _SettingsTabShell on _SettingsTabState {
           _buildDivider(isDark),
           _buildiOSRow(
             icon: Icons.home_outlined,
-            iconBgColor: SettingsMenuStyle.rose,
+            iconBgColor: SLSettingsColors.indigo,
             title: context.tr('settings_menu_replay_home'),
             isDark: isDark,
             onTap: () {
@@ -1058,17 +842,17 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildDivider(isDark),
         _buildiOSRow(
           icon: Icons.star_outline_rounded,
-          iconBgColor: SettingsMenuStyle.tea,
+          iconBgColor: SLSettingsColors.amber,
           title: context.tr('rate_app'),
           isDark: isDark,
           onTap: _rateApp,
         ),
       ], isDark),
-      const SizedBox(height: 8),
+      _buildSectionTitle(context.tr('settings_account_label')),
       _buildiOSSectionCard([
         _buildiOSRow(
           icon: Icons.logout_rounded,
-          iconBgColor: SettingsMenuStyle.danger,
+          iconBgColor: SLSettingsColors.red,
           title: context.tr('logout'),
           isDark: isDark,
           isDestructive: true,
@@ -1077,7 +861,7 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildDivider(isDark),
         _buildiOSRow(
           icon: Icons.delete_forever_outlined,
-          iconBgColor: SettingsMenuStyle.danger,
+          iconBgColor: SLSettingsColors.red,
           title: context.tr('settings_delete_account_data'),
           isDark: isDark,
           isDestructive: true,
@@ -1090,41 +874,94 @@ extension _SettingsTabShell on _SettingsTabState {
   Widget _buildSettingsFooter() {
     return SettingsMenuFooter(
       tagline: context.tr('settings_footer_tagline'),
+      versionLabel: context.tr('version'),
+      isDark: _settingsIsDark,
     );
   }
 
   Widget _buildStandalonePanelPage(String id) {
     final sectionId = _sectionIdForPanel(id);
     final baseTheme = Theme.of(context);
+    OutlineInputBorder inputBorder(Color color, [double width = 1]) =>
+        OutlineInputBorder(
+          borderRadius: BorderRadius.circular(SLSettingsRadius.control),
+          borderSide: BorderSide(color: color, width: width),
+        );
     final settingsTheme = baseTheme.copyWith(
       scaffoldBackgroundColor: Colors.transparent,
-      dialogTheme: DialogThemeData(
-        backgroundColor: SLColors.paper,
+      dividerColor: SLSettingsColors.divider,
+      dividerTheme: const DividerThemeData(
+        color: SLSettingsColors.divider,
+        thickness: 1,
+        space: 1,
+      ),
+      dialogTheme: baseTheme.dialogTheme.copyWith(
+        backgroundColor: SLSettingsColors.surface,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: SLColors.border),
+          side: const BorderSide(color: SLSettingsColors.border),
         ),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: SLColors.paper,
+        backgroundColor: SLSettingsColors.surface,
         surfaceTintColor: Colors.transparent,
+        showDragHandle: true,
+        dragHandleColor: SLSettingsColors.border,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          side: BorderSide(color: SLColors.border),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(SLSettingsRadius.sheet),
+          ),
         ),
       ),
-      switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.selected)
-              ? Colors.white
-              : SLColors.textTertiary,
+      inputDecorationTheme: baseTheme.inputDecorationTheme.copyWith(
+        filled: true,
+        fillColor: SLSettingsColors.surfaceMuted,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 15,
         ),
+        hintStyle: SLTheme.quicksand(
+          fontSize: 13.5,
+          fontWeight: FontWeight.w500,
+          color: SLSettingsColors.inkTertiary,
+        ),
+        prefixIconColor: SLSettingsColors.inkTertiary,
+        suffixIconColor: SLSettingsColors.inkTertiary,
+        border: inputBorder(SLSettingsColors.border),
+        enabledBorder: inputBorder(SLSettingsColors.border),
+        focusedBorder: inputBorder(SLSettingsColors.accent, 1.5),
+        errorBorder: inputBorder(SLSettingsColors.danger),
+        focusedErrorBorder: inputBorder(SLSettingsColors.danger, 1.5),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: const WidgetStatePropertyAll(Colors.white),
         trackColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
-              ? SLColors.primary
-              : SLColors.bgMuted,
+              ? SLSettingsColors.accent
+              : const Color(0xFFE6DCD3),
         ),
+        trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
+      ),
+      checkboxTheme: baseTheme.checkboxTheme.copyWith(
+        fillColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? SLSettingsColors.accent
+              : Colors.transparent,
+        ),
+      ),
+      radioTheme: RadioThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? SLSettingsColors.accent
+              : SLSettingsColors.inkTertiary,
+        ),
+      ),
+      sliderTheme: baseTheme.sliderTheme.copyWith(
+        activeTrackColor: SLSettingsColors.accent,
+        inactiveTrackColor: SLSettingsColors.accentSoft,
+        thumbColor: SLSettingsColors.accent,
+        overlayColor: SLSettingsColors.accent.withValues(alpha: 0.12),
       ),
     );
     return Theme(
@@ -1132,15 +969,7 @@ extension _SettingsTabShell on _SettingsTabState {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          if (sectionId == 'notifications' ||
-              sectionId == 'dataHealth' ||
-              sectionId == 'account' ||
-              sectionId == 'security')
-            ColoredBox(color: SLDetailStyle.background(context))
-          else if (sectionId == 'theme')
-            const ColoredBox(color: AppearancePanelStyle.canvas)
-          else
-            const _SettingsBackgroundLayer(),
+          const _SettingsBackgroundLayer(),
           ValueListenableBuilder<int>(
             valueListenable: _panelRebuildNotifier,
             builder: (context, _, _) {
@@ -1162,7 +991,7 @@ extension _SettingsTabShell on _SettingsTabState {
                           ),
                           child: SingleChildScrollView(
                             physics: const ClampingScrollPhysics(),
-                            padding: const EdgeInsets.only(top: 4, bottom: 32),
+                            padding: const EdgeInsets.only(top: 4, bottom: 40),
                             child: _buildStandalonePanelContent(sectionId),
                           ),
                         ),
@@ -1186,13 +1015,25 @@ extension _SettingsTabShell on _SettingsTabState {
     switch (sectionId) {
       case 'account':
         return _buildSectionStack([
-          _buildVipPanel(hideBackButton: false),
+          _buildPanelPageIntro(
+            title: context.tr('settings_account_label'),
+            description: context.tr('settings_account_desc'),
+            icon: Icons.manage_accounts_outlined,
+            color: SLSettingsColors.rose,
+          ),
+          _buildVipPanel(hideBackButton: true),
           _buildIdentityPanel(hideBackButton: true),
           _buildLanguagePanel(hideBackButton: true),
         ]);
       case 'security':
         return _buildSectionStack([
-          _buildSecurityPanel(hideBackButton: false),
+          _buildPanelPageIntro(
+            title: context.tr('settings_menu_security_title'),
+            description: context.tr('settings_menu_security_desc'),
+            icon: Icons.shield_outlined,
+            color: SLSettingsColors.sage,
+          ),
+          _buildSecurityPanel(hideBackButton: true),
           _buildLockPanel(hideBackButton: true),
         ]);
       case 'theme':
@@ -1226,9 +1067,32 @@ extension _SettingsTabShell on _SettingsTabState {
     }
   }
 
+  /// Đầu trang con dùng chung khi một trang gồm nhiều khối.
+  Widget _buildPanelPageIntro({
+    required String title,
+    required String description,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: SLSettingsPageHeader(
+        title: title,
+        description: description,
+        icon: icon,
+        iconColor: color,
+        backLabel: context.tr('p6_back'),
+        onBack: Navigator.of(context).canPop()
+            ? () => Navigator.pop(context)
+            : null,
+        padding: const EdgeInsets.fromLTRB(4, 6, 4, 4),
+      ),
+    );
+  }
+
   Widget _buildSectionStack(List<Widget> panels) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: panels,
     );
   }
@@ -1237,85 +1101,19 @@ extension _SettingsTabShell on _SettingsTabState {
     required String title,
     required String message,
   }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.97),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: SLColors.primary.withValues(alpha: 0.18),
-          width: 1.6,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: SLColors.primary.withValues(alpha: 0.08),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: SLTheme.quicksand(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                    color: SLColors.primaryActive,
-                  ),
-                ),
-              ),
-              InkWell(
-                onTap: () => Navigator.pop(context),
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: SLColors.primarySoft,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        size: 12,
-                        color: SLColors.primaryActive,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        context.tr('settings_back_btn'),
-                        style: SLTheme.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: SLColors.primaryActive,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+          SLSettingsPageHeader(
+            title: title,
+            icon: Icons.hourglass_empty_rounded,
+            iconColor: SLSettingsColors.slate,
+            backLabel: context.tr('settings_back_btn'),
+            onBack: () => Navigator.pop(context),
           ),
-          const SizedBox(height: 12),
-          Text(
-            message,
-            style: SLTheme.quicksand(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF6B5563),
-              height: 1.45,
-            ),
-          ),
+          SLSettingsNotice(tone: SLSettingsTone.info, message: message),
         ],
       ),
     );

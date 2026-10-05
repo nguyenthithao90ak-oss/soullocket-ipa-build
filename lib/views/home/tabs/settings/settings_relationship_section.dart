@@ -222,62 +222,27 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
       return const SizedBox.shrink();
     }
 
-    return Container(
-      width: double.infinity,
+    return SLSettingsNotice(
       margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: SLColors.paperBlush,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: SLColors.primary.withValues(alpha: 0.25)),
-        boxShadow: SLShadow.subtle,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            panelState.breakupStatusTitle,
-            style: SLTheme.quicksand(
-              fontSize: 14,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFFD81B60),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            panelState.breakupStatusDescription,
-            style: SLTheme.quicksand(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF6F5A62),
-              height: 1.45,
-            ),
-          ),
-          if (panelState.canWithdrawBreakup) ...[
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
+      tone: SLSettingsTone.warning,
+      icon: Icons.heart_broken_outlined,
+      title: panelState.breakupStatusTitle,
+      message: panelState.breakupStatusDescription,
+      action: panelState.canWithdrawBreakup
+          ? SLSettingsButton(
+              label: context.tr('home_rtliyucu_29ae92'),
+              icon: Icons.undo_rounded,
+              variant: SLSettingsButtonVariant.secondary,
+              expand: false,
+              compact: true,
+              loading: _isBreakupBusy,
               onPressed: _isBreakupBusy
                   ? null
                   : () {
                       unawaited(_withdrawBreakupRequest());
                     },
-              icon: const Icon(Icons.undo_rounded),
-              label: Text(context.tr('home_rtliyucu_29ae92')),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFFD81B60),
-                side: const BorderSide(color: Color(0xFFFFA8BF)),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
+            )
+          : null,
     );
   }
 
@@ -295,36 +260,9 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
       id: 'relationship',
       title: context.tr('relationship_status'),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isSingle
-                    ? const [SLColors.tertiarySoft, Color(0xFFE7DEF8)]
-                    : [SLColors.paperBlush, SLColors.primarySoft],
-              ),
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(
-                color: isSingle
-                    ? const Color(0xFF8B5CF6).withValues(alpha: 0.3)
-                    : const Color(0xFFFF6BA7).withValues(alpha: 0.3),
-                width: 1.1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: isSingle
-                      ? const Color(0xFF4F46E5).withValues(alpha: 0.15)
-                      : const Color(0xFFFF6BA7).withValues(alpha: 0.15),
-                  blurRadius: 18,
-                  offset: const Offset(0, 7),
-                ),
-              ],
-            ),
+          SLSettingsCard(
             child: Row(
               children: [
                 Image.asset(
@@ -333,8 +271,8 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
                         ? 'assets/icons/cute_3d/status_doc_than_3d.png'
                         : 'assets/icons/cute_3d/status_co_nguoi_yeu_3d.png',
                   ),
-                  width: 48,
-                  height: 48,
+                  width: 52,
+                  height: 52,
                   fit: BoxFit.contain,
                 ),
                 const SizedBox(width: 14),
@@ -342,30 +280,22 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        isSingle
+                      SLSettingsPill(
+                        label: isSingle
                             ? context.tr('p6_relationship_single_mode')
                             : context.tr('p6_relationship_couple_mode'),
-                        style: SLTheme.quicksand(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                          color: isSingle
-                              ? SLColors.accentPurpleDark
-                              : SLColors.primaryActive,
-                        ),
+                        tone: isSingle
+                            ? SLSettingsTone.info
+                            : SLSettingsTone.accent,
+                        icon: isSingle
+                            ? Icons.person_outline_rounded
+                            : Icons.favorite_rounded,
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 8),
                       Text(
                         panelDescription,
-                        style: SLTheme.quicksand(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: isSingle
-                              ? SLColors.accentPurpleDark.withValues(
-                                  alpha: 0.78,
-                                )
-                              : SLColors.textSecond,
-                          height: 1.35,
+                        style: SLSettingsText.caption(
+                          SLSettingsColors.inkSecondary,
                         ),
                       ),
                     ],
@@ -379,7 +309,8 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
             const SizedBox(height: 14),
             _buildGradientBtn(
               label: _relationshipQrActionLabel(isSingle),
-              gradient: const [Color(0xFFFF4D73), Color(0xFFD81B60)],
+              gradient: const [],
+              icon: Icons.qr_code_2_rounded,
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -392,7 +323,10 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
             const SizedBox(height: 14),
             _buildGradientBtn(
               label: _breakupActionLabel,
-              gradient: const [Color(0xFFFFB3C1), Color(0xFFD81B60)],
+              gradient: const [],
+              icon: Icons.heart_broken_outlined,
+              variant: SLSettingsButtonVariant.danger,
+              loading: _isBreakupBusy,
               onTap: _isBreakupBusy
                   ? () {}
                   : () {
@@ -400,14 +334,10 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
                     },
             ),
           ],
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
             panelNote,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[700],
-              fontWeight: FontWeight.w700,
-            ),
+            style: SLSettingsText.caption(SLSettingsColors.inkSecondary),
           ),
         ],
       ),

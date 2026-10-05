@@ -645,7 +645,8 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
         : '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
     return Text(
       context.tr('settings_cached_photos_size').replaceAll('{size}', size),
-      style: TextStyle(fontSize: 12.5, color: SLDetailStyle.muted(context)),
+      textAlign: TextAlign.center,
+      style: SLSettingsText.caption(SLSettingsColors.inkSecondary),
     );
   }
 
@@ -654,26 +655,27 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
     String timeStr,
     ValueChanged<String> onChanged,
   ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      child: SLDetailButton(
-        icon: Icons.schedule_rounded,
-        label: '$label · $timeStr',
-        onPressed: () async {
-          final parts = timeStr.split(':');
-          final hour = parts.isNotEmpty ? (int.tryParse(parts[0]) ?? 0) : 0;
-          final minute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
-          final time = await showSLTimePicker(
-            context: context,
-            initialTime: TimeOfDay(hour: hour, minute: minute),
-          );
-          if (time != null) {
-            final formatted =
-                '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-            onChanged(formatted);
-          }
-        },
-      ),
+    return SLSettingsRow(
+      icon: Icons.schedule_rounded,
+      iconColor: SLSettingsColors.indigo,
+      filledIcon: false,
+      title: label,
+      padding: const EdgeInsetsDirectional.fromSTEB(0, 8, 0, 8),
+      trailing: SLSettingsPill(label: timeStr, tone: SLSettingsTone.accent),
+      onTap: () async {
+        final parts = timeStr.split(':');
+        final hour = parts.isNotEmpty ? (int.tryParse(parts[0]) ?? 0) : 0;
+        final minute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
+        final time = await showSLTimePicker(
+          context: context,
+          initialTime: TimeOfDay(hour: hour, minute: minute),
+        );
+        if (time != null) {
+          final formatted =
+              '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+          onChanged(formatted);
+        }
+      },
     );
   }
 
@@ -791,16 +793,16 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
           decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(12),
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(SLSettingsRadius.control),
           ),
           child: Center(
             child: Text(
               label,
-              style: SLTextStyles.quicksand(
-                fontWeight: FontWeight.w900,
+              style: SLTheme.quicksand(
+                fontWeight: FontWeight.w800,
                 fontSize: 12.5,
-                color: Colors.white,
+                color: color,
               ),
               textAlign: TextAlign.center,
             ),

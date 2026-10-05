@@ -203,7 +203,6 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   void _logout() async {
     if (_logoutInProgress || _accountDeletionActionBusy) return;
     _logoutInProgress = true;
-    const logoutAccent = Color(0xFFD81B60);
     bool? confirm;
     try {
       confirm = await showDialog<bool>(
@@ -211,20 +210,12 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
         builder: (ctx) => SLAlertDialog(
           title: Row(
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: logoutAccent,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.logout_rounded,
-                  color: Colors.white,
-                  size: 22,
-                ),
+              const SLSettingsIconTile(
+                icon: Icons.logout_rounded,
+                color: SLSettingsColors.red,
+                size: 40,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Expanded(child: Text(context.tr('logout'))),
             ],
           ),
@@ -431,12 +422,12 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
           scrollable: true,
           title: Row(
             children: [
-              const Icon(
-                Icons.warning_amber_rounded,
-                color: Colors.red,
-                size: 32,
+              const SLSettingsIconTile(
+                icon: Icons.warning_amber_rounded,
+                color: SLSettingsColors.red,
+                size: 40,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Expanded(child: Text(context.tr('home_giyucuxati_78b195'))),
             ],
           ),
@@ -448,26 +439,13 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w800,
                   fontSize: 15,
-                  color: Colors.black87,
+                  color: SLSettingsColors.ink,
                 ),
               ),
               const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.red.shade200),
-                ),
-                child: Text(
-                  context.tr('legal_account_deletion_warning'),
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                    color: Colors.red.shade900,
-                    height: 1.4,
-                  ),
-                ),
+              SLSettingsNotice(
+                tone: SLSettingsTone.danger,
+                message: context.tr('legal_account_deletion_warning'),
               ),
             ],
           ),
@@ -507,12 +485,12 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
           builder: (ctx) => SLAlertDialog(
             title: Row(
               children: [
-                const Icon(
-                  Icons.dangerous_rounded,
-                  color: Colors.red,
-                  size: 32,
+                const SLSettingsIconTile(
+                  icon: Icons.dangerous_rounded,
+                  color: SLSettingsColors.red,
+                  size: 40,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
                 Expanded(child: Text(context.tr('home_xcnhnlncui_cc8537'))),
               ],
             ),
@@ -636,158 +614,128 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   }
 
   Widget _buildSupportLegalSectionPanel({bool hideBackButton = false}) {
+    SLSettingsRow docRow({
+      required IconData icon,
+      required String label,
+      required Color color,
+      required VoidCallback onTap,
+    }) => SLSettingsRow(
+      icon: icon,
+      iconColor: color,
+      filledIcon: false,
+      title: label,
+      showChevron: false,
+      trailing: const Icon(
+        Icons.open_in_new_rounded,
+        size: 18,
+        color: SLSettingsColors.inkTertiary,
+      ),
+      onTap: onTap,
+    );
+
     return _buildPanel(
       hideBackButton: hideBackButton,
       id: 'supportLegal',
       title: context.tr('support_legal'),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            context.tr('home_tiliu_771458'),
-            style: SLTheme.quicksand(
-              fontSize: 14,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF5E35B1),
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 10),
+            child: Text(
+              context.tr('home_tiliu_771458').toUpperCase(),
+              style: SLSettingsText.sectionLabel(SLSettingsColors.inkTertiary),
             ),
           ),
-          const SizedBox(height: 10),
-          _buildLegalBtn(
-            icon: Icons.article_rounded,
-            label: context.tr('home_tiliucitln_211bae'),
-            color: const Color(0xFF7B1FA2),
-            onTap: _openFirstSetupGuideDocument,
-          ),
-          const SizedBox(height: 10),
-          _buildLegalBtn(
-            icon: Icons.menu_book_rounded,
-            label: context.tr('user_guide'),
-            color: const Color(0xFF0288D1),
-            onTap: _openGuideDocument,
-          ),
-          const SizedBox(height: 10),
-          _buildLegalBtn(
-            icon: Icons.shield_outlined,
-            label: context.tr('privacy_policy'),
-            color: const Color(0xFFD81B60),
-            onTap: _openPolicyOverview,
-          ),
-          const SizedBox(height: 10),
-          _buildLegalBtn(
-            icon: Icons.rule_folder_outlined,
-            label: context.tr('terms_of_use'),
-            color: const Color(0xFF6D4C41),
-            onTap: _openTermsDocument,
-          ),
-          const SizedBox(height: 10),
-          _buildLegalBtn(
-            icon: Icons.cookie_outlined,
-            label: context.tr('cookie_policy'),
-            color: const Color(0xFFF57C00),
-            onTap: _openCookieDocument,
-          ),
-          const SizedBox(height: 10),
-          _buildLegalBtn(
-            icon: Icons.tune_rounded,
-            label: context.tr('privacy_choices_title'),
-            color: const Color(0xFF1976D2),
-            onTap: _openPrivacyChoices,
-          ),
-          if (!kIsWeb) ...[
-            const SizedBox(height: 10),
-            _buildLegalBtn(
-              icon: Icons.ads_click_rounded,
-              label: context.tr('privacy_ads_options_title'),
-              color: const Color(0xFF1976D2),
-              onTap: _openAdPrivacyChoices,
-            ),
-          ],
-          const SizedBox(height: 10),
-          _buildLegalBtn(
-            icon: Icons.info_outline_rounded,
-            label: context.tr('about_soullocket'),
-            color: const Color(0xFF00796B),
-            onTap: _openAboutDocument,
-          ),
-          _buildLegalBtn(
-            icon: Icons.verified_user_rounded,
-            label: context.tr('p6_copyright_and_warning'),
-            color: const Color(0xFFC62828),
-            onTap: _openAboutDocument,
-          ),
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: SLColors.dangerLight,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFFE53935).withValues(alpha: 0.2),
+          SLSettingsGroup(
+            margin: EdgeInsets.zero,
+            autoDividers: true,
+            children: [
+              docRow(
+                icon: Icons.article_outlined,
+                label: context.tr('home_tiliucitln_211bae'),
+                color: SLSettingsColors.violet,
+                onTap: _openFirstSetupGuideDocument,
               ),
-              boxShadow: SLShadow.subtle,
+              docRow(
+                icon: Icons.menu_book_outlined,
+                label: context.tr('user_guide'),
+                color: SLSettingsColors.sky,
+                onTap: _openGuideDocument,
+              ),
+              docRow(
+                icon: Icons.info_outline_rounded,
+                label: context.tr('about_soullocket'),
+                color: SLSettingsColors.teal,
+                onTap: _openAboutDocument,
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 22, 4, 10),
+            child: Text(
+              context.tr('privacy_policy').toUpperCase(),
+              style: SLSettingsText.sectionLabel(SLSettingsColors.inkTertiary),
             ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(
-                  Icons.copyright_rounded,
-                  size: 16,
-                  color: Color(0xFFC62828),
+          ),
+          SLSettingsGroup(
+            margin: EdgeInsets.zero,
+            autoDividers: true,
+            children: [
+              docRow(
+                icon: Icons.shield_outlined,
+                label: context.tr('privacy_policy'),
+                color: SLSettingsColors.rose,
+                onTap: _openPolicyOverview,
+              ),
+              docRow(
+                icon: Icons.rule_folder_outlined,
+                label: context.tr('terms_of_use'),
+                color: SLSettingsColors.slate,
+                onTap: _openTermsDocument,
+              ),
+              docRow(
+                icon: Icons.cookie_outlined,
+                label: context.tr('cookie_policy'),
+                color: SLSettingsColors.amber,
+                onTap: _openCookieDocument,
+              ),
+              docRow(
+                icon: Icons.tune_rounded,
+                label: context.tr('privacy_choices_title'),
+                color: SLSettingsColors.indigo,
+                onTap: _openPrivacyChoices,
+              ),
+              if (!kIsWeb)
+                docRow(
+                  icon: Icons.ads_click_rounded,
+                  label: context.tr('privacy_ads_options_title'),
+                  color: SLSettingsColors.indigo,
+                  onTap: _openAdPrivacyChoices,
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    L10nService()
-                        .translate('p6_copyright_notice')
-                        .replaceAll('{year}', DateTime.now().year.toString()),
-                    style: SLTheme.quicksand(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF8E1B1B),
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              docRow(
+                icon: Icons.verified_user_outlined,
+                label: context.tr('p6_copyright_and_warning'),
+                color: SLSettingsColors.red,
+                onTap: _openAboutDocument,
+              ),
+            ],
           ),
           const SizedBox(height: 14),
-          /*
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF0F0),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE53935).withValues(alpha: 0.2)),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.copyright_rounded, size: 16, color: Color(0xFFC62828)),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'SoulLocket © ${DateTime.now().year} Tame Trương Việt Hoàng. '
-                    'Mọi hành vi crack, mod, can thiệp trái phép đều vi phạm bản quyền và sẽ bị xử lý.',
-                    style: SLTheme.quicksand(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF8E1B1B),
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          SLSettingsNotice(
+            tone: SLSettingsTone.neutral,
+            icon: Icons.copyright_rounded,
+            message: L10nService()
+                .translate('p6_copyright_notice')
+                .replaceAll('{year}', DateTime.now().year.toString()),
           ),
-          */
-          TextButton.icon(
+          const SizedBox(height: 8),
+          SLSettingsButton(
+            label: context.tr('home_mtrangyucu_d2e49c'),
+            icon: Icons.open_in_new_rounded,
+            variant: SLSettingsButtonVariant.ghost,
+            color: SLSettingsColors.danger,
             onPressed: _openDeleteAccountRequestPage,
-            icon: const Icon(Icons.open_in_new_rounded, size: 16),
-            label: Text(
-              context.tr('home_mtrangyucu_d2e49c'),
-              style: SLTheme.quicksand(fontWeight: FontWeight.w800),
-            ),
           ),
         ],
       ),
