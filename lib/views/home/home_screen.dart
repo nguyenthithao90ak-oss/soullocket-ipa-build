@@ -837,12 +837,13 @@ class _HomeScreenState extends State<HomeScreen>
     if (normalizedHouseId.isEmpty || _callSub != null) {
       return;
     }
-    _callSub = WebRTCService().listenForIncomingCalls(normalizedHouseId, (
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    void onIncoming(
       roomId,
       callerId,
       data,
     ) {
-      if (!mounted || _incomingCall != null) {
+      if (!mounted || _incomingCall != null || WebRTCService().isBusy || FirebaseAuth.instance.currentUser?.uid != ownerUid) {
         return;
       }
       _incomingCall = <String, dynamic>{
@@ -851,7 +852,15 @@ class _HomeScreenState extends State<HomeScreen>
         'callerId': callerId,
       };
       unawaited(_showIncomingCallDialog());
-    });
+    }
+    if (_isHouseUnpairedCache) {
+      _callSub = WebRTCService().listenForIncomingCalls(normalizedHouseId, onIncoming);
+    } else {
+      _callSub = WebRTCService().watchIncomingCoupleCalls(normalizedHouseId).listen(
+        (data) => onIncoming(data['roomId'], data['houseId'], data),
+        onError: (Object error) => debugPrint('Couple call inbox: ${AppErrorMapper.resolve(error).message}'),
+      );
+    }
   }
 
   Future<void> _showIncomingCallDialog() async {
@@ -865,7 +874,8 @@ class _HomeScreenState extends State<HomeScreen>
                 context.tr('home_ngigi_f1117f'))
             .toString()
             .trim();
-    final accepted = await showDialog<bool>(
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final route = DialogRoute<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) => SLAlertDialog(
@@ -891,15 +901,29 @@ class _HomeScreenState extends State<HomeScreen>
         ],
       ),
     );
+    final statusSub = FirebaseDatabase.instance.ref('calls/${incoming['roomId']}/status').onValue.listen((event) {
+      final status = event.snapshot.value;
+      if (status != 'ringing' && route.isActive) navigator.removeRoute(route);
+    }, onError: (Object error) {
+      if (route.isActive) navigator.removeRoute(route);
+    });
+    final accepted = await navigator.push(route);
+    await statusSub.cancel();
     if (!mounted) {
       return;
     }
-    if (accepted == true) {
-      await _acceptIncomingCall(incoming);
-    } else {
-      await _declineIncomingCall(incoming);
+    try {
+      if (accepted == true) {
+        await _acceptIncomingCall(incoming);
+      } else if (accepted == false) {
+        await _declineIncomingCall(incoming);
+      }
+    } catch (error) {
+      if (mounted) SLNotice.showError(context, context.tr('p4_call_connection_failed'));
+      debugPrint('Incoming call: ${AppErrorMapper.resolve(error).message}');
+    } finally {
+      _incomingCall = null;
     }
-    _incomingCall = null;
   }
 
   Future<void> _acceptIncomingCall(Map<String, dynamic> incoming) async {
@@ -918,6 +942,8 @@ class _HomeScreenState extends State<HomeScreen>
     if (!mounted || myHouseId.isEmpty) {
       return;
     }
+    final room = await FirebaseDatabase.instance.ref('calls/$roomId').get();
+    if (!mounted || (room.value as Map?)?['status'] != 'ringing') return;
     await Navigator.of(context).push(
       SLRoute(
         builder: (_) => VideoCallScreen(
@@ -940,7 +966,8 @@ class _HomeScreenState extends State<HomeScreen>
       return;
     }
     await FirebaseDatabase.instance.ref('calls/$roomId').update({
-      'status': 'declined',
+      'status': 'ended',
+      'endReason': 'declined',
       'endedAt': ServerValue.timestamp,
     });
   }

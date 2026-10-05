@@ -13,6 +13,7 @@ import '../../../../../utils/services/house_service.dart';
 import '../../../../../utils/services/offline_cache_service.dart';
 import '../../../../../utils/services/diary_service.dart';
 import '../../../../../utils/services/l10n_service.dart';
+import '../../../../../utils/services/role_utils.dart';
 
 class DiaryFeedController extends ChangeNotifier {
   DiaryFeedController({
@@ -141,22 +142,21 @@ class DiaryFeedController extends ChangeNotifier {
   }
 
   String _houseNameForRole(String role) {
+    final String name;
     switch (_normalizeRole(role)) {
       case 'user1':
-        final name = _nameU1.trim();
-        return (name.isEmpty ||
-                name == L10nService().translate('home_bnnam_123ef2'))
-            ? ''
-            : name;
+        name = _nameU1.trim();
       case 'user2':
-        final name = _nameU2.trim();
-        return (name.isEmpty ||
-                name == L10nService().translate('home_bnn_babaec'))
-            ? ''
-            : name;
+        name = _nameU2.trim();
       default:
         return '';
     }
+    // Nhãn mặc định "Bạn Nam"/"Bạn Nữ" không phải tên thật, kể cả khi nhà
+    // đã đảo nhãn giới tính.
+    final isDefaultLabel =
+        name == L10nService().translate('home_bnnam_123ef2') ||
+        name == L10nService().translate('home_bnn_babaec');
+    return name.isEmpty || isDefaultLabel ? '' : name;
   }
 
   String _normalizeAuthorLabel(
@@ -220,12 +220,17 @@ class DiaryFeedController extends ChangeNotifier {
       }
 
       _activeRoleKey = _memberRoleByUid[_auth.currentUser?.uid ?? ''] ?? role;
+      final genderSwapped = RoleUtils.readGenderSwapped(settingsMap);
       _nameU1 =
           settingsMap['nameU1']?.toString() ??
-          L10nService().translate('home_bnnam_123ef2');
+          L10nService().translate(
+            RoleUtils.defaultNameKey('user1', genderSwapped: genderSwapped),
+          );
       _nameU2 =
           settingsMap['nameU2']?.toString() ??
-          L10nService().translate('home_bnn_babaec');
+          L10nService().translate(
+            RoleUtils.defaultNameKey('user2', genderSwapped: genderSwapped),
+          );
       _relationshipMode = HouseSettings.inferRelationshipModeFromSettingsMap(
         settingsMap,
       );

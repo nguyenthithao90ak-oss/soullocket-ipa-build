@@ -5,10 +5,15 @@ import 'package:soullocket_app/widgets/sl_feedback.dart';
 import '../../../utils/services/market_service.dart';
 import '../../../utils/calendar/calendar_time_zone.dart';
 import '../../../utils/calendar/calendar_civil_date.dart';
+import '../../../utils/calendar/calendar_display_format.dart';
+import '../../../models/home_calendar_plan.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:timezone/timezone.dart' as tz;
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'package:lottie/lottie.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
+import 'package:soullocket_app/widgets/soul_merge_mark.dart';
 import 'package:soullocket_app/views/utilities/tarot/tarot_screen.dart';
 import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/map_tilt_card.dart';
@@ -79,6 +84,8 @@ import 'package:soullocket_app/views/ui_prefs.dart';
 import 'package:soullocket_app/views/home/tabs/settings/theme/theme_preview_builder.dart';
 // import 'package:soullocket_app/views/utilities/age_zodiac_screen.dart';
 import 'package:soullocket_app/views/utilities/bucket_list_screen.dart';
+import 'package:soullocket_app/views/utilities/block_blast_game.dart';
+import 'package:soullocket_app/views/together/together_hub_screen.dart';
 import 'package:soullocket_app/views/utilities/calendar_screen.dart';
 import 'package:soullocket_app/views/utilities/capsule_screen.dart';
 import 'package:soullocket_app/views/utilities/cinema_screen.dart';
@@ -138,6 +145,7 @@ import 'package:soullocket_app/utils/services/sound_service.dart';
 import 'package:soullocket_app/views/home/widgets/companion/home_companion_painter.dart';
 import 'package:soullocket_app/views/home/widgets/companion/home_companion_journey_card.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/home_daily_activity_card.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/home_upcoming_plans.dart';
 
 part 'main_home/widgets/main_home_dialogs.dart';
 part 'main_home/widgets/main_home_soul_merge_sticker.dart';
@@ -465,6 +473,12 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   StreamSubscription<DatabaseEvent>? _homeCalendarSubscription;
   StreamSubscription<DatabaseEvent>? _healthCycleSyncSubscription;
   List<Map<String, dynamic>> _homeCalendarEvents = [];
+  HomeCalendarLoadState _homeCalendarLoadState = HomeCalendarLoadState.loading;
+  String? _homeCalendarUid, _homeCalendarHouseId;
+  int _homeCalendarBindingSerial = 0;
+  Timer? _homeCalendarReadTimeout;
+  Timer? _homeCalendarFreshnessTimer;
+  bool _homeCalendarRouteIsOpen = false;
 
   String? _selectedHomeToolId;
   late final ValueNotifier<List<_HomeReactionFlight>> _reactionFlightsNotifier;
@@ -492,7 +506,11 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   String? _pendingInsightSettingsKey;
   int _insightRequestSerial = 0;
   int _liveWorkSessionId = 0;
+  bool _togetherHubIsOpen = false;
   List<String> _cachedWidgetDiaryImageUrls = const <String>[];
+  // Danh sách rỗng là kết quả hợp lệ (ảnh riêng tư không có link công khai);
+  // cờ này tránh tải lại Nhật ký mỗi lần trạng thái online đổi.
+  bool _widgetDiaryImageUrlsLoaded = false;
   List<String> _recentChatSignals = [];
 
   late final ValueNotifier<_PartnerInteractionPreset>
@@ -592,6 +610,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     super.initState();
     MarketService.instance.addListener(_onRegionPreferencesChanged);
     L10nService().addListener(_onRegionPreferencesChanged);
+    unawaited(initializeDateFormatting().then((_) {
+      if (mounted) _safeSetState(() {});
+    }));
     unawaited(_loadCustomStickers());
     WidgetsBinding.instance.addObserver(this);
     _isTabActive = widget.isActiveListenable.value;
@@ -723,6 +744,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         _houseId != null) {
       unawaited(_ensureAppWideLocationTracking(_houseId!));
       unawaited(_refreshCurrentRoleWeather());
+      _listenHomeCalendarEvents(_houseId!);
+    } else if (state != AppLifecycleState.resumed) {
+      _pauseHomeCalendarEvents();
     }
   }
 
@@ -731,6 +755,10 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     if (isActive) {
       _deferHeavyHomeMotion = true;
       _warmHomeMedia(delayMotion: true);
+      final houseId = _houseId;
+      if (houseId != null) {
+        _listenHomeCalendarEvents(houseId);
+      }
       // ⚡ Skip re-fetch if data is still fresh (< 30s old)
       final dataIsFresh =
           _lastFetchTime != null &&
@@ -748,10 +776,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       );
       return;
     }
-    // Do not cancel Firebase RTDB bindings here (keep them connected to avoid tearing down and re-fetching on tab switch).
-    // Instead, we only pause non-critical active loops if any, but weather loop and presence check and update will
-    // automatically adapt based on _isTabActive inside their respective timers/listeners.
+    // Preview lịch dừng khi Home ẩn; các binding khác giữ lifecycle sẵn có.
     _fetchHouseDataDebounceTimer?.cancel();
+    _pauseHomeCalendarEvents();
     _invalidateLiveWorkSession();
   }
 
@@ -1000,7 +1027,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   }
 
   Future<List<String>> _loadWidgetDiaryImageUrls(String houseId) {
-    return _loadWidgetDiaryImageUrlsImpl(houseId);
+    return _loadWidgetDiaryImageUrlsImpl(
+      houseId,
+    ).then((urls) => urls ?? const <String>[]);
   }
 
   Future<

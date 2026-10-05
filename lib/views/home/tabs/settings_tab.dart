@@ -69,6 +69,7 @@ import '../../../utils/services/purchase_service.dart';
 import '../../../utils/services/schedule_notif_service.dart';
 import '../../../utils/services/settings_sync_service.dart';
 import '../../../utils/services/storage/storage_service.dart';
+import '../../../utils/services/storage/private_image_disk_cache.dart';
 import '../../../utils/services/storage/storage_app_check_helper.dart';
 import '../../../utils/services/app_check_http_headers.dart';
 import '../../../utils/services/cloudflare_r2_service.dart';
@@ -119,6 +120,7 @@ import '../../../utils/services/critical_data_sync_service.dart';
 import '../../../utils/services/house_service.dart';
 import '../../../utils/services/military_lock_service.dart';
 import '../../../utils/services/role_utils.dart';
+import '../../auth/widgets/gender_selection_dialog.dart';
 import 'package:soullocket_app/models/soul_event.dart';
 import '../../../utils/services/soul_event_service.dart';
 import '../../../utils/services/qr_payload_codec.dart';
@@ -361,6 +363,8 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   String _dobU2 = '';
   String _loveUnit = L10nService().translate('home_ngyyu_722b21');
   String _relationshipMode = 'single';
+  // Nhà đánh dấu đảo nhãn Nam/Nữ (chỗ user1 là Nữ); chỉ ảnh hưởng hiển thị.
+  bool _genderSwapped = false;
   bool _isLanguageListExpanded = false;
   bool _isCoupleConnected = false;
   bool _isLoading = false;
@@ -375,12 +379,17 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   DateTime? _settingsLocalBackupAt;
   String _settingsBackupStatusError = '';
   bool _isSavingAdvanced = false;
+  // Dung lượng ảnh riêng tư đang lưu trên máy (byte); null = chưa đo.
+  int? _cachedPhotoBytes;
+  bool _loadingCachedPhotoBytes = false;
   bool _isSecurityLocked = false;
   bool _isCheckingSecurityLock = false;
   bool _isDevicePending = false;
   String _devicePendingMessage = '';
   int _devicePendingUnlockAtMs = 0;
   bool _isVipActive = false;
+  // Gợi ý huy hiệu PRO từ lần mở trước; null khi đã có trạng thái thật.
+  bool? _vipBadgeHint;
   bool _isRestoringVip = false;
   bool _googleLinked = false;
   String _googleLinkedEmail = '';
@@ -594,12 +603,14 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     _scheduleSettingsBootstrap();
   }
 
-  void _restoreSettingsInitialIdentity() {
+  void _restoreSettingsInitialIdentity({String? houseId, String? role}) {
     final prefs = OfflineCacheService.getPrefsSync();
     if (prefs == null) return;
     final identity = SettingsInitialIdentity.restore(
       prefs: prefs,
       uid: _auth.currentUser?.uid,
+      houseId: houseId,
+      role: role,
       readCache: (key) =>
           OfflineCacheService.getMemoryCache(key) ??
           OfflineCacheService.loadCacheSync(key),
@@ -612,6 +623,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     if (identity.name2.isNotEmpty) _nameU2 = identity.name2;
     _avatarUrl1 = identity.avatar1;
     _avatarUrl2 = identity.avatar2;
+    if (identity.vipBadge && !_isVipActive) _vipBadgeHint = true;
     _settingsIdentityReady = true;
   }
 
@@ -621,14 +633,12 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     if (!_settingsIdentityReady ||
         uid == null ||
         uid != _settingsOwnerUid ||
-        houseId == null) {
+        houseId == null ||
+        houseId.isEmpty) {
       return;
     }
-    final prefs = OfflineCacheService.getPrefsSync();
-    if (prefs?.getString('il_auth_uid') != uid ||
-        prefs?.getString('il_house_id') != houseId) {
-      return;
-    }
+    // houseId đã được getCurrentHouseId resolve theo UID; không đòi prefs
+    // `il_house_id` vì khóa này có thể chỉ còn trong secure storage.
     final snapshot = SettingsInitialIdentity(
       houseId: houseId,
       relationshipMode: _relationshipMode,
@@ -637,8 +647,9 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       name2: _nameU2,
       avatar1: _avatarUrl1,
       avatar2: _avatarUrl2,
+      vipBadge: _vipBadgeHint ?? _isVipActive,
     ).toCache(uid);
-    final key = SettingsInitialIdentity.cacheKey(uid, houseId);
+    final key = SettingsInitialIdentity.cacheKey(uid);
     OfflineCacheService.setMemoryCache(key, snapshot, const Duration(hours: 8));
     unawaited(
       OfflineCacheService.saveCache(key, snapshot).catchError((Object error) {

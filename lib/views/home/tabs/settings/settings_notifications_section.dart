@@ -603,7 +603,10 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                     cleared++;
                   }
                 }
+                // Xóa luôn ảnh riêng tư đã lưu; ảnh sẽ tải lại khi xem.
+                if (!kIsWeb) await PrivateImageDiskCache.instance.clear();
                 if (!mounted) return;
+                setState(() => _cachedPhotoBytes = 0);
                 _showToast(
                   context
                       .tr('cleared_cache_msg')
@@ -612,10 +615,37 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                 );
               },
             ),
+            if (!kIsWeb) ...[SLSpacing.h8, _buildCachedPhotoSizeText()],
             if (kDebugMode) ...[SLSpacing.h8, _buildTestNotificationButton()],
           ],
         ],
       ),
+    );
+  }
+
+  /// Cho người dùng biết ảnh riêng tư đang chiếm bao nhiêu trên máy trước khi xóa.
+  Widget _buildCachedPhotoSizeText() {
+    if (_cachedPhotoBytes == null && !_loadingCachedPhotoBytes) {
+      _loadingCachedPhotoBytes = true;
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      unawaited(() async {
+        final bytes = uid == null
+            ? 0
+            : await PrivateImageDiskCache.instance.totalBytes(uid);
+        if (!mounted) return;
+        setState(() {
+          _cachedPhotoBytes = bytes;
+          _loadingCachedPhotoBytes = false;
+        });
+      }());
+    }
+    final bytes = _cachedPhotoBytes;
+    final size = bytes == null
+        ? '…'
+        : '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    return Text(
+      context.tr('settings_cached_photos_size').replaceAll('{size}', size),
+      style: TextStyle(fontSize: 12.5, color: SLDetailStyle.muted(context)),
     );
   }
 

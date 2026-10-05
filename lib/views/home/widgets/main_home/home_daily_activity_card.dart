@@ -11,6 +11,8 @@ class HomeDailyActivityCard extends StatelessWidget {
     this.onOpenChat,
     this.onOpenCalendar,
     this.onOpenPairing,
+    this.onOpenTogether,
+    this.upcomingPlans,
   });
 
   final bool isSingle;
@@ -18,6 +20,8 @@ class HomeDailyActivityCard extends StatelessWidget {
   final VoidCallback? onOpenChat;
   final VoidCallback? onOpenCalendar;
   final VoidCallback? onOpenPairing;
+  final VoidCallback? onOpenTogether;
+  final Widget? upcomingPlans;
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +53,15 @@ class HomeDailyActivityCard extends StatelessWidget {
           icon: Icons.favorite_border_rounded,
           label: context.tr('pairing_connect_now'),
           onTap: onOpenPairing!,
+        ),
+      if (onOpenTogether != null)
+        _DailyActivityAction(
+          key: const ValueKey('home-daily-together'),
+          icon: Icons.interests_outlined,
+          label: context.tr(
+            isSingle ? 'together_hub_solo_title' : 'together_hub_title',
+          ),
+          onTap: onOpenTogether!,
         ),
     ];
     if (actions.isEmpty) return const SizedBox.shrink();
@@ -110,7 +123,15 @@ class HomeDailyActivityCard extends StatelessWidget {
                 color: KeepsakeStyle.muted(context),
               ),
             ),
-            const SizedBox(height: 14),
+            if (!isSingle && upcomingPlans != null) ...[
+              const SizedBox(height: 16),
+              upcomingPlans!,
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Divider(height: 1, color: KeepsakeStyle.line(context)),
+              ),
+            ] else
+              const SizedBox(height: 14),
             for (var index = 0; index < actions.length; index++) ...[
               if (index > 0) const SizedBox(height: 8),
               actions[index],

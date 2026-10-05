@@ -8,6 +8,7 @@ part 'living_sticker_characters.dart';
 part 'living_sticker_objects.dart';
 part 'living_sticker_celebrations.dart';
 part 'living_sticker_couple_holidays.dart';
+part 'living_sticker_pack_art.dart';
 
 /// Hệ tọa độ cố định: chỉ các khớp và chi tiết được phép chuyển động.
 class LivingStickerPainter extends CustomPainter {
@@ -43,6 +44,11 @@ class LivingStickerPainter extends CustomPainter {
       (size.height - 200 * scale) / 2,
     );
     canvas.scale(scale);
+    if (scene.artStyle != null) {
+      _paintPackArtwork(canvas, t);
+      canvas.restore();
+      return;
+    }
     canvas.drawOval(
       const Rect.fromLTWH(32, 177, 136, 9),
       Paint()..color = rose.withValues(alpha: 0.12),

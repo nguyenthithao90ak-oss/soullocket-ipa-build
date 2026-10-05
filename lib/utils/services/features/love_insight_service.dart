@@ -281,18 +281,45 @@ class LoveInsightService {
     '🥺',
   };
 
+  // Home và màn khởi động gọi gần như cùng lúc khi mở app; gộp lượt đang chạy
+  // để không tải Nhật ký/album/settings/presence hai lần.
+  static Future<LoveInsightData>? _inFlightInsight;
+  static String? _inFlightInsightKey;
+
   Future<LoveInsightData> computeInsights(
     String houseId,
     String relationshipMode,
-  ) async {
+  ) {
     final now = DateTime.now();
-    // Trả về cache nếu còn trong TTL 5 phút và cùng houseId
+    // Trả về cache nếu còn trong TTL và cùng houseId
     if (_cachedInsight != null &&
         _cachedHouseId == houseId &&
         _cacheTime != null &&
         now.difference(_cacheTime!) < _cacheTtl) {
-      return _cachedInsight!;
+      return Future<LoveInsightData>.value(_cachedInsight!);
     }
+    final key = '$houseId|$relationshipMode';
+    final pending = _inFlightInsight;
+    if (pending != null && _inFlightInsightKey == key) {
+      return pending;
+    }
+    final task = _computeInsightsUncached(houseId, relationshipMode, now);
+    _inFlightInsight = task;
+    _inFlightInsightKey = key;
+    task.whenComplete(() {
+      if (identical(_inFlightInsight, task)) {
+        _inFlightInsight = null;
+        _inFlightInsightKey = null;
+      }
+    }).ignore();
+    return task;
+  }
+
+  Future<LoveInsightData> _computeInsightsUncached(
+    String houseId,
+    String relationshipMode,
+    DateTime now,
+  ) async {
     final monthStart = DateTime(now.year, now.month, 1);
 
     final firestore = FirebaseFirestore.instance;

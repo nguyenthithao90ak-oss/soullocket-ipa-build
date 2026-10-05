@@ -116,10 +116,12 @@ class _SoulBlockDiaryCoverState extends State<SoulBlockDiaryCover>
       } catch (_) {
         // Snapshot cũ hỏng không cản ảnh bìa chọn một Nhật ký khác.
       }
+      // Bìa chỉ thử tối đa 4 ảnh; 24 bản ghi đủ chọn ngẫu nhiên mà không tải 80 bản.
       final candidates = await _memories.candidates(
         houseId,
         preferredId: preferredId,
         diaryWidth: diaryWidth,
+        limit: 24,
       );
       final budget = Stopwatch()..start();
       for (final candidate in candidates.take(4)) {

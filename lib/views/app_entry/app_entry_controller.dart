@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/services/offline_cache_service.dart';
 
 import '../../utils/services/admob_service.dart';
+import '../../utils/services/auth/auth_house_context_service.dart';
 import '../../utils/services/critical_data_sync_service.dart';
 import '../../utils/services/device_manager_service.dart';
 import '../../utils/services/encryption_service.dart';
@@ -60,7 +61,9 @@ class AppEntryController {
     CriticalDataSyncService? criticalDataSyncService,
     LoveInsightService? loveInsightService,
     InteractionMetricsService? interactionMetricsService,
+    AuthHouseContextService? houseContextService,
   }) : _houseService = houseService ?? HouseService(),
+       _houseContextService = houseContextService ?? AuthHouseContextService(),
        _militaryLockService = militaryLockService ?? MilitaryLockService(),
        _presenceService = presenceService ?? PresenceService(),
        _deviceManagerService = deviceManagerService ?? DeviceManagerService(),
@@ -74,6 +77,7 @@ class AppEntryController {
   static const Duration _deviceRegistrationCooldown = Duration(seconds: 15);
 
   final HouseService _houseService;
+  final AuthHouseContextService _houseContextService;
   final MilitaryLockService _militaryLockService;
   final PresenceService _presenceService;
   final DeviceManagerService _deviceManagerService;
@@ -392,6 +396,14 @@ class AppEntryController {
     var didScheduleInitialAppOpenAd = false;
 
     _scheduleDeviceRegistration();
+
+    // Vai do server quyết định; nếu bản lưu trên máy lệch thì sửa lại, các
+    // phần nghe roleNotifier (presence, Home) sẽ tự chuyển theo.
+    unawaited(
+      _runGuarded('sync role from server', () async {
+        await _houseContextService.syncRoleFromServer(houseId);
+      }),
+    );
 
     if (_currentHouseId != houseId) {
       unawaited(

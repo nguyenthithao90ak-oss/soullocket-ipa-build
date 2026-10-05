@@ -1,8 +1,11 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
+
+import 'soul_merge_design.dart';
+import 'soul_merge_photo_tile.dart';
+import 'soul_merge_photo_viewer.dart';
 
 class SoulMergeChatBar extends StatelessWidget {
   const SoulMergeChatBar({
@@ -25,6 +28,7 @@ class SoulMergeChatBar extends StatelessWidget {
     this.historyLoadFailed = false,
     this.onRetryHistory,
     this.onLoadOlder,
+    this.imageProviderBuilder,
   });
 
   final List<Map<String, dynamic>> chatHistory;
@@ -45,6 +49,7 @@ class SoulMergeChatBar extends StatelessWidget {
   final bool historyLoadFailed;
   final VoidCallback? onRetryHistory;
   final VoidCallback? onLoadOlder;
+  final ImageProvider Function(String)? imageProviderBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -95,6 +100,7 @@ class SoulMergeChatBar extends StatelessWidget {
                 isLoading: isLoadingHistory,
                 loadFailed: historyLoadFailed,
                 onRetry: onRetryHistory,
+                imageProviderBuilder: imageProviderBuilder,
               ),
             ),
             if (presets.isNotEmpty) ...[
@@ -165,6 +171,7 @@ class _MergeChatHistory extends StatelessWidget {
     required this.isLoading,
     required this.loadFailed,
     required this.onRetry,
+    this.imageProviderBuilder,
   });
 
   final List<Map<String, dynamic>> history;
@@ -174,21 +181,14 @@ class _MergeChatHistory extends StatelessWidget {
   final bool isLoading;
   final bool loadFailed;
   final VoidCallback? onRetry;
+  final ImageProvider Function(String)? imageProviderBuilder;
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.64),
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.96)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF935363).withValues(alpha: 0.09),
-            blurRadius: 22,
-            offset: const Offset(0, 8),
-          ),
-        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(23),
@@ -227,7 +227,9 @@ class _MergeChatHistory extends StatelessWidget {
                   controller: controller,
                   reverse: true,
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+                  padding: const EdgeInsets.fromLTRB(4, 18, 4, 12),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
                   itemCount: history.length + (isLoading || loadFailed ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index == history.length) {
@@ -254,12 +256,45 @@ class _MergeChatHistory extends StatelessWidget {
                         ),
                       );
                     }
-                    final message = history[history.length - 1 - index];
+                    final position = history.length - 1 - index;
+                    final message = history[position];
+                    final previous = position > 0
+                        ? history[position - 1]
+                        : null;
+                    final grouped =
+                        previous != null &&
+                        previous['sender'] == message['sender'] &&
+                        ((message['timestamp'] as num? ?? 0) -
+                                    (previous['timestamp'] as num? ?? 0))
+                                .abs() <
+                            180000;
+                    final photos = history
+                        .where((entry) {
+                          final url = entry['imageUrl']?.toString() ?? '';
+                          return url.startsWith('https://') ||
+                              url.startsWith('http://');
+                        })
+                        .toList(growable: false);
+                    final photoIndex = photos.indexWhere(
+                      (entry) => identical(entry, message),
+                    );
                     return _MergeMessageBubble(
                       key: ValueKey(message['id']),
                       isSelf: message['sender']?.toString() == myRole,
+                      grouped: grouped,
+                      onOpenPhoto: () => SoulMergePhotoViewer.show(
+                        context,
+                        urls: photos
+                            .map((entry) => entry['imageUrl'].toString())
+                            .toList(growable: false),
+                        initialIndex: photoIndex < 0 ? 0 : photoIndex,
+                        imageProviderBuilder: imageProviderBuilder,
+                      ),
                       text: message['text']?.toString() ?? '',
                       imageUrl: message['imageUrl']?.toString() ?? '',
+                      imageProvider: imageProviderBuilder?.call(
+                        message['imageUrl']?.toString() ?? '',
+                      ),
                       time: formatTime((message['timestamp'] as num?)?.toInt()),
                     );
                   },
@@ -274,18 +309,25 @@ class _MergeMessageBubble extends StatelessWidget {
   const _MergeMessageBubble({
     super.key,
     required this.isSelf,
+    required this.grouped,
+    required this.onOpenPhoto,
+    this.imageProvider,
     required this.text,
     required this.imageUrl,
     required this.time,
   });
 
   final bool isSelf;
+  final bool grouped;
+  final VoidCallback onOpenPhoto;
+  final ImageProvider? imageProvider;
   final String text;
   final String imageUrl;
   final String time;
 
   @override
   Widget build(BuildContext context) {
+    final colors = SoulMergeColors(context);
     final localSticker = SoulLocketStickerCatalog.find(imageUrl);
     final isLegacySticker = imageUrl.startsWith(
       'assets/images/anhtomau_stickers/',
@@ -297,10 +339,10 @@ class _MergeMessageBubble extends StatelessWidget {
       alignment: isSelf ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: EdgeInsets.only(
-          top: 3,
+          top: grouped ? 2 : 12,
           bottom: 3,
-          left: isSelf ? 56 : 0,
-          right: isSelf ? 0 : 56,
+          left: isSelf ? 42 : 0,
+          right: isSelf ? 0 : 42,
         ),
         padding: isSticker
             ? EdgeInsets.zero
@@ -310,18 +352,14 @@ class _MergeMessageBubble extends StatelessWidget {
         decoration: isSticker
             ? null
             : BoxDecoration(
-                color: isSelf ? const Color(0xFFE9587E) : Colors.white,
+                color: isSelf ? colors.sent : colors.surface,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(18),
                   topRight: const Radius.circular(18),
                   bottomLeft: Radius.circular(isSelf ? 18 : 5),
                   bottomRight: Radius.circular(isSelf ? 5 : 18),
                 ),
-                border: Border.all(
-                  color: isSelf
-                      ? const Color(0xFFE9587E)
-                      : const Color(0xFFF0E1E5),
-                ),
+                border: Border.all(color: isSelf ? colors.sent : colors.line),
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFF754653).withValues(alpha: 0.08),
@@ -341,6 +379,8 @@ class _MergeMessageBubble extends StatelessWidget {
                 imageUrl: imageUrl,
                 localSticker: localSticker,
                 legacySticker: isLegacySticker,
+                onOpenPhoto: onOpenPhoto,
+                imageProvider: imageProvider,
               ),
             if (text.isNotEmpty)
               Padding(
@@ -348,8 +388,8 @@ class _MergeMessageBubble extends StatelessWidget {
                 child: Text(
                   text,
                   style: SLTheme.quicksand(
-                    color: isSelf ? Colors.white : const Color(0xFF43363D),
-                    fontSize: 13.4,
+                    color: isSelf ? Colors.white : colors.ink,
+                    fontSize: 14,
                     fontWeight: FontWeight.w700,
                     height: 1.25,
                   ),
@@ -363,7 +403,7 @@ class _MergeMessageBubble extends StatelessWidget {
                   style: SLTheme.quicksand(
                     color: isSelf
                         ? Colors.white.withValues(alpha: 0.78)
-                        : const Color(0xFF9B8A91),
+                        : colors.muted,
                     fontSize: 9.5,
                     fontWeight: FontWeight.w700,
                   ),
@@ -381,11 +421,15 @@ class _MergeMessageMedia extends StatelessWidget {
     required this.imageUrl,
     required this.localSticker,
     required this.legacySticker,
+    required this.onOpenPhoto,
+    this.imageProvider,
   });
 
   final String imageUrl;
   final SoulLocketStickerSpec? localSticker;
   final bool legacySticker;
+  final VoidCallback onOpenPhoto;
+  final ImageProvider? imageProvider;
 
   @override
   Widget build(BuildContext context) {
@@ -395,33 +439,10 @@ class _MergeMessageMedia extends StatelessWidget {
     if (legacySticker) {
       return Image.asset(imageUrl, fit: BoxFit.contain, width: 104);
     }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(13),
-      child: CachedNetworkImage(
-        imageUrl: imageUrl,
-        fit: BoxFit.cover,
-        width: 188,
-        height: 142,
-        memCacheWidth: 376,
-        memCacheHeight: 284,
-        placeholder: (_, _) => const SizedBox(
-          width: 188,
-          height: 142,
-          child: Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: Color(0xFFE9577D),
-            ),
-          ),
-        ),
-        errorWidget: (_, _, _) => const SizedBox(
-          width: 188,
-          height: 142,
-          child: Center(
-            child: Icon(Icons.broken_image_outlined, color: Color(0xFFC6B2B8)),
-          ),
-        ),
-      ),
+    return SoulMergePhotoTile(
+      url: imageUrl,
+      onOpen: onOpenPhoto,
+      imageProvider: imageProvider,
     );
   }
 }
@@ -434,6 +455,7 @@ class _MergePresetRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = SoulMergeColors(context);
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -452,14 +474,14 @@ class _MergePresetRow extends StatelessWidget {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.78),
+                        color: colors.surface,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFF2DDE3)),
+                        border: Border.all(color: colors.line),
                       ),
                       child: Text(
                         preset,
                         style: SLTheme.quicksand(
-                          color: const Color(0xFF9B3F59),
+                          color: colors.rose,
                           fontSize: 11.2,
                           fontWeight: FontWeight.w800,
                         ),
@@ -492,11 +514,12 @@ class _MergeComposer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = SoulMergeColors(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFF0DFE4)),
+        border: Border.all(color: colors.line),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF754653).withValues(alpha: 0.11),
@@ -510,7 +533,8 @@ class _MergeComposer extends StatelessWidget {
         child: Row(
           children: [
             _ComposerAction(
-              onTap: onPickImage,
+              onTap: isUploadingPhoto ? null : onPickImage,
+              semanticLabel: context.tr('community_compose_action_photo'),
               icon: isUploadingPhoto ? null : Icons.add_photo_alternate_rounded,
               child: isUploadingPhoto
                   ? const SizedBox(
@@ -537,7 +561,7 @@ class _MergeComposer extends StatelessWidget {
                 maxLines: 4,
                 maxLength: 2000,
                 style: SLTheme.quicksand(
-                  color: const Color(0xFF43363D),
+                  color: colors.ink,
                   fontSize: 13.5,
                   fontWeight: FontWeight.w700,
                 ),
@@ -545,7 +569,7 @@ class _MergeComposer extends StatelessWidget {
                   counterText: '',
                   hintText: context.tr('p4_soul_message_hint'),
                   hintStyle: SLTheme.quicksand(
-                    color: const Color(0xFFAA99A0),
+                    color: colors.muted,
                     fontSize: 13.2,
                     fontWeight: FontWeight.w600,
                   ),
@@ -565,10 +589,10 @@ class _MergeComposer extends StatelessWidget {
                 onTap: onSend,
                 borderRadius: BorderRadius.circular(15),
                 child: Ink(
-                  width: 42,
-                  height: 42,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE9577D),
+                    color: colors.sent,
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: const Icon(
@@ -594,13 +618,14 @@ class _ComposerAction extends StatelessWidget {
     this.semanticLabel,
   });
 
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final IconData? icon;
   final Widget? child;
   final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
+    final colors = SoulMergeColors(context);
     return Semantics(
       button: true,
       label: semanticLabel,
@@ -610,15 +635,14 @@ class _ComposerAction extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
           child: Ink(
-            width: 38,
-            height: 38,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: const Color(0xFFFFEDF2),
+              color: colors.blush,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Center(
-              child:
-                  child ?? Icon(icon, color: const Color(0xFFE9577D), size: 20),
+              child: child ?? Icon(icon, color: colors.rose, size: 20),
             ),
           ),
         ),

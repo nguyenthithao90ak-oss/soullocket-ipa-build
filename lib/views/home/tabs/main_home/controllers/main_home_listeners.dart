@@ -16,8 +16,111 @@ extension _MainHomeListeners on _MainHomeTabState {
         });
   }
 
+  bool get _homeCalendarSnapshotMatchesScope =>
+      _auth.currentUser?.uid != null &&
+      _homeCalendarUid == _auth.currentUser?.uid &&
+      _homeCalendarHouseId == _houseId;
+
+  void _pauseHomeCalendarEvents() {
+    _homeCalendarBindingSerial++;
+    _homeCalendarReadTimeout?.cancel();
+    _homeCalendarReadTimeout = null;
+    _homeCalendarFreshnessTimer?.cancel();
+    _homeCalendarFreshnessTimer = null;
+    unawaited(_homeCalendarSubscription?.cancel());
+    _homeCalendarSubscription = null;
+  }
+
+  void _scheduleHomeCalendarFreshness(
+    String houseId,
+    String uid,
+    int serial,
+    String queryDay,
+  ) {
+    _homeCalendarFreshnessTimer?.cancel();
+    final now = CalendarTimeZone.fromMilliseconds(
+      DateTime.now().millisecondsSinceEpoch,
+      MarketService.instance.preferences.timeZoneId,
+    );
+    if (CalendarCivilDate.key(now) != queryDay) {
+      _listenHomeCalendarEvents(houseId);
+      return;
+    }
+    final zone = CalendarTimeZone.locationFor(
+      MarketService.instance.preferences.timeZoneId,
+    );
+    final nextDay = zone == null
+        ? DateTime(now.year, now.month, now.day + 1)
+        : tz.TZDateTime(zone, now.year, now.month, now.day + 1);
+    var deadline = nextDay.millisecondsSinceEpoch;
+    for (final plan in HomeCalendarPlan.upcoming(
+      _homeCalendarEvents,
+      now: now,
+    )) {
+      final end = plan.timing?.endUtcMs;
+      if (end != null && end < deadline) deadline = end;
+    }
+    final delay = deadline - now.millisecondsSinceEpoch;
+    _homeCalendarFreshnessTimer = Timer(
+      Duration(milliseconds: max(1, delay)),
+      () {
+        if (!mounted ||
+            !_isTabActive ||
+            _homeCalendarBindingSerial != serial ||
+            _auth.currentUser?.uid != uid ||
+            _houseId != houseId) {
+          return;
+        }
+        final current = CalendarTimeZone.fromMilliseconds(
+          DateTime.now().millisecondsSinceEpoch,
+          MarketService.instance.preferences.timeZoneId,
+        );
+        if (CalendarCivilDate.key(current) != queryDay) {
+          _listenHomeCalendarEvents(houseId);
+        } else {
+          // Chỉ rebuild khi một kế hoạch hết giờ; không polling hoặc đọc lại Firebase.
+          _safeSetState(() {});
+          _scheduleHomeCalendarFreshness(houseId, uid, serial, queryDay);
+        }
+      },
+    );
+  }
+
   void _listenHomeCalendarEvents(String houseId) {
-    _homeCalendarSubscription?.cancel();
+    _pauseHomeCalendarEvents();
+    final uid = _auth.currentUser?.uid;
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    if (!mounted ||
+        !_isTabActive ||
+        uid == null ||
+        _houseId != houseId ||
+        _homeCalendarRouteIsOpen ||
+        (lifecycle != null && lifecycle != AppLifecycleState.resumed)) {
+      return;
+    }
+    final serial = _homeCalendarBindingSerial;
+    bool isCurrent() =>
+        mounted &&
+        _isTabActive &&
+        _homeCalendarBindingSerial == serial &&
+        _auth.currentUser?.uid == uid &&
+        _houseId == houseId;
+    final sameScope =
+        _homeCalendarUid == uid && _homeCalendarHouseId == houseId;
+    _safeSetState(() {
+      if (!sameScope) _homeCalendarEvents = [];
+      _homeCalendarUid = uid;
+      _homeCalendarHouseId = houseId;
+      if (!sameScope || _homeCalendarLoadState != HomeCalendarLoadState.ready) {
+        _homeCalendarLoadState = HomeCalendarLoadState.loading;
+      }
+    });
+    _homeCalendarReadTimeout = Timer(const Duration(seconds: 12), () {
+      if (!isCurrent()) return;
+      _safeSetState(
+        () => _homeCalendarLoadState = HomeCalendarLoadState.failed,
+      );
+    });
     // Chỉ query 30 ngày tới thay vì toàn bộ lịch sử calendar
     final now = CalendarTimeZone.fromMilliseconds(
       DateTime.now().millisecondsSinceEpoch,
@@ -32,16 +135,18 @@ extension _MainHomeListeners on _MainHomeTabState {
         .child('houses/$houseId/calendar')
         .orderByKey()
         .startAt(todayStr)
-        .endAt(endStr);
+        .endAt(endStr)
+        .limitToFirst(31);
     _homeCalendarSubscription = calendarRef.onValue.listen(
       (event) {
-        if (!mounted || _houseId != houseId) return;
+        if (!isCurrent()) return;
+        _homeCalendarReadTimeout?.cancel();
         if (event.snapshot.value == null) {
-          if (_isTabActive) {
-            _safeSetState(() {
-              _homeCalendarEvents = [];
-            });
-          }
+          _safeSetState(() {
+            _homeCalendarEvents = [];
+            _homeCalendarLoadState = HomeCalendarLoadState.ready;
+          });
+          _scheduleHomeCalendarFreshness(houseId, uid, serial, todayStr);
           return;
         }
 
@@ -61,22 +166,46 @@ extension _MainHomeListeners on _MainHomeTabState {
                 'id': key,
                 'dateKey': dateKey.toString(),
                 'title': map['title']?.toString() ?? '',
-                'ts': map['ts'] as int? ?? 0,
+                'ts': _readEpochMs(map['ts']) ?? 0,
+                if (map['timing'] is Map)
+                  'timing': {
+                    for (final field in [
+                      'schemaVersion',
+                      'startUtcMs',
+                      'endUtcMs',
+                      'timeZoneId',
+                    ])
+                      field: (map['timing'] as Map)[field],
+                  }
+                else if (map['timing'] != null)
+                  'timing': const <String, dynamic>{},
               });
             });
           });
 
-          if (_isTabActive) {
-            _safeSetState(() {
-              _homeCalendarEvents = parsedEvents;
-            });
-          }
-        } catch (e) {
-          debugPrint('[MainHomeListeners] Calendar events parse error: $e');
+          _safeSetState(() {
+            _homeCalendarEvents = parsedEvents;
+            _homeCalendarLoadState = HomeCalendarLoadState.ready;
+          });
+          _scheduleHomeCalendarFreshness(houseId, uid, serial, todayStr);
+        } catch (_) {
+          _safeSetState(
+            () => _homeCalendarLoadState = HomeCalendarLoadState.failed,
+          );
         }
       },
       onError: (Object error) {
-        debugPrint('[MainHomeListeners] Calendar events stream failed: $error');
+        if (!isCurrent()) return;
+        _homeCalendarReadTimeout?.cancel();
+        final denied =
+            error is FirebaseException &&
+            (error.code == 'permission-denied' ||
+                error.code == 'permission_denied');
+        if (denied) _homeCalendarFreshnessTimer?.cancel();
+        _safeSetState(() {
+          if (denied) _homeCalendarEvents = [];
+          _homeCalendarLoadState = HomeCalendarLoadState.failed;
+        });
       },
     );
   }

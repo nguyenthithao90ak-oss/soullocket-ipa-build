@@ -6,6 +6,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -28,6 +29,7 @@ import 'package:soullocket_app/utils/services/activity_history_service.dart';
 import 'package:soullocket_app/utils/services/sound_service.dart';
 import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 import 'package:soullocket_app/utils/services/storage/storage_signed_audio_upload.dart';
+import 'package:soullocket_app/utils/voice_storage_capacity.dart';
 
 class VoiceScreen extends StatefulWidget {
   final String houseId;
@@ -120,7 +122,6 @@ class _VoiceScreenState extends State<VoiceScreen>
     _releaseRecordingQuiet = null;
   }
 
-  static const Duration _maxVoiceStorageDuration = Duration(minutes: 5);
   static const int _maxPickedVoiceBytes = 6 * 1024 * 1024;
   late final String? _uploadOwnerUid;
   late final String _uploadHouseId;
@@ -151,9 +152,18 @@ class _VoiceScreenState extends State<VoiceScreen>
   late final AnimationController _bounceController;
 
   late final Stream<DatabaseEvent> _voiceStream;
+  // Bản mới nhất từ listener danh sách; dùng để tính dung lượng thay vì tải lại cả danh sách.
+  Object? _latestVoicesValue;
+  bool _hasVoicesSnapshot = false;
 
   DatabaseReference get _voiceRef =>
       _dbRef.child('houses/${widget.houseId}/utilities/voices');
+
+  DatabaseEvent _rememberVoicesSnapshot(DatabaseEvent event) {
+    _latestVoicesValue = event.snapshot.value;
+    _hasVoicesSnapshot = true;
+    return event;
+  }
 
   @override
   void initState() {
@@ -164,7 +174,7 @@ class _VoiceScreenState extends State<VoiceScreen>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     )..repeat(reverse: true);
-    _voiceStream = _voiceRef.onValue;
+    _voiceStream = _voiceRef.onValue.map(_rememberVoicesSnapshot);
     WidgetsBinding.instance.addObserver(this);
     _playbackStateSub = _player.onPlayerStateChanged.listen((state) {
       if (!_startingPlayback && state != PlayerState.playing) {
@@ -567,6 +577,8 @@ class _VoiceScreenState extends State<VoiceScreen>
     final session = await _createVoiceUploadSession(
       fileName: fileName,
       contentType: mimeType,
+      size: bytes.length,
+      md5Hex: md5.convert(bytes).toString(),
     );
     _requireUploadScope();
     final sessionId = session['sessionId']?.toString().trim() ?? '';
@@ -580,6 +592,8 @@ class _VoiceScreenState extends State<VoiceScreen>
         bytes: bytes,
         contentType: mimeType,
         client: client,
+        houseId: _uploadHouseId,
+        ownerUid: _uploadOwnerUid,
       );
     } catch (e, stackTrace) {
       // ClientException có thể chứa URL ký; chỉ chuyển lỗi đã bỏ thông tin nhạy cảm.
@@ -611,6 +625,8 @@ class _VoiceScreenState extends State<VoiceScreen>
   Future<Map<String, dynamic>> _createVoiceUploadSession({
     required String fileName,
     required String contentType,
+    required int size,
+    required String md5Hex,
   }) async {
     try {
       final response =
@@ -620,6 +636,11 @@ class _VoiceScreenState extends State<VoiceScreen>
               'houseId': widget.houseId.trim(),
               'fileName': fileName.trim(),
               'contentType': contentType.trim(),
+              // Server mới cấp phiên R2 riêng tư, khóa cứng kích thước + MD5;
+              // server cũ bỏ qua các trường này và trả phiên Firebase Storage.
+              'transport': 'r2',
+              'size': size,
+              'md5': md5Hex,
             },
             timeout: const Duration(seconds: 15),
             requireAppCheck: true,
@@ -894,19 +915,21 @@ class _VoiceScreenState extends State<VoiceScreen>
   }
 
   Future<int> _remainingVoiceCapacityMs() async {
+    if (_hasVoicesSnapshot) {
+      return VoiceStorageCapacity.remainingMs(_latestVoicesValue);
+    }
     final snapshot = await _voiceRef.get();
-    if (!snapshot.exists || snapshot.value == null || snapshot.value is! Map) {
-      return _maxVoiceStorageDuration.inMilliseconds;
+    return VoiceStorageCapacity.remainingMs(snapshot.value);
+  }
+
+  bool _isVoiceCapacityRejection(Object error) {
+    if (error is! FirebaseFunctionsException ||
+        error.code != 'failed-precondition') {
+      return false;
     }
-    final data = Map<dynamic, dynamic>.from(snapshot.value as Map);
-    var totalMs = 0;
-    for (final value in data.values) {
-      if (value is Map) {
-        totalMs += ((value['duration'] as num?)?.toInt() ?? 0);
-      }
-    }
-    final remaining = _maxVoiceStorageDuration.inMilliseconds - totalMs;
-    return remaining < 0 ? 0 : remaining;
+    final details = error.details;
+    return details is Map &&
+        details['reason'] == VoiceStorageCapacity.rejectionReason;
   }
 
   Future<String> _persistPendingUploadFile({
@@ -1043,7 +1066,7 @@ class _VoiceScreenState extends State<VoiceScreen>
       }
       _showMessage(successMsg);
     } catch (e) {
-      _showMessage(errRetryFailed);
+      _showMessage(e is AppErrorInfo ? e.message : errRetryFailed);
     } finally {
       if (mounted) {
         setState(() {
@@ -1063,6 +1086,7 @@ class _VoiceScreenState extends State<VoiceScreen>
     Map<String, dynamic>? retryPayload,
   }) async {
     _requireUploadScope();
+    final errNoCapacity = context.tr('util_khoghimkhn_25536a');
     if (retryPayload == null && _pendingRetryUpload != null) {
       throw StateError('Retry the pending voice upload first');
     }
@@ -1119,6 +1143,12 @@ class _VoiceScreenState extends State<VoiceScreen>
       await _clearPendingUpload(deleteLocalFile: true);
       _pendingRetryUpload = null;
     } catch (e, stackTrace) {
+      if (_isVoiceCapacityRejection(e)) {
+        // Server đã từ chối và xóa tệp; giữ bản chờ chỉ khiến người dùng kẹt ở nút thử lại.
+        await _clearPendingUpload(deleteLocalFile: true);
+        _pendingRetryUpload = null;
+        throw AppErrorInfo(kind: AppErrorKind.user, message: errNoCapacity);
+      }
       debugPrint('[VoiceScreen] _queueAndUploadVoiceFile error: $e');
       unawaited(
         ErrorLoggerService.instance.logError(
@@ -1501,10 +1531,7 @@ class _VoiceScreenState extends State<VoiceScreen>
           (a, b) => (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0),
         );
 
-        final totalDurationMs = items.fold<int>(
-          0,
-          (sum, item) => sum + ((item['duration'] as num?)?.toInt() ?? 0),
-        );
+        final totalDurationMs = VoiceStorageCapacity.storedDurationMs(rawValue);
 
         return Stack(
           children: [

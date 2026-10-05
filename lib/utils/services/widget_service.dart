@@ -1288,29 +1288,39 @@ class WidgetService {
   static Future<void> clearCalendarWidgetData() {
     _calendarSyncRevision++;
     if (!supportsMobileWidgets) return Future.value();
-    return _calendarWrites.enqueue(() async {
-      await ensureInitialized();
-      await _saveWidgetDataIfChanged<String>(
-        'calendar_snapshot_v2',
-        jsonEncode(CalendarWidgetPayload.empty()),
-      );
-      await _saveWidgetDataIfChanged<bool>('calendar_enabled', false);
-      for (final key in [
-        'calendar_next_date_key',
-        'calendar_countdown',
-        'calendar_next_date',
-        'calendar_events_text',
-      ]) {
-        await _saveWidgetDataIfChanged<String>(key, '');
-      }
-      await _updateAuxiliaryWidget(
-        androidName: androidWidgetCalendarName,
-        qualifiedAndroidName: qualifiedAndroidWidgetCalendarName,
-        iOSName: iOSWidgetCalendarName,
-      );
-    }).catchError((Object error) {
-      debugPrint('[WidgetService] Calendar clear failed: ${AppErrorMapper.resolve(error).message}');
-    });
+    return _calendarWrites
+        .enqueue(() async {
+          await ensureInitialized();
+          await _saveWidgetDataIfChanged<String>(
+            'calendar_snapshot_v2',
+            jsonEncode(
+              CalendarWidgetPayload.empty(
+                locale: L10nService().locale.toLanguageTag(),
+                titleLabel: L10nService().translate('calendar_shared_title'),
+                emptyLabel: L10nService().translate('widget_sync_empty'),
+              ),
+            ),
+          );
+          await _saveWidgetDataIfChanged<bool>('calendar_enabled', false);
+          for (final key in [
+            'calendar_next_date_key',
+            'calendar_countdown',
+            'calendar_next_date',
+            'calendar_events_text',
+          ]) {
+            await _saveWidgetDataIfChanged<String>(key, '');
+          }
+          await _updateAuxiliaryWidget(
+            androidName: androidWidgetCalendarName,
+            qualifiedAndroidName: qualifiedAndroidWidgetCalendarName,
+            iOSName: iOSWidgetCalendarName,
+          );
+        })
+        .catchError((Object error) {
+          debugPrint(
+            '[WidgetService] Calendar clear failed: ${AppErrorMapper.resolve(error).message}',
+          );
+        });
   }
 
   static Future<void> syncCalendarWidgetData({
@@ -1399,6 +1409,8 @@ class WidgetService {
         todayLabel: l10n.translate('milestone_today'),
         tomorrowLabel: l10n.translate('milestone_tomorrow'),
         daysLeftTemplate: l10n.translate('milestone_days_left'),
+        titleLabel: l10n.translate('calendar_shared_title'),
+        emptyLabel: l10n.translate('widget_sync_empty'),
       );
       await _calendarWrites.enqueue(() async {
         if (!await scopeStillActive()) return;

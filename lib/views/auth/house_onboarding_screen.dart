@@ -68,6 +68,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       'il_pending_signup_recovery_answer';
   static const String _pendingSignupAutoCreateHousePrefsKey =
       'il_pending_signup_auto_create_house';
+  static const String _pendingSignupEmailPrefsKey = 'il_pending_signup_email';
 
   final _houseService = HouseService();
   final _authService = AuthService();
@@ -187,6 +188,13 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       prefs.getString('il_rel_mode'),
     );
     final storedRole = _normalizeRole(prefs.getString('il_role'));
+    final pendingEmail =
+        prefs.getString(_pendingSignupEmailPrefsKey)?.trim().toLowerCase() ?? '';
+    final currentEmail =
+        FirebaseAuth.instance.currentUser?.email?.trim().toLowerCase() ?? '';
+    if (pendingEmail.isEmpty || pendingEmail != currentEmail) {
+      await _clearPendingSignupDraft(prefs: prefs);
+    }
     final pendingQuestion =
         prefs.getString(_pendingSignupRecoveryQuestionPrefsKey)?.trim() ?? '';
     final pendingAnswer =
@@ -285,6 +293,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     await resolvedPrefs.remove(_pendingSignupRecoveryQuestionPrefsKey);
     await resolvedPrefs.remove(_pendingSignupRecoveryAnswerPrefsKey);
     await resolvedPrefs.remove(_pendingSignupAutoCreateHousePrefsKey);
+    await resolvedPrefs.remove(_pendingSignupEmailPrefsKey);
   }
 
   @override
@@ -1084,7 +1093,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
             customHouseId: customHouseId,
           )
           .timeout(
-            const Duration(seconds: 15),
+            const Duration(seconds: 90),
             onTimeout: () {
               throw TimeoutException('_createHouse timed out');
             },

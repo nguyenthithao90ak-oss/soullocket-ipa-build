@@ -5,7 +5,8 @@ import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
-import '../../core/sl_theme.dart';
+import 'widgets/device_manager_design.dart';
+import 'widgets/keepsake_design.dart';
 import '../../utils/services/device_manager_service.dart';
 import '../../utils/services/device_manager_client.dart';
 import '../../utils/app_error_mapper.dart';
@@ -30,6 +31,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
   StreamSubscription<String?>? _sessionSub;
   String? _sessionUid;
   List<Map<String, dynamic>> _devices = [];
+  Map<String, dynamic> _management = const {};
   bool _isLoading = true;
   bool _isSyncingDevices = false;
   bool _listVerified = false;
@@ -55,6 +57,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
       setState(() {
         _sessionUid = uid;
         _devices = [];
+        _management = const {};
         _houseId = '';
         _currentDeviceId = '';
         _listVerified = false;
@@ -112,6 +115,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
       }
       setState(() {
         _currentDeviceId = currentDeviceId;
+        _isLoading = false;
         if (_devices.isEmpty) {
           _devices = [
             {...currentSnapshot, 'status': 'unverified', 'can_manage': false},
@@ -159,6 +163,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
         _currentDeviceId = currentDeviceId;
         _devices = devices;
         _houseId = listing.houseId;
+        _management = listing.management;
         _listVerified = true;
         _loadMessage = registrationMessage;
       });
@@ -189,7 +194,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
       id.isNotEmpty &&
       id != _currentDeviceId &&
       _devices.any(
-        (device) => device['deviceId'] == id && device['can_manage'] == true,
+        (device) => device['deviceId'] == id && device['can_manage'] == true && device['protected'] != true,
       );
 
   Future<void> _runDeviceAction({
@@ -295,55 +300,41 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
     if (mounted) SLNotice.showInfo(context, message);
   }
 
-  String _formatLastSeen(dynamic ts) {
-    if (ts == null) return context.tr('util_khngr_b18ff7');
+  String? _formatTimestamp(dynamic ts) {
+    if (ts is! num || !ts.isFinite || ts <= 0 || ts > 4102444800000) return null;
     try {
-      final dt = DateTime.fromMillisecondsSinceEpoch((ts as num).toInt());
+      final dt = DateTime.fromMillisecondsSinceEpoch(ts.toInt());
       final localizations = MaterialLocalizations.of(context);
-      final date = localizations.formatMediumDate(dt);
+      final date = localizations.formatFullDate(dt);
       final time = localizations.formatTimeOfDay(TimeOfDay.fromDateTime(dt));
-      return L10nService().format('device_manager_last_seen', {
-        'time': '$date $time',
-      });
+      return '$date $time';
     } catch (_) {
-      return context.tr('util_khngr_b18ff7');
+      return null;
     }
   }
 
-  Color _statusTextColor(String? status) {
-    switch (status) {
-      case 'approved':
-      case 'auto_approved':
-        return const Color(0xFF1B5E20);
-      case 'blocked':
-      case 'deleted':
-        return const Color(0xFFC62828);
-      case 'pending':
-        return const Color(0xFFE65100);
-      case 'local_only':
-      case 'unverified':
-        return SLColors.textPrimary;
-      default:
-        return Colors.grey;
-    }
+  String _formatLastSeen(dynamic ts) {
+    final timestamp = _formatTimestamp(ts);
+    return timestamp == null
+        ? context.tr('util_khngr_b18ff7')
+        : L10nScope.of(context).format('device_manager_last_seen', {'time': timestamp});
   }
 
-  Color _statusBgColor(String? status) {
-    switch (status) {
-      case 'approved':
-      case 'auto_approved':
-        return SLColors.successLight;
-      case 'blocked':
-      case 'deleted':
-        return SLColors.dangerLight;
-      case 'pending':
-        return SLColors.warningLight;
-      case 'local_only':
-      case 'unverified':
-        return SLColors.primaryLight;
-      default:
-        return const Color(0xFFF5F5F5);
+  String _managementMessage(Map<String, dynamic> device, bool isMe) {
+    if (device['protected'] == true) return context.tr('device_manager_creator_protected');
+    switch (device['management_reason']) {
+      case 'actor_new':
+        return context.tr('device_manager_device_too_new');
+      case 'actor_revoked':
+        return context.tr('device_manager_device_revoked');
+      case 'actor_unverified':
+        return context.tr('device_manager_device_unverified_permission');
     }
+    return isMe
+        ? context.tr('util_ylthitbbna_af3295')
+        : device['status'] == 'deleted'
+        ? _statusLabel('deleted')
+        : context.tr('util_thitbhinti_7d3436');
   }
 
   String _statusLabel(String? status) {
@@ -371,7 +362,9 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
     Map<String, dynamic> device,
     bool isMe,
   ) {
-    if (_isSyncingDevices && isMe && status == 'local_only') {
+    if (_isSyncingDevices &&
+        isMe &&
+        (status == 'local_only' || status == 'unverified')) {
       return L10nService().translate(
         'ui_utilities_verifying_with_server_09cfa0',
       );
@@ -395,24 +388,28 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: SLTheme.appBar(
+      backgroundColor: KeepsakeStyle.canvas(context),
+      appBar: KeepsakeStyle.appBar(
         context,
-        context.tr('util_qunlthitb_983ee3'),
+        title: Text(context.tr('util_qunlthitb_983ee3')),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: SLColors.primary),
+            icon: const Icon(Icons.refresh_rounded),
             tooltip: context.tr('util_tili_13be6c'),
             onPressed: _isSyncingDevices || _actionPending
                 ? null
                 : _loadDevices,
           ),
+          const SizedBox(width: 6),
         ],
       ),
-      body: SLTheme.background(
-        themeKey: 'off',
+      body: SafeArea(
+        top: false,
         child: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(color: SLColors.primary),
+            ? Center(
+                child: CircularProgressIndicator(
+                  color: KeepsakeStyle.accent(context),
+                ),
               )
             : _devices.isEmpty
             ? _buildEmpty()
@@ -421,121 +418,43 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
     );
   }
 
-  Widget _buildNoticeCard() {
-    final message = _loadMessage.trim().isNotEmpty
-        ? _loadMessage.trim()
-        : context.tr('device_manager_status_notice');
-    final isSyncing = _isSyncingDevices;
+  Widget _buildNoticeCard() => DeviceRegistryNotice(
+    title: _isSyncingDevices
+        ? context.tr(
+            'ui_utilities_loading_device_list_from_server_the_device_57c1c7',
+          )
+        : _loadFailed
+        ? context.tr('device_manager_load_failed_title')
+        : null,
+    detail: _loadMessage.trim().isEmpty ? null : _loadMessage.trim(),
+    message: context.tr(
+      _loadFailed
+          ? 'device_manager_load_failed_body'
+          : 'device_manager_status_notice',
+    ),
+    syncing: _isSyncingDevices,
+    failed: _loadFailed,
+  );
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: SLColors.primary.withValues(alpha: 0.16)),
-        boxShadow: [
-          BoxShadow(
-            color: SLColors.primary.withValues(alpha: 0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
+  Widget _buildEmpty() => ListView(
+    padding: const EdgeInsets.all(16),
+    children: [
+      _buildNoticeCard(),
+      const SizedBox(height: 28),
+      Icon(
+        Icons.devices_other_rounded,
+        size: 48,
+        color: KeepsakeStyle.muted(context),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            _loadFailed ? Icons.cloud_off_rounded : Icons.info_outline_rounded,
-            color: SLColors.primary,
-          ),
-          SLSpacing.w10,
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isSyncing
-                      ? context.tr(
-                          'ui_utilities_loading_device_list_from_server_the_device_57c1c7',
-                        )
-                      : _loadFailed
-                      ? context.tr('device_manager_load_failed_title')
-                      : message,
-                  style: SLTheme.quicksand(
-                    fontSize: 13,
-                    height: 1.45,
-                    fontWeight: FontWeight.w700,
-                    color: SLColors.textPrimary,
-                  ),
-                ),
-                if (_loadFailed) ...[
-                  SLSpacing.h10,
-                  Text(
-                    message,
-                    style: SLTheme.quicksand(
-                      fontSize: 13,
-                      height: 1.45,
-                      color: SLColors.textPrimary,
-                    ),
-                  ),
-                ],
-                if (_loadFailed || _loadMessage.trim().isNotEmpty) ...[
-                  SLSpacing.h10,
-                  Text(
-                    context.tr(
-                      _loadFailed
-                          ? 'device_manager_load_failed_body'
-                          : 'device_manager_status_notice',
-                    ),
-                    style: SLTheme.quicksand(
-                      fontSize: 12,
-                      height: 1.45,
-                      color: SLColors.textSecond,
-                    ),
-                  ),
-                ],
-                if (isSyncing) ...[
-                  SLSpacing.h10,
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(999),
-                    child: const LinearProgressIndicator(
-                      minHeight: 4,
-                      color: SLColors.primary,
-                      backgroundColor: SLColors.primaryLight,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmpty() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _buildNoticeCard(),
-        const Icon(Icons.devices_other, size: 72, color: Color(0xFFD81B60)),
-        SLSpacing.h16,
+      const SizedBox(height: 14),
+      if (!_loadFailed)
         Text(
-          context.tr(
-            _loadFailed
-                ? 'device_manager_load_failed_title'
-                : 'device_manager_empty',
-          ),
-          style: SLTheme.quicksand(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Colors.black54,
-          ),
+          context.tr('device_manager_empty'),
+          textAlign: TextAlign.center,
+          style: KeepsakeStyle.text(context, size: 15, weight: FontWeight.w600),
         ),
-      ],
-    );
-  }
+    ],
+  );
 
   Widget _buildDeviceActions(String id, String? status) {
     final busy = _actionPending || _isSyncingDevices;
@@ -552,16 +471,16 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
           if (status == 'pending' || status == 'blocked' || status == 'deleted')
             (
               label: context.tr('util_duyt_a4db4d'),
-              icon: Icons.check_circle_outline,
-              color: const Color(0xFF2E7D32),
+              icon: Icons.check_circle_outline_rounded,
+              color: DeviceManagerStyle.statusColor(context, 'approved'),
               onTap: () => _approve(id),
               key: 'device-approve-$id',
             ),
           if (status != 'blocked' && status != 'deleted')
             (
               label: context.tr('util_chn_483b6f'),
-              icon: Icons.block_outlined,
-              color: const Color(0xFFEF6C00),
+              icon: Icons.block_rounded,
+              color: DeviceManagerStyle.statusColor(context, 'pending'),
               onTap: () => _block(id),
               key: 'device-block-$id',
             ),
@@ -569,7 +488,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
             (
               label: context.tr('util_xa_4ed187'),
               icon: Icons.delete_outline_rounded,
-              color: const Color(0xFFC62828),
+              color: DeviceManagerStyle.statusColor(context, 'deleted'),
               onTap: () => _delete(id),
               key: 'device-delete-$id',
             ),
@@ -590,22 +509,22 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
             for (final action in actions)
               SizedBox(
                 width: width,
-                child: ElevatedButton.icon(
+                child: OutlinedButton.icon(
                   key: ValueKey(action.key),
                   onPressed: busy ? null : action.onTap,
-                  icon: Icon(action.icon, size: 16),
-                  label: Text(
-                    action.label,
-                    textAlign: TextAlign.center,
-                    style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 13,
+                  icon: Icon(action.icon, size: 17),
+                  label: Text(action.label, textAlign: TextAlign.center),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: action.color,
+                    backgroundColor: action.color.withValues(alpha: 0.05),
+                    side: BorderSide(
+                      color: action.color.withValues(alpha: 0.3),
                     ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: action.color,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
+                    textStyle: KeepsakeStyle.text(
+                      context,
+                      size: 13,
+                      weight: FontWeight.w600,
+                    ),
                     minimumSize: const Size(0, 48),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -623,244 +542,134 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
     );
   }
 
-  Widget _buildList() {
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-      itemCount: _devices.length + 1,
-      itemBuilder: (context, i) {
-        if (i == 0) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildNoticeCard(),
-              Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 12),
-                child: Text(
-                  L10nService().format('util_device_showing_count', {
-                    'count': _devices.length,
-                  }),
-                  style: SLTheme.quicksand(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    color: SLColors.textSecond,
-                  ),
-                ),
-              ),
-            ],
-          );
-        }
-        final device = _devices[i - 1];
-        final status = device['status'] as String?;
-        final id = device['deviceId'] as String? ?? '';
-        final isMe = id == _currentDeviceId;
-        final canTakeAction = _canManageDevice(id);
-
-        final statusBg = _statusBgColor(status);
-        final statusText = _statusTextColor(status);
-
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: isMe
-                  ? const Color(0xFF007AFF).withValues(alpha: 0.24)
-                  : Colors.black.withValues(alpha: 0.04),
-              width: isMe ? 1.5 : 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: isMe
-                    ? const Color(0xFF007AFF).withValues(alpha: 0.05)
-                    : Colors.black.withValues(alpha: 0.03),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Material(
-              type: MaterialType.transparency,
-              child: Theme(
-                data: Theme.of(
-                  context,
-                ).copyWith(dividerColor: Colors.transparent),
-                child: ExpansionTile(
-                  key: ValueKey('device-tile-$id'),
-                  tilePadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  leading: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: isMe
-                          ? const Color(0xFF007AFF).withValues(alpha: 0.08)
-                          : statusBg,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      _platformIcon(device['platform']),
-                      color: isMe ? const Color(0xFF007AFF) : statusText,
-                      size: 24,
-                    ),
-                  ),
-                  title: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        device['model'] ?? context.tr('util_thitbkhngr_671ddb'),
-                        style: SLTheme.quicksand(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 15,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (isMe)
-                        Container(
-                          margin: const EdgeInsets.only(top: 4),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(
-                              0xFF007AFF,
-                            ).withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            context.tr('ui_utilities_this_device_870b01'),
-                            style: SLTheme.quicksand(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF007AFF),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SLSpacing.h4,
-                      Text(
-                        device['os'] ?? '',
-                        style: SLTheme.quicksand(
-                          fontSize: 12,
-                          color: Colors.black54,
-                        ),
-                      ),
-                      SLSpacing.gapH(2),
-                      Text(
-                        _formatLastSeen(device['last_seen']),
-                        style: SLTheme.quicksand(
-                          fontSize: 11,
-                          color: Colors.black45,
-                        ),
-                      ),
-                      if (device['ip'] != null &&
-                          device['ip'] != 'unknown') ...[
-                        SLSpacing.gapH(2),
-                        Text(
-                          L10nScope.of(context).format(
-                            'ui_utilities_ip_value1_cf7f6d',
-                            {'value1': device['ip']},
-                          ),
-                          style: SLTheme.quicksand(
-                            fontSize: 11,
-                            color: Colors.black45,
-                          ),
-                        ),
-                      ],
-                      if (device['location'] != null &&
-                          device['location'] != 'unknown') ...[
-                        SLSpacing.gapH(2),
-                        Text(
-                          L10nService().format('util_device_location', {
-                            'location': device['location'],
-                          }),
-                          style: SLTheme.quicksand(
-                            fontSize: 11,
-                            color: Colors.black45,
-                          ),
-                        ),
-                      ],
-                      SLSpacing.h8,
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: statusBg,
-                          borderRadius: SLRadius.mdAll,
-                        ),
-                        child: Text(
-                          _statusLabelForTile(status, device, isMe),
-                          style: SLTheme.quicksand(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w900,
-                            color: statusText,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  children: [
-                    if (canTakeAction)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.02),
-                          borderRadius: const BorderRadius.only(
-                            bottomLeft: Radius.circular(24),
-                            bottomRight: Radius.circular(24),
-                          ),
-                        ),
-                        child: _buildDeviceActions(id, status),
-                      ),
-                    if (!canTakeAction)
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.015),
-                          borderRadius: const BorderRadius.only(
-                            bottomLeft: Radius.circular(24),
-                            bottomRight: Radius.circular(24),
-                          ),
-                        ),
-                        child: Text(
-                          isMe
-                              ? context.tr('util_ylthitbbna_af3295')
-                              : status == 'deleted'
-                              ? _statusLabel(status)
-                              : context.tr('util_thitbhinti_7d3436'),
-                          style: SLTheme.quicksand(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black45,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+  Widget _buildList() => ListView.builder(
+    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+    itemCount: _devices.length + 1,
+    itemBuilder: (context, index) {
+      if (index == 0) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              L10nScope.of(
+                context,
+              ).format('util_device_showing_count', {'count': _devices.length}),
+              style: KeepsakeStyle.text(
+                context,
+                size: 20,
+                weight: FontWeight.w600,
               ),
             ),
-          ),
+            const SizedBox(height: 4),
+            Text(
+              context.tr('device_manager_list_hint'),
+              style: KeepsakeStyle.text(
+                context,
+                size: 12,
+                color: KeepsakeStyle.muted(context),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildNoticeCard(),
+            const SizedBox(height: 16),
+          ],
         );
-      },
-    );
-  }
+      }
+      final device = _devices[index - 1];
+      final status = device['status'] as String?;
+      final id = device['deviceId'] as String? ?? '';
+      final isMe = id == _currentDeviceId;
+      final canTakeAction = _canManageDevice(id);
+      final statusColor = DeviceManagerStyle.statusColor(context, status);
+      final ip = device['ip']?.toString().trim() ?? '';
+      final location = device['location']?.toString().trim() ?? '';
+      final trustRole = device['trust_role'];
+      final trustLabel = switch (trustRole) {
+        'creator' => 'device_manager_role_creator',
+        'new' => 'device_manager_role_new',
+        'established' => 'device_manager_role_established',
+        'unverified' => 'device_manager_role_unverified',
+        _ => null,
+      };
+      final registeredAt = _formatTimestamp(device['trust_since']);
+      final manageAfter = isMe ? _formatTimestamp(_management['manageAfter']) : null;
+
+      return DeviceRegistryCard(
+        key: ValueKey('device-card-$id'),
+        deviceId: id,
+        model: device['model'] ?? context.tr('util_thitbkhngr_671ddb'),
+        os: device['os'] ?? '',
+        platformIcon: _platformIcon(device['platform']),
+        current: isMe,
+        badges: [
+          if (isMe)
+            DeviceStatusBadge(
+              label: context.tr('ui_utilities_this_device_870b01'),
+              icon: Icons.person_outline_rounded,
+              color: KeepsakeStyle.accent(context),
+            ),
+          DeviceStatusBadge(
+            label: _statusLabelForTile(status, device, isMe),
+            icon: DeviceManagerStyle.statusIcon(status),
+            color: statusColor,
+          ),
+          if (trustLabel != null)
+            DeviceStatusBadge(
+              label: context.tr(trustLabel),
+              icon: trustRole == 'creator' ? Icons.verified_user_outlined : trustRole == 'new' ? Icons.schedule_rounded : Icons.shield_outlined,
+              color: KeepsakeStyle.accent(context),
+            ),
+        ],
+        details: [
+          DeviceInformationRow(
+            icon: Icons.history_rounded,
+            text: _formatLastSeen(device['last_seen']),
+          ),
+          if (registeredAt != null)
+            DeviceInformationRow(
+              icon: Icons.event_outlined,
+              text: L10nScope.of(context).format('device_manager_registered_at', {'time': registeredAt}),
+            ),
+          if (manageAfter != null)
+            DeviceInformationRow(
+              icon: Icons.lock_clock_outlined,
+              text: L10nScope.of(context).format('device_manager_manage_after', {'time': manageAfter}),
+            ),
+          if (ip.isNotEmpty && ip != 'unknown')
+            DeviceInformationRow(
+              icon: Icons.language_rounded,
+              text: L10nScope.of(
+                context,
+              ).format('ui_utilities_ip_value1_cf7f6d', {'value1': ip}),
+            ),
+          if (location.isNotEmpty && location != 'unknown')
+            DeviceInformationRow(
+              icon: Icons.location_on_outlined,
+              text: L10nScope.of(
+                context,
+              ).format('util_device_location', {'location': location}),
+            ),
+          const SizedBox(height: 4),
+          if (canTakeAction)
+            _buildDeviceActions(id, status)
+          else
+            Text(
+              _managementMessage(device, isMe),
+              style: KeepsakeStyle.text(
+                context,
+                size: 12,
+                color: KeepsakeStyle.muted(context),
+              ),
+            ),
+          if (isMe) ...[
+            const SizedBox(height: 8),
+            Text(
+              context.tr('device_manager_policy_hint'),
+              style: KeepsakeStyle.text(context, size: 12, color: KeepsakeStyle.muted(context)),
+            ),
+          ],
+        ],
+      );
+    },
+  );
 }

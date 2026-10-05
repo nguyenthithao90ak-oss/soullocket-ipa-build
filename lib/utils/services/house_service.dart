@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 
-import 'package:crypto/crypto.dart' as crypto;
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
@@ -18,6 +16,7 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'core/cloud_functions_helper.dart';
 import 'offline_cache_service.dart';
 import 'secure_storage_service.dart';
+import 'device_installation_identity.dart';
 
 class HouseCreationOtpRequiredException implements Exception {
   final String maskedEmail;
@@ -66,7 +65,6 @@ class HouseService {
   }
 
   firebase_auth.User? get currentUser => _auth.currentUser;
-  bool get _allowLegacyDirectCreateFallback => false;
 
   Future<void> _syncHouseIdToFirestore(
     String uid,
@@ -325,9 +323,12 @@ class HouseService {
   }
 
   Future<HttpsCallableResult<dynamic>> _callCreateHouseSecureWithRetry(
-    Map<String, dynamic> payload,
-  ) async {
+    Map<String, dynamic> payload, {
+    required String expectedUid,
+  }) async {
+    _requireCreationSession(expectedUid);
     await _refreshCallableSecurityContext(force: false);
+    _requireCreationSession(expectedUid);
     try {
       return await CloudFunctionsHelper.callSecure<dynamic>(
         'createHouseSecure',
@@ -347,13 +348,21 @@ class HouseService {
         '[HouseService] createHouseSecure security sync retry: ${AppErrorMapper.resolve(error, fallbackMessage: 'Đang thử lại đồng bộ bảo mật.').message}',
       );
       await Future.delayed(const Duration(milliseconds: 700));
+      _requireCreationSession(expectedUid);
       await _refreshCallableSecurityContext(force: true);
+      _requireCreationSession(expectedUid);
       return await CloudFunctionsHelper.callSecure<dynamic>(
         'createHouseSecure',
         payload: payload,
         timeout: const Duration(seconds: 12),
         throwOriginalException: true,
       );
+    }
+  }
+
+  void _requireCreationSession(String uid) {
+    if (_auth.currentUser?.uid != uid) {
+      throw firebase_auth.FirebaseAuthException(code: 'user-token-expired');
     }
   }
 
@@ -379,8 +388,9 @@ class HouseService {
       throw Exception('Bạn chưa đăng nhập.');
     }
 
+    final creationUid = user.uid;
     await _waitForAuthenticatedSessionReady(forceRefreshToken: true);
-    user = _auth.currentUser ?? user;
+    _requireCreationSession(creationUid);
 
     final normalizedEmail = email.trim().toLowerCase();
     final rawHouseName = houseName.trim();
@@ -398,7 +408,10 @@ class HouseService {
         ? createdWith.trim()
         : 'email';
     final deviceSnapshot = await _safeCurrentDeviceSnapshot();
-    final deviceId = (deviceSnapshot['deviceId'] ?? '').trim();
+    _requireCreationSession(creationUid);
+    final identity = await DeviceInstallationIdentity.forUid(creationUid);
+    _requireCreationSession(creationUid);
+    final deviceId = identity.deviceId;
     final deviceModel = (deviceSnapshot['model'] ?? '').trim();
     final devicePlatform = (deviceSnapshot['platform'] ?? '').trim();
     if (deviceId.isEmpty) {
@@ -407,53 +420,9 @@ class HouseService {
       );
     }
 
-    Future<String> createDirectFallback() {
-      return _createHouseDirectly(
-        email: normalizedEmail,
-        houseName: rawHouseName,
-        nameU1: normalizedNameU1,
-        nameU2: normalizedNameU2,
-        relationshipMode: normalizedRelationshipMode,
-        recoveryQuestion: normalizedRecoveryQuestion,
-        recoveryAnswer: normalizedRecoveryAnswer,
-        createdWith: normalizedCreatedWith,
-        customHouseId: customHouseId,
-      );
-    }
-
-    Future<String> createAdminDebugFallback() async {
-      final payload = <String, dynamic>{
-        'email': normalizedEmail,
-        'houseName': rawHouseName,
-        'nameU1': normalizedNameU1,
-        'nameU2': normalizedNameU2,
-        'relationshipMode': normalizedRelationshipMode,
-        'recoveryQuestion': normalizedRecoveryQuestion,
-        'recoveryAnswer': normalizedRecoveryAnswer,
-        'createdWith': normalizedCreatedWith,
-        if (deviceId.isNotEmpty) 'deviceId': deviceId,
-        if (deviceModel.isNotEmpty) 'model': deviceModel,
-        if (devicePlatform.isNotEmpty) 'platform': devicePlatform,
-        if ((customHouseId ?? '').trim().isNotEmpty)
-          'customHouseId': customHouseId!.trim(),
-      };
-      debugPrint('[HouseService] Admin debug createHouseSecure start');
-      final response = await CloudFunctionsHelper.callSecure<dynamic>(
-        'createHouseSecureAdminDebug',
-        payload: payload,
-        timeout: const Duration(seconds: 12),
-      );
-      debugPrint('[HouseService] Admin debug createHouseSecure success');
-      final resultPayload = _asStringDynamicMap(response.data);
-      final createdHouseId = resultPayload?['houseId']?.toString().trim() ?? '';
-      if (createdHouseId.isEmpty) {
-        throw Exception('Không thể tạo nhà mới lúc này.');
-      }
-      return createdHouseId;
-    }
-
     try {
       final response = await _callCreateHouseSecureWithRetry(<String, dynamic>{
+        'expectedUid': creationUid,
         'email': normalizedEmail,
         'houseName': rawHouseName,
         'nameU1': normalizedNameU1,
@@ -463,12 +432,14 @@ class HouseService {
         'recoveryAnswer': normalizedRecoveryAnswer,
         'createdWith': normalizedCreatedWith,
         if (deviceId.isNotEmpty) 'deviceId': deviceId,
+        'deviceProof': identity.proof,
         if (deviceModel.isNotEmpty) 'model': deviceModel,
         if (devicePlatform.isNotEmpty) 'platform': devicePlatform,
         if ((otp ?? '').trim().isNotEmpty) 'otp': otp!.trim(),
         if ((customHouseId ?? '').trim().isNotEmpty)
           'customHouseId': customHouseId!.trim(),
-      });
+      }, expectedUid: creationUid);
+      _requireCreationSession(creationUid);
       debugPrint('[HouseService] createHouseSecure success');
       final payload = _asStringDynamicMap(response.data);
       if (payload == null) {
@@ -486,6 +457,7 @@ class HouseService {
           nameU2: normalizedNameU2,
           relationshipMode: normalizedRelationshipMode,
         );
+        _requireCreationSession(creationUid);
       }
       return createdHouseId;
     } on HouseCreationOtpRequiredException {
@@ -495,21 +467,12 @@ class HouseService {
       if (otpRequired != null) {
         throw otpRequired;
       }
-      if (_isDebugAppCheckFailure(error) && _allowLegacyDirectCreateFallback) {
-        try {
-          return await createAdminDebugFallback();
-        } catch (adminDebugError) {
-          debugPrint(
-            '[HouseService] createHouseSecureAdminDebug failed: ${AppErrorMapper.resolve(adminDebugError, fallbackMessage: 'Không thể tạo nhà bằng kênh dự phòng.').message}',
-          );
-        }
-        debugPrint(
-          '[HouseService] createHouseSecure blocked, using direct fallback: ${AppErrorMapper.resolve(error, fallbackMessage: 'Tạo nhà bảo mật bị chặn.').message}',
-        );
-        return createDirectFallback();
-      }
-
       final message = error.message?.trim();
+      if (message == 'house_creation_in_progress' ||
+          message == 'house_creation_lease_expired' ||
+          message == 'house_creation_membership_requires_review') {
+        throw Exception(L10nService().translate('auth_signup_unavailable'));
+      }
       if (_isDeviceRequiredError(error)) {
         throw Exception(
           'Không thể xác thực thiết bị để tạo nhà. Vui lòng mở lại ứng dụng và thử lại.',
@@ -528,9 +491,6 @@ class HouseService {
       debugPrint(
         '[HouseService] createHouseSecure timed out: ${AppErrorMapper.resolve(error, fallbackMessage: 'Tạo nhà đang mất quá nhiều thời gian.').message}',
       );
-      if (_allowLegacyDirectCreateFallback) {
-        return createDirectFallback();
-      }
       throw Exception(
         'Tạo ngôi nhà đang mất quá nhiều thời gian. Vui lòng thử lại.',
       );
@@ -1003,162 +963,6 @@ class HouseService {
     return null;
   }
 
-  Future<String> _createHouseDirectly({
-    required String email,
-    required String houseName,
-    required String nameU1,
-    required String nameU2,
-    required String relationshipMode,
-    required String recoveryQuestion,
-    required String recoveryAnswer,
-    required String createdWith,
-    String? customHouseId,
-  }) async {
-    final user = _auth.currentUser;
-    if (user == null) {
-      throw Exception('Bạn chưa đăng nhập.');
-    }
-
-    final currentHouseId = await getCurrentHouseId(preferFresh: true);
-    if (currentHouseId != null && currentHouseId.isNotEmpty) {
-      final ownerUid =
-          (await _dbRef.child('houses/$currentHouseId/owner_uid').get()).value
-              ?.toString()
-              .trim() ??
-          '';
-      if (ownerUid == user.uid) {
-        throw Exception('Tài khoản này đã có nhà. Vui lòng vào nhà hiện tại.');
-      }
-    }
-
-    final now = DateTime.now();
-    final nowMs = now.millisecondsSinceEpoch;
-    final startDate = now.toIso8601String().substring(0, 10);
-
-    String newHouseId;
-    if (customHouseId != null && customHouseId.trim().isNotEmpty) {
-      newHouseId = customHouseId.trim().toUpperCase();
-      if (!RegExp(r'^[A-Z0-9_]{3,20}$').hasMatch(newHouseId)) {
-        throw Exception(
-          'Mã nhà tự chọn chỉ gồm chữ, số, dấu gạch dưới và từ 3 đến 20 ký tự.',
-        );
-      }
-      final existsSnap = await _dbRef
-          .child('houses/$newHouseId/owner_uid')
-          .get();
-      if (existsSnap.exists) {
-        throw Exception('Mã nhà này đã tồn tại, vui lòng chọn mã khác.');
-      }
-    } else {
-      newHouseId = await _generateUniqueHouseId();
-    }
-    final resolvedHouseName = houseName.trim().isNotEmpty
-        ? houseName.trim()
-        : _defaultHouseName;
-    final hasRecovery =
-        recoveryQuestion.isNotEmpty && recoveryAnswer.isNotEmpty;
-
-    final updates = <String, dynamic>{
-      'houses/$newHouseId': {
-        'houseName': resolvedHouseName,
-        'owner_uid': user.uid,
-        'security': {
-          'email': email,
-          if (hasRecovery)
-            'recovery': {
-              'question': recoveryQuestion,
-              'answerHash': _hashRecoveryAnswer(recoveryAnswer),
-              'configuredAt': nowMs,
-            },
-        },
-        'members': {
-          user.uid: {
-            'uid': user.uid,
-            'displayName': (user.displayName ?? '').trim(),
-            'photoURL': (user.photoURL ?? '').trim(),
-            'role': 'user1',
-            'joinedAt': nowMs,
-          },
-        },
-        'createdWith': createdWith,
-        'createdAt': nowMs,
-        'updatedAt': nowMs,
-        'settings': {
-          'theme': 'theme-auto',
-          'countdownSizePx': 400,
-          'startDate': startDate,
-          'font': "'Quicksand', sans-serif",
-          'privacy': 'public',
-          'friendRequestPolicy': 'all',
-          'friendRequestLimit': 30,
-          'homeBlockTone': 'theme',
-          'countdownStyle': 'default',
-          'houseName': resolvedHouseName,
-          'nameU1': nameU1,
-          'nameU2': nameU2,
-          'dayUnit': 'ngày yêu',
-          'avtUser1': '',
-          'avtUser2': '',
-          'houseAvatar': '',
-          'relationshipMode': relationshipMode,
-          'updatedAt': nowMs,
-        },
-      },
-      'house_profiles/$newHouseId': {
-        'houseName': resolvedHouseName,
-        'nameU1': nameU1,
-        'nameU2': nameU2,
-        'startDate': startDate,
-        'dayUnit': 'ngày yêu',
-        'relationshipMode': relationshipMode,
-        'houseAvatar': '',
-        'avatar': '',
-        'settings': {
-          'houseName': resolvedHouseName,
-          'houseAvatar': '',
-          'relationshipMode': relationshipMode,
-          'startDate': startDate,
-          'dayUnit': 'ngày yêu',
-          'nameU1': nameU1,
-          'nameU2': nameU2,
-        },
-        'updatedAt': nowMs,
-        'updated_at': nowMs,
-      },
-      'houses_public/$newHouseId': {
-        'houseName': resolvedHouseName,
-        'startDate': startDate,
-        'dayUnit': 'ngày yêu',
-        'relationshipMode': relationshipMode,
-        'houseAvatar': '',
-        'avatar': '',
-        'settings': {
-          'houseName': resolvedHouseName,
-          'houseAvatar': '',
-          'relationshipMode': relationshipMode,
-          'startDate': startDate,
-          'dayUnit': 'ngày yêu',
-        },
-        'recovery_hint': _maskEmail(email),
-        'recovery_ready': email.isNotEmpty,
-        'updatedAt': nowMs,
-        'updated_at': nowMs,
-      },
-      'users/${user.uid}/houseId': newHouseId,
-      'users/${user.uid}/house_id': newHouseId,
-      'users/${user.uid}/email': email,
-      'users/${user.uid}/role': 'owner',
-    };
-
-    if (currentHouseId != null && currentHouseId.isNotEmpty) {
-      updates['houses/$currentHouseId/members/${user.uid}'] = null;
-      updates['houses/$currentHouseId/fcmTokens/${user.uid}'] = null;
-    }
-
-    await _dbRef.update(updates);
-    return newHouseId;
-  }
-
   Future<void> _syncCreatedHouseDefaults({
     required String houseId,
     required String houseName,
@@ -1202,51 +1006,5 @@ class HouseService {
         updatedAt: nowMs,
       ),
     });
-  }
-
-  Future<String> _generateUniqueHouseId() async {
-    for (var attempt = 0; attempt < 6; attempt++) {
-      final candidate = _generateHouseId();
-      final snapshot = await _dbRef.child('houses/$candidate/owner_uid').get();
-      if (!snapshot.exists) {
-        return candidate;
-      }
-    }
-    throw Exception('Không thể tạo mã nhà mới lúc này.');
-  }
-
-  String _generateHouseId() {
-    final base36 = DateTime.now().millisecondsSinceEpoch
-        .toRadixString(36)
-        .toUpperCase();
-    final suffix = Random.secure()
-        .nextInt(0x10000)
-        .toRadixString(16)
-        .padLeft(4, '0')
-        .toUpperCase();
-    return 'NH_$base36$suffix';
-  }
-
-  String _hashRecoveryAnswer(String answer) {
-    return crypto.sha256
-        .convert(utf8.encode(answer.trim().toLowerCase()))
-        .toString();
-  }
-
-  String _maskEmail(String email) {
-    final normalized = email.trim().toLowerCase();
-    final parts = normalized.split('@');
-    if (parts.length != 2 || parts.first.isEmpty) {
-      return '';
-    }
-    final local = parts.first;
-    final domain = parts.last;
-    if (local.length <= 4) {
-      return '${local[0]}${List.filled(local.length - 1, '*').join()}@$domain';
-    }
-    final firstTwo = local.substring(0, 2);
-    final lastTwo = local.substring(local.length - 2);
-    final middleMask = List.filled(local.length - 4, '*').join();
-    return '$firstTwo$middleMask$lastTwo@$domain';
   }
 }

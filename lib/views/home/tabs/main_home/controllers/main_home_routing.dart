@@ -65,12 +65,52 @@ extension _MainHomeRouting on _MainHomeTabState {
           houseId: _houseId!,
           startDate: _houseSettings?['startDate']?.toString(),
           houseSettings: _houseSettings ?? {},
-          homeCalendarEvents: _homeCalendarEvents,
+          homeCalendarEvents: _homeCalendarSnapshotMatchesScope
+              ? _homeCalendarEvents : const [],
         ),
       ),
     ).then((_) {
       _fetchHouseData(preserveVisibleState: true);
     });
+  }
+
+  Future<void> _openHomeCalendar({
+    required String expectedUid,
+    required String expectedHouseId,
+    HomeCalendarPlan? plan,
+  }) async {
+    bool isCurrent() =>
+        mounted &&
+        _auth.currentUser?.uid == expectedUid &&
+        _houseId == expectedHouseId;
+    if (!isCurrent() || _homeCalendarRouteIsOpen) return;
+    if (plan != null &&
+        (!_homeCalendarSnapshotMatchesScope ||
+            !_homeCalendarEvents.any(
+              (row) =>
+                  row['id']?.toString() == plan.id &&
+                  row['dateKey'] == plan.dateKey,
+            ))) {
+      return;
+    }
+    _homeCalendarRouteIsOpen = true;
+    _pauseHomeCalendarEvents();
+    try {
+      await Navigator.of(context).push(
+        SLRoute(
+          builder: (_) => CalendarScreen(
+            houseId: expectedHouseId,
+            myName: _resolveMyName(),
+            initialDateKey: plan?.dateKey,
+          ),
+        ),
+      );
+    } finally {
+      _homeCalendarRouteIsOpen = false;
+      if (isCurrent() && _isTabActive) {
+        _listenHomeCalendarEvents(expectedHouseId);
+      }
+    }
   }
 
   Future<void> _openSoulMergeChat() async {
@@ -85,5 +125,46 @@ extension _MainHomeRouting on _MainHomeTabState {
       context,
       SLRoute(builder: (_) => const SoulMergeScreen()),
     );
+  }
+
+  Future<void> _openTogetherHub({required bool isSingle}) async {
+    final houseId = _houseId?.trim() ?? '';
+    final uid = _auth.currentUser?.uid;
+    if (!mounted || houseId.isEmpty || uid == null || _togetherHubIsOpen) return;
+
+    bool isCurrentScope() =>
+        mounted && _auth.currentUser?.uid == uid && _houseId == houseId;
+
+    _togetherHubIsOpen = true;
+    try {
+      await Navigator.of(context).push(
+        SLRoute(
+          builder: (_) => TogetherHubScreen(
+            isSingle: isSingle,
+            onOpenActivity: (activity) async {
+              if (!isCurrentScope()) return;
+              if (activity == TogetherActivity.soulMerge) {
+                if (isSingle || _homeToolRelationshipMode() != 'couple') return;
+                await _openSoulMergeChat();
+                return;
+              }
+
+              final Widget? destination = switch (activity) {
+                TogetherActivity.soulBlock => const BlockBlastGame(),
+                TogetherActivity.drawing => _buildEmbeddedHomeTool('drawing'),
+                TogetherActivity.collage => _buildEmbeddedHomeTool('collage'),
+                TogetherActivity.soulMerge => null,
+              };
+              if (destination == null || !isCurrentScope()) return;
+              await Navigator.of(context).push(
+                SLRoute(builder: (_) => destination),
+              );
+            },
+          ),
+        ),
+      );
+    } finally {
+      _togetherHubIsOpen = false;
+    }
   }
 }

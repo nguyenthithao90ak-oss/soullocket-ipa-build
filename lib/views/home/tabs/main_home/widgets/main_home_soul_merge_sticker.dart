@@ -354,7 +354,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                 },
                 child: Tooltip(
                   message: context.tr('p4_soul_title'),
-                  child: const SoulMergeMascot(size: 52, framed: true),
+                  child: const SoulMergeMark(size: 52, framed: true),
                 ),
               ),
             ],

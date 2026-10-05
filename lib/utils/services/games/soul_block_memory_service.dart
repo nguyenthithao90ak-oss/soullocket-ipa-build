@@ -27,8 +27,10 @@ class SoulBlockPhoto {
 }
 
 class _SoulCandidateCache {
-  _SoulCandidateCache(this.items) : age = Stopwatch()..start();
+  _SoulCandidateCache(this.items, this.limit) : age = Stopwatch()..start();
   final List<Map<String, dynamic>> items;
+  // Số bản ghi đã truy vấn; bản cache lớn hơn dùng lại được cho yêu cầu nhỏ hơn.
+  final int limit;
   final Stopwatch age;
 }
 
@@ -43,20 +45,30 @@ class SoulBlockMemoryService {
   String _historyKey(String uid, String houseId) =>
       'soul_block_photo_history_v1:${jsonEncode([uid, houseId])}';
 
+  /// Số bản ghi Nhật ký mặc định cho game; ảnh bìa chỉ cần ít hơn.
+  static const int defaultCandidateLimit = 80;
+
+  // Mỗi bản ghi ~0,6 KB; giữ danh sách 10 phút để mở lại Nhật ký/game không tải lại.
+  static const Duration _candidateCacheTtl = Duration(minutes: 10);
+
   Future<List<Map<String, dynamic>>> candidates(
     String houseId, {
     String? preferredId,
     bool next = false,
     int diaryWidth = 640,
+    int limit = defaultCandidateLimit,
   }) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null || houseId.trim().isEmpty) return const [];
     final key = jsonEncode([uid, houseId]);
+    final queryLimit = limit.clamp(1, defaultCandidateLimit);
     final cached = _candidateCache[key];
     final items =
-        cached != null && cached.age.elapsed < const Duration(minutes: 3)
+        cached != null &&
+            cached.limit >= queryLimit &&
+            cached.age.elapsed < _candidateCacheTtl
         ? cached.items.map(Map<String, dynamic>.from).toList()
-        : await _readCandidates(uid, houseId, key);
+        : await _readCandidates(uid, houseId, key, queryLimit);
     if (FirebaseAuth.instance.currentUser?.uid != uid) return const [];
     // Ván đang lưu giữ đúng ảnh, kể cả ảnh đã nằm ngoài 80 nhật ký mới nhất.
     if (!next &&
@@ -112,12 +124,14 @@ class SoulBlockMemoryService {
     String uid,
     String houseId,
     String key,
+    int limit,
   ) async {
-    final pending = _candidateLoads.putIfAbsent(key, () async {
+    final loadKey = '$key|$limit';
+    final pending = _candidateLoads.putIfAbsent(loadKey, () async {
       final snapshot = await FirebaseDatabase.instance
           .ref('houses/$houseId/memories')
           .orderByChild('ts')
-          .limitToLast(80)
+          .limitToLast(limit)
           .get()
           .timeout(const Duration(seconds: 12));
       if (FirebaseAuth.instance.currentUser?.uid != uid) {
@@ -137,7 +151,7 @@ class SoulBlockMemoryService {
           }
         }
       }
-      _candidateCache[key] = _SoulCandidateCache(items);
+      _candidateCache[key] = _SoulCandidateCache(items, limit);
       while (_candidateCache.length > 2) {
         _candidateCache.remove(_candidateCache.keys.first);
       }
@@ -152,7 +166,9 @@ class SoulBlockMemoryService {
       }
       rethrow;
     } finally {
-      if (identical(_candidateLoads[key], pending)) _candidateLoads.remove(key);
+      if (identical(_candidateLoads[loadKey], pending)) {
+        _candidateLoads.remove(loadKey);
+      }
     }
   }
 

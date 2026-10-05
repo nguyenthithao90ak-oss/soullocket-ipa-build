@@ -207,7 +207,13 @@ class SoulBlockImageCache {
               data.offsetInBytes,
               data.lengthInBytes,
             );
-            await disk.write(uid, key, resized, current);
+            await disk.write(
+              uid,
+              key,
+              resized,
+              current,
+              memoryTag: PrivateImageDiskCache.memoryTag(uid, houseId, id),
+            );
             if (kDebugMode) {
               debugPrint(
                 '[SoulBlockPhoto] one image GET; cachedBytes=${resized.length}',

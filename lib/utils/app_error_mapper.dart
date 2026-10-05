@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -177,6 +178,18 @@ class AppErrorMapper {
   }) {
     final code = error.code.toLowerCase();
     final message = cleanMessage(error.message);
+
+    if (error is FirebaseFunctionsException && code == 'failed-precondition') {
+      final details = error.details;
+      final reason = details is Map ? details['reason'] : error.message;
+      final key = switch (reason) {
+        'creator_protected' => 'device_manager_creator_protected',
+        'device_too_new' => 'device_manager_device_too_new',
+        'device_unverified' => 'device_manager_device_unverified_permission',
+        _ => null,
+      };
+      if (key != null) return AppErrorInfo(kind: AppErrorKind.user, message: L10nService().translate(key));
+    }
 
     if (error.plugin == 'firebase_app_check' &&
         code != 'network-request-failed' &&

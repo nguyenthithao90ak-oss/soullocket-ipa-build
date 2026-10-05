@@ -83,6 +83,18 @@ enum StickerGesture {
   sing,
 }
 
+enum StickerArtStyle {
+  duck,
+  plush,
+  comic,
+  watercolor,
+  pixel,
+  space,
+  glossy,
+  paper,
+  journal,
+}
+
 @immutable
 class LivingStickerScene {
   const LivingStickerScene(
@@ -91,6 +103,8 @@ class LivingStickerScene {
     this.prop,
     this.accent = const Color(0xFFE9799B),
     this.detail,
+    this.artStyle,
+    this.artworkId,
   });
 
   final StickerSubject subject;
@@ -98,6 +112,8 @@ class LivingStickerScene {
   final StickerSubject? prop;
   final Color accent;
   final String? detail;
+  final StickerArtStyle? artStyle;
+  final String? artworkId;
 
   @override
   bool operator ==(Object other) =>
@@ -106,10 +122,13 @@ class LivingStickerScene {
       other.gesture == gesture &&
       other.prop == prop &&
       other.accent == accent &&
-      other.detail == detail;
+      other.detail == detail &&
+      other.artStyle == artStyle &&
+      other.artworkId == artworkId;
 
   @override
-  int get hashCode => Object.hash(subject, gesture, prop, accent, detail);
+  int get hashCode =>
+      Object.hash(subject, gesture, prop, accent, detail, artStyle, artworkId);
 }
 
 /// Ánh xạ theo ý nghĩa, không gán hình ngẫu nhiên theo hash hoặc số thứ tự.
@@ -487,9 +506,36 @@ abstract final class LivingStickerCatalog {
 
   static LivingStickerScene? find(String reference) {
     const prefix = 'soullocket://sticker/';
-    return scenes[reference.startsWith(prefix)
+    final id = reference.startsWith(prefix)
         ? reference.substring(prefix.length)
-        : reference];
+        : reference;
+    final scene = scenes[id];
+    if (scene == null) return null;
+    final style = artStyleFor(id);
+    return style == null
+        ? scene
+        : LivingStickerScene(
+            scene.subject,
+            scene.gesture,
+            prop: scene.prop,
+            accent: scene.accent,
+            detail: scene.detail,
+            artStyle: style,
+            artworkId: id,
+          );
+  }
+
+  static StickerArtStyle? artStyleFor(String id) {
+    if (id.startsWith('merge_joy_')) return StickerArtStyle.duck;
+    if (id.startsWith('merge_love_')) return StickerArtStyle.plush;
+    if (id.startsWith('mood_')) return StickerArtStyle.comic;
+    if (id.startsWith('merge_comfort_')) return StickerArtStyle.watercolor;
+    if (id.startsWith('merge_playful_')) return StickerArtStyle.pixel;
+    if (id.startsWith('novelty_')) return StickerArtStyle.space;
+    if (id.startsWith('heart_')) return StickerArtStyle.glossy;
+    if (id.startsWith('motion_')) return StickerArtStyle.paper;
+    if (id.startsWith('diary_')) return StickerArtStyle.journal;
+    return null;
   }
 
   static const utilitySubjects = <String, StickerSubject>{

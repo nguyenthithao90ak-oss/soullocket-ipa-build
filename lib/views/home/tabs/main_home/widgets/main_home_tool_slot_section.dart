@@ -266,19 +266,53 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
           isSingle: isSingle,
           onOpenDiary: widget.onOpenDiary,
           onOpenChat: () => unawaited(_openSoulMergeChat()),
-          onOpenCalendar: () {
-            final tool = _buildEmbeddedHomeTool('calendar');
-            if (tool == null) return;
-            Navigator.of(context).push(SLRoute(builder: (_) => tool));
-          },
-          onOpenPairing: () => Navigator.of(context).push(
-            SLRoute(builder: (_) => const PairingDashboardScreen()),
+          onOpenCalendar: () => unawaited(
+            _openHomeCalendar(expectedUid: uid, expectedHouseId: houseId),
           ),
+          upcomingPlans: isSingle
+              ? null
+              : HomeUpcomingPlans(
+                  plans: _homeCalendarSnapshotMatchesScope
+                      ? HomeCalendarPlan.upcoming(
+                          _homeCalendarEvents,
+                          now: CalendarTimeZone.fromMilliseconds(
+                            DateTime.now().millisecondsSinceEpoch,
+                            MarketService.instance.preferences.timeZoneId,
+                          ),
+                        )
+                      : const [],
+                  loadState: _homeCalendarSnapshotMatchesScope
+                      ? _homeCalendarLoadState
+                      : HomeCalendarLoadState.loading,
+                  displayFormat: CalendarDisplayFormat.forLocale(
+                    Localizations.localeOf(context),
+                    MarketService.instance.marketCode,
+                  ),
+                  use24HourFormat:
+                      MarketService.instance.preferences.use24HourFormat,
+                  onOpenPlan: (plan) => unawaited(
+                    _openHomeCalendar(
+                      expectedUid: uid,
+                      expectedHouseId: houseId,
+                      plan: plan,
+                    ),
+                  ),
+                  onRetry: () {
+                    if (!mounted ||
+                        _auth.currentUser?.uid != uid ||
+                        _houseId != houseId) {
+                      return;
+                    }
+                    _listenHomeCalendarEvents(houseId);
+                  },
+                ),
+          onOpenPairing: () => Navigator.of(
+            context,
+          ).push(SLRoute(builder: (_) => const PairingDashboardScreen())),
+          onOpenTogether: () => unawaited(_openTogetherHub(isSingle: isSingle)),
         ),
         if (!isSingle)
-          HomeCompanionJourneyCard(
-            key: ValueKey('home-journey-$uid-$houseId'),
-          ),
+          HomeCompanionJourneyCard(key: ValueKey('home-journey-$uid-$houseId')),
       ],
     );
   }

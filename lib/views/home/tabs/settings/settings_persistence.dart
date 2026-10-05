@@ -331,6 +331,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
       if (mounted) {
         setState(() {
           _isVipActive = false;
+          _vipBadgeHint = null;
           _vipPlanLabel = vipPlanSettingLabel;
           _vipExpiryLabel = activeLabel;
           _vipPlanCode = '';
@@ -347,6 +348,8 @@ extension _SettingsTabPersistence on _SettingsTabState {
           throw Exception();
         },
       );
+      // Nhãn gói đọc context; người dùng có thể đã rời Cài đặt khi chờ.
+      if (!mounted) return;
 
       final vipActive = access.isVip;
       final planCode = access.planId;
@@ -361,6 +364,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
       if (mounted) {
         setState(() {
           _isVipActive = vipActive;
+          _vipBadgeHint = null;
           _vipPlanLabel = planLabel;
           _vipExpiryLabel = expiryLabel;
           _vipPlanCode = planCode;
@@ -371,6 +375,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
     } catch (error) {
       debugPrint('[Settings] PurchaseService VIP lookup failed: $error');
     }
+    if (!mounted) return;
 
     bool vipActive = false;
     String planLabel = freePlanLabel;
@@ -384,6 +389,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
             const Duration(seconds: 3),
             onTimeout: () => throw Exception(),
           );
+      if (!mounted) return;
       if (userVipSnap.exists && userVipSnap.value is Map) {
         final vip = Map<dynamic, dynamic>.from(userVipSnap.value as Map);
 
@@ -398,6 +404,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
               const Duration(seconds: 3),
               onTimeout: () => throw Exception(),
             );
+        if (!mounted) return;
         if (houseVipSnap.exists && houseVipSnap.value is Map) {
           final vip = Map<dynamic, dynamic>.from(houseVipSnap.value as Map);
 
@@ -415,6 +422,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
                 const Duration(seconds: 3),
                 onTimeout: () => throw Exception(),
               );
+          if (!mounted) return;
           final proUntil = _toIntOrNull(legacyProSnap.value);
           if (proUntil != null &&
               proUntil > DateTime.now().millisecondsSinceEpoch) {
@@ -431,6 +439,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
     if (mounted) {
       setState(() {
         _isVipActive = vipActive;
+        _vipBadgeHint = null;
         _vipPlanLabel = planLabel;
         _vipExpiryLabel = expiryLabel;
       });

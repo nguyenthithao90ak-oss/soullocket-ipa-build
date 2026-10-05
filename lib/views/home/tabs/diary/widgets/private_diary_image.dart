@@ -253,7 +253,17 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
           ),
         );
         if (!current() || bytes == null) return;
-        final cacheWrite = diskCache?.write(uid, diskKey, bytes, current);
+        final cacheWrite = diskCache?.write(
+          uid,
+          diskKey,
+          bytes,
+          current,
+          memoryTag: PrivateImageDiskCache.memoryTag(
+            uid,
+            widget.houseId,
+            widget.memoryId,
+          ),
+        );
         if (cacheWrite != null) unawaited(cacheWrite);
         if (!current()) return;
         provider = MemoryImage(bytes);

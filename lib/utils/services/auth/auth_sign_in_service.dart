@@ -65,6 +65,8 @@ class AuthSignInService {
   static const String wrongPasswordMessage = 'Sai mật khẩu. Vui lòng thử lại.';
   static bool _isGoogleSignInInitialized = false;
   static final _pendingSignOuts = Expando<Future<void>>();
+  static final _pendingEmailSignups =
+      Expando<Future<firebase_auth.UserCredential?>>();
   static const String _dailyLoginTrackerPrefsKey = 'il_login_tracker';
   static const Set<String> _signOutPreservedPrefsKeys = {
     _dailyLoginTrackerPrefsKey,
@@ -83,6 +85,7 @@ class AuthSignInService {
     'il_pending_signup_recovery_question',
     'il_pending_signup_recovery_answer',
     'il_pending_signup_auto_create_house',
+    'il_pending_signup_email',
     'il_imgbb_api_key',
     'il_app_lock_enabled',
     'il_use_biometrics',
@@ -318,7 +321,7 @@ class AuthSignInService {
       final userCredential = await _auth
           .signInWithEmailAndPassword(
             email: normalizedEmail,
-            password: password.trim(),
+            password: password,
           )
           .timeout(
             const Duration(seconds: 12),
@@ -945,8 +948,29 @@ class AuthSignInService {
   Future<firebase_auth.UserCredential?> registerWithEmailPassword(
     String email,
     String password,
+  ) {
+    if (_pendingEmailSignups[_auth] != null) {
+      return Future.error(
+        firebase_auth.FirebaseAuthException(code: 'too-many-requests'),
+      );
+    }
+    final operation = _registerWithEmailPassword(email, password);
+    _pendingEmailSignups[_auth] = operation;
+    return operation.whenComplete(() {
+      if (identical(_pendingEmailSignups[_auth], operation)) {
+        _pendingEmailSignups[_auth] = null;
+      }
+    });
+  }
+
+  Future<firebase_auth.UserCredential?> _registerWithEmailPassword(
+    String email,
+    String password,
   ) async {
     await _pendingSignOuts[_auth];
+    if (_auth.currentUser != null) {
+      throw firebase_auth.FirebaseAuthException(code: 'operation-not-allowed');
+    }
     if (kIsWeb) {
       throw 'Tính năng tạo tài khoản hiện không khả dụng trên nền tảng này. Vui lòng đăng nhập bằng tài khoản đã có.';
     }
@@ -956,24 +980,23 @@ class AuthSignInService {
     try {
       await _pendingSignOuts[_auth];
       final userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email.trim(),
-        password: password.trim(),
+        email: email.trim().toLowerCase(),
+        password: password,
       );
-      await recordRollingRegisterLimit();
+      final createdUser = userCredential.user;
+      if (createdUser == null) {
+        throw firebase_auth.FirebaseAuthException(code: 'user-token-expired');
+      }
+      try {
+        await recordRollingRegisterLimit();
+      } catch (_) {
+        debugPrint(
+          '[Auth] Signup succeeded; local counter could not be saved.',
+        );
+      }
+      _requireCurrentSession(createdUser.uid);
       return userCredential;
     } on firebase_auth.FirebaseAuthException catch (error) {
-      if (error.code == 'email-already-in-use') {
-        try {
-          await _pendingSignOuts[_auth];
-          final loginCredential = await _auth.signInWithEmailAndPassword(
-            email: email.trim(),
-            password: password.trim(),
-          );
-          return loginCredential;
-        } catch (_) {
-          throw handleFirebaseAuthError(error);
-        }
-      }
       throw handleFirebaseAuthError(error);
     } catch (error) {
       if (error is String) rethrow;
@@ -1459,6 +1482,10 @@ class AuthSignInService {
             kind: AppErrorKind.user,
             message: AppErrorMapper.authSyncMessage,
           );
+        }
+        if (response.statusCode == 403) {
+          // AppCheck hoac quyen hanh: tai khoan khong co lenh xoa chan
+          return null;
         }
         throw const FormatException('deletion_status_failed');
       }

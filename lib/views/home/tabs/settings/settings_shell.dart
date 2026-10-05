@@ -103,68 +103,75 @@ extension _SettingsTabShell on _SettingsTabState {
     }
   }
 
-  Future<void> _swapRole() async {
-    final fallbackErrMsg = context.tr('home_clixyra_775791');
-    final singleRoleSwapUnavailable = context.tr(
-      'settings_single_role_swap_unavailable',
-    );
-    final houseId = _houseId?.trim();
-    if (houseId != null &&
-        houseId.isNotEmpty &&
-        !await _ensureCanModifySharedInfo()) {
+  bool get _myGenderIsFemale =>
+      RoleUtils.isFemaleRole(_activeRoleKey, genderSwapped: _genderSwapped);
+
+  /// Chỉ đổi nhãn Nam/Nữ của cả nhà; chỗ user1/user2, tên và dữ liệu giữ nguyên.
+  Future<void> _pickMyGender() async {
+    final houseId = _houseId?.trim() ?? '';
+    final uid = _auth.currentUser?.uid;
+    if (houseId.isEmpty || uid == null || _relationshipMode == 'single') {
       return;
     }
+    final fallbackErrMsg = context.tr('home_clixyra_775791');
+    if (!await _ensureCanModifySharedInfo()) return;
     if (!mounted) return;
-    final roleChangeTitle = context.tr('change_role');
-    final previousRole = _activeRoleKey == 'user2' ? 'user2' : 'user1';
-    final nextRole = _activeRoleKey == 'user1' ? 'user2' : 'user1';
-    final roleTerm = _displayNameForRole(nextRole);
-
-    final prefs = await SharedPreferences.getInstance();
-
-    setState(() {
-      _activeRoleKey = nextRole;
-    });
-
-    await prefs.setString('il_role', nextRole);
-    await prefs.setString('il_user_name', roleTerm);
-    RoleUtils.roleNotifier.value = nextRole;
-
-    if (_relationshipMode == 'single') {
-      _showToast(singleRoleSwapUnavailable, success: false);
-    } else {
+    final selected = await showDialog<String>(
+      context: context,
+      useRootNavigator: true,
+      builder: (dialogContext) => GenderSelectionDialog(
+        initialRole: _myGenderIsFemale ? 'user2' : 'user1',
+        onSelected: (value) {
+          if (dialogContext.mounted && Navigator.of(dialogContext).canPop()) {
+            Navigator.of(dialogContext).pop(value);
+          }
+        },
+      ),
+    );
+    // Hộp chọn trả 'user1' cho Nam, 'user2' cho Nữ.
+    if (selected == null ||
+        !mounted ||
+        _auth.currentUser?.uid != uid ||
+        _houseId?.trim() != houseId) {
+      return;
+    }
+    final wantsFemale = selected == 'user2';
+    if (wantsFemale == _myGenderIsFemale) return;
+    final nextSwapped = wantsFemale != (_activeRoleKey == 'user2');
+    try {
+      await _dbRef
+          .child('houses/$houseId/settings/genderSwapped')
+          .set(nextSwapped);
+    } catch (error) {
+      if (!mounted) return;
       _showToast(
-        '${L10nService().translate('settings_role_swap_prefix')} $roleTerm 🎉',
-        success: true,
+        AppErrorMapper.resolve(error, fallbackMessage: fallbackErrMsg).message,
+        success: false,
       );
+      return;
     }
-
-    final resolvedHouseId =
-        (_houseId ?? await _houseService.getCurrentHouseId())?.trim();
-    if (resolvedHouseId != null && resolvedHouseId.isNotEmpty) {
-      try {
-        await PresenceService().goOffline(
-          houseId: resolvedHouseId,
-          role: previousRole,
-        );
-      } catch (e) {
-        debugPrint(
-          'swap role presence cleanup failed: ${AppErrorMapper.resolve(e, fallbackMessage: fallbackErrMsg).message}',
-        );
+    if (!mounted ||
+        _auth.currentUser?.uid != uid ||
+        _houseId?.trim() != houseId) {
+      return;
+    }
+    setState(() {
+      _genderSwapped = nextSwapped;
+      final maleName = context.tr('home_bnnam_123ef2');
+      final femaleName = context.tr('home_bnn_babaec');
+      // Chỉ đổi tên mặc định; tên người dùng tự đặt giữ nguyên.
+      if (_nameU1 == maleName || _nameU1 == femaleName) {
+        _nameU1 = nextSwapped ? femaleName : maleName;
       }
-      unawaited(
-        PushNotificationHelper.systemEvent(
-          toHouseId: resolvedHouseId,
-          type: 'role_change',
-          title: roleChangeTitle,
-          content: L10nService().format('settings_role_change_event', {
-            'from': _displayNameForRole(previousRole),
-            'to': _displayNameForRole(nextRole),
-          }),
-          extra: {'previousRole': previousRole, 'role': nextRole},
-        ),
-      );
-    }
+      if (_nameU2 == maleName || _nameU2 == femaleName) {
+        _nameU2 = nextSwapped ? maleName : femaleName;
+      }
+    });
+    _showToast(
+      L10nService().format('settings_my_gender_updated', {
+        'gender': context.tr(wantsFemale ? 'auth_gender_female' : 'auth_gender_male'),
+      }),
+    );
   }
 
   String _resolveSettingsMyName() {
@@ -662,7 +669,7 @@ extension _SettingsTabShell on _SettingsTabState {
                           ),
                         ),
                       ),
-                      if (_isVipActive) ...[
+                      if (_isVipActive || _vipBadgeHint == true) ...[
                         const SizedBox(width: 7),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -862,13 +869,14 @@ extension _SettingsTabShell on _SettingsTabState {
       _buildiOSSectionCard([
         if (_relationshipMode != 'single') ...[
           _buildiOSRow(
-            icon: Icons.swap_horiz_rounded,
+            icon: Icons.wc_rounded,
             iconBgColor: SettingsMenuStyle.blue,
-            title: _activeRoleKey == 'user1'
-                ? context.tr('settings_swap_role_to_female')
-                : context.tr('settings_swap_role_to_male'),
+            title: context.tr('settings_my_gender_title'),
+            subtitle: context.tr(
+              _myGenderIsFemale ? 'auth_gender_female' : 'auth_gender_male',
+            ),
             isDark: isDark,
-            onTap: _swapRole,
+            onTap: _pickMyGender,
           ),
           _buildDivider(isDark),
         ],

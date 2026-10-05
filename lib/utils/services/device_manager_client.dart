@@ -3,8 +3,13 @@ import 'dart:async';
 class DeviceManagerListing {
   final String houseId;
   final List<Map<String, dynamic>> devices;
+  final Map<String, dynamic> management;
 
-  const DeviceManagerListing({required this.houseId, required this.devices});
+  const DeviceManagerListing({
+    required this.houseId,
+    required this.devices,
+    this.management = const {},
+  });
 }
 
 abstract class DeviceManagerClient {

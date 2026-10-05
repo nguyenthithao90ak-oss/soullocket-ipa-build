@@ -37,7 +37,16 @@ import '../home/screens/document_viewer_screen.dart';
 import '../app_entry.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({
+    super.key,
+    this.authService,
+    this.houseService,
+    this.securityService,
+  });
+
+  final AuthService? authService;
+  final HouseService? houseService;
+  final SecurityService? securityService;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -50,6 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
       'il_pending_signup_recovery_answer';
   static const String _pendingSignupAutoCreateHousePrefsKey =
       'il_pending_signup_auto_create_house';
+  static const String _pendingSignupEmailPrefsKey = 'il_pending_signup_email';
 
   static final int _copyrightYear = DateTime.now().year;
 
@@ -58,6 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoginTab = true;
   bool _obscurePassword = false;
   bool _isLoading = false;
+  bool _authActionInProgress = false;
   bool _isSuccessTransition = false;
   bool _rememberMe = true;
   bool _acceptTerms = false;
@@ -70,10 +81,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   int _failedAuthAttempts = 0;
 
-  final AuthService _authService = AuthService();
-  final HouseService _houseService = HouseService();
+  late final AuthService _authService = widget.authService ?? AuthService();
+  late final HouseService _houseService = widget.houseService ?? HouseService();
+  late final SecurityService _securityService =
+      widget.securityService ?? SecurityService();
   final AntiSpamRateLimitService _authRateLimiter = AntiSpamRateLimitService();
-  final SecurityFlowGuard _securityFlowGuard = SecurityFlowGuard.instance;
+  late final SecurityFlowGuard _securityFlowGuard = SecurityFlowGuard.instance;
 
   String _selectedSecurityQuestion = L10nService().translate(
     'Ngày sinh của bạn?',
@@ -140,8 +153,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _rememberProxyStateAtLogin() {
     unawaited(
-      SecurityService().isProxyOrVpnActive().then(
-        SecurityService().setProxyAtLogin,
+      _securityService.isProxyOrVpnActive().then(
+        _securityService.setProxyAtLogin,
         onError: (_) {},
       ),
     );
@@ -216,10 +229,8 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
-          content: Text(
-            context.tr('chat_friendly_19'),
-          ),
-          duration: Duration(seconds: 2),
+          content: Text(context.tr('chat_friendly_19')),
+          duration: const Duration(seconds: 2),
         ),
       );
     }
@@ -308,7 +319,10 @@ class _LoginScreenState extends State<LoginScreen> {
     return role;
   }
 
-  Future<void> _persistPendingHouseSetupDraft({required String? role}) async {
+  Future<void> _persistPendingHouseSetupDraft({
+    required String email,
+    required String? role,
+  }) async {
     _prefs ??= await SharedPreferences.getInstance();
     final prefs = _prefs!;
 
@@ -345,6 +359,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     }
 
+    await prefs.setString(_pendingSignupEmailPrefsKey, email);
     await prefs.setBool(_pendingSignupAutoCreateHousePrefsKey, true);
   }
 
@@ -354,6 +369,7 @@ class _LoginScreenState extends State<LoginScreen> {
     await prefs.remove(_pendingSignupRecoveryQuestionPrefsKey);
     await prefs.remove(_pendingSignupRecoveryAnswerPrefsKey);
     await prefs.remove(_pendingSignupAutoCreateHousePrefsKey);
+    await prefs.remove(_pendingSignupEmailPrefsKey);
   }
 
   void _setAuthTab(bool isLoginTab) {
@@ -364,14 +380,38 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleAuthAction() async {
+    if (_authActionInProgress || _isLoading || _isSuccessTransition) return;
+    _authActionInProgress = true;
+    setState(() => _isLoading = true);
+    try {
+      await _performAuthAction();
+    } catch (error) {
+      if (!mounted) return;
+      _showErrorDialog(
+        AppErrorMapper.resolve(
+          error,
+          fallbackMessage: L10nService().translate(
+            _isLoginTab ? 'auth_login_unavailable' : 'auth_signup_unavailable',
+          ),
+        ).message,
+      );
+    } finally {
+      _authActionInProgress = false;
+      if (mounted && !_isSuccessTransition) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _performAuthAction() async {
     FocusScope.of(context).unfocus();
 
+    final isLoginAttempt = _isLoginTab;
     final email = _emailController.text.trim().toLowerCase();
     final password = _passwordController.text;
     var shouldClearPendingHouseSetupDraft = false;
     var handedOffToAppEntry = false;
     String? sessionRole;
-    bool didAutoLogin = false;
 
     if (email.isEmpty || password.isEmpty) {
       _showErrorDialog(L10nService().translate('auth_err_empty_credentials'));
@@ -410,16 +450,14 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    if (!_isLoginTab) {
+    if (!isLoginAttempt) {
       if (!_acceptTerms) {
         _showErrorDialog(L10nService().translate('auth_err_must_agree_terms'));
         return;
       }
 
       if (password.length < 6) {
-        _showErrorDialog(
-          L10nService().translate('auth_password_min_length'),
-        );
+        _showErrorDialog(L10nService().translate('auth_password_min_length'));
         return;
       }
 
@@ -438,43 +476,20 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
 
-      setState(() => _isLoading = true);
-      try {
-        await _authService.signInWithEmailPassword(email, password);
-        didAutoLogin = true;
-        setState(() => _isLoginTab = true);
-      } catch (e) {
-        final errorString = e.toString().toLowerCase();
-        if (!errorString.contains('wrong_password') &&
-            !errorString.contains('wrong-password') &&
-            !errorString.contains('user-not-found') &&
-            !errorString.contains('account_not_found') &&
-            !errorString.contains('invalid-credential') &&
-            !errorString.contains('mật khẩu không chính xác') &&
-            !errorString.contains('sai mật khẩu') &&
-            !errorString.contains('tài khoản không tồn tại')) {
-          if (mounted) setState(() => _isLoading = false);
-          rethrow;
-        }
+      final relationshipMode = await _ensureRelationshipModeSelected(email);
+      if (relationshipMode == null) {
+        return;
       }
-      if (mounted) setState(() => _isLoading = false);
 
-      if (!didAutoLogin) {
-        final relationshipMode = await _ensureRelationshipModeSelected(email);
-        if (relationshipMode == null) {
-          return;
-        }
+      sessionRole = await _askGender(email);
+      if (sessionRole == null) {
+        return;
+      }
 
-        sessionRole = await _askGender(email);
-        if (sessionRole == null) {
-          return;
-        }
-
-        if (_failedAuthAttempts >= 2) {
-          final passed = await _showMathCaptcha();
-          if (!passed) return;
-          if (!mounted) return;
-        }
+      if (_failedAuthAttempts >= 2) {
+        final passed = await _showMathCaptcha();
+        if (!passed) return;
+        if (!mounted) return;
       }
     } else {
       sessionRole = await _readSavedGender(email);
@@ -498,7 +513,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (!mounted) return;
 
-    if (_isLoginTab) {
+    if (isLoginAttempt) {
       if (_failedAuthAttempts >= 2) {
         final passed = await _showMathCaptcha();
         if (!passed) return;
@@ -519,7 +534,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      if (_isLoginTab) {
+      if (isLoginAttempt) {
         SLNotice.showInfo(
           context,
           L10nService().translate('Đang đăng nhập... 🔐'),
@@ -527,9 +542,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         _rememberProxyStateAtLogin();
 
-        if (!didAutoLogin) {
-          await _authService.signInWithEmailPassword(email, password);
-        }
+        await _authService.signInWithEmailPassword(email, password);
 
         _prefs ??= await SharedPreferences.getInstance();
         final prefs = _prefs!;
@@ -608,10 +621,9 @@ class _LoginScreenState extends State<LoginScreen> {
       } else {
         _rememberProxyStateAtLogin();
 
-        await _persistPendingHouseSetupDraft(role: sessionRole);
         shouldClearPendingHouseSetupDraft = true;
+        await _persistPendingHouseSetupDraft(email: email, role: sessionRole);
         if (!mounted) {
-          shouldClearPendingHouseSetupDraft = false;
           return;
         }
         debugPrint('[Auth][LoginScreen] start registerWithEmailPassword');
@@ -638,20 +650,20 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       _failedAuthAttempts++;
-      if (!_isLoginTab && shouldClearPendingHouseSetupDraft) {
+      if (!isLoginAttempt && shouldClearPendingHouseSetupDraft) {
         await _clearPendingHouseSetupDraft();
       }
 
       final l10n = L10nService();
       final errorInfo = AppErrorMapper.resolve(
         e,
-        fallbackMessage: _isLoginTab
+        fallbackMessage: isLoginAttempt
             ? l10n.translate('auth_login_unavailable')
             : l10n.translate('auth_signup_unavailable'),
       );
 
       final isAccountNotFound =
-          _isLoginTab &&
+          isLoginAttempt &&
           (errorInfo.message.contains('Tài khoản không tồn tại') ||
               errorInfo.message.contains('Account does not exist'));
 
@@ -678,7 +690,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final showRecovery =
           !isAccountNotFound &&
-          _isLoginTab &&
+          isLoginAttempt &&
           (AppErrorMapper.shouldOfferPasswordRecovery(e) ||
               AppErrorMapper.shouldOfferPasswordRecovery(errorInfo.message));
       if (!mounted) return;
@@ -767,6 +779,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _handleSocialLogin(String provider) async {
+    if (_authActionInProgress || _isLoading || _isSuccessTransition) return;
     var handedOffToAppEntry = false;
 
     if (!SocialAuthActionHelper.isSupportedProvider(provider)) {
@@ -973,8 +986,12 @@ class _LoginScreenState extends State<LoginScreen> {
           contentBuilder: (compact) => AuthPanelShell(
             compact: compact,
             isLoginTab: _isLoginTab,
-            onSelectLogin: () => _setAuthTab(true),
-            onSelectRegister: () => _setAuthTab(false),
+            onSelectLogin: () {
+              if (!_authActionInProgress && !_isLoading) _setAuthTab(true);
+            },
+            onSelectRegister: () {
+              if (!_authActionInProgress && !_isLoading) _setAuthTab(false);
+            },
             authSection: _isLoginTab
                 ? LoginShell(
                     emailController: _emailController,
@@ -1189,9 +1206,7 @@ class _SyncGuideDialogContentState extends State<_SyncGuideDialogContent>
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  _l10n.translate(
-                    'auth_pairing_account_desc',
-                  ),
+                  _l10n.translate('auth_pairing_account_desc'),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontFamily: 'Quicksand',
@@ -1205,27 +1220,21 @@ class _SyncGuideDialogContentState extends State<_SyncGuideDialogContent>
                 _buildStep(
                   number: '1',
                   title: _l10n.translate('auth_pairing_account_title'),
-                  description: _l10n.translate(
-                    'auth_pairing_account_desc',
-                  ),
+                  description: _l10n.translate('auth_pairing_account_desc'),
                   icon: Icons.person_outline_rounded,
                   accent: const Color(0xFFE06686),
                 ),
                 _buildStep(
                   number: '2',
                   title: _l10n.translate('auth_pairing_code_title'),
-                  description: _l10n.translate(
-                    'auth_pairing_code_desc',
-                  ),
+                  description: _l10n.translate('auth_pairing_code_desc'),
                   icon: Icons.qr_code_2_rounded,
                   accent: const Color(0xFF8771C7),
                 ),
                 _buildStep(
                   number: '3',
                   title: _l10n.translate('auth_pairing_sync_title'),
-                  description: _l10n.translate(
-                    'auth_pairing_sync_desc',
-                  ),
+                  description: _l10n.translate('auth_pairing_sync_desc'),
                   icon: Icons.favorite_outline_rounded,
                   accent: const Color(0xFF4F9B90),
                   isLast: true,
@@ -1253,9 +1262,7 @@ class _SyncGuideDialogContentState extends State<_SyncGuideDialogContent>
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          _l10n.translate(
-                            'auth_pairing_restore_hint',
-                          ),
+                          _l10n.translate('auth_pairing_restore_hint'),
                           style: const TextStyle(
                             fontFamily: 'Quicksand',
                             fontSize: 10.4,

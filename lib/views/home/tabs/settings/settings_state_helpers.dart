@@ -583,8 +583,11 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
   }
 
   Future<void> _initVipServices() async {
+    // Trạng thái PRO đọc từ RTDB, không cần chờ kết nối cửa hàng mới hiện.
+    unawaited(_loadVipStatus());
     try {
       await PurchaseService().initialize();
+      if (!mounted) return;
       await _loadVipStatus();
     } catch (_) {
       // Store có thể không hỗ trợ trên web/emulator; giữ im lặng để không chặn UI.
@@ -598,6 +601,20 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
       _settingsIdentityLoadFailed = failed;
       if (!failed) _settingsIdentityReady = true;
     });
+  }
+
+  /// Vai chỉ dùng cho khung hình đầu; dữ liệu server vẫn ghi đè sau đó.
+  Future<String?> _readSettingsRoleHint() async {
+    final prefsRole = OfflineCacheService.getPrefsSync()?.getString('il_role');
+    if (prefsRole == 'user1' || prefsRole == 'user2') return prefsRole;
+    try {
+      final secureRole = await SecureStorageService.instance
+          .read(SecureStorageService.keyRole)
+          .timeout(const Duration(seconds: 2));
+      return secureRole == 'user1' || secureRole == 'user2' ? secureRole : null;
+    } catch (_) {
+      return null;
+    }
   }
 
   String _normalizeSettingsRoleKey(String? role) {
@@ -631,8 +648,8 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
 
     final loveDaysUnitMsg = context.tr('home_ngyyu_722b21');
     final loveHouseDefaultName = context.tr('home_nginhtnhyu_dbebce');
-    final maleRoleName = context.tr('role_male');
-    final femaleRoleName = context.tr('role_female');
+    final maleRoleName = context.tr('home_bnnam_123ef2');
+    final femaleRoleName = context.tr('home_bnn_babaec');
 
     try {
       if (!_settingsIdentityReady) {
@@ -651,19 +668,32 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
           _avatarUrl2 = '';
           _nameU1 = maleRoleName;
           _nameU2 = femaleRoleName;
+          _genderSwapped = false;
           _relationshipMode = 'single';
           _isCoupleConnected = false;
         });
       }
       _houseId = resolvedHouseId;
-      final results = await Future.wait([
-        _authService.syncRelationshipModeForCurrentUser(
-          user: user,
-          houseId: _houseId,
-        ),
-        _loadPendingAccountDeletionState(),
-      ]).timeout(const Duration(seconds: 10));
-      final syncedRelationshipMode = results[0] as String?;
+      if (!_settingsIdentityReady && (resolvedHouseId ?? '').isNotEmpty) {
+        // House đã resolve local (prefs/secure storage): dựng ngay từ cache
+        // Home thay vì chờ các truy vấn mạng bên dưới.
+        final roleHint = await _readSettingsRoleHint();
+        if (!mounted || _auth.currentUser?.uid != user.uid) return;
+        if (!_settingsIdentityReady && _houseId == resolvedHouseId) {
+          setState(
+            () => _restoreSettingsInitialIdentity(
+              houseId: resolvedHouseId,
+              role: roleHint,
+            ),
+          );
+        }
+      }
+      // Trạng thái xóa tài khoản gọi HTTP riêng và có cờ tải riêng trong panel
+      // tài khoản; không để nó chặn danh sách Cài đặt.
+      unawaited(_loadPendingAccountDeletionState());
+      final syncedRelationshipMode = await _authService
+          .syncRelationshipModeForCurrentUser(user: user, houseId: _houseId)
+          .timeout(const Duration(seconds: 10));
       if (!mounted || _auth.currentUser?.uid != user.uid) return;
       _bindBreakupRequestWatcher();
 
@@ -735,8 +765,13 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
                         data['homeShowHouseName'] == 'true')
                   : false;
               _loveDate = data['startDate'] ?? '';
-              _nameU1 = data['nameU1'] ?? maleRoleName;
-              _nameU2 = data['nameU2'] ?? femaleRoleName;
+              _genderSwapped = RoleUtils.readGenderSwapped(data);
+              _nameU1 =
+                  data['nameU1'] ??
+                  (_genderSwapped ? femaleRoleName : maleRoleName);
+              _nameU2 =
+                  data['nameU2'] ??
+                  (_genderSwapped ? maleRoleName : femaleRoleName);
               _avatarUrl1 = data['avtUser1'] ?? '';
               _avatarUrl2 = data['avtUser2'] ?? '';
               _dobU1 = data['dobU1'] ?? '';

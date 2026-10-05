@@ -4,6 +4,8 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
 import 'package:soullocket_app/widgets/living_sticker_packs.dart';
 
+import 'soul_merge_design.dart';
+
 class StickerBottomSheet extends StatefulWidget {
   const StickerBottomSheet({
     super.key,
@@ -49,13 +51,14 @@ class _StickerBottomSheetState extends State<StickerBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = SoulMergeColors(context);
     final selectedPack = _packs[_selectedIndex];
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
 
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: Color(0xFFFFFCFD),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
       ),
       child: Column(
         children: [
@@ -92,7 +95,7 @@ class _StickerBottomSheetState extends State<StickerBottomSheet> {
                       style: SLTheme.quicksand(
                         fontSize: 17,
                         fontWeight: FontWeight.w900,
-                        color: const Color(0xFF382D36),
+                        color: colors.ink,
                       ),
                     ),
                   ),
@@ -109,7 +112,7 @@ class _StickerBottomSheetState extends State<StickerBottomSheet> {
             ),
           ],
           SizedBox(
-            height: 76,
+            height: 90,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: ListView(
@@ -118,7 +121,7 @@ class _StickerBottomSheetState extends State<StickerBottomSheet> {
                   final pack = _packs[index];
                   final selected = index == _selectedIndex;
                   return SizedBox(
-                    width: 72,
+                    width: 94,
                     child: Semantics(
                       button: true,
                       selected: selected,
@@ -152,12 +155,10 @@ class _StickerBottomSheetState extends State<StickerBottomSheet> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
-                                  pack.icon,
-                                  size: 20,
-                                  color: selected
-                                      ? pack.accent
-                                      : const Color(0xFF9B8B92),
+                                SoulLocketAnimatedSticker(
+                                  sticker: pack.stickers.first,
+                                  size: 38,
+                                  animate: false,
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
@@ -186,66 +187,110 @@ class _StickerBottomSheetState extends State<StickerBottomSheet> {
               ),
             ),
           ),
-          Container(height: 1, color: const Color(0xFFF0E8EB)),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 6),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.tr(selectedPack.titleKey),
+                        style: SLTheme.quicksand(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: colors.ink,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        context.tr(selectedPack.styleKey),
+                        style: TextStyle(fontSize: 12, color: colors.muted),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  selectedPack.stickers.length.toString(),
+                  style: TextStyle(
+                    color: colors.rose,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: AnimatedSwitcher(
               duration: disableAnimations
                   ? Duration.zero
                   : const Duration(milliseconds: 180),
-              child: GridView.builder(
-                // Tương thích cả kernel Flutter hiện dùng để chạy test.
-                // ignore: deprecated_member_use
-                cacheExtent: 0,
-                addAutomaticKeepAlives: false,
-                key: ValueKey(selectedPack.id),
-                padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 1,
-                ),
-                itemCount: selectedPack.stickers.length,
-                itemBuilder: (context, index) {
-                  final sticker = selectedPack.stickers[index];
-                  return Semantics(
-                    button: true,
-                    label: context.tr(selectedPack.titleKey),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          if (widget.closeOnSelect) Navigator.of(context).pop();
-                          widget.onStickerSelected(
-                            SoulLocketStickerCatalog.referenceFor(sticker.id),
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(20),
-                        child: Ink(
-                          decoration: BoxDecoration(
-                            color: selectedPack.surface.withValues(alpha: 0.48),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: selectedPack.accent.withValues(
-                                alpha: 0.12,
+              child: LayoutBuilder(
+                builder: (context, constraints) => GridView.builder(
+                  // Tương thích cả kernel Flutter hiện dùng để chạy test.
+                  // ignore: deprecated_member_use
+                  cacheExtent: 0,
+                  addAutomaticKeepAlives: false,
+                  key: ValueKey(selectedPack.id),
+                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: constraints.maxWidth < 350 ? 2 : 3,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1,
+                  ),
+                  itemCount: selectedPack.stickers.length,
+                  itemBuilder: (context, index) {
+                    final sticker = selectedPack.stickers[index];
+                    return Semantics(
+                      button: true,
+                      label: context.tr(selectedPack.titleKey),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            if (widget.closeOnSelect) {
+                              Navigator.of(context).pop();
+                            }
+                            widget.onStickerSelected(
+                              SoulLocketStickerCatalog.referenceFor(sticker.id),
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(20),
+                          child: Ink(
+                            decoration: BoxDecoration(
+                              color: colors.dark
+                                  ? colors.blush
+                                  : selectedPack.surface.withValues(
+                                      alpha: 0.36,
+                                    ),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: selectedPack.accent.withValues(
+                                  alpha: 0.12,
+                                ),
                               ),
                             ),
-                          ),
-                          child: Center(
-                            child: LayoutBuilder(
-                              builder: (context, constraints) =>
-                                  SoulLocketAnimatedSticker(
-                                    sticker: sticker,
-                                    size: constraints.maxWidth.clamp(0.0, 88.0),
-                                    filterQuality: FilterQuality.medium,
-                                  ),
+                            child: Center(
+                              child: LayoutBuilder(
+                                builder: (context, constraints) =>
+                                    SoulLocketAnimatedSticker(
+                                      sticker: sticker,
+                                      size: constraints.maxWidth.clamp(
+                                        0.0,
+                                        88.0,
+                                      ),
+                                      filterQuality: FilterQuality.medium,
+                                    ),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
           ),

@@ -59,7 +59,8 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
     return items;
   }
 
-  Future<List<String>> _loadWidgetDiaryImageUrlsImpl(String houseId) async {
+  /// Trả về `null` khi đọc lỗi để lần sau thử lại; danh sách rỗng là kết quả hợp lệ.
+  Future<List<String>?> _loadWidgetDiaryImageUrlsImpl(String houseId) async {
     try {
       final memoriesFuture = _dbRef
           .child('houses/$houseId/memories')
@@ -85,7 +86,7 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
           .toList(growable: false);
     } catch (error) {
       debugPrint('[MainHome] Cannot collect widget memory images: $error');
-      return const <String>[];
+      return null;
     }
   }
 
@@ -235,6 +236,7 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
         _lastLoveWidgetAccountKey = accountKey;
         _lastLoveWidgetSignature = '';
         _cachedWidgetDiaryImageUrls = const <String>[];
+        _widgetDiaryImageUrlsLoaded = false;
       }
       final startDate = settings['startDate']?.toString();
       final days = _calculateLoveDays(startDate);
@@ -276,8 +278,12 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
           ? settings['avtUser2'].toString()
           : defaultFemaleAvatarUrl;
 
-      await WidgetService.syncSleepWidgetData(houseId: houseId);
-      if (!mounted || _houseId != houseId) return;
+      // Widget giấc ngủ được làm mới khi `sleep_updated_at` đổi (listener presence);
+      // lượt đồng bộ chỉ do trạng thái online không cần đọc lại cả nhánh presence.
+      if (includeDiaryMedia) {
+        await WidgetService.syncSleepWidgetData(houseId: houseId);
+        if (!mounted || _houseId != houseId) return;
+      }
       final status1Text = _presenceStatusText('user1');
       final status2Text = _presenceStatusText('user2');
       final isOnline1 = _isPresenceDataOnlineForRole(
@@ -298,16 +304,25 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       if (!_isTabActive) return;
       final dobU1 = settings['dobU1']?.toString() ?? '';
       final dobU2 = settings['dobU2']?.toString() ?? '';
-      final diaryImageUrls = appearance.showDiaryOnWidget
-          ? (includeDiaryMedia || _cachedWidgetDiaryImageUrls.isEmpty
-                ? await _loadWidgetDiaryImageUrlsImpl(houseId)
-                : _cachedWidgetDiaryImageUrls)
-          : const <String>[];
+      // Chỉ đọc lại Nhật ký khi cài đặt widget đổi hoặc chưa đọc thành công lần nào;
+      // cập nhật trạng thái online dùng lại kết quả cũ (kể cả danh sách rỗng).
+      final List<String> diaryImageUrls;
+      if (!appearance.showDiaryOnWidget) {
+        diaryImageUrls = const <String>[];
+      } else if (includeDiaryMedia || !_widgetDiaryImageUrlsLoaded) {
+        final loaded = await _loadWidgetDiaryImageUrlsImpl(houseId);
+        if (_houseId != houseId) return;
+        if (loaded != null) _widgetDiaryImageUrlsLoaded = true;
+        diaryImageUrls = loaded ?? _cachedWidgetDiaryImageUrls;
+      } else {
+        diaryImageUrls = _cachedWidgetDiaryImageUrls;
+      }
       if (!_isTabActive) return;
       if (appearance.showDiaryOnWidget) {
         _cachedWidgetDiaryImageUrls = diaryImageUrls;
       } else {
         _cachedWidgetDiaryImageUrls = const <String>[];
+        _widgetDiaryImageUrlsLoaded = false;
       }
 
       // Battery: partner battery from notifier

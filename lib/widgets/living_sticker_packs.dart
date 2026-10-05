@@ -18,6 +18,18 @@ class LivingStickerPack {
   final Color accent;
   final Color surface;
   final List<SoulLocketStickerSpec> stickers;
+  String get styleKey => _styleKeys[id]!;
+  static const _styleKeys = {
+    'joy': 'p4_soul_sticker_style_joy',
+    'love': 'p4_soul_sticker_style_love',
+    'sulking': 'p4_soul_sticker_style_sulking',
+    'sad': 'p4_soul_sticker_style_sad',
+    'playful': 'p4_soul_sticker_style_playful',
+    'novelty': 'p4_soul_sticker_style_novelty',
+    'hearts': 'p4_soul_sticker_style_hearts',
+    'couple': 'p4_soul_sticker_style_couple',
+    'diary': 'p4_soul_sticker_style_diary',
+  };
 }
 
 /// Cùng bộ và cùng thứ tự trong chat, Soul Merge, Home và thư viện.

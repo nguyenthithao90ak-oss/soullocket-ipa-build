@@ -12,11 +12,13 @@ class PrivateImageDiskCache {
     required this.openBox,
     required this.currentUid,
     DateTime Function()? now,
-    this.maxBytes = 128 * 1024 * 1024,
-    this.maxEntries = 200,
+    this.maxBytes = 512 * 1024 * 1024,
+    this.maxEntries = 1000,
   }) : _now = now ?? DateTime.now;
 
-  static const ttl = Duration(days: 14);
+  // Ảnh riêng tư giữ trên máy tối đa 60 ngày / 1.000 bản / 512 MB (cái nào tới trước);
+  // người dùng xóa được trong Cài đặt, ảnh bị xóa khỏi Nhật ký được dọn theo nhãn.
+  static const ttl = Duration(days: 60);
   static const maxImageBytes = 16 * 1024 * 1024;
   static PrivateImageDiskCache? _instance;
   static Future<LazyBox<dynamic>>? _opening;
@@ -77,6 +79,13 @@ class PrivateImageDiskCache {
           .convert(utf8.encode(jsonEncode([uid, houseId, memoryId, width])))
           .toString();
 
+  /// Nhãn chung cho mọi kích thước của một ảnh, để dọn khi ảnh bị xóa
+  /// mà không lưu memoryId dạng đọc được trong chỉ mục.
+  static String memoryTag(String uid, String houseId, String memoryId) => sha256
+      .convert(utf8.encode(jsonEncode(['memory', uid, houseId, memoryId])))
+      .toString()
+      .substring(0, 32);
+
   Future<T> _serial<T>(Future<T> Function() action) {
     final result = _work.then((_) => action());
     _work = result.then<void>((_) {}, onError: (Object _, StackTrace _) {});
@@ -121,9 +130,14 @@ class PrivateImageDiskCache {
             bytes.length != metadata['size']) {
           return null;
         }
-        index.remove(cacheKey);
-        index[cacheKey] = metadata;
-        await box.put('_index', index);
+        // Chỉ đẩy lên cuối hàng LRU khi bản ghi đã nằm ở nửa cũ: chỉ mục tới 1.000
+        // mục, ghi lại mỗi lần xem ảnh sẽ làm cuộn album chậm.
+        final keys = index.keys.toList(growable: false);
+        if (keys.indexOf(cacheKey) < keys.length ~/ 2) {
+          index.remove(cacheKey);
+          index[cacheKey] = metadata;
+          await box.put('_index', index);
+        }
         return uid == currentUid() && generation == _generation ? bytes : null;
       } catch (_) {
         return null;
@@ -174,8 +188,9 @@ class PrivateImageDiskCache {
     String uid,
     String cacheKey,
     Uint8List bytes,
-    bool Function() isCurrent,
-  ) {
+    bool Function() isCurrent, {
+    String? memoryTag,
+  }) {
     final generation = _generation;
     return _serial(() async {
       bool allowed() =>
@@ -214,7 +229,11 @@ class PrivateImageDiskCache {
         }
         if (!allowed()) return;
         await box.put(cacheKey, bytes);
-        index[cacheKey] = {'size': bytes.length, 'savedAt': now};
+        index[cacheKey] = {
+          'size': bytes.length,
+          'savedAt': now,
+          if (memoryTag != null && memoryTag.isNotEmpty) 'mid': memoryTag,
+        };
         await box.put('_index', index);
         await box.flush();
       } catch (_) {
@@ -234,6 +253,54 @@ class PrivateImageDiskCache {
       await box.delete(cacheKey);
       await box.put('_index', index);
     } catch (_) {}
+  });
+
+  /// Xóa mọi kích thước đã lưu của các ảnh vừa biến mất khỏi Nhật ký.
+  Future<int> removeMemories(
+    String uid,
+    String houseId,
+    Iterable<String> memoryIds,
+  ) {
+    final tags = {for (final id in memoryIds) memoryTag(uid, houseId, id)};
+    return _serial(() async {
+      if (kIsWeb || tags.isEmpty || uid != currentUid()) return 0;
+      try {
+        final box = await _box(uid);
+        final index = Map<String, dynamic>.from(
+          await box.get('_index') as Map? ?? {},
+        );
+        var removed = 0;
+        for (final entry in index.entries.toList()) {
+          final metadata = entry.value;
+          if (metadata is Map && tags.contains(metadata['mid'])) {
+            await box.delete(entry.key);
+            index.remove(entry.key);
+            removed++;
+          }
+        }
+        if (removed > 0) await box.put('_index', index);
+        return removed;
+      } catch (_) {
+        return 0;
+      }
+    });
+  }
+
+  /// Tổng dung lượng ảnh đang lưu của tài khoản hiện tại (byte), để hiển thị trong Cài đặt.
+  Future<int> totalBytes(String uid) => _serial(() async {
+    if (kIsWeb || uid != currentUid()) return 0;
+    try {
+      final box = await _box(uid);
+      final index = await box.get('_index');
+      if (index is! Map) return 0;
+      var total = 0;
+      for (final value in index.values) {
+        if (value is Map && value['size'] is int) total += value['size'] as int;
+      }
+      return total;
+    } catch (_) {
+      return 0;
+    }
   });
 
   Future<void> clear() {

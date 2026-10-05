@@ -4,6 +4,7 @@ import 'package:soullocket_app/widgets/getting_started_guide.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
 import 'package:soullocket_app/utils/services/pairing_service.dart';
+import 'package:soullocket_app/utils/services/role_utils.dart';
 import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_create_code_sheet.dart';
 import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_enter_code_sheet.dart';
 import 'pairing_connection_widgets.dart';
@@ -12,7 +13,6 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
-import 'package:soullocket_app/core/constants/app_firebase_paths.dart';
 import 'package:soullocket_app/utils/services/storage/storage_picker_service.dart';
 import 'package:soullocket_app/utils/services/infrastructure/storage_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -34,7 +34,13 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   String? _avatarU2;
   String? _nameU1;
   String? _nameU2;
-  String? _startDateStr;
+  bool _genderSwapped = false;
+  Object? _connectedAt;
+  Map _members = const {};
+  bool _connectionDateReceived = false;
+  bool _connectionDateError = false;
+  String? _uploadingRole;
+  String? _scopeUid;
   bool _settingsReceived = false;
   bool _membersReceived = false;
   bool _settingsPaired = false;
@@ -43,6 +49,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   bool _loadError = false;
   int _loadGeneration = 0;
   Timer? _loadTimer;
+  Timer? _dateTimer;
+  StreamSubscription<User?>? _authSub;
   StreamSubscription? _settingsSub;
   StreamSubscription? _membersSub;
   StreamSubscription? _connectionDateSub;
@@ -55,12 +63,17 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   void initState() {
     super.initState();
     _loadHouseId();
+    _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (mounted && user?.uid != _scopeUid) _loadHouseId();
+    });
   }
 
   @override
   void dispose() {
     _loadGeneration++;
     _loadTimer?.cancel();
+    _dateTimer?.cancel();
+    _authSub?.cancel();
     _settingsSub?.cancel();
     _membersSub?.cancel();
     _connectionDateSub?.cancel();
@@ -69,7 +82,10 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
 
   Future<void> _loadHouseId() async {
     final generation = ++_loadGeneration;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    _scopeUid = uid;
     _loadTimer?.cancel();
+    _dateTimer?.cancel();
     unawaited(_settingsSub?.cancel());
     unawaited(_membersSub?.cancel());
     unawaited(_connectionDateSub?.cancel());
@@ -82,7 +98,11 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       _settingsPaired = false;
       _membersPaired = false;
       _isPaired = false;
-      _startDateStr = null;
+      _connectedAt = null;
+      _members = const {};
+      _connectionDateReceived = false;
+      _connectionDateError = false;
+      _uploadingRole = null;
       _myHouseId = null;
       _nameU1 = null;
       _nameU2 = null;
@@ -90,13 +110,46 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       _avatarU2 = null;
       _incomingRequestsStream = null;
     });
-    bool isCurrent() => mounted && generation == _loadGeneration;
+    bool isCurrent() =>
+        mounted &&
+        generation == _loadGeneration &&
+        FirebaseAuth.instance.currentUser?.uid == uid;
     void handleLoadError(Object error) {
-      if (!isCurrent() || _hasResolvedPairing) return;
+      if (!isCurrent()) return;
+      final revoked =
+          error is FirebaseException && error.code == 'permission-denied';
+      if (_hasResolvedPairing && !revoked) return;
+      if (revoked) {
+        _loadGeneration++;
+        _loadTimer?.cancel();
+        _dateTimer?.cancel();
+        unawaited(_settingsSub?.cancel());
+        unawaited(_membersSub?.cancel());
+        unawaited(_connectionDateSub?.cancel());
+      }
+      setState(() {
+        _isLoading = false;
+        _loadError = true;
+        if (revoked) {
+          _myHouseId = null;
+          _incomingRequestsStream = null;
+          _connectedAt = null;
+          _members = const {};
+          _nameU1 = null;
+          _nameU2 = null;
+          _avatarU1 = null;
+          _avatarU2 = null;
+          _isPaired = false;
+        }
+      });
+    }
+
+    if (uid == null) {
       setState(() {
         _isLoading = false;
         _loadError = true;
       });
+      return;
     }
 
     _loadTimer = Timer(const Duration(seconds: 8), () {
@@ -133,6 +186,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
             _settingsPaired = settings['isPaired'] == true;
             _nameU1 = settings['nameU1']?.toString();
             _nameU2 = settings['nameU2']?.toString();
+            _genderSwapped = RoleUtils.readGenderSwapped(settings);
             _avatarU1 = pairingAvatarUrl(settings, 'user1');
             _avatarU2 = pairingAvatarUrl(settings, 'user2');
           });
@@ -144,31 +198,55 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     _membersSub = FirebaseDatabase.instance
         .ref('houses/$houseId/members')
         .onValue
-        .listen((event) {
-          if (!isCurrent()) return;
-          final value = event.snapshot.value;
-          final members = value is Map ? value : const {};
-          _membersReceived = true;
-          _membersPaired = members.length >= 2;
-          _applyPairingStatus();
-        }, onError: handleLoadError);
+        .listen(
+          (event) {
+            if (!isCurrent()) return;
+            final value = event.snapshot.value;
+            final members = value is Map ? value : const {};
+            _membersReceived = true;
+            _membersPaired = members.length >= 2;
+            _members = members;
+            _applyPairingStatus();
+          },
+          onError: (Object error) {
+            if (!isCurrent()) return;
+            setState(() {
+              _membersReceived = true;
+              _connectionDateError = true;
+            });
+            handleLoadError(error);
+          },
+        );
 
+    _dateTimer = Timer(const Duration(seconds: 8), () {
+      if (isCurrent() && !_connectionDateReceived) {
+        setState(() {
+          _connectionDateReceived = true;
+          _connectionDateError = true;
+        });
+      }
+    });
     _connectionDateSub = FirebaseDatabase.instance
         .ref('houses/$houseId/coupleConnectedAt')
         .onValue
         .listen(
           (event) {
             if (!isCurrent()) return;
-            final date = parsePairingConnectionDate(event.snapshot.value);
+            _dateTimer?.cancel();
             setState(() {
-              _startDateStr = date == null
-                  ? null
-                  : '${date.day.toString().padLeft(2, '0')}/'
-                        '${date.month.toString().padLeft(2, '0')}/${date.year}';
+              _connectedAt = event.snapshot.value;
+              _connectionDateReceived = true;
+              _connectionDateError = false;
             });
           },
           onError: (Object error) {
-            if (isCurrent()) setState(() => _startDateStr = null);
+            if (!isCurrent()) return;
+            _dateTimer?.cancel();
+            setState(() {
+              _connectedAt = null;
+              _connectionDateReceived = true;
+              _connectionDateError = true;
+            });
           },
         );
   }
@@ -355,10 +433,13 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = PairingPalette(
+      Theme.of(context).brightness == Brightness.dark,
+    );
     return Scaffold(
-      backgroundColor: const Color(0xFFFCFAF9),
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFCFAF9),
+        backgroundColor: colors.background,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -367,14 +448,14 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           style: SLTheme.quicksand(
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: SLColors.ink,
+            color: colors.ink,
           ),
         ),
         leading: IconButton(
           tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_new_rounded,
-            color: SLColors.ink,
+            color: colors.ink,
             size: 19,
           ),
           onPressed: () => Navigator.pop(context),
@@ -393,7 +474,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
         ],
       ),
       body: DecoratedBox(
-        decoration: const BoxDecoration(color: Color(0xFFFCFAF9)),
+        decoration: BoxDecoration(color: colors.background),
         child: SafeArea(
           top: false,
           child: _isLoading
@@ -616,52 +697,111 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   }
 
   Widget _buildPairedState() {
+    String nameForRole(String? saved, String role, String fallback) {
+      if (saved != null && saved.trim().isNotEmpty) return saved.trim();
+      for (final value in _members.values) {
+        if (value is Map && value['role'] == role) {
+          final name = value['displayName'];
+          if (name is String && name.trim().isNotEmpty) return name.trim();
+        }
+      }
+      return _t(fallback);
+    }
+
+    final connection = resolvePairingConnectionDetails(
+      connectedAt: _connectedAt,
+      members: _members,
+      now: DateTime.now(),
+    );
     return PairingConnectedView(
-      firstName: _nameU1 ?? _t('role_male'),
-      secondName: _nameU2 ?? _t('role_female'),
+      firstName: nameForRole(
+        _nameU1,
+        'user1',
+        RoleUtils.defaultNameKey('user1', genderSwapped: _genderSwapped),
+      ),
+      secondName: nameForRole(
+        _nameU2,
+        'user2',
+        RoleUtils.defaultNameKey('user2', genderSwapped: _genderSwapped),
+      ),
       firstAvatar: _avatarU1,
       secondAvatar: _avatarU2,
-      connectionDate: _startDateStr,
+      connection: connection,
+      connectionLoading:
+          connection == null &&
+          !_connectionDateError &&
+          (!_connectionDateReceived || !_membersReceived),
+      connectionError: _connectionDateError,
+      uploadingRole: _uploadingRole,
       onEditFirst: () => _updateAvatar('user1'),
       onEditSecond: () => _updateAvatar('user2'),
+      onRetry: _loadHouseId,
     );
   }
 
   Future<void> _updateAvatar(String role) async {
-    if (_myHouseId == null || _isLoading) return;
+    if (_myHouseId == null || _isLoading || _uploadingRole != null) return;
     final houseId = _myHouseId!;
     final ownerUid = FirebaseAuth.instance.currentUser?.uid;
-    final picker = StoragePickerService();
-    final xFile = await picker.pickImage();
-    if (xFile == null ||
-        !mounted ||
-        _myHouseId != houseId ||
-        FirebaseAuth.instance.currentUser?.uid != ownerUid) {
-      return;
-    }
-
-    if (mounted) setState(() => _isLoading = true);
+    final generation = _loadGeneration;
+    if (ownerUid == null) return;
+    bool isCurrent() =>
+        mounted &&
+        generation == _loadGeneration &&
+        _myHouseId == houseId &&
+        FirebaseAuth.instance.currentUser?.uid == ownerUid;
+    setState(() => _uploadingRole = role);
     try {
-      final url = await StorageService.instance.uploadImage(
-        houseId,
-        'avatars',
-        xFile,
+      final xFile = await StoragePickerService().pickImage();
+      if (xFile == null || !isCurrent()) return;
+      final currentHouseId = await HouseService().getCurrentHouseId(
+        preferFresh: true,
       );
-      if (url != null &&
-          mounted &&
-          _myHouseId == houseId &&
-          ownerUid != null &&
-          FirebaseAuth.instance.currentUser?.uid == ownerUid) {
-        final key = role == 'user1' ? 'avatarU1' : 'avatarU2';
-        await FirebaseDatabase.instance
-            .ref(AppFirebasePaths.houseSettings(houseId))
-            .child(key)
-            .set(url);
-      }
-    } catch (e) {
-      debugPrint('Upload avatar error: $e');
+      if (!isCurrent() || currentHouseId != houseId) return;
+      final upload = await StorageService.instance.uploadPublicImage(
+        houseId,
+        'home_avatar',
+        xFile,
+        role: role,
+        quality: 84,
+        minWidth: 512,
+        minHeight: 512,
+      );
+      if (!mounted || !isCurrent()) return;
+      final url = upload?.downloadUrl.trim() ?? '';
+      if (url.isEmpty) throw StateError('Avatar finalize not confirmed');
+      setState(() {
+        if (role == 'user1') {
+          _avatarU1 = url;
+        } else {
+          _avatarU2 = url;
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SLSnackBar(
+          content: Text(
+            _t(
+              role == 'user1'
+                  ? 'home_cpnhtavata_af1e5c'
+                  : 'home_cpnhtavata_182b34',
+            ),
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted || !isCurrent()) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SLSnackBar(
+          content: Text(
+            AppErrorMapper.resolve(
+              error,
+              fallbackMessage: _t('pairing_ui_avatar_upload_error'),
+            ).message,
+          ),
+        ),
+      );
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (isCurrent()) setState(() => _uploadingRole = null);
     }
   }
 

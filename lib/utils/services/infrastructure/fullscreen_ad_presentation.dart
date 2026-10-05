@@ -94,10 +94,12 @@ Future<FullscreenAdOutcome> _presentFullscreenAd({
       if (!result.isCompleted) {
         result.complete(earned ? FullscreenAdOutcome.rewarded : outcome);
       }
+      unawaited(disposeSafely());
     }
 
-    // Adapter có thể báo earned ngay sau dismiss. Cleanup không chờ
-    // ghi prefs hoặc Future dispose để mở khóa/hoàn tất cho caller.
+    // Giữ instance trong khoảng chờ earned sau dismiss: dispose sớm
+    // xóa dispatcher SDK và làm mất callback. Không chờ Future dispose
+    // để hoàn tất hoặc mở khóa cho caller.
     if (outcome == FullscreenAdOutcome.dismissed &&
         rewardGrace > Duration.zero) {
       Timer(rewardGrace, complete);
@@ -109,7 +111,6 @@ Future<FullscreenAdOutcome> _presentFullscreenAd({
     } catch (error) {
       logFailure(error);
     }
-    unawaited(disposeSafely());
   }
 
   installCallbacks(

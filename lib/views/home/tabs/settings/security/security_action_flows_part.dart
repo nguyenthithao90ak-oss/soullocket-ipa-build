@@ -607,9 +607,9 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
   String _displayNameForRole(String role) {
     final raw = (role == 'user2' ? _nameU2 : _nameU1).trim();
     if (raw.isNotEmpty) return raw;
-    return role == 'user2'
-        ? context.tr('role_female')
-        : context.tr('role_male');
+    return context.tr(
+      RoleUtils.defaultNameKey(role, genderSwapped: _genderSwapped),
+    );
   }
 
   bool _isBirthQuestion(String question) {

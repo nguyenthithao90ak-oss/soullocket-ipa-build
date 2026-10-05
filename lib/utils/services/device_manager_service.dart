@@ -6,7 +6,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'consent_service.dart';
-import 'security_service.dart';
+import 'device_installation_identity.dart';
 import 'core/cloud_functions_helper.dart';
 import 'offline_cache_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
@@ -87,6 +87,7 @@ class DeviceManagerService implements DeviceManagerClient {
   final _auth = FirebaseAuth.instance;
   final ConsentService _consentService = ConsentService();
   Map<String, String>? _cachedDeviceInfo;
+  String? _cachedDeviceInfoUid;
   String? _cachedHouseId;
   String? _cachedHouseAuthUid;
   Future<String?>? _currentHouseIdFuture;
@@ -241,6 +242,8 @@ class DeviceManagerService implements DeviceManagerClient {
       if (!await isSecurityDeviceSignalsAllowed()) return;
       _requireSession(uid);
       await _registrationQueue.run(uid, () async {
+        final identity = await DeviceInstallationIdentity.forUid(uid);
+        _requireSession(uid);
         final deviceInfo = await _getDeviceInfo();
         if (!await isSecurityDeviceSignalsAllowed()) {
           throw StateError('Device signals consent revoked');
@@ -248,7 +251,7 @@ class DeviceManagerService implements DeviceManagerClient {
         _requireSession(uid);
         await CloudFunctionsHelper.callSecure<dynamic>(
           'registerCurrentDeviceSecure',
-          payload: deviceInfo,
+          payload: {...deviceInfo, ...identity.payload},
           timeout: const Duration(seconds: 10),
           requireAppCheck: true,
           throwOriginalException: true,
@@ -432,11 +435,14 @@ class DeviceManagerService implements DeviceManagerClient {
   Future<DeviceManagerListing> loadDeviceListing() async {
     final uid = _auth.currentUser?.uid ?? '';
     _requireSession(uid);
-    final currentDeviceId = await getCurrentDeviceIdentifier();
+    final identity = await DeviceInstallationIdentity.forUid(uid);
     _requireSession(uid);
     final result = await CloudFunctionsHelper.callSecure<dynamic>(
       'getDeviceListSecure',
-      payload: {'currentDeviceId': currentDeviceId},
+      payload: {
+        'currentDeviceId': identity.deviceId,
+        'deviceProof': identity.proof,
+      },
       timeout: const Duration(seconds: 10),
       requireAppCheck: true,
       throwOriginalException: true,
@@ -448,11 +454,17 @@ class DeviceManagerService implements DeviceManagerClient {
     }
     final devices = rawDevices
         .whereType<Map>()
-        .map((device) => Map<String, dynamic>.from(device))
+        .map((device) => <String, dynamic>{
+          ...Map<String, dynamic>.from(device),
+          'can_manage': result.data['policyVersion'] == 2 && device['can_manage'] == true,
+        })
         .toList(growable: false);
     return DeviceManagerListing(
       houseId: result.data['houseId']?.toString() ?? '',
       devices: devices,
+      management: result.data['policyVersion'] == 2 && result.data['management'] is Map
+          ? Map<String, dynamic>.from(result.data['management'])
+          : const {'role': 'unverified', 'canManage': false},
     );
   }
 
@@ -492,11 +504,12 @@ class DeviceManagerService implements DeviceManagerClient {
   }) async {
     final uid = _auth.currentUser?.uid ?? '';
     _requireSession(uid);
-    final currentDeviceId = await getCurrentDeviceIdentifier();
+    final identity = await DeviceInstallationIdentity.forUid(uid);
     _requireSession(uid);
     final payload = <String, dynamic>{
       'deviceId': deviceId,
-      'currentDeviceId': currentDeviceId,
+      'currentDeviceId': identity.deviceId,
+      'deviceProof': identity.proof,
     };
     if (expectedHouseId != null) payload['houseId'] = expectedHouseId;
     await CloudFunctionsHelper.callSecure<dynamic>(
@@ -693,16 +706,16 @@ class DeviceManagerService implements DeviceManagerClient {
   }
 
   Future<Map<String, String>> _getDeviceInfo() async {
+    final uid = _auth.currentUser?.uid ?? '';
+    _requireSession(uid);
     final cachedDeviceInfo = _cachedDeviceInfo;
-    if (cachedDeviceInfo != null) {
+    if (cachedDeviceInfo != null && _cachedDeviceInfoUid == uid) {
       return Map<String, String>.from(cachedDeviceInfo);
     }
 
     final plugin = DeviceInfoPlugin();
-    String deviceId = (await SecurityService().getDeviceId()).trim();
-    if (deviceId.isEmpty) {
-      throw StateError('Stable device identifier unavailable');
-    }
+    final identity = await DeviceInstallationIdentity.forUid(uid);
+    _requireSession(uid);
     String model = 'Unknown';
     String os = 'Unknown';
     String platform = 'unknown';
@@ -730,16 +743,15 @@ class DeviceManagerService implements DeviceManagerClient {
       debugPrint('[DeviceManager] Không đọc được thông tin thiết bị: $error');
     }
 
-    // Ensure no invalid characters remain
-    deviceId = deviceId.replaceAll(RegExp(r'[.#$\[\]/]'), '_');
-
     final deviceInfo = {
-      'deviceId': deviceId,
+      'deviceId': identity.deviceId,
       'model': model,
       'os': os,
       'platform': platform,
     };
+    _requireSession(uid);
     _cachedDeviceInfo = deviceInfo;
+    _cachedDeviceInfoUid = uid;
     return Map<String, String>.from(deviceInfo);
   }
 }

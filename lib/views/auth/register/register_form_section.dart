@@ -11,7 +11,7 @@ final RegExp _registerEmailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
 bool _isRegisterInputValid(String email, String password, bool acceptTerms) {
   return _registerEmailRegex.hasMatch(email.trim()) &&
-      password.trim().length >= 6 &&
+      password.length >= 6 &&
       acceptTerms;
 }
 
@@ -99,7 +99,14 @@ class RegisterForm extends StatelessWidget {
             enableSuggestions: false,
             autocorrect: false,
             onSubmitted: (_) {
-              if (!isLoading) onRegister();
+              if (!isLoading &&
+                  _isRegisterInputValid(
+                    emailController.text,
+                    passwordController.text,
+                    acceptTerms,
+                  )) {
+                onRegister();
+              }
             },
             hintText: passwordHint,
             accentColor: accentRose,
@@ -149,7 +156,9 @@ class RegisterForm extends StatelessWidget {
             },
           ),
           const SizedBox(height: 16),
-          AuthSocialDivider(label: l10n.translate('auth_social_register_divider')),
+          AuthSocialDivider(
+            label: l10n.translate('auth_social_register_divider'),
+          ),
           const SizedBox(height: 14),
           SocialAuthButtons(onProviderTap: onSocialLogin),
           const SizedBox(height: 12),

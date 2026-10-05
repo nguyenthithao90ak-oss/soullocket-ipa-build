@@ -52,8 +52,11 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _partnerInboxSubscription = null;
     _noteSubscription?.cancel();
     _noteSubscription = null;
-    _homeCalendarSubscription?.cancel();
-    _homeCalendarSubscription = null;
+    _pauseHomeCalendarEvents();
+    _homeCalendarEvents = [];
+    _homeCalendarUid = null;
+    _homeCalendarHouseId = null;
+    _homeCalendarLoadState = HomeCalendarLoadState.loading;
     _healthCycleSyncSubscription?.cancel();
     _healthCycleSyncSubscription = null;
     _chatSignalSubscription?.cancel();
@@ -950,6 +953,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
       _hasLoadedPresenceSnapshot = false;
       _homeMapPreviewSignature = '';
       _cachedWidgetDiaryImageUrls = const <String>[];
+      _widgetDiaryImageUrlsLoaded = false;
       _reactionFlightsNotifier.value = const [];
       _seenReactionFlightIds.clear();
       _localReactionThrowMs.clear();

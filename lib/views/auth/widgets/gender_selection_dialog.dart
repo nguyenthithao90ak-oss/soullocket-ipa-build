@@ -6,14 +6,24 @@ import '../login/auth_visual_style.dart';
 class GenderSelectionDialog extends StatefulWidget {
   final ValueChanged<String> onSelected;
 
-  const GenderSelectionDialog({super.key, required this.onSelected});
+  /// 'user1' (Nam) hoặc 'user2' (Nữ) được chọn sẵn, ví dụ khi sửa trong Cài đặt.
+  final String? initialRole;
+
+  const GenderSelectionDialog({
+    super.key,
+    required this.onSelected,
+    this.initialRole,
+  });
 
   @override
   State<GenderSelectionDialog> createState() => _GenderSelectionDialogState();
 }
 
 class _GenderSelectionDialogState extends State<GenderSelectionDialog> {
-  String? _selectedRole;
+  late String? _selectedRole =
+      widget.initialRole == 'user1' || widget.initialRole == 'user2'
+      ? widget.initialRole
+      : null;
   bool _submitted = false;
 
   String _t(String key) => L10nService().translate(key);

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'dart:math';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureStorageService {
@@ -32,6 +33,27 @@ class SecureStorageService {
   static const String keyHouseId = 'il_house_id';
   static const String keyRole = 'il_role';
   static const String keyRelMode = 'il_rel_mode';
+  static const String keyInstallationCredential = 'il_device_installation_credential';
+
+  Future<String> installationCredential() => _serialize(() async {
+    final stored = await _storage.read(key: keyInstallationCredential);
+    if (stored != null) {
+      if (!RegExp(r'^[a-f0-9]{64}$').hasMatch(stored)) {
+        throw StateError('Invalid installation credential');
+      }
+      return stored;
+    }
+    final random = Random.secure();
+    final credential = List.generate(
+      32,
+      (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+    ).join();
+    await _storage.write(key: keyInstallationCredential, value: credential);
+    if (await _storage.read(key: keyInstallationCredential) != credential) {
+      throw StateError('Installation credential was not persisted');
+    }
+    return credential;
+  });
   Future<void> write(String key, String value) async {
     try {
       await _serialize(
@@ -73,7 +95,17 @@ class SecureStorageService {
     }
   }
 
-  Future<void> clearForSignOut() => _serialize(() => _storage.deleteAll());
+  Future<void> clearForSignOut() => _serialize(() async {
+    final values = await _storage.readAll();
+    final credential = values[keyInstallationCredential];
+    if (credential == null) {
+      await _storage.deleteAll();
+      return;
+    }
+    for (final key in values.keys) {
+      if (key != keyInstallationCredential) await _storage.delete(key: key);
+    }
+  });
 
   /// Migrates a key from SharedPreferences to SecureStorage if it exists
   Future<void> migrateFromPrefs(String key, String? value) async {

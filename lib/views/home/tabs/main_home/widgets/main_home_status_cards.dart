@@ -200,8 +200,10 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
       );
     }
 
-    // 4. Lịch trình chuyến đi
-    for (final event in _homeCalendarEvents) {
+    // Mode đôi đã xem kế hoạch ở thẻ hằng ngày; thẻ này giữ kỷ niệm/ngày lễ.
+    for (final event in _homeCalendarSnapshotMatchesScope &&
+        _homeToolRelationshipMode() != 'couple'
+        ? _homeCalendarEvents : const <Map<String, dynamic>>[]) {
       final dateKey = event['dateKey']?.toString() ?? '';
       final evTitle = event['title']?.toString() ?? '';
       if (dateKey.isEmpty || evTitle.isEmpty) continue;

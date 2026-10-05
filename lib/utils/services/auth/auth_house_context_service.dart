@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:soullocket_app/utils/services/presence_service.dart';
+import 'package:soullocket_app/utils/services/role_utils.dart';
 import 'package:soullocket_app/utils/services/secure_storage_service.dart';
 import 'package:soullocket_app/utils/services/security_service.dart';
 import 'auth_support.dart';
@@ -376,6 +377,34 @@ class AuthHouseContextService {
     };
   }
 
+  /// Vai thật do server quản lý tại `houses/{houseId}/members/{uid}/role`;
+  /// `il_role` trên máy chỉ là bản sao. Sửa bản sao khi lệch (ví dụ máy từng
+  /// bấm "Đổi vai" kiểu cũ) để các lần ghi theo vai không bị rules từ chối.
+  Future<String?> syncRoleFromServer(String houseId) async {
+    final uid = _auth.currentUser?.uid;
+    final normalizedHouseId = houseId.trim();
+    if (uid == null || normalizedHouseId.isEmpty) return null;
+    final snapshot = await _db
+        .child('houses/$normalizedHouseId/members/$uid/role')
+        .get()
+        .timeout(const Duration(seconds: 5));
+    if (_auth.currentUser?.uid != uid) return null;
+    final role = RoleUtils.normalizeNullable(snapshot.value?.toString());
+    if (role == null) return null;
+    final prefs = await _prefs;
+    if (_auth.currentUser?.uid != uid) return null;
+    if (prefs.getString('il_role') == role) return role;
+    await prefs.setString('il_role', role);
+    if (_auth.currentUser?.uid != uid) return null;
+    await SecureStorageService.instance.write(
+      SecureStorageService.keyRole,
+      role,
+    );
+    if (_auth.currentUser?.uid != uid) return null;
+    RoleUtils.roleNotifier.value = role;
+    return role;
+  }
+
   Future<void> _restoreRoleFromDatabase(
     String houseId,
     String uid,
@@ -557,13 +586,20 @@ class AuthHouseContextService {
     return true;
   }
 
+  /// Chỉ đồng bộ `users/{uid}/email` của chính người dùng. Email khôi phục của
+  /// nhà (`houses/{id}/security/email`, `houses_public/{id}/recovery_*`) do
+  /// server ghi khi tạo nhà theo email chủ nhà; rules chặn thành viên ghi để
+  /// người còn lại không ghi đè email khôi phục bằng email của mình. [houseId]
+  /// được giữ để tương thích caller cũ.
   Future<void> syncSecurityEmailForCurrentUser({
     firebase_auth.User? user,
     String? email,
     String? houseId,
   }) async {
     final resolvedUser = user ?? _auth.currentUser;
-    if (resolvedUser == null) return;
+    if (resolvedUser == null || _auth.currentUser?.uid != resolvedUser.uid) {
+      return;
+    }
 
     final normalizedEmail = _resolveProviderEmail(
       resolvedUser,
@@ -571,24 +607,7 @@ class AuthHouseContextService {
     );
     if (!normalizedEmail.contains('@')) return;
 
-    final resolvedHouseId = (houseId?.trim().isNotEmpty ?? false)
-        ? houseId!.trim()
-        : await resolveCurrentHouseId(user: resolvedUser);
-
-    final updates = <String, dynamic>{
-      'users/${resolvedUser.uid}/email': normalizedEmail,
-    };
-
-    if (resolvedHouseId != null && resolvedHouseId.isNotEmpty) {
-      final publicMeta = buildPublicRecoveryMeta(normalizedEmail);
-      updates['houses/$resolvedHouseId/security/email'] = normalizedEmail;
-      updates['houses_public/$resolvedHouseId/recovery_hint'] =
-          publicMeta['recovery_hint'];
-      updates['houses_public/$resolvedHouseId/recovery_ready'] =
-          publicMeta['recovery_ready'];
-    }
-
-    await _db.update(updates);
+    await _db.child('users/${resolvedUser.uid}/email').set(normalizedEmail);
   }
 
   String _resolveProviderEmail(

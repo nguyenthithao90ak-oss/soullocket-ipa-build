@@ -390,10 +390,20 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
         )!;
         final days = _loveDayCounter();
         final label1 = _nameU1.trim().isEmpty
-            ? context.tr('role_male')
+            ? context.tr(
+                RoleUtils.defaultNameKey(
+                  'user1',
+                  genderSwapped: _genderSwapped,
+                ),
+              )
             : _nameU1.trim();
         final label2 = _nameU2.trim().isEmpty
-            ? context.tr('role_female')
+            ? context.tr(
+                RoleUtils.defaultNameKey(
+                  'user2',
+                  genderSwapped: _genderSwapped,
+                ),
+              )
             : _nameU2.trim();
         final showDiaryPreview = _showDiaryOnWidget;
         final isCountdownStyle = _widgetStyleKey == 'countdown';

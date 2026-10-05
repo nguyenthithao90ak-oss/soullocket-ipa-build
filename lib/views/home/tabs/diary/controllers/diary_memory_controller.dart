@@ -101,6 +101,9 @@ class DiaryMemoryController extends ChangeNotifier {
   int _preparedMemoryLimit = 0;
   String _preparedMemoryHighlightKey = '';
   Object? _lastCachedLiveMemoriesSource;
+  String? _liveMemoryTsHouseId;
+  int _liveMemoryTsLimit = 0;
+  Map<String, int> _liveMemoryTs = const <String, int>{};
   List<String> _pendingUploadPaths = const <String>[];
   String? _pendingUploadMessage;
   final Map<String, XFile> _pendingFiles = {};
@@ -521,6 +524,8 @@ class DiaryMemoryController extends ChangeNotifier {
     _memoriesStream = null;
     _memoriesCacheFuture = null;
     _memoriesCacheHouseId = null;
+    _liveMemoryTsHouseId = null;
+    _liveMemoryTs = const <String, int>{};
     _clearPreparedMemoryFeedCache();
   }
 
@@ -582,7 +587,7 @@ class DiaryMemoryController extends ChangeNotifier {
 
   /// Giải nén và kiểm tra TTL của memories cache.
   /// Cache lưu dưới dạng {_cachedAt: ms, items: [...]}.
-  /// Nếu quá _memoryDownloadCacheTtl (14 ngày) thì trả về null để app fetch lại.
+  /// Nếu quá _memoryDownloadCacheTtl (60 ngày) thì trả về null để app fetch lại.
   dynamic _extractMemoriesCacheList(dynamic raw) {
     if (raw == null) return null;
     // Format mới: {_cachedAt, items}
@@ -636,12 +641,53 @@ class DiaryMemoryController extends ChangeNotifier {
     return '${items.length}|$firstId|$firstTs|$lastId|$lastTs';
   }
 
+  // Ảnh có ở snapshot trước nhưng mất ở snapshot sau, trong khi vẫn thuộc khoảng
+  // thời gian của truy vấn, là ảnh đã bị xóa: dọn mọi bản lưu trên máy của ảnh đó.
+  // Ảnh chỉ bị đẩy khỏi cửa sổ (cũ hơn ảnh cũ nhất hiện có) thì giữ nguyên.
+  void _purgeRemovedMemoryImages(String houseId, Map<dynamic, dynamic> data) {
+    final current = <String, int>{};
+    data.forEach((key, value) {
+      if (value is Map) {
+        current[key.toString()] = _readCacheTs(
+          Map<String, dynamic>.from(value),
+        );
+      }
+    });
+    final queryLimit = _memoryQueryLimit;
+    // Đổi nhà hoặc đổi cửa sổ truy vấn (tải thêm) chỉ lập mốc mới, không so sánh.
+    final previous =
+        _liveMemoryTsHouseId == houseId && _liveMemoryTsLimit == queryLimit
+        ? _liveMemoryTs
+        : const <String, int>{};
+    _liveMemoryTsHouseId = houseId;
+    _liveMemoryTsLimit = queryLimit;
+    _liveMemoryTs = current;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (kIsWeb || uid == null || previous.isEmpty) return;
+    final windowFull = current.length >= queryLimit;
+    var oldestTs = 0;
+    for (final ts in current.values) {
+      if (oldestTs == 0 || ts < oldestTs) oldestTs = ts;
+    }
+    final removed = <String>[
+      for (final entry in previous.entries)
+        if (!current.containsKey(entry.key) &&
+            (!windowFull || entry.value >= oldestTs))
+          entry.key,
+    ];
+    if (removed.isEmpty) return;
+    unawaited(
+      PrivateImageDiskCache.instance.removeMemories(uid, houseId, removed),
+    );
+  }
+
   Future<void> _cacheMemories(String houseId, Object? rawValue) async {
     if (rawValue == null || rawValue is! Map) {
       return;
     }
 
     final data = Map<dynamic, dynamic>.from(rawValue);
+    _purgeRemovedMemoryImages(houseId, data);
     final cacheList = <Map<String, dynamic>>[];
     data.forEach((key, value) {
       if (value is! Map) {

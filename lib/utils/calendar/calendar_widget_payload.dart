@@ -24,7 +24,11 @@ abstract final class CalendarWidgetPayload {
     );
   }
 
-  static Map<String, Object?> empty() => {
+  static Map<String, Object?> empty({
+    String locale = 'en',
+    String titleLabel = '',
+    String emptyLabel = '',
+  }) => {
     'version': version,
     'enabled': false,
     'uid': '',
@@ -32,6 +36,9 @@ abstract final class CalendarWidgetPayload {
     'dateKey': '',
     'nextDate': '',
     'events': '',
+    'locale': locale,
+    'titleLabel': titleLabel,
+    'emptyLabel': emptyLabel,
   };
 
   static Map<String, Object?> create({
@@ -46,6 +53,8 @@ abstract final class CalendarWidgetPayload {
     required String todayLabel,
     required String tomorrowLabel,
     required String daysLeftTemplate,
+    String titleLabel = '',
+    String emptyLabel = '',
   }) => {
     'version': version,
     'enabled': event != null && uid.isNotEmpty && houseId.isNotEmpty,
@@ -61,6 +70,8 @@ abstract final class CalendarWidgetPayload {
     'todayLabel': todayLabel,
     'tomorrowLabel': tomorrowLabel,
     'daysLeftTemplate': daysLeftTemplate,
+    'titleLabel': titleLabel,
+    'emptyLabel': emptyLabel,
   };
 }
 
