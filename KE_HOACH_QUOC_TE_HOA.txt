@@ -1,0 +1,170 @@
+SOULLOCKET – QUỐC TẾ HOÁ (CHO NGƯỜI DÙNG NƯỚC NGOÀI)
+Tổng kết việc đã làm + kế hoạch chi tiết để hoàn thiện
+Nhánh: claude/gifted-galileo-1xpti1
+==========================================================================
+
+A. KIỂM TRA ĐÃ CHẠY
+--------------------------------------------------------------------------
+- flutter analyze: 253 issue = đúng bằng con số trước khi sửa (không phát sinh lỗi mới).
+- flutter test: 18/18 test đạt (thư mục test/ mới tạo).
+- Test ngày lịch chạy ở 5 múi giờ: UTC, New York, Berlin, Sydney, Hồ Chí Minh → đều đạt.
+- Widget Android (Kotlin) đã biên dịch thử thành công với stub (không build được
+  APK từ repo này, xem mục C.6).
+- iOS: chưa build được ở máy Linux. project.pbxproj đã được parse lại để kiểm tra
+  cú pháp → hợp lệ. CẦN chạy workflow "Build iOS IPA" để xác nhận.
+
+B. ĐÃ LÀM XONG
+--------------------------------------------------------------------------
+1. Lỗi đếm thiếu 1 ngày ở nước có giờ mùa hè (Mỹ/EU/Úc)  [XONG]
+   - lib/utils/calendar/calendar_civil_date.dart: thêm addDays, localMidnight, isSameDay.
+   - Thay mọi phép "hiệu 2 nửa đêm địa phương + .inDays" và "Duration(days: n)" bằng
+     tính theo ngày lịch ở các file sau:
+     main_home_formatters.dart (vòng đếm chính, giờ/phút/giây, mốc sắp tới),
+     main_home_tab.dart, home_screen.dart, settings_state_helpers.dart,
+     theme_preview_widgets_part.dart, countdown_mode_*_part.dart,
+     widget_preview_part.dart, love_insight_service.dart (mốc, chuỗi ngày, kỷ niệm),
+     schedule_notif_service.dart (mốc 30/100/365, nhắc sinh nhật trước 7 ngày),
+     widget_service.dart, health_*_service.dart, health_screen.dart,
+     habit_screen.dart, zodiac_utils.dart (thêm getAgeDayCount),
+     notification_service.dart (nhắc ngủ không lệch 1 tiếng ngày đổi giờ).
+   - Test: test/calendar_civil_date_test.dart
+
+2. Thống nhất quy ước "ngày bắt đầu = ngày 0" (giống vòng đếm chính)  [XONG]
+   - milestones_screen.dart (bỏ "m - 1"), pairing_connection_date.dart (bỏ "+1"),
+     main_home_tab.dart _calculateDays (bỏ "+1"), main_home_status_cards.dart.
+
+3. Thông báo kỷ niệm/sinh nhật/mốc ngày yêu  [CODE XONG, CÒN DỊCH]
+   - schedule_notification_presenter.dart viết lại: dùng khóa dịch sched_*,
+     nhận diện loại sự kiện bằng eventKey (không dò câu tiếng Việt nữa),
+     vẫn đọc được thông báo cũ tiếng Việt.
+   - Sửa lỗi cũ: nhắc "sinh nhật sau 7 ngày" bị báo thành "Hôm nay là sinh nhật!".
+   - Trung tâm thông báo dựng lại nội dung theo NGÔN NGỮ CỦA NGƯỜI XEM.
+   - 20 gợi ý quà → khóa sched_gift_1..20.
+   - Test: test/schedule_notification_presenter_test.dart
+
+4. iOS  [XONG]
+   - Info.plist: lời xin quyền gốc chuyển sang tiếng Anh, thêm CFBundleLocalizations.
+   - ios/Runner/<22 ngôn ngữ>.lproj/InfoPlist.strings: lời xin quyền Camera, Ảnh,
+     Vị trí, Micro, Face ID, Sức khỏe, ATT đã dịch đủ 21 ngôn ngữ (+ fil).
+   - TRƯỚC ĐÂY file InfoPlist.strings KHÔNG được đưa vào build → đã đăng ký vào
+     project.pbxproj (variant group A300...0005).
+   - Widget: 2 widget tên/mô tả tiếng Việt → WidgetStrings (21 ngôn ngữ),
+     đơn vị "day" → "days"/"jours"/"Tage"..., thêm fil.lproj.
+   - App Intent "Thả tim nhanh" → tiếng Anh (tránh lỗi trích xuất metadata).
+
+5. Android widget  [XONG]
+   - Tự tính số ngày từ startDateRaw (java.time) → tự tăng qua nửa đêm.
+   - Hẹn cập nhật lúc 0h; nghe TIME_SET / TIMEZONE_CHANGED / LOCALE_CHANGED.
+   - Bỏ qua vẽ lại mỗi 6 giây khi màn hình tắt (đỡ tốn pin).
+   - Bỏ chữ cứng "ngày", "Tu", "Bạn", "Người ấy" → strings.xml cho 21 ngôn ngữ
+     (values-*/strings.xml); nhãn widget trong Manifest dùng @string.
+   - Thêm res/xml/locales_config.xml (chọn ngôn ngữ app trên Android 13+).
+   - Sửa lỗi: đơn vị widget lấy nhầm khóa "Date" (home_ngy_b9474a) → comm_ngy_41ec10.
+
+6. Nhập/hiển thị ngày theo vùng  [XONG]
+   - flexible_date_input.dart viết lại: Mỹ/PH = MM/DD/YYYY, Trung/Nhật/Hàn =
+     YYYY/MM/DD, còn lại DD/MM/YYYY; gõ nhầm thứ tự (14/03 với người Mỹ) vẫn hiểu;
+     năm Phật lịch cho tiếng Thái; thông báo lỗi dùng khóa dịch date_input_*.
+   - Câu trả lời bảo mật ngày sinh: chuẩn hoá không phụ thuộc ngôn ngữ, tương thích
+     băm cũ; nhận diện câu hỏi ngày sinh ở mọi ngôn ngữ (trước chỉ nhận "sinh").
+   - app.dart gọi DateInputUtils.configureLocale; main.dart gọi initializeDateFormatting.
+   - lib/utils/locale_date_format.dart mới; thay ~30 chỗ DateFormat('dd/MM/yyyy')
+     cố định (nhật ký, kỷ niệm, capsule, bản đồ, xuất dữ liệu...). Tiếng Việt giữ dd/MM/yyyy.
+   - Test: test/flexible_date_input_test.dart
+
+7. Tiền tệ  [LÀM DỞ]
+   - lib/utils/money_format.dart mới (tiền tệ theo khu vực: VND, USD, EUR, JPY...).
+   - finance_screen.dart: bỏ ký hiệu sai "Tiện ích/Utilities"; lưu loại tiền chung
+     của nhà tại houses/<id>/settings/moneyCurrency (ghi lần đầu dùng).
+   - wishlist_screen.dart: tạm dùng tiền tệ mặc định theo khu vực (có TODO).
+
+8. Nhãn & lời chào  [XONG PHẦN CHÍNH]
+   - Lời chào: 5–11h sáng, 11–14h trưa, 14–18h chiều (mới), 18–23h tối (mới), còn lại khuya.
+     Trước đây "Buổi trưa rồi" hiện tới 23h.
+   - Sửa dịch sai "mở app là thấy thương ngay" (EN đang là "feel sorry for myself").
+   - Sửa nhãn đơn vị: DAY→DAYS, KO "요일"(=thứ)→"일", JA "1日目"→"日", "DAY OLD"→"DAYS OLD"...
+
+9. Công cụ dịch: tool/i18n/
+   - merge_i18n.py: gộp bản dịch vào assets/i18n/*.json, kiểm tra placeholder {..}.
+   - src/*.json  : khóa mới (nguồn vi + en)
+   - multi/*.json: bản sửa cho khóa có sẵn (đủ 21 ngôn ngữ)
+   - tr/<lang>__<tên>.json: nơi đặt bản dịch cho từng ngôn ngữ (đang trống)
+   - infoplist_strings.json: nguồn lời xin quyền iOS
+   Chạy: python3 tool/i18n/merge_i18n.py   (thêm --check để chỉ kiểm tra)
+
+C. VIỆC CÒN LẠI – KẾ HOẠCH CHI TIẾT (theo thứ tự ưu tiên)
+--------------------------------------------------------------------------
+C.1 [CAO] Dịch 87 khóa mới sang 19 ngôn ngữ (zh, zh-TW, ja, ko, th, id, es, pt, fr,
+    de, it, ru, hi, tr, ar, ms, tl, nl, pl). Hiện các ngôn ngữ này tự rơi về tiếng Anh.
+    - Khóa nằm trong tool/i18n/src/02_sched.json (70 khóa) và 03_date_input.json (15),
+      cộng home_greeting_afternoon/evening đã có đủ trong multi/01_greetings.json.
+    - Tạo tool/i18n/tr/ja__sched.json dạng {"sched_title_d0": "...", ...} cho mỗi
+      ngôn ngữ → chạy merge_i18n.py → script báo "thiếu 0 khóa" là xong.
+    - Lưu ý: giữ nguyên {days} {name} {couple} {event} {gift} {format} {a} {b}...
+
+C.2 [CAO] Chạy workflow iOS (Build iOS IPA) để xác nhận pbxproj/Info.plist build được.
+    Mở app ở máy cài tiếng Anh/Nhật → kiểm tra hộp thoại xin quyền đúng ngôn ngữ.
+
+C.3 [CAO] Hoàn thiện tiền tệ
+    - wishlist_screen.dart: đọc houses/<id>/settings/moneyCurrency giống finance_screen
+      (_currencySub + _ensureHouseCurrency khi thêm món), bỏ TODO.
+    - Ô nhập số tiền (finance_screen.dart dòng ~145, 165, 235, 315; wishlist ~158)
+      đang xoá mọi ký tự không phải số → "12.50" thành 1250. Thêm hàm
+      MoneyFormat.parseWholeAmount: nếu cuối chuỗi là [.,] + 1–2 chữ số thì là phần
+      lẻ → làm tròn; "1.000" (3 chữ số) vẫn là hàng nghìn. Thay 5 chỗ trên.
+    - (Tuỳ chọn) Thêm mục chọn loại tiền trong màn Tài chính.
+
+C.4 [TRUNG BÌNH] Chuỗi tiếng Việt viết cứng (~1.300 chuỗi, không có trong bảng dịch)
+    Ưu tiên theo mức người dùng thấy:
+    a) Lỗi ném ra dạng chuỗi: house_settings_service.dart (208–225, 420–423:
+       "Ngày yêu không được ở tương lai!"...), auth_sign_in_service.dart,
+       auth_recovery_service.dart, storage_service.dart, social_service.dart.
+       Cách làm: thêm khóa err_* vào src/, ném L10nService().translate(key) hoặc
+       ném key rồi dịch trong AppErrorMapper.resolve (cuối hàm gọi translate(message)).
+    b) Mặc định tiếng Việt khi lưu widget: widget_service.dart
+       (status1 = 'Đang hoạt động', _saveIfMissing('daysText','0 ngày')...).
+    c) Bong bóng thoại sticker: walking_sticker_overlay.dart,
+       main_home_soul_merge_sticker.dart, original_sticker_performances.dart.
+    d) Tên cung hoàng đạo / tarot: zodiac_utils.dart, tarot_reading_service.dart.
+    e) Thông báo nhắc ngủ: notification_service.dart (~880) "Ngủ ngoan nha...".
+    f) Overlay chat: notification_service.dart "Bong bóng tâm hồn".
+    Tìm nhanh: python script quét chuỗi có dấu tiếng Việt không có trong vi.json
+    (bỏ qua comment, debugPrint, từ khoá tìm kiếm, regex nhận diện lỗi).
+
+C.5 [TRUNG BÌNH] Lấp bản dịch đang để tiếng Anh trong assets/i18n:
+    ms/nl/pl ~77% câu dài còn tiếng Anh, tl 67%, fr/pt/es 51–57%, it 35%,
+    các ngôn ngữ khác ~17%. Ưu tiên tiền tố khóa: home_, util_, settings_, auth_,
+    pairing_, map_, consent_, sec_ (bỏ qua admin_). Rà thêm câu dịch sai nghĩa
+    (dịch máy từ tiếng Anh sai nghĩa gốc tiếng Việt), ví dụ:
+    chat_friendly_13 (vi "ngày/tháng hoặc ngày/tháng/năm" nhưng en là
+    "House code does not exist").
+
+C.6 [TRUNG BÌNH] Android trong repo này KHÔNG đầy đủ:
+    AndroidManifest khai báo WidgetCycleProvider, WidgetCalendarProvider,
+    WidgetSoulEventProvider + res/xml/widget_cycle_info, widget_calendar_info,
+    widget_soul_event_info nhưng không có file → không build được APK từ repo này.
+    Cần chép các thay đổi Android (mục B.5) sang repo Android thật hoặc bổ sung
+    các file còn thiếu.
+
+C.7 [THẤP] Múi giờ
+    - Điểm danh/quảng cáo thưởng reset lúc 0h giờ VN (reward_missions.dart:35,
+      functions/rewards.js) → ở Mỹ là ~10h–13h trưa. Giữ (chống gian lận) nhưng hiển
+      thị giờ reset theo giờ địa phương trong màn Phần thưởng.
+    - functions/dataExport.js:502 cố định 'Asia/Ho_Chi_Minh' → nhận timeZone từ app
+      (FlutterTimezone) khi yêu cầu xuất dữ liệu.
+
+C.8 [THẤP] Thông báo push gửi cho người kia đang dùng ngôn ngữ của MÁY GỬI.
+    Trong app (Trung tâm thông báo) đã hiển thị đúng ngôn ngữ người xem. Muốn push
+    cũng đúng: hàm server createScheduleNotificationSecure (không có trong repo này)
+    cần lưu ngôn ngữ từng thành viên và dịch theo eventKey + daysUntil.
+
+C.9 [THẤP] Danh mục Tài chính đang lưu bằng chữ đã dịch → cặp đôi khác ngôn ngữ
+    thấy chữ của người tạo. Đổi sang lưu mã danh mục (food, shopping...).
+
+D. CÁCH KIỂM TRA SAU MỖI BƯỚC
+--------------------------------------------------------------------------
+  flutter pub get
+  flutter analyze            # phải giữ 253 issue, không có error mới
+  flutter test               # 18 test hiện có phải đạt
+  TZ=America/New_York flutter test test/calendar_civil_date_test.dart
+  python3 tool/i18n/merge_i18n.py --check

@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
@@ -278,8 +279,7 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
                                     ? context.tr('util_lulinhngdn_f942d3')
                                     : L10nService().format(
                                         'util_diary_saved_date', {
-                                        'date': DateFormat('dd/MM/yyyy')
-                                            .format(activePage.createdAt)
+                                        'date': LocaleDateFormat.date(activePage.createdAt)
                                       }),
                                 style: SLTheme.quicksand(
                                   fontSize: compact ? 11.5 : 12.5,
@@ -670,7 +670,7 @@ class _DiaryPageCard extends StatelessWidget {
                     ),
                     SLSpacing.h4,
                     Text(
-                      L10nScope.of(context).format('ui_utilities_value1_value2_words_a27aaf', {'value1': DateFormat('dd/MM/yyyy').format(page.createdAt), 'value2': page.wordCount}),
+                      L10nScope.of(context).format('ui_utilities_value1_value2_words_a27aaf', {'value1': LocaleDateFormat.date(page.createdAt), 'value2': page.wordCount}),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: SLTheme.quicksand(
@@ -719,7 +719,7 @@ class _DiaryPageCard extends StatelessWidget {
             children: [
               _DiaryMetaChip(
                 icon: Icons.event_note_rounded,
-                label: DateFormat('dd/MM/yyyy').format(page.createdAt),
+                label: LocaleDateFormat.date(page.createdAt),
                 color: page.accent,
                 background: page.surface,
               ),
@@ -929,7 +929,7 @@ class _DiaryExportPageCard extends StatelessWidget {
                       Text(
                         L10nService().format('util_diary_day_date', {
                           'date':
-                              DateFormat('dd/MM/yyyy').format(page.createdAt)
+                              LocaleDateFormat.date(page.createdAt)
                         }),
                         style: SLTheme.quicksand(
                           fontSize: 12.5,
@@ -1061,7 +1061,7 @@ class _DiaryExportPageCard extends StatelessWidget {
               children: [
                 _DiaryMetaChip(
                   icon: Icons.event_note_rounded,
-                  label: DateFormat('dd/MM/yyyy').format(page.createdAt),
+                  label: LocaleDateFormat.date(page.createdAt),
                   color: page.accent,
                   background: page.surface,
                 ),

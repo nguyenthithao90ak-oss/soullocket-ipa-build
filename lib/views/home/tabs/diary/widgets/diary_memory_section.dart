@@ -1,9 +1,9 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
@@ -186,7 +186,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                     : _selectedMonth == months[index - 1];
                 final label = isAll
                     ? context.tr('Tất cả')
-                    : DateFormat('MM/yyyy').format(months[index - 1]);
+                    : LocaleDateFormat.monthYear(months[index - 1]);
                 return ChoiceChip(
                   label: Text(
                     label,
@@ -610,7 +610,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                 final item = filteredItems[index];
                                 final d = item.date;
                                 final label = d != null
-                                    ? DateFormat('dd/MM/yyyy').format(d)
+                                    ? LocaleDateFormat.date(d)
                                     : '';
 
                                 _scrollIndicatorNotifier.value = (

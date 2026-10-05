@@ -1,5 +1,6 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
+import '../calendar/calendar_civil_date.dart';
 
 /// ============================================================
 ///  HealthPeriodService — Gra (Logic/Data)
@@ -33,7 +34,7 @@ class HealthPeriodService {
 
     // Tính toán trạm dừng chân tiếp theo
     final nextPredictedDate =
-        startDate.add(const Duration(days: defaultCycleLength));
+        CalendarCivilDate.addDays(startDate, defaultCycleLength);
 
     // Cập nhật lên Cổng Chính (Home) để Trae bắt vẽ Giọt Nước
     await ref.update({
@@ -63,9 +64,8 @@ class HealthPeriodService {
 
     // Trigger mock notification via NotificationService if it's within a few days
     final now = DateTime.now();
-    final pmsDate =
-        nextPredictedDate.subtract(const Duration(days: pmsWarningDays));
-    final diffDays = pmsDate.difference(now).inDays;
+    final pmsDate = CalendarCivilDate.addDays(nextPredictedDate, -pmsWarningDays);
+    final diffDays = CalendarCivilDate.daysBetween(now, pmsDate);
 
     // Just a mock debug log, in production this would be sent to Firebase Cloud Functions Queue
     debugPrint('Scheduled PMS Notification for $pmsDate (in $diffDays days)');

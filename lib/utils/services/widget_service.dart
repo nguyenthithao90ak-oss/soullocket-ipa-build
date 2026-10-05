@@ -19,6 +19,7 @@ import '../calendar/holiday_occurrence_resolver.dart';
 import '../calendar/calendar_time_zone.dart';
 import '../calendar/calendar_display_format.dart';
 import '../calendar/calendar_widget_payload.dart';
+import '../calendar/calendar_civil_date.dart';
 import '../sleep_tracking_math.dart';
 import 'storage/storage_service.dart';
 import 'package:soullocket_app/utils/flexible_date_input.dart';
@@ -354,8 +355,7 @@ class WidgetService {
     final parsed = DateInputUtils.parse(raw, firstYear: 1900, lastYear: 2100);
     if (parsed == null) return false;
     final anchor = DateTime(now.year, parsed.month, parsed.day);
-    final today = DateTime(now.year, now.month, now.day);
-    return (today.difference(anchor).inDays).abs() <= windowDays;
+    return CalendarCivilDate.daysBetween(anchor, now).abs() <= windowDays;
   }
 
   static Future<void> _saveIfMissing<T>(String key, T value) async {

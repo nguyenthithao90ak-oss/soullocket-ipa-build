@@ -42,3 +42,7 @@
 "p3_health_next_period" = "until your next period";
 "milestone_today" = "📍 今日";
 "milestone_days_left" = "🌸残り {days} 日";
+"widget_avatar_days_name" = "SoulLocket：アバターと日数";
+"widget_avatar_days_desc" = "2人のアバターと一緒に交際日数を中央に表示します。";
+"widget_soul_merge_name" = "SoulLocket：Soul Merge";
+"widget_soul_merge_desc" = "パートナーからの最新の Soul Merge メッセージを表示します。";

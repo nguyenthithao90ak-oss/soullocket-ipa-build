@@ -1087,7 +1087,16 @@ class NotificationService {
       minute,
     );
     if (!scheduled.isAfter(now)) {
-      scheduled = scheduled.add(const Duration(days: 1));
+      // Dựng lại theo giờ đồng hồ của ngày mai: cộng 24 giờ sẽ lệch 1 tiếng
+      // vào ngày đổi giờ mùa hè.
+      scheduled = tz.TZDateTime(
+        tz.local,
+        now.year,
+        now.month,
+        now.day + 1,
+        hour,
+        minute,
+      );
     }
     return scheduled;
   }

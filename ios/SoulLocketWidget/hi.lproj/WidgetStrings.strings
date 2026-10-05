@@ -42,3 +42,7 @@
 "p3_health_next_period" = "until your next period";
 "milestone_today" = "📍आज";
 "milestone_days_left" = "🌸 {days} दिन बचे हैं";
+"widget_avatar_days_name" = "SoulLocket: अवतार और दिन";
+"widget_avatar_days_desc" = "बीच में साथ बिताए दिनों की संख्या और दोनों के अवतार दिखाता है।";
+"widget_soul_merge_name" = "SoulLocket: Soul Merge";
+"widget_soul_merge_desc" = "आपके पार्टनर का नवीनतम Soul Merge संदेश दिखाता है।";

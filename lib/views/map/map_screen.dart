@@ -1,4 +1,5 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -120,7 +121,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final ll.Distance _distance = const ll.Distance();
   final DateFormat _dayFormat = DateFormat('yyyy-MM-dd');
-  final DateFormat _prettyDayFormat = DateFormat('dd/MM/yyyy');
+  DateFormat get _prettyDayFormat => LocaleDateFormat.dateFormat();
   final DateFormat _timeFormat = DateFormat('HH:mm');
 
   final ValueNotifier<List<fm.Marker>> _staticMarkersVN =

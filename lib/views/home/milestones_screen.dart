@@ -135,7 +135,9 @@ class _MilestonesScreenState extends State<MilestonesScreen>
         10000,
       ];
       for (final m in milestoneDays) {
-        final milestoneDate = startDtMidnight.add(Duration(days: m - 1));
+        // Cùng quy ước với vòng đếm ở màn chính và thông báo: ngày bắt đầu
+        // là ngày 0, nên mốc N ngày rơi vào đúng ngày bộ đếm hiện N.
+        final milestoneDate = CalendarCivilDate.addDays(startDtMidnight, m);
         final diff = CalendarCivilDate.daysBetween(
           todayMidnight,
           milestoneDate,

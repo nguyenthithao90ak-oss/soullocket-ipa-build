@@ -14,6 +14,7 @@ import 'package:soullocket_app/widgets/sound_effects_scope.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:soullocket_app/widgets/sl_date_picker.dart';
+import 'package:soullocket_app/utils/flexible_date_input.dart';
 
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 
@@ -34,6 +35,11 @@ class MyApp extends StatelessWidget {
         final displayLocale = AppLocaleRegistry.formattingLocale(
           L10nService().locale,
           MarketService.instance.marketCode,
+        );
+        // Ô nhập ngày theo thói quen vùng: Mỹ MM/DD/YYYY, Nhật YYYY/MM/DD...
+        DateInputUtils.configureLocale(
+          languageCode: L10nService().locale.languageCode,
+          countryCode: MarketService.instance.marketCode,
         );
         return MaterialApp.router(
           title: 'SoulLocket',

@@ -22,6 +22,7 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
       fallbackMessage: notif.msg,
       eventTitle: raw['eventTitle']?.toString() ?? '',
       eventDate: raw['eventDate']?.toString(),
+      eventKey: raw['eventKey']?.toString(),
       identity: _scheduleIdentity,
     );
   }

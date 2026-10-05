@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
@@ -870,7 +871,7 @@ class DiaryMemoryController extends ChangeNotifier {
     final flattenedItems = <DiaryMemoryFlattenedItem>[];
 
     for (final group in groupedPhotos) {
-      final dateString = DateFormat('dd/MM/yyyy').format(group.date);
+      final dateString = LocaleDateFormat.date(group.date);
       final highlights = DateHighlightHelper.getDateHighlights(
         group.date.millisecondsSinceEpoch,
         anniversaryDate: startDate,

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_days_unit">дней</string>
+    <string name="widget_since_date">С %1$s</string>
+    <string name="widget_default_me">Вы</string>
+    <string name="widget_default_partner">Любимый человек</string>
+    <string name="widget_label_couple">Пара</string>
+    <string name="widget_label_cycle">Цикл</string>
+    <string name="widget_label_calendar">Расписание</string>
+    <string name="widget_label_soul_event">События и годовщины</string>
+    <string name="widget_label_sleep">Сон ☁️💤</string>
+    <string name="widget_sleep_title">СОН ПАРЫ ☁️✨</string>
+    <string name="widget_sleep_summary_default">Оба не спят ☀️</string>
+    <string name="widget_sleep_status_awake">☀️ Не спит</string>
+    <string name="widget_sleep_time_active">В сети</string>
+</resources>

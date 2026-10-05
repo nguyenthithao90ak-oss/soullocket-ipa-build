@@ -701,9 +701,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                                   },
                                   decoration:
                                       LegacyWebUi.softInputDecoration(
-                                        hintText: context.tr(
-                                          'home_ngythngnm_a697d0',
-                                        ),
+                                        hintText: DateInputUtils.formatHint(),
                                       ).copyWith(
                                         errorText: _anniversaryDateErrorText,
                                         isDense: true,

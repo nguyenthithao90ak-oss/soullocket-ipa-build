@@ -4,10 +4,10 @@ import Foundation
 
 @available(iOS 17.0, *)
 public struct SendQuickActionIntent: AppIntent {
-    public static var title: LocalizedStringResource = "Thả tim nhanh"
-    public static var description = IntentDescription("Gửi tim nhanh cho người ấy trực tiếp từ widget.")
+    public static var title: LocalizedStringResource = "Send a quick heart"
+    public static var description = IntentDescription("Send a quick heart to your partner right from the widget.")
 
-    @Parameter(title: "Hành động")
+    @Parameter(title: "Action")
     public var actionType: String
 
     public init() {

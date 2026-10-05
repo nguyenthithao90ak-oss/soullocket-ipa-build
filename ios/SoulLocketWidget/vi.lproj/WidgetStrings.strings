@@ -42,3 +42,7 @@
 "p3_health_next_period" = "bắt đầu kỳ tiếp theo";
 "milestone_today" = "📍 Hôm nay";
 "milestone_days_left" = "🌸 Còn {days} ngày";
+"widget_avatar_days_name" = "SoulLocket: Ảnh đại diện & Ngày";
+"widget_avatar_days_desc" = "Hiện số ngày yêu ở giữa cùng ảnh đại diện 2 người.";
+"widget_soul_merge_name" = "SoulLocket: Soul Merge";
+"widget_soul_merge_desc" = "Hiển thị tin nhắn Soul Merge mới nhất từ người kia.";

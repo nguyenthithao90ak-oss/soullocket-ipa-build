@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/money_format.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
@@ -214,8 +215,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
     );
   }
 
-  final _currencyFormat = NumberFormat.currency(
-      locale: 'vi_VN', symbol: L10nService().translate('util_txt_b5407d'));
+  // TODO(i18n): đọc loại tiền chung của nhà như màn Tài chính.
+  NumberFormat get _currencyFormat => MoneyFormat.forCurrency(null);
 
   int _priorityRank(String? value) {
     switch (value) {

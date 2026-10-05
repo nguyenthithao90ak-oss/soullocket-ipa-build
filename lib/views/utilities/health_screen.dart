@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/widgets/sl_date_picker.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
@@ -10,6 +11,7 @@ import '../../core/sl_theme.dart';
 import '../../utils/services/health_period_service.dart';
 import 'package:soullocket_app/utils/services/widget_service.dart';
 import '../../utils/services/l10n_service.dart';
+import '../../utils/calendar/calendar_civil_date.dart';
 import 'widgets/health_cycle_dashboard.dart';
 
 class HealthScreen extends StatefulWidget {
@@ -201,7 +203,7 @@ class _HealthScreenState extends State<HealthScreen> {
     if (_lastDate == null) return {};
 
     final today = DateTime.now();
-    final diffDays = today.difference(_lastDate!).inDays;
+    final diffDays = CalendarCivilDate.daysBetween(_lastDate!, today);
 
     final safeLength = _length > 0 ? _length : 28;
     final dayInCycle = ((diffDays % safeLength) + safeLength) % safeLength;
@@ -403,7 +405,7 @@ class _HealthScreenState extends State<HealthScreen> {
           title: context.tr('p3_health_latest_start'),
           subtitle: _lastDate == null
               ? context.tr('p3_not_selected')
-              : DateFormat('dd/MM/yyyy').format(_lastDate!),
+              : LocaleDateFormat.date(_lastDate!),
           icon: Icons.calendar_today,
           iconColor: const Color(0xFFFF80AB),
           iconBgColor: const Color(0xFFFCE4EC),

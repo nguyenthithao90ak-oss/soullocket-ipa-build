@@ -1918,7 +1918,7 @@
   "home_chntinch_c56314": "ऐड-ऑन चुनें",
   "home_chntmtrngc_7fe6ac": "लेख के लिए मूड चुनें",
   "home_chnyutinsn_20a566": "यह मोड बीच में दिनों की संख्या और नीचे प्रारंभ तिथि को प्राथमिकता देता है।",
-  "home_chobuisngn_6aa536": "सुप्रभात, जब मैं ऐप खोलता हूं तो मुझे तुरंत अपने लिए खेद महसूस होता है",
+  "home_chobuisngn_6aa536": "सुप्रभात! ऐप खोलते ही प्यार महसूस होने लगा",
   "home_chomngbnnv_7ffc51": "आपके नए घर में आपका स्वागत है",
   "home_chomngbnnv_b93a5d": "सोललॉकेट में आपका स्वागत है",
   "home_chpnhn_6ca558": "स्वीकार करो",
@@ -2723,8 +2723,8 @@
   "home_ngysinhcab_9bdbf2": "आपकी जन्मतिथि?",
   "home_ngythngnm_03da5a": "दिन/माह/वर्ष",
   "home_ngythngnm_a697d0": "दिन/माह/वर्ष",
-  "home_ngytui_22bed4": "दिन पुराना",
-  "home_ngyyu_722b21": "प्रेम दिवस",
+  "home_ngytui_22bed4": "दिन की उम्र",
+  "home_ngyyu_722b21": "प्यार के दिन",
   "home_ngyyu_caafdc": "प्यार का दिन",
   "home_nh_217304": "घर",
   "home_nh_3c6f33": "फ़ोटो",
@@ -9848,5 +9848,7 @@
   "p4_call_busy": "आप पहले से कॉल पर हैं।",
   "p4_call_connection_failed": "कॉल कनेक्ट नहीं हो सकी। नेटवर्क जाँचें और फिर कोशिश करें।",
   "p4_call_media_permission": "कॉल शुरू करने के लिए माइक्रोफ़ोन और वीडियो कॉल के लिए कैमरे की अनुमति दें।",
-  "settings_cached_photos_size": "इस डिवाइस पर सहेजी गई फ़ोटो: {size}"
+  "settings_cached_photos_size": "इस डिवाइस पर सहेजी गई फ़ोटो: {size}",
+  "home_greeting_afternoon": "शुभ दोपहर! थोड़ा पानी पी लो और अपने प्यार को मैसेज भेजो",
+  "home_greeting_evening": "शुभ संध्या! एक-दूसरे को अपने दिन के बारे में बताओ"
 }

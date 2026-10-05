@@ -6,8 +6,9 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
     if (timestamp <= 0) {
       return context.tr('util_khngxcnh_fb806e');
     }
-    return _resetTimeFormat
-        .format(DateTime.fromMillisecondsSinceEpoch(timestamp).toLocal());
+    return LocaleDateFormat.timeAndDate(
+      DateTime.fromMillisecondsSinceEpoch(timestamp).toLocal(),
+    );
   }
 
   String _pendingResetRequesterLabel() {

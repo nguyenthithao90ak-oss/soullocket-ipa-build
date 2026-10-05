@@ -1918,7 +1918,7 @@
   "home_chntinch_c56314": "Eklentileri seçin",
   "home_chntmtrngc_7fe6ac": "Makalenin ruh halini seçin",
   "home_chnyutinsn_20a566": "Bu mod, ortadaki gün sayısına ve alttaki başlangıç tarihine öncelik verir.",
-  "home_chobuisngn_6aa536": "Günaydın, uygulamayı açtığımda hemen kendime üzülüyorum",
+  "home_chobuisngn_6aa536": "Günaydın! Uygulamayı açar açmaz sevgiyi hissediyorum",
   "home_chomngbnnv_7ffc51": "Yeni evinize hoş geldiniz",
   "home_chomngbnnv_b93a5d": "SOULLOCKET'E HOŞGELDİNİZ",
   "home_chpnhn_6ca558": "Kabul et",
@@ -2723,8 +2723,8 @@
   "home_ngysinhcab_9bdbf2": "doğum tarihin?",
   "home_ngythngnm_03da5a": "gün/ay/yıl",
   "home_ngythngnm_a697d0": "gün/ay/yıl",
-  "home_ngytui_22bed4": "GÜN ESKİ",
-  "home_ngyyu_722b21": "aşk günü",
+  "home_ngytui_22bed4": "GÜNLÜK",
+  "home_ngyyu_722b21": "aşk günleri",
   "home_ngyyu_caafdc": "Aşk günü",
   "home_nh_217304": "ev",
   "home_nh_3c6f33": "Fotoğraf",
@@ -9848,5 +9848,7 @@
   "p4_call_busy": "Zaten bir görüşmedesiniz.",
   "p4_call_connection_failed": "Arama bağlanamadı. Bağlantınızı kontrol edip tekrar deneyin.",
   "p4_call_media_permission": "Aramayı başlatmak için mikrofon erişimine ve görüntülü aramalarda kamera erişimine izin verin.",
-  "settings_cached_photos_size": "Bu cihazda kayıtlı fotoğraflar: {size}"
+  "settings_cached_photos_size": "Bu cihazda kayıtlı fotoğraflar: {size}",
+  "home_greeting_afternoon": "Tünaydın! Biraz su iç ve sevgiline bir mesaj gönder",
+  "home_greeting_evening": "İyi akşamlar! Birbirinize gününüzü anlatın"
 }

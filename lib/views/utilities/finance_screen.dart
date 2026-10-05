@@ -1,3 +1,5 @@
+import 'package:soullocket_app/utils/money_format.dart';
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
@@ -61,11 +63,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
     L10nService().translate('util_thucmen_ba87cf'),
     L10nService().translate('util_khc_dd4bad'),
   ];
-  final _fmt = NumberFormat.currency(
-    locale: 'vi_VN',
-    symbol: L10nService().translate('util_txt_b5407d'),
-    decimalDigits: 0,
-  );
+  // Loại tiền chung của nhà (VND, USD, EUR...), mặc định theo khu vực.
+  String _houseCurrency = '';
+  StreamSubscription<DatabaseEvent>? _currencySub;
+  NumberFormat get _fmt => MoneyFormat.forCurrency(_houseCurrency);
 
   @override
   void initState() {
@@ -76,6 +77,29 @@ class _FinanceScreenState extends State<FinanceScreen> {
         .onValue;
     _loadBudgetPlan();
     _loadSavingsGoal();
+    _currencySub = _dbRef
+        .child(MoneyFormat.houseCurrencyPath(widget.houseId))
+        .onValue
+        .listen((event) {
+          if (!mounted) return;
+          setState(() {
+            _houseCurrency = MoneyFormat.normalizeCode(event.snapshot.value);
+          });
+        }, onError: (_) {});
+  }
+
+  /// Ghi loại tiền lần đầu nhà dùng Tài chính để hai người luôn thấy cùng
+  /// một đơn vị dù khác ngôn ngữ/khu vực.
+  void _ensureHouseCurrency() {
+    if (_houseCurrency.isNotEmpty) return;
+    final code = MoneyFormat.defaultCurrencyCode;
+    _houseCurrency = code;
+    unawaited(
+      _dbRef
+          .child(MoneyFormat.houseCurrencyPath(widget.houseId))
+          .set(code)
+          .catchError((_) {}),
+    );
   }
 
   void _loadBudgetPlan() {
@@ -124,6 +148,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     if (amount == null || days == null || days <= 0) return;
 
     final now = DateTime.now();
+    _ensureHouseCurrency();
     _dbRef.child('houses/${widget.houseId}/finance_plan').set({
       'targetAmount': amount,
       'targetDays': days,
@@ -143,6 +168,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     if (amount == null || amount <= 0 || name.isEmpty) return;
 
     final now = DateTime.now();
+    _ensureHouseCurrency();
     _dbRef.child('houses/${widget.houseId}/savings_goal').set({
       'name': name,
       'targetAmount': amount,
@@ -231,6 +257,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     }
 
     final now = DateTime.now();
+    _ensureHouseCurrency();
     _dbRef.child('houses/${widget.houseId}/budget').push().set({
       'from': widget.myName,
       'amount': amount,
@@ -238,7 +265,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
       'category': _category,
       'note': _noteController.text.trim(),
       'ts': now.millisecondsSinceEpoch,
-      'time': DateFormat('dd/MM, HH:mm').format(now),
+      'time': LocaleDateFormat.dayMonthTime(now),
     });
     _amountController.clear();
     _noteController.clear();
@@ -384,6 +411,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
   void dispose() {
     _budgetPlanSub?.cancel();
     _savingsGoalSub?.cancel();
+    _currencySub?.cancel();
     _amountController.dispose();
     _noteController.dispose();
     _goalAmountController.dispose();

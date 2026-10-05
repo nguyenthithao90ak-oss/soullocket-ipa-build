@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'calendar/calendar_civil_date.dart';
+import 'services/l10n_service.dart';
 
 class ZodiacUtils {
   static const List<Map<String, dynamic>> _zodiacs = [
@@ -199,14 +201,25 @@ class ZodiacUtils {
     return null;
   }
 
-  static String? getAgeInDays(String dob) {
+  /// Số ngày tuổi theo ngày lịch (không lệch khi đổi giờ mùa hè).
+  static int? getAgeDayCount(String dob) {
     if (dob.isEmpty) return null;
     try {
       final date = DateTime.parse(dob);
-      final now = DateTime.now();
-      final difference = now.difference(date).inDays;
-      if (difference < 0) return null;
-      return '$difference ngày tuổi';
+      final difference = CalendarCivilDate.daysBetween(date, DateTime.now());
+      return difference < 0 ? null : difference;
+    } catch (error) {
+      debugPrint('[SuppressedError] lib/utils/zodiac_utils.dart: $error');
+    }
+    return null;
+  }
+
+  static String? getAgeInDays(String dob) {
+    if (dob.isEmpty) return null;
+    try {
+      final difference = getAgeDayCount(dob);
+      if (difference == null) return null;
+      return L10nService().format('zodiac_age_days', {'count': difference});
     } catch (error) {
       debugPrint('[SuppressedError] lib/utils/zodiac_utils.dart: $error');
     }

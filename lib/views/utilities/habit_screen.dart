@@ -2,6 +2,7 @@ import 'package:soullocket_app/widgets/sl_date_picker.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
+import 'package:soullocket_app/utils/calendar/calendar_civil_date.dart';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -181,7 +182,7 @@ class _HabitScreenState extends State<HabitScreen> {
     final today = DateTime.now();
     return List.generate(
       7,
-      (index) => today.subtract(Duration(days: 6 - index)),
+      (index) => CalendarCivilDate.addDays(today, -(6 - index)),
     );
   }
 
@@ -196,14 +197,14 @@ class _HabitScreenState extends State<HabitScreen> {
       final key = _formatDateKey(checkDate);
       if (completedMap[key] == true) {
         streak++;
-        checkDate = checkDate.subtract(const Duration(days: 1));
+        checkDate = CalendarCivilDate.addDays(checkDate, -1);
       } else {
         if (streak == 0 &&
             _formatDateKey(checkDate) == _formatDateKey(DateTime.now())) {
-          checkDate = checkDate.subtract(const Duration(days: 1));
+          checkDate = CalendarCivilDate.addDays(checkDate, -1);
           if (completedMap[_formatDateKey(checkDate)] == true) {
             streak++;
-            checkDate = checkDate.subtract(const Duration(days: 1));
+            checkDate = CalendarCivilDate.addDays(checkDate, -1);
             continue;
           }
         }

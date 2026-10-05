@@ -1918,7 +1918,7 @@
   "home_chntinch_c56314": "Pilih add-on",
   "home_chntmtrngc_7fe6ac": "Pilih suasana artikel",
   "home_chnyutinsn_20a566": "Mode ini mengutamakan jumlah hari di tengah dan tanggal mulai di bawah.",
-  "home_chobuisngn_6aa536": "Selamat pagi, ketika saya membuka aplikasinya saya langsung kasihan pada diri sendiri",
+  "home_chobuisngn_6aa536": "Selamat pagi! Buka aplikasi langsung terasa sayangnya",
   "home_chomngbnnv_7ffc51": "Selamat datang di rumah baru Anda",
   "home_chomngbnnv_b93a5d": "SELAMAT DATANG DI SOULLOCKET",
   "home_chpnhn_6ca558": "Terima",
@@ -2723,7 +2723,7 @@
   "home_ngysinhcab_9bdbf2": "tanggal lahirmu?",
   "home_ngythngnm_03da5a": "hari/bulan/tahun",
   "home_ngythngnm_a697d0": "hari/bulan/tahun",
-  "home_ngytui_22bed4": "HARI TUA",
+  "home_ngytui_22bed4": "HARI USIA",
   "home_ngyyu_722b21": "hari cinta",
   "home_ngyyu_caafdc": "hari cinta",
   "home_nh_217304": "Rumah",
@@ -9848,5 +9848,7 @@
   "p4_call_busy": "Kamu sedang dalam panggilan.",
   "p4_call_connection_failed": "Panggilan tidak dapat terhubung. Periksa koneksimu dan coba lagi.",
   "p4_call_media_permission": "Izinkan akses mikrofon dan kamera untuk panggilan video agar dapat memulai panggilan.",
-  "settings_cached_photos_size": "Foto yang tersimpan di perangkat ini: {size}"
+  "settings_cached_photos_size": "Foto yang tersimpan di perangkat ini: {size}",
+  "home_greeting_afternoon": "Selamat siang! Minum air dulu dan kirim pesan untuk si dia ya",
+  "home_greeting_evening": "Selamat malam! Ceritakan hari kalian satu sama lain ya"
 }

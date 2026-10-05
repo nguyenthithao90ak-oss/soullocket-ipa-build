@@ -1,4 +1,5 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
+import 'package:soullocket_app/utils/calendar/calendar_civil_date.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
@@ -1177,10 +1178,7 @@ class _HomeScreenState extends State<HomeScreen>
     final parsed = DateTime.tryParse(normalized);
     if (parsed == null) return 0;
 
-    final today = DateTime.now();
-    final normalizedToday = DateTime(today.year, today.month, today.day);
-    final normalizedStart = DateTime(parsed.year, parsed.month, parsed.day);
-    final diff = normalizedToday.difference(normalizedStart).inDays;
+    final diff = CalendarCivilDate.daysBetween(parsed, DateTime.now());
     return diff < 0 ? 0 : diff;
   }
 

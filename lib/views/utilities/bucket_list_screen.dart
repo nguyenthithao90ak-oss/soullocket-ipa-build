@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
@@ -7,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:intl/intl.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/activity_history_service.dart';
 import '../../utils/app_error_mapper.dart';
@@ -180,7 +180,7 @@ class _BucketListScreenState extends State<BucketListScreen>
       'a': widget.myName,
       'c': text,
       'ts': now.millisecondsSinceEpoch,
-      'time': DateFormat('dd/MM/yyyy').format(now),
+      'time': LocaleDateFormat.date(now),
       'done': false,
     });
 

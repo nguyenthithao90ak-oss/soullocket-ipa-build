@@ -1918,7 +1918,7 @@
   "home_chntinch_c56314": "부가기능 선택",
   "home_chntmtrngc_7fe6ac": "기사의 분위기를 선택하세요",
   "home_chnyutinsn_20a566": "이 모드는 중간 일수와 아래 시작일을 우선시합니다.",
-  "home_chobuisngn_6aa536": "좋은 아침이에요 앱을 열자마자 제 자신이 불쌍해요",
+  "home_chobuisngn_6aa536": "좋은 아침! 앱을 열자마자 사랑이 느껴져요",
   "home_chomngbnnv_7ffc51": "새 집에 오신 것을 환영합니다",
   "home_chomngbnnv_b93a5d": "SOULLOCKET에 오신 것을 환영합니다",
   "home_chpnhn_6ca558": "수락",
@@ -2707,7 +2707,7 @@
   "home_ngxut_0b3c82": "로그아웃",
   "home_ngxutthitb_7e13ea": "다른 기기에서 로그아웃하시겠습니까?",
   "home_ngy_41ec10": "일",
-  "home_ngy_48e4b0": "요일",
+  "home_ngy_48e4b0": "일",
   "home_ngy_b9474a": "날짜",
   "home_ngybnnhau_dd626e": "함께하는 하루",
   "home_ngycdun_98fd1e": "표시된 날",
@@ -2723,8 +2723,8 @@
   "home_ngysinhcab_9bdbf2": "당신의 생년월일은요?",
   "home_ngythngnm_03da5a": "일/월/년",
   "home_ngythngnm_a697d0": "일/월/년",
-  "home_ngytui_22bed4": "하루 지난",
-  "home_ngyyu_722b21": "사랑의 날",
+  "home_ngytui_22bed4": "일",
+  "home_ngyyu_722b21": "사랑한 날",
   "home_ngyyu_caafdc": "사랑의 날",
   "home_nh_217304": "집",
   "home_nh_3c6f33": "사진",
@@ -9848,5 +9848,7 @@
   "p4_call_busy": "이미 통화 중입니다.",
   "p4_call_connection_failed": "통화를 연결하지 못했어요. 네트워크를 확인하고 다시 시도하세요.",
   "p4_call_media_permission": "통화를 시작하려면 마이크 접근과 영상 통화 시 카메라 접근을 허용하세요.",
-  "settings_cached_photos_size": "이 기기에 저장된 사진: {size}"
+  "settings_cached_photos_size": "이 기기에 저장된 사진: {size}",
+  "home_greeting_afternoon": "좋은 오후예요! 물 한 잔 마시고 그 사람에게 메시지 보내요",
+  "home_greeting_evening": "좋은 저녁이에요! 서로의 하루 이야기를 나눠 봐요"
 }

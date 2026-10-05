@@ -54,7 +54,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     final List<HomeUpcomingEvent> upcomingEvents = [];
 
     // 1. Kỷ niệm ngày yêu
-    int totalDays = 0;
+    int totalDays = -1;
     if (startDate != null && startDate.isNotEmpty) {
       try {
         final startDt = DateTime.parse(startDate);
@@ -63,7 +63,9 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
           startDt.month,
           startDt.day,
         );
-        final daysToday = CalendarCivilDate.daysBetween(startDtMidnight, todayMidnight) + 1;
+        // Ngày bắt đầu là ngày 0, khớp vòng đếm chính.
+        final daysToday =
+            CalendarCivilDate.daysBetween(startDtMidnight, todayMidnight);
         totalDays = daysToday;
 
         int? nextMilestone;
@@ -91,8 +93,9 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
           }
         }
         if (nextMilestone != null) {
-          final milestoneDate = startDtMidnight.add(
-            Duration(days: nextMilestone - 1),
+          final milestoneDate = CalendarCivilDate.addDays(
+            startDtMidnight,
+            nextMilestone,
           );
           upcomingEvents.add(
             HomeUpcomingEvent(
@@ -355,7 +358,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                           emoji: '📅',
                           imageAsset:
                               'assets/icons/cute_3d/card_ngay_yeu_calendar.png',
-                          value: totalDays > 0 ? '$totalDays' : '--',
+                          value: totalDays >= 0 ? '$totalDays' : '--',
                           label: context.tr('home_love_days'),
                           flex: 1,
                           accentColor: const Color(0xFFFF5E7E),

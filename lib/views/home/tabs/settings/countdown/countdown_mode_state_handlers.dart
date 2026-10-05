@@ -711,8 +711,8 @@ extension _CountdownModeIndependentScreenStatePart
                       },
                       decoration: InputDecoration(
                         labelText: context.tr('home_nhpngy_91932a'),
-                        hintText: context.tr('home_ngythngnm_a697d0'),
-                        helperText: context.tr('home_angnhpngyt_377d85'),
+                        hintText: DateInputUtils.formatHint(),
+                        helperText: L10nService().format('date_input_helper', {'format': DateInputUtils.formatHint()}),
                         errorText: errorText,
                         prefixIcon: const Icon(
                           Icons.calendar_month_rounded,
@@ -1677,10 +1677,7 @@ extension _CountdownModeIndependentScreenStatePart
   }
 
   int _daysSince(DateTime startDate) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final normalized = DateTime(startDate.year, startDate.month, startDate.day);
-    final days = today.difference(normalized).inDays;
+    final days = CalendarCivilDate.daysBetween(startDate, DateTime.now());
     return days < 0 ? 0 : days;
   }
 

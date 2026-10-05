@@ -1,5 +1,5 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'creative_diary_controller.dart';
@@ -79,7 +79,7 @@ class CreativeDiaryHeader extends StatelessWidget {
                   activePage == null
                       ? L10nService().translate('util_lulinhngdn_f942d3')
                       : L10nService().format('util_diary_saved_date', {
-                          'date': DateFormat('dd/MM/yyyy').format(
+                          'date': LocaleDateFormat.date(
                             DateTime.fromMillisecondsSinceEpoch(
                               activePage!.createdAtMs,
                             ),

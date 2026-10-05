@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_days_unit">hari</string>
+    <string name="widget_since_date">Sejak %1$s</string>
+    <string name="widget_default_me">Kamu</string>
+    <string name="widget_default_partner">Si dia</string>
+    <string name="widget_label_couple">Pasangan</string>
+    <string name="widget_label_cycle">Siklus</string>
+    <string name="widget_label_calendar">Jadwal</string>
+    <string name="widget_label_soul_event">Acara &amp; Hari Jadi</string>
+    <string name="widget_label_sleep">Tidur ☁️💤</string>
+    <string name="widget_sleep_title">TIDUR BERDUA ☁️✨</string>
+    <string name="widget_sleep_summary_default">Keduanya terjaga ☀️</string>
+    <string name="widget_sleep_status_awake">☀️ Terjaga</string>
+    <string name="widget_sleep_time_active">Aktif</string>
+</resources>

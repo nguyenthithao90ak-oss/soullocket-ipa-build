@@ -42,3 +42,7 @@
 "p3_health_next_period" = "until your next period";
 "milestone_today" = "📍 Hari ini";
 "milestone_days_left" = "🌸 {days} hari tersisa";
+"widget_avatar_days_name" = "SoulLocket: Avatar & Hari";
+"widget_avatar_days_desc" = "Menampilkan jumlah hari bersama di tengah dengan avatar kalian berdua.";
+"widget_soul_merge_name" = "SoulLocket: Soul Merge";
+"widget_soul_merge_desc" = "Menampilkan pesan Soul Merge terbaru dari pasangan.";

@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
@@ -15,7 +16,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
@@ -1606,7 +1606,7 @@ class _VoiceScreenState extends State<VoiceScreen>
                       final date = DateTime.fromMillisecondsSinceEpoch(
                         item['ts'] as int? ?? 0,
                       );
-                      final timeStr = DateFormat('dd/MM HH:mm').format(date);
+                      final timeStr = LocaleDateFormat.dayMonthTime(date);
                       final durationStr = _formatDuration(
                         item['duration'] as int? ?? 0,
                       );

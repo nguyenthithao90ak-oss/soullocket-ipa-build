@@ -14,9 +14,7 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       final zInfo = ZodiacUtils.getZodiac(dob);
       final emoji = (zInfo?['emoji'] ?? '✨').toString().trim();
 
-      final ageText = ZodiacUtils.getAgeInDays(dob);
-      final match = RegExp(r'\d+').firstMatch(ageText ?? '');
-      final ageDays = int.tryParse(match?.group(0) ?? '') ?? 0;
+      final ageDays = ZodiacUtils.getAgeDayCount(dob) ?? 0;
 
       if (ageDays <= 0) {
         return '$emoji 0';
@@ -242,7 +240,7 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       final days = _calculateLoveDays(startDate);
       final unit = _resolveCountdownLabel(
         settings['dayUnit']?.toString(),
-        L10nService().translate('home_ngy_b9474a'),
+        L10nService().translate('comm_ngy_41ec10'),
       );
       final rawNameU1 =
           (settings['nameU1']?.toString().trim().isNotEmpty ?? false)

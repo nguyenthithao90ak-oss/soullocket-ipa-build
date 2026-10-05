@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
@@ -69,7 +70,7 @@ class SleepStatusCard extends StatelessWidget {
         ? person.duration
         : (now.millisecondsSinceEpoch - person.start).clamp(0, 86400000);
     final detail = person.state == 'recorded'
-          ? DateFormat('dd/MM HH:mm').format(DateTime.fromMillisecondsSinceEpoch(person.end))
+          ? LocaleDateFormat.dayMonthTime(DateTime.fromMillisecondsSinceEpoch(person.end))
         : L10nService().format('p3_sleep_started_at', {
             'time': DateFormat(
               'HH:mm',

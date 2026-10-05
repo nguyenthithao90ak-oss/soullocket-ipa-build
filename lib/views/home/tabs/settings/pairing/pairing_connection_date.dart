@@ -26,7 +26,8 @@ class PairingConnectionDetails {
   int daysTogether(DateTime now) {
     final start = DateTime.utc(date.year, date.month, date.day);
     final today = DateTime.utc(now.year, now.month, now.day);
-    return today.difference(start).inDays.clamp(0, 365000000) + 1;
+    // Cùng quy ước với bộ đếm ngày yêu: ngày ghép nối là ngày 0.
+    return today.difference(start).inDays.clamp(0, 365000000);
   }
 }
 

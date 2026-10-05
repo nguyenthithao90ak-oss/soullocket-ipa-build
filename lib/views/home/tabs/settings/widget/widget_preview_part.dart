@@ -569,7 +569,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
         if (!event.isPinned) continue;
         final nextDate = event.calculateNextOccurrence(today);
         if (nextDate != null) {
-          final diff = nextDate.difference(today).inDays;
+          final diff = CalendarCivilDate.daysBetween(today, nextDate);
           if (diff >= 0 && diff < minDays) {
             minDays = diff;
             topEvent = event;
@@ -581,7 +581,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
         for (final event in events) {
           final nextDate = event.calculateNextOccurrence(today);
           if (nextDate != null) {
-            final diff = nextDate.difference(today).inDays;
+            final diff = CalendarCivilDate.daysBetween(today, nextDate);
             if (diff >= 0 && diff < minDays) {
               minDays = diff;
               topEvent = event;
@@ -592,7 +592,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
 
       if (topEvent != null) {
         final nextDate = topEvent.calculateNextOccurrence(today)!;
-        final isToday = nextDate.isAtSameMomentAs(today);
+        final isToday = CalendarCivilDate.isSameDay(nextDate, today);
         final dateStr =
             '${nextDate.day.toString().padLeft(2, '0')}/${nextDate.month.toString().padLeft(2, '0')}/${nextDate.year}';
         final colorHex = topEvent.colorHex.isNotEmpty

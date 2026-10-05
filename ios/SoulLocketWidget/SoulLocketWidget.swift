@@ -251,8 +251,8 @@ struct WidgetCoupleAccessoryAvatarProvider: Widget {
         StaticConfiguration(kind: kind, provider: CoupleWidgetProvider()) { entry in
             LockScreenWidgetAvatarView(data: entry.data, date: entry.date)
         }
-        .configurationDisplayName("SoulLocket: Avatar & Ngày")
-        .description("Hiện số ngày yêu ở giữa cùng ảnh đại diện 2 người.")
+        .configurationDisplayName(Text("widget_avatar_days_name", tableName: "WidgetStrings"))
+        .description(Text("widget_avatar_days_desc", tableName: "WidgetStrings"))
         .supportedFamilies([.accessoryRectangular])
     }
 }
@@ -265,8 +265,8 @@ struct WidgetSoulMergeAccessoryProvider: Widget {
         StaticConfiguration(kind: kind, provider: CoupleWidgetProvider()) { entry in
             LockScreenSoulMergeWidgetView(data: entry.data)
         }
-        .configurationDisplayName("SoulLocket: Soul Merge")
-        .description("Hiển thị tin nhắn Soul Merge mới nhất từ người kia.")
+        .configurationDisplayName(Text("widget_soul_merge_name", tableName: "WidgetStrings"))
+        .description(Text("widget_soul_merge_desc", tableName: "WidgetStrings"))
         .supportedFamilies([.accessoryRectangular])
     }
 }

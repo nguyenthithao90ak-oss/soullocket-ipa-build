@@ -1918,7 +1918,7 @@
   "home_chntinch_c56314": "アドオンを選択する",
   "home_chntmtrngc_7fe6ac": "記事の雰囲気を選ぶ",
   "home_chnyutinsn_20a566": "真ん中の日数と下の開始日を優先するモードです。",
-  "home_chobuisngn_6aa536": "おはようございます、アプリを開くとすぐに自分が残念になります",
+  "home_chobuisngn_6aa536": "おはよう！アプリを開いただけで愛があふれてくる",
   "home_chomngbnnv_7ffc51": "新しいお家へようこそ",
   "home_chomngbnnv_b93a5d": "ソウルロケットへようこそ",
   "home_chpnhn_6ca558": "受け入れる",
@@ -2723,8 +2723,8 @@
   "home_ngysinhcab_9bdbf2": "あなたの生年月日は?",
   "home_ngythngnm_03da5a": "日/月/年",
   "home_ngythngnm_a697d0": "日/月/年",
-  "home_ngytui_22bed4": "1日目",
-  "home_ngyyu_722b21": "愛の日",
+  "home_ngytui_22bed4": "日",
+  "home_ngyyu_722b21": "愛の日々",
   "home_ngyyu_caafdc": "愛の日",
   "home_nh_217304": "ハウス",
   "home_nh_3c6f33": "写真",
@@ -9848,5 +9848,7 @@
   "p4_call_busy": "すでに通話中です。",
   "p4_call_connection_failed": "通話に接続できませんでした。通信環境を確認して再試行してください。",
   "p4_call_media_permission": "通話を始めるにはマイクへのアクセスと、ビデオ通話の場合はカメラへのアクセスを許可してください。",
-  "settings_cached_photos_size": "この端末に保存された写真：{size}"
+  "settings_cached_photos_size": "この端末に保存された写真：{size}",
+  "home_greeting_afternoon": "こんにちは！お水を飲んで、大切な人にメッセージを送ろう",
+  "home_greeting_evening": "こんばんは！今日あったことをお互いに話そう"
 }

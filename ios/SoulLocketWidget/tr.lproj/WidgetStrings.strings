@@ -42,3 +42,7 @@
 "p3_health_next_period" = "until your next period";
 "milestone_today" = "📍Bugün";
 "milestone_days_left" = "🌸 {days} gün kaldı";
+"widget_avatar_days_name" = "SoulLocket: Avatarlar ve Günler";
+"widget_avatar_days_desc" = "Birlikte geçen gün sayısını ikinizin avatarıyla ortada gösterir.";
+"widget_soul_merge_name" = "SoulLocket: Soul Merge";
+"widget_soul_merge_desc" = "Partnerinizden gelen en son Soul Merge mesajını gösterir.";

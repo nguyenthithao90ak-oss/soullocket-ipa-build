@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
@@ -9,7 +10,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'widgets/keepsake_design.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -555,7 +555,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
         for (final month in months)
           _buildSheetOption(
             icon: Icons.calendar_month_rounded,
-            title: DateFormat('MM/yyyy').format(month),
+            title: LocaleDateFormat.monthYear(month),
             selected: _selectedMonth == month,
             color: KeepsakeStyle.accent(context),
             onTap: () {
@@ -988,7 +988,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
                           backgroundColor: KeepsakeStyle.surface(context),
                           side: BorderSide(color: KeepsakeStyle.line(context)),
                           label: Text(
-                            DateFormat('MM/yyyy').format(_selectedMonth!),
+                            LocaleDateFormat.monthYear(_selectedMonth!),
                             style: KeepsakeStyle.text(context, size: 12),
                           ),
                           onDeleted: () => setState(() {

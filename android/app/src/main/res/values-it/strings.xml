@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_days_unit">giorni</string>
+    <string name="widget_since_date">Dal %1$s</string>
+    <string name="widget_default_me">Tu</string>
+    <string name="widget_default_partner">Il tuo amore</string>
+    <string name="widget_label_couple">Coppia</string>
+    <string name="widget_label_cycle">Ciclo</string>
+    <string name="widget_label_calendar">Agenda</string>
+    <string name="widget_label_soul_event">Eventi e anniversari</string>
+    <string name="widget_label_sleep">Sonno ☁️💤</string>
+    <string name="widget_sleep_title">SONNO DI COPPIA ☁️✨</string>
+    <string name="widget_sleep_summary_default">Entrambi svegli ☀️</string>
+    <string name="widget_sleep_status_awake">☀️ Sveglio</string>
+    <string name="widget_sleep_time_active">Attivo</string>
+</resources>
