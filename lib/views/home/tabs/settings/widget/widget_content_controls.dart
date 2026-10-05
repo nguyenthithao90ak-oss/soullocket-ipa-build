@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../core/sl_theme.dart';
 import '../../../../../models/widget_appearance.dart';
+import '../../../../../widgets/sl_settings_kit.dart';
 import 'widget_couple_preview.dart';
 
 /// Chỉ đổi nhóm đang xem; khóa tim được lưu vẫn là lựa chọn cũ của người dùng.
@@ -49,7 +50,7 @@ class _WidgetHeartStylePickerState extends State<WidgetHeartStylePicker> {
           button: true,
           selected: selected,
           child: Material(
-            color: selected ? Colors.white : Colors.transparent,
+            color: selected ? SLSettingsColors.surface : Colors.transparent,
             borderRadius: BorderRadius.circular(13),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
@@ -68,8 +69,8 @@ class _WidgetHeartStylePickerState extends State<WidgetHeartStylePicker> {
                         icon,
                         size: 17,
                         color: selected
-                            ? const Color(0xFFAC4168)
-                            : const Color(0xFF918695),
+                            ? SLSettingsColors.accent
+                            : SLSettingsColors.inkTertiary,
                       ),
                       const SizedBox(width: 6),
                       Flexible(
@@ -80,8 +81,8 @@ class _WidgetHeartStylePickerState extends State<WidgetHeartStylePicker> {
                             fontSize: 12,
                             fontWeight: FontWeight.w800,
                             color: selected
-                                ? const Color(0xFF933354)
-                                : const Color(0xFF827487),
+                                ? SLSettingsColors.accentStrong
+                                : SLSettingsColors.inkSecondary,
                           ),
                         ),
                       ),
@@ -106,8 +107,9 @@ class _WidgetHeartStylePickerState extends State<WidgetHeartStylePicker> {
         Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: const Color(0xFFF3EFF5),
+            color: SLSettingsColors.surfaceMuted,
             borderRadius: BorderRadius.circular(17),
+            border: Border.all(color: SLSettingsColors.border),
           ),
           child: Row(
             children: [
@@ -163,7 +165,7 @@ class WidgetContentToggle extends StatelessWidget {
     required this.value,
     required this.icon,
     required this.onChanged,
-    this.accent = const Color(0xFF9074BC),
+    this.accent = SLSettingsColors.violet,
   });
   final String title, subtitle;
   final bool value;
@@ -179,8 +181,11 @@ class WidgetContentToggle extends StatelessWidget {
     onTap: () => onChanged(!value),
     excludeSemantics: true,
     child: Material(
-      color: const Color(0xFFFAF8FC),
-      borderRadius: BorderRadius.circular(18),
+      color: SLSettingsColors.surfaceMuted,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(SLSettingsRadius.control + 2),
+        side: const BorderSide(color: SLSettingsColors.border),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => onChanged(!value),
@@ -204,31 +209,20 @@ class WidgetContentToggle extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: SLTheme.quicksand(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF413749),
-                      ),
+                      style: SLSettingsText.title(SLSettingsColors.ink),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       subtitle,
-                      style: SLTheme.quicksand(
-                        fontSize: 11,
-                        height: 1.35,
-                        color: const Color(0xFF776A82),
+                      style: SLSettingsText.caption(
+                        SLSettingsColors.inkSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 4),
-              Switch.adaptive(
-                value: value,
-                onChanged: onChanged,
-                activeTrackColor: accent,
-                materialTapTargetSize: MaterialTapTargetSize.padded,
-              ),
+              SLSettingsSwitch(value: value, onChanged: onChanged),
             ],
           ),
         ),

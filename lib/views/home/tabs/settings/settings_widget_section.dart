@@ -224,20 +224,13 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     context.tr('widget_utility_examples'),
-                    style: SLTheme.quicksand(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      color: SLColors.textMedium,
-                    ),
+                    style: SLSettingsText.title(SLSettingsColors.ink),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   context.tr('widget_utility_examples_hint'),
-                  style: SLTheme.quicksand(
-                    fontSize: 11,
-                    color: SLColors.textMedium,
-                  ),
+                  style: SLSettingsText.caption(SLSettingsColors.inkSecondary),
                 ),
                 const SizedBox(height: 10),
                 WidgetUtilityGallery(
@@ -276,7 +269,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   textAlign: TextAlign.center,
                   style: SLTheme.quicksand(
                     fontSize: 11,
-                    color: const Color(0xFF8E6A76),
+                    color: SLSettingsColors.inkSecondary,
                   ),
                 ),
               ],
@@ -290,7 +283,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               icon: Icons.info_outline_rounded,
               title: context.tr('p7_event_widget_config'),
               subtitle: null,
-              iconGradient: const [Color(0xFF3B82F6), Color(0xFF60A5FA)],
+              iconGradient: const [SLSettingsColors.sky],
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Text(
@@ -298,7 +291,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   style: SLTheme.quicksand(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF64748B),
+                    color: SLSettingsColors.inkSecondary,
                     height: 1.4,
                   ),
                 ),
@@ -310,7 +303,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
             icon: Icons.palette_outlined,
             title: context.tr('theme_widget_bg'),
             subtitle: null,
-            iconGradient: const [Color(0xFFFF9A9E), Color(0xFFFECF6A)],
+            iconGradient: const [SLSettingsColors.coral],
             child: _buildWidgetThemeSwatchGrid(config),
           ),
           const SizedBox(height: 14),
@@ -318,7 +311,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
             icon: Icons.auto_awesome_rounded,
             title: context.tr('widget_gentle_motion'),
             subtitle: null,
-            iconGradient: const [Color(0xFF9A79C6), Color(0xFFC5B0DF)],
+            iconGradient: const [SLSettingsColors.violet],
             child: WidgetContentToggle(
               icon: Icons.auto_awesome_rounded,
               title: context.tr('widget_gentle_motion'),
@@ -328,7 +321,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                     : 'widget_motion_keeps_choice',
               ),
               value: _widgetHeartAnimated,
-              accent: const Color(0xFF9A79C6),
+              accent: SLSettingsColors.violet,
               onChanged: (value) => unawaited(
                 _updateWidgetAppearanceDraft(
                   () => _widgetHeartAnimated = value,
@@ -342,7 +335,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               icon: Icons.favorite_rounded,
               title: context.tr('home_tritimvnid_67f35f'),
               subtitle: null,
-              iconGradient: const [Color(0xFFFF86A8), Color(0xFFFF5B8A)],
+              iconGradient: const [SLSettingsColors.rose],
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -351,7 +344,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                     style: SLTheme.quicksand(
                       fontSize: 13,
                       fontWeight: FontWeight.w900,
-                      color: const Color(0xFF243041),
+                      color: SLSettingsColors.ink,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -361,11 +354,11 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                     context.tr('widget_center_selection_hint'),
                     style: SLTheme.quicksand(
                       fontSize: 11.5,
-                      color: const Color(0xFF8E6A76),
+                      color: SLSettingsColors.inkSecondary,
                     ),
                   ),
                   const SizedBox(height: 14),
-                  const Divider(height: 1, color: Color(0xFFE5ECF4)),
+                  const Divider(height: 1, color: SLSettingsColors.divider),
                   const SizedBox(height: 14),
                   if (_widgetPanelTabKey != 'countdown')
                     WidgetContentToggle(
@@ -373,7 +366,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                       title: context.tr('widget_show_diary_photos'),
                       subtitle: context.tr('widget_diary_content_hint'),
                       value: _showDiaryOnWidget,
-                      accent: const Color(0xFF8A78B4),
+                      accent: SLSettingsColors.violet,
                       onChanged: _handleWidgetDiaryVisibilityChanged,
                     ),
                   if (_showDiaryOnWidget &&
@@ -381,7 +374,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                     const SizedBox(height: 12),
                     Text(
                       context.tr('widget_photo_layout'),
-                      style: SLTheme.quicksand(fontWeight: FontWeight.w800),
+                      style: SLSettingsText.title(SLSettingsColors.ink),
                     ),
                     const SizedBox(height: 6),
                     WidgetPhotoLayoutPicker(
@@ -399,7 +392,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                     const SizedBox(height: 12),
                     Text(
                       context.tr('widget_photo_frame'),
-                      style: SLTheme.quicksand(fontWeight: FontWeight.w800),
+                      style: SLSettingsText.title(SLSettingsColors.ink),
                     ),
                     const SizedBox(height: 6),
                     WidgetPhotoFramePicker(
@@ -419,7 +412,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                       context.tr('widget_photo_sync_hint'),
                       style: SLTheme.quicksand(
                         fontSize: 11,
-                        color: const Color(0xFF8E6A76),
+                        color: SLSettingsColors.inkSecondary,
                       ),
                     ),
                   ],
@@ -433,7 +426,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               icon: Icons.auto_awesome_rounded,
               title: context.tr('widget_sticker_collection'),
               subtitle: context.tr('widget_sticker_choice_hint'),
-              iconGradient: const [Color(0xFFAB8BD1), Color(0xFFF1A9B7)],
+              iconGradient: const [SLSettingsColors.violet],
               child: _buildWidgetStickerPicker(),
             ),
           ],
@@ -443,7 +436,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               icon: Icons.timer_rounded,
               title: context.tr('home_widgetmngy_92c2bc'),
               subtitle: context.tr('home_chnyutinsn_20a566'),
-              iconGradient: const [Color(0xFFFFB84D), Color(0xFFFF7A59)],
+              iconGradient: const [SLSettingsColors.amber],
               child: Text(
                 context
                     .tr('widget_using_style')
@@ -451,7 +444,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 style: SLTheme.quicksand(
                   fontSize: 12.8,
                   fontWeight: FontWeight.w800,
-                  color: SLColors.textMedium,
+                  color: SLSettingsColors.inkSecondary,
                   height: 1.45,
                 ),
               ),
@@ -463,13 +456,13 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               icon: Icons.celebration_rounded,
               title: context.tr('p7_event_widget_title'),
               subtitle: context.tr('p7_event_widget_subtitle'),
-              iconGradient: const [Color(0xFFF472B6), Color(0xFFEC4899)],
+              iconGradient: const [SLSettingsColors.rose],
               child: Text(
                 context.tr('p7_event_widget_desc'),
                 style: SLTheme.quicksand(
                   fontSize: 12.8,
                   fontWeight: FontWeight.w800,
-                  color: SLColors.textMedium,
+                  color: SLSettingsColors.inkSecondary,
                   height: 1.45,
                 ),
               ),
@@ -486,7 +479,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   ? 'ios_widget_pin_guide'
                   : 'add_widget_desc',
             ),
-            iconGradient: const [Color(0xFF14B8A6), Color(0xFF06B6D4)],
+            iconGradient: const [SLSettingsColors.teal],
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -497,7 +490,11 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                         Theme.of(context).platform != TargetPlatform.iOS;
                     final updateButton = _buildGradientBtn(
                       label: context.tr('update_widget'),
-                      gradient: const [Color(0xFFFF7898), Color(0xFFD81B60)],
+                      gradient: const [],
+                      icon: Icons.refresh_rounded,
+                      variant: showPinButton
+                          ? SLSettingsButtonVariant.tonal
+                          : SLSettingsButtonVariant.primary,
                       onTap: handleRefreshWidget,
                     );
                     if (!showPinButton) {
@@ -505,7 +502,8 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                     }
                     final addButton = _buildGradientBtn(
                       label: context.tr('add_widget'),
-                      gradient: const [Color(0xFF10C8E6), Color(0xFF0E9EB0)],
+                      gradient: const [],
+                      icon: Icons.add_to_home_screen_rounded,
                       onTap: handlePinWidget,
                     );
                     if (useColumn) {
@@ -529,59 +527,10 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 ),
                 if (Theme.of(context).platform == TargetPlatform.iOS) ...[
                   const SizedBox(height: 12),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF5FBFF),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFCAEAF3)),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 34,
-                          height: 34,
-                          decoration: BoxDecoration(
-                            color: const Color(
-                              0xFF0EA5C6,
-                            ).withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.info_outline_rounded,
-                            color: Color(0xFF0B7285),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                context.tr('home_hngdnios_522391'),
-                                style: SLTheme.quicksand(
-                                  fontSize: 12.6,
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF0B7285),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                context.tr('widget_ios_guide'),
-                                style: SLTheme.quicksand(
-                                  fontSize: 11.8,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF667085),
-                                  height: 1.4,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                  SLSettingsNotice(
+                    tone: SLSettingsTone.info,
+                    title: context.tr('home_hngdnios_522391'),
+                    message: context.tr('widget_ios_guide'),
                   ),
                 ],
               ],
