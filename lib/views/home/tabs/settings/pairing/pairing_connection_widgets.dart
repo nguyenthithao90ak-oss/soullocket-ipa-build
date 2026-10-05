@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/sl_settings_kit.dart';
 import 'package:lottie/lottie.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/home_image_policy.dart';
@@ -19,15 +20,21 @@ class PairingPalette {
 
   final bool dark;
   Color get background =>
-      dark ? const Color(0xFF1F1D1B) : const Color(0xFFFAF8F4);
-  Color get surface => dark ? const Color(0xFF292623) : const Color(0xFFFFFEFC);
-  Color get ink => dark ? const Color(0xFFF3EEE7) : const Color(0xFF403A35);
-  Color get muted => dark ? const Color(0xFFBDB3A8) : const Color(0xFF7D746A);
-  Color get border => dark ? const Color(0xFF443E37) : const Color(0xFFE9E3D9);
-  Color get rose => dark ? const Color(0xFFE6A2AC) : const Color(0xFF9E5264);
-  Color get blush => dark ? const Color(0xFF3A2B2E) : const Color(0xFFF7ECEC);
-  Color get sage => dark ? const Color(0xFFACCAAB) : const Color(0xFF527658);
-  Color get leaf => dark ? const Color(0xFF2C352B) : const Color(0xFFEDF3E9);
+      dark ? SLSettingsColors.darkCanvas : SLSettingsColors.canvas;
+  Color get surface =>
+      dark ? SLSettingsColors.darkSurface : SLSettingsColors.surface;
+  Color get ink => dark ? SLSettingsColors.darkInk : SLSettingsColors.ink;
+  Color get muted =>
+      dark ? SLSettingsColors.darkInkSecondary : SLSettingsColors.inkSecondary;
+  Color get border =>
+      dark ? SLSettingsColors.darkBorder : SLSettingsColors.border;
+  Color get rose =>
+      dark ? const Color(0xFFF2849B) : SLSettingsColors.accentStrong;
+  Color get blush =>
+      dark ? const Color(0xFF3A2830) : SLSettingsColors.accentSoft;
+  Color get sage => dark ? const Color(0xFF9CCFB4) : SLSettingsColors.success;
+  Color get leaf =>
+      dark ? const Color(0xFF243329) : SLSettingsColors.successSoft;
 }
 
 class PairingAvatar extends StatelessWidget {
