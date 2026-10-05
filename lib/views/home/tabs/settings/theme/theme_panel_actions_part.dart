@@ -71,13 +71,9 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: <Color>[Color(0xFFFFFCFE), Color(0xFFFFF3F7)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF5C4D7)),
+        color: SLSettingsColors.surfaceMuted,
+        borderRadius: BorderRadius.circular(SLSettingsRadius.control + 2),
+        border: Border.all(color: SLSettingsColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,7 +84,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFE3EE),
+                  color: SLSettingsColors.accentSoft,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -96,7 +92,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
                       ? Icons.verified_rounded
                       : Icons.ondemand_video_rounded,
                   size: 18,
-                  color: const Color(0xFFD81B60),
+                  color: SLSettingsColors.accentStrong,
                 ),
               ),
               const SizedBox(width: 10),
@@ -109,7 +105,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
                       style: SLTheme.quicksand(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w900,
-                        color: const Color(0xFF7C254C),
+                        color: SLSettingsColors.ink,
                       ),
                     ),
                     Text(
@@ -120,8 +116,8 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
                         color: hasCountdownAdPass
-                            ? const Color(0xFF2E7D32)
-                            : const Color(0xFFD81B60),
+                            ? SLSettingsColors.success
+                            : SLSettingsColors.accentStrong,
                       ),
                     ),
                   ],
@@ -136,7 +132,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
               height: 1.38,
-              color: const Color(0xFF8A5B76),
+              color: SLSettingsColors.inkSecondary,
             ),
           ),
           const SizedBox(height: 10),
@@ -177,12 +173,12 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
               margin: const EdgeInsets.only(top: 8),
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.88),
-                borderRadius: BorderRadius.circular(14),
+                color: SLSettingsColors.surface,
+                borderRadius: BorderRadius.circular(SLSettingsRadius.control),
                 border: Border.all(
                   color: isActive
-                      ? const Color(0xFFD81B60)
-                      : const Color(0xFFF3D6E2),
+                      ? SLSettingsColors.accentStrong
+                      : SLSettingsColors.border,
                 ),
               ),
               child: Row(
@@ -192,8 +188,8 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
                     height: 36,
                     decoration: BoxDecoration(
                       color: isLocked
-                          ? const Color(0xFFFFEEF5)
-                          : const Color(0xFFEAF8EE),
+                          ? SLSettingsColors.accentSoft
+                          : SLSettingsColors.successSoft,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -202,8 +198,8 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
                           : Icons.auto_awesome_rounded,
                       size: 18,
                       color: isLocked
-                          ? const Color(0xFFD81B60)
-                          : const Color(0xFF2E7D32),
+                          ? SLSettingsColors.accentStrong
+                          : SLSettingsColors.success,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -219,7 +215,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
                                 style: SLTheme.quicksand(
                                   fontSize: 13.2,
                                   fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF4A3340),
+                                  color: SLSettingsColors.ink,
                                 ),
                               ),
                             ),
@@ -230,8 +226,8 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
                               ),
                               decoration: BoxDecoration(
                                 color: isLocked
-                                    ? const Color(0xFFFFE3EE)
-                                    : const Color(0xFFEAF8EE),
+                                    ? SLSettingsColors.accentSoft
+                                    : SLSettingsColors.successSoft,
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: Text(
@@ -242,8 +238,8 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
                                   fontSize: 10.4,
                                   fontWeight: FontWeight.w900,
                                   color: isLocked
-                                      ? const Color(0xFFD81B60)
-                                      : const Color(0xFF2E7D32),
+                                      ? SLSettingsColors.accentStrong
+                                      : SLSettingsColors.success,
                                 ),
                               ),
                             ),
@@ -255,7 +251,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
                           style: SLTheme.quicksand(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF8A5B76),
+                            color: SLSettingsColors.inkSecondary,
                             height: 1.32,
                           ),
                         ),
@@ -278,15 +274,15 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
                     style: ElevatedButton.styleFrom(
                       elevation: 0,
                       backgroundColor: isLocked
-                          ? const Color(0xFFD81B60)
-                          : const Color(0xFF2E7D32),
+                          ? SLSettingsColors.accentStrong
+                          : SLSettingsColors.success,
                       foregroundColor: Colors.white,
                       disabledBackgroundColor: isActive
-                          ? const Color(0xFF9E9E9E)
-                          : const Color(0xFFE0E0E0),
+                          ? SLSettingsColors.inkTertiary
+                          : SLSettingsColors.surfaceMuted,
                       disabledForegroundColor: isActive
                           ? Colors.white
-                          : const Color(0xFF7A7A7A),
+                          : SLSettingsColors.inkSecondary,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 10,

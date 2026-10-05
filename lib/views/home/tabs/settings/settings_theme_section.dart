@@ -332,13 +332,10 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                     _buildLabel(context.tr('p7_home_background_color')),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: Text(
-                        context.tr('p7_default_image_background_note'),
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: SLColors.primaryActive,
-                          fontStyle: FontStyle.italic,
-                        ),
+                      child: SLSettingsNotice(
+                        tone: SLSettingsTone.info,
+                        icon: Icons.image_outlined,
+                        message: context.tr('p7_default_image_background_note'),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -359,7 +356,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                           children: [
                             _SettingsToggleRow(
                               icon: Icons.music_note_rounded,
-                              iconColor: const Color(0xFFD05B80),
+                              iconColor: SLSettingsColors.rose,
                               label: context.tr('touch_sound'),
                               switchValue: prefs.touchSound,
                               onSwitchChanged: (enabled) async {
@@ -381,10 +378,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                               padding: const EdgeInsets.fromLTRB(12, 2, 12, 4),
                               child: Text(
                                 context.tr('ui_action_sound_subtitle'),
-                                style: SLTheme.quicksand(
-                                  fontSize: 12,
-                                  height: 1.4,
-                                  color: SLColors.textSecond,
+                                style: SLSettingsText.caption(
+                                  SLSettingsColors.inkSecondary,
                                 ),
                               ),
                             ),
@@ -402,7 +397,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                           children: [
                             _SettingsToggleRow(
                               icon: Icons.pets_rounded,
-                              iconColor: const Color(0xFFD05B80),
+                              iconColor: SLSettingsColors.rose,
                               label: context.tr('home_companion_setting_title'),
                               switchValue: prefs.homeCompanionEnabled,
                               onSwitchChanged: (enabled) async {
@@ -423,10 +418,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                               padding: const EdgeInsets.fromLTRB(12, 2, 12, 4),
                               child: Text(
                                 context.tr('home_companion_setting_subtitle'),
-                                style: SLTheme.quicksand(
-                                  fontSize: 12,
-                                  height: 1.4,
-                                  color: SLColors.textSecond,
+                                style: SLSettingsText.caption(
+                                  SLSettingsColors.inkSecondary,
                                 ),
                               ),
                             ),
@@ -444,7 +437,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                           children: [
                             _SettingsToggleRow(
                               icon: Icons.volume_down_rounded,
-                              iconColor: const Color(0xFFD05B80),
+                              iconColor: SLSettingsColors.rose,
                               label: context.tr('home_companion_sound_title'),
                               switchValue: prefs.homeCompanionSoundEnabled,
                               onSwitchChanged: (enabled) async {
@@ -465,10 +458,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                               padding: const EdgeInsets.fromLTRB(12, 2, 12, 4),
                               child: Text(
                                 context.tr('home_companion_sound_subtitle'),
-                                style: SLTheme.quicksand(
-                                  fontSize: 12,
-                                  height: 1.4,
-                                  color: SLColors.textSecond,
+                                style: SLSettingsText.caption(
+                                  SLSettingsColors.inkSecondary,
                                 ),
                               ),
                             ),
@@ -493,10 +484,9 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                                             )
                                       : context.tr('theme_uploading_img'))
                                 : context.tr('theme_upload_web_bg'),
-                            gradient: const [
-                              Color(0xFFFF7EA8),
-                              Color(0xFFFF5E92),
-                            ],
+                            gradient: const [],
+                            icon: Icons.upload_rounded,
+                            loading: _isUploadingThemeBackground,
                             onTap: _isUploadingThemeBackground
                                 ? () {}
                                 : _pickThemeBackgroundImage,
@@ -506,10 +496,9 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                         Expanded(
                           child: _buildGradientBtn(
                             label: context.tr('theme_remove_bg'),
-                            gradient: const [
-                              Color(0xFFFF5B6A),
-                              Color(0xFFFF4343),
-                            ],
+                            gradient: const [],
+                            icon: Icons.hide_image_outlined,
+                            variant: SLSettingsButtonVariant.danger,
                             onTap: _clearThemeBackgroundImage,
                           ),
                         ),
@@ -605,20 +594,19 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        border: Border(
-                          bottom: BorderSide(
-                            color: Colors.black.withValues(alpha: 0.05),
-                          ),
+                        color: SLSettingsColors.surfaceMuted,
+                        borderRadius: BorderRadius.circular(
+                          SLSettingsRadius.control,
                         ),
+                        border: Border.all(color: SLSettingsColors.border),
                       ),
                       child: Text(
                         context.tr('theme_font_desc'),
                         style: _themeFontStyle(
                           selection.fontKey,
                           fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFFD81B60),
+                          fontWeight: FontWeight.w700,
+                          color: SLSettingsColors.ink,
                           height: 1.45,
                         ),
                       ),
@@ -699,87 +687,31 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                                       offset: _anniversaryDateCtrl.text.length,
                                     );
                                   },
-                                  decoration:
-                                      LegacyWebUi.softInputDecoration(
-                                        hintText: context.tr(
-                                          'home_ngythngnm_a697d0',
-                                        ),
-                                      ).copyWith(
-                                        errorText: _anniversaryDateErrorText,
-                                        isDense: true,
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                              horizontal: 12,
-                                              vertical: 12,
-                                            ),
-                                        prefixIcon: const Icon(
-                                          Icons.calendar_month_rounded,
-                                          color: Color(0xFFD81B60),
-                                          size: 18,
-                                        ),
-                                        suffixIcon: IconButton(
-                                          icon: const Icon(
-                                            Icons.event_rounded,
-                                            size: 18,
-                                          ),
-                                          color: const Color(0xFFD81B60),
-                                          padding: EdgeInsets.zero,
-                                          onPressed: _pickAnniversaryDate,
-                                        ),
+                                  decoration: slSettingsInputDecoration(
+                                    hint: context.tr('home_ngythngnm_a697d0'),
+                                    errorText: _anniversaryDateErrorText,
+                                    prefixIcon: const Icon(
+                                      Icons.calendar_month_rounded,
+                                      size: 20,
+                                    ),
+                                    suffixIcon: IconButton(
+                                      icon: const Icon(
+                                        Icons.event_rounded,
+                                        size: 20,
                                       ),
-                                  style: SLTheme.quicksand(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                    color: const Color(0xFF5F4C58),
+                                      color: SLSettingsColors.accentStrong,
+                                      onPressed: _pickAnniversaryDate,
+                                    ),
                                   ),
+                                  style: slSettingsInputTextStyle(),
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              GestureDetector(
-                                onTap: _addCustomAnniversary,
-                                child: Container(
-                                  height: 48,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color(0xFFFF5E92),
-                                        Color(0xFFD81B60),
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(14),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(
-                                          0xFFD81B60,
-                                        ).withValues(alpha: 0.22),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(
-                                        Icons.add_rounded,
-                                        color: Colors.white,
-                                        size: 18,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        context.tr('home_thm_d9cb42'),
-                                        style: SLTheme.quicksand(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w900,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                              SLSettingsButton(
+                                label: context.tr('home_thm_d9cb42'),
+                                icon: Icons.add_rounded,
+                                expand: false,
+                                onPressed: _addCustomAnniversary,
                               ),
                             ],
                           ),
@@ -803,7 +735,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                     // Trong suốt
                     _SettingsToggleRow(
                       icon: Icons.blur_on_rounded,
-                      iconColor: const Color(0xFFD81B60),
+                      iconColor: SLSettingsColors.accent,
                       label: context.tr('home_trongsut_38b9d1'),
                       useCheckbox: true,
                       checkValue: _draftTransparentMode ?? ui.transparentMode,
@@ -811,34 +743,28 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                         () => _draftTransparentMode = v ?? false,
                       ),
                     ),
-                    const Divider(height: 1, color: Color(0xFFF1F5F9)),
                     // Chế độ đơn giản hóa
                     _SettingsToggleRow(
                       icon: Icons.bolt_rounded,
-                      iconColor: const Color(0xFFFF9800),
+                      iconColor: SLSettingsColors.amber,
                       label: context.tr('theme_lite_mode_title'),
                       switchValue: _draftLiteMode,
                       onSwitchChanged: (v) =>
                           _updateThemeDraft(() => _draftLiteMode = v),
                     ),
-                    const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
                     // Chất lượng đồ họa
                     Row(
                       children: [
                         const Icon(
                           Icons.tune_rounded,
-                          size: 16,
-                          color: Color(0xFF64748B),
+                          size: 17,
+                          color: SLSettingsColors.inkSecondary,
                         ),
                         const SizedBox(width: 6),
                         Text(
                           context.tr('theme_graphics_quality'),
-                          style: SLTheme.quicksand(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF334155),
-                          ),
+                          style: SLSettingsText.body(SLSettingsColors.ink),
                         ),
                         const Spacer(),
                         GestureDetector(
@@ -855,8 +781,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                                   (_draftGraphicsQualityKey ??
                                           ui.graphicsQualityKey) ==
                                       'auto'
-                                  ? const Color(0xFF2877FF)
-                                  : const Color(0xFFE2E8F0),
+                                  ? SLSettingsColors.accentSoft
+                                  : SLSettingsColors.surfaceMuted,
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
@@ -868,8 +794,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                                     (_draftGraphicsQualityKey ??
                                             ui.graphicsQualityKey) ==
                                         'auto'
-                                    ? Colors.white
-                                    : const Color(0xFF64748B),
+                                    ? SLSettingsColors.accentStrong
+                                    : SLSettingsColors.inkSecondary,
                               ),
                             ),
                           ),
@@ -892,9 +818,16 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                               padding: const EdgeInsets.symmetric(vertical: 10),
                               decoration: BoxDecoration(
                                 color: selected
-                                    ? const Color(0xFFFF4D8D)
-                                    : const Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(12),
+                                    ? SLSettingsColors.accent
+                                    : SLSettingsColors.surfaceMuted,
+                                borderRadius: BorderRadius.circular(
+                                  SLSettingsRadius.control - 2,
+                                ),
+                                border: Border.all(
+                                  color: selected
+                                      ? SLSettingsColors.accent
+                                      : SLSettingsColors.border,
+                                ),
                               ),
                               child: Text(
                                 item.$1,
@@ -904,7 +837,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                                   fontWeight: FontWeight.w800,
                                   color: selected
                                       ? Colors.white
-                                      : const Color(0xFF64748B),
+                                      : SLSettingsColors.inkSecondary,
                                 ),
                               ),
                             ),
@@ -974,15 +907,15 @@ class _SliderWithLabelState extends State<_SliderWithLabel> {
           style: SLTheme.quicksand(
             fontSize: 13,
             fontWeight: FontWeight.w800,
-            color: const Color(0xFF8A5B76),
+            color: SLSettingsColors.inkSecondary,
           ),
         ),
         Slider(
           value: _value.clamp(widget.min, widget.max),
           min: widget.min,
           max: widget.max,
-          activeColor: const Color(0xFFD81B60),
-          inactiveColor: const Color(0xFFE6E6E6),
+          activeColor: SLSettingsColors.accent,
+          inactiveColor: SLSettingsColors.accentSoft,
           onChanged: (value) {
             setState(() => _value = value);
             widget.onChanged(value);
@@ -999,7 +932,7 @@ class _SliderWithLabelState extends State<_SliderWithLabel> {
               style: SLTheme.quicksand(fontWeight: FontWeight.w800),
             ),
             style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFFD81B60),
+              foregroundColor: SLSettingsColors.accentStrong,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             ),
           ),
