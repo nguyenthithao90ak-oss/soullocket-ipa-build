@@ -1,237 +1,222 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/utils/services/utility_service.dart';
 
 import '../../../../core/sl_theme.dart';
 import '../../../../widgets/app_help_center.dart';
+import 'utilities_category_section.dart';
 
-class UtilitiesHubHeader extends StatelessWidget {
-  const UtilitiesHubHeader({
-    super.key,
-    required this.currentSegment,
-    required this.onSegmentChanged,
-    required this.onResetTap,
+/// Đầu trang thu gọn: tiêu đề trượt đi khi cuộn, hàng chủ đề luôn ghim lại.
+class UtilitiesHubHeaderDelegate extends SliverPersistentHeaderDelegate {
+  const UtilitiesHubHeaderDelegate({
+    required this.topInset,
+    required this.titleExtent,
+    required this.chipsExtent,
+    required this.title,
+    required this.chips,
   });
 
-  final int currentSegment;
-  final ValueChanged<int> onSegmentChanged;
-  final VoidCallback onResetTap;
+  final double topInset;
+  final double titleExtent;
+  final double chipsExtent;
+  final Widget title;
+  final Widget chips;
+
+  @override
+  double get minExtent => topInset + chipsExtent;
+
+  @override
+  double get maxExtent => topInset + titleExtent + chipsExtent;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    final progress = (shrinkOffset / titleExtent).clamp(0.0, 1.0);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: SLColors.paperCanvas.withValues(alpha: progress),
+        border: Border(
+          bottom: BorderSide(
+            color: SLColors.border.withValues(alpha: progress),
+          ),
+        ),
+      ),
+      child: ClipRect(
+        child: Stack(
+          children: [
+            Positioned(
+              left: 0,
+              right: 0,
+              top: topInset - shrinkOffset,
+              height: titleExtent,
+              child: Opacity(opacity: 1 - progress, child: title),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: chipsExtent,
+              child: chips,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant UtilitiesHubHeaderDelegate oldDelegate) {
+    return oldDelegate.topInset != topInset ||
+        oldDelegate.titleExtent != titleExtent ||
+        oldDelegate.chipsExtent != chipsExtent ||
+        oldDelegate.title != title ||
+        oldDelegate.chips != chips;
+  }
+}
+
+class UtilitiesHubTitle extends StatelessWidget {
+  const UtilitiesHubTitle({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(
-        20,
-        MediaQuery.paddingOf(context).top + 12,
-        20,
-        12,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(20, 4, 8, 4),
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [SLColors.primary, SLColors.secondary],
-                  ),
-                  borderRadius: BorderRadius.circular(17),
-                  boxShadow: SLShadow.subtle,
-                ),
-                child: const Icon(
-                  Icons.widgets_rounded,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.tr('utilities_hub_title'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: SLColors.textPrimary,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      context.tr('utilities_hub_subtitle'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: SLColors.textMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const AppHelpButton(articleId: 'utilities', iconOnly: true),
-              SizedBox(
-                width: 44,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    _UtilitiesHubHeaderAction(
-                      icon: Icons.restart_alt_rounded,
-                      tooltip: context.tr('home_tli_ffd7c4'),
-                      onTap: onResetTap,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SLSpacing.h16,
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Container(
-              padding: const EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                color: SLColors.paper.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(22),
-                boxShadow: SLShadow.subtle,
-                border: Border.all(color: SLColors.borderLight),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _UtilitiesHubSegmentButton(
-                      label: context.tr('home_tinchchung_3e7d5e'),
-                      icon: Icons.favorite_rounded,
-                      active: currentSegment == 0,
-                      onTap: () => onSegmentChanged(0),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Semantics(
+                  header: true,
+                  child: Text(
+                    context.tr('utilities_hub_title'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: SLTheme.quicksand(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      color: SLColors.textPrimary,
+                      letterSpacing: -0.5,
                     ),
                   ),
-                  Expanded(
-                    child: _UtilitiesHubSegmentButton(
-                      label: context.tr('home_cngcthityu_872418'),
-                      icon: Icons.handyman_rounded,
-                      active: currentSegment == 1,
-                      onTap: () => onSegmentChanged(1),
-                    ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  context.tr('utilities_hub_subtitle'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: SLTheme.quicksand(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: SLColors.textSecond,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
+          const AppHelpButton(articleId: 'utilities', iconOnly: true),
         ],
       ),
     );
   }
 }
 
-class _UtilitiesHubHeaderAction extends StatelessWidget {
-  const _UtilitiesHubHeaderAction({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
+/// Hàng nút chủ đề; `null` là "Tất cả".
+class UtilitiesCategoryChips extends StatelessWidget {
+  const UtilitiesCategoryChips({
+    super.key,
+    required this.categories,
+    required this.active,
+    required this.onSelected,
+    required this.controller,
+    required this.chipKeys,
   });
 
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
+  final List<UtilityCategory> categories;
+  final UtilityCategory? active;
+  final ValueChanged<UtilityCategory?> onSelected;
+  final ScrollController controller;
+  final Map<UtilityCategory?, GlobalKey> chipKeys;
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: SLColors.bgElevated.withValues(alpha: 0.9),
-            shape: BoxShape.circle,
-            boxShadow: SLShadow.subtle,
-            border: Border.all(
-              color: SLColors.bgElevated.withValues(alpha: 0.5),
+    return ListView(
+      controller: controller,
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+      children: [
+        _CategoryChip(
+          key: chipKeys[null],
+          label: context.tr('utilities_filter_all'),
+          selected: active == null,
+          onTap: () => onSelected(null),
+        ),
+        for (final category in categories)
+          Padding(
+            padding: const EdgeInsetsDirectional.only(start: 8),
+            child: _CategoryChip(
+              key: chipKeys[category],
+              label: context.tr(utilityCategoryTitleKey(category)),
+              selected: active == category,
+              onTap: () => onSelected(category),
             ),
           ),
-          child: Icon(icon, color: SLColors.primary, size: 20),
-        ),
-      ),
+      ],
     );
   }
 }
 
-class _UtilitiesHubSegmentButton extends StatelessWidget {
-  const _UtilitiesHubSegmentButton({
+class _CategoryChip extends StatelessWidget {
+  const _CategoryChip({
+    super.key,
     required this.label,
-    required this.icon,
-    required this.active,
+    required this.selected,
     required this.onTap,
   });
 
   final String label;
-  final IconData icon;
-  final bool active;
+  final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 8),
-        decoration: BoxDecoration(
-          gradient: active
-              ? const LinearGradient(
-                  colors: [SLColors.primary, SLColors.secondary],
-                )
-              : null,
-          color: active ? null : Colors.transparent,
-          borderRadius: BorderRadius.circular(17),
-          boxShadow: active
-              ? [
-                  BoxShadow(
-                    color: SLColors.primary.withValues(alpha: 0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : null,
-        ),
-        alignment: Alignment.center,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 17,
-              color: active ? Colors.white : SLColors.textMuted,
-            ),
-            const SizedBox(width: 7),
-            Flexible(
+    final shape = StadiumBorder(
+      side: selected
+          ? BorderSide.none
+          : const BorderSide(color: SLColors.border),
+    );
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Material(
+        color: selected ? SLColors.textPrimary : SLColors.paper,
+        shape: shape,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          customBorder: shape,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Center(
+              widthFactor: 1,
               child: Text(
                 label,
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
                 style: SLTheme.quicksand(
-                  fontWeight: active ? FontWeight.w900 : FontWeight.w700,
-                  fontSize: 13.5,
-                  color: active ? Colors.white : SLColors.textSecondary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: selected ? SLColors.paper : SLColors.textMedium,
                 ),
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

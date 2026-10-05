@@ -617,6 +617,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _isTabActive = widget.isActiveListenable.value;
     widget.isActiveListenable.addListener(_onActiveChanged);
+    UtilityService.pinnedAppsRevision.addListener(_onPinnedAppsChanged);
     _reactionFlightsNotifier = ValueNotifier<List<_HomeReactionFlight>>([]);
     _smartInteractionPresetNotifier = ValueNotifier<_PartnerInteractionPreset>(
       _defaultSmartInteractionPreset(),
@@ -662,6 +663,15 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     );
   }
 
+  /// Tải lại dải tiện ích đã ghim khi người dùng ghim/bỏ ghim ở tab Tiện ích.
+  void _onPinnedAppsChanged() {
+    unawaited(() async {
+      final pinnedApps = await _utilityService.getPinnedApps();
+      if (!mounted) return;
+      setState(() => _pinnedApps = pinnedApps);
+    }());
+  }
+
   void _onActiveChanged() {
     if (!mounted) return;
     final nextActive = widget.isActiveListenable.value;
@@ -699,6 +709,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     L10nService().removeListener(_onRegionPreferencesChanged);
     WidgetsBinding.instance.removeObserver(this);
     widget.isActiveListenable.removeListener(_onActiveChanged);
+    UtilityService.pinnedAppsRevision.removeListener(_onPinnedAppsChanged);
     _invalidateLiveWorkSession();
     _cancelLiveWorkBindings();
     _fetchHouseDataDebounceTimer?.cancel();

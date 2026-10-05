@@ -31,6 +31,9 @@ class UtilityAccountSnapshot {
   final String? name;
 }
 
+/// Nhóm hiển thị trên trang Tiện ích.
+enum UtilityCategory { memories, together, care, fun, other }
+
 class UtilityApp {
   final String title;
   final IconData icon;
@@ -182,6 +185,61 @@ class UtilityService {
         .where((app) => isUtilityAllowed(app.id, relationshipMode))
         .toList(growable: false);
   }
+
+  /// Thứ tự trong từng nhóm; ô đầu tiên của nhóm "together" là ô lớn.
+  static const Map<UtilityCategory, List<String>> categoryAppIds = {
+    UtilityCategory.memories: [
+      'local_album',
+      'collage',
+      'cinema',
+      'creative_diary',
+      'surprise_maker',
+      'capsule',
+      'soul_events',
+    ],
+    UtilityCategory.together: [
+      'calendar',
+      'note',
+      'finance',
+      'voice',
+      'couple_connect',
+    ],
+    UtilityCategory.care: ['habit', 'health', 'sleep_tracker'],
+    UtilityCategory.fun: ['tarot', 'wheel', 'drawing', 'friendly_chat'],
+    UtilityCategory.other: ['vault', 'diary_export', 'store', 'giftcode'],
+  };
+
+  static UtilityCategory categoryOf(String id) {
+    for (final entry in categoryAppIds.entries) {
+      if (entry.value.contains(id)) return entry.key;
+    }
+    return UtilityCategory.other;
+  }
+
+  /// Tiện ích được phép theo chế độ, gom theo nhóm; bỏ nhóm rỗng.
+  static Map<UtilityCategory, List<UtilityApp>> appsByCategory(
+    String? relationshipMode,
+  ) {
+    final allowed = {
+      for (final app in appsForMode(relationshipMode)) app.id: app,
+    };
+    final result = <UtilityCategory, List<UtilityApp>>{
+      for (final category in UtilityCategory.values) category: <UtilityApp>[],
+    };
+    for (final category in UtilityCategory.values) {
+      for (final id in categoryAppIds[category] ?? const <String>[]) {
+        final app = allowed.remove(id);
+        if (app != null) result[category]!.add(app);
+      }
+    }
+    // Tiện ích mới chưa được xếp nhóm vẫn hiện ở "Khác".
+    result[UtilityCategory.other]!.addAll(allowed.values);
+    result.removeWhere((_, apps) => apps.isEmpty);
+    return result;
+  }
+
+  /// Tăng mỗi khi danh sách ghim đổi để trang Nhà tải lại.
+  static final ValueNotifier<int> pinnedAppsRevision = ValueNotifier<int>(0);
 
   static final List<UtilityApp> allApps = [
     UtilityApp(
@@ -408,12 +466,13 @@ class UtilityService {
     return sanitized;
   }
 
-  Future<void> togglePinApp(String appId) async {
+  /// Trả về trạng thái ghim sau khi đổi.
+  Future<bool> togglePinApp(String appId) async {
     final normalizedId = appId.trim();
-    if (normalizedId.isEmpty) return;
-    if (!isUtilityVisibleInCurrentBuild(normalizedId)) return;
+    if (normalizedId.isEmpty) return false;
+    if (!isUtilityVisibleInCurrentBuild(normalizedId)) return false;
 
-    if (!_allAppIds.contains(normalizedId)) return;
+    if (!_allAppIds.contains(normalizedId)) return false;
 
     final prefs =
         OfflineCacheService.getPrefsSync() ??
@@ -422,13 +481,16 @@ class UtilityService {
       prefs.getStringList(_pinnedAppsPrefKey) ?? const <String>[],
     );
 
-    if (current.contains(normalizedId)) {
+    final wasPinned = current.contains(normalizedId);
+    if (wasPinned) {
       current.removeWhere((id) => id == normalizedId);
     } else {
       current.add(normalizedId);
     }
 
     await prefs.setStringList(_pinnedAppsPrefKey, current);
+    pinnedAppsRevision.value++;
+    return !wasPinned;
   }
 
   Future<List<UtilityApp>> getPinnedApps() async {

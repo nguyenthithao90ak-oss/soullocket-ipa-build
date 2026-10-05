@@ -1,6 +1,8 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
+import 'widgets/utilities_app_action_sheet.dart';
+import 'widgets/utilities_daily_pick_card.dart';
 import 'widgets/utilities_tab_body.dart';
 import 'dart:async';
 import 'dart:math';
@@ -8,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:soullocket_app/views/utilities/love_card_screen.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -74,13 +77,8 @@ class _UtilitiesTabState extends State<UtilitiesTab>
 
   String? _houseId;
   String _myName = L10nService().translate('home_bn_1fd75b');
-  List<String> _customOrder = [];
   String _relationshipMode = 'single';
-  bool _isEditMode = false;
-  int _currentSegment = 0;
-  BannerAd? _bottomBannerAd;
-  final bool _isBottomBannerReady = false;
-  List<UtilityApp> _pinnedApps = const <UtilityApp>[];
+  Set<String> _pinnedIds = const <String>{};
   List<UtilityApp> _recentApps = const <UtilityApp>[];
   bool _layoutReady = false;
 
@@ -90,17 +88,6 @@ class _UtilitiesTabState extends State<UtilitiesTab>
     final prefs = OfflineCacheService.getPrefsSync();
     if (prefs != null) _restoreLayout(prefs);
     unawaited(_init());
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      Future<void>.delayed(const Duration(seconds: 3), () {
-        if (!mounted) return;
-        precacheUtilityStickerList(context);
-      });
-      Future<void>.delayed(const Duration(seconds: 20), () {
-        if (!mounted) return;
-        _loadBottomBanner();
-      });
-    });
   }
 
   // Không khai báo lại dispose() ở dưới nữa
@@ -125,8 +112,7 @@ class _UtilitiesTabState extends State<UtilitiesTab>
 
   void _restoreLayout(SharedPreferences prefs) {
     final snapshot = _utilityService.readLayout(prefs);
-    _customOrder = snapshot.order;
-    _pinnedApps = snapshot.pinnedApps;
+    _pinnedIds = snapshot.pinnedApps.map((app) => app.id).toSet();
     _recentApps = snapshot.recentApps;
     final account = UtilityService.cachedAccount(prefs, _auth.currentUser?.uid);
     _houseId = account?.houseId;
@@ -136,99 +122,6 @@ class _UtilitiesTabState extends State<UtilitiesTab>
       _relationshipMode = mode;
       _layoutReady = true;
     }
-  }
-
-  Future<void> _saveOrder() async {
-    await _utilityService.saveCustomOrder(_customOrder);
-  }
-
-  List<UtilityApp> _sortAppsByCurrentOrder(List<UtilityApp> apps) {
-    return UtilityService.sortApps(apps, _customOrder);
-  }
-
-  Future<void> _reloadCustomOrder() async {
-    final nextOrder = await _utilityService.getCustomOrder();
-    if (!mounted) return;
-    setState(() {
-      _customOrder = List<String>.from(nextOrder);
-    });
-  }
-
-  Future<void> _reorderAppAsync(String draggedId, String targetId) async {
-    if (draggedId == targetId) return;
-    if (!_customOrder.contains(draggedId) || !_customOrder.contains(targetId)) {
-      await _reloadCustomOrder();
-      return;
-    }
-
-    final nextOrder = List<String>.from(_customOrder);
-    final oldIndex = nextOrder.indexOf(draggedId);
-    final newIndex = nextOrder.indexOf(targetId);
-    if (oldIndex == -1 || newIndex == -1 || oldIndex == newIndex) {
-      return;
-    }
-
-    nextOrder.removeAt(oldIndex);
-    nextOrder.insert(newIndex, draggedId);
-
-    if (!mounted) return;
-    setState(() {
-      _customOrder = nextOrder;
-    });
-    await _saveOrder();
-  }
-
-  List<UtilityApp> _appsForCurrentSegment() {
-    final visibleAppsAll = UtilityService.appsForMode(_relationshipMode);
-    final filtered = _currentSegment == 1
-        ? visibleAppsAll.where((app) => app.isTool).toList(growable: false)
-        : visibleAppsAll.where((app) => !app.isTool).toList(growable: false);
-    return _sortAppsByCurrentOrder(filtered);
-  }
-
-  void _handleOrderDrop(String draggedId, String targetId) {
-    unawaited(_reorderAppAsync(draggedId, targetId));
-  }
-
-  Future<void> _resetOrderToDefault() async {
-    if (!mounted) return;
-    setState(() {
-      _customOrder = _utilityService.defaultOrder;
-    });
-    await _utilityService.clearCustomOrder();
-    await _reloadCustomOrder();
-  }
-
-  Future<void> _confirmResetLayout() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) {
-        return SLAlertDialog(
-          title: Text(context.tr('utilities_reset_layout_title')),
-          content: Text(context.tr('home_bncchcmuna_5043aa')),
-          actions: [
-            SLDialogAction(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(context.tr('home_hy_1e4050')),
-            ),
-            SLDialogAction(
-              primary: true,
-
-              onPressed: () => Navigator.of(ctx).pop(true),
-
-              child: Text(context.tr('home_tli_ffd7c4')),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirm != true) return;
-    await _resetOrderToDefault();
-  }
-
-  void _reorderApp(String draggedId, String targetId) {
-    _handleOrderDrop(draggedId, targetId);
   }
 
   Future<void> _fetchUtilityStats() async {
@@ -280,27 +173,19 @@ class _UtilitiesTabState extends State<UtilitiesTab>
   }
 
   @override
-  void dispose() {
-    AdMobService().disposeBanner(_bottomBannerAd);
-    super.dispose();
-  }
-
-  void _loadBottomBanner() {
-    // Disabled to prevent white screen crashes on emulator / unverified environments.
-  }
-
-  @override
   Widget build(BuildContext context) {
     super.build(context);
     if (!_layoutReady) {
       return const Center(child: CircularProgressIndicator());
     }
-    final visibleAppsAll = UtilityService.appsForMode(_relationshipMode);
-    final commonApps = _sortAppsByCurrentOrder(
-      visibleAppsAll.where((app) => !app.isTool).toList(growable: false),
-    );
-    final essentialApps = _sortAppsByCurrentOrder(
-      visibleAppsAll.where((app) => app.isTool).toList(growable: false),
+    final categories = UtilityService.appsByCategory(_relationshipMode);
+    final appsById = <String, UtilityApp>{
+      for (final apps in categories.values)
+        for (final app in apps) app.id: app,
+    };
+    final dailyPick = UtilityDailyPick.forDay(
+      DateTime.now(),
+      appsById.containsKey,
     );
 
     return Scaffold(
@@ -311,46 +196,18 @@ class _UtilitiesTabState extends State<UtilitiesTab>
         secondaryAccent: SLColors.thread,
         motif: SLCanvasBackdropMotif.sparkles,
         child: UtilitiesTabBody(
-          currentSegment: _currentSegment,
-          onSegmentChanged: _handleSegmentChanged,
-          onResetTap: _confirmResetLayout,
-          commonApps: commonApps,
-          essentialApps: essentialApps,
-          pinnedApps: _shortcutPinnedApps,
-          recentApps: _shortcutRecentApps,
-          onShortcutTap: _navigateToApp,
-          showBottomBanner: _shouldShowBottomBanner,
-          bottomBannerAd: _bottomBannerAd,
-          isEditMode: _isEditMode,
+          categories: categories,
+          recentApps: _recentApps
+              .where((app) => appsById.containsKey(app.id))
+              .toList(growable: false),
+          pinnedIds: _pinnedIds,
+          dailyPick: dailyPick,
+          dailyPickApp: dailyPick == null ? null : appsById[dailyPick.appId],
           onAppTap: _navigateToApp,
-          onReorder: _reorderApp,
-          onEditModeChanged: _handleEditModeChanged,
+          onAppLongPress: _showAppActions,
         ),
       ),
     );
-  }
-
-  bool get _shouldShowBottomBanner =>
-      _currentSegment == 0 &&
-      _isBottomBannerReady &&
-      ModalRoute.of(context)?.isCurrent == true;
-
-  List<UtilityApp> get _shortcutPinnedApps {
-    return _pinnedApps
-        .where(
-          (app) => UtilityService.isUtilityAllowed(app.id, _relationshipMode),
-        )
-        .toList(growable: false);
-  }
-
-  List<UtilityApp> get _shortcutRecentApps {
-    final pinnedIds = _shortcutPinnedApps.map((app) => app.id).toSet();
-    return _recentApps
-        .where(
-          (app) => UtilityService.isUtilityAllowed(app.id, _relationshipMode),
-        )
-        .where((app) => !pinnedIds.contains(app.id))
-        .toList(growable: false);
   }
 
   bool _sameAppIds(List<UtilityApp> left, List<UtilityApp> right) {
@@ -365,14 +222,31 @@ class _UtilitiesTabState extends State<UtilitiesTab>
     return true;
   }
 
-  void _handleSegmentChanged(int segment) {
-    if (_currentSegment == segment) return;
-    setState(() => _currentSegment = segment);
-  }
-
-  void _handleEditModeChanged(bool value) {
-    if (_isEditMode == value) return;
-    setState(() => _isEditMode = value);
+  Future<void> _showAppActions(UtilityApp app) async {
+    HapticFeedback.mediumImpact();
+    final action = await showUtilitiesAppActionSheet(
+      context,
+      app: app,
+      isPinned: _pinnedIds.contains(app.id),
+    );
+    if (!mounted || action == null) return;
+    switch (action) {
+      case UtilitiesAppAction.open:
+        await _navigateToApp(app.id);
+      case UtilitiesAppAction.togglePin:
+        final pinned = await _utilityService.togglePinApp(app.id);
+        if (!mounted) return;
+        setState(() {
+          _pinnedIds = {..._pinnedIds}..remove(app.id);
+          if (pinned) _pinnedIds.add(app.id);
+        });
+        SLNotice.showSuccess(
+          context,
+          context.tr(
+            pinned ? 'utilities_pinned_toast' : 'utilities_unpinned_toast',
+          ),
+        );
+    }
   }
 
   Future<void> _checkAndShowAppReviewForUtility() async {
