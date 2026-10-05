@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../widgets/sl_settings_kit.dart';
+
 /// Không dựng danh sách với vai/avatar mặc định rồi chèn hàng khi tải xong.
 class SettingsInitialContent extends StatelessWidget {
   const SettingsInitialContent({
@@ -24,21 +26,43 @@ class SettingsInitialContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (ready) return builder(context);
+    final isDark = SLSettingsPalette.isNightTheme;
+    final palette = SLSettingsPalette.resolve(isDark);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (!failed)
             const SizedBox.square(
-              dimension: 24,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              dimension: 26,
+              child: CircularProgressIndicator(strokeWidth: 2.4),
             )
           else
-            const Icon(Icons.cloud_off_rounded),
+            SLSettingsIconTile(
+              icon: Icons.cloud_off_rounded,
+              color: SLSettingsColors.slate,
+              filled: false,
+              size: 52,
+              isDark: isDark,
+            ),
           const SizedBox(height: 16),
-          Text(failed ? errorLabel : loadingLabel, textAlign: TextAlign.center),
-          if (failed) TextButton(onPressed: onRetry, child: Text(retryLabel)),
+          Text(
+            failed ? errorLabel : loadingLabel,
+            textAlign: TextAlign.center,
+            style: SLSettingsText.body(palette.inkSecondary),
+          ),
+          if (failed) ...[
+            const SizedBox(height: 16),
+            SLSettingsButton(
+              label: retryLabel,
+              icon: Icons.refresh_rounded,
+              expand: false,
+              variant: SLSettingsButtonVariant.tonal,
+              isDark: isDark,
+              onPressed: onRetry,
+            ),
+          ],
         ],
       ),
     );

@@ -3,9 +3,10 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/widgets/sl_settings_kit.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
+import '../settings_menu_widgets.dart';
 import 'pairing_connection_widgets.dart';
 import 'pairing_shortcut_state.dart';
 import 'pairing_display_cache.dart';
@@ -140,153 +141,96 @@ class _PairingSettingsShortcutState extends State<PairingSettingsShortcut> {
   Widget build(BuildContext context) {
     final title = context.tr('settings_partner_connect');
     final status = context.tr('pairing_ui_connected_status');
-    return Semantics(
-      button: true,
-      label: !_snapshot.ready
+    final Widget leading;
+    if (!_snapshot.ready) {
+      leading = SizedBox.square(
+        dimension: 40,
+        child: Center(
+          child: _snapshot.failed
+              ? const Icon(Icons.cloud_off_rounded, color: SLSettingsColors.rose)
+              : const SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+        ),
+      );
+    } else if (_paired) {
+      final ring = widget.isDark
+          ? SLSettingsColors.darkSurface
+          : SLSettingsColors.surface;
+      leading = SizedBox(
+        key: const ValueKey('pairing-shortcut-avatars'),
+        width: 66,
+        height: 40,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              left: 0,
+              top: 0,
+              child: PairingAvatar(
+                key: ValueKey(
+                  '${FirebaseAuth.instance.currentUser?.uid}:${widget.houseId}:user1',
+                ),
+                url: pairingAvatarUrl(_settings, 'user1'),
+                size: 40,
+              ),
+            ),
+            Positioned(
+              left: 26,
+              top: 0,
+              child: PairingAvatar(
+                key: ValueKey(
+                  '${FirebaseAuth.instance.currentUser?.uid}:${widget.houseId}:user2',
+                ),
+                url: pairingAvatarUrl(_settings, 'user2'),
+                size: 40,
+                second: true,
+              ),
+            ),
+            Positioned(
+              left: 21,
+              bottom: -3,
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: SLSettingsColors.rose,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: ring, width: 2),
+                ),
+                child: const Icon(
+                  Icons.favorite_rounded,
+                  color: Colors.white,
+                  size: 10,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      leading = SLSettingsIconTile(
+        key: const ValueKey('pairing-shortcut-unpaired'),
+        icon: Icons.favorite_border_rounded,
+        color: SLSettingsColors.rose,
+        size: 40,
+        isDark: widget.isDark,
+      );
+    }
+    return SettingsQuickTile(
+      title: title,
+      leading: leading,
+      caption: !_snapshot.ready
+          ? null
+          : (_paired ? status : context.tr('home_chaghpni_70d9cc')),
+      captionTone: _paired ? SLSettingsTone.success : SLSettingsTone.accent,
+      semanticLabel: !_snapshot.ready
           ? '$title. ${context.tr('settings_loading_data')}'
           : _paired
           ? '$title. $status'
           : title,
-      excludeSemantics: true,
+      isDark: widget.isDark,
       onTap: widget.onTap,
-      child: Material(
-        color: widget.isDark ? const Color(0xFF261F23) : SLColors.paper,
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          onTap: widget.onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            constraints: const BoxConstraints(minHeight: 112),
-            padding: const EdgeInsets.fromLTRB(8, 14, 8, 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: widget.isDark
-                    ? Colors.white.withValues(alpha: 0.1)
-                    : SLColors.border,
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  height: 42,
-                  child: !_snapshot.ready
-                      ? Center(
-                          child: _snapshot.failed
-                              ? const Icon(
-                                  Icons.cloud_off_rounded,
-                                  color: SLColors.primary,
-                                )
-                              : const SizedBox.square(
-                                  dimension: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                        )
-                      : _paired
-                      ? FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: SizedBox(
-                            key: const ValueKey('pairing-shortcut-avatars'),
-                            width: 74,
-                            height: 42,
-                            child: Stack(
-                              children: [
-                                Positioned(
-                                  left: 0,
-                                  top: 0,
-                                  child: PairingAvatar(
-                                    key: ValueKey(
-                                      '${FirebaseAuth.instance.currentUser?.uid}:${widget.houseId}:user1',
-                                    ),
-                                    url: pairingAvatarUrl(_settings, 'user1'),
-                                    size: 39,
-                                  ),
-                                ),
-                                Positioned(
-                                  right: 0,
-                                  top: 0,
-                                  child: PairingAvatar(
-                                    key: ValueKey(
-                                      '${FirebaseAuth.instance.currentUser?.uid}:${widget.houseId}:user2',
-                                    ),
-                                    url: pairingAvatarUrl(_settings, 'user2'),
-                                    size: 39,
-                                    second: true,
-                                  ),
-                                ),
-                                Positioned(
-                                  bottom: 0,
-                                  left: 28,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(3),
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFFB9516D),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.favorite_rounded,
-                                      color: Colors.white,
-                                      size: 11,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      : Container(
-                          key: const ValueKey('pairing-shortcut-unpaired'),
-                          width: 42,
-                          decoration: BoxDecoration(
-                            color: SLColors.primary.withValues(
-                              alpha: widget.isDark ? 0.2 : 0.12,
-                            ),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.favorite_border_rounded,
-                            color: SLColors.primary,
-                            size: 22,
-                          ),
-                        ),
-                ),
-                const SizedBox(height: 9),
-                Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: SLTheme.quicksand(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w800,
-                    color: widget.isDark ? Colors.white : SLColors.ink,
-                    height: 1.2,
-                  ),
-                ),
-                if (_paired) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    status,
-                    textAlign: TextAlign.center,
-                    style: SLTheme.quicksand(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w600,
-                      color: widget.isDark
-                          ? const Color(0xFFF3B2C3)
-                          : const Color(0xFFB9516D),
-                      height: 1.2,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

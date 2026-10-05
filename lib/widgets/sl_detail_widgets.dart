@@ -1,39 +1,42 @@
 import 'package:flutter/material.dart';
 
 import '../core/sl_theme.dart';
+import 'sl_settings_kit.dart';
 
+/// Token cho các trang chi tiết mở từ Cài đặt; dùng chung bảng màu
+/// [SLSettingsColors] để mọi trang con nhìn đồng bộ.
 class SLDetailStyle {
-  static const canvas = Color(0xFFF5EFE6);
-  static const surface = Color(0xFFFFFAF3);
-  static const border = Color(0xFFE8DDD0);
-  static const ink = Color(0xFF45382F);
-  static const secondary = Color(0xFF7A695D);
-  static const primary = Color(0xFF72543F);
-  static const sage = Color(0xFF587564);
-  static const rose = Color(0xFF9D6372);
-  static const blue = Color(0xFF587589);
-  static const warning = Color(0xFF906536);
+  static const canvas = SLSettingsColors.canvas;
+  static const surface = SLSettingsColors.surface;
+  static const border = SLSettingsColors.border;
+  static const ink = SLSettingsColors.ink;
+  static const secondary = SLSettingsColors.inkSecondary;
+  static const primary = SLSettingsColors.accentStrong;
+  static const sage = SLSettingsColors.sage;
+  static const rose = SLSettingsColors.rose;
+  static const blue = SLSettingsColors.sky;
+  static const warning = SLSettingsColors.warning;
 
   static bool isDark(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark;
 
   static Color background(BuildContext context) =>
-      isDark(context) ? const Color(0xFF1F1B18) : canvas;
+      isDark(context) ? SLSettingsColors.darkCanvas : canvas;
 
   static Color card(BuildContext context) =>
-      isDark(context) ? const Color(0xFF29231F) : surface;
+      isDark(context) ? SLSettingsColors.darkSurface : surface;
 
   static Color outline(BuildContext context) =>
-      isDark(context) ? const Color(0xFF483D33) : border;
+      isDark(context) ? SLSettingsColors.darkBorder : border;
 
   static Color text(BuildContext context) =>
-      isDark(context) ? const Color(0xFFF6EADC) : ink;
+      isDark(context) ? SLSettingsColors.darkInk : ink;
 
   static Color muted(BuildContext context) =>
-      isDark(context) ? const Color(0xFFC3B3A3) : secondary;
+      isDark(context) ? SLSettingsColors.darkInkSecondary : secondary;
 
   static Color accent(BuildContext context, Color color) =>
-      isDark(context) ? Color.lerp(color, surface, 0.45)! : color;
+      isDark(context) ? Color.lerp(color, surface, 0.35)! : color;
 }
 
 class SLDetailPageHeader extends StatelessWidget {
@@ -53,60 +56,30 @@ class SLDetailPageHeader extends StatelessWidget {
   final String? backLabel;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 8, bottom: 20),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            if (onBack != null) ...[
-              IconButton(
-                onPressed: onBack,
-                tooltip: backLabel,
-                style: IconButton.styleFrom(
-                  minimumSize: const Size(48, 48),
-                  foregroundColor: SLDetailStyle.text(context),
-                  backgroundColor: SLDetailStyle.card(context),
-                  side: BorderSide(color: SLDetailStyle.outline(context)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                icon: const BackButtonIcon(),
-              ),
-              const SizedBox(width: 12),
-            ],
-            Expanded(
-              child: Text(
-                title,
-                style: SLTheme.quicksand(
-                  fontSize: 21,
-                  fontWeight: FontWeight.w700,
-                  height: 1.35,
-                  color: SLDetailStyle.text(context),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            SLDetailIcon(icon: icon),
-          ],
-        ),
-        if (description != null) ...[
-          const SizedBox(height: 12),
-          Text(
-            description!,
-            style: SLTheme.quicksand(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w500,
-              height: 1.5,
-              color: SLDetailStyle.muted(context),
-            ),
-          ),
-        ],
-      ],
-    ),
+  Widget build(BuildContext context) => SLSettingsPageHeader(
+    title: title,
+    description: description,
+    icon: icon,
+    iconColor: _iconColorFor(icon),
+    onBack: onBack,
+    backLabel: backLabel,
+    isDark: SLDetailStyle.isDark(context),
   );
+
+  /// Mỗi trang giữ một sắc nhận diện riêng, cùng bộ màu với danh sách Cài đặt.
+  static Color _iconColorFor(IconData icon) {
+    if (icon == Icons.notifications_none_rounded ||
+        icon == Icons.notifications_rounded) {
+      return SLSettingsColors.amber;
+    }
+    if (icon == Icons.cloud_sync_outlined || icon == Icons.cloud_rounded) {
+      return SLSettingsColors.sky;
+    }
+    if (icon == Icons.history_rounded) return SLSettingsColors.slate;
+    if (icon == Icons.support_agent_rounded) return SLSettingsColors.teal;
+    if (icon == Icons.location_on_outlined) return SLSettingsColors.indigo;
+    return SLSettingsColors.rose;
+  }
 }
 
 class SLDetailIcon extends StatelessWidget {
@@ -122,40 +95,44 @@ class SLDetailIcon extends StatelessWidget {
   final double size;
 
   @override
-  Widget build(BuildContext context) {
-    final accent = SLDetailStyle.accent(context, color);
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(size * 0.32),
-      ),
-      child: Icon(icon, color: accent, size: size * 0.5),
-    );
-  }
+  Widget build(BuildContext context) => SLSettingsIconTile(
+    icon: icon,
+    color: color,
+    size: size,
+    filled: false,
+    isDark: SLDetailStyle.isDark(context),
+  );
 }
 
 class SLDetailCard extends StatelessWidget {
   const SLDetailCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(14),
+    this.padding = const EdgeInsets.all(16),
   });
 
   final Widget child;
   final EdgeInsetsGeometry padding;
 
   @override
-  Widget build(BuildContext context) => Material(
-    color: SLDetailStyle.card(context),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(24),
-      side: BorderSide(color: SLDetailStyle.outline(context)),
-    ),
-    clipBehavior: Clip.antiAlias,
-    child: Padding(padding: padding, child: child),
-  );
+  Widget build(BuildContext context) {
+    final palette = SLSettingsPalette.resolve(SLDetailStyle.isDark(context));
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(SLSettingsRadius.card),
+        boxShadow: palette.shadow,
+      ),
+      child: Material(
+        color: palette.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(SLSettingsRadius.card),
+          side: BorderSide(color: palette.border),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Padding(padding: padding, child: child),
+      ),
+    );
+  }
 }
 
 class SLDetailHeading extends StatelessWidget {
@@ -173,40 +150,12 @@ class SLDetailHeading extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(BuildContext context) => Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      SLDetailIcon(icon: icon, color: color),
-      const SizedBox(width: 12),
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: SLTheme.quicksand(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                height: 1.4,
-                color: SLDetailStyle.text(context),
-              ),
-            ),
-            if (description != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                description!,
-                style: SLTheme.quicksand(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w500,
-                  height: 1.5,
-                  color: SLDetailStyle.muted(context),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    ],
+  Widget build(BuildContext context) => SLSettingsBlockHeading(
+    icon: icon,
+    title: title,
+    subtitle: description,
+    iconColor: color,
+    isDark: SLDetailStyle.isDark(context),
   );
 }
 
@@ -225,46 +174,15 @@ class SLDetailButton extends StatelessWidget {
   final bool primary;
 
   @override
-  Widget build(BuildContext context) {
-    final color = primary ? Colors.white : SLDetailStyle.text(context);
-    return SizedBox(
-      width: double.infinity,
-      child: TextButton(
-        onPressed: onPressed,
-        style: TextButton.styleFrom(
-          minimumSize: const Size(48, 48),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          backgroundColor: primary
-              ? SLDetailStyle.primary
-              : SLDetailStyle.card(context),
-          foregroundColor: color,
-          disabledBackgroundColor: SLDetailStyle.outline(context),
-          disabledForegroundColor: SLDetailStyle.muted(context),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 18),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                label,
-                textAlign: TextAlign.center,
-                style: SLTheme.quicksand(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  height: 1.4,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => SLSettingsButton(
+    icon: icon,
+    label: label,
+    onPressed: onPressed,
+    isDark: SLDetailStyle.isDark(context),
+    variant: primary
+        ? SLSettingsButtonVariant.primary
+        : SLSettingsButtonVariant.secondary,
+  );
 }
 
 class SLDetailToggle extends StatelessWidget {
@@ -291,14 +209,12 @@ class SLDetailToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final toggle = Switch(
+    final isDark = SLDetailStyle.isDark(context);
+    final palette = SLSettingsPalette.resolve(isDark);
+    final toggle = SLSettingsSwitch(
       value: value,
       onChanged: onChanged,
-      activeTrackColor: SLDetailStyle.primary,
-      activeThumbColor: Colors.white,
-      inactiveTrackColor: SLDetailStyle.outline(context),
-      inactiveThumbColor: SLDetailStyle.muted(context),
-      materialTapTargetSize: MaterialTapTargetSize.padded,
+      isDark: isDark,
     );
     return Semantics(
       label: ignoreDirectSwitchTap ? title : null,
@@ -306,51 +222,42 @@ class SLDetailToggle extends StatelessWidget {
       button: ignoreDirectSwitchTap ? true : null,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            crossAxisAlignment: description == null
+                ? CrossAxisAlignment.center
+                : CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  SLDetailIcon(icon: icon, color: color, size: 32),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: SLTheme.quicksand(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        height: 1.4,
-                        color: SLDetailStyle.text(context),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  if (ignoreDirectSwitchTap)
-                    ExcludeSemantics(child: IgnorePointer(child: toggle))
-                  else
-                    Semantics(label: title, child: toggle),
-                ],
+              SLSettingsIconTile(
+                icon: icon,
+                color: color,
+                size: 34,
+                filled: false,
+                isDark: isDark,
               ),
-              if (description != null)
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(
-                    start: 42,
-                    bottom: 4,
-                  ),
-                  child: Text(
-                    description!,
-                    style: SLTheme.quicksand(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      height: 1.45,
-                      color: SLDetailStyle.muted(context),
-                    ),
-                  ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: SLSettingsText.title(palette.ink)),
+                    if (description != null) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        description!,
+                        style: SLSettingsText.caption(palette.inkSecondary),
+                      ),
+                    ],
+                  ],
                 ),
+              ),
+              const SizedBox(width: 8),
+              if (ignoreDirectSwitchTap)
+                ExcludeSemantics(child: IgnorePointer(child: toggle))
+              else
+                Semantics(label: title, child: toggle),
             ],
           ),
         ),
@@ -377,35 +284,15 @@ class SLDetailStatusRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = SLDetailStyle.accent(
-      context,
-      ready ? SLDetailStyle.sage : SLDetailStyle.warning,
+    final isDark = SLDetailStyle.isDark(context);
+    final palette = SLSettingsPalette.resolve(isDark);
+    final badge = SLSettingsPill(
+      label: status,
+      tone: ready ? SLSettingsTone.success : SLSettingsTone.warning,
+      isDark: isDark,
+      dense: true,
     );
-    final badge = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.09),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        status,
-        style: SLTheme.quicksand(
-          fontSize: 11.5,
-          fontWeight: FontWeight.w600,
-          color: accent,
-          height: 1.35,
-        ),
-      ),
-    );
-    final label = Text(
-      title,
-      style: SLTheme.quicksand(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: SLDetailStyle.text(context),
-        height: 1.4,
-      ),
-    );
+    final label = Text(title, style: SLSettingsText.body(palette.ink));
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -420,12 +307,18 @@ class SLDetailStatusRow extends StatelessWidget {
                   MediaQuery.textScalerOf(context).scale(13) < 18;
               return Row(
                 children: [
-                  Icon(icon, color: SLDetailStyle.muted(context), size: 19),
+                  Icon(icon, color: palette.inkSecondary, size: 19),
                   const SizedBox(width: 10),
                   if (inline) ...[
                     Expanded(flex: 3, child: label),
                     const SizedBox(width: 8),
-                    Flexible(flex: 2, child: badge),
+                    Flexible(
+                      flex: 2,
+                      child: Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: badge,
+                      ),
+                    ),
                   ] else
                     Expanded(
                       child: Column(
@@ -437,7 +330,7 @@ class SLDetailStatusRow extends StatelessWidget {
                     const SizedBox(width: 4),
                     Icon(
                       Icons.chevron_right_rounded,
-                      color: SLDetailStyle.muted(context),
+                      color: palette.inkTertiary,
                       size: 20,
                     ),
                   ],
@@ -468,43 +361,33 @@ class SLDetailDisclosure extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => SLDetailCard(
-    padding: EdgeInsets.zero,
-    child: ExpansionTile(
-      dense: true,
-      tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-      shape: const Border(),
-      collapsedShape: const Border(),
-      iconColor: SLDetailStyle.muted(context),
-      collapsedIconColor: SLDetailStyle.muted(context),
-      leading: SLDetailIcon(icon: icon, color: color, size: 32),
-      title: Text(
-        title,
-        style: SLTheme.quicksand(
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-          color: SLDetailStyle.text(context),
-          height: 1.4,
-        ),
-      ),
-      subtitle: description == null
-          ? null
-          : Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                description!,
-                style: SLTheme.quicksand(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: SLDetailStyle.muted(context),
-                  height: 1.45,
+  Widget build(BuildContext context) {
+    final palette = SLSettingsPalette.resolve(SLDetailStyle.isDark(context));
+    return SLDetailCard(
+      padding: EdgeInsets.zero,
+      child: ExpansionTile(
+        dense: true,
+        tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+        shape: const Border(),
+        collapsedShape: const Border(),
+        iconColor: palette.inkSecondary,
+        collapsedIconColor: palette.inkTertiary,
+        leading: SLDetailIcon(icon: icon, color: color, size: 34),
+        title: Text(title, style: SLSettingsText.title(palette.ink)),
+        subtitle: description == null
+            ? null
+            : Padding(
+                padding: const EdgeInsets.only(top: 3),
+                child: Text(
+                  description!,
+                  style: SLSettingsText.caption(palette.inkSecondary),
                 ),
               ),
-            ),
-      children: [child],
-    ),
-  );
+        children: [child],
+      ),
+    );
+  }
 }
 
 class SLDetailChoice extends StatelessWidget {
@@ -533,11 +416,13 @@ class SLDetailChoice extends StatelessWidget {
     inMutuallyExclusiveGroup: true,
     button: true,
     child: Material(
-      color: selected ? const Color(0xFFF2E8DA) : SLDetailStyle.surface,
+      color: selected ? SLSettingsColors.accentSoft : SLSettingsColors.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(SLSettingsRadius.card),
         side: BorderSide(
-          color: selected ? SLDetailStyle.primary : SLDetailStyle.border,
+          color: selected
+              ? SLSettingsColors.accent.withValues(alpha: 0.6)
+              : SLSettingsColors.border,
           width: selected ? 1.5 : 1,
         ),
       ),
@@ -551,17 +436,19 @@ class SLDetailChoice extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  SLDetailIcon(icon: icon, size: 36),
-                  const SizedBox(width: 10),
+                  SLSettingsIconTile(
+                    icon: icon,
+                    color: selected
+                        ? SLSettingsColors.accent
+                        : SLSettingsColors.slate,
+                    filled: selected,
+                    size: 36,
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       title,
-                      style: SLTheme.quicksand(
-                        color: SLDetailStyle.ink,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        height: 1.4,
-                      ),
+                      style: SLSettingsText.title(SLSettingsColors.ink),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -570,13 +457,13 @@ class SLDetailChoice extends StatelessWidget {
                         ? Icons.check_circle_rounded
                         : Icons.radio_button_off_rounded,
                     color: selected
-                        ? SLDetailStyle.primary
-                        : SLDetailStyle.secondary,
+                        ? SLSettingsColors.accent
+                        : SLSettingsColors.inkTertiary,
                     size: 22,
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Text.rich(
                 TextSpan(
                   children: [
@@ -584,8 +471,8 @@ class SLDetailChoice extends StatelessWidget {
                       TextSpan(
                         text: '$badge · ',
                         style: const TextStyle(
-                          color: SLDetailStyle.sage,
-                          fontWeight: FontWeight.w700,
+                          color: SLSettingsColors.success,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     TextSpan(text: description),
@@ -593,34 +480,17 @@ class SLDetailChoice extends StatelessWidget {
                 ),
                 style: SLTheme.quicksand(
                   fontSize: 12.5,
-                  color: SLDetailStyle.secondary,
+                  color: SLSettingsColors.inkSecondary,
                   height: 1.45,
                   fontWeight: FontWeight.w500,
                 ),
               ),
               if (warning != null) ...[
                 const SizedBox(height: 12),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      Icons.battery_alert_outlined,
-                      color: SLDetailStyle.warning,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        warning!,
-                        style: SLTheme.quicksand(
-                          fontSize: 12,
-                          color: SLDetailStyle.warning,
-                          height: 1.5,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
+                SLSettingsNotice(
+                  tone: SLSettingsTone.warning,
+                  icon: Icons.battery_alert_outlined,
+                  message: warning!,
                 ),
               ],
             ],

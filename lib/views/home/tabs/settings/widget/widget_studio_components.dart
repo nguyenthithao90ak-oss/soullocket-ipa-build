@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../core/sl_theme.dart';
+import '../../../../../widgets/sl_settings_kit.dart';
 import 'widget_theme_surface.dart';
 
 /// Khung giao diện dùng riêng cho trang tuỳ chỉnh widget.
@@ -25,117 +26,27 @@ class WidgetStudioPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFEFC),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFF0E5E8)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF4B2C38).withValues(alpha: 0.08),
-            blurRadius: 28,
-            offset: const Offset(0, 12),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SLSettingsPageHeader(
+            title: title,
+            icon: Icons.widgets_outlined,
+            iconColor: SLSettingsColors.teal,
+            leading: leading,
+            onBack: onBack,
+            trailing: onClose == null
+                ? null
+                : IconButton(
+                    onPressed: onClose,
+                    icon: const Icon(Icons.close_rounded),
+                    color: SLSettingsColors.inkSecondary,
+                  ),
           ),
+          child,
         ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(27),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: const EdgeInsets.fromLTRB(14, 14, 12, 13),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFFFFF1F5), Color(0xFFF4FCFE)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Row(
-                children: [
-                  if (onBack != null) ...[
-                    _HeaderButton(
-                      icon: Icons.arrow_back_rounded,
-                      onTap: onBack!,
-                    ),
-                    const SizedBox(width: 10),
-                  ],
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.84),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFF5D7E0)),
-                    ),
-                    child: SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: Center(
-                        child:
-                            leading ??
-                            const Icon(
-                              Icons.favorite_rounded,
-                              size: 20,
-                              color: Color(0xFFE9567D),
-                            ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 11),
-                  Expanded(
-                    child: Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF312C36),
-                      ),
-                    ),
-                  ),
-                  if (onClose != null) ...[
-                    const SizedBox(width: 8),
-                    _HeaderButton(icon: Icons.close_rounded, onTap: onClose!),
-                  ],
-                ],
-              ),
-            ),
-            Container(height: 1, color: const Color(0xFFF1E5E9)),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 16, 14, 18),
-              child: child,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _HeaderButton extends StatelessWidget {
-  const _HeaderButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Ink(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.7),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFEEDDE3)),
-          ),
-          child: Icon(icon, size: 20, color: const Color(0xFF796C75)),
-        ),
       ),
     );
   }
@@ -155,76 +66,32 @@ class WidgetStudioPreviewStage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF9FA),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFF4E2E8)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 13, 14, 15),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 31,
-                  height: 31,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFE4EC),
-                    borderRadius: BorderRadius.circular(11),
-                  ),
-                  child: const Icon(
-                    Icons.phone_android_rounded,
-                    size: 17,
-                    color: Color(0xFFE9567D),
-                  ),
-                ),
-                const SizedBox(width: 9),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: SLTheme.quicksand(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF302D35),
-                    ),
-                  ),
-                ),
-                Container(
-                  constraints: const BoxConstraints(maxWidth: 112),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 9,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFF0DEE4)),
-                  ),
-                  child: Text(
-                    themeName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: SLTheme.quicksand(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF8E6A76),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: child,
+    return SLSettingsCard(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SLSettingsBlockHeading(
+            title: title,
+            icon: Icons.phone_android_rounded,
+            iconColor: SLSettingsColors.teal,
+            trailing: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 120),
+              child: SLSettingsPill(
+                label: themeName,
+                tone: SLSettingsTone.accent,
+                dense: true,
               ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 14),
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: child,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -238,7 +105,7 @@ class WidgetStudioSection extends StatelessWidget {
     this.subtitle,
     this.icon,
     this.leading,
-    this.accent = const Color(0xFFE9567D),
+    this.accent = SLSettingsColors.rose,
   });
 
   final String title;
@@ -250,73 +117,21 @@ class WidgetStudioSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFF0E5E8)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.11),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: SizedBox(
-                    width: 36,
-                    height: 36,
-                    child: Center(
-                      child:
-                          leading ??
-                          Icon(
-                            icon ?? Icons.tune_rounded,
-                            size: 19,
-                            color: accent,
-                          ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: SLTheme.quicksand(
-                          fontSize: 13.8,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFF302D35),
-                        ),
-                      ),
-                      if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          subtitle!,
-                          style: SLTheme.quicksand(
-                            fontSize: 11.4,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF7B7280),
-                            height: 1.3,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 13),
-            child,
-          ],
-        ),
+    return SLSettingsCard(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SLSettingsBlockHeading(
+            title: title,
+            subtitle: subtitle,
+            icon: icon ?? Icons.tune_rounded,
+            leading: leading,
+            iconColor: accent,
+          ),
+          const SizedBox(height: 14),
+          child,
+        ],
       ),
     );
   }
@@ -352,9 +167,9 @@ class WidgetStudioSegmentedControl extends StatelessWidget {
     return Semantics(
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: const Color(0xFFF8F4F5),
+          color: SLSettingsColors.surfaceMuted,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFF0E4E8)),
+          border: Border.all(color: SLSettingsColors.border),
         ),
         child: Row(
           children: items
@@ -381,14 +196,16 @@ class WidgetStudioSegmentedControl extends StatelessWidget {
                             vertical: 10,
                           ),
                           decoration: BoxDecoration(
-                            color: selected ? Colors.white : Colors.transparent,
+                            color: selected
+                                ? SLSettingsColors.surface
+                                : Colors.transparent,
                             borderRadius: BorderRadius.circular(14),
                             boxShadow: selected
                                 ? [
                                     BoxShadow(
-                                      color: const Color(
-                                        0xFF643344,
-                                      ).withValues(alpha: 0.09),
+                                      color: SLSettingsColors.ink.withValues(
+                                        alpha: 0.08,
+                                      ),
                                       blurRadius: 8,
                                       offset: const Offset(0, 3),
                                     ),
@@ -402,8 +219,8 @@ class WidgetStudioSegmentedControl extends StatelessWidget {
                                 item.icon,
                                 size: 18,
                                 color: selected
-                                    ? const Color(0xFFE9567D)
-                                    : const Color(0xFF8B7B82),
+                                    ? SLSettingsColors.accent
+                                    : SLSettingsColors.inkTertiary,
                               ),
                               const SizedBox(height: 5),
                               Text(
@@ -412,13 +229,13 @@ class WidgetStudioSegmentedControl extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: SLTheme.quicksand(
-                                  fontSize: 10.6,
+                                  fontSize: 11,
                                   fontWeight: selected
-                                      ? FontWeight.w900
+                                      ? FontWeight.w800
                                       : FontWeight.w700,
                                   color: selected
-                                      ? const Color(0xFFB83D60)
-                                      : const Color(0xFF746A70),
+                                      ? SLSettingsColors.accentStrong
+                                      : SLSettingsColors.inkSecondary,
                                 ),
                               ),
                             ],
@@ -501,8 +318,8 @@ class WidgetStudioThemePicker extends StatelessWidget {
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: selected
-                                  ? const Color(0xFFD65D84)
-                                  : const Color(0xFFE9E2E5),
+                                  ? SLSettingsColors.accent
+                                  : SLSettingsColors.border,
                               width: selected ? 1.7 : 1,
                             ),
                           ),
@@ -531,7 +348,7 @@ class WidgetStudioThemePicker extends StatelessWidget {
                                             child: const Icon(
                                               Icons.check_rounded,
                                               size: 14,
-                                              color: Color(0xFFD65D84),
+                                              color: SLSettingsColors.accent,
                                             ),
                                           ),
                                         ),
@@ -554,8 +371,8 @@ class WidgetStudioThemePicker extends StatelessWidget {
                                           ? FontWeight.w900
                                           : FontWeight.w700,
                                       color: selected
-                                          ? const Color(0xFFB83D60)
-                                          : const Color(0xFF70666C),
+                                          ? SLSettingsColors.accentStrong
+                                          : SLSettingsColors.inkSecondary,
                                       height: 1.1,
                                     ),
                                   ),
