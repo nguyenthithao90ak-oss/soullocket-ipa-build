@@ -82,7 +82,10 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
       ),
       focusedBorder: const OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(16)),
-        borderSide: BorderSide(color: SLSettingsColors.accentStrong, width: 1.4),
+        borderSide: BorderSide(
+          color: SLSettingsColors.accentStrong,
+          width: 1.4,
+        ),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     );
