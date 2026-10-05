@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_config.dart';
 import '../../../../core/sl_theme.dart';
+import '../../../../widgets/sl_settings_kit.dart';
 
 import '../../../../utils/services/memory_share_service.dart';
 import '../../../../utils/sl_notice.dart';
@@ -85,86 +86,90 @@ class _SettingsLinksManagerScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: SLColors.paperCanvas,
-      appBar: AppBar(
-        title: Text(
-          context.tr('home_qunllinkt_df5d77'),
-          style: SLTheme.textStyleForKey(
-            'dancingScript',
-            fontSize: 23,
-            fontWeight: FontWeight.w700,
-            color: SLColors.ink,
-          ),
-        ),
-        backgroundColor: SLColors.paper,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: SLColors.primaryActive,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: StreamBuilder<List<_MemoryShareLinkData>>(
-        stream: _memoryStream,
-        builder: (context, memorySnapshot) {
-          if (memorySnapshot.hasError) {
-            return Center(child: Text(context.tr('home_khngticdan_123cc6')));
-          }
+      backgroundColor: SLSettingsColors.canvas,
+      body: Stack(
+        children: [
+          const Positioned.fill(child: SLSettingsBackdrop()),
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 720),
+                child: StreamBuilder<List<_MemoryShareLinkData>>(
+                  stream: _memoryStream,
+                  builder: (context, memorySnapshot) {
+                    final header = Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                      child: SLSettingsPageHeader(
+                        title: context.tr('home_qunllinkt_df5d77'),
+                        description: context.tr('home_xemdanhsch_640b35'),
+                        icon: Icons.link_rounded,
+                        iconColor: SLSettingsColors.amber,
+                        backLabel: context.tr('p6_back'),
+                        onBack: () => Navigator.pop(context),
+                      ),
+                    );
+                    if (memorySnapshot.hasError) {
+                      return ListView(
+                        children: [
+                          header,
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: SLSettingsNotice(
+                              tone: SLSettingsTone.danger,
+                              message: context.tr('home_khngticdan_123cc6'),
+                            ),
+                          ),
+                        ],
+                      );
+                    }
 
-          final items = memorySnapshot.data ?? <_MemoryShareLinkData>[];
-          items.sort((a, b) => b.ts.compareTo(a.ts));
+                    final items =
+                        memorySnapshot.data ?? <_MemoryShareLinkData>[];
+                    items.sort((a, b) => b.ts.compareTo(a.ts));
 
-          if (items.isEmpty) {
-            return _buildEmptyState();
-          }
-
-          return Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: items.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  return _buildMemoryItem(items[index]);
-                },
+                    return ListView.separated(
+                      padding: const EdgeInsets.only(bottom: 32),
+                      itemCount: items.isEmpty ? 2 : items.length + 1,
+                      separatorBuilder: (context, index) =>
+                          SizedBox(height: index == 0 ? 0 : 12),
+                      itemBuilder: (context, index) {
+                        if (index == 0) return header;
+                        if (items.isEmpty) return _buildEmptyState();
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: _buildMemoryItem(items[index - 1]),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: SLTheme.paperCard(
-        showTape: true,
-        margin: const EdgeInsets.all(24),
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+      child: SLSettingsCard(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.link_off_rounded,
-              size: 48,
-              color: SLColors.primary,
+            const SLSettingsIconTile(
+              icon: Icons.link_off_rounded,
+              color: SLSettingsColors.slate,
+              filled: false,
+              size: 56,
             ),
             const SizedBox(height: 14),
             Text(
               context.tr('home_chaclinktn_e88a82'),
               textAlign: TextAlign.center,
-              style: SLTheme.quicksand(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: SLColors.textSecond,
-              ),
+              style: SLSettingsText.body(SLSettingsColors.inkSecondary),
             ),
           ],
         ),
@@ -177,67 +182,32 @@ class _SettingsLinksManagerScreenState
       'dd/MM/yyyy HH:mm',
     ).format(DateTime.fromMillisecondsSinceEpoch(link.ts));
 
-    return Container(
-      decoration: BoxDecoration(
-        color: SLColors.paper,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: SLColors.border),
-        boxShadow: SLShadow.paper,
-      ),
-      padding: const EdgeInsets.all(16),
+    return SLSettingsCard(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: SLColors.paperBlush,
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(color: SLColors.borderLight),
-                ),
-                alignment: Alignment.center,
-                child: const Icon(
-                  Icons.photo_library_rounded,
-                  color: SLColors.primary,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.tr('util_knimalbumn_62ecb7'),
-                      style: SLTheme.quicksand(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: SLColors.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      dateStr,
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey[500],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          SLSettingsBlockHeading(
+            icon: Icons.photo_library_outlined,
+            iconColor: link.isRevoked
+                ? SLSettingsColors.slate
+                : SLSettingsColors.rose,
+            title: context.tr('util_knimalbumn_62ecb7'),
+            subtitle: dateStr,
+            trailing: link.isRevoked
+                ? SLSettingsPill(
+                    label: context.tr('home_thuhi_b8c669'),
+                    tone: SLSettingsTone.neutral,
+                    dense: true,
+                  )
+                : null,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
             decoration: BoxDecoration(
-              color: link.isRevoked ? SLColors.bgMuted : SLColors.bgSubtle,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: SLColors.border),
+              color: SLSettingsColors.surfaceMuted,
+              borderRadius: BorderRadius.circular(SLSettingsRadius.control),
+              border: Border.all(color: SLSettingsColors.border),
             ),
             child: Row(
               children: [
@@ -248,8 +218,8 @@ class _SettingsLinksManagerScreenState
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: link.isRevoked
-                          ? SLColors.textTertiary
-                          : SLColors.primaryActive,
+                          ? SLSettingsColors.inkTertiary
+                          : SLSettingsColors.accentStrong,
                       decoration: link.isRevoked
                           ? TextDecoration.lineThrough
                           : null,
@@ -258,10 +228,10 @@ class _SettingsLinksManagerScreenState
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(width: 8),
                 if (!link.isRevoked)
-                  InkWell(
-                    onTap: () async {
+                  IconButton(
+                    tooltip: context.tr('home_copylinkme_7f75af'),
+                    onPressed: () async {
                       await Clipboard.setData(
                         ClipboardData(text: _getMemoryDisplayUrl(link.token)),
                       );
@@ -271,52 +241,31 @@ class _SettingsLinksManagerScreenState
                         context.tr('home_copylinkme_7f75af'),
                       );
                     },
-                    child: Icon(
+                    icon: const Icon(
                       Icons.copy_rounded,
-                      size: 20,
-                      color: Colors.grey[400],
+                      size: 19,
+                      color: SLSettingsColors.inkSecondary,
                     ),
-                  ),
+                  )
+                else
+                  const SizedBox(height: 40),
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerRight,
-            child: link.isRevoked
-                ? Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    child: Text(
-                      context.tr('home_thuhi_b8c669'),
-                      style: SLTheme.quicksand(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.grey[500],
-                      ),
-                    ),
-                  )
-                : InkWell(
-                    onTap: () => _deleteMemoryLink(link),
-                    borderRadius: BorderRadius.circular(20),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      child: Text(
-                        context.tr('home_thuhi_b8c669'),
-                        style: SLTheme.quicksand(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.red[400],
-                        ),
-                      ),
-                    ),
-                  ),
-          ),
+          if (!link.isRevoked) ...[
+            const SizedBox(height: 10),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: SLSettingsButton(
+                label: context.tr('home_thuhi_b8c669'),
+                icon: Icons.link_off_rounded,
+                variant: SLSettingsButtonVariant.danger,
+                expand: false,
+                compact: true,
+                onPressed: () => _deleteMemoryLink(link),
+              ),
+            ),
+          ],
         ],
       ),
     );
