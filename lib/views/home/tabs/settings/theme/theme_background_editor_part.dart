@@ -303,7 +303,9 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
         child: Center(
           child: CircularProgressIndicator(
             strokeWidth: 2.2,
-            valueColor: AlwaysStoppedAnimation<Color>(SLSettingsColors.accentStrong),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              SLSettingsColors.accentStrong,
+            ),
           ),
         ),
       ),

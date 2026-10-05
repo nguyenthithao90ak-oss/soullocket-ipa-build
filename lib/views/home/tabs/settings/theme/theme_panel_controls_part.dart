@@ -482,7 +482,9 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
                       style: SLTheme.quicksand(
                         fontSize: 11,
                         fontWeight: FontWeight.w900,
-                        color: selected ? item.$4 : SLSettingsColors.inkSecondary,
+                        color: selected
+                            ? item.$4
+                            : SLSettingsColors.inkSecondary,
                       ),
                     ),
                   ],
