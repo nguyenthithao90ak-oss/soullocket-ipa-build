@@ -52,63 +52,35 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
             const SizedBox(height: 8),
           ],
           if (isSingleMode) ...[
-            Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFDEEF4),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      _houseId == null
-                          ? context.tr('home_mnhchac_a0dca8')
-                          : context
-                                .tr('p6_house_id_value')
-                                .replaceAll('{houseId}', _houseId!),
-                      style: SLTextStyles.quicksand(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFFE8A0B6),
+            SLSettingsCard(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SLSettingsBlockHeading(
+                    icon: Icons.home_outlined,
+                    iconColor: SLSettingsColors.rose,
+                    title: _houseId == null
+                        ? context.tr('home_mnhchac_a0dca8')
+                        : context
+                              .tr('p6_house_id_value')
+                              .replaceAll('{houseId}', _houseId!),
+                  ),
+                  const SizedBox(height: 14),
+                  SLSettingsButton(
+                    label: context.tr('p6_pair_now'),
+                    icon: Icons.link_rounded,
+                    variant: SLSettingsButtonVariant.tonal,
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const PairingDashboardScreen(),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const PairingDashboardScreen(),
-                        ),
-                      ),
-                      icon: const Icon(Icons.link_rounded, size: 18),
-                      label: Text(
-                        context.tr('p6_pair_now'),
-                        style: SLTextStyles.quicksand(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFFD81B60),
-                        side: const BorderSide(color: Color(0xFFD81B60)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-            SLSpacing.h12,
           ],
           _buildSecurityCard(
             title: context.tr('home_thngtinngn_7bc2e7'),
@@ -139,7 +111,6 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     : null,
                 secondaryActionLabel: context.tr('home_iemail_3dfe1f'),
               ),
-              SLSpacing.h12,
               // --- EMAIL PHỤ ---
               _buildModernIdentityTile(
                 icon: Icons.mark_email_read_rounded,
@@ -156,9 +127,8 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 statusLabel: _secondaryEmail.isEmpty
                     ? context.tr('home_trng_bf792b')
                     : context.tr('home_anton_94fd1f'),
-                accentColor: const Color(0xFF9C27B0),
+                accentColor: SLSettingsColors.violet,
               ),
-              SLSpacing.h12,
               _buildModernIdentityTile(
                 icon: Icons.account_circle_rounded,
                 label: context.tr('home_tikhongoog_fba9e3'),
@@ -171,13 +141,12 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 onAction: _googleLinked ? null : _linkGoogleAccount,
                 actionLabel: context.tr('home_linkt_9d73d8'),
                 isLoading: _isLinkingGoogle,
-                accentColor: const Color(0xFFEA4335),
+                accentColor: SLSettingsColors.red,
                 showCheckmark: _googleLinked,
                 showDivider: false,
               ),
             ],
           ),
-          SLSpacing.h12,
           _buildSecurityCard(
             title: context.tr('home_mtkhunh_58f4ec'),
             subtitle: _passwordLinked
@@ -194,12 +163,14 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                       ? context.tr('home_bomt_46487e')
                       : context.tr('home_chato_492567'),
                   background: _passwordLinked
-                      ? const Color(0xFFFFCC80)
-                      : const Color(0xFFFFE0B2),
-                  foreground: const Color(0xFFE65100),
+                      ? SLSettingsColors.successSoft
+                      : SLSettingsColors.warningSoft,
+                  foreground: _passwordLinked
+                      ? SLSettingsColors.success
+                      : SLSettingsColors.warning,
                 ),
               ),
-              SLSpacing.h8,
+              const SizedBox(height: 10),
               _buildSecurityInlineButton(
                 label: _showPasswordEditor
                     ? (_passwordLinked
@@ -208,125 +179,66 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     : (_passwordLinked
                           ? context.tr('home_mphnimtkhu_fb2c60')
                           : context.tr('home_tomtkhulnu_2b399b')),
-                gradient: const [Color(0xFFFFC107), Color(0xFFFF9800)],
-                textColor: Colors.black87,
+                gradient: const [],
                 onTap: () =>
                     setState(() => _showPasswordEditor = !_showPasswordEditor),
               ),
               if (_showPasswordEditor) ...[
-                SLSpacing.h12,
+                const SizedBox(height: 14),
                 if (!_passwordLinked) ...[
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF9C4).withValues(alpha: 0.4),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: const Color(0xFFFBC02D).withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(
-                          Icons.info_outline_rounded,
-                          color: Color(0xFFF57F17),
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            context.tr('home_bnangdnggo_f12b63'),
-                            style: SLTheme.quicksand(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF5D4037),
-                              height: 1.4,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                  SLSettingsNotice(
+                    tone: SLSettingsTone.info,
+                    message: context.tr('home_bnangdnggo_f12b63'),
                   ),
-                  SLSpacing.h12,
+                  const SizedBox(height: 12),
                 ],
                 if (_passwordLinked)
                   TextField(
                     controller: _oldPassCtrl,
                     obscureText: true,
-                    style: SLTheme.quicksand(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: context.tr('home_mtkhuhinti_d94873'),
+                    style: slSettingsInputTextStyle(),
+                    decoration: slSettingsInputDecoration(
+                      hint: context.tr('home_mtkhuhinti_d94873'),
                       prefixIcon: const Icon(
                         Icons.lock_outline_rounded,
-                        color: Colors.grey,
+                        size: 20,
                       ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(
-                          color: Colors.grey.withValues(alpha: 0.2),
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(
-                          color: Colors.grey.withValues(alpha: 0.2),
-                        ),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white.withValues(alpha: 0.8),
                     ),
                   ),
-                if (_passwordLinked) SLSpacing.h12,
+                if (_passwordLinked) const SizedBox(height: 10),
                 TextField(
                   controller: _newPassCtrl,
                   obscureText: true,
-                  style: SLTheme.quicksand(
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: _passwordLinked
+                  style: slSettingsInputTextStyle(),
+                  decoration: slSettingsInputDecoration(
+                    hint: _passwordLinked
                         ? context.tr('home_mtkhumitit_9da358')
                         : context.tr('home_tomtkhungn_3e6b26'),
-                    prefixIcon: const Icon(
-                      Icons.lock,
-                      color: Color(0xFFD81B60),
-                    ),
-                    border: OutlineInputBorder(borderRadius: SLRadius.mdAll),
-                    filled: true,
-                    fillColor: Colors.white,
+                    prefixIcon: const Icon(Icons.lock_rounded, size: 20),
                   ),
                 ),
-                SLSpacing.h8,
+                const SizedBox(height: 12),
                 _buildGradientBtn(
                   label: _passwordLinked
                       ? context.tr('home_lumtkhumi_a84375')
                       : context.tr('home_tomtkhungn_b628e5'),
-                  gradient: const [Color(0xFFFFC107), Color(0xFFFF9800)],
-                  textColor: Colors.black,
+                  gradient: const [],
+                  icon: Icons.check_rounded,
                   onTap: _changeHousePassword,
                 ),
                 if (_passwordLinked) ...[
-                  SLSpacing.h8,
+                  const SizedBox(height: 8),
                   _buildGradientBtn(
                     label: context.tr('home_gimtlimtkh_0dcb54'),
-                    gradient: const [Color(0xFF90CAF9), Color(0xFF90CAF9)],
-                    textColor: const Color(0xFF1565C0),
+                    gradient: const [],
+                    variant: SLSettingsButtonVariant.secondary,
+                    icon: Icons.mail_outline_rounded,
                     onTap: _sendPasswordResetLink,
                   ),
                 ],
               ],
             ],
           ),
-          SLSpacing.h12,
           SecurityRecoveryQuestion(
             questions: questionItems,
             selectedQuestion: selectedQuestion,
@@ -369,232 +281,179 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
     final showSecretVault = UtilityService.isUtilityVisibleInCurrentBuild(
       'vault',
     );
+    String scopeLabel(String key) => switch (key) {
+      'security' => context.tr('security_settings'),
+      'diary' => context.tr('home_nhtktnhyu_84a6e2'),
+      'chat' => context.tr('home_linhnyuthn_d28cd1'),
+      'private' => context.tr('secret_vault'),
+      _ => '',
+    };
+    IconData scopeIcon(String key) => switch (key) {
+      'security' => Icons.shield_outlined,
+      'diary' => Icons.menu_book_outlined,
+      'chat' => Icons.chat_bubble_outline_rounded,
+      'private' => Icons.lock_person_outlined,
+      _ => Icons.lock_outline_rounded,
+    };
+    final scopeEntries = _lockScopes.entries.where((e) {
+      if (e.key == 'app') return false;
+      if (!showSecretVault && e.key == 'private') return false;
+      return true;
+    }).toList();
     return _buildPanel(
       hideBackButton: hideBackButton,
       id: 'lock',
       title: context.tr('home_trungtmkha_d42ff3'),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const AppHelpButton(articleId: 'security'),
-          Container(
-            padding: SLSpacing.all16,
-            decoration: BoxDecoration(
-              color: SLColors.paperBlush,
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: SLColors.border, width: 1.1),
-              boxShadow: SLShadow.subtle,
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: SLSpacing.all8,
-                  decoration: BoxDecoration(
-                    color: SLColors.paper,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: SLColors.borderLight),
-                  ),
-                  child: const Icon(
-                    Icons.security_rounded,
-                    color: Color(0xFFD81B60),
-                    size: 24,
-                  ),
-                ),
-                SLSpacing.w12,
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _isAppLockEnabled
-                            ? context.tr('home_mpinangbt_467063')
-                            : context.tr('home_chabtmpin_ceae9d'),
-                        style: SLTextStyles.quicksand(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFFD81B60),
-                        ),
-                      ),
-                      Text(
-                        _isAppLockEnabled
-                            ? context.tr('home_ngdngangck_d70e01')
-                            : context.tr('home_hybtmpinbo_df23d6'),
-                        style: SLTextStyles.quicksand(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF8A5B76),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Switch.adaptive(
-                  value: _isAppLockEnabled,
-                  activeThumbColor: const Color(0xFFD81B60),
-                  onChanged: (v) async {
-                    if (!await _ensureCanModifySecurityInfo()) return;
-                    if (v) {
-                      if (_storedLockSecret.trim().isEmpty) {
-                        await _setupNewPin();
-                      } else {
-                        setState(() {
-                          _isAppLockEnabled = true;
-                          _lockScopes['app'] = true;
-                        });
-                        await _saveAppLockSettings();
-                      }
+          SLSettingsGroup(
+            margin: EdgeInsets.zero,
+            children: [
+              SLSettingsSwitchRow(
+                icon: _isAppLockEnabled
+                    ? Icons.lock_rounded
+                    : Icons.lock_open_rounded,
+                iconColor: _isAppLockEnabled
+                    ? SLSettingsColors.sage
+                    : SLSettingsColors.amber,
+                title: _isAppLockEnabled
+                    ? context.tr('home_mpinangbt_467063')
+                    : context.tr('home_chabtmpin_ceae9d'),
+                subtitle: _isAppLockEnabled
+                    ? context.tr('home_ngdngangck_d70e01')
+                    : context.tr('home_hybtmpinbo_df23d6'),
+                value: _isAppLockEnabled,
+                onChanged: (v) async {
+                  if (!await _ensureCanModifySecurityInfo()) return;
+                  if (v) {
+                    if (_storedLockSecret.trim().isEmpty) {
+                      await _setupNewPin();
                     } else {
-                      final authSuccess =
-                          await _authenticateLockSettingsChange();
-                      if (authSuccess) {
-                        _customLockCtrl.clear();
-                        if (!mounted) return;
-                        setState(() {
-                          _isAppLockEnabled = false;
-                          _isMilitaryMode = false;
-                          _useBiometrics = false;
-                          _lockConfiguredAtMs = null;
-                          _resetLockScopeDrafts();
-                        });
-                        await _saveAppLockSettings();
-                      }
+                      setState(() {
+                        _isAppLockEnabled = true;
+                        _lockScopes['app'] = true;
+                      });
+                      await _saveAppLockSettings();
                     }
+                  } else {
+                    final authSuccess = await _authenticateLockSettingsChange();
+                    if (authSuccess) {
+                      _customLockCtrl.clear();
+                      if (!mounted) return;
+                      setState(() {
+                        _isAppLockEnabled = false;
+                        _isMilitaryMode = false;
+                        _useBiometrics = false;
+                        _lockConfiguredAtMs = null;
+                        _resetLockScopeDrafts();
+                      });
+                      await _saveAppLockSettings();
+                    }
+                  }
+                },
+              ),
+            ],
+          ),
+          if (_isAppLockEnabled) ...[
+            const SizedBox(height: 12),
+            SLSettingsGroup(
+              margin: EdgeInsets.zero,
+              autoDividers: true,
+              children: [
+                _buildModernSettingsRow(
+                  icon: Icons.pin_rounded,
+                  label: context.tr('change_pin'),
+                  subtitle: _pinChangeHelperText(),
+                  onTap: () async {
+                    if (!await _ensureCanModifySecurityInfo()) return;
+                    _handlePinChangeRequested();
                   },
                 ),
-              ],
-            ),
-          ),
-          SLSpacing.h16,
-          if (_isAppLockEnabled) ...[
-            _buildModernSettingsRow(
-              icon: Icons.pin_rounded,
-              label: context.tr('change_pin'),
-              onTap: () async {
-                if (!await _ensureCanModifySecurityInfo()) return;
-                _handlePinChangeRequested();
-              },
-              trailing: const Icon(
-                Icons.chevron_right_rounded,
-                color: Color(0xFFD81B60),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 44, right: 16, bottom: 8),
-              child: Text(
-                _pinChangeHelperText(),
-                style: SLTheme.quicksand(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.grey[600],
-                  height: 1.4,
+                SLSettingsSwitchRow(
+                  icon: Icons.fingerprint_rounded,
+                  iconColor: SLSettingsColors.teal,
+                  title: context.tr('use_biometrics'),
+                  subtitle: context
+                      .tr('p6_biometric_note')
+                      .replaceAll(
+                        '{deviceLock}',
+                        context.tr('home_dngmtkhu_281aff'),
+                      ),
+                  value: _useBiometrics,
+                  onChanged: (v) async {
+                    final msgBioNotSupported = context.tr(
+                      'home_thitbkhngh_75b1e3',
+                    );
+                    final msgBioFailed = context.tr('home_xcthcsinht_2fd95b');
+                    final requiresExistingLock =
+                        _isAppLockEnabled &&
+                        _storedLockSecret.trim().isNotEmpty;
+                    if (requiresExistingLock) {
+                      final authSuccess =
+                          await _authenticateLockSettingsChange();
+                      if (!authSuccess) {
+                        return;
+                      }
+                    }
+                    if (v) {
+                      final canBio = await _militaryLockService
+                          .canUseBiometrics();
+                      if (!canBio) {
+                        _showToast(msgBioNotSupported, success: false);
+                        return;
+                      }
+                      final testAuth = await _militaryLockService
+                          .authenticateWithDeviceForTest();
+                      if (!testAuth) {
+                        _showToast(msgBioFailed, success: false);
+                        return;
+                      }
+                    }
+                    setState(() => _useBiometrics = v);
+                    _saveAppLockSettings();
+                  },
                 ),
-              ),
-            ),
-            _buildModernSettingsRow(
-              icon: Icons.fingerprint_rounded,
-              label: context.tr('use_biometrics'),
-              trailing: Switch.adaptive(
-                value: _useBiometrics,
-                activeThumbColor: const Color(0xFFD81B60),
-                onChanged: (v) async {
-                  final msgBioNotSupported = context.tr(
-                    'home_thitbkhngh_75b1e3',
-                  );
-                  final msgBioFailed = context.tr('home_xcthcsinht_2fd95b');
-                  final requiresExistingLock =
-                      _isAppLockEnabled && _storedLockSecret.trim().isNotEmpty;
-                  if (requiresExistingLock) {
+                SLSettingsSwitchRow(
+                  icon: Icons.military_tech_rounded,
+                  iconColor: SLSettingsColors.indigo,
+                  title: context.tr('military_mode'),
+                  subtitle: context.tr('military_mode_desc'),
+                  value: _isMilitaryMode,
+                  onTap: () async {
+                    final enabledMessage = context.tr('military_mode_enabled');
                     final authSuccess = await _authenticateLockSettingsChange();
                     if (!authSuccess) {
                       return;
                     }
-                  }
-                  if (v) {
-                    final canBio = await _militaryLockService
-                        .canUseBiometrics();
-                    if (!canBio) {
-                      _showToast(msgBioNotSupported, success: false);
+                    setState(() => _isMilitaryMode = !_isMilitaryMode);
+                    _saveAppLockSettings();
+                    if (_isMilitaryMode) {
+                      _showToast(enabledMessage, success: true);
+                    }
+                  },
+                  onChanged: (v) async {
+                    final authSuccess = await _authenticateLockSettingsChange();
+                    if (!authSuccess) {
                       return;
                     }
-                    final testAuth = await _militaryLockService
-                        .authenticateWithDeviceForTest();
-                    if (!testAuth) {
-                      _showToast(msgBioFailed, success: false);
-                      return;
-                    }
-                  }
-                  setState(() => _useBiometrics = v);
-                  _saveAppLockSettings();
-                },
-              ),
+                    setState(() => _isMilitaryMode = v);
+                    _saveAppLockSettings();
+                  },
+                ),
+              ],
             ),
+            const SizedBox(height: 22),
             Padding(
-              padding: const EdgeInsets.only(left: 44, right: 16, bottom: 8),
+              padding: const EdgeInsets.only(left: 4, bottom: 10),
               child: Text(
-                context
-                    .tr('p6_biometric_note')
-                    .replaceAll(
-                      '{deviceLock}',
-                      context.tr('home_dngmtkhu_281aff'),
-                    ),
-                style: SLTheme.quicksand(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[600],
-                  height: 1.4,
+                context.tr('lock_scopes').toUpperCase(),
+                style: SLSettingsText.sectionLabel(
+                  SLSettingsColors.inkTertiary,
                 ),
               ),
             ),
-            _buildModernSettingsRow(
-              icon: Icons.military_tech_rounded,
-              label: context.tr('military_mode'),
-              onTap: () async {
-                final enabledMessage = context.tr('military_mode_enabled');
-                final authSuccess = await _authenticateLockSettingsChange();
-                if (!authSuccess) {
-                  return;
-                }
-                setState(() => _isMilitaryMode = !_isMilitaryMode);
-                _saveAppLockSettings();
-                if (_isMilitaryMode) {
-                  _showToast(enabledMessage, success: true);
-                }
-              },
-              trailing: Switch.adaptive(
-                value: _isMilitaryMode,
-                activeThumbColor: const Color(0xFFD81B60),
-                onChanged: (v) async {
-                  final authSuccess = await _authenticateLockSettingsChange();
-                  if (!authSuccess) {
-                    return;
-                  }
-                  setState(() => _isMilitaryMode = v);
-                  _saveAppLockSettings();
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 44, right: 16, bottom: 12),
-              child: Text(
-                context.tr('military_mode_desc'),
-                style: SLTheme.quicksand(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[600],
-                  height: 1.4,
-                ),
-              ),
-            ),
-            SLSpacing.h20,
-            Text(
-              context.tr('lock_scopes'),
-              style: SLTextStyles.quicksand(
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFF8A5B76),
-              ),
-            ),
-            SLSpacing.h8,
             Row(
               children: [
                 Expanded(
@@ -612,7 +471,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     isPrimary: true,
                   ),
                 ),
-                SLSpacing.w8,
+                const SizedBox(width: 10),
                 Expanded(
                   child: _buildSimpleButton(
                     label: context.tr('lock_app_only'),
@@ -630,64 +489,29 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 ),
               ],
             ),
-            SLSpacing.h12,
-            ..._lockScopes.entries
-                .where((e) {
-                  if (e.key == 'app') return false;
-                  if (!showSecretVault && e.key == 'private') return false;
-                  return true;
-                })
-                .map((e) {
-                  String label = '';
-                  switch (e.key) {
-                    case 'security':
-                      label = context.tr('security_settings');
-                      break;
-                    case 'diary':
-                      label = context.tr('home_nhtktnhyu_84a6e2');
-                      break;
-                    case 'chat':
-                      label = context.tr('home_linhnyuthn_d28cd1');
-                      break;
-                    case 'private':
-                      label = context.tr('secret_vault');
-                      break;
-                  }
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Row(
-                      children: [
-                        SLSpacing.w8,
-                        Expanded(
-                          child: Text(
-                            label,
-                            style: SLTextStyles.quicksand(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF7A6B82),
-                            ),
-                          ),
-                        ),
-                        Transform.scale(
-                          scale: 0.8,
-                          child: Switch.adaptive(
-                            value: e.value,
-                            activeThumbColor: const Color(0xFFD81B60),
-                            onChanged: (v) async {
-                              final authSuccess =
-                                  await _authenticateLockSettingsChange();
-                              if (!authSuccess) {
-                                return;
-                              }
-                              setState(() => _lockScopes[e.key] = v);
-                              _saveAppLockSettings();
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
+            const SizedBox(height: 12),
+            SLSettingsGroup(
+              margin: EdgeInsets.zero,
+              autoDividers: true,
+              children: [
+                for (final e in scopeEntries)
+                  SLSettingsSwitchRow(
+                    icon: scopeIcon(e.key),
+                    iconColor: SLSettingsColors.slate,
+                    title: scopeLabel(e.key),
+                    value: e.value,
+                    onChanged: (v) async {
+                      final authSuccess =
+                          await _authenticateLockSettingsChange();
+                      if (!authSuccess) {
+                        return;
+                      }
+                      setState(() => _lockScopes[e.key] = v);
+                      _saveAppLockSettings();
+                    },
+                  ),
+              ],
+            ),
           ],
         ],
       ),

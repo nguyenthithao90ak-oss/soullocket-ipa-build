@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/sl_theme.dart';
 import '../../../../../utils/flexible_date_input.dart';
 import '../../../../../utils/services/l10n_service.dart';
-import '../../../../../widgets/sl_detail_widgets.dart';
+import '../../../../../widgets/sl_settings_kit.dart';
 
 class SecurityRecoveryQuestion extends StatelessWidget {
   const SecurityRecoveryQuestion({
@@ -39,14 +38,12 @@ class SecurityRecoveryQuestion extends StatelessWidget {
     configured: locked,
     children: locked
         ? [
-            Text(
-              selectedQuestion,
-              style: SLTheme.quicksand(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                height: 1.5,
-                color: SLDetailStyle.text(context),
-              ),
+            SLSettingsSelectField(
+              icon: Icons.help_outline_rounded,
+              label: context.tr('security_question'),
+              value: selectedQuestion,
+              trailingIcon: Icons.lock_outline_rounded,
+              onTap: null,
             ),
           ]
         : [
@@ -59,10 +56,10 @@ class SecurityRecoveryQuestion extends StatelessWidget {
               isExpanded: true,
               itemHeight: null,
               borderRadius: BorderRadius.circular(14),
-              dropdownColor: SLDetailStyle.card(context),
-              icon: Icon(
+              dropdownColor: SLSettingsColors.surface,
+              icon: const Icon(
                 Icons.expand_more_rounded,
-                color: SLDetailStyle.muted(context),
+                color: SLSettingsColors.inkTertiary,
               ),
               style: _inputStyle(context),
               decoration: _inputDecoration(
@@ -129,55 +126,20 @@ class SecurityDeviceLink extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => DecoratedBox(
-    decoration: BoxDecoration(
-      border: Border.symmetric(
-        horizontal: BorderSide(color: SLDetailStyle.outline(context)),
-      ),
-    ),
-    child: Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Row(
-            children: [
-              const SLDetailIcon(
-                icon: Icons.devices_outlined,
-                color: SLDetailStyle.blue,
-                size: 34,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.tr('home_thitbngnhp_d39323'),
-                      style: _headingStyle(context),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      context.tr('home_qunlthitbn_8d057f'),
-                      style: _descriptionStyle(context),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Icon(
-                Directionality.of(context) == TextDirection.rtl
-                    ? Icons.chevron_left_rounded
-                    : Icons.chevron_right_rounded,
-                color: SLDetailStyle.muted(context),
-                textDirection: Directionality.of(context),
-              ),
-            ],
-          ),
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: SLSettingsGroup(
+      margin: EdgeInsets.zero,
+      children: [
+        SLSettingsRow(
+          icon: Icons.devices_outlined,
+          iconColor: SLSettingsColors.sky,
+          filledIcon: false,
+          title: context.tr('home_thitbngnhp_d39323'),
+          subtitle: context.tr('home_qunlthitbn_8d057f'),
+          onTap: onTap,
         ),
-      ),
+      ],
     ),
   );
 }
@@ -250,58 +212,34 @@ class _SecuritySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = configured
-        ? SLDetailStyle.accent(context, SLDetailStyle.sage)
-        : SLDetailStyle.muted(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+    return SLSettingsCard(
+      margin: const EdgeInsets.only(bottom: 12),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SLDetailIcon(icon: icon, size: 34),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: _headingStyle(context)),
-                    const SizedBox(height: 4),
-                    Wrap(
-                      spacing: 5,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Icon(
-                          configured
-                              ? Icons.check_circle_outline_rounded
-                              : Icons.radio_button_unchecked_rounded,
-                          size: 13,
-                          color: statusColor,
-                        ),
-                        Text(
-                          context.tr(
-                            configured
-                                ? 'home_thitlp_2fdbaa'
-                                : 'home_chathitlp_bf65d4',
-                          ),
-                          style: SLTheme.quicksand(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: statusColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          SLSettingsBlockHeading(
+            icon: icon,
+            iconColor: SLSettingsColors.indigo,
+            title: title,
+            subtitle: subtitle,
           ),
-          const SizedBox(height: 9),
-          Text(subtitle, style: _descriptionStyle(context)),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: SLSettingsPill(
+              label: context.tr(
+                configured ? 'home_thitlp_2fdbaa' : 'home_chathitlp_bf65d4',
+              ),
+              icon: configured
+                  ? Icons.check_rounded
+                  : Icons.radio_button_unchecked_rounded,
+              tone: configured
+                  ? SLSettingsTone.success
+                  : SLSettingsTone.neutral,
+              dense: true,
+            ),
+          ),
+          const SizedBox(height: 14),
           ...children,
         ],
       ),
@@ -316,51 +254,14 @@ class _SecuritySaveButton extends StatelessWidget {
   final VoidCallback onSave;
 
   @override
-  Widget build(BuildContext context) => Align(
-    alignment: AlignmentDirectional.centerEnd,
-    child: FilledButton.icon(
-      onPressed: onSave,
-      icon: const Icon(Icons.check_rounded, size: 18),
-      label: Text(
-        label,
-        textAlign: TextAlign.center,
-        style: SLTheme.quicksand(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          height: 1.35,
-        ),
-      ),
-      style: FilledButton.styleFrom(
-        minimumSize: const Size(48, 48),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        backgroundColor: SLDetailStyle.primary,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    ),
+  Widget build(BuildContext context) => SLSettingsButton(
+    label: label,
+    icon: Icons.check_rounded,
+    onPressed: onSave,
   );
 }
 
-TextStyle _headingStyle(BuildContext context) => SLTheme.quicksand(
-  fontSize: 15,
-  fontWeight: FontWeight.w700,
-  height: 1.4,
-  color: SLDetailStyle.text(context),
-);
-
-TextStyle _descriptionStyle(BuildContext context) => SLTheme.quicksand(
-  fontSize: 12,
-  fontWeight: FontWeight.w500,
-  height: 1.5,
-  color: SLDetailStyle.muted(context),
-);
-
-TextStyle _inputStyle(BuildContext context) => SLTheme.quicksand(
-  fontSize: 13,
-  fontWeight: FontWeight.w600,
-  height: 1.5,
-  color: SLDetailStyle.text(context),
-);
+TextStyle _inputStyle(BuildContext context) => slSettingsInputTextStyle();
 
 InputDecoration _inputDecoration(
   BuildContext context, {
@@ -368,32 +269,13 @@ InputDecoration _inputDecoration(
   String? helper,
   Widget? suffix,
 }) {
-  final border = OutlineInputBorder(
-    borderRadius: BorderRadius.circular(12),
-    borderSide: BorderSide(color: SLDetailStyle.outline(context)),
-  );
-  return InputDecoration(
-    hintText: hint,
-    hintMaxLines: 3,
+  return slSettingsInputDecoration(
+    hint: hint,
     helperText: helper,
-    helperMaxLines: 4,
-    helperStyle: _descriptionStyle(context),
-    hintStyle: _inputStyle(
-      context,
-    ).copyWith(color: SLDetailStyle.muted(context)),
     suffixIcon: suffix,
-    suffixIconColor: SLDetailStyle.muted(context),
+  ).copyWith(
+    hintMaxLines: 3,
+    helperMaxLines: 4,
     suffixIconConstraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-    filled: true,
-    fillColor: SLDetailStyle.card(context),
-    border: border,
-    enabledBorder: border,
-    focusedBorder: border.copyWith(
-      borderSide: BorderSide(
-        color: SLDetailStyle.accent(context, SLDetailStyle.primary),
-        width: 1.5,
-      ),
-    ),
   );
 }

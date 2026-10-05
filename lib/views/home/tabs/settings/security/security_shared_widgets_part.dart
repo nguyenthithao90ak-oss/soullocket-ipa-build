@@ -8,16 +8,16 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
     required Color foreground,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         label,
         style: SLTheme.quicksand(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
+          fontSize: 11.5,
+          fontWeight: FontWeight.w800,
           color: foreground,
         ),
       ),
@@ -30,13 +30,11 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
     required VoidCallback? onTap,
     Color textColor = Colors.white,
   }) {
-    return SizedBox(
-      width: double.infinity,
-      child: AccountSettingsButton(
-        label: label,
-        onPressed: onTap,
-        icon: Icons.lock_outline_rounded,
-      ),
+    return SLSettingsButton(
+      label: label,
+      onPressed: onTap,
+      icon: Icons.lock_outline_rounded,
+      variant: SLSettingsButtonVariant.tonal,
     );
   }
 
@@ -59,7 +57,7 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
     required VoidCallback? onAction,
     required String actionLabel,
     String? statusLabel,
-    Color accentColor = const Color(0xFF3B82F6),
+    Color accentColor = SLSettingsColors.sky,
     bool isLoading = false,
     bool showCheckmark = true,
     VoidCallback? onSecondaryAction,
@@ -81,7 +79,7 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
       loading: isLoading,
       showCheckmark: showCheckmark,
       showDivider: showDivider,
-      accent: Color.lerp(accentColor, SLDetailStyle.primary, 0.35)!,
+      accent: accentColor,
     );
   }
 
@@ -89,38 +87,15 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
     required String label,
     required VoidCallback? onTap,
     bool isPrimary = true,
-    Color accentColor = const Color(0xFF3B82F6),
+    Color accentColor = SLSettingsColors.sky,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 200),
-        opacity: onTap == null ? 0.5 : 1.0,
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: isPrimary
-                ? accentColor.withValues(alpha: 0.1)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isPrimary
-                  ? accentColor.withValues(alpha: 0.2)
-                  : SLColors.border,
-            ),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: SLTheme.quicksand(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: isPrimary ? accentColor : SLColors.textSecond,
-            ),
-          ),
-        ),
-      ),
+    return SLSettingsButton(
+      label: label,
+      onPressed: onTap,
+      compact: true,
+      variant: isPrimary
+          ? SLSettingsButtonVariant.tonal
+          : SLSettingsButtonVariant.secondary,
     );
   }
 
@@ -131,69 +106,63 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: EdgeInsets.fromLTRB(
-          24,
-          24,
-          24,
+          20,
+          12,
+          20,
           MediaQuery.viewInsetsOf(context).bottom + 24,
         ),
         decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          color: SLSettingsColors.surface,
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(SLSettingsRadius.sheet),
+          ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(2),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: SLSettingsColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 32),
-            Text(
-              context.tr('home_emaildphng_60bcd4'),
-              style: SLTheme.quicksand(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF0F172A),
+              const SizedBox(height: 20),
+              SLSettingsBlockHeading(
+                icon: Icons.mark_email_read_rounded,
+                iconColor: SLSettingsColors.violet,
+                title: context.tr('home_emaildphng_60bcd4'),
+                subtitle: context.tr('home_dngnhnmkhi_7efdcc'),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              context.tr('home_dngnhnmkhi_7efdcc'),
-              style: SLTheme.quicksand(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF64748B),
-                height: 1.5,
+              const SizedBox(height: 18),
+              _buildInput(
+                _secondaryEmailCtrl,
+                context.tr('home_nhpemailph_9c0bf7'),
               ),
-            ),
-            const SizedBox(height: 24),
-            _buildInput(
-              _secondaryEmailCtrl,
-              context.tr('home_nhpemailph_9c0bf7'),
-            ),
-            const SizedBox(height: 24),
-            _buildGradientBtn(
-              label: _secondaryEmail.isEmpty
-                  ? context.tr('home_thmemailph_cdc362')
-                  : context.tr('home_cpnht_c81e30'),
-              gradient: const [Color(0xFF3B82F6), Color(0xFF2563EB)],
-              onTap: () {
-                Navigator.pop(context);
-                Future.delayed(const Duration(milliseconds: 300), () {
-                  if (mounted) {
-                    _saveSecondaryEmail();
-                  }
-                });
-              },
-            ),
-          ],
+              const SizedBox(height: 12),
+              _buildGradientBtn(
+                label: _secondaryEmail.isEmpty
+                    ? context.tr('home_thmemailph_cdc362')
+                    : context.tr('home_cpnht_c81e30'),
+                gradient: const [],
+                icon: Icons.check_rounded,
+                onTap: () {
+                  Navigator.pop(context);
+                  Future.delayed(const Duration(milliseconds: 300), () {
+                    if (mounted) {
+                      _saveSecondaryEmail();
+                    }
+                  });
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

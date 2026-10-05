@@ -571,7 +571,10 @@ class AccountLoginMethod extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(label, style: SLSettingsText.title(SLSettingsColors.ink)),
+                    Text(
+                      label,
+                      style: SLSettingsText.title(SLSettingsColors.ink),
+                    ),
                     const SizedBox(height: 3),
                     Text(
                       value,

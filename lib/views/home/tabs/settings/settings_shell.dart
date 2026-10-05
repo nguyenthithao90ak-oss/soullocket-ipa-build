@@ -169,7 +169,9 @@ extension _SettingsTabShell on _SettingsTabState {
     });
     _showToast(
       L10nService().format('settings_my_gender_updated', {
-        'gender': context.tr(wantsFemale ? 'auth_gender_female' : 'auth_gender_male'),
+        'gender': context.tr(
+          wantsFemale ? 'auth_gender_female' : 'auth_gender_male',
+        ),
       }),
     );
   }
@@ -622,9 +624,7 @@ extension _SettingsTabShell on _SettingsTabState {
         _isAppLockEnabled ? 'settings_app_lock_on' : 'settings_app_lock_off',
       ),
       tone: _isAppLockEnabled ? SLSettingsTone.success : SLSettingsTone.warning,
-      icon: _isAppLockEnabled
-          ? Icons.lock_rounded
-          : Icons.lock_open_rounded,
+      icon: _isAppLockEnabled ? Icons.lock_rounded : Icons.lock_open_rounded,
       isDark: isDark,
       dense: true,
     );

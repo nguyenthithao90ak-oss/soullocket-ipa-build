@@ -3,9 +3,6 @@
 // TODO: [TECH-DEBT] Xóa ignore_for_file sau khi đã dọn dẹp unused code
 part of '../settings_tab.dart';
 
-const Color _settingsAccountAccentColor = Color(0xFFD81B60);
-const Color _settingsAccountPurpleTextColor = Color(0xFF7A6A86);
-
 const _settingsLanguageOptions = AppLocaleRegistry.options;
 
 extension _SettingsTabAccountSection on _SettingsTabState {
@@ -141,17 +138,15 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                         offset: ctrl.text.length,
                       );
                     },
-                    decoration: InputDecoration(
-                      hintText: context.tr('home_ngythngnm_03da5a'),
+                    style: slSettingsInputTextStyle(),
+                    decoration: slSettingsInputDecoration(
+                      hint: context.tr('home_ngythngnm_03da5a'),
                       helperText: context.tr('home_angnhpngyt_a0800e'),
                       errorText: errorText,
                       prefixIcon: const Icon(
                         Icons.calendar_month_rounded,
-                        color: _settingsAccountAccentColor,
+                        size: 20,
                       ),
-                      border: OutlineInputBorder(borderRadius: SLRadius.mdAll),
-                      filled: true,
-                      fillColor: Colors.white,
                     ),
                   ),
                 ],
@@ -744,134 +739,62 @@ extension _SettingsTabAccountSection on _SettingsTabState {
     final hint = lang == 'vi'
         ? context.tr('home_pdngngaych_18f97b')
         : context.tr('p6_language_applies_immediately');
+    final current = _settingsLanguageOptions.firstWhere(
+      (o) => o.code == lang,
+      orElse: () => _settingsLanguageOptions.first,
+    );
 
     return _buildPanel(
       hideBackButton: hideBackButton,
       id: 'language',
-      title: '🌐 ${context.tr('language')}',
-      borderColor: const Color(0xFF6a1b9a),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              hint,
-              style: SLTheme.quicksand(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w700,
-                color: _settingsAccountPurpleTextColor,
-              ),
-            ),
-            const SizedBox(height: 14),
-            Container(
-              decoration: BoxDecoration(
-                color: SLColors.paper,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: SLColors.accentPurple.withValues(alpha: 0.38),
-                  width: 1.2,
+      title: context.tr('language'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SLSettingsGroup(
+            margin: EdgeInsets.zero,
+            children: [
+              AnimatedSize(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.topCenter,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (!_isLanguageListExpanded)
+                      SLSettingsRow(
+                        title: current.title,
+                        subtitle: hint,
+                        showChevron: false,
+                        trailing: const Icon(
+                          Icons.unfold_more_rounded,
+                          size: 22,
+                          color: SLSettingsColors.inkTertiary,
+                        ),
+                        onTap: () {
+                          setState(() {
+                            _isLanguageListExpanded = true;
+                          });
+                        },
+                      )
+                    else
+                      for (final option in _settingsLanguageOptions) ...[
+                        _buildLanguageOption(
+                          code: option.code,
+                          badge: option.badge,
+                          title: option.title,
+                        ),
+                        if (option.code != _settingsLanguageOptions.last.code)
+                          const SLSettingsDivider(indent: 64),
+                      ],
+                  ],
                 ),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: AnimatedSize(
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeInOut,
-                  alignment: Alignment.topCenter,
-                  child: Column(
-                    children: [
-                      if (!_isLanguageListExpanded)
-                        Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              setState(() {
-                                _isLanguageListExpanded = true;
-                              });
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 16,
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 38,
-                                    height: 30,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      color: SLColors.tertiarySoft,
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: const Color(0xFFB79AD9),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      _settingsLanguageOptions
-                                          .firstWhere(
-                                            (o) => o.code == lang,
-                                            orElse: () =>
-                                                _settingsLanguageOptions.first,
-                                          )
-                                          .badge,
-                                      style: SLTheme.quicksand(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w900,
-                                        color: const Color(0xFF5C4A78),
-                                        letterSpacing: 0.4,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      _settingsLanguageOptions
-                                          .firstWhere(
-                                            (o) => o.code == lang,
-                                            orElse: () =>
-                                                _settingsLanguageOptions.first,
-                                          )
-                                          .title,
-                                      style: SLTheme.quicksand(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w800,
-                                        color: const Color(0xFF2B2238),
-                                      ),
-                                    ),
-                                  ),
-                                  const Icon(
-                                    Icons.keyboard_arrow_down_rounded,
-                                    color: Color(0xFF5C4A78),
-                                    size: 24,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        )
-                      else
-                        for (final option in _settingsLanguageOptions) ...[
-                          _buildLanguageOption(
-                            code: option.code,
-                            badge: option.badge,
-                            title: option.title,
-                          ),
-                          if (option.code != _settingsLanguageOptions.last.code)
-                            const Divider(
-                              height: 1,
-                              color: SLColors.borderLight,
-                            ),
-                        ],
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const RegionPreferencesPanel(),
-          ],
-        ),
+            ],
+          ),
+          const RegionPreferencesPanel(),
+        ],
       ),
     );
   }
@@ -883,10 +806,10 @@ extension _SettingsTabAccountSection on _SettingsTabState {
   }) {
     final isSelected = L10nService().localeCode == code;
 
-    return Material(
-      color: Colors.transparent,
+    return Semantics(
+      selected: isSelected,
+      inMutuallyExclusiveGroup: true,
       child: InkWell(
-        borderRadius: BorderRadius.circular(22),
         onTap: () {
           _applyLanguage(code);
           setState(() {
@@ -894,25 +817,28 @@ extension _SettingsTabAccountSection on _SettingsTabState {
           });
         },
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+          padding: const EdgeInsets.fromLTRB(16, 12, 14, 12),
           child: Row(
             children: [
               Container(
-                width: 38,
-                height: 30,
+                width: 36,
+                height: 28,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: SLColors.tertiarySoft,
+                  color: isSelected
+                      ? SLSettingsColors.accentSoft
+                      : SLSettingsColors.surfaceMuted,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFB79AD9)),
                 ),
                 child: Text(
                   badge,
                   style: SLTheme.quicksand(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF5C4A78),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
                     letterSpacing: 0.4,
+                    color: isSelected
+                        ? SLSettingsColors.accentStrong
+                        : SLSettingsColors.inkSecondary,
                   ),
                 ),
               ),
@@ -920,20 +846,16 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               Expanded(
                 child: Text(
                   title,
-                  style: SLTheme.quicksand(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF2B2238),
-                  ),
+                  style: SLSettingsText.title(SLSettingsColors.ink),
                 ),
               ),
               AnimatedOpacity(
                 opacity: isSelected ? 1 : 0,
                 duration: const Duration(milliseconds: 180),
                 child: const Icon(
-                  Icons.check_circle,
-                  color: Color(0xFFD81B60),
-                  size: 24,
+                  Icons.check_circle_rounded,
+                  color: SLSettingsColors.accent,
+                  size: 22,
                 ),
               ),
             ],
@@ -1072,8 +994,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                       children: [
                         const Icon(
                           Icons.warning_amber_rounded,
-                          color: Colors.orange,
-                          size: 28,
+                          color: SLSettingsColors.warning,
+                          size: 26,
                         ),
                         const SizedBox(width: 8),
                         Text(context.tr('p6_house_id_confirm_title')),
@@ -1105,207 +1027,143 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               );
             }
 
+            final fieldState = errorReason != null
+                ? SLSettingsColors.danger
+                : (isAvailable ? SLSettingsColors.success : null);
             return Dialog(
-              backgroundColor: Colors.white,
+              backgroundColor: SLSettingsColors.surface,
               surfaceTintColor: Colors.transparent,
-              insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+              insetPadding: const EdgeInsets.symmetric(horizontal: 20),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(SLSettingsRadius.sheet),
               ),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 520),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFFF0F5),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Icon(
-                              Icons.maps_home_work_rounded,
-                              color: Color(0xFFD81B60),
-                              size: 32,
-                            ),
+                          const SLSettingsIconTile(
+                            icon: Icons.maps_home_work_rounded,
+                            color: SLSettingsColors.rose,
+                            size: 48,
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: 14),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   context.tr('p6_house_id_change_title'),
-                                  style: SLTextStyles.quicksand(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w900,
-                                    color: const Color(0xFF2C1B22),
+                                  style: SLTheme.quicksand(
+                                    fontSize: 19,
+                                    fontWeight: FontWeight.w800,
+                                    height: 1.25,
+                                    color: SLSettingsColors.ink,
                                   ),
                                 ),
-                                Text(
-                                  context.tr('p6_house_id_one_time_only'),
-                                  style: SLTextStyles.quicksand(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFFD81B60),
+                                const SizedBox(height: 4),
+                                SLSettingsPill(
+                                  label: context.tr(
+                                    'p6_house_id_one_time_only',
                                   ),
+                                  tone: SLSettingsTone.accent,
+                                  dense: true,
                                 ),
                               ],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
                       Text(
                         context.tr('p6_house_id_sync_note'),
-                        style: SLTextStyles.quicksand(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF7A6871),
-                          height: 1.4,
+                        style: SLSettingsText.body(
+                          SLSettingsColors.inkSecondary,
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 4,
+                      const SizedBox(height: 18),
+                      TextField(
+                        controller: customIdCtrl,
+                        maxLength: 20,
+                        autofocus: true,
+                        style: SLTheme.quicksand(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: SLSettingsColors.ink,
                         ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFAFAFA),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            width: 2,
-                            color: errorReason != null
-                                ? Colors.red.shade300
-                                : (isAvailable
-                                      ? Colors.green.shade400
-                                      : const Color(0xFFEEEEEE)),
-                          ),
-                          boxShadow: [
-                            if (isAvailable)
-                              BoxShadow(
-                                color: Colors.green.withValues(alpha: 0.1),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
+                        decoration:
+                            slSettingsInputDecoration(
+                              label: context.tr('p6_house_id_input_label'),
+                              prefixIcon: const Icon(
+                                Icons.alternate_email_rounded,
+                                size: 20,
                               ),
-                            if (errorReason != null)
-                              BoxShadow(
-                                color: Colors.red.withValues(alpha: 0.1),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                          ],
-                        ),
-                        child: TextField(
-                          controller: customIdCtrl,
-                          maxLength: 20,
-                          style: SLTextStyles.quicksand(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF2C1B22),
-                          ),
-                          decoration: InputDecoration(
-                            labelText: context.tr('p6_house_id_input_label'),
-                            labelStyle: SLTextStyles.quicksand(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF8C7381),
-                            ),
-                            counterText: '',
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            errorBorder: InputBorder.none,
-                            focusedErrorBorder: InputBorder.none,
-                            suffixIcon: isChecking
-                                ? const Padding(
-                                    padding: EdgeInsets.all(12),
-                                    child: SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.5,
-                                        color: Color(0xFFD81B60),
+                              focusColor: fieldState,
+                              suffixIcon: isChecking
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(14),
+                                      child: SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.2,
+                                        ),
+                                      ),
+                                    )
+                                  : (isAvailable
+                                        ? const Icon(
+                                            Icons.check_circle_rounded,
+                                            color: SLSettingsColors.success,
+                                          )
+                                        : (errorReason != null
+                                              ? const Icon(
+                                                  Icons.cancel_rounded,
+                                                  color:
+                                                      SLSettingsColors.danger,
+                                                )
+                                              : null)),
+                            ).copyWith(
+                              counterText: '',
+                              enabledBorder: fieldState == null
+                                  ? null
+                                  : OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(
+                                        SLSettingsRadius.control,
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: fieldState,
+                                        width: 1.5,
                                       ),
                                     ),
-                                  )
-                                : (isAvailable
-                                      ? const Icon(
-                                          Icons.check_circle_rounded,
-                                          color: Colors.green,
-                                          size: 26,
-                                        )
-                                      : (errorReason != null
-                                            ? const Icon(
-                                                Icons.cancel_rounded,
-                                                color: Colors.red,
-                                                size: 26,
-                                              )
-                                            : null)),
-                          ),
-                          onChanged: onIdChanged,
-                        ),
+                            ),
+                        onChanged: onIdChanged,
                       ),
                       if (isAvailable) ...[
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.verified_rounded,
-                              color: Colors.green,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              context.tr('p6_house_id_valid_available'),
-                              style: SLTextStyles.quicksand(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.green.shade700,
-                              ),
-                            ),
-                          ],
+                        const SizedBox(height: 10),
+                        SLSettingsNotice(
+                          tone: SLSettingsTone.success,
+                          icon: Icons.verified_rounded,
+                          message: context.tr('p6_house_id_valid_available'),
                         ),
                       ],
                       if (errorReason != null) ...[
-                        const SizedBox(height: 8),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              Icons.error_outline_rounded,
-                              color: Colors.red.shade600,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                errorReason!,
-                                style: SLTextStyles.quicksand(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.red.shade700,
-                                  height: 1.3,
-                                ),
-                              ),
-                            ),
-                          ],
+                        const SizedBox(height: 10),
+                        SLSettingsNotice(
+                          tone: SLSettingsTone.danger,
+                          message: errorReason!,
                         ),
                       ],
                       if (suggestions.isNotEmpty) ...[
                         const SizedBox(height: 16),
                         Text(
                           context.tr('p6_suggestions_for_you'),
-                          style: SLTextStyles.quicksand(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF7A6871),
+                          style: SLSettingsText.sectionLabel(
+                            SLSettingsColors.inkSecondary,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -1316,96 +1174,48 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                             return ActionChip(
                               label: Text(
                                 sugg,
-                                style: SLTextStyles.quicksand(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFFD81B60),
+                                style: SLTheme.quicksand(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: SLSettingsColors.accentStrong,
                                 ),
                               ),
-                              backgroundColor: const Color(0xFFFFF0F5),
-                              side: const BorderSide(
-                                color: Color(0xFFFFD3E4),
-                                width: 1.5,
-                              ),
+                              backgroundColor: SLSettingsColors.accentSoft,
+                              side: BorderSide.none,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(999),
                               ),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 4,
-                                vertical: 8,
+                                vertical: 6,
                               ),
                               onPressed: () => selectSuggestion(sugg),
                             );
                           }).toList(),
                         ),
                       ],
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 24),
                       Row(
                         children: [
                           Expanded(
-                            child: TextButton(
+                            child: SLSettingsButton(
+                              label: context.tr('cancel'),
+                              variant: SLSettingsButtonVariant.secondary,
                               onPressed: isSaving
                                   ? null
                                   : () => Navigator.of(dialogContext).pop(),
-                              style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              child: Text(
-                                context.tr('cancel'),
-                                style: SLTextStyles.quicksand(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF8C7381),
-                                ),
-                              ),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 10),
                           Expanded(
                             flex: 2,
-                            child: ElevatedButton(
+                            child: SLSettingsButton(
+                              label: context.tr('p6_continue_action'),
+                              loading: isSaving,
                               onPressed:
                                   (isAvailable && !isSaving && !isChecking)
                                   ? confirmSubmitChange
                                   : null,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFD81B60),
-                                foregroundColor: Colors.white,
-                                disabledBackgroundColor: const Color(
-                                  0xFFF0F0F0,
-                                ),
-                                disabledForegroundColor: const Color(
-                                  0xFFAAAAAA,
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              child: isSaving
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.5,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : Text(
-                                      context.tr('p6_continue_action'),
-                                      style: SLTextStyles.quicksand(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w900,
-                                      ),
-                                    ),
                             ),
                           ),
                         ],
