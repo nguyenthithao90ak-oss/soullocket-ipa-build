@@ -92,7 +92,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
                                 style: SLTheme.quicksand(
                                   fontSize: 9,
                                   fontWeight: FontWeight.w900,
-                                  color: const Color(0xFFD81B60),
+                                  color: SLSettingsColors.accentStrong,
                                 ),
                               ),
                             ),
@@ -233,7 +233,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
                                 height: 6,
                                 decoration: BoxDecoration(
                                   color: index == 0
-                                      ? const Color(0xFFD81B60)
+                                      ? SLSettingsColors.accentStrong
                                       : const Color(0xFFE8AFC6),
                                   shape: BoxShape.circle,
                                 ),
@@ -278,7 +278,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
             child: const Icon(
               Icons.image_outlined,
               size: 24,
-              color: Color(0xFFD81B60),
+              color: SLSettingsColors.accentStrong,
             ),
           ),
         ),
@@ -303,7 +303,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
         child: Center(
           child: CircularProgressIndicator(
             strokeWidth: 2.2,
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD81B60)),
+            valueColor: AlwaysStoppedAnimation<Color>(SLSettingsColors.accentStrong),
           ),
         ),
       ),
@@ -312,7 +312,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
         alignment: Alignment.center,
         child: const Icon(
           Icons.image_not_supported_outlined,
-          color: Color(0xFFD81B60),
+          color: SLSettingsColors.accentStrong,
         ),
       ),
     );

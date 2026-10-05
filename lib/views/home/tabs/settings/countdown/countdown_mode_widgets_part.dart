@@ -745,7 +745,7 @@ class _CountdownModeAvatarIdentity extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFD81B60),
+                          color: SLSettingsColors.accentStrong,
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 1.5),
                           boxShadow: const [

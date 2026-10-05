@@ -26,7 +26,7 @@ extension StylesEditorExt on _CountdownModeEditorScreenState {
                     fontWeight: FontWeight.w800,
                     color: _singleMode ? Colors.white : const Color(0xFF7C6D76),
                   ),
-                  selectedColor: const Color(0xFFD81B60),
+                  selectedColor: SLSettingsColors.accentStrong,
                   onSelected: (_) => _safeSetState(() => _singleMode = true),
                 ),
                 ChoiceChip(
@@ -38,7 +38,7 @@ extension StylesEditorExt on _CountdownModeEditorScreenState {
                         ? Colors.white
                         : const Color(0xFF7C6D76),
                   ),
-                  selectedColor: const Color(0xFFD81B60),
+                  selectedColor: SLSettingsColors.accentStrong,
                   onSelected: (_) => _safeSetState(() => _singleMode = false),
                 ),
               ],

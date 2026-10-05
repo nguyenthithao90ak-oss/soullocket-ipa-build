@@ -716,7 +716,7 @@ extension _CountdownModeIndependentScreenStatePart
                         errorText: errorText,
                         prefixIcon: const Icon(
                           Icons.calendar_month_rounded,
-                          color: Color(0xFFD81B60),
+                          color: SLSettingsColors.accentStrong,
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
