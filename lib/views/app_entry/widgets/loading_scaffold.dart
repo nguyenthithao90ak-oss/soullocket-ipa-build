@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -166,6 +167,7 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
   late final CurvedAnimation _captionIn;
   late final CurvedAnimation _tipIn;
   late final ValueNotifier<int> _tipIndex;
+  final _SkyCache _skyCache = _SkyCache();
   double _lastTipProgress = 0;
   bool? _reduceMotion;
 
@@ -276,6 +278,7 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
     _tips.dispose();
     _entrance.dispose();
     _tipIndex.dispose();
+    _skyCache.dispose();
     super.dispose();
   }
 
@@ -290,7 +293,11 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
           children: [
             RepaintBoundary(
               child: CustomPaint(
-                painter: _NightSkyPainter(ambient: _ambient, reveal: _reveal),
+                painter: _NightSkyPainter(
+                  ambient: _ambient,
+                  reveal: _reveal,
+                  cache: _skyCache,
+                ),
               ),
             ),
             RepaintBoundary(
@@ -830,119 +837,185 @@ Path _heartPath(Offset c, double w) {
 
 // ─── Sky ────────────────────────────────────────────────────────────
 
+// The sky is only soft gradients drifting a few pixels per second, so it is
+// drawn into a third-resolution bitmap ten times a second and stretched over
+// the screen. It looks the same as painting it live, but the GPU fills the
+// screen once per frame instead of six times.
+const double _kSkyScale = 1 / 3;
+const int _kSkyStepsPerCycle = 240;
+
 /// Deep plum night with slow aurora clouds. Fades up from black on first
 /// show so it reads as a continuation of the native splash.
+void _paintNightSky(Canvas canvas, Size size, double ambient, double reveal) {
+  final rect = Offset.zero & size;
+  final r = reveal;
+  final t = ambient * 2 * math.pi;
+
+  canvas.drawRect(
+    rect,
+    Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Color.lerp(Colors.black, _Night.top, r)!,
+          Color.lerp(Colors.black, _Night.middle, r)!,
+          Color.lerp(Colors.black, _Night.bottom, r)!,
+        ],
+        stops: const [0, 0.55, 1],
+      ).createShader(rect),
+  );
+  if (r <= 0) return;
+
+  final extent = size.longestSide;
+  _paintCloud(
+    canvas,
+    Offset(
+      size.width * (0.16 + 0.12 * math.sin(t)),
+      size.height * (0.14 + 0.06 * math.cos(2 * t)),
+    ),
+    extent * 0.55,
+    _Night.rose,
+    0.30 * r,
+  );
+  _paintCloud(
+    canvas,
+    Offset(
+      size.width * (0.9 + 0.08 * math.cos(t)),
+      size.height * (0.4 + 0.07 * math.sin(2 * t + 1)),
+    ),
+    extent * 0.6,
+    _Night.violet,
+    0.32 * r,
+  );
+  _paintCloud(
+    canvas,
+    Offset(
+      size.width * (0.72 + 0.12 * math.sin(2 * t + 0.5)),
+      size.height * (0.8 + 0.05 * math.cos(t + 2)),
+    ),
+    extent * 0.45,
+    _Night.berry,
+    0.24 * r,
+  );
+  _paintCloud(
+    canvas,
+    Offset(
+      size.width * (0.22 + 0.14 * math.sin(t + 2)),
+      size.height * (0.98 + 0.04 * math.cos(t)),
+    ),
+    extent * 0.5,
+    _Night.peach,
+    0.16 * r,
+  );
+
+  // Vignette keeps the edges dark and the eye on the locket.
+  canvas.drawRect(
+    rect,
+    Paint()
+      ..shader = RadialGradient(
+        radius: 0.9,
+        colors: [
+          Colors.black.withValues(alpha: 0),
+          Colors.black.withValues(alpha: 0.42),
+        ],
+        stops: const [0.55, 1],
+      ).createShader(rect),
+  );
+}
+
+void _paintCloud(
+  Canvas canvas,
+  Offset center,
+  double radius,
+  Color color,
+  double alpha,
+) {
+  canvas.drawCircle(
+    center,
+    radius,
+    Paint()
+      ..shader = RadialGradient(
+        colors: [
+          color.withValues(alpha: alpha),
+          color.withValues(alpha: alpha * 0.4),
+          color.withValues(alpha: 0),
+        ],
+        stops: const [0, 0.45, 1],
+      ).createShader(Rect.fromCircle(center: center, radius: radius)),
+  );
+}
+
+/// Holds the latest sky bitmap and redraws it only when the size, the drift
+/// step or the entrance fade changes.
+class _SkyCache {
+  ui.Image? _image;
+  Size _size = Size.zero;
+  int _step = -1;
+  double _reveal = -1;
+
+  ui.Image? imageFor(Size size, double ambient, double reveal) {
+    final step = (ambient * _kSkyStepsPerCycle).floor();
+    final current = _image;
+    if (current != null &&
+        size == _size &&
+        step == _step &&
+        reveal == _reveal) {
+      return current;
+    }
+    final width = (size.width * _kSkyScale).ceil();
+    final height = (size.height * _kSkyScale).ceil();
+    if (width <= 0 || height <= 0) return null;
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder)
+      ..scale(width / size.width, height / size.height);
+    _paintNightSky(canvas, size, step / _kSkyStepsPerCycle, reveal);
+    final picture = recorder.endRecording();
+    final next = picture.toImageSync(width, height);
+    picture.dispose();
+    current?.dispose();
+    _image = next;
+    _size = size;
+    _step = step;
+    _reveal = reveal;
+    return next;
+  }
+
+  void dispose() {
+    _image?.dispose();
+    _image = null;
+  }
+}
+
 class _NightSkyPainter extends CustomPainter {
-  _NightSkyPainter({required this.ambient, required this.reveal})
-    : super(repaint: Listenable.merge([ambient, reveal]));
+  _NightSkyPainter({
+    required this.ambient,
+    required this.reveal,
+    required this.cache,
+  }) : super(repaint: Listenable.merge([ambient, reveal]));
 
   final Animation<double> ambient;
   final Animation<double> reveal;
+  final _SkyCache cache;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final r = reveal.value;
-    final t = ambient.value * 2 * math.pi;
-
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color.lerp(Colors.black, _Night.top, r)!,
-            Color.lerp(Colors.black, _Night.middle, r)!,
-            Color.lerp(Colors.black, _Night.bottom, r)!,
-          ],
-          stops: const [0, 0.55, 1],
-        ).createShader(rect),
-    );
-    if (r <= 0) return;
-
-    final extent = size.longestSide;
-    _cloud(
-      canvas,
-      Offset(
-        size.width * (0.16 + 0.12 * math.sin(t)),
-        size.height * (0.14 + 0.06 * math.cos(2 * t)),
-      ),
-      extent * 0.55,
-      _Night.rose,
-      0.30 * r,
-    );
-    _cloud(
-      canvas,
-      Offset(
-        size.width * (0.9 + 0.08 * math.cos(t)),
-        size.height * (0.4 + 0.07 * math.sin(2 * t + 1)),
-      ),
-      extent * 0.6,
-      _Night.violet,
-      0.32 * r,
-    );
-    _cloud(
-      canvas,
-      Offset(
-        size.width * (0.72 + 0.12 * math.sin(2 * t + 0.5)),
-        size.height * (0.8 + 0.05 * math.cos(t + 2)),
-      ),
-      extent * 0.45,
-      _Night.berry,
-      0.24 * r,
-    );
-    _cloud(
-      canvas,
-      Offset(
-        size.width * (0.22 + 0.14 * math.sin(t + 2)),
-        size.height * (0.98 + 0.04 * math.cos(t)),
-      ),
-      extent * 0.5,
-      _Night.peach,
-      0.16 * r,
-    );
-
-    // Vignette keeps the edges dark and the eye on the locket.
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = RadialGradient(
-          radius: 0.9,
-          colors: [
-            Colors.black.withValues(alpha: 0),
-            Colors.black.withValues(alpha: 0.42),
-          ],
-          stops: const [0.55, 1],
-        ).createShader(rect),
-    );
-  }
-
-  void _cloud(
-    Canvas canvas,
-    Offset center,
-    double radius,
-    Color color,
-    double alpha,
-  ) {
-    canvas.drawCircle(
-      center,
-      radius,
-      Paint()
-        ..shader = RadialGradient(
-          colors: [
-            color.withValues(alpha: alpha),
-            color.withValues(alpha: alpha * 0.4),
-            color.withValues(alpha: 0),
-          ],
-          stops: const [0, 0.45, 1],
-        ).createShader(Rect.fromCircle(center: center, radius: radius)),
+    final image = cache.imageFor(size, ambient.value, reveal.value);
+    if (image == null) return;
+    canvas.drawImageRect(
+      image,
+      Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+      Offset.zero & size,
+      Paint()..filterQuality = FilterQuality.low,
     );
   }
 
   @override
   bool shouldRepaint(_NightSkyPainter oldDelegate) =>
-      oldDelegate.ambient != ambient || oldDelegate.reveal != reveal;
+      oldDelegate.ambient != ambient ||
+      oldDelegate.reveal != reveal ||
+      oldDelegate.cache != cache;
 }
 
 class _Mote {
