@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../../../../../widgets/sl_settings_kit.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../../core/sl_theme.dart';
 import '../../../../../../utils/services/l10n_service.dart';
@@ -148,12 +149,14 @@ class _UtilityKindChoice extends StatelessWidget {
               : const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
           decoration: BoxDecoration(
-            color: selected ? Colors.white : const Color(0xFFF8F4F5),
+            color: selected
+                ? SLSettingsColors.accentSoft
+                : SLSettingsColors.surfaceMuted,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: selected
-                  ? const Color(0xFFE9567D)
-                  : const Color(0xFFF0E4E8),
+                  ? SLSettingsColors.accent
+                  : SLSettingsColors.border,
             ),
           ),
           child: Row(
@@ -162,8 +165,8 @@ class _UtilityKindChoice extends StatelessWidget {
                 _icon,
                 size: 17,
                 color: selected
-                    ? const Color(0xFFE9567D)
-                    : const Color(0xFF8B7B82),
+                    ? SLSettingsColors.accent
+                    : SLSettingsColors.inkTertiary,
               ),
               const SizedBox(width: 7),
               Expanded(
@@ -173,10 +176,10 @@ class _UtilityKindChoice extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: SLTheme.quicksand(
                     fontSize: 11,
-                    fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
+                    fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
                     color: selected
-                        ? const Color(0xFFB83D60)
-                        : const Color(0xFF746A70),
+                        ? SLSettingsColors.accentStrong
+                        : SLSettingsColors.inkSecondary,
                   ),
                 ),
               ),

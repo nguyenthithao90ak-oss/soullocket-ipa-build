@@ -7,7 +7,7 @@ extension _SettingsTabWidgetPanelHelpersPart on _SettingsTabState {
     required String title,
     String? subtitle,
     required Widget child,
-    List<Color> iconGradient = const [Color(0xFFFF93AE), Color(0xFF57D9E9)],
+    List<Color> iconGradient = const [SLSettingsColors.rose],
   }) {
     return WidgetStudioSection(
       title: title,
