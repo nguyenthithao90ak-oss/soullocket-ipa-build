@@ -211,20 +211,9 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
       margin: const EdgeInsets.only(top: 8, bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFF0F5), Color(0xFFFFE8F0)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: SLRadius.mdAll,
-        border: Border.all(color: const Color(0xFFF48FB1), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFE91E63).withValues(alpha: 0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        color: SLSettingsColors.surfaceMuted,
+        borderRadius: BorderRadius.circular(SLSettingsRadius.control + 2),
+        border: Border.all(color: SLSettingsColors.border),
       ),
       child: Row(
         children: [
@@ -236,22 +225,9 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                 height: 44,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: isPlaying
-                        ? [const Color(0xFFE91E63), const Color(0xFFFF80AB)]
-                        : [Colors.grey.shade400, Colors.grey.shade300],
-                  ),
-                  boxShadow: isPlaying
-                      ? [
-                          BoxShadow(
-                            color: const Color(
-                              0xFFE91E63,
-                            ).withValues(alpha: 0.35),
-                            blurRadius: 10,
-                            spreadRadius: 1,
-                          ),
-                        ]
-                      : null,
+                  color: isPlaying
+                      ? SLSettingsColors.accent
+                      : SLSettingsColors.inkTertiary,
                 ),
                 child: Icon(
                   isPlaying
@@ -278,31 +254,16 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                         style: SLTextStyles.quicksand(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFF6A1B4D),
+                          color: SLSettingsColors.ink,
                         ),
                       ),
                     ),
                     const SizedBox(width: 6),
                     if (isDefault)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(
-                            0xFFE91E63,
-                          ).withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          context.tr('theme_music_default_tag'),
-                          style: SLTextStyles.quicksand(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFFE91E63),
-                          ),
-                        ),
+                      SLSettingsPill(
+                        label: context.tr('theme_music_default_tag'),
+                        tone: SLSettingsTone.accent,
+                        dense: true,
                       ),
                   ],
                 ),
@@ -318,8 +279,8 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: isPlaying
-                            ? const Color(0xFFD81B60)
-                            : Colors.grey.shade600,
+                            ? SLSettingsColors.accentStrong
+                            : SLSettingsColors.inkSecondary,
                       ),
                     );
                   },
@@ -338,7 +299,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                   isPlaying
                       ? Icons.pause_circle_filled_rounded
                       : Icons.play_circle_fill_rounded,
-                  color: const Color(0xFFE91E63),
+                  color: SLSettingsColors.accent,
                 ),
                 tooltip: isPlaying
                     ? context.tr('theme_music_action_pause')
@@ -407,7 +368,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
           children: [
             _SettingsToggleRow(
               icon: Icons.play_circle_rounded,
-              iconColor: const Color(0xFFec407a),
+              iconColor: SLSettingsColors.rose,
               label: context.tr('theme_music_autoplay_label'),
               switchValue: _musicAutoplay,
               onSwitchChanged: (v) async {
@@ -428,7 +389,9 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
             if (hasCustomTracks) ...[
               _buildGradientBtn(
                 label: context.tr('theme_music_reset_default_btn'),
-                gradient: const [Color(0xFFEC407A), Color(0xFFF48FB1)],
+                gradient: const [],
+                icon: Icons.restart_alt_rounded,
+                variant: SLSettingsButtonVariant.secondary,
                 onTap: _switchToDefaultTrack,
               ),
               SLSpacing.h8,
@@ -438,9 +401,11 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                 width: double.infinity,
                 padding: SLSpacing.all12,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFF3F7),
-                  borderRadius: SLRadius.mdAll,
-                  border: Border.all(color: const Color(0xFFF48FB1)),
+                  color: SLSettingsColors.surfaceMuted,
+                  borderRadius: BorderRadius.circular(
+                    SLSettingsRadius.control + 2,
+                  ),
+                  border: Border.all(color: SLSettingsColors.border),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -457,8 +422,8 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                                 overflow: TextOverflow.ellipsis,
                                 style: SLTextStyles.quicksand(
                                   fontSize: 13,
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF6A1B4D),
+                                  fontWeight: FontWeight.w700,
+                                  color: SLSettingsColors.ink,
                                 ),
                               ),
                             ),
@@ -468,7 +433,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                                 tooltip: context.tr('p7_music_remove_track'),
                                 icon: const Icon(
                                   Icons.delete_outline_rounded,
-                                  color: Colors.redAccent,
+                                  color: SLSettingsColors.danger,
                                   size: 20,
                                 ),
                                 padding: EdgeInsets.zero,
@@ -483,8 +448,8 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                       _syncModeLabel(),
                       style: SLTextStyles.quicksand(
                         fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF6A1B4D),
+                        fontWeight: FontWeight.w600,
+                        color: SLSettingsColors.inkSecondary,
                         height: 1.45,
                       ),
                     ),
@@ -498,39 +463,13 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                           child: InkWell(
                             borderRadius: BorderRadius.circular(8),
                             onTap: _showVipAccountDetail,
-                            child: Container(
-                              margin: const EdgeInsets.only(top: 8),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFFFFD54F),
-                                    Color(0xFFFF8F00),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.star_rounded,
-                                    size: 12,
-                                    color: Color(0xFF3E2723),
-                                  ),
-                                  const SizedBox(width: 3),
-                                  Text(
-                                    'PRO',
-                                    style: SLTextStyles.quicksand(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w900,
-                                      color: const Color(0xFF3E2723),
-                                    ),
-                                  ),
-                                ],
+                            child: const Padding(
+                              padding: EdgeInsets.only(top: 8),
+                              child: SLSettingsPill(
+                                label: 'PRO',
+                                tone: SLSettingsTone.premium,
+                                icon: Icons.star_rounded,
+                                dense: true,
                               ),
                             ),
                           ),
@@ -548,7 +487,9 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                               .tr('p7_music_add_tracks')
                               .replaceAll('{count}', '${_playlist.length}')
                         : context.tr('p7_music_limit_button')),
-              gradient: const [Color(0xFF8E24AA), Color(0xFFD81B60)],
+              gradient: const [],
+              icon: Icons.library_music_outlined,
+              loading: _isLoading,
               onTap: _isLoading || _playlist.length >= 5
                   ? () {}
                   : _pickAndStoreMultipleMusicFilesLocally,
@@ -556,8 +497,9 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
             SLSpacing.h8,
             _buildGradientBtn(
               label: context.tr('theme_music_guide'),
-              gradient: const [Color(0xFFFFB74D), Color(0xFFFF9800)],
-              textColor: Colors.black87,
+              gradient: const [],
+              icon: Icons.help_outline_rounded,
+              variant: SLSettingsButtonVariant.secondary,
               onTap: () {
                 showDialog(
                   context: context,
@@ -572,13 +514,13 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                             context.tr('p7_music_guide_quantity_label'),
                             style: SLTextStyles.quicksand(
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF6A1B4D),
+                              color: SLSettingsColors.ink,
                             ),
                           ),
                           Text(
                             context.tr('p7_music_guide_quantity_body'),
                             style: SLTextStyles.quicksand(
-                              color: const Color(0xFF3E2723),
+                              color: SLSettingsColors.inkSecondary,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -586,13 +528,13 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                             context.tr('p7_music_guide_size_label'),
                             style: SLTextStyles.quicksand(
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF6A1B4D),
+                              color: SLSettingsColors.ink,
                             ),
                           ),
                           Text(
                             context.tr('p7_music_guide_size_body'),
                             style: SLTextStyles.quicksand(
-                              color: const Color(0xFF3E2723),
+                              color: SLSettingsColors.inkSecondary,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -600,13 +542,13 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                             context.tr('p7_music_guide_formats_label'),
                             style: SLTextStyles.quicksand(
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF6A1B4D),
+                              color: SLSettingsColors.ink,
                             ),
                           ),
                           Text(
                             context.tr('p7_music_guide_formats_body'),
                             style: SLTextStyles.quicksand(
-                              color: const Color(0xFF3E2723),
+                              color: SLSettingsColors.inkSecondary,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -614,19 +556,19 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                             context.tr('p7_music_guide_sync_label'),
                             style: SLTextStyles.quicksand(
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF6A1B4D),
+                              color: SLSettingsColors.ink,
                             ),
                           ),
                           Text(
                             context.tr('p7_music_guide_pro_body'),
                             style: SLTextStyles.quicksand(
-                              color: const Color(0xFF3E2723),
+                              color: SLSettingsColors.inkSecondary,
                             ),
                           ),
                           Text(
                             context.tr('p7_music_guide_regular_body'),
                             style: SLTextStyles.quicksand(
-                              color: const Color(0xFF3E2723),
+                              color: SLSettingsColors.inkSecondary,
                             ),
                           ),
                         ],

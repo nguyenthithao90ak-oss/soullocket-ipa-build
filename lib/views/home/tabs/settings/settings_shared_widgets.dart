@@ -267,7 +267,6 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
   Widget _buildGradientBtn({
     required String label,
     required List<Color> gradient,
-    Color textColor = Colors.white,
     required VoidCallback onTap,
     SLSettingsButtonVariant variant = SLSettingsButtonVariant.primary,
     IconData? icon,

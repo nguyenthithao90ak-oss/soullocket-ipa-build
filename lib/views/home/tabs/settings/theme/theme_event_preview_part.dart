@@ -17,8 +17,8 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
 
   Color _themeEventSourceColor(UpcomingEvent event) {
     return event.source == 'calendar'
-        ? const Color(0xFF5B8DEF)
-        : const Color(0xFFE57AA5);
+        ? SLSettingsColors.sky
+        : SLSettingsColors.rose;
   }
 
   Widget _buildThemeEventChip({
@@ -79,7 +79,7 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
-                  accent == const Color(0xFF3366D6)
+                  accent == SLSettingsColors.sky
                       ? Icons.calendar_view_day_rounded
                       : Icons.favorite_rounded,
                   color: accent,
@@ -96,7 +96,7 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
                       style: SLTheme.quicksand(
                         fontSize: 13,
                         fontWeight: FontWeight.w900,
-                        color: const Color(0xFF4A3B45),
+                        color: SLSettingsColors.ink,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -105,7 +105,7 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
                       style: SLTheme.quicksand(
                         fontSize: 11.2,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF8A5B76),
+                        color: SLSettingsColors.inkSecondary,
                       ),
                     ),
                   ],
@@ -133,9 +133,9 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
       margin: const EdgeInsets.only(top: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: accent.withValues(alpha: 0.14)),
+        color: SLSettingsColors.surface,
+        borderRadius: BorderRadius.circular(SLSettingsRadius.control + 2),
+        border: Border.all(color: SLSettingsColors.border),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,8 +174,8 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
                     _buildThemeEventChip(
                       icon: Icons.schedule_rounded,
                       label: _themeUpcomingBadge(event),
-                      color: const Color(0xFF8A5B76),
-                      background: const Color(0xFFF9EEF4),
+                      color: SLSettingsColors.inkSecondary,
+                      background: SLSettingsColors.surfaceMuted,
                     ),
                   ],
                 ),
@@ -185,7 +185,7 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
                   style: SLTheme.quicksand(
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
-                    color: const Color(0xFF444444),
+                    color: SLSettingsColors.ink,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -194,7 +194,7 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
                     const Icon(
                       Icons.event_available_rounded,
                       size: 14,
-                      color: Color(0xFF8A5B76),
+                      color: SLSettingsColors.inkSecondary,
                     ),
                     const SizedBox(width: 6),
                     Expanded(
@@ -205,7 +205,7 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
                         style: SLTheme.quicksand(
                           fontSize: 11.4,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF8A5B76),
+                          color: SLSettingsColors.inkSecondary,
                         ),
                       ),
                     ),
@@ -226,10 +226,10 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF1F5),
+                    color: SLSettingsColors.accentSoft,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: const Color(0xFFFFC8D8),
+                      color: SLSettingsColors.border,
                     ),
                   ),
                   alignment: Alignment.center,
@@ -239,12 +239,12 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
                           height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 2.2,
-                            color: Color(0xFFD81B60),
+                            color: SLSettingsColors.accentStrong,
                           ),
                         )
                       : Icon(
                           Icons.delete_outline_rounded,
-                          color: const Color(0xFFD81B60),
+                          color: SLSettingsColors.accentStrong,
                           size: 18,
                           semanticLabel: context.tr('theme_event_delete_cta'),
                         ),
@@ -265,7 +265,7 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
         style: SLTheme.quicksand(
           fontSize: 12,
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF8F7A85),
+          color: SLSettingsColors.inkSecondary,
         ),
       );
     }
@@ -334,7 +334,7 @@ class _ThemeEventPreviewSectionState extends State<_ThemeEventPreviewSection> {
             style: SLTheme.quicksand(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF8F7A85),
+              color: SLSettingsColors.inkSecondary,
             ),
           );
         }
@@ -351,16 +351,16 @@ class _ThemeEventPreviewSectionState extends State<_ThemeEventPreviewSection> {
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF7FA),
+                color: SLSettingsColors.surfaceMuted,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFF6D9E6)),
+                border: Border.all(color: SLSettingsColors.border),
               ),
               child: Text(
                 widget.context.tr('theme_event_description_hint'),
                 style: SLTheme.quicksand(
                   fontSize: 11.4,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF8A5B76),
+                  color: SLSettingsColors.inkSecondary,
                   height: 1.42,
                 ),
               ),
@@ -371,7 +371,7 @@ class _ThemeEventPreviewSectionState extends State<_ThemeEventPreviewSection> {
                     widget.context.tr('theme_event_anniversary_section_title'),
                 subtitle:
                     widget.context.tr('theme_event_anniversary_section_desc'),
-                accent: const Color(0xFFD81B60),
+                accent: SLSettingsColors.accentStrong,
                 events: anniversaryEvents,
               ),
             if (calendarEvents.isNotEmpty)
@@ -379,7 +379,7 @@ class _ThemeEventPreviewSectionState extends State<_ThemeEventPreviewSection> {
                 title: widget.context.tr('theme_event_calendar_section_title'),
                 subtitle:
                     widget.context.tr('theme_event_calendar_section_desc'),
-                accent: const Color(0xFF3366D6),
+                accent: SLSettingsColors.sky,
                 events: calendarEvents,
               ),
           ],
