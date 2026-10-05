@@ -499,36 +499,6 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
   }
 }
 
-// Painter cho viền nét đứt linh hoạt
-class _DashedBorderPainter extends CustomPainter {
-  final Color color = Colors.grey;
-  final double radius = 24.0;
-  static const double strokeWidth = 1.6;
-
-  _DashedBorderPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-
-    // Tối ưu: Dùng path cơ bản thay vì computeMetrics liên tục gây lag khi cuộn
-    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
-    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(radius));
-
-    // Fallback: Vẽ viền solid nhạt thay vì dashed để tránh lag trên Web
-    // Vì computeMetrics rất tốn tài nguyên trên Web CanvasKit.
-    paint.color = color.withValues(alpha: 0.5);
-    canvas.drawRRect(rrect, paint);
-  }
-
-  @override
-  bool shouldRepaint(_DashedBorderPainter old) =>
-      color != old.color || radius != old.radius;
-}
-
 class _HeartbeatWidget extends StatefulWidget {
   final Widget child;
   const _HeartbeatWidget({required this.child});

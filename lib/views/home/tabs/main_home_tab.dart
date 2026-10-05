@@ -17,7 +17,6 @@ import 'package:soullocket_app/widgets/soul_merge_mark.dart';
 import 'package:soullocket_app/views/utilities/tarot/tarot_screen.dart';
 import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/map_tilt_card.dart';
-import 'package:soullocket_app/views/home/widgets/home_insight_card.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/hero/heartbeat_thread_painter.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/widgets/getting_started_guide.dart';
@@ -143,11 +142,7 @@ import 'package:soullocket_app/views/home/widgets/home_sticker_motion.dart';
 import 'package:soullocket_app/widgets/soul_merge_mascot.dart';
 import 'package:soullocket_app/utils/services/sound_service.dart';
 import 'package:soullocket_app/views/home/widgets/companion/home_companion_painter.dart';
-import 'package:soullocket_app/views/home/widgets/companion/home_companion_journey_card.dart';
-import 'package:soullocket_app/views/home/widgets/main_home/home_daily_activity_card.dart';
-import 'package:soullocket_app/views/home/widgets/main_home/home_upcoming_plans.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/home_compact_sections.dart';
-import 'package:soullocket_app/views/home/tabs/widgets/utilities_hub_tile.dart';
 import 'package:soullocket_app/views/utilities/utility_launcher.dart';
 
 part 'main_home/widgets/main_home_dialogs.dart';
@@ -166,7 +161,6 @@ part 'main_home/widgets/main_home_map_card.dart';
 part 'main_home/widgets/main_home_insight_card.dart';
 part 'main_home/widgets/main_home_avatar_section.dart';
 part 'main_home/widgets/main_home_quote_activity_card.dart';
-part 'main_home/widgets/main_home_shortcut_dock.dart';
 part 'main_home/widgets/main_home_fullscreen_layout.dart';
 part 'main_home/controllers/main_home_formatters.dart';
 part 'main_home/controllers/main_home_interactions.dart';
@@ -215,8 +209,6 @@ class MainHomeTab extends StatefulWidget {
 }
 
 class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
-  final ValueNotifier<bool> _showHighlightCardFirstTapHintNotifier =
-      ValueNotifier(false);
   final ValueNotifier<bool> _showInsightCardFirstTapHintNotifier =
       ValueNotifier(false);
   final ValueNotifier<double> _avatarUploadProgressNotifier = ValueNotifier(
@@ -472,7 +464,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
 
   LoveInsightData? _insightData;
   // ignore: prefer_final_fields
-  final List<dynamic> _albumHighlights = [];
   List<SharedNote> _noteHighlights = [];
   StreamSubscription<DatabaseEvent>? _homeCalendarSubscription;
   StreamSubscription<DatabaseEvent>? _healthCycleSyncSubscription;

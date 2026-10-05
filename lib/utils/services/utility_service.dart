@@ -9,12 +9,10 @@ import '../../models/house_settings.dart';
 
 class UtilityLayoutSnapshot {
   const UtilityLayoutSnapshot({
-    required this.order,
     required this.pinnedApps,
     required this.recentApps,
   });
 
-  final List<String> order;
   final List<UtilityApp> pinnedApps;
   final List<UtilityApp> recentApps;
 }
@@ -60,7 +58,6 @@ class UtilityService {
         .whereType<UtilityApp>()
         .toList(growable: false);
     return UtilityLayoutSnapshot(
-      order: _completeOrder(prefs.getStringList(_customOrderPrefKey) ?? []),
       pinnedApps: appsForIds(
         _sanitizeAppIds(prefs.getStringList(_pinnedAppsPrefKey) ?? []),
       ),
@@ -71,8 +68,6 @@ class UtilityService {
       ),
     );
   }
-
-  List<String> get defaultOrder => _completeOrder(const []);
 
   /// Chỉ dùng cache của đúng phiên hiện tại; đây không phải kiểm tra quyền.
   static UtilityAccountSnapshot? cachedAccount(
@@ -107,28 +102,9 @@ class UtilityService {
     );
   }
 
-  /// Lọc thứ tự cho từng nhóm mà không sửa danh sách thứ tự chung.
-  static List<UtilityApp> sortApps(
-    List<UtilityApp> apps,
-    Iterable<String> order,
-  ) {
-    final remaining = {for (final app in apps) app.id: app};
-    final result = <UtilityApp>[];
-    for (final id in order) {
-      final app = remaining.remove(id);
-      if (app != null) result.add(app);
-    }
-    result.addAll(remaining.values);
-    return result;
-  }
-
-  static const String _customOrderPrefKey = 'il_utility_order';
   static const String _pinnedAppsPrefKey = 'il_pinned_utility_ids';
   static const String _recentAppsPrefKey = 'il_recent_utility_ids';
   static const int _maxRecentApps = 6;
-  static final List<String> _defaultOrder = [
-    ...allApps.map((UtilityApp app) => app.id),
-  ];
   static const Set<String> _coupleOnlyIds = {
     'voice',
     'finance',
@@ -402,56 +378,6 @@ class UtilityService {
       }
     }
     return sanitized;
-  }
-
-  List<String> _completeOrder(Iterable<String> rawIds) {
-    final order = _sanitizeAppIds(rawIds);
-    final seen = order.toSet();
-    for (final appId in _defaultOrder) {
-      if (!_allAppIds.contains(appId) ||
-          !isUtilityVisibleInCurrentBuild(appId)) {
-        continue;
-      }
-      if (seen.add(appId)) {
-        order.add(appId);
-      }
-    }
-    return order;
-  }
-
-  bool _sameStringList(List<String> left, List<String> right) {
-    if (left.length != right.length) return false;
-    for (var i = 0; i < left.length; i += 1) {
-      if (left[i] != right[i]) return false;
-    }
-    return true;
-  }
-
-  Future<List<String>> getCustomOrder() async {
-    final prefs =
-        OfflineCacheService.getPrefsSync() ??
-        await SharedPreferences.getInstance();
-    final stored = prefs.getStringList(_customOrderPrefKey) ?? const <String>[];
-    final sanitized = _sanitizeAppIds(stored);
-    final order = _completeOrder(sanitized);
-    if (stored.isNotEmpty && !_sameStringList(stored, sanitized)) {
-      await prefs.setStringList(_customOrderPrefKey, sanitized);
-    }
-    return order;
-  }
-
-  Future<void> saveCustomOrder(Iterable<String> appIds) async {
-    final prefs =
-        OfflineCacheService.getPrefsSync() ??
-        await SharedPreferences.getInstance();
-    await prefs.setStringList(_customOrderPrefKey, _sanitizeAppIds(appIds));
-  }
-
-  Future<void> clearCustomOrder() async {
-    final prefs =
-        OfflineCacheService.getPrefsSync() ??
-        await SharedPreferences.getInstance();
-    await prefs.remove(_customOrderPrefKey);
   }
 
   Future<List<String>> getPinnedAppIds() async {

@@ -1,55 +1,26 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
-import 'package:soullocket_app/widgets/sl_feedback.dart';
-import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'widgets/utilities_app_action_sheet.dart';
 import 'widgets/utilities_daily_pick_card.dart';
 import 'widgets/utilities_tab_body.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:intl/intl.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:soullocket_app/views/utilities/love_card_screen.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../utils/sl_notice.dart';
 import '../../../models/house_settings.dart';
 import '../../../utils/services/admob_service.dart';
 import '../../../utils/services/house_service.dart';
-import '../../../utils/services/military_lock_service.dart';
 import '../../../utils/services/utility_service.dart';
 import '../../../utils/services/offline_cache_service.dart';
 import '../../../core/sl_theme.dart';
-import '../../utilities/notebook_hub_screen.dart';
-import '../../utilities/finance_screen.dart';
-import '../../utilities/friendly_chat_screen.dart';
-import '../../utilities/habit_screen.dart';
-import '../../utilities/voice_screen.dart';
-import '../../utilities/calendar_screen.dart';
-import '../../utilities/capsule_screen.dart';
-import '../../utilities/cinema_screen.dart';
-import '../../../views/utilities/wheel/wheel_screen.dart';
-import '../../utilities/secret_vault_screen.dart';
-
-import '../../utilities/giftcode_screen.dart';
-import '../../utilities/drawing_studio_screen.dart';
-import '../../utilities/diary_export_screen.dart';
-import '../../utilities/reward_store_screen.dart';
-import '../../../views/utilities/tarot/tarot_screen.dart';
-import '../../utilities/collage_maker_screen.dart';
-
-import '../../utilities/creative_diary_screen.dart';
-import '../../utilities/utility_sticker_icon.dart';
-import '../../utilities/health_screen.dart';
-import '../../utilities/sleep_tracker_screen.dart';
 import '../../utilities/local_album_screen.dart';
-import '../../utilities/soul_events/soul_events_screen.dart';
 import 'package:soullocket_app/core/sl_route.dart';
 import 'package:soullocket_app/views/home/tabs/settings/settings_links_manager_screen.dart';
 import 'package:soullocket_app/views/utilities/utility_launcher.dart';
@@ -74,7 +45,6 @@ class _UtilitiesTabState extends State<UtilitiesTab>
   final HouseService _houseService = HouseService();
   final UtilityService _utilityService = UtilityService();
   final AdMobService _adMob = AdMobService();
-  final MilitaryLockService _militaryLockService = MilitaryLockService();
 
   String? _houseId;
   String _myName = L10nService().translate('home_bn_1fd75b');
