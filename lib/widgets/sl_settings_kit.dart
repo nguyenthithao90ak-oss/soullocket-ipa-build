@@ -438,6 +438,7 @@ class SLSettingsRow extends StatelessWidget {
     this.destructive = false,
     this.showChevron,
     this.enabled = true,
+    this.padding = const EdgeInsetsDirectional.fromSTEB(16, 11, 12, 11),
   });
 
   final String title;
@@ -454,6 +455,7 @@ class SLSettingsRow extends StatelessWidget {
   final bool destructive;
   final bool? showChevron;
   final bool enabled;
+  final EdgeInsetsGeometry padding;
 
   @override
   Widget build(BuildContext context) {
@@ -467,7 +469,7 @@ class SLSettingsRow extends StatelessWidget {
     final content = ConstrainedBox(
       constraints: BoxConstraints(minHeight: hasSubtitle ? 66 : 56),
       child: Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(16, 11, 12, 11),
+        padding: padding,
         child: Row(
           children: [
             if (icon != null) ...[
@@ -747,7 +749,11 @@ class SLSettingsButton extends StatelessWidget {
     final palette = SLSettingsPalette.resolve(isDark);
     final accent = color ?? SLSettingsColors.accentStrong;
     final (Color bg, Color fg, BorderSide side) = switch (variant) {
-      SLSettingsButtonVariant.primary => (accent, Colors.white, BorderSide.none),
+      SLSettingsButtonVariant.primary => (
+        accent,
+        Colors.white,
+        BorderSide.none,
+      ),
       SLSettingsButtonVariant.secondary => (
         palette.surface,
         palette.ink,
@@ -925,7 +931,10 @@ class SLSettingsPageHeader extends StatelessWidget {
               Expanded(
                 child: Semantics(
                   header: true,
-                  child: Text(title, style: SLSettingsText.pageTitle(palette.ink)),
+                  child: Text(
+                    title,
+                    style: SLSettingsText.pageTitle(palette.ink),
+                  ),
                 ),
               ),
               if (showIcon) ...[
@@ -1166,6 +1175,84 @@ class SLSettingsSwitchRow extends StatelessWidget {
                   IgnorePointer(child: toggle)
                 else
                   toggle,
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Ô chọn giá trị (mở hộp chọn khi bấm), trông giống ô nhập liệu.
+class SLSettingsSelectField extends StatelessWidget {
+  const SLSettingsSelectField({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.onTap,
+    this.icon,
+    this.trailingIcon = Icons.expand_more_rounded,
+    this.isDark = false,
+  });
+
+  final String label;
+  final String value;
+  final VoidCallback? onTap;
+  final IconData? icon;
+  final IconData trailingIcon;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = SLSettingsPalette.resolve(isDark);
+    return Semantics(
+      button: true,
+      label: '$label: $value',
+      excludeSemantics: true,
+      child: Material(
+        color: palette.surfaceMuted,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(SLSettingsRadius.control),
+          side: BorderSide(color: palette.border),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 12, 10),
+            child: Row(
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 20, color: palette.inkSecondary),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: SLTheme.quicksand(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: palette.inkSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        value,
+                        style: SLTheme.quicksand(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w700,
+                          height: 1.35,
+                          color: palette.ink,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(trailingIcon, size: 22, color: palette.inkTertiary),
               ],
             ),
           ),

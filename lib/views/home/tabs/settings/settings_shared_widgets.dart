@@ -553,9 +553,7 @@ class _SettingsToggleRow extends StatelessWidget {
             isDark: isDark,
           ),
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(label, style: SLSettingsText.body(palette.ink)),
-          ),
+          Expanded(child: Text(label, style: SLSettingsText.body(palette.ink))),
           if (useCheckbox)
             Checkbox(
               value: checkValue ?? false,

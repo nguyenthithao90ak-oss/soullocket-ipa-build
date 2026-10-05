@@ -147,7 +147,10 @@ class _PairingSettingsShortcutState extends State<PairingSettingsShortcut> {
         dimension: 40,
         child: Center(
           child: _snapshot.failed
-              ? const Icon(Icons.cloud_off_rounded, color: SLSettingsColors.rose)
+              ? const Icon(
+                  Icons.cloud_off_rounded,
+                  color: SLSettingsColors.rose,
+                )
               : const SizedBox.square(
                   dimension: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),

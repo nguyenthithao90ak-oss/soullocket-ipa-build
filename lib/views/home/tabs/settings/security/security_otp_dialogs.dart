@@ -6,6 +6,14 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import '../../../../../core/sl_theme.dart';
 import '../../../../../utils/app_error_mapper.dart';
 import '../../../../../widgets/sensitive_content_guard.dart';
+import '../../../../../widgets/sl_settings_kit.dart';
+
+TextStyle get _otpTextStyle => SLTheme.quicksand(
+  fontSize: 20,
+  fontWeight: FontWeight.w800,
+  letterSpacing: 6,
+  color: SLSettingsColors.ink,
+);
 
 Future<bool> showSettingsEmailOtpDialog({
   required BuildContext context,
@@ -103,8 +111,8 @@ Future<bool> showSettingsEmailOtpDialog({
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
                           color: (sendError != null || verifyError != null)
-                              ? Colors.red
-                              : Colors.black87,
+                              ? SLSettingsColors.danger
+                              : SLSettingsColors.ink,
                           height: 1.35,
                         ),
                       ),
@@ -123,13 +131,10 @@ Future<bool> showSettingsEmailOtpDialog({
                             setDialogState(() => verifyError = null);
                           }
                         },
-                        decoration: InputDecoration(
-                          labelText: context.tr('home_mxcnhn_ef70d2'),
-                          counterText: '',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
+                        style: _otpTextStyle,
+                        decoration: slSettingsInputDecoration(
+                          label: context.tr('home_mxcnhn_ef70d2'),
+                        ).copyWith(counterText: ''),
                       ),
                     ],
                   ),
@@ -278,18 +283,19 @@ Future<bool> showSettingsPasswordResetOtpDialog({
                           FilteringTextInputFormatter.digitsOnly,
                         ],
                         maxLength: 6,
-                        decoration: InputDecoration(
-                          labelText: context.tr('home_mxcnhn_ef70d2'),
-                          counterText: '',
-                        ),
+                        style: _otpTextStyle,
+                        decoration: slSettingsInputDecoration(
+                          label: context.tr('home_mxcnhn_ef70d2'),
+                        ).copyWith(counterText: ''),
                       ),
                       const SizedBox(height: 12),
                       TextField(
                         controller: passwordCtrl,
                         enabled: canConfirm,
                         obscureText: obscure,
-                        decoration: InputDecoration(
-                          labelText: context.tr('home_mtkhumi_ccef95'),
+                        style: slSettingsInputTextStyle(),
+                        decoration: slSettingsInputDecoration(
+                          label: context.tr('home_mtkhumi_ccef95'),
                           suffixIcon: IconButton(
                             onPressed: canConfirm
                                 ? () => setDialogState(() => obscure = !obscure)
@@ -304,12 +310,9 @@ Future<bool> showSettingsPasswordResetOtpDialog({
                       ),
                       if (sendError != null || verifyError != null) ...[
                         const SizedBox(height: 12),
-                        Text(
-                          sendError ?? verifyError ?? '',
-                          style: SLTheme.quicksand(
-                            fontWeight: FontWeight.w700,
-                            color: Colors.red,
-                          ),
+                        SLSettingsNotice(
+                          tone: SLSettingsTone.danger,
+                          message: sendError ?? verifyError ?? '',
                         ),
                       ],
                     ],
