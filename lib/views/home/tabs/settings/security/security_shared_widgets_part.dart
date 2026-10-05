@@ -28,7 +28,6 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
     required String label,
     required List<Color> gradient,
     required VoidCallback? onTap,
-    Color textColor = Colors.white,
   }) {
     return SLSettingsButton(
       label: label,
@@ -87,7 +86,6 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
     required String label,
     required VoidCallback? onTap,
     bool isPrimary = true,
-    Color accentColor = SLSettingsColors.sky,
   }) {
     return SLSettingsButton(
       label: label,

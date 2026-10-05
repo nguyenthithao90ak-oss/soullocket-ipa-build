@@ -193,7 +193,6 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
   Widget _buildPanel({
     required String id,
     required String title,
-    Color? borderColor,
     required Widget child,
     bool hideBackButton = false,
     Widget? titleBadge,
@@ -458,32 +457,6 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
   //       ),
   //     );
   //   }
-
-  Widget _buildLegalBtn({
-    required IconData icon,
-    required String label,
-    required Color color,
-    VoidCallback? onTap,
-  }) {
-    return SLSettingsGroup(
-      margin: EdgeInsets.zero,
-      children: [
-        SLSettingsRow(
-          icon: icon,
-          iconColor: color,
-          filledIcon: false,
-          title: label,
-          showChevron: false,
-          trailing: const Icon(
-            Icons.open_in_new_rounded,
-            size: 18,
-            color: SLSettingsColors.inkTertiary,
-          ),
-          onTap: onTap ?? () => _showToast(context.tr('home_angm_1441cf')),
-        ),
-      ],
-    );
-  }
 
   /// Một bước hướng dẫn có số thứ tự.
   Widget _buildStepRow(String step, String text) {

@@ -184,7 +184,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
     final statusColor = _isCheckingBackupStatus
         ? SLDetailStyle.blue
         : hasError
-        ? const Color(0xFFAC4E54)
+        ? SLSettingsColors.danger
         : _hasSettingsCloudBackup
         ? SLDetailStyle.sage
         : SLDetailStyle.warning;
@@ -762,48 +762,23 @@ extension _SettingsDataHealthSection on _SettingsTabState {
     required String subtitle,
     required IconData icon,
   }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () => Navigator.pop(ctx, days),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FBFF),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFDCE7F2)),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: SLSettingsColors.surfaceMuted,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(SLSettingsRadius.control + 2),
+          side: const BorderSide(color: SLSettingsColors.border),
         ),
-        child: Row(
-          children: [
-            Icon(icon, color: SLDetailStyle.blue),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: SLTheme.quicksand(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      color: SLDetailStyle.text(context),
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: SLTheme.quicksand(
-                      fontSize: 11.8,
-                      fontWeight: FontWeight.w700,
-                      color: SLDetailStyle.muted(context),
-                      height: 1.35,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded, color: Color(0xFF7A8AA0)),
-          ],
+        clipBehavior: Clip.antiAlias,
+        child: SLSettingsRow(
+          icon: icon,
+          iconColor: SLSettingsColors.sky,
+          filledIcon: false,
+          title: title,
+          subtitle: subtitle,
+          padding: const EdgeInsetsDirectional.fromSTEB(12, 10, 8, 10),
+          onTap: () => Navigator.pop(ctx, days),
         ),
       ),
     );
@@ -836,13 +811,10 @@ extension _SettingsDataHealthSection on _SettingsTabState {
             controller: passwordCtrl,
             obscureText: true,
             autofocus: true,
-            style: SLTheme.quicksand(
-              color: SLDetailStyle.blue,
-              fontWeight: FontWeight.w700,
-            ),
-            decoration: InputDecoration(
-              labelText: context.tr('home_mtkhungnhp_201838'),
-              prefixIcon: const Icon(Icons.lock_rounded),
+            style: slSettingsInputTextStyle(),
+            decoration: slSettingsInputDecoration(
+              label: context.tr('home_mtkhungnhp_201838'),
+              prefixIcon: const Icon(Icons.lock_rounded, size: 20),
             ),
             onSubmitted: (value) => Navigator.pop(ctx, value.trim()),
           ),
@@ -899,28 +871,19 @@ extension _SettingsDataHealthSection on _SettingsTabState {
       builder: (ctx) => SLAlertDialog(
         title: Row(
           children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: SLDetailStyle.blue,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(Icons.download_rounded, color: Colors.white),
+            const SLSettingsIconTile(
+              icon: Icons.download_rounded,
+              color: SLSettingsColors.sky,
+              size: 40,
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             Expanded(child: Text(context.tr('home_tidliucati_f2139a'))),
           ],
         ),
         content: SingleChildScrollView(
           child: Text(
             context.tr('p6_data_export_intro'),
-            style: SLTheme.quicksand(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF445064),
-              height: 1.45,
-            ),
+            style: SLSettingsText.body(SLSettingsColors.inkSecondary),
           ),
         ),
         actions: [
@@ -1045,52 +1008,15 @@ extension _SettingsDataHealthSection on _SettingsTabState {
           const SizedBox(height: 16),
           _buildCompactCard(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEBEFEF),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.download_for_offline_rounded,
-                        color: SLDetailStyle.blue,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.tr('home_tidliucati_f2139a'),
-                            style: SLTheme.quicksand(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w900,
-                              color: SLDetailStyle.text(context),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            context.tr('home_tofiletixu_da933b'),
-                            style: SLTheme.quicksand(
-                              fontSize: 11.8,
-                              fontWeight: FontWeight.w700,
-                              color: SLDetailStyle.muted(context),
-                              height: 1.4,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                SLDetailHeading(
+                  icon: Icons.download_for_offline_outlined,
+                  color: SLSettingsColors.sky,
+                  title: context.tr('home_tidliucati_f2139a'),
+                  description: context.tr('home_tofiletixu_da933b'),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
                 _buildCompactActionBtn(
                   icon: Icons.download_rounded,
                   label: context.tr('home_tobntixung_3d109d'),
@@ -1099,74 +1025,40 @@ extension _SettingsDataHealthSection on _SettingsTabState {
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: 12),
+          _buildCompactCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF2E8DA),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.link_rounded,
-                    color: SLDetailStyle.warning,
-                  ),
+                SLDetailHeading(
+                  icon: Icons.link_rounded,
+                  color: SLSettingsColors.amber,
+                  title: context.tr('home_qunllinktq_98c5d9'),
+                  description: context.tr('home_xemdanhsch_640b35'),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.tr('home_qunllinktq_98c5d9'),
-                        style: SLTheme.quicksand(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          color: SLDetailStyle.text(context),
-                        ),
+                const SizedBox(height: 14),
+                _buildCompactActionBtn(
+                  icon: Icons.link_rounded,
+                  label: context.tr('home_qunllinkt_df5d77'),
+                  onTap: () {
+                    if (_houseId == null || _houseId!.trim().isEmpty) {
+                      _showToast(
+                        context.tr('home_bncnvonhch_206d8c'),
+                        success: false,
+                      );
+                      return;
+                    }
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            SettingsLinksManagerScreen(houseId: _houseId!),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        context.tr('home_xemdanhsch_640b35'),
-                        style: SLTheme.quicksand(
-                          fontSize: 11.8,
-                          fontWeight: FontWeight.w700,
-                          color: SLDetailStyle.muted(context),
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 12),
-          _buildCompactActionBtn(
-            icon: Icons.link_rounded,
-            label: context.tr('home_qunllinkt_df5d77'),
-            onTap: () {
-              if (_houseId == null || _houseId!.trim().isEmpty) {
-                _showToast(
-                  context.tr('home_bncnvonhch_206d8c'),
-                  success: false,
-                );
-                return;
-              }
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      SettingsLinksManagerScreen(houseId: _houseId!),
-                ),
-              );
-            },
           ),
         ],
       ),
