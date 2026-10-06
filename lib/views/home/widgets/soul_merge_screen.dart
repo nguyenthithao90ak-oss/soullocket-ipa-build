@@ -69,12 +69,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
   String _myName = '…';
   bool _iHaveBumped = false;
   bool _partnerHasBumped = false;
-  final GlobalKey<TapHeartsOverlayState> _heartsOverlayKey =
-      GlobalKey<TapHeartsOverlayState>();
   final ValueNotifier<double> _interactiveScaleNotifier = ValueNotifier(1.0);
-  Timer? _continuousHeartsTimer;
-  Offset _lastTapPosition = Offset.zero;
-  Offset? _lastSpawnedPosition;
+  int _heartPulse = 0;
   DateTime? _lastManualNudgeTime;
 
   final TextEditingController _customMsgController = TextEditingController();
@@ -213,7 +209,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
     debugPrint('[SoulMergeScreen] _handleLocalBump triggered (bump or tap)');
     _mergeService.reportBump();
     HapticFeedback.mediumImpact();
-    // NOTE: Heart spawning is handled exclusively by _onTapDown to avoid double-spawn.
+    setState(() => _heartPulse++);
   }
 
   Future<void> _initUserInfo() async {
@@ -283,17 +279,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
     }
   }
 
-  // Tap hearts logic is now completely isolated within the _TapHeartsOverlay widget
-
   void _sendManualNudgeNotification() async {
     if (_houseId == null || _houseId!.isEmpty) return;
-
-    final size = MediaQuery.of(context).size;
-    _heartsOverlayKey.currentState?.spawnFlyingToExplosion(
-      Offset(size.width / 2, size.height / 2),
-      Offset(size.width / 2, size.height * 0.15),
-      count: 8,
-    );
 
     await NotificationService().sendPartnerNotification(
       houseId: _houseId!,
@@ -384,13 +371,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
 
   void _onTapDown(Offset globalPosition) {
     _interactiveScaleNotifier.value = 0.9;
-    _lastTapPosition = globalPosition;
-    _lastSpawnedPosition = globalPosition;
-    final size = MediaQuery.sizeOf(context);
-    _heartsOverlayKey.currentState?.spawnFlyingToExplosion(
-      globalPosition,
-      Offset(size.width / 2, size.height * 0.15),
-    );
     _handleLocalBump();
 
     final now = DateTime.now();
@@ -416,43 +396,14 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
         );
       }
     }
-
-    // Continuous heart spawning & haptic feedback timer - optimized for performance
-    _continuousHeartsTimer?.cancel();
-    int tickCount = 0;
-    _continuousHeartsTimer = Timer.periodic(const Duration(milliseconds: 90), (
-      timer,
-    ) {
-      if (!mounted || _isMerged) {
-        timer.cancel();
-        return;
-      }
-      _heartsOverlayKey.currentState?.spawnFlyingToExplosion(
-        _lastTapPosition,
-        Offset(
-          MediaQuery.sizeOf(context).width / 2,
-          MediaQuery.sizeOf(context).height * 0.15,
-        ),
-        count: 5,
-      );
-      tickCount++;
-      if (tickCount % 5 == 0) {
-        // Limit haptics to every ~450ms
-        HapticFeedback.lightImpact();
-      }
-    });
   }
 
   void _onTapUp() {
-    _continuousHeartsTimer?.cancel();
-    _continuousHeartsTimer = null;
     _interactiveScaleNotifier.value = 1.0;
   }
 
   void _onTapCancel() {
-    _continuousHeartsTimer?.cancel();
-    _continuousHeartsTimer = null;
-    _interactiveScaleNotifier.value = 1.0;
+    _onTapUp();
   }
 
   // ignore: unused_element
@@ -681,7 +632,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
     _interactiveScaleNotifier.dispose();
     _messagesSub?.cancel();
     _interactiveEventsSub?.cancel();
-    _continuousHeartsTimer?.cancel();
     _bumpDetector.stop();
     _mergeTimesSub?.cancel();
     _overlayListenerSub?.cancel();
@@ -707,17 +657,17 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
 
     _callRouteOpen = true;
     try {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => VideoCallScreen(
-          houseId: houseId,
-          targetHouseId: houseId, // Cùng house
-          targetName: _partnerName,
-          isVideo: isVideo,
-          callerName: _myName,
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => VideoCallScreen(
+            houseId: houseId,
+            targetHouseId: houseId, // Cùng house
+            targetName: _partnerName,
+            isVideo: isVideo,
+            callerName: _myName,
+          ),
         ),
-      ),
-    );
+      );
     } finally {
       _callRouteOpen = false;
     }
@@ -756,9 +706,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
               ),
             ),
 
-          // Isolated tap hearts particle overlay
-          TapHeartsOverlay(key: _heartsOverlayKey, style: _activeStyle),
-
           // 4. Floating message bubbles
           for (final msg in _floatingMessages)
             FloatingMessageWidget(key: msg.id, message: msg),
@@ -787,29 +734,14 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
                             isSelfReady: _iHaveBumped,
                             isPartnerReady: _partnerHasBumped,
                             onAccessibleTap: _handleLocalBump,
+                            heartPulse: _heartPulse,
+                            heartStyle: _activeStyle,
                             photoUrls: latestPhotos
                                 .map((photo) => photo['imageUrl'].toString())
                                 .toList(growable: false),
                             onPointerDown: (event) =>
                                 _onTapDown(event.position),
-                            onPointerMove: (event) {
-                              _lastTapPosition = event.position;
-                              final lastPosition = _lastSpawnedPosition;
-                              if (lastPosition == null ||
-                                  (event.position - lastPosition).distance >
-                                      18) {
-                                _lastSpawnedPosition = event.position;
-                                _heartsOverlayKey.currentState
-                                    ?.spawnFlyingToExplosion(
-                                      event.position,
-                                      Offset(
-                                        MediaQuery.sizeOf(context).width / 2,
-                                        MediaQuery.paddingOf(context).top + 120,
-                                      ),
-                                      count: 2,
-                                    );
-                              }
-                            },
+                            onPointerMove: (_) {},
                             onPointerUp: (_) => _onTapUp(),
                             onPointerCancel: (_) => _onTapCancel(),
                           ),
@@ -883,14 +815,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
           x > 0 ? x : MediaQuery.of(context).size.width / 2,
           y > 0 ? y : MediaQuery.of(context).size.height / 2,
         );
-        _heartsOverlayKey.currentState?.spawnFlyingToExplosion(
-          pos,
-          Offset(
-            MediaQuery.sizeOf(context).width / 2,
-            MediaQuery.sizeOf(context).height * 0.15,
-          ),
-          count: 5,
-        );
+        setState(() => _heartPulse++);
         if (url.isNotEmpty) {
           _spawnPhotoExplosion(
             specificItem: {

@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 
+import 'package:soullocket_app/utils/services/session/duplicate_role_detector.dart';
 import 'package:soullocket_app/utils/services/session/presence_status_formatter.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/role_utils.dart';
@@ -397,16 +398,30 @@ class PresenceService {
     }
   }
 
-  /// Kiểm tra có thiết bị khác cùng vai đang online không.
+  static const String _duplicateRoleWarnedAtPrefsKey =
+      'presence_duplicate_role_warned_at';
+
+  /// Kiểm tra có tài khoản KHÁC đang online cùng vai không.
   /// Nếu có và chưa cảnh báo trong 24h → set duplicateRoleNotifier = true.
   Future<void> _checkDuplicateRole({required int nowMs}) async {
     final houseId = _activeHouseId;
     final role = _activeRole;
     final sessionId = _mySessionId;
-    if (houseId == null || role == null || sessionId == null) return;
+    final uid = _currentUid;
+    if (houseId == null || role == null || sessionId == null || uid == null) {
+      return;
+    }
 
-    // Throttle 24h
-    final lastWarned = _lastDuplicateRoleWarnedAt;
+    // Throttle 24h, lưu vào máy để mở lại app không báo lặp.
+    final prefs = await SharedPreferences.getInstance();
+    final storedWarnedAt = prefs.getInt(
+      '${_duplicateRoleWarnedAtPrefsKey}_${uid}_$houseId',
+    );
+    final lastWarned =
+        _lastDuplicateRoleWarnedAt ??
+        (storedWarnedAt == null
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(storedWarnedAt));
     if (lastWarned != null &&
         DateTime.now().difference(lastWarned).inHours < 24) {
       return;
@@ -418,31 +433,26 @@ class PresenceService {
           .get();
       safeGet.ignore();
       final snap = await safeGet.timeout(const Duration(seconds: 3));
-      final raw = snap.value;
-      if (raw is! Map) return;
-
       final currentDeviceId = await DeviceManagerService()
           .getCurrentDeviceIdentifier();
-      var otherFreshCount = 0;
-      raw.forEach((key, value) {
-        if (key.toString() == sessionId) return; // bỏ qua session của mình
-        final ts = _readSessionTimestamp(value);
-        if (ts != null &&
-            nowMs - ts >= 0 &&
-            nowMs - ts <= onlineFreshness.inMilliseconds) {
-          // Bỏ qua nếu là cùng một thiết bị (tránh false positive khi restart/hot reload)
-          if (value is Map) {
-            final otherDeviceId = value['deviceId']?.toString();
-            if (otherDeviceId != null && otherDeviceId == currentDeviceId) {
-              return;
-            }
-          }
-          otherFreshCount++;
-        }
-      });
+      final otherFreshCount = DuplicateRoleDetector.countOtherAccountSessions(
+        snap.value,
+        mySessionId: sessionId,
+        myUid: uid,
+        myDeviceId: currentDeviceId,
+        nowMs: nowMs,
+        freshness: onlineFreshness,
+      );
 
-      if (otherFreshCount > 0) {
+      if (otherFreshCount > 0 &&
+          _currentUid == uid &&
+          _activeHouseId == houseId &&
+          _activeRole == role) {
         _lastDuplicateRoleWarnedAt = DateTime.now();
+        await prefs.setInt(
+          '${_duplicateRoleWarnedAtPrefsKey}_${uid}_$houseId',
+          _lastDuplicateRoleWarnedAt!.millisecondsSinceEpoch,
+        );
         RoleUtils.duplicateRoleNotifier.value = true;
         debugPrint(
           '[Presence] Duplicate role detected: $otherFreshCount other session(s) on $role',

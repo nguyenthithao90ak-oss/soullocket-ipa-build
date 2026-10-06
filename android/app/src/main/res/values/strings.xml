@@ -5,17 +5,4 @@
     <string name="facebook_app_id">2604105489983792</string>
     <string name="fb_login_protocol_scheme">fb2604105489983792</string>
     <string name="facebook_client_token">a140622e72ab28fe86915c2739432657</string>
-    <string name="widget_days_unit">days</string>
-    <string name="widget_since_date">Since %1$s</string>
-    <string name="widget_default_me">You</string>
-    <string name="widget_default_partner">Your love</string>
-    <string name="widget_label_couple">Couple</string>
-    <string name="widget_label_cycle">Cycle</string>
-    <string name="widget_label_calendar">Schedule</string>
-    <string name="widget_label_soul_event">Events &amp; Anniversaries</string>
-    <string name="widget_label_sleep">Sleep ☁️💤</string>
-    <string name="widget_sleep_title">COUPLE SLEEP ☁️✨</string>
-    <string name="widget_sleep_summary_default">Both awake ☀️</string>
-    <string name="widget_sleep_status_awake">☀️ Awake</string>
-    <string name="widget_sleep_time_active">Active</string>
 </resources>

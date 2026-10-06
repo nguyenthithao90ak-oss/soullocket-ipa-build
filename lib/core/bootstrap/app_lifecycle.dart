@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -147,7 +148,7 @@ void scheduleDeferredBootstrap() {
           PlatformDispatcher.instance.onError = (error, stackTrace) {
             final mappedError = AppErrorMapper.resolve(
               error,
-              fallbackMessage: 'Lỗi nền hệ thống.',
+              fallbackMessage: UiCopy.text('copy_ccfa7985a8a4'),
             );
             unawaited(
               ErrorLoggerService.instance.logError(

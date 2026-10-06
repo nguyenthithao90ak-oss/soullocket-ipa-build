@@ -1,18 +1,1 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">SoulLocket</string>
-    <string name="widget_name">Widget Cặp Đôi</string>
-    <string name="widget_days_unit">ngày</string>
-    <string name="widget_since_date">Từ %1$s</string>
-    <string name="widget_default_me">Bạn</string>
-    <string name="widget_default_partner">Người ấy</string>
-    <string name="widget_label_couple">Widget Cặp Đôi</string>
-    <string name="widget_label_cycle">Widget Chu Kỳ</string>
-    <string name="widget_label_calendar">Widget Lịch Trình</string>
-    <string name="widget_label_soul_event">Widget Sự Kiện &amp; Kỷ Niệm</string>
-    <string name="widget_label_sleep">Widget Giấc Ngủ ☁️💤</string>
-    <string name="widget_sleep_title">GIẤC NGỦ ĐÔI ☁️✨</string>
-    <string name="widget_sleep_summary_default">Cả 2 cùng thức ☀️</string>
-    <string name="widget_sleep_status_awake">☀️ Đang thức</string>
-    <string name="widget_sleep_time_active">Đang hoạt động</string>
-</resources>
+<?xml version="1.0" encoding="utf-8"?><resources><string name="app_name">SoulLocket</string><string name="widget_name">Widget Cặp Đôi</string></resources>

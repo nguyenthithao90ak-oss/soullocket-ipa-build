@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:math';
 import 'dart:ui' as ui;
 
@@ -32,10 +33,10 @@ class CollageDecor {
     required String message,
   }) {
     return CollageDecor(
-      badge: 'Dấu mốc yêu thương',
+      badge: UiCopy.text('copy_b8493e2150b5'),
       occasionLabel: occasionLabel,
       message: message,
-      footerText: 'SoulLocket cảm ơn',
+      footerText: UiCopy.text('copy_21611872b94e'),
       primary: const Color(0xFFA76F61),
       secondary: const Color(0xFFC7D4C8),
       backgroundTop: const Color(0xFFF7F0E6),
@@ -132,7 +133,7 @@ class CollageGenerator {
   }) async {
     if (images.isEmpty) return null;
     final effectiveDecor =
-        decor ?? CollageDecor.memory(occasionLabel: 'Kỷ niệm', message: '');
+        decor ?? CollageDecor.memory(occasionLabel: UiCopy.text('copy_fc45b5c58245'), message: '');
     final renderScale = options.renderScale;
     await _loadStickerImages(options.stickers);
 
@@ -1062,7 +1063,7 @@ class CollageGenerator {
     );
     _drawCenteredTextInRect(
       canvas,
-      'KHOẢNH KHẮC ĐẶC BIỆT',
+      UiCopy.text('copy_ddd02b1c9d5d'),
       ribbonRect.outerRect,
       Colors.white,
       width < 420 ? 15 : 18,
@@ -1568,7 +1569,7 @@ class CollageGenerator {
     _drawHeader(
       canvas,
       contentWidth,
-      title.isNotEmpty ? title : 'Kỷ niệm của chúng mình ❤️',
+      title.isNotEmpty ? title : UiCopy.text('copy_6acd69a50487'),
       decor,
     );
 
@@ -1661,7 +1662,7 @@ class CollageGenerator {
     _drawHeader(
       canvas,
       contentWidth,
-      title.isNotEmpty ? title : 'Kỷ niệm của chúng mình ❤️',
+      title.isNotEmpty ? title : UiCopy.text('copy_6acd69a50487'),
       decor,
     );
 
@@ -1719,7 +1720,7 @@ class CollageGenerator {
     _drawHeader(
       canvas,
       contentWidth,
-      title.isNotEmpty ? title : 'Kỷ niệm của chúng mình ❤️',
+      title.isNotEmpty ? title : UiCopy.text('copy_6acd69a50487'),
       decor,
     );
 
@@ -1828,7 +1829,7 @@ class CollageGenerator {
     _drawHeader(
       canvas,
       contentWidth,
-      title.isNotEmpty ? title : 'Kỷ niệm của chúng mình ❤️',
+      title.isNotEmpty ? title : UiCopy.text('copy_6acd69a50487'),
       decor,
     );
 
@@ -1956,7 +1957,7 @@ class CollageGenerator {
     _drawHeader(
       canvas,
       contentWidth,
-      title.isNotEmpty ? title : 'Kỷ niệm của chúng mình ❤️',
+      title.isNotEmpty ? title : UiCopy.text('copy_6acd69a50487'),
       decor,
     );
 
@@ -2089,7 +2090,7 @@ class CollageGenerator {
     _drawHeader(
       canvas,
       contentWidth,
-      title.isNotEmpty ? title : 'Kỷ niệm của chúng mình ❤️',
+      title.isNotEmpty ? title : UiCopy.text('copy_6acd69a50487'),
       decor,
     );
 
@@ -2139,7 +2140,7 @@ class CollageGenerator {
     _drawHeader(
       canvas,
       contentWidth,
-      title.isNotEmpty ? title : 'Kỷ niệm của chúng mình ❤️',
+      title.isNotEmpty ? title : UiCopy.text('copy_6acd69a50487'),
       decor,
     );
 

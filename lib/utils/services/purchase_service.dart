@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -422,7 +423,7 @@ class PurchaseService with WidgetsBindingObserver {
     } catch (error) {
       final msg = AppErrorMapper.resolve(
         error,
-        fallbackMessage: 'Không thể đồng bộ VIP lúc này.',
+        fallbackMessage: UiCopy.text('copy_bdbcec0e4d6c'),
       ).message;
       if (!msg.contains('Too many attempts')) {
         debugPrint('VIP sync error: $msg');

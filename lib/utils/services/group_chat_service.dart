@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 
 import 'package:cloud_functions/cloud_functions.dart';
@@ -26,8 +27,8 @@ class GroupChatService {
     caseSensitive: false,
   );
   static final List<String> _blockedPhrases = <String>[
-    'lừa đảo',
-    'chiếm đoạt',
+    UiCopy.text('copy_364db51a25be'),
+    UiCopy.text('copy_474fa880e585'),
     'phishing',
     'hack',
     'malware',
@@ -85,7 +86,7 @@ class GroupChatService {
   Future<GroupChatRoom> fetchGroupRoom(String groupId) async {
     final roomSnap = await _dbRef.child('groups/$groupId').get();
     if (!roomSnap.exists || roomSnap.value is! Map) {
-      throw Exception('Nhóm chat không còn tồn tại.');
+      throw UiCopyException('copy_1f23998464f3');
     }
     return GroupChatRoom.fromMap(
       groupId,
@@ -99,7 +100,7 @@ class GroupChatService {
   }) async {
     final room = await fetchGroupRoom(groupId);
     if (!isHouseMemberOfGroup(room, viewerHouseId)) {
-      throw Exception('Bạn không còn là thành viên của nhóm này.');
+      throw UiCopyException('copy_f5c8f262e423');
     }
     await _functions.httpsCallable('syncGroupChatAccess').call<void>(
       <String, dynamic>{'groupId': groupId.trim()},
@@ -110,10 +111,10 @@ class GroupChatService {
   void _detectSpam(String text) {
     final trimmed = text.trim();
     if (trimmed.isEmpty) {
-      throw Exception('Tin nhắn trống');
+      throw UiCopyException('copy_5d308b37b644');
     }
     if (trimmed.length > 1500) {
-      throw Exception('Tin nhắn quá dài');
+      throw UiCopyException('copy_19c4aaa26f5f');
     }
 
     final normalized = trimmed
@@ -124,13 +125,13 @@ class GroupChatService {
 
     for (final phrase in _blockedPhrases) {
       if (normalized.contains(phrase)) {
-        throw Exception('Tin nhắn vi phạm tiêu chuẩn cộng đồng');
+        throw UiCopyException('copy_786c1396b7bb');
       }
     }
 
     if (_repeatCharRegex.hasMatch(normalized) ||
         _repeatWordRegex.hasMatch(normalized)) {
-      throw Exception('Tin nhắn có dấu hiệu spam lặp lại');
+      throw UiCopyException('copy_8ec89d5af7d7');
     }
   }
 
@@ -148,7 +149,7 @@ class GroupChatService {
       throw const SilentRapidActionBlockException();
     }
     if (cooldown >= 0) {
-      throw Exception('Bạn gửi hơi nhanh. Vui lòng chờ một lát rồi thử lại.');
+      throw UiCopyException('copy_d9661cb7655a');
     }
     throw Exception(
       cooldown > 0
@@ -182,7 +183,7 @@ class GroupChatService {
         groupId: data['groupId']?.toString().trim() ?? '',
         name: data['name']?.toString().trim().isNotEmpty == true
             ? data['name'].toString().trim()
-            : 'Nhóm chat',
+            : UiCopy.text('copy_eb9036bf8765'),
         memberHouseIds: (data['memberHouseIds'] as List? ?? const [])
             .map((item) => item.toString().trim())
             .where((item) => item.isNotEmpty)
@@ -196,7 +197,7 @@ class GroupChatService {
       if (message != null && message.isNotEmpty) {
         throw Exception(message);
       }
-      throw Exception('Không thể tạo nhóm chat lúc này.');
+      throw UiCopyException('copy_e19477281240');
     }
   }
 
@@ -250,10 +251,10 @@ class GroupChatService {
   }) async {
     final nextName = name.trim();
     if (nextName.isEmpty) {
-      throw Exception('Tên nhóm không được để trống.');
+      throw UiCopyException('copy_79fdef77def1');
     }
     if (nextName.length > 50) {
-      throw Exception('Tên nhóm tối đa 50 ký tự.');
+      throw UiCopyException('copy_f6be47a34bad');
     }
     if ((actorHouseId ?? '').trim().isNotEmpty) {
       await requireMemberRoom(
@@ -274,7 +275,7 @@ class GroupChatService {
       if (message != null && message.isNotEmpty) {
         throw Exception(message);
       }
-      throw Exception('Không thể đổi tên nhóm lúc này.');
+      throw UiCopyException('copy_f8aeb4013d6f');
     }
   }
 
@@ -285,13 +286,11 @@ class GroupChatService {
   }) async {
     final uid = _auth.currentUser?.uid.trim();
     if (uid == null || uid.isEmpty) {
-      throw Exception(
-        'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại rồi thử tiếp.',
-      );
+      throw UiCopyException('copy_afdd2528b4bd');
     }
     final normalizedReason = reason.trim();
     if (normalizedReason.isEmpty) {
-      throw Exception('Hãy chọn lý do báo cáo.');
+      throw UiCopyException('copy_6d0814fa4b91');
     }
     await requireMemberRoom(groupId: groupId, viewerHouseId: reporterHouseId);
     await FirebaseFirestore.instance.collection('reports').add({
@@ -431,7 +430,7 @@ class GroupChatService {
                       return;
                     }
                     controller.addError(
-                      Exception('Bạn không còn là thành viên của nhóm này.'),
+                      UiCopyException('copy_f5c8f262e423'),
                     );
                   },
                 );

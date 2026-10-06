@@ -13,6 +13,7 @@ import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'secure_storage_service.dart';
 import 'device_manager_client.dart';
 import 'device_registration_queue.dart';
+import 'auth/auth_house_context_service.dart';
 
 class DeviceTrustState {
   static const Duration autoTrustDelay = Duration(hours: 12);
@@ -241,9 +242,17 @@ class DeviceManagerService implements DeviceManagerClient {
     try {
       if (!await isSecurityDeviceSignalsAllowed()) return;
       _requireSession(uid);
-      await _registrationQueue.run(uid, () async {
+      final houseHint = await AuthHouseContextService.quickHouseId(
+        firebaseAuth: _auth,
+      );
+      _requireSession(uid);
+      await _registrationQueue.run('$uid:${houseHint ?? ''}', () async {
         final identity = await DeviceInstallationIdentity.forUid(uid);
         _requireSession(uid);
+        final scope = await _loadListingForIdentity(uid, identity);
+        if (scope.policyVersion != 2) {
+          throw StateError('Device management policy upgrade required');
+        }
         final deviceInfo = await _getDeviceInfo();
         if (!await isSecurityDeviceSignalsAllowed()) {
           throw StateError('Device signals consent revoked');
@@ -251,7 +260,11 @@ class DeviceManagerService implements DeviceManagerClient {
         _requireSession(uid);
         await CloudFunctionsHelper.callSecure<dynamic>(
           'registerCurrentDeviceSecure',
-          payload: {...deviceInfo, ...identity.payload},
+          payload: {
+            ...deviceInfo,
+            ...identity.payload,
+            'houseId': scope.houseId,
+          },
           timeout: const Duration(seconds: 10),
           requireAppCheck: true,
           throwOriginalException: true,
@@ -436,6 +449,13 @@ class DeviceManagerService implements DeviceManagerClient {
     final uid = _auth.currentUser?.uid ?? '';
     _requireSession(uid);
     final identity = await DeviceInstallationIdentity.forUid(uid);
+    return _loadListingForIdentity(uid, identity);
+  }
+
+  Future<DeviceManagerListing> _loadListingForIdentity(
+    String uid,
+    DeviceInstallationIdentity identity,
+  ) async {
     _requireSession(uid);
     final result = await CloudFunctionsHelper.callSecure<dynamic>(
       'getDeviceListSecure',
@@ -448,24 +468,7 @@ class DeviceManagerService implements DeviceManagerClient {
       throwOriginalException: true,
     );
     _requireSession(uid);
-    final rawDevices = result.data is Map ? result.data['devices'] : null;
-    if (rawDevices is! List) {
-      throw const FormatException('Invalid device list response');
-    }
-    final devices = rawDevices
-        .whereType<Map>()
-        .map((device) => <String, dynamic>{
-          ...Map<String, dynamic>.from(device),
-          'can_manage': result.data['policyVersion'] == 2 && device['can_manage'] == true,
-        })
-        .toList(growable: false);
-    return DeviceManagerListing(
-      houseId: result.data['houseId']?.toString() ?? '',
-      devices: devices,
-      management: result.data['policyVersion'] == 2 && result.data['management'] is Map
-          ? Map<String, dynamic>.from(result.data['management'])
-          : const {'role': 'unverified', 'canManage': false},
-    );
+    return DeviceManagerListing.fromServer(result.data);
   }
 
   /// Duyệt thiết bị đang ở trạng thái pending

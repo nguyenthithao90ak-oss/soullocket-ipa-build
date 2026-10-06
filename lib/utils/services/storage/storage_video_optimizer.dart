@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -33,15 +34,13 @@ class StorageVideoOptimizer {
       final sizeMb = length / (1024 * 1024);
 
       if (sizeMb > maxHardVideoSizeMb) {
-        throw Exception(
-          'Video quá lớn (${sizeMb.toStringAsFixed(1)} MB). Vui lòng chọn video ngắn hơn hoặc dưới ${maxHardVideoSizeMb.toInt()} MB.',
-        );
+        throw UiCopyException('copy_6d8531b0bda3', {'value1': sizeMb.toStringAsFixed(1), 'value2': maxHardVideoSizeMb.toInt()});
       }
 
       String? warning;
       if (sizeMb > maxRecommendedVideoSizeMb) {
         warning =
-            'Video của bạn khá nặng (${sizeMb.toStringAsFixed(1)} MB). Việc tải lên có thể mất nhiều thời gian hơn.';
+            UiCopy.text('copy_9da52327c5ce', {'value1': sizeMb.toStringAsFixed(1)});
         debugPrint('[StorageVideoOptimizer] Warning: $warning');
       }
 

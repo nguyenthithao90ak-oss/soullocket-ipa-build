@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'l10n_service.dart';
@@ -38,7 +39,7 @@ class SecurityService {
   factory SecurityService() => _instance;
   SecurityService._internal() {
     _lastSpamReason =
-        'Bạn đang thao tác quá nhanh. Vui lòng chờ một lát rồi thử lại.';
+        UiCopy.text('copy_cd9cccbb3ecb');
   }
 
   // Throttling / Spam detection
@@ -61,7 +62,7 @@ class SecurityService {
   bool _isProxyAtLogin = false;
   DateTime? _lastProxyCheck;
   String _lastSpamReason =
-      'Bạn đang thao tác quá nhanh. Vui lòng chờ một lát rồi thử lại.';
+      UiCopy.text('copy_cd9cccbb3ecb');
 
   void setProxyAtLogin(bool value) {
     _isProxyAtLogin = value;
@@ -182,10 +183,10 @@ class SecurityService {
       final hash = sha256.convert(utf8.encode(text)).toString();
       if (_lastContentHash[actionType] == hash) {
         _lastSpamReason =
-            'Nội dung này bạn vừa mới đăng xong. Đừng đăng trùng lặp nhé!';
+            UiCopy.text('copy_5b39ec7d1ede');
         _logSecurityAlert(
           'spam_duplicate_content',
-          'Hành động: $actionType. Nội dung trùng lặp, độ dài: ${text.length}.',
+          UiCopy.text('copy_567527bb6722', {'value1': actionType, 'value2': text.length}),
           'low',
         );
         return true;
@@ -195,10 +196,10 @@ class SecurityService {
       // 2. Kiểm tra lặp từ quá mức (Advanced word repetition)
       if (_isHighlyRepetitive(text)) {
         _lastSpamReason =
-            'Nội dung có dấu hiệu lặp bất thường. Vui lòng chỉnh lại trước khi gửi.';
+            UiCopy.text('copy_bb5a0ac4b12e');
         _logSecurityAlert(
           'spam_repetitive_words',
-          'Hành động: $actionType. Nội dung lặp bất thường, độ dài: ${text.length}.',
+          UiCopy.text('copy_fb36d2e8725a', {'value1': actionType, 'value2': text.length}),
           'medium',
         );
         return true;
@@ -220,10 +221,10 @@ class SecurityService {
     // Check if count exceeds max
     if (_actionHistory[actionType]!.length > _maxActionsPerMinute) {
       _lastSpamReason =
-          'Bạn đang thao tác quá nhanh. Vui lòng chờ một lát rồi thử lại.';
+          UiCopy.text('copy_cd9cccbb3ecb');
       _logSecurityAlert(
         'spam_rate_limit',
-        'Hành động: $actionType. Vượt quá $_maxActionsPerMinute lần/phút.',
+        UiCopy.text('copy_504825884135', {'value1': actionType, 'value2': _maxActionsPerMinute}),
         'high',
       );
       return true;
@@ -601,7 +602,7 @@ class SecurityService {
     final message = _runtimeRiskService.messageFor(
       verdict,
       fallback:
-          'Phát hiện thao tác lặp bất thường. Hãy tắt auto click hoặc chờ một lúc rồi thử lại.',
+          UiCopy.text('copy_7fd745475695'),
     );
 
     if (verdict.effectiveRisk != SecurityProtectionRiskLevel.allow) {
@@ -691,7 +692,7 @@ class SecurityService {
   String _formatMilliseconds(int value) {
     if (value >= 1000) {
       final seconds = (value / 1000).toStringAsFixed(value >= 2000 ? 0 : 1);
-      return '$seconds giây';
+      return UiCopy.text('copy_a2626da20f60', {'value1': seconds});
     }
     return '$value ms';
   }

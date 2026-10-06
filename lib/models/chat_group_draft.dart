@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:soullocket_app/views/chat/chat_message_preview.dart'
     show repairMojibakeText;
 
@@ -30,7 +31,7 @@ class ChatGroupDraft {
 
   factory ChatGroupDraft.fromJson(Map<String, dynamic> json) {
     final nameVal = json['name']?.toString().trim() ?? '';
-    final name = nameVal.isNotEmpty ? repairMojibakeText(nameVal) : 'Nhóm mới';
+    final name = nameVal.isNotEmpty ? repairMojibakeText(nameVal) : UiCopy.text('copy_558bb2746b83');
     return ChatGroupDraft(
       id: json['id']?.toString() ?? '',
       name: name,

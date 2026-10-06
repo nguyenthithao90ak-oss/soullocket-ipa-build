@@ -1,7 +1,6 @@
-import 'dart:math' as math;
-
 import 'soul_merge_design.dart';
 import 'soul_merge_photo_viewer.dart';
+import 'soul_merge_touch_heart.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
@@ -19,6 +18,8 @@ class SoulMergeInteractionStrip extends StatelessWidget {
     this.isSelfReady = false,
     this.isPartnerReady = false,
     this.onAccessibleTap,
+    this.heartPulse = 0,
+    this.heartStyle = 'basic',
   });
 
   final ValueNotifier<double> scale;
@@ -32,6 +33,8 @@ class SoulMergeInteractionStrip extends StatelessWidget {
   final bool isSelfReady;
   final bool isPartnerReady;
   final VoidCallback? onAccessibleTap;
+  final int heartPulse;
+  final String heartStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +53,7 @@ class SoulMergeInteractionStrip extends StatelessWidget {
         : context.tr('p4_soul_touch_hint');
     return Container(
       key: const ValueKey('soul-merge-interaction-strip'),
-      constraints: const BoxConstraints(minHeight: 90),
+      constraints: const BoxConstraints(minHeight: 112),
       margin: const EdgeInsets.symmetric(horizontal: 14),
       padding: const EdgeInsetsDirectional.fromSTEB(12, 10, 6, 10),
       decoration: BoxDecoration(
@@ -82,32 +85,24 @@ class SoulMergeInteractionStrip extends StatelessWidget {
                   builder: (context, value, child) => Row(
                     children: [
                       AnimatedScale(
-                        scale: value,
+                        scale: value < 1 ? .97 : 1,
                         duration: MediaQuery.disableAnimationsOf(context)
                             ? Duration.zero
                             : const Duration(milliseconds: 100),
                         child: RepaintBoundary(
                           child: SizedBox.square(
-                            dimension: 66,
-                            child: CustomPaint(
-                              painter: _TouchRingPainter(
-                                colors: colors,
-                                active: value < 1 || isMerged || isPartnerReady,
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  isMerged
-                                      ? Icons.favorite_rounded
-                                      : Icons.fingerprint_rounded,
-                                  size: 29,
-                                  color: colors.rose,
-                                ),
-                              ),
+                            dimension: 90,
+                            child: SoulMergeTouchHeart(
+                              pressed: value < 1,
+                              partnerReady: isPartnerReady,
+                              connected: isMerged,
+                              pulse: heartPulse,
+                              style: heartStyle,
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 6),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,47 +151,4 @@ class SoulMergeInteractionStrip extends StatelessWidget {
       ),
     );
   }
-}
-
-class _TouchRingPainter extends CustomPainter {
-  const _TouchRingPainter({required this.colors, required this.active});
-  final SoulMergeColors colors;
-  final bool active;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = size.center(Offset.zero);
-    final radius = size.width / 2;
-    canvas.drawCircle(center, radius - 6, Paint()..color = colors.surface);
-    final stroke = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.4
-      ..strokeCap = StrokeCap.round;
-    final ring = Rect.fromCircle(center: center, radius: radius - 2);
-    canvas.drawArc(
-      ring,
-      -math.pi * .42,
-      math.pi * .82,
-      false,
-      stroke..color = colors.rose.withValues(alpha: active ? 1 : .55),
-    );
-    canvas.drawArc(
-      ring,
-      math.pi * .58,
-      math.pi * .82,
-      false,
-      stroke
-        ..color = const Color(0xFF9A8CB4).withValues(alpha: active ? 1 : .55),
-    );
-    canvas.drawCircle(Offset(center.dx, 2), 2.8, Paint()..color = colors.rose);
-    canvas.drawCircle(
-      Offset(center.dx, size.height - 2),
-      2.8,
-      Paint()..color = const Color(0xFF9A8CB4),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _TouchRingPainter oldDelegate) =>
-      active != oldDelegate.active || colors.dark != oldDelegate.colors.dark;
 }

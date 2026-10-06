@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
@@ -217,7 +218,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     for (final item in _filteredItems) {
       final dateKey = item.addedAt != null
           ? '${item.addedAt!.day}/${item.addedAt!.month}/${item.addedAt!.year}'
-          : 'Không rõ';
+          : UiCopy.text('copy_988a61b595c6');
       map.putIfAbsent(dateKey, () => []).add(item);
     }
     final sortedKeys = map.keys.toList()

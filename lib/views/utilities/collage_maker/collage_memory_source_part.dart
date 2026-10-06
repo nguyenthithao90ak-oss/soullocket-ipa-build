@@ -213,6 +213,6 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
     if (parts.length != 2) {
       return key;
     }
-    return 'tháng ${parts[1]}/${parts[0]}';
+    return UiCopy.text('copy_fb0b15c2163c', {'value1': parts[1], 'value2': parts[0]});
   }
 }

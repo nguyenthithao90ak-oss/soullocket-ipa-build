@@ -21,7 +21,6 @@ import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Shader
 import android.net.Uri
-import android.os.PowerManager
 import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
@@ -29,9 +28,6 @@ import es.antonborri.home_widget.HomeWidgetLaunchIntent
 import es.antonborri.home_widget.HomeWidgetPlugin
 import es.antonborri.home_widget.HomeWidgetProvider
 import java.io.File
-import java.time.LocalDate
-import java.time.ZonedDateTime
-import java.time.temporal.ChronoUnit
 import org.json.JSONArray
 import kotlin.math.cos
 import kotlin.math.sin
@@ -124,25 +120,13 @@ class WidgetCoupleProvider : HomeWidgetProvider() {
             }
             return
         }
-        if (intent.action != ACTION_WIDGET_REFRESH &&
-            intent.action != Intent.ACTION_TIME_CHANGED &&
-            intent.action != Intent.ACTION_TIMEZONE_CHANGED &&
-            intent.action != Intent.ACTION_LOCALE_CHANGED
-        ) return
+        if (intent.action != ACTION_WIDGET_REFRESH) return
 
         val appWidgetManager = AppWidgetManager.getInstance(context)
         val provider = ComponentName(context, WidgetCoupleProvider::class.java)
         val appWidgetIds = appWidgetManager.getAppWidgetIds(provider)
         if (appWidgetIds.isEmpty()) {
             cancelScheduledRefresh(context)
-            return
-        }
-
-        // Nhịp hoạt ảnh 6 giây: không vẽ lại (giải mã ảnh, dựng bitmap) khi màn
-        // hình đang tắt, chỉ hẹn lại để tiếp tục khi người dùng mở máy.
-        val power = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
-        if (intent.action == ACTION_WIDGET_REFRESH && power?.isInteractive == false) {
-            scheduleNextRefresh(context)
             return
         }
 
@@ -244,10 +228,8 @@ class WidgetCoupleProvider : HomeWidgetProvider() {
                         )
                     }
 
-                    val name1 = widgetData.getString("name1", null)
-                        ?: context.getString(R.string.widget_default_me)
-                    val name2 = widgetData.getString("name2", null)
-                        ?: context.getString(R.string.widget_default_partner)
+                    val name1 = widgetData.getString("name1", "Bạn") ?: "Bạn"
+                    val name2 = widgetData.getString("name2", "Người ấy") ?: "Người ấy"
                     setTextViewText(R.id.tv_name_1, name1)
                     setTextViewText(R.id.tv_name_2, name2)
 
@@ -299,22 +281,15 @@ class WidgetCoupleProvider : HomeWidgetProvider() {
                     setViewVisibility(R.id.tv_stars_1, View.GONE)
                     setViewVisibility(R.id.tv_stars_2, View.GONE)
 
-                    // Tự tính từ ngày yêu để số ngày tăng qua nửa đêm kể cả khi
-                    // chưa mở app; chỉ dùng số đã lưu khi thiếu ngày bắt đầu.
-                    val daysCount = resolveDaysCount(widgetData)
-                    val dayUnit = resolveDayUnit(context, widgetData)
-                    setTextViewText(R.id.tv_days, "$daysCount\n$dayUnit")
-                    setTextViewText(R.id.tv_days_countdown, daysCount)
-                    setTextViewText(R.id.tv_days_countdown_unit, dayUnit)
+                    val daysRaw = widgetData.getString("daysText", "0") ?: "0"
+                    setTextViewText(R.id.tv_days, formatDaysStackedText(daysRaw))
+                    setTextViewText(R.id.tv_days_countdown, extractDaysDigits(daysRaw))
                     val loveDateText = widgetData.getString("loveDateText", "") ?: ""
                     if (loveDateText.isBlank()) {
                         setViewVisibility(R.id.tv_love_date, View.GONE)
                     } else {
                         setViewVisibility(R.id.tv_love_date, View.VISIBLE)
-                        setTextViewText(
-                            R.id.tv_love_date,
-                            context.getString(R.string.widget_since_date, loveDateText.trim())
-                        )
+                        setTextViewText(R.id.tv_love_date, formatLoveDateLabel(loveDateText))
                     }
 
                     val avatar1Path = widgetData.getString("avatar1Path", null)
@@ -414,8 +389,7 @@ class WidgetCoupleProvider : HomeWidgetProvider() {
         if (shouldKeepRefreshing) {
             scheduleNextRefresh(context)
         } else {
-            // Không có hoạt ảnh: chỉ cần thức dậy sau nửa đêm để tăng số ngày.
-            scheduleMidnightRefresh(context)
+            cancelScheduledRefresh(context)
         }
     }
 
@@ -450,22 +424,18 @@ class WidgetCoupleProvider : HomeWidgetProvider() {
         return if (digits.isBlank()) "0" else digits
     }
 
-    /** Số ngày theo lịch từ ngày yêu (ngày bắt đầu là ngày 0), giống app. */
-    private fun resolveDaysCount(widgetData: SharedPreferences): String {
-        val raw = widgetData.getString("startDateRaw", "")?.trim().orEmpty()
-        if (raw.length >= 10) {
-            val start = runCatching { LocalDate.parse(raw.substring(0, 10)) }.getOrNull()
-            if (start != null) {
-                val days = ChronoUnit.DAYS.between(start, LocalDate.now()).coerceAtLeast(0)
-                return days.toString()
-            }
-        }
-        return extractDaysDigits(widgetData.getString("daysText", "0") ?: "0")
+    private fun formatDaysStackedText(daysRaw: String): String {
+        return "${extractDaysDigits(daysRaw)}\nng\u00E0y"
     }
 
-    private fun resolveDayUnit(context: Context, widgetData: SharedPreferences): String {
-        val saved = widgetData.getString("dayUnitText", "")?.trim().orEmpty()
-        return saved.ifEmpty { context.getString(R.string.widget_days_unit) }
+    private fun formatDaysText(daysRaw: String): String {
+        val digits = Regex("\\d+").find(daysRaw)?.value ?: daysRaw.trim()
+        return if (digits.isBlank()) "0 ngày" else "$digits ngày"
+    }
+
+    private fun formatLoveDateLabel(loveDateRaw: String): String {
+        val normalized = loveDateRaw.trim()
+        return if (normalized.isBlank()) "" else "Tu $normalized"
     }
 
     private fun getDiaryImagePaths(widgetData: SharedPreferences): List<String> {
@@ -499,21 +469,8 @@ class WidgetCoupleProvider : HomeWidgetProvider() {
     }
 
     private fun scheduleNextRefresh(context: Context) {
-        scheduleRefreshAt(context, System.currentTimeMillis() + REFRESH_INTERVAL_MS)
-    }
-
-    private fun scheduleMidnightRefresh(context: Context) {
-        // RTC (không đánh thức máy): nếu máy đang ngủ, widget cập nhật ngay
-        // lần đầu người dùng mở màn hình sau nửa đêm.
-        val nextMidnight = ZonedDateTime.now()
-            .toLocalDate()
-            .plusDays(1)
-            .atStartOfDay(ZonedDateTime.now().zone)
-        scheduleRefreshAt(context, nextMidnight.toInstant().toEpochMilli() + 30_000L)
-    }
-
-    private fun scheduleRefreshAt(context: Context, triggerAtMillis: Long) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
+        val triggerAtMillis = System.currentTimeMillis() + REFRESH_INTERVAL_MS
         alarmManager.set(
             AlarmManager.RTC,
             triggerAtMillis,

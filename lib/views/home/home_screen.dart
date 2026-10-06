@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'package:soullocket_app/utils/calendar/calendar_civil_date.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
@@ -23,6 +24,7 @@ import 'package:soullocket_app/models/account_deletion_status.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import '../../utils/services/offline_cache_service.dart';
+import '../../utils/services/auth/auth_house_context_service.dart';
 
 import '../../core/sl_route.dart';
 import '../../core/sl_theme.dart';
@@ -548,7 +550,7 @@ class _HomeScreenState extends State<HomeScreen>
       final prefs = await SharedPreferences.getInstance();
       final houseId = prefs.getString('il_house_id');
       final role = prefs.getString('il_role') ?? 'user1';
-      final partnerName = prefs.getString('overlay_partner_name') ?? 'Người ấy';
+      final partnerName = prefs.getString('overlay_partner_name') ?? UiCopy.text('copy_145933221191');
 
       if (houseId != null && houseId.isNotEmpty) {
         final payloadText = jsonEncode({
@@ -689,16 +691,34 @@ class _HomeScreenState extends State<HomeScreen>
     if (!mounted || !RoleUtils.duplicateRoleNotifier.value) return;
     // Reset ngay để chỉ hiện 1 lần, throttle 24h được xử lý trong PresenceService.
     RoleUtils.duplicateRoleNotifier.value = false;
+    unawaited(_showDuplicateRoleWarning());
+  }
+
+  /// Chỉ hiện khi một tài khoản KHÁC dùng nhầm vai của mình; nhãn Nam/Nữ theo
+  /// cờ `genderSwapped` của nhà (đọc từ cache cài đặt Home nếu có).
+  Future<void> _showDuplicateRoleWarning() async {
     final role = RoleUtils.roleNotifier.value ?? RoleUtils.currentRoleSync();
-    final roleLabel = role == 'user2'
-        ? L10nService().translate('Nữ')
-        : L10nService().translate('Nam');
+    final houseId = (await AuthHouseContextService.quickHouseId())?.trim();
+    final cacheKey = 'home_settings_${houseId ?? ''}';
+    final settings = houseId == null || houseId.isEmpty
+        ? null
+        : OfflineCacheService.getMemoryCache(cacheKey) ??
+              OfflineCacheService.loadCacheSync(cacheKey);
+    if (!mounted) return;
+    final isFemale = RoleUtils.isFemaleRole(
+      role,
+      genderSwapped: RoleUtils.readGenderSwapped(settings),
+    );
     ScaffoldMessenger.of(context).showSnackBar(
       SLSnackBar(
         content: Text(
-          '⚠️ ${L10nService().translate('Bạn đang trùng vai')} $roleLabel — ${L10nService().translate('một thiết bị khác cũng đang đăng nhập cùng vai.')}',
+          L10nService().format('presence_duplicate_role_warning', {
+            'gender': L10nService().translate(
+              isFemale ? 'auth_gender_female' : 'auth_gender_male',
+            ),
+          }),
         ),
-        duration: const Duration(seconds: 5),
+        duration: const Duration(seconds: 6),
         behavior: SnackBarBehavior.floating,
       ),
     );

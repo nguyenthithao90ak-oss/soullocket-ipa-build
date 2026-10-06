@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:flutter/foundation.dart';
 import 'core/constants/app_locale_registry.dart';
 import 'utils/services/market_service.dart';
@@ -481,7 +482,7 @@ class StartupErrorApp extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        'SoulLocket © ${DateTime.now().year} — Tame Trương Việt Hoàng.\nMọi hành vi crack, mod, can thiệp trái phép đều vi phạm bản quyền.',
+                        UiCopy.text('copy_6c16230af790', {'value1': DateTime.now().year}),
                         style: SLTheme.quicksand(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,

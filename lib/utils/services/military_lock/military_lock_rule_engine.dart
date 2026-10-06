@@ -85,15 +85,15 @@ abstract final class _MilitaryLockRuleEngine {
   static String? validateCustomLock(String value) {
     final trimmed = value.trim();
     if (trimmed.isEmpty) {
-      return 'Hãy đặt mã PIN từ 4 đến 8 số.';
+      return UiCopy.text('copy_c94862e5678c');
     }
 
     final isNumericPin = RegExp(r'^\d{4,8}$').hasMatch(trimmed);
     if (!isNumericPin) {
-      return 'Mã PIN phải là dãy số từ 4 đến 8 chữ số.';
+      return UiCopy.text('copy_131d9155cbac');
     }
     if (trimmed.split('').toSet().length == 1) {
-      return 'Mã PIN không nên dùng cùng 1 chữ số lặp lại.';
+      return UiCopy.text('copy_cb3bc92f765a');
     }
 
     var ascending = true;
@@ -109,7 +109,7 @@ abstract final class _MilitaryLockRuleEngine {
       }
     }
     if (ascending || descending) {
-      return 'Mã PIN không nên là dãy số quen thuộc dễ đoán.';
+      return UiCopy.text('copy_4ac036378812');
     }
 
     return null;

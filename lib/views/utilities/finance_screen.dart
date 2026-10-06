@@ -1,8 +1,10 @@
 import 'package:soullocket_app/utils/money_format.dart';
 import 'package:soullocket_app/utils/locale_date_format.dart';
-import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../utils/house_money_currency.dart';
+import '../../utils/finance_category.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -42,72 +44,99 @@ class _FinanceScreenState extends State<FinanceScreen> {
   );
 
   String _transactionType = 'out';
-  String _category = L10nService().translate('util_nung_ee6149');
+  String _category = 'food';
+  bool _saving = false;
+  int _houseGeneration = 0;
   int _totalBalance = 0, _totalIn = 0, _totalOut = 0;
 
   Map<String, dynamic>? _budgetPlan;
   Map<String, dynamic>? _savingsGoal;
   List<Map<String, dynamic>> _allTransactions = [];
   String _transactionSignature = '';
-  late final Stream<DatabaseEvent> _budgetStream;
+  late Stream<DatabaseEvent> _budgetStream;
   StreamSubscription<DatabaseEvent>? _budgetPlanSub;
   StreamSubscription<DatabaseEvent>? _savingsGoalSub;
 
-  final List<String> _categories = [
-    L10nService().translate('util_nung_ee6149'),
-    L10nService().translate('util_giitr_79b00e'),
-    L10nService().translate('util_qucp_f4e023'),
-    L10nService().translate('util_hnh_94d189'),
-    L10nService().translate('util_sinhhot_f4ce1b'),
-    L10nService().translate('util_dulch_c7cc56'),
-    L10nService().translate('util_thucmen_ba87cf'),
-    L10nService().translate('util_khc_dd4bad'),
-  ];
+  List<String> get _categories => FinanceCategory.labelKeys.keys.toList();
   // Loại tiền chung của nhà (VND, USD, EUR...), mặc định theo khu vực.
   String _houseCurrency = '';
   StreamSubscription<DatabaseEvent>? _currencySub;
-  NumberFormat get _fmt => MoneyFormat.forCurrency(_houseCurrency);
+  NumberFormat get _fmt =>
+      MoneyFormat.forCurrency(_houseCurrency.isEmpty ? 'VND' : _houseCurrency);
 
   @override
   void initState() {
     super.initState();
+    _bindHouse();
+  }
+
+  @override
+  void didUpdateWidget(covariant FinanceScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.houseId != widget.houseId) _bindHouse();
+  }
+
+  void _bindHouse() {
+    final generation = ++_houseGeneration;
+    final houseId = widget.houseId;
+    _saving = false;
+    _houseCurrency = '';
+    _allTransactions = [];
+    _transactionSignature = '';
+    _totalBalance = _totalIn = _totalOut = 0;
+    _budgetPlan = null;
+    _savingsGoal = null;
     _budgetStream = _dbRef
-        .child('houses/${widget.houseId}/budget')
+        .child('houses/$houseId/budget')
         .limitToLast(200)
         .onValue;
     _loadBudgetPlan();
     _loadSavingsGoal();
+    _currencySub?.cancel();
     _currencySub = _dbRef
-        .child(MoneyFormat.houseCurrencyPath(widget.houseId))
+        .child(MoneyFormat.houseCurrencyPath(houseId))
         .onValue
         .listen((event) {
-          if (!mounted) return;
-          setState(() {
-            _houseCurrency = MoneyFormat.normalizeCode(event.snapshot.value);
-          });
+          if (!mounted || generation != _houseGeneration) return;
+          setState(
+            () => _houseCurrency = MoneyFormat.normalizeCode(
+              event.snapshot.value,
+            ),
+          );
         }, onError: (_) {});
   }
 
-  /// Ghi loại tiền lần đầu nhà dùng Tài chính để hai người luôn thấy cùng
-  /// một đơn vị dù khác ngôn ngữ/khu vực.
-  void _ensureHouseCurrency() {
-    if (_houseCurrency.isNotEmpty) return;
-    final code = MoneyFormat.defaultCurrencyCode;
-    _houseCurrency = code;
-    unawaited(
-      _dbRef
-          .child(MoneyFormat.houseCurrencyPath(widget.houseId))
-          .set(code)
-          .catchError((_) {}),
+  Future<String> _ensureHouseCurrency(int generation, String? uid) async {
+    final code = await HouseMoneyCurrency.ensure(
+      root: _dbRef,
+      houseId: widget.houseId,
+      isCurrent: () =>
+          mounted &&
+          generation == _houseGeneration &&
+          FirebaseAuth.instance.currentUser?.uid == uid,
     );
+    if (mounted && generation == _houseGeneration)
+      setState(() => _houseCurrency = code);
+    return code;
+  }
+
+  bool _isCurrentWrite(int generation, String? uid) =>
+      mounted &&
+      generation == _houseGeneration &&
+      FirebaseAuth.instance.currentUser?.uid == uid;
+
+  void _showWriteError(Object error) {
+    SLToast.show(context, AppErrorMapper.resolve(error).message);
   }
 
   void _loadBudgetPlan() {
+    final generation = _houseGeneration;
     _budgetPlanSub?.cancel();
     _budgetPlanSub = _dbRef
         .child('houses/${widget.houseId}/finance_plan')
         .onValue
         .listen((event) {
+          if (!mounted || generation != _houseGeneration) return;
           final raw = event.snapshot.value;
           if (event.snapshot.exists && raw is Map && mounted) {
             setState(() {
@@ -122,11 +151,13 @@ class _FinanceScreenState extends State<FinanceScreen> {
   }
 
   void _loadSavingsGoal() {
+    final generation = _houseGeneration;
     _savingsGoalSub?.cancel();
     _savingsGoalSub = _dbRef
         .child('houses/${widget.houseId}/savings_goal')
         .onValue
         .listen((event) {
+          if (!mounted || generation != _houseGeneration) return;
           final raw = event.snapshot.value;
           if (event.snapshot.exists && raw is Map && mounted) {
             setState(() {
@@ -140,43 +171,72 @@ class _FinanceScreenState extends State<FinanceScreen> {
         });
   }
 
-  void _saveBudgetPlan() {
-    final amount = int.tryParse(
-      _goalAmountController.text.replaceAll(RegExp(r'[^0-9]'), ''),
-    );
-    final days = int.tryParse(_goalDaysController.text);
-    if (amount == null || days == null || days <= 0) return;
-
-    final now = DateTime.now();
-    _ensureHouseCurrency();
-    _dbRef.child('houses/${widget.houseId}/finance_plan').set({
-      'targetAmount': amount,
-      'targetDays': days,
-      'createdAt': now.millisecondsSinceEpoch,
-      'startDate': DateFormat('yyyy-MM-dd').format(now),
-    });
-    _goalAmountController.clear();
-    _goalDaysController.clear();
-    Navigator.pop(context);
+  Future<void> _saveBudgetPlan() async {
+    if (_saving) return;
+    final amountText = _goalAmountController.text;
+    final daysText = _goalDaysController.text;
+    final amount = MoneyFormat.parseWholeAmount(amountText);
+    final days = int.tryParse(daysText);
+    if (amount == null || amount <= 0 || days == null || days <= 0) return;
+    final generation = _houseGeneration;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final houseId = widget.houseId;
+    _saving = true;
+    try {
+      await _ensureHouseCurrency(generation, uid);
+      if (!_isCurrentWrite(generation, uid)) return;
+      final now = DateTime.now();
+      await _dbRef.child('houses/$houseId/finance_plan').set({
+        'targetAmount': amount,
+        'targetDays': days,
+        'createdAt': now.millisecondsSinceEpoch,
+        'startDate': DateFormat('yyyy-MM-dd').format(now),
+      });
+      if (!_isCurrentWrite(generation, uid)) return;
+      if (_goalAmountController.text == amountText &&
+          _goalDaysController.text == daysText) {
+        _goalAmountController.clear();
+        _goalDaysController.clear();
+        Navigator.pop(context);
+      }
+    } catch (error) {
+      if (_isCurrentWrite(generation, uid)) _showWriteError(error);
+    } finally {
+      if (generation == _houseGeneration) _saving = false;
+    }
   }
 
-  void _saveSavingsGoal() {
-    final amount = int.tryParse(
-      _savingsGoalAmountController.text.replaceAll(RegExp(r'[^0-9]'), ''),
-    );
-    final name = _savingsGoalNameController.text.trim();
+  Future<void> _saveSavingsGoal() async {
+    if (_saving) return;
+    final amountText = _savingsGoalAmountController.text;
+    final nameText = _savingsGoalNameController.text;
+    final amount = MoneyFormat.parseWholeAmount(amountText);
+    final name = nameText.trim();
     if (amount == null || amount <= 0 || name.isEmpty) return;
-
-    final now = DateTime.now();
-    _ensureHouseCurrency();
-    _dbRef.child('houses/${widget.houseId}/savings_goal').set({
-      'name': name,
-      'targetAmount': amount,
-      'createdAt': now.millisecondsSinceEpoch,
-    });
-    _savingsGoalAmountController.clear();
-    _savingsGoalNameController.clear();
-    Navigator.pop(context);
+    final generation = _houseGeneration;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final houseId = widget.houseId;
+    _saving = true;
+    try {
+      await _ensureHouseCurrency(generation, uid);
+      if (!_isCurrentWrite(generation, uid)) return;
+      await _dbRef.child('houses/$houseId/savings_goal').set({
+        'name': name,
+        'targetAmount': amount,
+        'createdAt': DateTime.now().millisecondsSinceEpoch,
+      });
+      if (!_isCurrentWrite(generation, uid)) return;
+      if (_savingsGoalAmountController.text == amountText &&
+          _savingsGoalNameController.text == nameText) {
+        _savingsGoalAmountController.clear();
+        _savingsGoalNameController.clear();
+        Navigator.pop(context);
+      }
+    } catch (error) {
+      if (_isCurrentWrite(generation, uid)) _showWriteError(error);
+    } finally {
+      if (generation == _houseGeneration) _saving = false;
+    }
   }
 
   void _resetSavingsGoal() {
@@ -231,47 +291,55 @@ class _FinanceScreenState extends State<FinanceScreen> {
     );
   }
 
-  void _addTransaction() async {
-    final amountText = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
-    final amount = int.tryParse(amountText);
+  Future<void> _addTransaction() async {
+    if (_saving) return;
+    final amountText = _amountController.text;
+    final noteText = _noteController.text;
+    final amount = MoneyFormat.parseWholeAmount(amountText);
     if (amount == null || amount <= 0) {
       SLToast.show(context, context.tr('util_nhpstinhpl_99919c'));
       return;
     }
-
-    final currentSnap = await _dbRef
-        .child('houses/${widget.houseId}/budget')
-        .get();
-    if (currentSnap.exists && currentSnap.value is Map) {
-      final currentMap = currentSnap.value as Map;
-      if (currentMap.length >= 100) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SLSnackBar(
-            content: Text(context.tr('p8_finance_transaction_limit')),
-            backgroundColor: SLColors.danger,
-          ),
-        );
+    final generation = _houseGeneration;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final houseId = widget.houseId;
+    final author = widget.myName;
+    final type = _transactionType;
+    final category = _category;
+    _saving = true;
+    try {
+      final currentSnap = await _dbRef
+          .child('houses/$houseId/budget')
+          .limitToFirst(101)
+          .get();
+      if (!_isCurrentWrite(generation, uid)) return;
+      if (currentSnap.value is Map &&
+          (currentSnap.value as Map).length >= 100) {
+        SLToast.show(context, context.tr('p8_finance_transaction_limit'));
         return;
       }
+      await _ensureHouseCurrency(generation, uid);
+      if (!_isCurrentWrite(generation, uid)) return;
+      final now = DateTime.now();
+      await _dbRef.child('houses/$houseId/budget').push().set({
+        'from': author,
+        'amount': amount,
+        'type': type,
+        'category': category,
+        'note': noteText.trim(),
+        'ts': now.millisecondsSinceEpoch,
+        'time': LocaleDateFormat.dayMonthTime(now),
+      });
+      if (!_isCurrentWrite(generation, uid)) return;
+      if (_amountController.text == amountText) _amountController.clear();
+      if (_noteController.text == noteText) _noteController.clear();
+      FocusScope.of(context).unfocus();
+      HapticFeedback.mediumImpact();
+    } catch (error) {
+      if (_isCurrentWrite(generation, uid)) _showWriteError(error);
+    } finally {
+      if (generation == _houseGeneration) _saving = false;
     }
-
-    final now = DateTime.now();
-    _ensureHouseCurrency();
-    _dbRef.child('houses/${widget.houseId}/budget').push().set({
-      'from': widget.myName,
-      'amount': amount,
-      'type': _transactionType,
-      'category': _category,
-      'note': _noteController.text.trim(),
-      'ts': now.millisecondsSinceEpoch,
-      'time': LocaleDateFormat.dayMonthTime(now),
-    });
-    _amountController.clear();
-    _noteController.clear();
-    if (!mounted) return;
-    FocusScope.of(context).unfocus();
-    HapticFeedback.mediumImpact();
   }
 
   void _deleteTransaction(String key) {
@@ -311,10 +379,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
             final availableHeight =
                 mediaQuery.size.height - mediaQuery.viewInsets.bottom;
             final amount =
-                int.tryParse(
-                  _splitAmountController.text.replaceAll(RegExp(r'[^0-9]'), ''),
-                ) ??
-                0;
+                MoneyFormat.parseWholeAmount(_splitAmountController.text) ?? 0;
             final people = int.tryParse(_splitPeopleController.text) ?? 2;
             final splitResult = people > 0 ? amount / people : 0;
 
@@ -339,7 +404,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     children: [
                       TextField(
                         controller: _splitAmountController,
-                        keyboardType: TextInputType.number,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         textInputAction: TextInputAction.next,
                         autofocus: true,
                         maxLength: 12,
@@ -355,7 +422,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
                       SLSpacing.h8,
                       TextField(
                         controller: _splitPeopleController,
-                        keyboardType: TextInputType.number,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         textInputAction: TextInputAction.done,
                         maxLength: 4,
                         decoration: InputDecoration(
@@ -921,7 +990,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
             SLSpacing.h8,
             TextField(
               controller: _savingsGoalAmountController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               maxLength: 12,
               decoration: InputDecoration(
                 labelText: context.tr('util_stinmctiuv_e1bc2d'),
@@ -960,7 +1031,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
     final Map<String, double> categoryTotals = {};
     double totalOut = 0;
     for (var t in outTransactions) {
-      final cat = t['category']?.toString() ?? context.tr('util_khc_06c1f8');
+      final cat =
+          FinanceCategory.codeOf(t['category']) ??
+          t['category']?.toString() ??
+          'other';
       final amt = (t['amount'] as num?)?.toDouble() ?? 0.0;
       categoryTotals[cat] = (categoryTotals[cat] ?? 0) + amt;
       totalOut += amt;
@@ -1057,7 +1131,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                         SLSpacing.w8,
                         Expanded(
                           child: Text(
-                            e.key,
+                            FinanceCategory.label(e.key, context.tr),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: SLTheme.quicksand(
@@ -1109,7 +1183,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
           children: [
             TextField(
               controller: _goalAmountController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               maxLength: 12,
               decoration: InputDecoration(
                 labelText: context.tr('util_tngngnschd_7447b3'),
@@ -1119,7 +1195,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
             SLSpacing.h8,
             TextField(
               controller: _goalDaysController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               maxLength: 5,
               decoration: InputDecoration(
                 labelText: context.tr('util_sngypdngvd_78fb41'),
@@ -1318,7 +1396,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                       ),
                     ),
                     child: Text(
-                      cat,
+                      FinanceCategory.label(cat, context.tr),
                       style: TextStyle(
                         fontSize: 11,
                         color: isSelected ? Colors.white : SLTheme.textMuted,
@@ -1336,7 +1414,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
           // Amount input
           TextField(
             controller: _amountController,
-            keyboardType: TextInputType.number,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             style: SLTheme.quicksand(
               color: SLTheme.textMain,
               fontWeight: FontWeight.w700,
@@ -1417,7 +1495,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
           SLSpacing.h12,
           SLTheme.primaryButton(
             label:
-                '${context.tr('save')} ${_transactionType == 'in' ? context.tr('income') : context.tr('expense')} • $_category',
+                '${context.tr('save')} ${_transactionType == 'in' ? context.tr('income') : context.tr('expense')} • ${FinanceCategory.label(_category, context.tr)}',
             onPressed: _addTransaction,
           ),
         ],
@@ -1596,9 +1674,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
             delegate: SliverChildBuilderDelegate((ctx, i) {
               final item = items[i];
               final isIncome = item['type'] == 'in';
-              final catEmoji =
-                  item['category']?.toString().split(' ').first ??
-                  (isIncome ? '💚' : '❤️');
+              final catEmoji = FinanceCategory.emoji(item['category']);
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -1656,10 +1732,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            item['category'] ??
-                                (isIncome
-                                    ? context.tr('util_thunhp_63c92e')
-                                    : context.tr('util_chitiu_fbc1f6')),
+                            FinanceCategory.label(item['category'], context.tr),
                             style: SLTheme.quicksand(
                               color: SLTheme.textMain,
                               fontWeight: FontWeight.w800,

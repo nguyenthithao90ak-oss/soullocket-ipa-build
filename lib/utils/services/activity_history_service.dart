@@ -228,6 +228,9 @@ class ActivityHistoryService {
   static const _cachePrefix = 'il_activity_history_cache_v2_';
   static const _seqPrefix = 'il_activity_history_seq_v2_';
   static const _migratedPrefix = 'il_activity_history_migrated_v2_';
+  static const _trimPrefix = 'il_activity_history_trim_v1_';
+  // Người đọc luôn chỉ giữ 20 mục mới nhất; dọn bớt trên server chỉ để nhánh không phình.
+  static const Duration _remoteTrimInterval = Duration(hours: 6);
   static const maxItems = 20;
   static const _max = maxItems;
   static const int restoreWindowMs = 3 * 24 * 60 * 60 * 1000;
@@ -244,8 +247,9 @@ class ActivityHistoryService {
 
     try {
       if (ConnectivityService().isOnline) {
-        final remote = await _loadRemote(resolvedHouseId);
-        await _trimRemote(resolvedHouseId);
+        final raw = await _readRemoteRaw(resolvedHouseId);
+        final remote = _remoteEntries(resolvedHouseId, raw);
+        await _trimRemote(resolvedHouseId, raw: raw);
         final cache = await _loadCache(resolvedHouseId);
         final merged = _normalizeEntries([
           ...remote,
@@ -364,7 +368,7 @@ class ActivityHistoryService {
     if (ConnectivityService().isOnline) {
       try {
         await _entryRef(resolvedHouseId, entry.id).set(payload);
-        await _trimRemote(resolvedHouseId);
+        await _trimRemoteThrottled(resolvedHouseId);
         await _saveCache(
           resolvedHouseId,
           next
@@ -627,12 +631,21 @@ $rows
   }
 
   Future<List<ActivityHistoryEntry>> _loadRemote(String houseId) async {
-    final snapshot = await _db.ref('houses/$houseId/activity_history').get();
-    if (!snapshot.exists || snapshot.value == null) {
-      return const <ActivityHistoryEntry>[];
-    }
+    return _remoteEntries(houseId, await _readRemoteRaw(houseId));
+  }
 
-    final raw = Map<dynamic, dynamic>.from(snapshot.value as Map);
+  /// Đọc cả nhánh một lần; bước tải và bước dọn dùng chung kết quả này.
+  Future<Map<dynamic, dynamic>?> _readRemoteRaw(String houseId) async {
+    final snapshot = await _db.ref('houses/$houseId/activity_history').get();
+    if (!snapshot.exists || snapshot.value == null) return null;
+    return Map<dynamic, dynamic>.from(snapshot.value as Map);
+  }
+
+  List<ActivityHistoryEntry> _remoteEntries(
+    String houseId,
+    Map<dynamic, dynamic>? raw,
+  ) {
+    if (raw == null) return const <ActivityHistoryEntry>[];
     return _normalizeEntries(
       raw.entries.map((entry) {
         final map = Map<String, dynamic>.from(
@@ -757,13 +770,48 @@ $rows
     return values;
   }
 
-  Future<void> _trimRemote(String houseId) async {
+  /// Sau mỗi lần thêm chỉ dọn tối đa một lần mỗi [_remoteTrimInterval] cho mỗi nhà, vì dọn
+  /// cần tải cả nhánh. Không đọc được mốc dọn thì dọn như trước để nhánh không phình.
+  Future<void> _trimRemoteThrottled(String houseId) async {
     try {
-      final snapshot = await _db.ref('houses/$houseId/activity_history').get();
-      if (!snapshot.exists || snapshot.value == null) return;
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
+      final last = prefs.getInt('$_trimPrefix$houseId') ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (now >= last && now - last < _remoteTrimInterval.inMilliseconds) {
+        return;
+      }
+    } catch (_) {
+      /* Dọn như trước khi không đọc được mốc. */
+    }
+    await _trimRemote(houseId);
+  }
 
-      final raw = Map<dynamic, dynamic>.from(snapshot.value as Map);
-      final list = raw.entries.where((entry) => entry.value is Map).map((
+  Future<void> _markRemoteTrimmed(String houseId) async {
+    try {
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
+      await prefs.setInt(
+        '$_trimPrefix$houseId',
+        DateTime.now().millisecondsSinceEpoch,
+      );
+    } catch (_) {
+      /* Mốc dọn chỉ để tiết kiệm lượt đọc; mất mốc thì lần sau dọn lại. */
+    }
+  }
+
+  Future<void> _trimRemote(
+    String houseId, {
+    Map<dynamic, dynamic>? raw,
+  }) async {
+    try {
+      final source = raw ?? await _readRemoteRaw(houseId);
+      if (source == null) return;
+      await _markRemoteTrimmed(houseId);
+
+      final list = source.entries.where((entry) => entry.value is Map).map((
         entry,
       ) {
         final map = Map<String, dynamic>.from(

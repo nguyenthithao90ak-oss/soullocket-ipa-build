@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -149,7 +150,7 @@ class StorageManagedUploadHelper {
       debugPrint(
         'Lỗi khi upload ảnh: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không tải ảnh lên đám mây được.').message}',
       );
-      throw 'Không thể tải ảnh lên đám mây, vui lòng kiểm tra kết nối mạng.';
+      throw UiCopy.text('copy_dca452408db0');
     }
   }
 }

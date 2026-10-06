@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -28,7 +29,7 @@ class HouseCreationOtpRequiredException implements Exception {
   });
 
   @override
-  String toString() => 'Cần xác minh Gmail để tiếp tục tạo nhà.';
+  String toString() => UiCopy.text('copy_982f13993be4');
 }
 
 class HouseService {
@@ -151,7 +152,7 @@ class HouseService {
       'syncMyHouseMembership',
       payload: <String, dynamic>{'houseId': houseId},
       timeout: const Duration(seconds: 15),
-      fallbackErrorMessage: 'Không thể đồng bộ quyền truy cập nhà.',
+      fallbackErrorMessage: UiCopy.text('copy_ea439e6a6264'),
       throwOriginalException: true,
     );
   }
@@ -385,7 +386,7 @@ class HouseService {
     }
 
     if (user == null) {
-      throw Exception('Bạn chưa đăng nhập.');
+      throw UiCopyException('copy_5d6354a5c9ea');
     }
 
     final creationUid = user.uid;
@@ -415,9 +416,7 @@ class HouseService {
     final deviceModel = (deviceSnapshot['model'] ?? '').trim();
     final devicePlatform = (deviceSnapshot['platform'] ?? '').trim();
     if (deviceId.isEmpty) {
-      throw Exception(
-        'Không thể xác thực thiết bị để tạo nhà. Vui lòng mở lại ứng dụng và thử lại.',
-      );
+      throw UiCopyException('copy_457a7add0800');
     }
 
     try {
@@ -443,11 +442,11 @@ class HouseService {
       debugPrint('[HouseService] createHouseSecure success');
       final payload = _asStringDynamicMap(response.data);
       if (payload == null) {
-        throw Exception('Không thể tạo nhà mới lúc này.');
+        throw UiCopyException('copy_7af94c91604b');
       }
       final createdHouseId = payload['houseId']?.toString().trim() ?? '';
       if (createdHouseId.isEmpty) {
-        throw Exception('Không thể tạo nhà mới lúc này.');
+        throw UiCopyException('copy_7af94c91604b');
       }
       if (rawHouseName.isEmpty) {
         await _syncCreatedHouseDefaults(
@@ -474,26 +473,20 @@ class HouseService {
         throw Exception(L10nService().translate('auth_signup_unavailable'));
       }
       if (_isDeviceRequiredError(error)) {
-        throw Exception(
-          'Không thể xác thực thiết bị để tạo nhà. Vui lòng mở lại ứng dụng và thử lại.',
-        );
+        throw UiCopyException('copy_457a7add0800');
       }
       if (message == 'HOUSE_CREATION_EMAIL_VERIFICATION_REQUIRED') {
-        throw Exception(
-          'Bạn cần xác minh email trước khi tạo thêm nhà trên thiết bị này.',
-        );
+        throw UiCopyException('copy_570732d848d8');
       }
       if (message != null && message.isNotEmpty) {
         throw Exception(message);
       }
-      throw Exception('Không thể tạo nhà mới lúc này.');
+      throw UiCopyException('copy_7af94c91604b');
     } on TimeoutException catch (error) {
       debugPrint(
         '[HouseService] createHouseSecure timed out: ${AppErrorMapper.resolve(error, fallbackMessage: 'Tạo nhà đang mất quá nhiều thời gian.').message}',
       );
-      throw Exception(
-        'Tạo ngôi nhà đang mất quá nhiều thời gian. Vui lòng thử lại.',
-      );
+      throw UiCopyException('copy_d106c4f33dee');
     }
   }
 
@@ -544,7 +537,7 @@ class HouseService {
         }
       } else {
         final reason =
-            map?['reason'] ?? map?['message'] ?? 'Đổi mã nhà không thành công.';
+            map?['reason'] ?? map?['message'] ?? UiCopy.text('copy_351defc82d77');
         throw Exception(reason);
       }
       return success;
@@ -564,7 +557,7 @@ class HouseService {
         requireAppCheck: true,
         payload: const <String, dynamic>{},
         fallbackErrorMessage:
-            'Yêu cầu ghép nối chưa được chấp nhận hoặc đã hết hạn.',
+            UiCopy.text('copy_fae030b2a9fa'),
       );
 
       final map = _asStringDynamicMap(response.data);
@@ -599,7 +592,7 @@ class HouseService {
         }
         return;
       }
-      throw Exception('Không thể ghép nối mã nhà lúc này.');
+      throw UiCopyException('copy_6c393420932f');
     } catch (e) {
       debugPrint('[HouseService] joinHouse error: $e');
       throw Exception(

@@ -153,12 +153,12 @@ extension _MilitaryLockCooldownEvaluator on MilitaryLockService {
   String _invalidUnlockMessage(int failedAttempts) {
     final remainingAttempts = _remainingAttemptsBeforeLock(failedAttempts);
     if (remainingAttempts == 1) {
-      return 'Mã khóa chưa đúng. Còn 1 lần thử trước khi tạm khóa.';
+      return UiCopy.text('copy_31570a98c7c5');
     }
-    return 'Mã khóa chưa đúng. Còn $remainingAttempts lần thử trước khi tạm khóa.';
+    return UiCopy.text('copy_43ca2382b6a0', {'value1': remainingAttempts});
   }
 
   String _blockedUnlockMessage(int remainingSeconds) {
-    return 'Bạn đã nhập sai quá nhiều lần. Thử lại sau $remainingSeconds giây.';
+    return UiCopy.text('copy_b60ef168cbe7', {'value1': remainingSeconds});
   }
 }

@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -126,7 +127,7 @@ class DrawingStudioService {
 
   Future<String?> saveBytesToDevice(Uint8List bytes, {String? fileName}) async {
     if (kIsWeb) {
-      throw UnsupportedError('Trình duyệt hiện chưa hỗ trợ lưu trực tiếp.');
+      throw UnsupportedError(UiCopy.text('copy_2f0d2a9e6a01'));
     }
 
     final name =
@@ -156,7 +157,7 @@ class DrawingStudioService {
   }) async {
     final bytes = await _readItemBytes(item);
     if (bytes == null || bytes.isEmpty) {
-      throw StateError('Không đọc được dữ liệu tranh để lưu ra máy.');
+      throw StateError(UiCopy.text('copy_481aa0d6a0c9'));
     }
     return saveBytesToDevice(
       bytes,

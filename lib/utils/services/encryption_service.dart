@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
@@ -157,12 +158,12 @@ class EncryptionService {
       final remainingMs = _lockedUntil - now;
       final remainingMinutes = (remainingMs / 60000).ceil();
       throw StateError(
-          'Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau $remainingMinutes phút.');
+          UiCopy.text('copy_279c21c9e739', {'value1': remainingMinutes}));
     }
 
     final normalizedPassphrase = passphrase.trim();
     if (normalizedPassphrase.length < 8) {
-      throw StateError('Mật khẩu kho mật phải từ 8 ký tự.');
+      throw StateError(UiCopy.text('copy_9453e44b17fe'));
     }
 
     final metadataSnap = await _metadataRef(houseId).get();
@@ -179,7 +180,7 @@ class EncryptionService {
         (metadata['iterations'] as num?)?.toInt() ?? _pbkdf2Iterations;
 
     if (saltB64.isEmpty || verifier.isEmpty) {
-      throw StateError('Cấu hình mã hóa không hợp lệ.');
+      throw StateError(UiCopy.text('copy_3552702c5af0'));
     }
 
     final key = await _deriveKey(
@@ -190,7 +191,7 @@ class EncryptionService {
 
     if (!_constantTimeEquals(_buildVerifier(key), verifier)) {
       _incrementFailedAttempts();
-      throw StateError('Mật khẩu kho mật không đúng.');
+      throw StateError(UiCopy.text('copy_dc769f1a0fc4'));
     }
 
     // Nếu đúng pass thì reset số lần sai
@@ -210,12 +211,12 @@ class EncryptionService {
   ) async {
     final normalizedCode = recoveryCode.trim().toUpperCase();
     if (normalizedCode.length < 8) {
-      throw StateError('Mã khôi phục không hợp lệ.');
+      throw StateError(UiCopy.text('copy_0591b3cb70f5'));
     }
 
     final metadataSnap = await _metadataRef(houseId).get();
     if (!metadataSnap.exists || metadataSnap.value == null) {
-      throw StateError('Kho mật chưa được thiết lập.');
+      throw StateError(UiCopy.text('copy_848608a85f46'));
     }
 
     final metadata = Map<String, dynamic>.from(metadataSnap.value as Map);
@@ -226,7 +227,7 @@ class EncryptionService {
         (metadata['recoveryIterations'] as num?)?.toInt() ?? _pbkdf2Iterations;
 
     if (saltB64.isEmpty || verifier.isEmpty || wrappedKey.isEmpty) {
-      throw StateError('Kho mật chưa có mã khôi phục.');
+      throw StateError(UiCopy.text('copy_38cd0205f1c2'));
     }
 
     final recoveryKey = await _deriveKey(
@@ -237,7 +238,7 @@ class EncryptionService {
 
     if (!_constantTimeEquals(_buildRecoveryVerifier(recoveryKey), verifier)) {
       _incrementFailedAttempts();
-      throw StateError('Mã khôi phục không đúng.');
+      throw StateError(UiCopy.text('copy_ba5703dbdf56'));
     }
 
     final decodedKeyB64 =
@@ -287,7 +288,7 @@ class EncryptionService {
     }
     // Legacy Web format 'ENC:ivHex:ctHex' — không thể decrypt bằng session key
     // vì Web dùng house password trực tiếp. Trả thông báo để UI xử lý.
-    return '[Cần nhập mật khẩu để xem nội dung cũ]';
+    return UiCopy.text('copy_b23fac06a827');
   }
 
   /// Decrypt dữ liệu cũ bằng house password trực tiếp.
@@ -301,7 +302,7 @@ class EncryptionService {
       final key = await _deriveWebCompatKey(housePassword);
       return _aesGcmDecrypt(key, ciphertext);
     } catch (e) {
-      throw StateError('Mật khẩu không đúng hoặc dữ liệu bị hỏng.');
+      throw StateError(UiCopy.text('copy_897f812927e1'));
     }
   }
 
@@ -487,7 +488,7 @@ class EncryptionService {
     final restored = await tryRestoreKeyFromSecureStorage(houseId);
     if (restored) return _keyCache[houseId]!;
 
-    throw StateError('Kho mật chưa được mở khóa.');
+    throw StateError(UiCopy.text('copy_e2e22a1a19b7'));
   }
 
   // Lưu ý: Đã bỏ việc lưu Key vào SecureStorage theo yêu cầu.

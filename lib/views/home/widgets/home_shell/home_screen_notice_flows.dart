@@ -8,7 +8,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     final mm = dt.month.toString().padLeft(2, '0');
     final hh = dt.hour.toString().padLeft(2, '0');
     final min = dt.minute.toString().padLeft(2, '0');
-    return '$dd/$mm/${dt.year} lúc $hh:$min';
+    return UiCopy.text('copy_03dc788a1b2c', {'value1': dd, 'value2': mm, 'value3': dt.year, 'value4': hh, 'value5': min});
   }
 
   Future<void> _maybeShowPendingDeviceNotice() async {
@@ -338,7 +338,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     final month = dt.month.toString().padLeft(2, '0');
     final hour = dt.hour.toString().padLeft(2, '0');
     final minute = dt.minute.toString().padLeft(2, '0');
-    return '$day/$month/${dt.year} lúc $hour:$minute';
+    return UiCopy.text('copy_03dc788a1b2c', {'value1': day, 'value2': month, 'value3': dt.year, 'value4': hour, 'value5': minute});
   }
 
   Future<void> _maybeShowBreakupEntryNotice() async {

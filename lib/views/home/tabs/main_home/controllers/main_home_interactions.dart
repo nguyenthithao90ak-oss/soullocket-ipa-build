@@ -231,7 +231,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
 
       switch (type) {
         case 'hot':
-          title = customTitle ?? '$myName nhắc bạn uống nước';
+          title = customTitle ?? UiCopy.text('copy_2eafbdd99c7a', {'value1': myName});
           body = partnerOnline
               ? L10nService().format('ui_home_value1_is_in_a_pretty_hot_place_a451a6', {'value1': partnerName})
               : L10nService().format('ui_home_value1_hasn_t_opened_the_house_yet_29e70d', {'value1': partnerName});
@@ -243,7 +243,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
               : L10nService().format('ui_home_value1_hasn_t_opened_the_app_yet_fd0b09', {'value1': partnerName});
           break;
         case 'warmth':
-          title = customTitle ?? '$myName nhắc bạn mặc ấm';
+          title = customTitle ?? UiCopy.text('copy_23de277f1945', {'value1': myName});
           body = partnerOnline
               ? L10nService().format('ui_home_value1_is_in_a_rainy_or_cold_ee33bd', {'value1': partnerName})
               : L10nService().format('ui_home_value1_hasn_t_opened_the_house_yet_2e5983', {'value1': partnerName});
@@ -255,7 +255,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
               : L10nService().format('ui_home_value1_hasn_t_opened_the_app_yet_6d21ef', {'value1': partnerName});
           break;
         case 'kiss':
-          title = customTitle ?? '$myName gửi bạn một nụ hôn';
+          title = customTitle ?? UiCopy.text('copy_e31715d05c5d', {'value1': myName});
           body = partnerOnline
               ? L10nService().format('ui_home_value1_is_online_this_kiss_came_right_b937db', {'value1': partnerName})
               : L10nService().format('ui_home_value1_hasn_t_opened_the_house_yet_2093ea', {'value1': partnerName});
@@ -267,7 +267,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
               : L10nService().format('ui_home_value1_hasn_t_opened_the_app_yet_8fee30', {'value1': partnerName});
           break;
         case 'hug':
-          title = customTitle ?? '$myName ôm bạn một cái';
+          title = customTitle ?? UiCopy.text('copy_4849ba46efb3', {'value1': myName});
           body = partnerOnline
               ? L10nService().format('ui_home_value1_is_online_this_soft_hug_is_954a62', {'value1': partnerName})
               : L10nService().format('ui_home_value1_hasn_t_opened_the_house_yet_d30419', {'value1': partnerName});
@@ -279,7 +279,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
               : L10nService().format('ui_home_value1_hasn_t_opened_the_app_yet_845a47', {'value1': partnerName});
           break;
         case 'angry':
-          title = customTitle ?? '$myName đang dỗi bạn đó';
+          title = customTitle ?? UiCopy.text('copy_ecabb4c9cfe0', {'value1': myName});
           body = partnerOnline
               ? L10nService().format('ui_home_value1_is_online_this_love_message_appeared_57ae14', {'value1': partnerName})
               : L10nService().format('ui_home_value1_hasn_t_opened_the_house_yet_d345ce', {'value1': partnerName});
@@ -291,7 +291,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
               : L10nService().format('ui_home_value1_hasn_t_opened_the_app_yet_9c9038', {'value1': partnerName});
           break;
         case 'furious':
-          title = customTitle ?? '$myName đang tức bạn đỏ mặt luôn';
+          title = customTitle ?? UiCopy.text('copy_9e52860cd17d', {'value1': myName});
           body = partnerOnline
               ? L10nService().format('ui_home_value1_is_online_this_red_anger_appeared_e50739', {'value1': partnerName})
               : L10nService().format('ui_home_value1_hasn_t_opened_the_house_yet_0900e8', {'value1': partnerName});
@@ -303,7 +303,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
               : L10nService().format('ui_home_value1_hasn_t_opened_the_app_yet_f4f01d', {'value1': partnerName});
           break;
         case 'tease':
-          title = customTitle ?? '$myName vừa trêu bạn một chút';
+          title = customTitle ?? UiCopy.text('copy_0c8311b0e21e', {'value1': myName});
           body = partnerOnline
               ? L10nService().format('ui_home_value1_is_online_this_love_jab_popped_0180a9', {'value1': partnerName})
               : L10nService().format('ui_home_value1_hasn_t_opened_the_house_yet_57bf3a', {'value1': partnerName});
@@ -315,7 +315,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
               : L10nService().format('ui_home_value1_hasn_t_opened_the_app_yet_a1e737', {'value1': partnerName});
           break;
         case 'cry':
-          title = customTitle ?? '$myName đang cần bạn dỗ dành';
+          title = customTitle ?? UiCopy.text('copy_73186326cc67', {'value1': myName});
           body = partnerOnline
               ? L10nService().format('ui_home_value1_is_online_this_cry_signal_appeared_f43a9b', {'value1': partnerName})
               : L10nService().format('ui_home_value1_hasn_t_opened_the_house_yet_2c1e84', {'value1': partnerName});
@@ -327,7 +327,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
               : L10nService().format('ui_home_value1_hasn_t_opened_the_app_yet_72e6d6', {'value1': partnerName});
           break;
         case 'poop':
-          title = customTitle ?? '$myName vừa ném 💩 vào bạn';
+          title = customTitle ?? UiCopy.text('copy_0745a0ad9b9d', {'value1': myName});
           body = partnerOnline
               ? L10nService().format('ui_home_value1_is_online_this_tease_popped_up_7ddb4e', {'value1': partnerName})
               : L10nService().format('ui_home_value1_hasn_t_opened_the_house_yet_0c43c8', {'value1': partnerName});
@@ -340,7 +340,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
           break;
         case 'miss':
         default:
-          title = customTitle ?? '$myName gửi ngàn nỗi nhớ';
+          title = customTitle ?? UiCopy.text('copy_86edf680a455', {'value1': myName});
           body = partnerOnline
               ? L10nService().format('ui_home_value1_is_online_this_nostalgia_hits_me_95a7c8', {'value1': partnerName})
               : L10nService().format('ui_home_value1_hasn_t_opened_the_house_yet_e2a8f8', {'value1': partnerName});

@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'cinema_video_export_contract.dart';
 
 CinemaVideoExportService createCinemaVideoExportService() =>
@@ -17,6 +18,6 @@ class _UnsupportedCinemaVideoExportService implements CinemaVideoExportService {
     required CinemaVideoOverlayConfig overlay,
     CinemaVideoProgressCallback? onProgress,
   }) {
-    throw UnsupportedError('Xuất video chưa hỗ trợ trên nền tảng này.');
+    throw UnsupportedError(UiCopy.text('copy_ec457f14d83c'));
   }
 }

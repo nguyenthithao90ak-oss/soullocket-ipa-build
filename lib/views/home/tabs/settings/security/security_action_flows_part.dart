@@ -203,7 +203,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
               _SettingsTabState._emailVerifyResendCooldownSeconds ~/ 60 -
               (diff / 60000).floor();
           // ignore: unused_local_variable
-          final waitText = waitMins > 0 ? '$waitMins phút' : waitMinText;
+          final waitText = waitMins > 0 ? UiCopy.text('copy_eba409a16070', {'value1': waitMins}) : waitMinText;
           _showToast(context.tr('resend_cooldown_text'), success: false);
           return;
         }

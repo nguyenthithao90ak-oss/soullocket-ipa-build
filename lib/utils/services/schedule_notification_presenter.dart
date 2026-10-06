@@ -97,14 +97,16 @@ ScheduleEventPresentation describeScheduleNotification({
   required ScheduleIdentityContext identity,
   String? eventDate,
   String? eventKey,
+  int? daysUntil,
   ScheduleTextResolver text = _defaultScheduleText,
 }) {
   final normalizedTitle = eventTitle.trim();
   final resolvedTitle = normalizedTitle.isNotEmpty
       ? normalizedTitle
       : _extractEventLabel(fallbackMessage);
-  final stage =
-      _inferScheduleStage(notificationId, fallbackTitle, fallbackMessage);
+  final stage = daysUntil != null
+      ? _stageFromDays(daysUntil)
+      : _inferScheduleStage(notificationId, fallbackTitle, fallbackMessage);
   final key = (eventKey ?? '').trim();
   final coupleLabel = identity.fallbackSourceWith(text);
 

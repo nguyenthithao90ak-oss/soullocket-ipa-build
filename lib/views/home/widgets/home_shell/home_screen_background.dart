@@ -21,32 +21,8 @@ extension _HomeScreenShellBackground on _HomeScreenState {
       );
     }
 
-    // Áp dụng ảnh nền mặc định cho tất cả các tab
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Positioned.fill(
-          child: Image.asset(
-            'assets/images/default_home_bg.jpg',
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-            gaplessPlayback: true,
-            filterQuality: FilterQuality.low,
-            isAntiAlias: false,
-            cacheWidth: 720,
-          ),
-        ),
-        // Lớp phủ tối nhẹ giúp làm dịu nền, làm nổi bật nội dung phía trên
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.15),
-            ),
-          ),
-        ),
-      ],
-    );
+    // Nền mặc định cho tất cả các tab: màu kem trơn theo bản phác thảo.
+    return const ColoredBox(color: Color(0xFFF8EEE3));
   }
 
   Widget _buildPinnedCustomShellBackground({

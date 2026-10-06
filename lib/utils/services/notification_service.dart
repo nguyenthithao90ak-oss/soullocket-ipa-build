@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -51,6 +52,9 @@ class NotificationService {
   StreamSubscription<RemoteMessage>? _foregroundSubscription;
   StreamSubscription<RemoteMessage>? _messageOpenedSubscription;
   bool _isInitialized = false;
+  bool _localeListenerAttached = false;
+  int _localeRevision = 0;
+  Future<void>? _localeWrite;
   Future<void>? _initializingTask;
   bool _didCheckInitialMessage = false;
   String? _lastForegroundMessageKey;
@@ -105,6 +109,10 @@ class NotificationService {
   Future<void> initialize() async {
     if (_isInitialized) {
       await _saveFcmToken();
+      if (!_localeListenerAttached) {
+        L10nService().addListener(_onNotificationLocaleChanged);
+        _localeListenerAttached = true;
+      }
       await syncDailySleepReminder();
       return;
     }
@@ -152,6 +160,10 @@ class NotificationService {
           }
         }
 
+        if (!_localeListenerAttached) {
+          L10nService().addListener(_onNotificationLocaleChanged);
+          _localeListenerAttached = true;
+        }
         _isInitialized = true;
         await syncDailySleepReminder();
       } catch (error) {
@@ -195,11 +207,12 @@ class NotificationService {
     }
 
     final token = await _fcm.getToken();
-    if (token == null) return;
+    if (token == null || FirebaseAuth.instance.currentUser?.uid != user.uid) return;
 
     await FirebaseDatabase.instance
         .ref('users/${user.uid}/fcmToken')
         .set(token);
+    await _saveNotificationLocale();
 
     // FCM token giờ chỉ lưu độc lập tại users/{uid}/fcmToken
     // Không lưu gộp vào houses/{houseId}/fcmTokens nữa để tách biệt hoàn toàn thiết bị theo UID
@@ -211,13 +224,42 @@ class NotificationService {
     await FirebaseDatabase.instance
         .ref('users/${user.uid}/fcmToken')
         .set(newToken);
+    await _saveNotificationLocale();
 
     // FCM token giờ chỉ lưu độc lập tại users/{uid}/fcmToken
     // Không lưu gộp vào houses/{houseId}/fcmTokens nữa để tách biệt hoàn toàn thiết bị theo UID
   }
 
+  void _onNotificationLocaleChanged() => unawaited(_saveNotificationLocale());
+
+  Future<void> _saveNotificationLocale() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    final locale = L10nService().localeCode;
+    final revision = ++_localeRevision;
+    final previous = _localeWrite;
+    final write = () async {
+      try {
+        if (previous != null) await previous;
+        if (revision != _localeRevision || FirebaseAuth.instance.currentUser?.uid != uid) return;
+        await FirebaseDatabase.instance.ref('users/$uid/notificationLocale').set(locale);
+      } catch (_) {
+        // Rules cũ có thể chưa hỗ trợ locale; vẫn giữ FCM token và thông báo trong app.
+        debugPrint('[NotificationService] notification locale sync unavailable');
+      }
+    }();
+    _localeWrite = write;
+    await write;
+    if (identical(_localeWrite, write)) _localeWrite = null;
+  }
+
   /// Dọn dẹp FCM token khi người dùng đăng xuất
   Future<void> clearTokenOnSignOut() async {
+    _localeRevision++;
+    if (_localeListenerAttached) {
+      L10nService().removeListener(_onNotificationLocaleChanged);
+      _localeListenerAttached = false;
+    }
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
@@ -250,8 +292,8 @@ class NotificationService {
         final text =
             message.notification?.body ??
             message.data['text'] ??
-            'Có tin nhắn mới 💕';
-        final senderName = message.data['senderName']?.toString() ?? 'Người ấy';
+            UiCopy.text('copy_ed5fd66064f8');
+        final senderName = message.data['senderName']?.toString() ?? UiCopy.text('copy_145933221191');
         await WidgetService.syncSoulMergeWidgetData(
           message: text.toString(),
           senderName: senderName,
@@ -288,8 +330,8 @@ class NotificationService {
               height: 100,
               width: 100,
               alignment: OverlayAlignment.centerRight,
-              overlayTitle: 'Bong bóng tâm hồn',
-              overlayContent: 'Lời thì thầm đang kết nối...',
+              overlayTitle: UiCopy.text('copy_2ae0a531a5df'),
+              overlayContent: UiCopy.text('copy_2beace08a4bf'),
             );
           }
         }
@@ -380,7 +422,7 @@ class NotificationService {
         final targetHouseId =
             data['targetHouseId']?.toString() ??
             data['target_house_id']?.toString();
-        final targetName = data['target_name']?.toString() ?? 'Người ấy';
+        final targetName = data['target_name']?.toString() ?? UiCopy.text('copy_145933221191');
         if (myHouseId == null ||
             targetHouseId == null ||
             targetHouseId.isEmpty) {
@@ -397,7 +439,7 @@ class NotificationService {
         final targetHouseId =
             data['targetHouseId']?.toString() ??
             data['target_house_id']?.toString();
-        final targetName = data['target_name']?.toString() ?? 'Người ấy';
+        final targetName = data['target_name']?.toString() ?? UiCopy.text('copy_145933221191');
         if (myHouseId == null ||
             targetHouseId == null ||
             targetHouseId.isEmpty) {
@@ -521,7 +563,7 @@ class NotificationService {
         FirebaseAuth.instance.currentUser?.displayName?.trim().isNotEmpty ==
             true
         ? FirebaseAuth.instance.currentUser!.displayName!.trim()
-        : 'Bạn';
+        : UiCopy.text('copy_40ffd8d0f1c7');
 
     try {
       final prefs =
@@ -705,7 +747,7 @@ class NotificationService {
   /// Gửi thông báo "Tôi nhớ bạn" cho người yêu
   Future<void> sendMissYouNotification(String houseId) async {
     final user = FirebaseAuth.instance.currentUser;
-    final name = user?.displayName ?? 'Người ấy';
+    final name = user?.displayName ?? UiCopy.text('copy_145933221191');
     await sendPartnerNotification(
       houseId: houseId,
       title: L10nService().format('notif_miss_you_title', {'value1': name}),
@@ -717,7 +759,7 @@ class NotificationService {
   /// Gửi thông báo khi đăng bài mới lên feed
   Future<void> sendNewPostNotification(String houseId, String postId) async {
     final user = FirebaseAuth.instance.currentUser;
-    final name = user?.displayName ?? 'Người ấy';
+    final name = user?.displayName ?? UiCopy.text('copy_145933221191');
     await sendPartnerNotification(
       houseId: houseId,
       title: L10nService().format('notif_new_post_title', {'value1': name}),
@@ -873,14 +915,14 @@ class NotificationService {
   }
 
   String buildSleepReminderTitle(String displayName) {
-    return '🌙 Đến giờ ngủ rồi, $displayName ơi ❤️';
+    return UiCopy.text('copy_756122cb6b19', {'value1': displayName});
   }
 
   String buildSleepReminderMessage(String displayName) {
     final safeName = displayName.trim().isNotEmpty
         ? displayName.trim()
-        : 'người thương';
-    return 'Ngủ ngoan nha, $safeName ơi. Khép lại một ngày dài, để trái tim đỏ này ôm bạn vào một giấc mơ thật dịu và thật ấm nhé ❤️';
+        : UiCopy.text('copy_296890314132');
+    return UiCopy.text('copy_10f764e244cf', {'value1': safeName});
   }
 
   Future<bool> _ensureTimeZoneReady() async {
@@ -951,7 +993,7 @@ class NotificationService {
   }
 
   String buildSleepReminderBody(String displayName) {
-    return 'Ngủ ngoan nha, $displayName ơi. Khép lại một ngày dài, để trái tim đỏ này ôm bạn vào một giấc mơ thật dịu và thật ấm nhé ❤️';
+    return UiCopy.text('copy_10f764e244cf', {'value1': displayName});
   }
 
   Future<void> checkAutoSleepGreetings(String houseId) async {
@@ -1119,7 +1161,7 @@ class NotificationService {
   /// Gửi thông báo chúc ngủ ngon / chào buổi sáng
   Future<void> sendSleepSyncNotification(String houseId, bool isWakeUp) async {
     final user = FirebaseAuth.instance.currentUser;
-    final name = user?.displayName ?? 'Người ấy';
+    final name = user?.displayName ?? UiCopy.text('copy_145933221191');
 
     final title = L10nService().translate(
       isWakeUp ? 'notif_sleep_wake_title' : 'notif_sleep_bed_title',
@@ -1139,7 +1181,7 @@ class NotificationService {
   /// Gửi thông báo về nhà an toàn
   Future<void> sendSafeArrivalNotification(String houseId) async {
     final user = FirebaseAuth.instance.currentUser;
-    final name = user?.displayName ?? 'Người ấy';
+    final name = user?.displayName ?? UiCopy.text('copy_145933221191');
 
     await sendPartnerNotification(
       houseId: houseId,
@@ -1170,7 +1212,7 @@ class NotificationService {
     String moodIcon,
   ) async {
     final user = FirebaseAuth.instance.currentUser;
-    final name = user?.displayName ?? 'Người ấy';
+    final name = user?.displayName ?? UiCopy.text('copy_145933221191');
 
     await sendPartnerNotification(
       houseId: houseId,

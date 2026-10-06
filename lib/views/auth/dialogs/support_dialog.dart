@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -34,7 +35,7 @@ class _AuroraSupportDialogContentState
   final _descriptionController = TextEditingController();
 
   bool _isSubmitting = false;
-  String _selectedCategory = '🔐 Không đăng nhập được';
+  String _selectedCategory = UiCopy.text('copy_f6e110ce45ed');
 
   final List<String> _categories = const [
     '🔐 Không đăng nhập được',
@@ -83,9 +84,9 @@ class _AuroraSupportDialogContentState
     final user = FirebaseAuth.instance.currentUser;
     final effectiveUid =
         user?.uid ?? 'guest_${DateTime.now().millisecondsSinceEpoch}';
-    final effectiveName = name.isEmpty ? 'Khách' : name;
+    final effectiveName = name.isEmpty ? UiCopy.text('copy_8c19417f7b96') : name;
     final effectiveEmail =
-        email.isEmpty ? (user?.email?.trim() ?? 'Không có') : email;
+        email.isEmpty ? (user?.email?.trim() ?? UiCopy.text('copy_8d5f260f89b5')) : email;
 
     try {
       final ticketRef =

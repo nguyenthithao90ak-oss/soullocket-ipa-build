@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../calendar/calendar_civil_date.dart';
 
@@ -129,26 +130,26 @@ class HealthCycleService {
   static String _getPhaseLabel(CyclePhase phase) {
     switch (phase) {
       case CyclePhase.menstruation:
-        return '🩸 Giai đoạn Hành kinh';
+        return UiCopy.text('copy_43ecc1a18f92');
       case CyclePhase.follicular:
-        return '✨ Giai đoạn Nang trứng';
+        return UiCopy.text('copy_6cad356d0172');
       case CyclePhase.ovulation:
-        return '🥚 Giai đoạn Rụng trứng';
+        return UiCopy.text('copy_63292da16aaf');
       case CyclePhase.luteal:
-        return '🌙 Giai đoạn Hoàng thể (PMS)';
+        return UiCopy.text('copy_c55874e17975');
     }
   }
 
   static String _getTip(CyclePhase phase) {
     switch (phase) {
       case CyclePhase.menstruation:
-        return 'Bạn nữ có thể mệt mỏi, đau bụng. Hãy chuẩn bị nước ấm, túi chườm và đồ ăn nhẹ nhé. Đừng quên những lời an ủi dịu dàng! ❤️';
+        return UiCopy.text('copy_562c5a45f4f1');
       case CyclePhase.follicular:
-        return 'Năng lượng đang quay trở lại! Đây là lúc thích hợp cho những buổi hẹn hò năng động hoặc cùng nhau học điều mới.';
+        return UiCopy.text('copy_8b73174c430e');
       case CyclePhase.ovulation:
-        return 'Bạn nữ cảm thấy tự tin và quyến rũ nhất. Hãy dành cho nhau những lời khen ngợi và tạo không gian lãng mạn nhé!';
+        return UiCopy.text('copy_b5a25b55be10');
       case CyclePhase.luteal:
-        return 'Tâm trạng có thể nhạy cảm hơn một chút do thay đổi nội tiết tố. Hãy kiên nhẫn, lắng nghe và tặng cô ấy những cái ôm thật chặt.';
+        return UiCopy.text('copy_b0b081bc2cdf');
     }
   }
 

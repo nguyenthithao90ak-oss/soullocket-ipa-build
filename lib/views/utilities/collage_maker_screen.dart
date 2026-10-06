@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 // TODO: [TECH-DEBT] File này có 1700+ lines - cần refactor thành các widgets nhỏ hơn
 // TODO: [TECH-DEBT] Xóa ignore_for_file sau khi đã dọn dẹp unused code

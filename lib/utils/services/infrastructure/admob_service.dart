@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
@@ -420,7 +421,7 @@ class AdMobService {
           consentUpdateFailed = true;
           final errorInfo = AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể xử lý đồng ý quảng cáo lúc này.',
+            fallbackMessage: UiCopy.text('copy_8cd3c308eb00'),
           );
           debugPrint('Consent Info Update Error: ${errorInfo.message}');
           if (!consentCompleter.isCompleted) {
@@ -440,7 +441,7 @@ class AdMobService {
       consentUpdateFailed = true;
       final errorInfo = AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể xử lý đồng ý quảng cáo lúc này.',
+        fallbackMessage: UiCopy.text('copy_8cd3c308eb00'),
       );
       debugPrint('Error handling UMP Consent: ${errorInfo.message}');
     }
@@ -522,7 +523,7 @@ class AdMobService {
       } catch (e) {
         final errorInfo = AppErrorMapper.resolve(
           e,
-          fallbackMessage: 'Không thể đồng bộ ID quảng cáo lúc này.',
+          fallbackMessage: UiCopy.text('copy_caacd24575fa'),
         );
         debugPrint('Failed to sync AdMob IDs: ${errorInfo.message}');
       }
@@ -1347,7 +1348,7 @@ class AdMobService {
         onAdFailedToLoad: (ad, error) {
           final errorInfo = AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Banner quảng cáo chưa tải được.',
+            fallbackMessage: UiCopy.text('copy_35dbca5182e0'),
           );
           debugPrint(
             'AdMobService: banner failed to load: ${errorInfo.message}',
@@ -1764,7 +1765,7 @@ class AdMobService {
     } catch (tokenError) {
       final errorInfo = AppErrorMapper.resolve(
         tokenError,
-        fallbackMessage: 'Không thể lấy token xác thực quảng cáo.',
+        fallbackMessage: UiCopy.text('copy_249f14d0744b'),
       );
       debugPrint(
         'Failed to get Firebase ID token (checkin): ${errorInfo.message}',
@@ -1784,7 +1785,7 @@ class AdMobService {
       }
       final errorInfo = AppErrorMapper.resolve(
         error,
-        fallbackMessage: 'Thiếu token App Check để gửi yêu cầu thưởng.',
+        fallbackMessage: UiCopy.text('copy_5d1bf9bf2cf5'),
       );
       debugPrint(
         'Reward server blocked due to missing App Check token: ${errorInfo.message}',
@@ -1831,7 +1832,7 @@ class AdMobService {
           final retryMessage = retryError.message.toLowerCase();
           final retryInfo = AppErrorMapper.resolve(
             retryError,
-            fallbackMessage: 'Yêu cầu máy chủ thưởng chưa hoàn tất.',
+            fallbackMessage: UiCopy.text('copy_4d8803e82af4'),
           );
           if (retryMessage.contains('parse header value')) {
             debugPrint(
@@ -1845,7 +1846,7 @@ class AdMobService {
       } else {
         final errorInfo = AppErrorMapper.resolve(
           error,
-          fallbackMessage: 'Yêu cầu máy chủ thưởng chưa hoàn tất.',
+          fallbackMessage: UiCopy.text('copy_4d8803e82af4'),
         );
         debugPrint('Reward server request failed: ${errorInfo.message}');
         return {'ok': false, 'error': 'network_error'};
@@ -1853,14 +1854,14 @@ class AdMobService {
     } on TimeoutException catch (error) {
       final errorInfo = AppErrorMapper.resolve(
         error,
-        fallbackMessage: 'Yêu cầu máy chủ thưởng bị quá thời gian.',
+        fallbackMessage: UiCopy.text('copy_2ba6f354b50c'),
       );
       debugPrint('Reward server request timed out: ${errorInfo.message}');
       return {'ok': false, 'error': 'network_timeout'};
     } catch (error) {
       final errorInfo = AppErrorMapper.resolve(
         error,
-        fallbackMessage: 'Yêu cầu máy chủ thưởng chưa hoàn tất.',
+        fallbackMessage: UiCopy.text('copy_4d8803e82af4'),
       );
       debugPrint('Reward server request failed: ${errorInfo.message}');
       return {'ok': false, 'error': 'network_error'};

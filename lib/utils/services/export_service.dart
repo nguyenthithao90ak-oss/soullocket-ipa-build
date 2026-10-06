@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'dart:convert';
 import 'dart:io' as io;
@@ -83,7 +84,7 @@ class ExportService {
   Future<String?> exportDiaryToPdf(String houseId, String houseName) async {
     final resolvedHouseId = houseId.trim();
     if (resolvedHouseId.isEmpty) {
-      throw Exception('Chưa có mã nhà');
+      throw UiCopyException('copy_f15d7c99a3c3');
     }
 
     final resolvedHouseName = houseName.trim().isNotEmpty
@@ -91,7 +92,7 @@ class ExportService {
         : 'SoulHouse';
     final entries = await _loadDiaryEntries(resolvedHouseId);
     if (entries.isEmpty) {
-      throw Exception('Chưa có nhật ký để xuất');
+      throw UiCopyException('copy_1a95ec8dce23');
     }
     final pdf = pw.Document();
 
@@ -167,7 +168,7 @@ class ExportService {
     await SharePlus.instance.share(
       ShareParams(
         files: [XFile(file.path)],
-        text: 'Xuất Nhật ký của $resolvedHouseName',
+        text: UiCopy.text('copy_fc2e29aa251c', {'value1': resolvedHouseName}),
       ),
     );
 
@@ -177,7 +178,7 @@ class ExportService {
   Future<String?> exportDiaryToHtml(String houseId, String houseName) async {
     final resolvedHouseId = houseId.trim();
     if (resolvedHouseId.isEmpty) {
-      throw Exception('Chưa có mã nhà');
+      throw UiCopyException('copy_f15d7c99a3c3');
     }
 
     final resolvedHouseName = houseName.trim().isNotEmpty
@@ -185,7 +186,7 @@ class ExportService {
         : 'SoulHouse';
     final entries = await _loadDiaryEntries(resolvedHouseId);
     if (entries.isEmpty) {
-      throw Exception('Chưa có nhật ký để xuất');
+      throw UiCopyException('copy_1a95ec8dce23');
     }
 
     final htmlContent = _buildHtml(entries, resolvedHouseName);
@@ -207,7 +208,7 @@ class ExportService {
     await SharePlus.instance.share(
       ShareParams(
         files: [XFile(file.path)],
-        text: 'Xuất HTML Nhật ký của $resolvedHouseName',
+        text: UiCopy.text('copy_e0d70bd709ba', {'value1': resolvedHouseName}),
       ),
     );
 
@@ -257,7 +258,7 @@ class ExportService {
       ..writeln(
         '<meta name="viewport" content="width=device-width, initial-scale=1">',
       )
-      ..writeln('<title>Nhật ký $houseName</title>')
+      ..writeln(UiCopy.text('copy_d42342ea9f14', {'value1': houseName}))
       ..writeln('<style>')
       ..writeln(
         'body{font-family:Arial,sans-serif;background:#fff7fb;color:#3f3f46;padding:24px;}',
@@ -275,7 +276,7 @@ class ExportService {
       ..writeln('</head>')
       ..writeln('<body>')
       ..writeln('<div class="wrap">')
-      ..writeln('<h1>Nhật ký tình yêu - ${_escapeHtml(houseName)}</h1>');
+      ..writeln(UiCopy.text('copy_7bcf5ee1baec', {'value1': _escapeHtml(houseName)}));
 
     for (final entry in entries) {
       final timestamp = entry['ts'] as int? ?? entry['timestamp'] as int? ?? 0;
@@ -285,7 +286,7 @@ class ExportService {
       final author =
           entry['authorName']?.toString() ??
           entry['author']?.toString() ??
-          'Ẩn danh';
+          UiCopy.text('copy_7f0ab3a994bf');
       final mood = entry['mood']?.toString() ?? '';
       final content =
           entry['content']?.toString() ?? entry['c']?.toString() ?? '';
@@ -322,7 +323,7 @@ class ExportService {
     void Function(double progress, String status)? onProgress,
   }) async {
     final resolvedHouseId = houseId.trim();
-    if (resolvedHouseId.isEmpty) throw Exception('Chưa có mã nhà');
+    if (resolvedHouseId.isEmpty) throw UiCopyException('copy_f15d7c99a3c3');
 
     final resolvedHouseName = houseName.trim().isNotEmpty
         ? houseName.trim()
@@ -340,7 +341,7 @@ class ExportService {
     await memoriesDir.create();
 
     // 1. Load diary entries
-    onProgress?.call(0.05, 'Đang thu thập nhật ký...');
+    onProgress?.call(0.05, UiCopy.text('copy_927331615e0a'));
     final entries = await _loadDiaryEntries(resolvedHouseId);
 
     // 2. Write diary.json
@@ -354,7 +355,7 @@ class ExportService {
     );
 
     // 3. Load memories
-    onProgress?.call(0.1, 'Đang thu thập ảnh kỷ niệm...');
+    onProgress?.call(0.1, UiCopy.text('copy_7fe65f51958e'));
     final memoriesSnap = await _dbRef
         .child('houses/$resolvedHouseId/memories')
         .get();
@@ -374,12 +375,12 @@ class ExportService {
     }
 
     if (memoriesList.isEmpty) {
-      throw Exception('Chưa có ảnh kỷ niệm để xuất');
+      throw UiCopyException('copy_e563ca6b8bd4');
     }
 
     // 4. Download memories images
     final totalMemories = memoriesList.length;
-    onProgress?.call(0.2, 'Đang tải 0/$totalMemories ảnh...');
+    onProgress?.call(0.2, UiCopy.text('copy_d1bdd0b9a45b', {'value1': totalMemories}));
 
     for (var i = 0; i < memoriesList.length; i++) {
       final mem = memoriesList[i];
@@ -403,7 +404,7 @@ class ExportService {
       final progress = 0.2 + (0.7 * (i + 1) / totalMemories);
       onProgress?.call(
         progress.clamp(0.2, 0.9),
-        'Đang tải ${i + 1}/$totalMemories ảnh...',
+        UiCopy.text('copy_58c93ec30d62', {'value1': i + 1, 'value2': totalMemories}),
       );
     }
 
@@ -427,7 +428,7 @@ class ExportService {
     );
 
     // 6. Create ZIP archive
-    onProgress?.call(0.92, 'Đang nén ZIP...');
+    onProgress?.call(0.92, UiCopy.text('copy_b0a804b6d3d9'));
     final archive = Archive();
     await _addDirectoryToArchive(archive, exportDir, '');
 
@@ -443,7 +444,7 @@ class ExportService {
 
     if (kIsWeb) {
       downloadWebFile(filename, zipData, 'application/zip');
-      onProgress?.call(1.0, 'Hoàn tất!');
+      onProgress?.call(1.0, UiCopy.text('copy_73feb527bf4b'));
       return '';
     }
 
@@ -459,7 +460,7 @@ class ExportService {
       debugPrint('[ExportService] Không xóa được thư mục tạm: $error');
     }
 
-    onProgress?.call(1.0, 'Hoàn tất!');
+    onProgress?.call(1.0, UiCopy.text('copy_73feb527bf4b'));
     return zipFile.path;
   }
 

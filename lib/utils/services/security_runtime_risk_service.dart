@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 
 import 'security_protection_analytics_service.dart';
@@ -71,31 +72,31 @@ class SecurityRuntimeRiskService {
     switch (verdict.reason) {
       case SecurityProtectionReason.overlay:
         return verdict.shouldBlock
-            ? 'Phát hiện lớp phủ màn hình hoặc chạm bị che khuất. Hãy tắt app nổi rồi thử lại.'
-            : 'Phát hiện lớp phủ màn hình. Nếu bạn đang bật app nổi, hãy tắt rồi thử lại.';
+            ? UiCopy.text('copy_4c65019179ad')
+            : UiCopy.text('copy_7da0d9f6f26a');
       case SecurityProtectionReason.screenCapture:
         return verdict.shouldBlock
-            ? 'Phát hiện quay hoặc chia sẻ màn hình trên thao tác nhạy cảm. Hãy tắt rồi thử lại.'
-            : 'Phát hiện chia sẻ màn hình. Hãy xác minh đây là thao tác của bạn trước khi tiếp tục.';
+            ? UiCopy.text('copy_480f32f85e37')
+            : UiCopy.text('copy_da5a08d7d4ca');
       case SecurityProtectionReason.controlApp:
         return verdict.shouldBlock
-            ? 'Phát hiện bấm quá nhanh hoặc dấu hiệu auto click/macro. Hãy tắt công cụ tự động rồi thử lại.'
-            : 'Bạn đang thao tác quá nhanh. Nếu có bật auto click, macro hoặc remote control thì hãy tắt đi.';
+            ? UiCopy.text('copy_dd1db30752e2')
+            : UiCopy.text('copy_36b1ce9c9c38');
       case SecurityProtectionReason.unofficialBuild:
-        return 'Ứng dụng hiện tại không được nhận diện là bản phát hành chuẩn. Hãy dùng bản chính thức rồi thử lại.';
+        return UiCopy.text('copy_5825f9687a75');
       case SecurityProtectionReason.unlicensed:
-        return 'Thiết bị hoặc bản cài đặt này chưa được cấp phép. Hãy cài lại bản chính thức rồi thử lại.';
+        return UiCopy.text('copy_1616dd499a1d');
       case SecurityProtectionReason.malware:
-        return 'Thiết bị có dấu hiệu rủi ro ứng dụng độc hại. Hãy kiểm tra bảo mật thiết bị trước khi thử lại.';
+        return UiCopy.text('copy_876a1960810c');
       case SecurityProtectionReason.rootIntegrity:
-        return 'Thiết bị có dấu hiệu root, fake GPS hoặc can thiệp hệ thống. Tạm khóa thao tác để bảo vệ tài khoản.';
+        return UiCopy.text('copy_6e66ce81de1d');
       case SecurityProtectionReason.playProtect:
-        return 'Play Protect đang trả về cảnh báo rủi ro. Hãy xử lý cảnh báo bảo mật rồi thử lại.';
+        return UiCopy.text('copy_31a4006da755');
       case SecurityProtectionReason.unknown:
         return fallback ??
             (verdict.shouldBlock
-                ? 'Hệ thống tạm khóa thao tác này vì phát hiện rủi ro bảo mật.'
-                : 'Hệ thống phát hiện tín hiệu bất thường. Hãy kiểm tra lại rồi thử tiếp.');
+                ? UiCopy.text('copy_1ef37447bbe1')
+                : UiCopy.text('copy_6d464d269ffe'));
     }
   }
 }

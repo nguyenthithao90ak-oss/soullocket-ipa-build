@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -34,7 +35,7 @@ class PairingRequest {
     }
     return PairingRequest(
       requestId: id,
-      guestName: map['guestName']?.toString() ?? 'Khách',
+      guestName: map['guestName']?.toString() ?? UiCopy.text('copy_8c19417f7b96'),
       guestAvatar: map['guestAvatar']?.toString() ?? '',
       timestamp: timestampVal,
       status: map['status']?.toString() ?? 'pending',
@@ -65,19 +66,19 @@ class PairingService {
   /// Creates a new pairing code with a given duration in minutes
   Future<PairingInviteCode> createPairingCode(int durationMinutes) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Chưa đăng nhập');
+    if (user == null) throw UiCopyException('copy_3bbf8095e7db');
 
     final response = await CloudFunctionsHelper.callSecure<dynamic>(
       'createPairingInvite',
       requireAppCheck: true,
       payload: <String, dynamic>{'durationMinutes': durationMinutes},
-      fallbackErrorMessage: 'Không thể tạo mã ghép nối lúc này.',
+      fallbackErrorMessage: UiCopy.text('copy_8432f3632bf4'),
     );
     final data = _asMap(response.data);
     final code = data['code']?.toString().trim() ?? '';
     final expiresAt = (data['expiresAt'] as num?)?.toInt() ?? 0;
     if (code.isEmpty || expiresAt <= DateTime.now().millisecondsSinceEpoch) {
-      throw Exception('Máy chủ không trả về mã ghép nối hợp lệ.');
+      throw UiCopyException('copy_ab1224a6f7a6');
     }
     return PairingInviteCode(code: code, expiresAt: expiresAt);
   }
@@ -85,12 +86,12 @@ class PairingService {
   /// Sends a pairing request using a 12-digit code
   Future<void> sendPairingRequest(String code) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Chưa đăng nhập');
+    if (user == null) throw UiCopyException('copy_3bbf8095e7db');
     await CloudFunctionsHelper.callSecure<dynamic>(
       'requestPairingInvite',
       requireAppCheck: true,
       payload: <String, dynamic>{'code': code},
-      fallbackErrorMessage: 'Mã ghép nối không hợp lệ hoặc đã hết hạn.',
+      fallbackErrorMessage: UiCopy.text('copy_8a5f1d79a6fd'),
     );
   }
 
@@ -148,7 +149,7 @@ class PairingService {
       'cancelPairingRequest',
       requireAppCheck: true,
       payload: const <String, dynamic>{},
-      fallbackErrorMessage: 'Không thể hủy yêu cầu ghép nối.',
+      fallbackErrorMessage: UiCopy.text('copy_9d5478976176'),
     );
   }
 
@@ -180,7 +181,7 @@ class PairingService {
       'respondPairingRequest',
       requireAppCheck: true,
       payload: <String, dynamic>{'requestId': requestId, 'accept': true},
-      fallbackErrorMessage: 'Không thể chấp nhận yêu cầu ghép nối.',
+      fallbackErrorMessage: UiCopy.text('copy_5a6c8e3b0ffd'),
     );
   }
 
@@ -190,7 +191,7 @@ class PairingService {
       'respondPairingRequest',
       requireAppCheck: true,
       payload: <String, dynamic>{'requestId': requestId, 'accept': false},
-      fallbackErrorMessage: 'Không thể từ chối yêu cầu ghép nối.',
+      fallbackErrorMessage: UiCopy.text('copy_84bb5debc5ed'),
     );
   }
 
@@ -223,7 +224,7 @@ class PairingService {
       'revokePairingInvite',
       requireAppCheck: true,
       payload: <String, dynamic>{'code': code},
-      fallbackErrorMessage: 'Không thể hủy mã ghép nối.',
+      fallbackErrorMessage: UiCopy.text('copy_2ab563874c33'),
     );
   }
 }

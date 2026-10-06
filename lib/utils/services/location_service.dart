@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'dart:async';
 
@@ -254,7 +255,7 @@ class LocationService {
       if (kDebugMode) {
         final errorMsg = AppErrorMapper.resolve(
           e,
-          fallbackMessage: 'Không thể lấy vị trí hiện tại lúc này.',
+          fallbackMessage: UiCopy.text('copy_698a8ac897bc'),
         ).message;
         if (!errorMsg.contains('thời gian chờ')) {
           debugPrint('LocationService.getCurrentPosition error: $errorMsg');

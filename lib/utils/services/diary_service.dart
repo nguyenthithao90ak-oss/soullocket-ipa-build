@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:firebase_database/firebase_database.dart'
     hide Query, Transaction;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -70,9 +71,9 @@ class DiaryService {
     String imageUrl = '',
     String? customMoodUrl,
   }) async {
-    if (content.trim().isEmpty) throw 'Nội dung không được để trống.';
+    if (content.trim().isEmpty) throw UiCopy.text('copy_94f373c96775');
     if (content.trim().length > 5000) {
-      throw 'Nội dung nhật ký vượt quá giới hạn 5000 ký tự.';
+      throw UiCopy.text('copy_d39050654d84');
     }
 
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -104,12 +105,12 @@ class DiaryService {
   }) async {
     final docRef = _diariesRef(houseId).doc(postId);
     final snap = await docRef.get();
-    if (!snap.exists) throw 'Bài viết không tồn tại.';
+    if (!snap.exists) throw UiCopy.text('copy_eb757d247d81');
 
     final data = snap.data()!;
     final owner = (data['authorId'] ?? '').toString();
     if (owner.isNotEmpty && owner != requestingAuthorId) {
-      throw 'Bạn không có quyền xóa bài viết này.';
+      throw UiCopy.text('copy_83cbf45152c9');
     }
     await docRef.delete();
   }
@@ -120,9 +121,9 @@ class DiaryService {
     required String postId,
     required String newContent,
   }) async {
-    if (newContent.trim().isEmpty) throw 'Nội dung không được để trống.';
+    if (newContent.trim().isEmpty) throw UiCopy.text('copy_94f373c96775');
     if (newContent.trim().length > 5000) {
-      throw 'Nội dung nhật ký vượt quá giới hạn 5000 ký tự.';
+      throw UiCopy.text('copy_d39050654d84');
     }
     await _diariesRef(houseId).doc(postId).update({
       'content': _sanitize(newContent),

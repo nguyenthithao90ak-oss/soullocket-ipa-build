@@ -33,7 +33,8 @@ class SecureStorageService {
   static const String keyHouseId = 'il_house_id';
   static const String keyRole = 'il_role';
   static const String keyRelMode = 'il_rel_mode';
-  static const String keyInstallationCredential = 'il_device_installation_credential';
+  static const String keyInstallationCredential =
+      'il_device_installation_credential';
 
   Future<String> installationCredential() => _serialize(() async {
     final stored = await _storage.read(key: keyInstallationCredential);

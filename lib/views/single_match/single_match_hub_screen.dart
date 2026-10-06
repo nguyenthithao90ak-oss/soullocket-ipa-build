@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:soullocket_app/widgets/sl_date_picker.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
@@ -1591,7 +1592,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                       builder: (_) => ChatDetailScreen(
                         myHouseId: widget.houseId,
                         targetHouseId: roomId,
-                        targetName: 'Người ấy',
+                        targetName: UiCopy.text('copy_145933221191'),
                       ),
                     ),
                   );

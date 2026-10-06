@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -34,7 +35,7 @@ class InternalChatService {
   // ── GỬI tin nhắn mới ─────────────────────────────────────────────────
   Future<String> sendMessage(String houseId, ChatMessage message) async {
     if (message.text.trim().length > 2000) {
-      throw Exception('Tin nhắn vượt quá giới hạn 2000 ký tự.');
+      throw UiCopyException('copy_44fdfcf1695b');
     }
     final now = DateTime.now().millisecondsSinceEpoch;
     final payload = <String, dynamic>{...message.toMap(), 'ts': now};
@@ -47,7 +48,7 @@ class InternalChatService {
       _rtdb
           .child('houses/$houseId/chat_room/lastMessage')
           .set({
-            'text': message.type == 'image' ? '[Hình ảnh]' : message.text,
+            'text': message.type == 'image' ? UiCopy.text('copy_f88e6b16e3c8') : message.text,
             'ts': now,
             'senderId': message.senderId,
             'isRead': false,

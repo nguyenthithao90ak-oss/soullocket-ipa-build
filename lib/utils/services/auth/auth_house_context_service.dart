@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
@@ -266,8 +267,8 @@ class AuthHouseContextService {
           final reason = house['banReason']?.toString().trim();
           await onForcedSignOut();
           throw reason == null || reason.isEmpty
-              ? 'Tài khoản này đã bị khóa truy cập. Vui lòng liên hệ quản trị viên.'
-              : 'Tài khoản này đã bị khóa: $reason';
+              ? UiCopy.text('copy_b55d00042212')
+              : UiCopy.text('copy_bab9b1827268', {'value1': reason});
         }
       } catch (error) {
         if (error is String) rethrow;
@@ -287,7 +288,7 @@ class AuthHouseContextService {
             if (data != null) {
               if (data['status'] == 'blocked') {
                 await onForcedSignOut();
-                throw 'Thiết bị này đã bị chủ nhà chặn truy cập vĩnh viễn.';
+                throw UiCopy.text('copy_4e75407995f5');
               }
               if (data['status'] == 'deleted') {
                 final deletedAt = data['deleted_at'] as int?;
@@ -297,7 +298,7 @@ class AuthHouseContextService {
                   if (diff < 3600000) {
                     final minutesLeft = 60 - (diff / 60000).floor();
                     await onForcedSignOut();
-                    throw 'Thiết bị này vừa bị xóa khỏi nhà. Vui lòng thử lại sau $minutesLeft phút.';
+                    throw UiCopy.text('copy_20a7df6c9349', {'value1': minutesLeft});
                   }
                 }
               }

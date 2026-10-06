@@ -137,7 +137,10 @@ extension _SettingsTabShell on _SettingsTabState {
     }
     final wantsFemale = selected == 'user2';
     if (wantsFemale == _myGenderIsFemale) return;
-    final nextSwapped = wantsFemale != (_activeRoleKey == 'user2');
+    final nextSwapped = RoleUtils.genderSwappedFor(
+      myRole: _activeRoleKey,
+      wantsFemale: wantsFemale,
+    );
     try {
       await _dbRef
           .child('houses/$houseId/settings/genderSwapped')

@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:flutter/widgets.dart';
 
 typedef CinemaVideoProgressCallback = void Function(
@@ -5,12 +6,13 @@ typedef CinemaVideoProgressCallback = void Function(
 );
 
 enum CinemaVideoQualityPreset {
-  economy('Tiết kiệm'),
-  balanced('Cân bằng'),
-  highQuality('Cao cấp');
+  economy('copy_45cb70d8b619'),
+  balanced('copy_9fe59d4b6467'),
+  highQuality('copy_1a1b406348be');
 
-  const CinemaVideoQualityPreset(this.label);
-  final String label;
+  const CinemaVideoQualityPreset(this.labelKey);
+  final String labelKey;
+  String get label => UiCopy.text(labelKey);
 
   int get crfValue {
     switch (this) {

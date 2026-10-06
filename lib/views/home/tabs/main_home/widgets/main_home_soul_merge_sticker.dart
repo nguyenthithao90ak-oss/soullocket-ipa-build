@@ -29,40 +29,40 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
   bool _showHeartNotif = false;
 
   static const List<String> _appTips = [
-    '💡 Chạm giữ nút "Lưu Tâm Sự" để thấy hiệu ứng co giãn 3D cực mượt nha!',
-    '💡 Viết tâm sự dưới 30 ký tự sẽ tự động biến thành thẻ trích dẫn nghệ thuật lãng mạn đó!',
-    '💡 Lắc điện thoại cùng lúc với người ấy khi mở Soul Merge để ghép đôi tâm hồn 💕',
-    '💡 Chia sẻ kỷ niệm ra ngoài qua liên kết Memory Share để bạn bè cùng xem nhé 🏡',
-    '💡 Chạm liên tục vào trái tim trong Soul Merge để bắn ra những hạt bụi phép thuật lãng mạn 💫',
-    '💡 Bạn có thể gửi ảnh thì thầm trực tiếp cho người ấy ngay trong màn hình Soul Merge 📸',
-    '💡 Bật bong bóng nổi ngoài app (nút chat ở góc) để trò chuyện nhanh với người ấy bất cứ lúc nào!',
-    '💡 Nâng cấp tài khoản PRO để tạo tới 20 liên kết Memory Share và tắt quảng cáo hoàn toàn 💎',
-    '💡 Trải nghiệm Rạp chiếu phim đôi ở tab Tiện ích để cùng xem phim online với người ấy 🍿',
-    '💡 Sử dụng Sổ tay chi tiêu chung ở tab Tiện ích để quản lý quỹ hẹn hò của hai bạn minh bạch 💰',
-    '💡 Gửi thư đến tương lai bằng Hộp thư thời gian (Capsule) để bất ngờ trao gửi yêu thương ✉️',
-    '💡 Cùng lên danh sách To-do list hoặc ghi lại ghi chú ngọt ngào ở mục Ghi chú chung 📝',
-    '💡 Thử vận may hoặc giải trí cùng người ấy với Vòng quay thử thách ở tab Giải Trí 🎡',
-    '💡 Rút bài Tarot tình duyên mỗi ngày ở tab Giải Trí để xem mức độ đồng điệu hôm nay 🔮',
-    '💡 Đừng quên cho thú cưng ảo ăn và tương tác mỗi ngày trong ngôi nhà chung nhé 🐱',
-    '💡 Vào Cài đặt ➔ Giao diện để đổi màu chủ đề cực xinh như "Hoàng hôn", "Đại dương" hay "Hồng ngọt ngào"! 🎨',
-    '💡 Bạn có thể bật hiệu ứng tuyết rơi, trái tim bay hoặc lá rụng rất lãng mạn trong Cài đặt ➔ Giao diện! ❄️',
-    '💡 Đừng quên vào Cài đặt ➔ Giao diện để tải lên ảnh đôi (tỷ lệ 9:16) làm hình nền nhà chung ấm cúng nhé! 🖼️',
-    '💡 Muốn đổi kiểu chữ lãng mạn? Hãy vào Cài đặt ➔ Giao diện ➔ Chọn phông chữ (Quicksand, Inter, Roboto...)! ✍️',
-    '💡 Vào Cài đặt ➔ Giao diện để bật/tắt khung viền ảnh đại diện thủy tinh, ngọc trai hay viền VIP lấp lánh! 💍',
-    '💡 Cài đặt phong cách đồng hồ đếm ngược ngày yêu (Anniversary style) với nhiều mẫu độc đáo trong Cài đặt! ⏰',
-    '💡 Vào Cài đặt ➔ Bảo mật ➔ Thiết lập câu hỏi bảo mật để dễ dàng tự khôi phục tài khoản khi cần! 🔑',
-    '💡 Để tránh người lạ đọc trộm nhật ký, hãy vào Cài đặt ➔ Bảo mật và đặt "Mã PIN dự phòng" ngay nha! 🔒',
-    '💡 Tính năng Kho báu bí mật tự động khóa sau 5p/15p/1h, bạn có thể tùy chỉnh ở Cài đặt ➔ Bảo mật! 💼',
-    '💡 Vào Cài đặt ➔ Bảo mật ➔ Quản lý thiết bị để kiểm tra và đăng xuất từ xa khỏi các thiết bị lạ! 📱',
-    '💡 Bạn có thể liên kết tài khoản Google trong Cài đặt ➔ Bảo mật để đăng nhập nhanh chóng và an toàn hơn! 🌐',
-    '💡 Đăng ký Email phụ trong Cài đặt ➔ Bảo mật để tăng cường an toàn và nhận mã khôi phục khi quên mật khẩu! ✉️',
-    '💡 Vào Cài đặt ➔ Thông báo để nhận tin nhắc nhở trước ngày kỷ niệm 1 ngày, 3 ngày hoặc 7 ngày nhé! 📅',
-    '💡 Để biết lúc nào người ấy vào ứng dụng, hãy bật "Thông báo đối phương online" trong Cài đặt ➔ Thông báo! 🔔',
-    '💡 Để ẩn thời gian online, hãy vào Cài đặt ➔ Thông báo ➔ tắt mục "Hiển thị trạng thái hoạt động". Người ấy sẽ không thấy bạn đang hoạt động nữa! 🟢',
-    '💡 Vào Cài đặt ➔ Mối quan hệ để đổi biệt danh đáng yêu hiển thị riêng cho hai bạn nha! 💕',
-    '💡 Bạn có thể chỉnh ngày bắt đầu yêu trong Cài đặt ➔ Mối quan hệ để đếm chính xác số ngày bên nhau! 🗓️',
-    '💡 Hãy vào Cài đặt ➔ Widget để tùy chỉnh giao diện đếm ngày yêu ngoài màn hình chính điện thoại cực đẹp! 📱',
-    '💡 Trong Cài đặt ➔ Mối quan hệ, bạn có thể dễ dàng chuyển đổi giữa chế độ Độc thân (Single) và Đôi lứa (Couple)! 🏡',
+    'copy_75353c695990',
+    'copy_f5f5b2880efe',
+    'copy_b616dcf44fe3',
+    'copy_6068cc26e948',
+    'copy_9741b65a9481',
+    'copy_1b612cfbe367',
+    'copy_3335271a5a71',
+    'copy_3c3e1b430f73',
+    'copy_89cda6d13ed6',
+    'copy_b7cad573548e',
+    'copy_24acfbb8320c',
+    'copy_15777a06d375',
+    'copy_0e157bd91e2f',
+    'copy_c31c42beaed1',
+    'copy_8f3e30302d6f',
+    'copy_77d6bdb70457',
+    'copy_77a581341ba7',
+    'copy_8f56a347cf81',
+    'copy_13fad8d5bc53',
+    'copy_e4a7300ba130',
+    'copy_f3bde32376b3',
+    'copy_8c0903741085',
+    'copy_5bcfef7dd617',
+    'copy_c6dff6257033',
+    'copy_1e124f6b324a',
+    'copy_e493fb401e16',
+    'copy_dcb6fd6665b4',
+    'copy_18b2bf7cd138',
+    'copy_ae6d99e5e8e2',
+    'copy_2b41529af6cf',
+    'copy_c4e7b5aee94d',
+    'copy_5b261fc50242',
+    'copy_76805291fbe1',
+    'copy_402b9620b3c8',
   ];
 
   @override
@@ -167,7 +167,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
         final imgUrl = lastMsg['imageUrl']?.toString() ?? '';
         final displayTxt = text.isNotEmpty
             ? text
-            : (imgUrl.isNotEmpty ? 'Đã gửi một ảnh 📸' : '');
+            : (imgUrl.isNotEmpty ? UiCopy.text('copy_c306bf7c70f5') : '');
         if (displayTxt.isEmpty) return;
 
         final msgTime = lastMsg['timestamp'] as int? ?? 0;
@@ -191,7 +191,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
     final isVisible = widget.activeIndex == 0;
     if (!isVisible) return;
     final tip = _appTips[_random.nextInt(_appTips.length)];
-    _showFloatingMessage(tip);
+    _showFloatingMessage(UiCopy.text(tip));
   }
 
   void _showFloatingMessage(String text) {

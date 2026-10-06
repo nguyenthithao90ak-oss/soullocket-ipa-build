@@ -1,9 +1,11 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:io';
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -27,6 +29,7 @@ import 'package:soullocket_app/utils/services/storage/storage_image_upload_input
 import 'package:soullocket_app/utils/services/storage/storage_managed_upload_helper.dart';
 import 'package:soullocket_app/utils/services/storage/storage_media_constants.dart';
 import 'package:soullocket_app/utils/services/storage/storage_path_policy.dart';
+import 'package:soullocket_app/utils/services/storage/private_r2_put.dart';
 import 'package:soullocket_app/utils/services/storage/storage_picker_service.dart';
 import 'package:soullocket_app/utils/services/storage/storage_raw_upload_helper.dart';
 import 'package:soullocket_app/utils/services/storage/storage_upload_result.dart';
@@ -226,7 +229,7 @@ class StorageService {
   String _requireCurrentUid() {
     final uid = _auth.currentUser?.uid.trim() ?? '';
     if (uid.isEmpty) {
-      throw Exception('Cần đăng nhập để tải tệp lên đám mây.');
+      throw UiCopyException('copy_0d17dba25af1');
     }
     return uid;
   }
@@ -310,9 +313,9 @@ class StorageService {
       }
       switch (error.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw Exception('Cần đăng nhập để gửi ảnh chat.');
+          throw UiCopyException('copy_3b1a55a37917');
         case 'invalid-argument':
-          throw Exception('Thiếu thông tin gửi ảnh chat.');
+          throw UiCopyException('copy_6561892964ac');
         case 'not-found':
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -332,10 +335,10 @@ class StorageService {
                 : 'Bạn đã dùng hết lượt gửi ảnh chat hôm nay.',
           );
         case 'permission-denied':
-          throw Exception('Bạn không có quyền gửi ảnh vào cuộc chat này.');
+          throw UiCopyException('copy_8a24722de890');
         case 'deadline-exceeded':
         case 'unavailable':
-          throw Exception('Không thể kết nối máy chủ gửi ảnh chat.');
+          throw UiCopyException('copy_87c69d5f9627');
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -380,16 +383,14 @@ class StorageService {
       }
       switch (error.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw Exception('Cần đăng nhập để tải ảnh Kỷ niệm.');
+          throw UiCopyException('copy_b44a30bfef88');
         case 'invalid-argument':
-          throw Exception('Thiếu thông tin tải ảnh Kỷ niệm.');
+          throw UiCopyException('copy_1a801c2953b4');
         case 'permission-denied':
-          throw Exception('Bạn không có quyền tải ảnh vào Kỷ niệm này.');
+          throw UiCopyException('copy_dd37c52a99a6');
         case 'deadline-exceeded':
         case 'unavailable':
-          throw Exception(
-            'Không thể kết nối máy chủ tạo phiên tải ảnh Kỷ niệm.',
-          );
+          throw UiCopyException('copy_dd8932601953');
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -434,14 +435,14 @@ class StorageService {
       }
       switch (error.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw Exception('Cần đăng nhập để tải ảnh Album.');
+          throw UiCopyException('copy_f7bbe23f6145');
         case 'invalid-argument':
-          throw Exception('Thiếu thông tin tải ảnh Album.');
+          throw UiCopyException('copy_07b57ae1291a');
         case 'permission-denied':
-          throw Exception('Bạn không có quyền tải ảnh vào Album này.');
+          throw UiCopyException('copy_0a0e82c2da65');
         case 'deadline-exceeded':
         case 'unavailable':
-          throw Exception('Không thể kết nối máy chủ tạo phiên tải ảnh Album.');
+          throw UiCopyException('copy_98cbed0ef403');
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -526,16 +527,14 @@ class StorageService {
       }
       switch (error.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw Exception('Cần đăng nhập để tải ảnh công khai.');
+          throw UiCopyException('copy_3e75f7405247');
         case 'invalid-argument':
-          throw Exception('Thiếu thông tin tải ảnh công khai.');
+          throw UiCopyException('copy_c62167c0e18b');
         case 'permission-denied':
-          throw Exception('Bạn không có quyền tải ảnh công khai này.');
+          throw UiCopyException('copy_89a73767f9fc');
         case 'deadline-exceeded':
         case 'unavailable':
-          throw Exception(
-            'Không thể kết nối máy chủ tạo phiên tải ảnh công khai.',
-          );
+          throw UiCopyException('copy_f8b58a3bc941');
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -576,9 +575,9 @@ class StorageService {
     } on FirebaseFunctionsException catch (error) {
       switch (error.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw Exception('Cần đăng nhập để hoàn tất ảnh Album.');
+          throw UiCopyException('copy_90a477ac6e83');
         case 'invalid-argument':
-          throw Exception('Thiếu thông tin hoàn tất ảnh Album.');
+          throw UiCopyException('copy_c6d946b85ebe');
         case 'not-found':
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -586,7 +585,7 @@ class StorageService {
                 : 'Không tìm thấy phiên tải ảnh Album.',
           );
         case 'permission-denied':
-          throw Exception('Bạn không có quyền hoàn tất ảnh Album này.');
+          throw UiCopyException('copy_6c6006ba38ea');
         case 'failed-precondition':
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -595,7 +594,7 @@ class StorageService {
           );
         case 'deadline-exceeded':
         case 'unavailable':
-          throw Exception('Không thể kết nối máy chủ hoàn tất ảnh Album.');
+          throw UiCopyException('copy_67d933ac8ea6');
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -646,11 +645,11 @@ class StorageService {
     } on FirebaseFunctionsException catch (error) {
       switch (error.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw Exception('Cần đăng nhập để hoàn tất ảnh Kỷ niệm.');
+          throw UiCopyException('copy_e51f8753446e');
         case 'invalid-argument':
-          throw Exception('Thiếu dữ liệu để hoàn tất ảnh Kỷ niệm.');
+          throw UiCopyException('copy_7d96fae4af62');
         case 'resource-exhausted':
-          throw Exception('Bạn đã đạt giới hạn đăng ảnh Kỷ niệm hôm nay.');
+          throw UiCopyException('copy_5470f87bf0a1');
         case 'not-found':
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -666,7 +665,7 @@ class StorageService {
           );
         case 'deadline-exceeded':
         case 'unavailable':
-          throw Exception('Không thể kết nối máy chủ hoàn tất ảnh Kỷ niệm.');
+          throw UiCopyException('copy_4efcae934e53');
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -741,7 +740,7 @@ class StorageService {
         .toSet()
         .toList();
     if (normalizedIds.isEmpty) {
-      throw Exception('Thiếu ảnh Kỷ niệm để xóa.');
+      throw UiCopyException('copy_5128b4443dbd');
     }
 
     Future<Map<String, dynamic>> callMoveToTrash() {
@@ -776,11 +775,11 @@ class StorageService {
       }
       switch (resolvedError.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw Exception('Cần đăng nhập để xóa ảnh Kỷ niệm.');
+          throw UiCopyException('copy_34e1b3d650e7');
         case 'invalid-argument':
-          throw Exception('Thiếu dữ liệu để xóa ảnh Kỷ niệm.');
+          throw UiCopyException('copy_2f7fb878a0de');
         case 'permission-denied':
-          throw Exception('Bạn không có quyền xóa ảnh Kỷ niệm này.');
+          throw UiCopyException('copy_febe3f9cb924');
         case 'not-found':
           throw Exception(
             (resolvedError.message ?? '').trim().isNotEmpty
@@ -789,7 +788,7 @@ class StorageService {
           );
         case 'deadline-exceeded':
         case 'unavailable':
-          throw Exception('Không thể kết nối máy chủ để xóa ảnh Kỷ niệm.');
+          throw UiCopyException('copy_8f44baa3f6f7');
         default:
           throw Exception(
             (resolvedError.message ?? '').trim().isNotEmpty
@@ -829,11 +828,11 @@ class StorageService {
     } on FirebaseFunctionsException catch (error) {
       switch (error.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw Exception('Cần đăng nhập để khôi phục ảnh Kỷ niệm.');
+          throw UiCopyException('copy_d4788b9ad5cb');
         case 'invalid-argument':
-          throw Exception('Thiếu dữ liệu để khôi phục ảnh Kỷ niệm.');
+          throw UiCopyException('copy_342a1ad34a6a');
         case 'permission-denied':
-          throw Exception('Bạn không có quyền khôi phục ảnh Kỷ niệm này.');
+          throw UiCopyException('copy_fffaee0b9efd');
         case 'not-found':
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -848,9 +847,7 @@ class StorageService {
           );
         case 'deadline-exceeded':
         case 'unavailable':
-          throw Exception(
-            'Không thể kết nối máy chủ để khôi phục ảnh Kỷ niệm.',
-          );
+          throw UiCopyException('copy_f077e76c9760');
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -882,16 +879,14 @@ class StorageService {
     } on FirebaseFunctionsException catch (error) {
       switch (error.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw Exception('Cần đăng nhập để dọn thùng rác Kỷ niệm.');
+          throw UiCopyException('copy_66a39337300e');
         case 'invalid-argument':
-          throw Exception('Thiếu dữ liệu để dọn thùng rác Kỷ niệm.');
+          throw UiCopyException('copy_7b3f71abbf6b');
         case 'permission-denied':
-          throw Exception('Bạn không có quyền dọn thùng rác Kỷ niệm.');
+          throw UiCopyException('copy_e52c27bcd89e');
         case 'deadline-exceeded':
         case 'unavailable':
-          throw Exception(
-            'Không thể kết nối máy chủ để dọn thùng rác Kỷ niệm.',
-          );
+          throw UiCopyException('copy_ba3af1f1f4ce');
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -993,9 +988,9 @@ class StorageService {
       }
       switch (error.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw Exception('Cần đăng nhập để hoàn tất ảnh công khai.');
+          throw UiCopyException('copy_d63f7c5741da');
         case 'invalid-argument':
-          throw Exception('Thiếu dữ liệu để hoàn tất ảnh công khai.');
+          throw UiCopyException('copy_cd208658eecf');
         case 'not-found':
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -1011,7 +1006,7 @@ class StorageService {
           );
         case 'deadline-exceeded':
         case 'unavailable':
-          throw Exception('Không thể kết nối máy chủ hoàn tất ảnh công khai.');
+          throw UiCopyException('copy_56d7893f7c4e');
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -1151,7 +1146,7 @@ class StorageService {
       };
     } catch (e) {
       debugPrint('Collage R2 upload error: $e');
-      throw Exception('Không thể tải ảnh ghép lên đám mây.');
+      throw UiCopyException('copy_97d441d22938');
     }
   }
 
@@ -1214,7 +1209,7 @@ class StorageService {
   }) {
     return _uploadSignedImageWithCompression(
       file: file,
-      sessionBuilder: (contentType, preferredFileName) async =>
+      sessionBuilder: (contentType, preferredFileName, _, _) async =>
           _createPublicImageUploadSession(
             houseId: houseId,
             target: target,
@@ -1250,7 +1245,7 @@ class StorageService {
               }
             }
           : null,
-      errorMessage: 'Không thể tải ảnh công khai lên máy chủ.',
+      errorMessage: UiCopy.text('copy_bfaa60aee417'),
       onProgress: onProgress,
     );
   }
@@ -1266,7 +1261,7 @@ class StorageService {
   }) {
     return _uploadSignedImageWithCompression(
       file: file,
-      sessionBuilder: (contentType, preferredFileName) =>
+      sessionBuilder: (contentType, preferredFileName, _, _) =>
           _createChatImageUploadSession(
             houseId: houseId,
             scope: isInternal ? 'internal' : 'direct',
@@ -1280,7 +1275,7 @@ class StorageService {
       tempPrefix: 'sl_chat',
       errorLabel: 'Chat image',
       mapResult: mapChatStorageUploadResult,
-      errorMessage: 'Không thể tải ảnh chat lên máy chủ.',
+      errorMessage: UiCopy.text('copy_668d3addf2f9'),
     );
   }
 
@@ -1384,7 +1379,7 @@ class StorageService {
   }) {
     return _uploadSignedImageWithCompression(
       file: file,
-      sessionBuilder: (contentType, preferredFileName) =>
+      sessionBuilder: (contentType, preferredFileName, _, _) =>
           _createMemoryImageUploadSession(
             houseId: houseId,
             contentType: contentType,
@@ -1396,7 +1391,7 @@ class StorageService {
       tempPrefix: 'sl_memory',
       errorLabel: 'Memory image',
       mapResult: mapBasicStorageUploadResult,
-      errorMessage: 'Lỗi tải ảnh đám mây.',
+      errorMessage: UiCopy.text('copy_6f4cc17c0717'),
       beforeUpload: beforeUpload,
     );
   }
@@ -1410,7 +1405,7 @@ class StorageService {
   }) {
     return _uploadSignedImageWithCompression(
       file: file,
-      sessionBuilder: (contentType, preferredFileName) =>
+      sessionBuilder: (contentType, preferredFileName, size, md5Hex) =>
           _uploadSessionHelper.createUploadSession(
             invokeCallable: (name, payload) => _callWithAppCheckRetry(
               () => _functions.httpsCallable(name).call(payload),
@@ -1421,6 +1416,9 @@ class StorageService {
               'houseId': houseId.trim(),
               'contentType': contentType.trim(),
               'fileName': preferredFileName.trim(),
+              'transport': 'r2',
+              'size': size,
+              'md5': md5Hex,
             },
             label: 'Time capsule image upload session',
             requireSessionId: true,
@@ -1430,6 +1428,8 @@ class StorageService {
       minHeight: minHeight,
       quality: quality,
       tempPrefix: 'sl_time_capsule',
+      r2Folder: 'time_capsules',
+      r2HouseId: houseId,
       errorLabel: 'Time capsule image',
       mapResult: mapBasicStorageUploadResult,
       finalizeSession: (session) async {
@@ -1445,7 +1445,7 @@ class StorageService {
           throw StateError('Time capsule image finalize was not confirmed');
         }
       },
-      errorMessage: 'Không thể tải ảnh hòm thời gian lên máy chủ.',
+      errorMessage: UiCopy.text('copy_3d3563928844'),
     );
   }
 
@@ -1458,7 +1458,7 @@ class StorageService {
   }) {
     return _uploadSignedImageWithCompression(
       file: file,
-      sessionBuilder: (contentType, preferredFileName) =>
+      sessionBuilder: (contentType, preferredFileName, _, _) =>
           _createAlbumImageUploadSession(
             houseId: houseId,
             contentType: contentType,
@@ -1470,7 +1470,7 @@ class StorageService {
       tempPrefix: 'sl_album',
       errorLabel: 'Album image',
       mapResult: mapBasicStorageUploadResult,
-      errorMessage: 'Không thể tải ảnh Album lên đám mây.',
+      errorMessage: UiCopy.text('copy_cf39b1f1b5a6'),
     );
   }
 
@@ -1483,7 +1483,7 @@ class StorageService {
   }) async {
     return _uploadSignedImageWithCompression(
       file: file,
-      sessionBuilder: (contentType, preferredFileName) =>
+      sessionBuilder: (contentType, preferredFileName, _, _) =>
           _createGiftImageUploadSession(
             houseId: houseId,
             contentType: contentType,
@@ -1495,7 +1495,7 @@ class StorageService {
       tempPrefix: 'sl_gift',
       errorLabel: 'Gift image',
       mapResult: mapBasicStorageUploadResult,
-      errorMessage: 'Không thể tải ảnh quà tặng lên đám mây.',
+      errorMessage: UiCopy.text('copy_e05dbe307913'),
     );
   }
 
@@ -1508,7 +1508,7 @@ class StorageService {
   }) async {
     return _uploadSignedImageWithCompression(
       file: file,
-      sessionBuilder: (contentType, preferredFileName) =>
+      sessionBuilder: (contentType, preferredFileName, _, _) =>
           _createLoveCardImageUploadSession(
             houseId: houseId,
             contentType: contentType,
@@ -1520,7 +1520,7 @@ class StorageService {
       tempPrefix: 'sl_love_card',
       errorLabel: 'Love card image',
       mapResult: mapBasicStorageUploadResult,
-      errorMessage: 'Không thể tải ảnh love card lên đám mây.',
+      errorMessage: UiCopy.text('copy_0d1384921d39'),
     );
   }
 
@@ -1529,8 +1529,13 @@ class StorageService {
     required Future<Map<String, dynamic>> Function(
       String contentType,
       String preferredFileName,
+      int size,
+      String md5Hex,
     )
     sessionBuilder,
+    // Thư mục R2 riêng tư khi server trả phiên `transport: 'r2'` (ví dụ time_capsules).
+    String? r2Folder,
+    String? r2HouseId,
     required int minWidth,
     required int minHeight,
     required int quality,
@@ -1604,57 +1609,28 @@ class StorageService {
       requireUploadOwner();
       onProgress?.call(0.4);
 
-      final session = await sessionBuilder(contentType, preferredFileName);
+      final session = await sessionBuilder(
+        contentType,
+        preferredFileName,
+        bytes.length,
+        md5.convert(bytes).toString(),
+      );
       requireUploadOwner();
-      final uploadUrl = session['uploadUrl']?.toString().trim() ?? '';
-      final rawHeaders = session['headers'];
-      if (uploadUrl.isEmpty || rawHeaders is! Map) {
-        throw StateError('Invalid upload session');
-      }
-      final uploadUri = Uri.tryParse(uploadUrl);
-      if (uploadUri == null ||
-          uploadUri.scheme != 'https' ||
-          uploadUri.port != 443 ||
-          uploadUri.userInfo.isNotEmpty ||
-          uploadUri.hasFragment ||
-          !(uploadUri.host == 'storage.googleapis.com' ||
-              uploadUri.host.endsWith('.storage.googleapis.com'))) {
-        throw StateError('Invalid upload destination');
-      }
-      final headers = <String, String>{};
-      for (final entry in rawHeaders.entries) {
-        if (entry.key is! String || entry.value is! String) {
-          throw StateError('Invalid upload headers');
-        }
-        final name = (entry.key as String).toLowerCase();
-        final value = entry.value as String;
-        if (RegExp(r'[\x00-\x1f\x7f]').hasMatch(name + value) ||
-            headers.containsKey(name)) {
-          throw StateError('Invalid upload headers');
-        }
-        if (name == 'content-type' || name.startsWith('x-goog-meta-')) {
-          headers[name] = value;
-        }
-      }
-      if (headers['content-type'] != contentType) {
-        throw StateError('Upload content type mismatch');
-      }
-
-      final request = http.Request('PUT', uploadUri)
-        ..followRedirects = false
-        ..headers.addAll(headers)
-        ..bodyBytes = bytes;
-      final client = http.Client();
-      try {
-        final response = await client
-            .send(request)
-            .then(http.Response.fromStream)
-            .timeout(const Duration(minutes: 2));
-        if (response.statusCode < 200 || response.statusCode >= 300) {
-          throw StateError('Upload failed (${response.statusCode})');
-        }
-      } finally {
-        client.close();
+      if (session['transport'] == 'r2') {
+        await _putPrivateR2Image(
+          session: session,
+          bytes: bytes,
+          contentType: contentType,
+          folder: r2Folder,
+          houseId: r2HouseId,
+          ownerUid: uploadUid,
+        );
+      } else {
+        await _putFirebaseSignedImage(
+          session: session,
+          bytes: bytes,
+          contentType: contentType,
+        );
       }
 
       requireUploadOwner();
@@ -1687,6 +1663,91 @@ class StorageService {
     }
   }
 
+  /// PUT ảnh lên bucket R2 riêng tư theo phiên server ký; kiểm tra đúng nhà/chủ/thư mục.
+  Future<void> _putPrivateR2Image({
+    required Map<String, dynamic> session,
+    required Uint8List bytes,
+    required String contentType,
+    required String? folder,
+    required String? houseId,
+    required String ownerUid,
+  }) async {
+    final request = PrivateR2Put.buildRequest(
+      session: session,
+      bytes: bytes,
+      contentType: contentType,
+      houseId: houseId?.trim(),
+      ownerUid: ownerUid,
+      folder: folder ?? '',
+      extensions: const {'jpg', 'png', 'webp', 'gif', 'heic', 'heif'},
+      maxBytes: 15 * 1024 * 1024,
+    );
+    final client = http.Client();
+    try {
+      await PrivateR2Put.send(client, request);
+    } finally {
+      client.close();
+    }
+  }
+
+  /// PUT ảnh lên Firebase Storage theo URL ký V4 (luồng cũ, giữ cho server chưa bật R2).
+  Future<void> _putFirebaseSignedImage({
+    required Map<String, dynamic> session,
+    required Uint8List bytes,
+    required String contentType,
+  }) async {
+    final uploadUrl = session['uploadUrl']?.toString().trim() ?? '';
+    final rawHeaders = session['headers'];
+    if (uploadUrl.isEmpty || rawHeaders is! Map) {
+      throw StateError('Invalid upload session');
+    }
+    final uploadUri = Uri.tryParse(uploadUrl);
+    if (uploadUri == null ||
+        uploadUri.scheme != 'https' ||
+        uploadUri.port != 443 ||
+        uploadUri.userInfo.isNotEmpty ||
+        uploadUri.hasFragment ||
+        !(uploadUri.host == 'storage.googleapis.com' ||
+            uploadUri.host.endsWith('.storage.googleapis.com'))) {
+      throw StateError('Invalid upload destination');
+    }
+    final headers = <String, String>{};
+    for (final entry in rawHeaders.entries) {
+      if (entry.key is! String || entry.value is! String) {
+        throw StateError('Invalid upload headers');
+      }
+      final name = (entry.key as String).toLowerCase();
+      final value = entry.value as String;
+      if (RegExp(r'[\x00-\x1f\x7f]').hasMatch(name + value) ||
+          headers.containsKey(name)) {
+        throw StateError('Invalid upload headers');
+      }
+      if (name == 'content-type' || name.startsWith('x-goog-meta-')) {
+        headers[name] = value;
+      }
+    }
+    if (headers['content-type'] != contentType) {
+      throw StateError('Upload content type mismatch');
+    }
+
+    final request = http.Request('PUT', uploadUri)
+      ..followRedirects = false
+      ..headers.addAll(headers)
+      ..bodyBytes = bytes;
+    final client = http.Client();
+    try {
+      final response = await client
+          .send(request)
+          .then(http.Response.fromStream)
+          .timeout(const Duration(minutes: 2));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw StateError('Upload failed (${response.statusCode})');
+      }
+    } finally {
+      client.close();
+    }
+  }
+
   Future<StorageUploadResult?> uploadSecretVaultImage(
     String houseId,
     XFile file, {
@@ -1696,7 +1757,7 @@ class StorageService {
   }) async {
     final normalizedHouseId = houseId.trim();
     if (normalizedHouseId.isEmpty) {
-      throw Exception('Thiếu thông tin kho bí mật.');
+      throw UiCopyException('copy_57a524aa6dd1');
     }
     _requireCurrentUid();
 
@@ -1745,14 +1806,14 @@ class StorageService {
       );
       final rawSession = sessionResult.data;
       if (rawSession is! Map) {
-        throw Exception('Máy chủ trả về phiên tải kho bí mật không hợp lệ.');
+        throw UiCopyException('copy_dd1fed82cddc');
       }
       final session = Map<String, dynamic>.from(rawSession);
       final uploadId = session['uploadId']?.toString().trim() ?? '';
       final uploadUrl = session['url']?.toString().trim() ?? '';
       final storagePath = session['path']?.toString().trim() ?? '';
       if (uploadId.isEmpty || uploadUrl.isEmpty || storagePath.isEmpty) {
-        throw Exception('Phiên tải kho bí mật thiếu thông tin bắt buộc.');
+        throw UiCopyException('copy_3081f058c454');
       }
 
       final headers = <String, String>{};
@@ -1770,9 +1831,7 @@ class StorageService {
           .put(Uri.parse(uploadUrl), headers: headers, body: bytes)
           .timeout(const Duration(minutes: 2));
       if (uploadResponse.statusCode < 200 || uploadResponse.statusCode >= 300) {
-        throw Exception(
-          'Máy chủ lưu trữ từ chối ảnh (${uploadResponse.statusCode}).',
-        );
+        throw UiCopyException('copy_f36e2a41b72a', {'value1': uploadResponse.statusCode});
       }
 
       final finalized = await _callWithAppCheckRetry(
@@ -1783,7 +1842,7 @@ class StorageService {
       );
       final finalizeData = finalized.data;
       if (finalizeData is! Map || finalizeData['success'] != true) {
-        throw Exception('Không thể xác nhận ảnh kho bí mật đã tải xong.');
+        throw UiCopyException('copy_a72d2688a7b4');
       }
 
       return StorageUploadResult(

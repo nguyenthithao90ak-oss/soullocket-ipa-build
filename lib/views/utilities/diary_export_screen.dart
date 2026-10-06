@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
@@ -599,7 +600,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
                 _actionIcon(
                   Icons.delete_outline_rounded,
                   Colors.red[300]!,
-                  'Xoá file',
+                  UiCopy.text('copy_a372558dd185'),
                   () {
                     showDialog(
                       context: context,

@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -58,52 +59,52 @@ class _WalkingStickerOverlayState extends State<WalkingStickerOverlay>
   final Random _random = Random();
 
   static const List<String> _speechPhrases = [
-    'Meow~ Đi dạo vui quá! 🐾',
-    'Cậu ơi, hôm nay thế nào? ❤️',
-    'Nhìn chỉ số hạnh phúc kìa! ✨',
-    'Tớ đang canh gác tình yêu! 🛡️',
-    'Bấm vào tớ để đổi bạn nhé! 🔄',
-    'Chúc hai bạn luôn ngọt ngào! 🍬',
-    'Thể dục nâng cao sức khỏe! 🏃',
-    'Chạm vào tớ xem tớ nhảy nè! ⚡',
-    'Hãy lưu giữ thật nhiều kỷ niệm nha! 📸',
-    'Yêu thương là cùng nhau nhìn về một hướng! 🌅',
-    'Chúc hai bạn hôm nay tràn ngập tiếng cười nhé! 🎉',
-    'Mỗi ngày bên nhau đều là một ngày nắng đẹp! ☀️',
-    'Hãy gửi cho người ấy một lời chúc ngọt ngào ngay đi nào! 💌',
-    'Bạn chính là lý do khiến người ấy mỉm cười hôm nay đấy! 😊',
-    'Hạnh phúc là cùng nhau làm những điều bình dị! ☕',
-    'Hai bạn sinh ra là để dành cho nhau đó! 🧩',
-    'Càng bên nhau lâu, tình yêu càng thêm đậm sâu! 🍯',
-    'Hãy ôm người ấy thật chặt mỗi khi có cơ hội nha! 🤗',
-    'Tình yêu của hai bạn tỏa sáng lung linh luôn! ⭐',
-    'Hãy là điểm tựa bình yên và ấm áp của nhau nhé! 🏡',
-    'Hôm nay hãy cùng chụp một tấm ảnh thật ngộ nghĩnh nha! 📸',
-    'Chúc cho tình yêu này luôn bền chặt theo năm tháng! ⏳',
-    'Cùng nhau qua giông bão mới trân trọng ngày nắng ấm! 🌈',
-    'Có một người đang nhớ cậu lắm đó, biết không? 💭',
-    'Một tin nhắn quan tâm nhỏ thôi cũng đủ ấm lòng cả ngày! 💬',
-    'Hai bạn là cặp đôi đáng yêu nhất hệ mặt trời! 🪐',
-    'Tối nay hãy cùng nghe một bản nhạc thật chill nhé! 🎵',
-    'Yêu là chia sẻ từ những điều nhỏ nhặt nhất! 🍰',
-    'Đi khắp thế gian, người tớ muốn ở bên nhất vẫn là cậu! 🌍',
-    'Lắng nghe và thấu hiểu nhau nhiều hơn mỗi ngày nha! 🌸',
-    'Chỉ cần có nhau, góc nhỏ nào cũng hóa bình yên! 🔑',
+    'copy_3e57ff571440',
+    'copy_1f78b165f42b',
+    'copy_abd44f779419',
+    'copy_4eea16787b5d',
+    'copy_a4bb1c801c99',
+    'copy_3e127609305a',
+    'copy_88bac2e2b6c2',
+    'copy_047880da2e43',
+    'copy_717b1a78fdb2',
+    'copy_de9eff45ae30',
+    'copy_dec71ff07669',
+    'copy_09879bc5d866',
+    'copy_57def43b0696',
+    'copy_f9dc54b497e8',
+    'copy_6f552a9fa77c',
+    'copy_f38d062f7299',
+    'copy_03f027fc6689',
+    'copy_a32882cda0a7',
+    'copy_887994c15e38',
+    'copy_1222f27d776f',
+    'copy_7a114095aad6',
+    'copy_777f59a91c9b',
+    'copy_fd2ffc42f4dd',
+    'copy_5b629b9e4f3d',
+    'copy_85e971472d20',
+    'copy_c47f69821083',
+    'copy_00485e6d839c',
+    'copy_a09e5246c482',
+    'copy_dacb8155dc64',
+    'copy_cb22f2fbf838',
+    'copy_24286b44f5ad',
   ];
 
   static const List<String> _singleSpeechPhrases = [
-    'Meow~ Đi dạo vui quá! 🐾',
-    'Cậu ơi, hôm nay thế nào? ❤️',
-    'Bấm vào tớ để đổi nhân vật nhé! 🔄',
-    'Thể dục nâng cao sức khỏe! 🏃',
-    'Chạm vào tớ xem tớ nhảy nè! ⚡',
-    'Hãy lưu giữ thật nhiều kỷ niệm nha! 📸',
-    'Một ngày tuyệt vời để làm việc mình thích! 🌟',
-    'Chăm sóc bản thân là ưu tiên hàng đầu nhé! 💖',
-    'Hôm nay hãy tự thưởng cho mình một món quà nha! 🎁',
-    'Uống đủ nước và nghỉ ngơi khi mệt nhé! 💧',
-    'Tối nay hãy cùng nghe một bản nhạc thật chill nhé! 🎵',
-    'Góc nhỏ của riêng bạn luôn bình yên và ấm áp! 🏡',
+    'copy_3e57ff571440',
+    'copy_1f78b165f42b',
+    'copy_dc7fd5eb7a6e',
+    'copy_88bac2e2b6c2',
+    'copy_047880da2e43',
+    'copy_717b1a78fdb2',
+    'copy_fcbd74e4cca8',
+    'copy_d5a65f2cf99a',
+    'copy_0a221c129750',
+    'copy_2447b1840ff9',
+    'copy_00485e6d839c',
+    'copy_e7903ff9d465',
   ];
 
   @override
@@ -220,7 +221,7 @@ class _WalkingStickerOverlayState extends State<WalkingStickerOverlay>
     final phrases = isSingle ? _singleSpeechPhrases : _speechPhrases;
     final phraseIndex = _random.nextInt(phrases.length);
     setState(() {
-      _speechText = phrases[phraseIndex];
+      _speechText = UiCopy.text(phrases[phraseIndex]);
     });
 
     _speechBubbleTimer = Timer(const Duration(seconds: 4), () {

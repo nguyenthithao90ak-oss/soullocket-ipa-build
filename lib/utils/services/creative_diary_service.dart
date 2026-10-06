@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:typed_data';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -55,7 +56,7 @@ class CreativeDiaryService {
     final mimeType = _detectMimeType(safeExtension);
     final bytes = await _readVoiceBytes(voiceNote);
     if (bytes == null || bytes.isEmpty) {
-      throw Exception('Không đọc được dữ liệu ghi âm để lưu sổ tay.');
+      throw UiCopyException('copy_0fff4818611f');
     }
 
     final pendingKey = _voicePendingKey(houseId);

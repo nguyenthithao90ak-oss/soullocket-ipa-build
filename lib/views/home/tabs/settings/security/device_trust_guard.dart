@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../../../utils/services/device_manager_service.dart';
@@ -64,7 +65,7 @@ class DeviceTrustGuard {
     final mm = dt.month.toString().padLeft(2, '0');
     final hh = dt.hour.toString().padLeft(2, '0');
     final min = dt.minute.toString().padLeft(2, '0');
-    return '$dd/$mm/${dt.year} lúc $hh:$min';
+    return UiCopy.text('copy_03dc788a1b2c', {'value1': dd, 'value2': mm, 'value3': dt.year, 'value4': hh, 'value5': min});
   }
 
   String buildPendingMessage({

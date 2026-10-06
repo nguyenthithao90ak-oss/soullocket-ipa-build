@@ -5,6 +5,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'ui_copy.dart';
 
 enum AppErrorKind { user, network, server }
 
@@ -30,6 +31,15 @@ class AppErrorMapper {
       L10nService().translate('err_auth_recent_login_required');
 
   static AppErrorInfo resolve(dynamic error, {String? fallbackMessage}) {
+    if (error is UiCopyException) {
+      final original = error.canonicalMessage;
+      return AppErrorInfo(
+        kind: _looksLikeNetwork(original)
+            ? AppErrorKind.network
+            : _looksLikeUser(original) ? AppErrorKind.user : AppErrorKind.server,
+        message: error.message,
+      );
+    }
     if (error is AppErrorInfo) {
       return error;
     }
@@ -183,12 +193,18 @@ class AppErrorMapper {
       final details = error.details;
       final reason = details is Map ? details['reason'] : error.message;
       final key = switch (reason) {
+        'target_unverified' => 'device_manager_legacy_protected',
         'creator_protected' => 'device_manager_creator_protected',
         'device_too_new' => 'device_manager_device_too_new',
         'device_unverified' => 'device_manager_device_unverified_permission',
         _ => null,
       };
-      if (key != null) return AppErrorInfo(kind: AppErrorKind.user, message: L10nService().translate(key));
+      if (key != null) {
+        return AppErrorInfo(
+          kind: AppErrorKind.user,
+          message: L10nService().translate(key),
+        );
+      }
     }
 
     if (error.plugin == 'firebase_app_check' &&

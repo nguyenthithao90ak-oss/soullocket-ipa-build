@@ -116,8 +116,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     // 2. Sinh nhật
     final dobU1 = _houseSettings?['dobU1']?.toString() ?? '';
     final dobU2 = _houseSettings?['dobU2']?.toString() ?? '';
-    String nameU1 = _houseSettings?['nameU1']?.toString() ?? 'Bạn';
-    String nameU2 = _houseSettings?['nameU2']?.toString() ?? 'Người ấy';
+    String nameU1 = _houseSettings?['nameU1']?.toString() ?? UiCopy.text('copy_40ffd8d0f1c7');
+    String nameU2 = _houseSettings?['nameU2']?.toString() ?? UiCopy.text('copy_145933221191');
     if (nameU1.toLowerCase() == 'bạn nam') {
       nameU1 = context.tr('male_role_default');
     }

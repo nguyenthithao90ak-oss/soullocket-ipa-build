@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
@@ -1759,7 +1760,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                             ),
                             const SizedBox(width: 3),
                             Text(
-                              marker.togetherTime ?? 'Đang bên nhau 💕',
+                              marker.togetherTime ?? UiCopy.text('copy_18bd95496b34'),
                               style: SLTheme.quicksand(
                                 fontSize: 9.0,
                                 fontWeight: FontWeight.w900,

@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
 
@@ -75,7 +76,7 @@ class AuthAdminService {
 
     final isMaintenanceMode = await isMaintenanceModeEnabled();
     if (isMaintenanceMode) {
-      return 'Hệ thống đang trong chế độ bảo trì. Vui lòng quay lại sau.';
+      return UiCopy.text('copy_0f883a4f1253');
     }
 
     return null;

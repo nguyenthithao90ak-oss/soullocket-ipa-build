@@ -14,7 +14,8 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
   ScheduleEventPresentation? _schedulePresentation(_NotifModel notif) {
     final raw = notif.raw;
     final isSchedule =
-        raw['kind']?.toString() == 'schedule' || notif.id.startsWith('sched_d');
+        raw['kind']?.toString() == 'schedule' ||
+        raw['category']?.toString() == 'schedule' || notif.id.startsWith('sched_d');
     if (!isSchedule) return null;
     return describeScheduleNotification(
       notificationId: notif.id,
@@ -23,6 +24,7 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
       eventTitle: raw['eventTitle']?.toString() ?? '',
       eventDate: raw['eventDate']?.toString(),
       eventKey: raw['eventKey']?.toString(),
+      daysUntil: raw['daysUntil'] is num ? (raw['daysUntil'] as num).toInt() : null,
       identity: _scheduleIdentity,
     );
   }

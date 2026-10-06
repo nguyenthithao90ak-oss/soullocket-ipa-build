@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:convert';
 
 class ChatMessagePreviewLabels {
@@ -88,7 +89,7 @@ String formatChatMessagePreview(
 
   if (type == 'image' && imageStatus == 'expired') {
     return text.isEmpty
-        ? '\u1ea2nh \u0111\u00e3 b\u1ecb x\u00f3a sau 15 ng\u00e0y'
+        ? UiCopy.text('copy_aa5a9691954f')
         : text;
   }
 

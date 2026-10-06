@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
@@ -53,41 +54,41 @@ class FriendsService {
     final normalizedToHouseId = _normalizeHouseId(toHouseId);
     if (normalizedFromHouseId.isEmpty) {
       return FriendRequestResult.error(
-        'Không xác định được mã nhà hiện tại để gửi yêu cầu.',
+        UiCopy.text('copy_e674dc3e7559'),
       );
     }
 
     if (normalizedToHouseId.isEmpty) {
       return FriendRequestResult.error(
-        'Bạn chưa nhập mã nhà. Hãy nhập đúng mã như NH_ABC123.',
+        UiCopy.text('copy_707d1439736a'),
       );
     }
 
     if (normalizedFromHouseId == normalizedToHouseId) {
-      return FriendRequestResult.error('Không thể kết bạn với chính mình');
+      return FriendRequestResult.error(UiCopy.text('copy_faa583530998'));
     }
 
     try {
       final response = await CloudFunctionsHelper.callSecure<dynamic>(
         'sendFriendRequestSecure',
         payload: <String, dynamic>{'toHouseId': normalizedToHouseId},
-        fallbackErrorMessage: 'Không thể gửi lời mời lúc này.',
+        fallbackErrorMessage: UiCopy.text('copy_e2d263cf5d71'),
       );
       final result = _asStringDynamicMap(response.data) ?? const {};
       final message = result['message']?.toString().trim();
       if (result['success'] == true) {
         return FriendRequestResult.success(
-          message?.isNotEmpty == true ? message! : 'Đã gửi lời mời!',
+          message?.isNotEmpty == true ? message! : UiCopy.text('copy_87904b61cd1e'),
         );
       }
       return FriendRequestResult.error(
         message?.isNotEmpty == true
             ? message!
-            : 'Không thể gửi lời mời lúc này.',
+            : UiCopy.text('copy_e2d263cf5d71'),
       );
     } catch (error) {
       return FriendRequestResult.error(
-        _callableErrorMessage(error, 'Không thể gửi lời mời lúc này.'),
+        _callableErrorMessage(error, UiCopy.text('copy_e2d263cf5d71')),
       );
     }
   }
@@ -120,7 +121,7 @@ class FriendsService {
           'requestId': normalizedRequestId,
           'accept': true,
         },
-        fallbackErrorMessage: 'Không thể chấp nhận lời mời.',
+        fallbackErrorMessage: UiCopy.text('copy_d5ffa0bdee5c'),
       );
       final result = _asStringDynamicMap(response.data) ?? const {};
       if (result['success'] != true) return false;
@@ -148,7 +149,7 @@ class FriendsService {
         'requestId': normalizedRequestId,
         'accept': false,
       },
-      fallbackErrorMessage: 'Không thể từ chối lời mời.',
+      fallbackErrorMessage: UiCopy.text('copy_b44e591ec0ed'),
     );
   }
 
@@ -159,7 +160,7 @@ class FriendsService {
     await CloudFunctionsHelper.callSecure<dynamic>(
       'cancelFriendRequestSecure',
       payload: <String, dynamic>{'requestId': normalizedRequestId},
-      fallbackErrorMessage: 'Không thể hủy lời mời.',
+      fallbackErrorMessage: UiCopy.text('copy_bb1c8d90750b'),
     );
   }
 
@@ -170,7 +171,7 @@ class FriendsService {
     await CloudFunctionsHelper.callSecure<dynamic>(
       'removeFriendSecure',
       payload: <String, dynamic>{'friendHouseId': normalizedFriendHouseId},
-      fallbackErrorMessage: 'Không thể hủy kết bạn.',
+      fallbackErrorMessage: UiCopy.text('copy_26ad1631b7e0'),
     );
   }
 

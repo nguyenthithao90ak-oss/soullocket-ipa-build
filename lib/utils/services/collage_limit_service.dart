@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'admob_service.dart';
 import 'offline_cache_service.dart';
@@ -39,7 +40,7 @@ class CollageLimitService {
       if (nowMs - lastAdTime < cooldownMs) {
         await prefs.setInt(extraKey, extraLimit + dailyLimit);
         onShowMessage(
-            'Vì bạn vừa xem quảng cáo gần đây, tặng bạn thêm $dailyLimit lượt miễn phí!',
+            UiCopy.text('copy_d3235d2eafe4', {'value1': dailyLimit}),
             isError: false);
         return true;
       }
@@ -55,11 +56,11 @@ class CollageLimitService {
         await prefs.setInt(extraKey, extraLimit + dailyLimit);
         await prefs.setInt('collage_last_ad_time_$today',
             DateTime.now().millisecondsSinceEpoch);
-        onShowMessage('Bạn đã nhận thêm $dailyLimit lượt tạo ảnh!',
+        onShowMessage(UiCopy.text('copy_9824528f08aa', {'value1': dailyLimit}),
             isError: false);
         return true;
       } else {
-        onShowMessage('Chưa xem xong quảng cáo!', isError: true);
+        onShowMessage(UiCopy.text('copy_4f6681c556f3'), isError: true);
         return false;
       }
     }

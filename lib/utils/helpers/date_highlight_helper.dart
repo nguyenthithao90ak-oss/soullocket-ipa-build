@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 class DateHighlightHelper {
   static const Map<String, Map<String, String>> _holidayMap = {
     '01-01': {'icon': '🎉', 'text': 'Năm mới'},
@@ -34,10 +35,10 @@ class DateHighlightHelper {
         d.month == anniversaryDate.month &&
         d.day == anniversaryDate.day) {
       if (d.year == anniversaryDate.year) {
-        tags.add({'icon': '💕', 'text': 'Ngày bắt đầu yêu'});
+        tags.add({'icon': '💕', 'text': UiCopy.text('copy_07d4844612d2')});
       } else if (d.year > anniversaryDate.year) {
         final years = d.year - anniversaryDate.year;
-        tags.add({'icon': '💕', 'text': 'Kỷ niệm $years năm yêu nhau'});
+        tags.add({'icon': '💕', 'text': UiCopy.text('copy_82e418760b5a', {'value1': years})});
       }
     }
 

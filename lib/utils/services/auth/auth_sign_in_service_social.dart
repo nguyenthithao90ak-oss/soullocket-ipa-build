@@ -43,7 +43,7 @@ extension AuthSignInServiceSocial on AuthSignInService {
   Future<void> linkGoogleToCurrentUser() async {
     var user = _auth.currentUser;
     if (user == null) {
-      throw 'Bạn cần đăng nhập trước khi liên kết Google.';
+      throw UiCopy.text('copy_ba3ce6b45be4');
     }
 
     if (await isGoogleLinkedCurrentUser()) {
@@ -75,7 +75,7 @@ extension AuthSignInServiceSocial on AuthSignInService {
           await initCompleter.future.timeout(
             const Duration(seconds: 15),
             onTimeout: () =>
-                throw 'Thời gian chờ Google quá lâu. Vui lòng thử lại.',
+                throw UiCopy.text('copy_90ca8dbde435'),
           );
           AuthSignInService._isGoogleSignInInitialized = true;
         }
@@ -104,12 +104,12 @@ extension AuthSignInServiceSocial on AuthSignInService {
         final googleUser = await authCompleter.future.timeout(
           const Duration(seconds: 20),
           onTimeout: () =>
-              throw 'Bạn đã để màn hình đăng nhập Google quá lâu hoặc chưa hoàn tất thao tác. Vui lòng thử lại.',
+              throw UiCopy.text('copy_fe32cbfef9b5'),
         );
         if (googleUser == null) return;
         final googleAuth = await googleUser.authentication;
         if ((googleAuth.idToken ?? '').isEmpty) {
-          throw 'Google không trả về ID token hợp lệ. Vui lòng thử lại.';
+          throw UiCopy.text('copy_f82aa856e91f');
         }
 
         final credential = firebase_auth.GoogleAuthProvider.credential(
@@ -128,16 +128,16 @@ extension AuthSignInServiceSocial on AuthSignInService {
         case 'credential-already-in-use':
         case 'email-already-in-use':
         case 'account-exists-with-different-credential':
-          throw 'Email Google này đã liên kết với tài khoản khác.';
+          throw UiCopy.text('copy_08d7dd1facf5');
         case 'requires-recent-login':
-          throw 'Phiên đăng nhập đã cũ. Hãy đăng xuất rồi đăng nhập lại trước khi liên kết Google.';
+          throw UiCopy.text('copy_1c54ebfdd9df');
         case 'popup-closed-by-user':
-          throw 'Bạn đã đóng cửa sổ đăng nhập Google.';
+          throw UiCopy.text('copy_21749000c8a0');
         case 'popup-blocked':
         case 'cancelled-popup-request':
-          throw 'Popup Google đang bị chặn. Hãy cho phép popup rồi thử lại.';
+          throw UiCopy.text('copy_4c6335e28066');
         case 'network-request-failed':
-          throw 'Lỗi kết nối hoặc sự cố từ Google, chưa thể liên kết Google lúc này.';
+          throw UiCopy.text('copy_3f3929986e93');
         default:
           throw handleFirebaseAuthError(error);
       }
@@ -151,13 +151,13 @@ extension AuthSignInServiceSocial on AuthSignInService {
           (errStr.contains('sign_in_canceled') ||
               errStr.contains('canceled') ||
               errStr.contains('cancelled'))) {
-        throw 'Bạn đã huỷ đăng nhập Google.';
+        throw UiCopy.text('copy_4cccee9577ae');
       }
       final raw = error.toString();
       if (raw.contains('10') ||
           raw.contains('sign_in_failed') ||
           raw.contains('ApiException')) {
-        throw 'Đăng nhập Google gặp sự cố ở bước xác thực tài khoản. Vui lòng thử lại sau.';
+        throw UiCopy.text('copy_d3bda4768414');
       }
       if (error is String) rethrow;
       throw AppErrorMapper.resolve(
@@ -171,7 +171,7 @@ extension AuthSignInServiceSocial on AuthSignInService {
   Future<void> linkAppleToCurrentUser() async {
     var user = _auth.currentUser;
     if (user == null) {
-      throw 'Bạn cần đăng nhập trước khi liên kết Apple.';
+      throw UiCopy.text('copy_cb88670faeb1');
     }
 
     if (await isAppleLinkedCurrentUser()) {
@@ -187,7 +187,7 @@ extension AuthSignInServiceSocial on AuthSignInService {
       } else {
         final isAvailable = await SignInWithApple.isAvailable();
         if (!isAvailable) {
-          throw 'Thiết bị hoặc bản build này chưa hỗ trợ Sign in with Apple.';
+          throw UiCopy.text('copy_422db9a6de1d');
         }
 
         final rawNonce = generateNonce();
@@ -222,19 +222,19 @@ extension AuthSignInServiceSocial on AuthSignInService {
         case 'credential-already-in-use':
         case 'email-already-in-use':
         case 'account-exists-with-different-credential':
-          throw 'Email Apple này đã liên kết với tài khoản khác.';
+          throw UiCopy.text('copy_9a315310c935');
         case 'requires-recent-login':
-          throw 'Phiên đăng nhập đã cũ. Hãy đăng xuất rồi đăng nhập lại trước khi liên kết Apple.';
+          throw UiCopy.text('copy_83503900874c');
         case 'popup-closed-by-user':
           return;
         case 'popup-blocked':
-          throw 'Popup liên kết Apple đang bị chặn. Hãy cho phép popup rồi thử lại.';
+          throw UiCopy.text('copy_99a56919b762');
         case 'operation-not-allowed':
           throw kDebugMode
-              ? 'Firebase Authentication chưa bật nhà cung cấp Apple.'
-              : 'Liên kết Apple chưa sẵn sàng trên bản app này.';
+              ? UiCopy.text('copy_85202bcdedf7')
+              : UiCopy.text('copy_82ae68ad2982');
         case 'network-request-failed':
-          throw 'Lỗi kết nối, chưa thể liên kết Apple lúc này.';
+          throw UiCopy.text('copy_e7fa1658c1aa');
         default:
           throw handleFirebaseAuthError(error);
       }
@@ -243,8 +243,8 @@ extension AuthSignInServiceSocial on AuthSignInService {
         return;
       }
       throw kDebugMode
-          ? 'Apple trả về lỗi xác thực (${error.code}). Hãy kiểm tra cấu hình Apple Sign In.'
-          : 'Liên kết Apple chưa hoàn tất được. Hãy thử lại sau.';
+          ? UiCopy.text('copy_94cb73e5c857', {'value1': error.code})
+          : UiCopy.text('copy_6ea982614770');
     } catch (error) {
       if (error is String) rethrow;
       throw AppErrorMapper.resolve(
@@ -258,19 +258,19 @@ extension AuthSignInServiceSocial on AuthSignInService {
   Future<void> createPasswordForCurrentUser(String newPassword) async {
     var user = _auth.currentUser;
     if (user == null) {
-      throw 'Bạn cần đăng nhập trước khi tạo mật khẩu.';
+      throw UiCopy.text('copy_27d42e4975c0');
     }
 
     final email = user.email?.trim() ?? '';
     final normalizedPassword = newPassword.trim();
     if (email.isEmpty) {
-      throw 'Tài khoản hiện tại chưa có email nên chưa thể tạo mật khẩu đăng nhập.';
+      throw UiCopy.text('copy_4202a22da8cd');
     }
     if (normalizedPassword.length < 6) {
-      throw 'Mật khẩu phải có ít nhất 6 ký tự.';
+      throw UiCopy.text('copy_4a11931017d1');
     }
     if (await isPasswordLinkedCurrentUser()) {
-      throw 'Tài khoản này đã có mật khẩu đăng nhập. Hãy dùng phần đổi mật khẩu.';
+      throw UiCopy.text('copy_5a8d7b0b0484');
     }
 
     Future<void> linkPasswordCredential() async {
@@ -293,7 +293,7 @@ extension AuthSignInServiceSocial on AuthSignInService {
       } else if (error.code == 'email-already-in-use' ||
           error.code == 'credential-already-in-use' ||
           error.code == 'account-exists-with-different-credential') {
-        throw 'Email này đã gắn với một tài khoản khác nên chưa thể tạo mật khẩu ở đây.';
+        throw UiCopy.text('copy_f5efcaa5e1b5');
       } else {
         throw handleFirebaseAuthError(error);
       }
@@ -326,9 +326,9 @@ extension AuthSignInServiceSocial on AuthSignInService {
       return;
     }
     if (providerIds.contains('facebook.com')) {
-      throw 'Tài khoản Facebook không còn được hỗ trợ. Hãy liên kết Google hoặc Apple rồi thử lại.';
+      throw UiCopy.text('copy_759b8bdbf042');
     }
-    throw 'Phiên đăng nhập đã cũ. Hãy đăng xuất rồi đăng nhập lại bằng Google hoặc Apple trước khi tạo mật khẩu.';
+    throw UiCopy.text('copy_647e89e2e05d');
   }
 
   Future<void> _reauthenticateCurrentUserWithGoogle(
@@ -360,7 +360,7 @@ extension AuthSignInServiceSocial on AuthSignInService {
         await initCompleter.future.timeout(
           const Duration(seconds: 15),
           onTimeout: () =>
-              throw 'Thời gian chờ Google quá lâu. Vui lòng thử lại.',
+              throw UiCopy.text('copy_90ca8dbde435'),
         );
         AuthSignInService._isGoogleSignInInitialized = true;
       }
@@ -389,14 +389,14 @@ extension AuthSignInServiceSocial on AuthSignInService {
       final googleUser = await authCompleter.future.timeout(
         const Duration(seconds: 20),
         onTimeout: () =>
-            throw 'Bạn đã để màn hình đăng nhập Google quá lâu hoặc chưa hoàn tất thao tác. Vui lòng thử lại.',
+            throw UiCopy.text('copy_fe32cbfef9b5'),
       );
       if (googleUser == null) {
-        throw 'Bạn đã huỷ đăng nhập Google.';
+        throw UiCopy.text('copy_4cccee9577ae');
       }
       final googleAuth = await googleUser.authentication;
       if ((googleAuth.idToken ?? '').isEmpty) {
-        throw 'Google không trả về ID token hợp lệ để xác minh lại tài khoản.';
+        throw UiCopy.text('copy_8802343cdb61');
       }
 
       final credential = firebase_auth.GoogleAuthProvider.credential(
@@ -406,14 +406,14 @@ extension AuthSignInServiceSocial on AuthSignInService {
     } on firebase_auth.FirebaseAuthException catch (error) {
       switch (error.code) {
         case 'user-mismatch':
-          throw 'Bạn cần chọn đúng tài khoản Google đã dùng để đăng nhập trước đó.';
+          throw UiCopy.text('copy_59b962780d3d');
         case 'popup-closed-by-user':
-          throw 'Bạn đã đóng cửa sổ xác minh lại Google.';
+          throw UiCopy.text('copy_51a950751f0d');
         case 'popup-blocked':
         case 'cancelled-popup-request':
-          throw 'Popup Google đang bị chặn. Hãy cho phép popup rồi thử lại.';
+          throw UiCopy.text('copy_4c6335e28066');
         case 'network-request-failed':
-          throw 'Lỗi kết nối hoặc sự cố từ Google, chưa thể xác minh lại Google lúc này.';
+          throw UiCopy.text('copy_8d11b55cdb38');
         default:
           throw handleFirebaseAuthError(error);
       }
@@ -427,7 +427,7 @@ extension AuthSignInServiceSocial on AuthSignInService {
           (errStr.contains('sign_in_canceled') ||
               errStr.contains('canceled') ||
               errStr.contains('cancelled'))) {
-        throw 'Bạn đã huỷ đăng nhập Google.';
+        throw UiCopy.text('copy_4cccee9577ae');
       }
       if (error is String) rethrow;
       throw AppErrorMapper.resolve(

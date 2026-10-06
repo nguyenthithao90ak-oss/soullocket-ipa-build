@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -192,7 +193,7 @@ class GameDownloadService extends ChangeNotifier {
       notifyListeners();
       final code = e.response?.statusCode;
       if (code == 401 || code == 403) {
-        throw 'Không có quyền truy cập file game (HTTP $code). Vui lòng thử lại sau.';
+        throw UiCopy.text('copy_4c7af68774af', {'value1': code});
       }
       throw AppErrorMapper.resolve(e).message;
     } catch (e) {

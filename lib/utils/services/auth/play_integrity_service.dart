@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -337,8 +338,8 @@ class PlayIntegrityService {
         requestId: requestId,
         reason: 'missing_flow',
         message: kDebugMode
-            ? 'Flow Play Integrity không được để trống.'
-            : 'Thiết bị chưa sẵn sàng để kiểm tra an toàn.',
+            ? UiCopy.text('copy_faba6762b3df')
+            : UiCopy.text('copy_7e7460aebd8c'),
       );
     }
 
@@ -351,8 +352,8 @@ class PlayIntegrityService {
             ? 'marked_unsupported'
             : 'unsupported_platform',
         message: kDebugMode
-            ? 'Play Integrity hiện không khả dụng.'
-            : 'Tính năng kiểm tra an toàn hiện chưa áp dụng trên thiết bị này.',
+            ? UiCopy.text('copy_e37e6f996b80')
+            : UiCopy.text('copy_8877de59da82'),
         riskLevel: PlayIntegrityRiskLevel.allow,
       );
     }
@@ -366,8 +367,8 @@ class PlayIntegrityService {
           requestId: requestId,
           reason: 'native_bridge_unavailable',
           message: kDebugMode
-              ? 'Chưa có Android bridge cho Play Integrity. Cần owner native nối method channel.'
-              : 'Thiết bị chưa sẵn sàng để kiểm tra an toàn.',
+              ? UiCopy.text('copy_ba37bef869ac')
+              : UiCopy.text('copy_7e7460aebd8c'),
         );
       }
     }
@@ -382,8 +383,8 @@ class PlayIntegrityService {
         requestId: requestId,
         reason: 'integrity_token_missing',
         message: kDebugMode
-            ? 'Không lấy được Play Integrity token từ Android.'
-            : 'Không kiểm tra được độ an toàn của thiết bị.',
+            ? UiCopy.text('copy_8cf35685bcc1')
+            : UiCopy.text('copy_a14c01bbb21b'),
       );
     }
 
@@ -395,8 +396,8 @@ class PlayIntegrityService {
         requestId: requestId,
         reason: 'endpoint_not_configured',
         message: kDebugMode
-            ? 'Chưa cấu hình endpoint verify Play Integrity.'
-            : 'Hệ thống kiểm tra an toàn hiện chưa sẵn sàng.',
+            ? UiCopy.text('copy_19fa142d6d93')
+            : UiCopy.text('copy_0b4d8c49a973'),
       );
     }
 
@@ -452,8 +453,8 @@ class PlayIntegrityService {
         message: _stringOrFallback(
           decoded['message'],
           kDebugMode
-              ? 'Máy chủ Play Integrity trả về phản hồi lỗi.'
-              : 'Hệ thống kiểm tra an toàn đang gặp sự cố. Hãy thử lại sau.',
+              ? UiCopy.text('copy_fc129aec42c1')
+              : UiCopy.text('copy_7495c016ee8f'),
         ),
         riskLevel: response.statusCode >= 500
             ? PlayIntegrityRiskLevel.warn
@@ -474,8 +475,8 @@ class PlayIntegrityService {
         requestId: requestId,
         reason: 'verify_timeout',
         message: kDebugMode
-            ? 'Máy chủ verify Play Integrity phản hồi quá chậm.'
-            : 'Hệ thống kiểm tra an toàn phản hồi quá chậm. Hãy thử lại sau.',
+            ? UiCopy.text('copy_0bd54620b0a7')
+            : UiCopy.text('copy_13049b3813b6'),
       );
     } catch (error) {
       debugPrint(
@@ -497,8 +498,8 @@ class PlayIntegrityService {
         requestId: requestId,
         reason: 'verify_request_failed',
         message: kDebugMode
-            ? 'Không gửi được request verify Play Integrity.'
-            : 'Không gửi được yêu cầu kiểm tra an toàn. Hãy kiểm tra mạng rồi thử lại.',
+            ? UiCopy.text('copy_92f863f28657')
+            : UiCopy.text('copy_112c9af9ba1f'),
       );
     }
   }

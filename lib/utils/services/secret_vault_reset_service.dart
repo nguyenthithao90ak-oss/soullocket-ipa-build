@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_database/firebase_database.dart';
 
@@ -90,7 +91,7 @@ class SecretVaultResetService {
       });
       final rawData = response.data;
       if (rawData is! Map) {
-        throw 'Máy chủ trả về dữ liệu reset Kho ảnh mật không hợp lệ.';
+        throw UiCopy.text('copy_fbe89bc54f16');
       }
       final data = Map<String, dynamic>.from(rawData);
       return SecretVaultResetRequestInfo.fromMap(data);
@@ -98,26 +99,26 @@ class SecretVaultResetService {
       switch (error.code) {
         case 'already-exists':
           throw error.message ??
-              'Đã có yêu cầu reset Kho ảnh mật đang chờ xử lý.';
+              UiCopy.text('copy_d04740d36848');
         case 'permission-denied':
-          throw 'Mã OTP không đúng. Vui lòng kiểm tra lại.';
+          throw UiCopy.text('copy_8d9f3b1f9ea4');
         case 'deadline-exceeded':
-          throw 'Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.';
+          throw UiCopy.text('copy_ce8b53085ba9');
         case 'failed-precondition':
           throw error.message ??
-              'Email xác nhận không khớp email chính của tài khoản hiện tại.';
+              UiCopy.text('copy_1218113d2af5');
         case 'resource-exhausted':
           throw error.message ??
-              'Bạn đã nhập sai OTP quá nhiều lần. Vui lòng thử lại sau.';
+              UiCopy.text('copy_3fc83e0151c2');
         case 'unauthenticated':
-          throw 'Bạn cần đăng nhập lại trước khi xác nhận reset Kho ảnh mật.';
+          throw UiCopy.text('copy_9a64ce2f9715');
         default:
           throw error.message ??
-              'Không thể tạo yêu cầu reset Kho ảnh mật lúc này.';
+              UiCopy.text('copy_e8429394853e');
       }
     } catch (error) {
       if (error is String) rethrow;
-      throw 'Không thể tạo yêu cầu reset Kho ảnh mật lúc này.';
+      throw UiCopy.text('copy_e8429394853e');
     }
   }
 
@@ -130,19 +131,19 @@ class SecretVaultResetService {
     } on FirebaseFunctionsException catch (error) {
       switch (error.code) {
         case 'not-found':
-          throw 'Không tìm thấy yêu cầu reset Kho ảnh mật đang chờ.';
+          throw UiCopy.text('copy_2444640f81c6');
         case 'failed-precondition':
           throw error.message ??
-              'Yêu cầu reset Kho ảnh mật không còn ở trạng thái chờ.';
+              UiCopy.text('copy_8dbe12cb3aaf');
         case 'unauthenticated':
-          throw 'Bạn cần đăng nhập lại trước khi thu hồi yêu cầu reset.';
+          throw UiCopy.text('copy_0448e3d20bec');
         default:
           throw error.message ??
-              'Không thể thu hồi yêu cầu reset Kho ảnh mật lúc này.';
+              UiCopy.text('copy_b09462abbd5a');
       }
     } catch (error) {
       if (error is String) rethrow;
-      throw 'Không thể thu hồi yêu cầu reset Kho ảnh mật lúc này.';
+      throw UiCopy.text('copy_b09462abbd5a');
     }
   }
 }

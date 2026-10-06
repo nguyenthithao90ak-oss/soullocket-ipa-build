@@ -25,7 +25,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/widget_sleep_title"
+                android:text="GIẤC NGỦ ĐÔI ☁️✨"
                 android:textColor="#4A148C"
                 android:textSize="12sp"
                 android:textStyle="bold" />
@@ -36,7 +36,7 @@
                 android:background="@drawable/widget_chip_cute"
                 android:paddingHorizontal="10dp"
                 android:paddingVertical="3dp"
-                android:text="@string/widget_sleep_summary_default"
+                android:text="Cả 2 cùng thức ☀️"
                 android:textColor="#AD1457"
                 android:textSize="10sp"
                 android:textStyle="bold" />
@@ -65,7 +65,7 @@
                     android:id="@+id/tv_my_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/widget_default_me"
+                    android:text="Bạn Nam 🧸"
                     android:textColor="#3E2723"
                     android:textSize="12sp"
                     android:textStyle="bold"
@@ -77,7 +77,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="3dp"
-                    android:text="@string/widget_sleep_status_awake"
+                    android:text="☀️ Đang thức"
                     android:textColor="#D81B60"
                     android:textSize="11sp"
                     android:textStyle="bold" />
@@ -87,7 +87,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="--"
+                    android:text="Thức dậy 07:15"
                     android:textColor="#5D4037"
                     android:textSize="10sp" />
             </LinearLayout>
@@ -107,7 +107,7 @@
                     android:id="@+id/tv_partner_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/widget_default_partner"
+                    android:text="Người ấy 🐰"
                     android:textColor="#3E2723"
                     android:textSize="12sp"
                     android:textStyle="bold"
@@ -119,7 +119,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="3dp"
-                    android:text="@string/widget_sleep_status_awake"
+                    android:text="☀️ Đang thức"
                     android:textColor="#D81B60"
                     android:textSize="11sp"
                     android:textStyle="bold" />
@@ -129,7 +129,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="--"
+                    android:text="Thức dậy 07:30"
                     android:textColor="#5D4037"
                     android:textSize="10sp" />
             </LinearLayout>

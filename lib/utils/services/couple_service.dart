@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -104,7 +105,7 @@ class CoupleService {
         mappedCode,
         error.message?.trim().isNotEmpty == true
             ? error.message!.trim()
-            : 'Không thể tham gia nhà này lúc này.',
+            : UiCopy.text('copy_b5ccb5536d72'),
       );
     } catch (e) {
       final resolvedMessage = AppErrorMapper.resolve(e).message;
@@ -112,7 +113,7 @@ class CoupleService {
         JoinHouseError.unknown,
         resolvedMessage.isNotEmpty
             ? resolvedMessage
-            : 'Không thể tham gia nhà này lúc này.',
+            : UiCopy.text('copy_b5ccb5536d72'),
       );
     }
   }

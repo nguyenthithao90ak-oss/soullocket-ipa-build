@@ -1,3 +1,4 @@
+import 'ui_copy.dart';
 import 'package:flutter/foundation.dart';
 import 'calendar/calendar_civil_date.dart';
 import 'services/l10n_service.dart';
@@ -177,6 +178,33 @@ class ZodiacUtils {
     },
   };
 
+  static const _nameKeys = <String, String>{'Bạch Dương': 'copy_9dc2cdcf4907','Kim Ngưu': 'copy_9aa5e88aad04','Song Tử': 'copy_570adfb6b5bc','Cự Giải': 'copy_92c1befe3b25','Sư Tử': 'copy_550cc4d7a0c9','Xử Nữ': 'copy_15e7e2c53171','Thiên Bình': 'copy_d91db436c92b','Thiên Yết': 'copy_4d3c14a09d1c','Nhân Mã': 'copy_3ffa4e71879e','Ma Kết': 'copy_350e0d8cb2b6','Bảo Bình': 'copy_067e6ab504de','Song Ngư': 'copy_8fd5502586aa'};
+
+  static String localizedName(String raw, {bool isEnglish = false}) {
+    final key = _nameKeys[raw];
+    return key == null ? raw : UiCopy.bilingual(key, isEnglish);
+  }
+
+  static const _detailKeys = <String, Map<String, String>>{
+'Bạch Dương': {'element': 'copy_9970f03e889b','planet': 'copy_70984c5ca32e','traits': 'copy_244512d96263','love': 'copy_847a2c9f30fd'},
+'Kim Ngưu': {'element': 'copy_6bad4a503e7e','planet': 'copy_3f4819e0eadd','traits': 'copy_fd0e8fc35e2c','love': 'copy_25044bed921c'},
+'Song Tử': {'element': 'copy_faab071f46bc','planet': 'copy_94b77c38559d','traits': 'copy_0c38d04cf46e','love': 'copy_8ae46248962e'},
+'Cự Giải': {'element': 'copy_82029055d7e1','planet': 'copy_1c9bc170739c','traits': 'copy_5ab57ddd1a87','love': 'copy_b2786137698d'},
+'Sư Tử': {'element': 'copy_9970f03e889b','planet': 'copy_5593c0c1408e','traits': 'copy_2feae68d80bb','love': 'copy_46b7eeb7d76c'},
+'Xử Nữ': {'element': 'copy_6bad4a503e7e','planet': 'copy_94b77c38559d','traits': 'copy_e9e999beafad','love': 'copy_ed67b41d9026'},
+'Thiên Bình': {'element': 'copy_faab071f46bc','planet': 'copy_3f4819e0eadd','traits': 'copy_b7503a01655a','love': 'copy_6abf2fb227e3'},
+'Thiên Yết': {'element': 'copy_82029055d7e1','planet': 'copy_aaaa7c048bbf','traits': 'copy_0019cdd93644','love': 'copy_771e60c33f2a'},
+'Nhân Mã': {'element': 'copy_9970f03e889b','planet': 'copy_12e205f00c2e','traits': 'copy_8cd5ecde13f6','love': 'copy_b20e1e82b032'},
+'Ma Kết': {'element': 'copy_6bad4a503e7e','planet': 'copy_486d6c0e1b8a','traits': 'copy_8916230d4cad','love': 'copy_273bb7842dcf'},
+'Bảo Bình': {'element': 'copy_faab071f46bc','planet': 'copy_c4e162de1024','traits': 'copy_eac005483050','love': 'copy_0d8a605df2a1'},
+'Song Ngư': {'element': 'copy_82029055d7e1','planet': 'copy_5fe184b2b713','traits': 'copy_cba9a8ef28b1','love': 'copy_7081647d2112'}
+};
+
+  static Map<String, String>? localizedDetails(String raw) {
+    final keys = _detailKeys[raw];
+    return keys?.map((field, key) => MapEntry(field, UiCopy.text(key)));
+  }
+
   static Map<String, String>? getZodiac(String dob) {
     if (dob.isEmpty) return null;
     try {
@@ -231,9 +259,9 @@ class ZodiacUtils {
     if (sign1 == sign2) {
       return {
         'score': 80,
-        'title': 'Sự thấu hiểu tuyệt đối',
+        'title': UiCopy.text('copy_2878f4e02060'),
         'desc':
-            'Vì cùng một cung hoàng đạo, hai bạn dễ dàng thấu hiểu suy nghĩ và cảm xúc của đối phương. Tuy nhiên, hãy cẩn thận đừng để những khuyết điểm chung làm phóng đại các vấn đề nhé!',
+            UiCopy.text('copy_3b4ba024841e'),
       };
     }
 
@@ -243,9 +271,9 @@ class ZodiacUtils {
     if (e1 == null || e2 == null) {
       return {
         'score': 50,
-        'title': 'Cần nhiều nỗ lực',
+        'title': UiCopy.text('copy_d91ad0962257'),
         'desc':
-            'Hai bạn có những nét tính cách khác biệt. Cần học cách bao dung và nhường nhịn để tình yêu bền chặt hơn.',
+            UiCopy.text('copy_b7cec0d5cdcc'),
       };
     }
 
@@ -253,17 +281,17 @@ class ZodiacUtils {
     if ((e1 == 'Lửa' && e2 == 'Khí') || (e1 == 'Khí' && e2 == 'Lửa')) {
       return {
         'score': 90,
-        'title': 'Ngọn lửa bùng cháy',
+        'title': UiCopy.text('copy_456e3aa0f06f'),
         'desc':
-            'Khí giúp Lửa bùng cháy mạnh mẽ hơn. Hai bạn tạo nên một mối quan hệ sôi động, đầy cảm hứng và luôn hỗ trợ nhau phát triển.',
+            UiCopy.text('copy_4120f96ed2a1'),
       };
     }
     if ((e1 == 'Đất' && e2 == 'Nước') || (e1 == 'Nước' && e2 == 'Đất')) {
       return {
         'score': 95,
-        'title': 'Sự nuôi dưỡng hoàn hảo',
+        'title': UiCopy.text('copy_bbc52c5e73c4'),
         'desc':
-            'Nước làm Đất thêm màu mỡ, Đất tạo cho Nước hình hài. Sự kết hợp này mang lại cảm giác an toàn, thấu hiểu sâu sắc và vô cùng gắn bó.',
+            UiCopy.text('copy_f1856185e405'),
       };
     }
 
@@ -271,9 +299,9 @@ class ZodiacUtils {
     if (e1 == e2) {
       return {
         'score': 85,
-        'title': 'Sự hòa hợp tự nhiên',
+        'title': UiCopy.text('copy_f423444f1e32'),
         'desc':
-            'Cùng chung một nguyên tố giúp hai bạn có cùng nhịp đập, chung nhân sinh quan và rất dễ đồng cảm với nhau trong cuộc sống.',
+            UiCopy.text('copy_337f5622b5a8'),
       };
     }
 
@@ -281,17 +309,17 @@ class ZodiacUtils {
     if ((e1 == 'Lửa' && e2 == 'Nước') || (e1 == 'Nước' && e2 == 'Lửa')) {
       return {
         'score': 60,
-        'title': 'Sự hấp dẫn trái ngược',
+        'title': UiCopy.text('copy_505a7ce3c8f1'),
         'desc':
-            'Nước có thể dập tắt Lửa, hoặc Lửa làm Nước bốc hơi. Mối quan hệ đầy đam mê mãnh liệt nhưng đòi hỏi nhiều sự bao dung để dung hòa sự khác biệt lớn này.',
+            UiCopy.text('copy_10d604d79bc0'),
       };
     }
     if ((e1 == 'Đất' && e2 == 'Khí') || (e1 == 'Khí' && e2 == 'Đất')) {
       return {
         'score': 65,
-        'title': 'Lý trí và Thực tế',
+        'title': UiCopy.text('copy_851cc3007e39'),
         'desc':
-            'Đất thích ổn định, Khí lại ưa bay nhảy. Tuy nhiên nếu biết cách kết hợp, Khí sẽ mang lại luồng gió mới cho Đất, và Đất sẽ giúp Khí có điểm tựa vững vàng.',
+            UiCopy.text('copy_90939cdbf1b5'),
       };
     }
 
@@ -299,25 +327,25 @@ class ZodiacUtils {
     if ((e1 == 'Lửa' && e2 == 'Đất') || (e1 == 'Đất' && e2 == 'Lửa')) {
       return {
         'score': 75,
-        'title': 'Sáng tạo và Bền vững',
+        'title': UiCopy.text('copy_0bbac3410bb7'),
         'desc':
-            'Một sự kết hợp bổ sung cho nhau. Lửa mang lại năng lượng và ý tưởng, còn Đất giúp biến những ý tưởng đó thành hiện thực một cách chắc chắn.',
+            UiCopy.text('copy_498e4876d765'),
       };
     }
     if ((e1 == 'Nước' && e2 == 'Khí') || (e1 == 'Khí' && e2 == 'Nước')) {
       return {
         'score': 70,
-        'title': 'Cảm xúc và Trí tuệ',
+        'title': UiCopy.text('copy_a06bc44b855b'),
         'desc':
-            'Khí dùng lý trí, Nước dùng trái tim. Hai bạn có thể giúp nhau mở rộng góc nhìn, tuy đôi lúc cần cố gắng diễn đạt để hiểu ngôn ngữ yêu của đối phương.',
+            UiCopy.text('copy_3d092c89aa98'),
       };
     }
 
     return {
       'score': 70,
-      'title': 'Mảnh ghép thú vị',
+      'title': UiCopy.text('copy_8e0ff4908ad8'),
       'desc':
-          'Dù có nhiều điểm khác biệt, tình yêu của hai bạn luôn chứa đựng những bất ngờ thú vị nếu cả hai cùng nhau vun đắp.',
+          UiCopy.text('copy_bb99be564365'),
     };
   }
 }

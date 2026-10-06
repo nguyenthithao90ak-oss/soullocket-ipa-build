@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 String normalizeStorageRefPath(String storagePath) {
   return storagePath
       .trim()
@@ -11,7 +12,7 @@ String normalizeStorageWritePath({
 }) {
   final normalized = normalizeStorageRefPath(storagePath);
   if (normalized.isEmpty) {
-    throw Exception('Đường dẫn upload không hợp lệ.');
+    throw UiCopyException('copy_4b4db5cfdc9e');
   }
 
   if (normalized.startsWith('uploads/')) {
@@ -20,7 +21,7 @@ String normalizeStorageWritePath({
 
   final uid = currentUid.trim();
   if (uid.isEmpty) {
-    throw Exception('Cần đăng nhập để tải tệp lên đám mây.');
+    throw UiCopyException('copy_0d17dba25af1');
   }
 
   return 'uploads/$uid/$normalized';

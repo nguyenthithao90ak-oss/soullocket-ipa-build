@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
@@ -21,10 +22,15 @@ class WebRTCService {
   factory WebRTCService() => _instance;
   WebRTCService._internal()
     : _db = FirebaseDatabase.instance,
-      _auth = FirebaseAuth.instance;
+      _auth = FirebaseAuth.instance,
+      _onPeerCreated = null;
 
   @visibleForTesting
-  WebRTCService.testInstance(this._db, this._auth);
+  WebRTCService.testInstance(
+    this._db,
+    this._auth, [
+    this._onPeerCreated,
+  ]);
 
   RTCPeerConnection? _peerConnection;
   MediaStream? _localStream;
@@ -32,6 +38,7 @@ class WebRTCService {
 
   final FirebaseDatabase _db;
   final FirebaseAuth _auth;
+  final void Function(RTCPeerConnection)? _onPeerCreated;
   String? _roomId; // ID của phòng gọi (giống houseId)
   String? _coupleHouseId;
   RtcCandidateQueue<RTCIceCandidate>? _remoteCandidates;
@@ -83,7 +90,10 @@ class WebRTCService {
       iceServers.add(turnServer);
     }
     try {
-      final snap = await _db.ref('appConfig/webrtc/iceServers').get();
+      final snap = await _db
+          .ref('appConfig/webrtc/iceServers')
+          .get()
+          .timeout(const Duration(seconds: 5));
       final raw = snap.value;
       final servers = _parseIceServers(raw);
       if (servers.isNotEmpty) {
@@ -151,7 +161,7 @@ class WebRTCService {
         await track.stop();
       }
       await stream.dispose();
-      throw StateError('Cuộc gọi đã đóng trong lúc chờ quyền media.');
+      throw StateError(UiCopy.text('copy_fdaa024832ca'));
     }
     _localStream = stream;
     return stream;
@@ -175,7 +185,7 @@ class WebRTCService {
   }) async {
     final session = _session;
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Chưa đăng nhập');
+    if (user == null) throw const UiCopyException('copy_3bbf8095e7db');
 
     final resolvedTargetHouseId = targetHouseId.trim();
     final resolvedCallerHouseId =
@@ -188,9 +198,10 @@ class WebRTCService {
     final peer = await createPeerConnection(await _loadRtcConfiguration());
     if (session != _session) {
       await peer.dispose();
-      throw StateError('Cuộc gọi đã đóng.');
+      throw StateError(UiCopy.text('copy_f68819406a61'));
     }
     _peerConnection = peer;
+    _onPeerCreated?.call(peer);
     peer.onConnectionState = (state) {
       if (_peerConnection == peer) connectionState.value = state;
     };
@@ -212,7 +223,11 @@ class WebRTCService {
 
     // Firebase refs
     final roomRef = _db.ref('calls').push();
-    _roomId = roomRef.key;
+    final roomId = roomRef.key!;
+    _roomId = roomId;
+    if (resolvedTargetHouseId == resolvedCallerHouseId) {
+      _coupleHouseId = resolvedCallerHouseId;
+    }
 
     final callerCandidatesRef = roomRef.child('callerCandidates');
     // Gửi ICE Candidate của A lên Firebase
@@ -225,14 +240,10 @@ class WebRTCService {
     );
 
     // Tạo Offer cho B
-    final offer = await _peerConnection!.createOffer().timeout(
-      const Duration(seconds: 12),
-    );
-    await _peerConnection!
-        .setLocalDescription(offer)
-        .timeout(const Duration(seconds: 12));
+    final offer = await peer.createOffer().timeout(const Duration(seconds: 12));
+    await peer.setLocalDescription(offer).timeout(const Duration(seconds: 12));
     if (session != _session || _auth.currentUser?.uid != user.uid) {
-      throw StateError('Phiên gọi đã thay đổi.');
+      throw StateError(UiCopy.text('copy_54e3d751d003'));
     }
 
     await roomRef
@@ -247,13 +258,19 @@ class WebRTCService {
           'callerName': callerName,
         })
         .timeout(const Duration(seconds: 12));
+    if (session != _session) {
+      await roomRef
+          .update({'status': 'ended'})
+          .timeout(const Duration(seconds: 8));
+      throw StateError(UiCopy.text('copy_f68819406a61'));
+    }
     await localCandidates.markReady();
+    if (session != _session) throw StateError(UiCopy.text('copy_f68819406a61'));
     if (resolvedTargetHouseId == resolvedCallerHouseId) {
-      _coupleHouseId = resolvedCallerHouseId;
       await _db
           .ref(CoupleCallInvite.inboxPath(resolvedCallerHouseId))
           .set({
-            'roomId': _roomId,
+            'roomId': roomId,
             'houseId': resolvedCallerHouseId,
             'callerUid': user.uid,
             'callerName': callerName,
@@ -261,6 +278,10 @@ class WebRTCService {
             'timestamp': ServerValue.timestamp,
           })
           .timeout(const Duration(seconds: 8));
+      if (session != _session) {
+        await _clearCoupleInvite(resolvedCallerHouseId, roomId);
+        throw StateError(UiCopy.text('copy_f68819406a61'));
+      }
     }
 
     // Lắng nghe Answer từ B
@@ -277,7 +298,7 @@ class WebRTCService {
                 if (currentRemoteDesc == null && _peerConnection == peer) {
                   final answer = RTCSessionDescription(val['sdp'], val['type']);
                   await peer.setRemoteDescription(answer);
-              await remoteCandidates.markReady();
+                  await remoteCandidates.markReady();
                 }
               } catch (error) {
                 _logSignalingError(error);
@@ -304,7 +325,7 @@ class WebRTCService {
               val['sdpMLineIndex'] as int?,
             );
             unawaited(
-          remoteCandidates.add(candidate).catchError(_logSignalingError),
+              remoteCandidates.add(candidate).catchError(_logSignalingError),
             );
           },
           onError: (Object error) {
@@ -314,7 +335,7 @@ class WebRTCService {
           },
         );
 
-    return _roomId!;
+    return roomId;
   }
 
   /// Người B: Tham gia phòng (Bắt máy người A)
@@ -353,14 +374,14 @@ class WebRTCService {
   Future<void> joinRoom(String roomId, RTCVideoRenderer remoteRenderer) async {
     final session = _session;
     final roomRef = _db.ref('calls/$roomId');
-    final roomSnap = await roomRef.get();
-    if (!roomSnap.exists) throw Exception('Phòng gọi không tồn tại');
+    final roomSnap = await roomRef.get().timeout(const Duration(seconds: 8));
+    if (!roomSnap.exists) throw const UiCopyException('copy_9ee77d4b3d6f');
     final data = Map<String, dynamic>.from(roomSnap.value as Map);
     if (data['status'] != 'ringing' ||
         data['callerId'] == _auth.currentUser?.uid) {
-      throw StateError('Cuộc gọi không còn chờ bắt máy.');
+      throw StateError(UiCopy.text('copy_af1996becb05'));
     }
-    if (session != _session) throw StateError('Cuộc gọi đã đóng.');
+    if (session != _session) throw StateError(UiCopy.text('copy_f68819406a61'));
     _roomId = roomId;
     if (data['houseId'] == data['calleeId']) {
       _coupleHouseId = data['houseId']?.toString();
@@ -369,9 +390,10 @@ class WebRTCService {
     final peer = await createPeerConnection(await _loadRtcConfiguration());
     if (session != _session) {
       await peer.dispose();
-      throw StateError('Cuộc gọi đã đóng.');
+      throw StateError(UiCopy.text('copy_f68819406a61'));
     }
     _peerConnection = peer;
+    _onPeerCreated?.call(peer);
     peer.onConnectionState = (state) {
       if (_peerConnection == peer) connectionState.value = state;
     };
@@ -404,25 +426,38 @@ class WebRTCService {
     final offerData = Map<String, dynamic>.from(data['offer']);
 
     final offer = RTCSessionDescription(offerData['sdp'], offerData['type']);
-    await _peerConnection
-        ?.setRemoteDescription(offer)
-        .timeout(const Duration(seconds: 12));
+    await peer.setRemoteDescription(offer).timeout(const Duration(seconds: 12));
     await remoteCandidates.markReady();
 
-    final answer = await _peerConnection!.createAnswer().timeout(
+    final answer = await peer.createAnswer().timeout(
       const Duration(seconds: 12),
     );
-    await _peerConnection!
-        .setLocalDescription(answer)
-        .timeout(const Duration(seconds: 12));
+    await peer.setLocalDescription(answer).timeout(const Duration(seconds: 12));
 
-    await roomRef
-        .child('answer')
-        .set({'type': answer.type, 'sdp': answer.sdp})
+    if (session != _session) throw StateError(UiCopy.text('copy_f68819406a61'));
+    // Bắt máy chỉ khi phòng vẫn đang đổ chuông; không mở lại phòng đã hủy.
+    final accepted = await roomRef
+        .runTransaction((current) {
+          if (session != _session) return Transaction.abort();
+          // Lần đầu cache có thể chưa có dữ liệu; để Firebase lấy lại từ server.
+          if (current == null) return Transaction.success(null);
+          if (current is! Map || current['status'] != 'ringing') {
+            return Transaction.abort();
+          }
+          return Transaction.success({
+            ...Map<String, dynamic>.from(current),
+            'answer': {'type': answer.type, 'sdp': answer.sdp},
+            'status': 'ongoing',
+          });
+        }, applyLocally: false)
         .timeout(const Duration(seconds: 12));
-    await roomRef
-        .update({'status': 'ongoing'})
-        .timeout(const Duration(seconds: 8));
+    final acceptedData = accepted.snapshot.value;
+    if (!accepted.committed ||
+        acceptedData is! Map ||
+        acceptedData['status'] != 'ongoing' ||
+        session != _session) {
+      throw StateError(UiCopy.text('copy_af1996becb05'));
+    }
 
     // Lắng nghe ICE Candidate của A
     _callerCandidatesSub = roomRef
@@ -439,7 +474,7 @@ class WebRTCService {
               val['sdpMLineIndex'] as int?,
             );
             unawaited(
-          remoteCandidates.add(candidate).catchError(_logSignalingError),
+              remoteCandidates.add(candidate).catchError(_logSignalingError),
             );
           },
           onError: (Object error) {
@@ -488,7 +523,7 @@ class WebRTCService {
       if (remote != null) remote.dispose,
     ]) {
       try {
-        await release();
+        await release().timeout(const Duration(seconds: 5));
       } catch (error) {
         _logSignalingError(error);
       }
@@ -498,26 +533,30 @@ class WebRTCService {
         final roomRef = _db.ref('calls/$endedRoomId');
         final room = await roomRef.get().timeout(const Duration(seconds: 8));
         if (room.exists) {
-          await roomRef.update({
-            'status': 'ended',
-            'endedAt': ServerValue.timestamp,
-          });
+          await roomRef
+              .update({'status': 'ended', 'endedAt': ServerValue.timestamp})
+              .timeout(const Duration(seconds: 8));
         }
         if (coupleHouseId != null) {
-          await _db
-              .ref(CoupleCallInvite.inboxPath(coupleHouseId))
-              .runTransaction((data) {
-                if (data is Map && data['roomId'] == endedRoomId) {
-                  return Transaction.success(null);
-                }
-                return Transaction.abort();
-              });
+          await _clearCoupleInvite(coupleHouseId, endedRoomId);
         }
       } catch (error) {
         _logSignalingError(error);
       }
     }
   }
+
+  Future<void> _clearCoupleInvite(String houseId, String roomId) => _db
+      .ref(CoupleCallInvite.inboxPath(houseId))
+      .runTransaction((data) {
+        if (data == null) return Transaction.success(null);
+        if (data is Map && data['roomId'] == roomId) {
+          return Transaction.success(null);
+        }
+        return Transaction.abort();
+      }, applyLocally: false)
+      .timeout(const Duration(seconds: 8))
+      .then((_) {});
 
   void _logSignalingError(Object error) =>
       debugPrint('WebRTC signaling: ${AppErrorMapper.resolve(error).message}');
@@ -528,11 +567,23 @@ class WebRTCService {
         .ref(CoupleCallInvite.inboxPath(houseId))
         .onValue
         .asyncMap((event) async {
+          if (event.snapshot.value == null) return null;
+          var serverOffset = 0;
+          try {
+            final offset = await _db
+                .ref('.info/serverTimeOffset')
+                .onValue
+                .firstWhere((event) => event.snapshot.value is num)
+                .timeout(const Duration(seconds: 2));
+            serverOffset = (offset.snapshot.value as num).round();
+          } catch (_) {
+            // Khi chưa có offset, vẫn kiểm tra độ mới bằng đồng hồ hiện tại.
+          }
           final invite = CoupleCallInvite.incoming(
             event.snapshot.value,
             houseId: houseId,
             uid: uid,
-            now: DateTime.now().millisecondsSinceEpoch,
+            now: DateTime.now().millisecondsSinceEpoch + serverOffset,
           );
           if (invite == null || _auth.currentUser?.uid != uid || isBusy) {
             return null;
@@ -633,7 +684,7 @@ class WebRTCService {
         }
         final callerId = val['houseId']?.toString().trim().isNotEmpty == true
             ? val['houseId'].toString().trim()
-            : val['callerId']?.toString().trim() ?? 'Người lạ';
+            : val['callerId']?.toString().trim() ?? UiCopy.text('copy_0a3126b85a42');
         onIncomingCall(roomId, callerId, val);
       },
       onError: (error) {

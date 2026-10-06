@@ -1,12 +1,13 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 Map<String, dynamic> parseUploadSessionResponse(
   Object? data, {
   required String label,
   bool requireSessionId = false,
   bool requireDownloadUrl = true,
 }) {
-  final normalizedLabel = label.trim().isEmpty ? 'tải lên' : label.trim();
+  final normalizedLabel = label.trim().isEmpty ? UiCopy.text('copy_639a6b55e397') : label.trim();
   if (data is! Map) {
-    throw Exception('Phản hồi $normalizedLabel không hợp lệ.');
+    throw UiCopyException('copy_740946c109ba', {'value1': normalizedLabel});
   }
 
   final session = Map<String, dynamic>.from(data);
@@ -21,7 +22,7 @@ Map<String, dynamic> parseUploadSessionResponse(
       (requireDownloadUrl && downloadUrl.isEmpty) ||
       (requireSessionId && sessionId.isEmpty);
   if (isIncomplete) {
-    throw Exception('Phản hồi $normalizedLabel thiếu thông tin tải lên.');
+    throw UiCopyException('copy_42a7998f4b7a', {'value1': normalizedLabel});
   }
 
   session['uploadUrl'] = uploadUrl;
@@ -36,10 +37,10 @@ Map<String, dynamic> parseFinalizeResponse(
   required String label,
 }) {
   final normalizedLabel = label.trim().isEmpty
-      ? 'hoàn tất tải lên'
+      ? UiCopy.text('copy_74dcde5080ba')
       : label.trim();
   if (data is! Map) {
-    throw Exception('Phản hồi $normalizedLabel không hợp lệ.');
+    throw UiCopyException('copy_740946c109ba', {'value1': normalizedLabel});
   }
   return Map<String, dynamic>.from(data);
 }

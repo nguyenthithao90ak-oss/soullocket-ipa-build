@@ -191,10 +191,14 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
   bool _canManageDevice(String id) =>
       _listVerified &&
       _houseId.isNotEmpty &&
+      _management['canManage'] != false &&
       id.isNotEmpty &&
       id != _currentDeviceId &&
       _devices.any(
-        (device) => device['deviceId'] == id && device['can_manage'] == true && device['protected'] != true,
+        (device) =>
+            device['deviceId'] == id &&
+            device['can_manage'] == true &&
+            device['protected'] != true,
       );
 
   Future<void> _runDeviceAction({
@@ -301,7 +305,9 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
   }
 
   String? _formatTimestamp(dynamic ts) {
-    if (ts is! num || !ts.isFinite || ts <= 0 || ts > 4102444800000) return null;
+    if (ts is! num || !ts.isFinite || ts <= 0 || ts > 4102444800000) {
+      return null;
+    }
     try {
       final dt = DateTime.fromMillisecondsSinceEpoch(ts.toInt());
       final localizations = MaterialLocalizations.of(context);
@@ -317,12 +323,18 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
     final timestamp = _formatTimestamp(ts);
     return timestamp == null
         ? context.tr('util_khngr_b18ff7')
-        : L10nScope.of(context).format('device_manager_last_seen', {'time': timestamp});
+        : L10nScope.of(
+            context,
+          ).format('device_manager_last_seen', {'time': timestamp});
   }
 
   String _managementMessage(Map<String, dynamic> device, bool isMe) {
-    if (device['protected'] == true) return context.tr('device_manager_creator_protected');
+    if (device['protected'] == true) {
+      return context.tr('device_manager_creator_protected');
+    }
     switch (device['management_reason']) {
+      case 'target_unverified':
+        return context.tr('device_manager_legacy_protected');
       case 'actor_new':
         return context.tr('device_manager_device_too_new');
       case 'actor_revoked':
@@ -580,6 +592,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
       final id = device['deviceId'] as String? ?? '';
       final isMe = id == _currentDeviceId;
       final canTakeAction = _canManageDevice(id);
+      final model = device['model']?.toString().trim() ?? '';
       final statusColor = DeviceManagerStyle.statusColor(context, status);
       final ip = device['ip']?.toString().trim() ?? '';
       final location = device['location']?.toString().trim() ?? '';
@@ -592,12 +605,14 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
         _ => null,
       };
       final registeredAt = _formatTimestamp(device['trust_since']);
-      final manageAfter = isMe ? _formatTimestamp(_management['manageAfter']) : null;
+      final manageAfter = isMe
+          ? _formatTimestamp(_management['manageAfter'])
+          : null;
 
       return DeviceRegistryCard(
         key: ValueKey('device-card-$id'),
         deviceId: id,
-        model: device['model'] ?? context.tr('util_thitbkhngr_671ddb'),
+        model: model.isEmpty ? context.tr('util_thitbkhngr_671ddb') : model,
         os: device['os'] ?? '',
         platformIcon: _platformIcon(device['platform']),
         current: isMe,
@@ -616,7 +631,11 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
           if (trustLabel != null)
             DeviceStatusBadge(
               label: context.tr(trustLabel),
-              icon: trustRole == 'creator' ? Icons.verified_user_outlined : trustRole == 'new' ? Icons.schedule_rounded : Icons.shield_outlined,
+              icon: trustRole == 'creator'
+                  ? Icons.verified_user_outlined
+                  : trustRole == 'new'
+                  ? Icons.schedule_rounded
+                  : Icons.shield_outlined,
               color: KeepsakeStyle.accent(context),
             ),
         ],
@@ -628,12 +647,16 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
           if (registeredAt != null)
             DeviceInformationRow(
               icon: Icons.event_outlined,
-              text: L10nScope.of(context).format('device_manager_registered_at', {'time': registeredAt}),
+              text: L10nScope.of(
+                context,
+              ).format('device_manager_registered_at', {'time': registeredAt}),
             ),
           if (manageAfter != null)
             DeviceInformationRow(
               icon: Icons.lock_clock_outlined,
-              text: L10nScope.of(context).format('device_manager_manage_after', {'time': manageAfter}),
+              text: L10nScope.of(
+                context,
+              ).format('device_manager_manage_after', {'time': manageAfter}),
             ),
           if (ip.isNotEmpty && ip != 'unknown')
             DeviceInformationRow(
@@ -665,7 +688,11 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
             const SizedBox(height: 8),
             Text(
               context.tr('device_manager_policy_hint'),
-              style: KeepsakeStyle.text(context, size: 12, color: KeepsakeStyle.muted(context)),
+              style: KeepsakeStyle.text(
+                context,
+                size: 12,
+                color: KeepsakeStyle.muted(context),
+              ),
             ),
           ],
         ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/locale_date_format.dart';
 
 import '../../models/reward_missions.dart';
 import '../../utils/services/l10n_service.dart';
@@ -60,6 +61,13 @@ class RewardCheckinCard extends StatelessWidget {
             checked
                 ? _copy('reward_store_done_today', {'count': '$streak'})
                 : _copy('util_imdanhngay_da87d4'),
+            style: const TextStyle(color: _muted, fontSize: 12, height: 1.5),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _copy('reward_store_reset_local', {
+              'time': LocaleDateFormat.dateTime(nextRewardResetUtc(instant).toLocal()),
+            }),
             style: const TextStyle(color: _muted, fontSize: 12, height: 1.5),
           ),
           const SizedBox(height: 18),

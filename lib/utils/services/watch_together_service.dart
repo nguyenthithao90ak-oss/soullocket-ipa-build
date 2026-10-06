@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -180,7 +181,7 @@ class WatchTogetherService {
     if (inviteId == null) return null;
 
     final safeTitle =
-        videoTitle.trim().isEmpty ? 'phim đang chiếu' : videoTitle;
+        videoTitle.trim().isEmpty ? UiCopy.text('copy_b49c0d00a6f5') : videoTitle;
     await inviteRef.set({
       'fromUid': uid,
       'fromName': senderName.trim(),
@@ -196,8 +197,8 @@ class WatchTogetherService {
         'queuePartnerNotificationSecure',
         payload: <String, dynamic>{
           'houseId': normalizedHouseId,
-          'title': '${senderName.trim()} mời bạn vào rạp phim',
-          'body': 'Chấp nhận để xem "$safeTitle" cùng nhau.',
+          'title': UiCopy.text('copy_a7d5bcf6f5f2', {'value1': senderName.trim()}),
+          'body': UiCopy.text('copy_e0326fc7f4cb', {'value1': safeTitle}),
           'data': <String, dynamic>{
             'screen': 'cinema',
             'type': 'cinema_invite',

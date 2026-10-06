@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:math';
 
 import 'package:firebase_database/firebase_database.dart';
@@ -31,27 +32,11 @@ int? _calculateAgeYears(String dob) {
 
 String? _ageLabel(int? ageYears, bool isEnglish) {
   if (ageYears == null) return null;
-  return isEnglish ? '$ageYears years' : '$ageYears tuổi';
+  return isEnglish ? '$ageYears years' : UiCopy.text('copy_750f44691f6d', {'value1': ageYears});
 }
 
-String? _localizedZodiacName(String? raw, bool isEnglish) {
-  if (raw == null || raw.isEmpty || !isEnglish) return raw;
-  const zodiacMap = {
-    'Bạch Dương': 'Aries',
-    'Kim Ngưu': 'Taurus',
-    'Song Tử': 'Gemini',
-    'Cự Giải': 'Cancer',
-    'Sư Tử': 'Leo',
-    'Xử Nữ': 'Virgo',
-    'Thiên Bình': 'Libra',
-    'Thiên Yết': 'Scorpio',
-    'Nhân Mã': 'Sagittarius',
-    'Ma Kết': 'Capricorn',
-    'Bảo Bình': 'Aquarius',
-    'Song Ngư': 'Pisces',
-  };
-  return zodiacMap[raw] ?? raw;
-}
+String? _localizedZodiacName(String? raw, bool isEnglish) =>
+    raw == null ? null : ZodiacUtils.localizedName(raw, isEnglish: isEnglish);
 
 String? _elementFromZodiac(String? zodiacKey) {
   if (zodiacKey == null || zodiacKey.isEmpty) return null;
@@ -71,65 +56,37 @@ class _MaturityLens {
 _MaturityLens _resolveMaturityLens(int? ageYears, bool isEnglish) {
   if (ageYears == null) {
     return _MaturityLens(
-      label: _t(isEnglish, 'nhịp tự nhận thức', 'self-awareness lens'),
-      summary: _t(
-        isEnglish,
-        'Tarot đang đọc lớp cảm xúc hiện tại nhiều hơn là tuổi thật, nên phần bản năng và nhu cầu an toàn được nhấn mạnh.',
-        'Tarot is reading the current emotional layer more than age itself, so instinct and the need for safety are emphasized.',
-      ),
+      label: UiCopy.bilingual('copy_360c4d0aaac3', isEnglish),
+      summary: UiCopy.bilingual('copy_c73d3ee38997', isEnglish),
     );
   }
   if (ageYears <= 20) {
     return _MaturityLens(
-      label: _t(
-          isEnglish, 'tuổi gọi tên rung động', 'the phase of naming feelings'),
-      summary: _t(
-        isEnglish,
-        'Ở tuổi này, trái tim dễ rung động nhanh nhưng cũng đang học cách phân biệt cảm xúc thật với sự chú ý thoáng qua.',
-        'At this age, the heart responds quickly, but it is also learning to separate true feeling from passing attention.',
-      ),
+      label: UiCopy.bilingual('copy_a4390f73a2ea', isEnglish),
+      summary: UiCopy.bilingual('copy_2bdd95882564', isEnglish),
     );
   }
   if (ageYears <= 26) {
     return _MaturityLens(
-      label: _t(isEnglish, 'tuổi khám phá bản thân khi yêu',
-          'the phase of discovering yourself in love'),
-      summary: _t(
-        isEnglish,
-        'Giai đoạn này thường vừa muốn yêu sâu vừa muốn giữ bản sắc riêng, nên kết nối mập mờ rất dễ làm bạn mệt.',
-        'This stage often wants deep love while protecting personal identity, so vague connections can become exhausting fast.',
-      ),
+      label: UiCopy.bilingual('copy_6cc2d86e8a81', isEnglish),
+      summary: UiCopy.bilingual('copy_663fd4d8099b', isEnglish),
     );
   }
   if (ageYears <= 33) {
     return _MaturityLens(
-      label: _t(isEnglish, 'tuổi cân bằng cảm xúc và tiêu chuẩn',
-          'the phase of balancing feeling and standards'),
-      summary: _t(
-        isEnglish,
-        'Ở tuổi này, trái tim không chỉ cần rung động mà còn cần độ rõ ràng, sự nhất quán và cảm giác được chọn thật.',
-        'At this age, the heart no longer wants chemistry alone; it also wants clarity, consistency, and the sense of being genuinely chosen.',
-      ),
+      label: UiCopy.bilingual('copy_b275c139fdb9', isEnglish),
+      summary: UiCopy.bilingual('copy_5967b0739a81', isEnglish),
     );
   }
   if (ageYears <= 40) {
     return _MaturityLens(
-      label: _t(isEnglish, 'tuổi ưu tiên sự bền vững',
-          'the phase of choosing durability'),
-      summary: _t(
-        isEnglish,
-        'Giai đoạn này thường nhìn tình cảm qua giá trị dài hạn: ai giữ lời, ai ổn định và ai đủ chín để cùng đi lâu.',
-        'This stage often reads love through long-term value: who follows through, who is stable, and who is mature enough to go far with you.',
-      ),
+      label: UiCopy.bilingual('copy_359e38068fc4', isEnglish),
+      summary: UiCopy.bilingual('copy_e8a0b808b4c7', isEnglish),
     );
   }
   return _MaturityLens(
-    label: _t(isEnglish, 'tuổi chọn chiều sâu', 'the phase of choosing depth'),
-    summary: _t(
-      isEnglish,
-      'Trái tim ở giai đoạn này thường không còn hứng thú với cảm xúc ồn ào; nó chọn sự sâu, thật và an tâm.',
-      'At this stage, the heart is usually no longer interested in noisy intensity; it chooses depth, truth, and peace.',
-    ),
+    label: UiCopy.bilingual('copy_33046d32bb5b', isEnglish),
+    summary: UiCopy.bilingual('copy_279922355541', isEnglish),
   );
 }
 
@@ -342,12 +299,12 @@ class TarotViewerProfile {
     final isEnglish = localeCode.startsWith('en');
     final isSingle = relationshipMode == 'single';
     final nameU1 =
-        _safeText(settings['nameU1'], fallback: isEnglish ? 'You' : 'Bạn');
+        _safeText(settings['nameU1'], fallback: isEnglish ? 'You' : UiCopy.text('copy_40ffd8d0f1c7'));
     final nameU2 = _safeText(
       settings['nameU2'],
       fallback: isSingle
-          ? (isEnglish ? 'Future partner' : 'Người thương tương lai')
-          : (isEnglish ? 'Your partner' : 'Người ấy'),
+          ? (isEnglish ? 'Future partner' : UiCopy.text('copy_fd4ca9e4d18c'))
+          : (isEnglish ? 'Your partner' : UiCopy.text('copy_145933221191')),
     );
     final dobU1 = _safeText(settings['dobU1']);
     final dobU2 = _safeText(settings['dobU2']);
@@ -661,35 +618,35 @@ class TarotReadingService {
     final metrics = <TarotReadingMetric>[
       if (viewerProfile.viewerAgeLabel != null)
         TarotReadingMetric(
-          label: _t(isEnglish, 'Độ tuổi', 'Age'),
+          label: UiCopy.bilingual('copy_101001be15a5', isEnglish),
           value: viewerProfile.viewerAgeLabel!,
         ),
       if (viewerProfile.hasViewerZodiac)
         TarotReadingMetric(
-          label: _t(isEnglish, 'Cung mệnh', 'Zodiac'),
+          label: UiCopy.bilingual('copy_698257e8dc93', isEnglish),
           value:
               '${viewerProfile.viewerZodiacEmoji ?? ''} ${viewerProfile.viewerZodiacLabel!}'
                   .trim(),
         ),
       TarotReadingMetric(
-        label: _t(isEnglish, 'Nhiệt cảm xúc', 'Emotional heat'),
+        label: UiCopy.bilingual('copy_1717baa2c26a', isEnglish),
         value: _warmthText(isEnglish, warmthIndex),
       ),
       TarotReadingMetric(
-        label: _t(isEnglish, 'Nhịp kết nối', 'Connection rhythm'),
+        label: UiCopy.bilingual('copy_897ffdabcbe5', isEnglish),
         value: _interactionText(isEnglish, insights.interactionRate),
       ),
       if (viewerProfile.hasCompatibility)
         TarotReadingMetric(
-          label: _t(isEnglish, 'Độ hợp', 'Compatibility'),
+          label: UiCopy.bilingual('copy_7652e17ba3fb', isEnglish),
           value: '${viewerProfile.compatibilityScore}%',
         ),
     ];
 
     final facets = <TarotReadingFacet>[
       TarotReadingFacet(
-        title: _t(isEnglish, 'Lăng kính cảm xúc', 'Emotional lens'),
-        accent: _t(isEnglish, 'Nội tâm', 'Inner tide'),
+        title: UiCopy.bilingual('copy_2d4384028ed5', isEnglish),
+        accent: UiCopy.bilingual('copy_22b1e894f6ea', isEnglish),
         body: _facetEmotion(
           viewerProfile,
           insights,
@@ -699,13 +656,13 @@ class TarotReadingService {
         ),
       ),
       TarotReadingFacet(
-        title: _t(isEnglish, 'Lăng kính giao tiếp', 'Communication lens'),
-        accent: _t(isEnglish, 'Lời nói', 'Words'),
+        title: UiCopy.bilingual('copy_e6bd7d6f4479', isEnglish),
+        accent: UiCopy.bilingual('copy_160225dbc62a', isEnglish),
         body: _facetCommunication(viewerProfile, insights, signals),
       ),
       TarotReadingFacet(
-        title: _t(isEnglish, 'Nhu cầu sâu bên trong', 'Attachment lens'),
-        accent: _t(isEnglish, 'Nhu cầu', 'Needs'),
+        title: UiCopy.bilingual('copy_64e106c7ae8c', isEnglish),
+        accent: UiCopy.bilingual('copy_ea17a77e67a2', isEnglish),
         body: _facetAttachment(
           viewerProfile,
           viewerLoveScore,
@@ -713,14 +670,13 @@ class TarotReadingService {
         ),
       ),
       TarotReadingFacet(
-        title: _t(isEnglish, 'Nhịp thời điểm', 'Timing lens'),
-        accent: _t(isEnglish, 'Thời điểm', 'Timing'),
+        title: UiCopy.bilingual('copy_23c57b4dc1b9', isEnglish),
+        accent: UiCopy.bilingual('copy_020b0562702a', isEnglish),
         body: _facetTiming(viewerProfile, insights, signals),
       ),
       TarotReadingFacet(
-        title: _t(isEnglish, 'Độ hợp cung và khí chất',
-            'Compatibility and chemistry'),
-        accent: _t(isEnglish, 'Hợp mệnh', 'Chemistry'),
+        title: UiCopy.bilingual('copy_38321c4b5334', isEnglish),
+        accent: UiCopy.bilingual('copy_44069c434e91', isEnglish),
         body: _facetCompatibility(viewerProfile),
       ),
     ];
@@ -796,50 +752,39 @@ class TarotReadingService {
   String _warmthText(bool isEnglish, int index) {
     switch (index) {
       case 3:
-        return _t(isEnglish, 'Rất ấm và mở', 'Very warm and open');
+        return UiCopy.bilingual('copy_7a52e7e19ad8', isEnglish);
       case 2:
-        return _t(isEnglish, 'Ấm và có tín hiệu', 'Warm with visible signals');
+        return UiCopy.bilingual('copy_f6c02fc5925d', isEnglish);
       case 1:
-        return _t(isEnglish, 'Lúc gần lúc xa', 'Mixed and shifting');
+        return UiCopy.bilingual('copy_e949f7a44b5a', isEnglish);
       default:
-        return _t(isEnglish, 'Đang dè chừng', 'Guarded');
+        return UiCopy.bilingual('copy_3847a5e7e0f6', isEnglish);
     }
   }
 
   String _interactionText(bool isEnglish, double rate) {
     if (rate >= 1.2) {
-      return _t(isEnglish, 'Đều và chủ động', 'Steady and active');
+      return UiCopy.bilingual('copy_24afe779a9ff', isEnglish);
     }
-    if (rate >= 0.7) return _t(isEnglish, 'Có kết nối', 'Connected');
+    if (rate >= 0.7) return UiCopy.bilingual('copy_cdadc36b5b6b', isEnglish);
     if (rate >= 0.45) {
-      return _t(isEnglish, 'Mỏng nhưng chưa lạnh', 'Thin but not cold');
+      return UiCopy.bilingual('copy_489b52e84a91', isEnglish);
     }
-    return _t(isEnglish, 'Chậm và thiếu nhịp', 'Slow and uneven');
+    return UiCopy.bilingual('copy_823d8a8dcfbe', isEnglish);
   }
 
   String _attachmentNeed(String? element, bool isEnglish) {
     switch (element) {
       case 'Lửa':
-        return _t(isEnglish, 'được nhìn thấy và trân trọng',
-            'being seen and appreciated');
+        return UiCopy.bilingual('copy_9f157962dc7c', isEnglish);
       case 'Nước':
-        return _t(
-          isEnglish,
-          'an toàn cảm xúc và sự dịu dàng có thật',
-          'emotional safety and real tenderness',
-        );
+        return UiCopy.bilingual('copy_7d0399eac729', isEnglish);
       case 'Khí':
-        return _t(
-          isEnglish,
-          'đối thoại thông minh và không gian thở',
-          'intelligent dialogue and breathing room',
-        );
+        return UiCopy.bilingual('copy_4596a5a823a3', isEnglish);
       case 'Đất':
-        return _t(isEnglish, 'sự ổn định và hành động đều',
-            'stability and consistent action');
+        return UiCopy.bilingual('copy_ea2a3883fcdd', isEnglish);
       default:
-        return _t(isEnglish, 'cảm giác được hiểu thật',
-            'the feeling of being truly understood');
+        return UiCopy.bilingual('copy_9b9f8658fa76', isEnglish);
     }
   }
 
@@ -911,31 +856,18 @@ class TarotReadingService {
     required String? viewerElement,
   }) {
     if (dominantEnergy == 'reflective') {
-      return _t(isEnglish, 'người yêu bằng chiều sâu', 'a depth-led heart');
+      return UiCopy.bilingual('copy_02b61087569a', isEnglish);
     }
     if (dominantEnergy == 'transformative' || dominantEnergy == 'intense') {
-      return _t(
-        isEnglish,
-        'trái tim mạnh nhưng cần ranh giới',
-        'a strong heart that still needs boundaries',
-      );
+      return UiCopy.bilingual('copy_d997f0b36549', isEnglish);
     }
     if (interactionRate < 0.45) {
-      return _t(isEnglish, 'người đang đợi tín hiệu chắc chắn',
-          'a heart waiting for certainty');
+      return UiCopy.bilingual('copy_a18f1a68239a', isEnglish);
     }
     if (affectionScore >= 3 || viewerElement == 'Nước') {
-      return _t(
-        isEnglish,
-        'người mang năng lượng dịu và mở',
-        'a soft and open emotional energy',
-      );
+      return UiCopy.bilingual('copy_86c15f82fba8', isEnglish);
     }
-    return _t(
-      isEnglish,
-      'người giữ nhịp cảm xúc khá cân bằng',
-      'a fairly balanced emotional rhythm',
-    );
+    return UiCopy.bilingual('copy_c5934d7ac02d', isEnglish);
   }
 
   String _headline(
@@ -948,38 +880,18 @@ class TarotReadingService {
     if (viewerProfile.hasCompatibility &&
         (viewerProfile.compatibilityScore ?? 0) >= 88 &&
         insights.positivity >= 70) {
-      return _t(
-        isEnglish,
-        'Trải bài nghiêng về một kết nối có độ hợp cao: tình cảm vẫn có nền tốt, chỉ cần đi đúng nhịp để chạm sâu hơn.',
-        'This spread leans toward a highly compatible bond: the emotional foundation is there, it simply needs the right rhythm to deepen.',
-      );
+      return UiCopy.bilingual('copy_e6ed7fcfd444', isEnglish);
     }
     if (insights.interactionRate < 0.45) {
-      return _t(
-        isEnglish,
-        'Điểm nghẽn hiện tại không nằm ở việc hết thương, mà ở nhịp kết nối đang chậm hơn cảm xúc thật.',
-        'The present blockage does not look like a lack of feeling, but a connection rhythm that is lagging behind the true emotion.',
-      );
+      return UiCopy.bilingual('copy_53146b79b890', isEnglish);
     }
     if (dominantEnergy == 'transformative' || dominantEnergy == 'intense') {
-      return _t(
-        isEnglish,
-        'Tarot cho thấy bạn đang ở giai đoạn thay da cảm xúc: thứ không đủ thật sẽ khó đứng vững trước trái tim hiện tại của bạn.',
-        'Tarot points to an emotional shedding phase: what is not real enough will struggle to stand in front of your current heart.',
-      );
+      return UiCopy.bilingual('copy_da6448949836', isEnglish);
     }
     if (signals.affectionScore >= 4 || insights.positivity >= 76) {
-      return _t(
-        isEnglish,
-        'Trải bài khá sáng: cảm xúc đang mở, nhưng nó cần một cách bày tỏ chín hơn để được đáp lại đúng mức.',
-        'The spread is fairly bright: feelings are opening up, but they need a more mature expression to be fully received.',
-      );
+      return UiCopy.bilingual('copy_a0d5c81a4b4e', isEnglish);
     }
-    return _t(
-      isEnglish,
-      'Tarot cho thấy trái tim của bạn không hời hợt. Điều nó cần lúc này là rõ ràng, đều nhịp, và cảm giác được hiểu thật.',
-      'Tarot shows your heart is not shallow. What it needs now is clarity, steadiness, and the feeling of being truly understood.',
-    );
+    return UiCopy.bilingual('copy_d41f56fe09a1', isEnglish);
   }
 
   String _profileSummary(
@@ -990,61 +902,29 @@ class TarotReadingService {
   ) {
     final isEnglish = viewerProfile.isEnglish;
     final zodiacText = viewerProfile.hasViewerZodiac
-        ? _t(
-            isEnglish,
-            'Mang khí chất ${viewerProfile.viewerZodiacLabel}, bạn thường yêu theo cách rất riêng và khó bị cuốn bởi thứ nửa vời.',
-            'With the tone of ${viewerProfile.viewerZodiacLabel}, you tend to love in your own way and are rarely moved by anything half-real.',
-          )
-        : _t(
-            isEnglish,
-            'Bạn không còn hợp với kiểu cảm xúc nửa vời hoặc mập mờ kéo dài.',
-            'You are not aligned with half-hearted feelings or prolonged ambiguity.',
-          );
+        ? UiCopy.bilingual('copy_f40a61830d9c', isEnglish, {'value1': viewerProfile.viewerZodiacLabel})
+        : UiCopy.bilingual('copy_c6e15eb627b9', isEnglish);
     final signalText = signals.messageCount == 0
-        ? _t(
-            isEnglish,
-            'Tarot đang đọc nhiều hơn từ nhịp hoạt động và các lá bài, nên phần vô thức được nhấn mạnh khá rõ.',
-            'Tarot is reading more from activity rhythm and the cards themselves, so the unconscious layer stands out strongly here.',
-          )
+        ? UiCopy.bilingual('copy_4fc975a8b773', isEnglish)
         : _t(
             isEnglish,
-            'Nhịp tin nhắn gần đây cho thấy cảm xúc của bạn ${signals.averageLength >= 28 ? 'có chiều sâu và chịu khó quan sát' : 'không phô ra hết, nhưng vẫn có độ thật rõ rệt'}.',
+            UiCopy.text('copy_c2c1d4665d95', {'value1': signals.averageLength >= 28 ? 'có chiều sâu và chịu khó quan sát' : 'không phô ra hết, nhưng vẫn có độ thật rõ rệt'}),
             'Recent messages suggest your feelings ${signals.averageLength >= 28 ? 'carry depth and careful observation' : 'do not show everything, yet still feel very real'}.',
           );
-    return _t(
-      isEnglish,
-      '${viewerProfile.viewerName} hiện mang màu của $profileTag. ${viewerProfile.maturitySummary} $zodiacText Điểm mở lòng của bạn đang ở khoảng $viewerLoveScore/100. $signalText',
-      '${viewerProfile.viewerName} currently carries the energy of $profileTag. ${viewerProfile.maturitySummary} $zodiacText Your openness is around $viewerLoveScore/100. $signalText',
-    );
+    return UiCopy.bilingual('copy_de59a2a0a4ee', isEnglish, {'value1': viewerProfile.viewerName, 'value2': profileTag, 'value3': viewerProfile.maturitySummary, 'value4': zodiacText, 'value5': viewerLoveScore, 'value6': signalText});
   }
 
   String _spreadSummary(TarotViewerProfile viewerProfile, String spreadId) {
     final isEnglish = viewerProfile.isEnglish;
     switch (spreadId) {
       case 'pulse':
-        return _t(
-          isEnglish,
-          'Nhịp cảm xúc soi điều đang nổi lên, phần bạn đang giấu, và cánh cửa mở tim gần nhất.',
-          'Emotional Pulse reads what is rising, what is being hidden, and the nearest doorway for the heart to open.',
-        );
+        return UiCopy.bilingual('copy_6f3f11406b58', isEnglish);
       case 'mirror':
-        return _t(
-          isEnglish,
-          'Gương cảm xúc cho thấy hai phía đang mang gì, điểm va chạm nằm ở đâu, và chiếc cầu chữa lành nên bắt đầu từ đâu.',
-          'Emotional Mirror shows what both sides are carrying, where the friction lives, and where healing should begin.',
-        );
+        return UiCopy.bilingual('copy_a57616a3688d', isEnglish);
       case 'map':
-        return _t(
-          isEnglish,
-          'Bản đồ mối quan hệ đào sâu từ gốc cảm xúc, nhu cầu thật, cách yêu, rào cản hiện tại đến hướng đi 7 ngày tới.',
-          'Relationship Map goes deep from emotional roots and true needs to love language, present blocks, and the direction of the next 7 days.',
-        );
+        return UiCopy.bilingual('copy_dfe232c8dc44', isEnglish);
       default:
-        return _t(
-          isEnglish,
-          'Chương kế tiếp tập trung vào điều cần buông, điều cần mời vào, nhịp thời điểm và dấu hiệu sẽ xuất hiện.',
-          'Next Chapter focuses on what to release, what to invite in, the timing, and the sign that is about to show up.',
-        );
+        return UiCopy.bilingual('copy_b2568abb9e4d', isEnglish);
     }
   }
 
@@ -1061,36 +941,19 @@ class TarotReadingService {
     final rhythm =
         _interactionText(isEnglish, insights.interactionRate).toLowerCase();
     if (viewerProfile.isSingle) {
-      return _t(
-        isEnglish,
-        'Trường cảm xúc hiện tại nghiêng về $warmth, còn nhịp kết nối bên ngoài thì $rhythm. Tarot cho thấy bạn đang học cách phân biệt rung động thật với cảm xúc nhất thời.',
-        'The current emotional field leans $warmth, while outer connection rhythm feels $rhythm. Tarot suggests you are learning to distinguish real feeling from passing chemistry.',
-      );
+      return UiCopy.bilingual('copy_e9812d14417c', isEnglish, {'value1': warmth, 'value2': rhythm});
     }
     final balanceLine = viewerLoveScore > partnerLoveScore + 8
-        ? _t(isEnglish, 'Bạn đang mở lòng mạnh hơn đối phương một nhịp.',
-            'You are opening your heart one beat ahead of the other person.')
+        ? UiCopy.bilingual('copy_7ea8fbdfd4aa', isEnglish)
         : partnerLoveScore > viewerLoveScore + 8
-            ? _t(
-                isEnglish,
-                'Đối phương dường như đang để nhiều tình cảm ra ngoài hơn bạn.',
-                'The other person seems to be putting more feeling on the surface than you are.')
-            : _t(
-                isEnglish,
-                'Hai phía đang mở lòng khá cân nhau, chỉ khác cách thể hiện.',
-                'Both sides appear fairly equal in openness, only different in expression.');
+            ? UiCopy.bilingual('copy_c1954c9997a7', isEnglish)
+            : UiCopy.bilingual('copy_97bfb623d1eb', isEnglish);
     final signalLine = signals.affectionScore >= 3
-        ? _t(
-            isEnglish,
-            'Những dấu vết trò chuyện gần đây vẫn giữ được độ mềm và quan tâm.',
-            'Recent conversation traces still carry softness and care.')
-        : _t(
-            isEnglish,
-            'Cảm xúc có vẻ thật, nhưng lời nói đang dè hơn cảm xúc bên trong.',
-            'The feeling looks real, but the words are more guarded than the inner emotion.');
+        ? UiCopy.bilingual('copy_830aab11f815', isEnglish)
+        : UiCopy.bilingual('copy_dbe61da586f5', isEnglish);
     return _t(
       isEnglish,
-      'Năng lượng hiện tại ${viewerProfile.hasCompatibility ? 'có độ hợp khá rõ' : 'chưa hề lạnh'}: cảm xúc $warmth, kết nối $rhythm. $balanceLine $signalLine',
+      UiCopy.text('copy_9b2c5f7a5a11', {'value1': viewerProfile.hasCompatibility ? 'có độ hợp khá rõ' : 'chưa hề lạnh', 'value2': warmth, 'value3': rhythm, 'value4': balanceLine, 'value5': signalLine}),
       'The current energy ${viewerProfile.hasCompatibility ? 'shows visible compatibility' : 'is not cold at all'}: feelings are $warmth and the connection rhythm is $rhythm. $balanceLine $signalLine',
     );
   }
@@ -1143,44 +1006,20 @@ class TarotReadingService {
     if (oracleAdvice.isNotEmpty) return oracleAdvice;
     if (viewerProfile.isSingle) {
       if ((viewerProfile.viewerAgeYears ?? 0) >= 28) {
-        return _t(
-          isEnglish,
-          'Lời khuyên của Tarot: đừng phản hồi bằng sự mập mờ. Hãy chọn người đi kèm sự rõ ràng, đều nhịp, và biết giữ lời hơn là chỉ nói hay.',
-          'Tarot advice: do not answer with ambiguity. Choose the person who brings clarity, steadiness, and follow-through, not just beautiful words.',
-        );
+        return UiCopy.bilingual('copy_959ce8a7e980', isEnglish);
       }
-      return _t(
-        isEnglish,
-        'Lời khuyên của Tarot: hãy nói ra một nhu cầu thật ngắn nhưng thật thật của bạn. Khi trái tim dám gọi tên điều mình cần, người phù hợp sẽ lộ ra nhanh hơn.',
-        'Tarot advice: say one need out loud, briefly but truthfully. When your heart names what it needs, the right person reveals themselves faster.',
-      );
+      return UiCopy.bilingual('copy_99f5a95331fb', isEnglish);
     }
     if (insights.interactionRate < 0.45) {
-      return _t(
-        isEnglish,
-        '7 ngày tới, ưu tiên một lời hỏi han mềm và cụ thể hơn là nói chuyện nặng. Mối liên kết này cần được làm ấm lại bằng nhịp đều trước khi đòi câu trả lời lớn.',
-        'Over the next 7 days, prioritize one gentle and specific check-in over a heavy conversation. This bond needs warmth through consistency before it can hold big answers.',
-      );
+      return UiCopy.bilingual('copy_c01e1cb8aab3', isEnglish);
     }
     if (viewerLoveScore > partnerLoveScore + 10) {
-      return _t(
-        isEnglish,
-        'Bạn đang cho đi nhiều hơn một nhịp. Đừng giảm sự dịu dàng của mình, nhưng hãy thêm ranh giới: quan sát xem đối phương có tự bước thêm một bước không.',
-        'You are giving one beat more than the other person. Do not lose your softness, but add a boundary: watch whether they take one step forward on their own.',
-      );
+      return UiCopy.bilingual('copy_3c4ef5e62361', isEnglish);
     }
     if (signals.averageLength <= 16) {
-      return _t(
-        isEnglish,
-        'Điều nên làm ngay là nói rõ một ý thay vì để đối phương tự đoán. Với trái tim hiện tại của bạn, rõ ràng là lãng mạn hơn im lặng.',
-        'The immediate move is to say one thing clearly instead of making the other person guess. For your current heart, clarity is more romantic than silence.',
-      );
+      return UiCopy.bilingual('copy_39d5608febf2', isEnglish);
     }
-    return _t(
-      isEnglish,
-      'Tarot khuyên hai bạn giữ nhịp yêu bằng những hành động nhỏ nhưng đều: một câu hỏi thật lòng, một phản hồi đúng lúc, và ít kiểm tra lòng nhau hơn.',
-      'Tarot advises keeping the bond alive through small but steady acts: one honest question, one timely response, and less emotional testing.',
-    );
+    return UiCopy.bilingual('copy_7e06d5186df0', isEnglish);
   }
 
   String _facetEmotion(
@@ -1192,34 +1031,15 @@ class TarotReadingService {
   ) {
     final isEnglish = viewerProfile.isEnglish;
     final energyLine = dominantEnergy == 'warm'
-        ? _t(
-            isEnglish,
-            'Các lá bài nghiêng về trường ấm: tình cảm vẫn còn cửa đi vào, không phải kiểu đã nguội.',
-            'The cards lean warm: there is still a doorway into feeling here, not a field that has gone cold.')
+        ? UiCopy.bilingual('copy_af27c335c577', isEnglish)
         : dominantEnergy == 'reflective'
-            ? _t(
-                isEnglish,
-                'Trải bài nghiêng về phần chưa nói ra: cảm xúc có chiều sâu hơn bề mặt bạn đang để lộ.',
-                'The spread leans toward the unsaid layer: the feeling is deeper than what is currently being shown on the surface.')
+            ? UiCopy.bilingual('copy_d384b3d75775', isEnglish)
             : dominantEnergy == 'steady'
-                ? _t(
-                    isEnglish,
-                    'Tarot cho thấy trái tim đang tìm sự yên tâm và nhịp ổn định hơn là cảm xúc bốc cao chóng tàn.',
-                    'Tarot suggests the heart is seeking reassurance and stability more than dramatic intensity that burns out quickly.')
+                ? UiCopy.bilingual('copy_c06595f6364d', isEnglish)
                 : dominantEnergy == 'transformative'
-                    ? _t(
-                        isEnglish,
-                        'Đây là giai đoạn lột xác cảm xúc: bạn không còn hợp với điều gì đẹp trên bề mặt nhưng thiếu chiều sâu thật.',
-                        'This is an emotional shedding phase: you are no longer aligned with what looks beautiful on the surface but lacks real depth.')
-                    : _t(
-                        isEnglish,
-                        'Các lá bài mang sắc thái mạnh: cảm xúc thật có thể rất lớn, nên bài học nằm ở cách giữ bình tĩnh để không làm nó tràn bờ.',
-                        'The cards carry intensity: the feeling may be very real and strong, so the lesson is about staying calm enough not to let it spill over.');
-    final warmthLine = _t(
-      isEnglish,
-      'Tổng năng lượng gần đây cho thấy bầu khí cảm xúc ${_warmthText(isEnglish, warmthIndex).toLowerCase()}.',
-      'Recent overall energy suggests an emotional climate that feels ${_warmthText(isEnglish, warmthIndex).toLowerCase()}.',
-    );
+                    ? UiCopy.bilingual('copy_78cbb41a0db1', isEnglish)
+                    : UiCopy.bilingual('copy_d45332321e1e', isEnglish);
+    final warmthLine = UiCopy.bilingual('copy_7b92a8bae8d6', isEnglish, {'value1': _warmthText(isEnglish, warmthIndex).toLowerCase()});
     return '$energyLine $warmthLine ${viewerProfile.maturitySummary}';
   }
 
@@ -1249,31 +1069,15 @@ class TarotReadingService {
     );
     if (oracleCommunication.isNotEmpty) return oracleCommunication;
     if (signals.messageCount == 0) {
-      return _t(
-        isEnglish,
-        'Chưa có đủ dấu vết tin nhắn để đọc lời nói, nên Tarot thấy rõ hơn phần cảm xúc bên trong và nhịp hoạt động. Điều đó thường cho thấy có cảm giác thật nhưng chưa được đặt thành lời.',
-        'There is not enough message data to read the spoken layer, so Tarot sees the inner emotional movement and activity rhythm more clearly. That usually means the feeling is present, but not yet fully named.',
-      );
+      return UiCopy.bilingual('copy_7fb89dfdbe51', isEnglish);
     }
     if (signals.averageLength >= 34 && signals.questionCount >= 2) {
-      return _t(
-        isEnglish,
-        'Bạn có xu hướng giao tiếp bằng chiều sâu và muốn hiểu bản chất vấn đề trước khi mở hết lòng. Điểm mạnh là tinh tế, điểm cần nhớ là đừng hỏi nhiều hơn mức bạn bộc lộ thật.',
-        'You tend to communicate through depth and want to understand the root before opening fully. The strength is sensitivity, the caution is not to ask for more than you are willing to reveal.',
-      );
+      return UiCopy.bilingual('copy_e71446270fb6', isEnglish);
     }
     if (signals.averageLength <= 16) {
-      return _t(
-        isEnglish,
-        'Lời nói hiện tại ngắn hơn cảm xúc thật. Nút thắt không phải thiếu thương, mà là người còn lại khó đoán đúng điều bạn đang cần nếu mọi thứ chỉ dừng ở câu ngắn.',
-        'The current words are shorter than the true feeling. The knot is not a lack of care, but that the other person may struggle to read what you need if everything stays in short lines.',
-      );
+      return UiCopy.bilingual('copy_ae7eb49ca86c', isEnglish);
     }
-    return _t(
-      isEnglish,
-      'Nhịp giao tiếp đang ở mức vừa phải: có sự quan tâm nhưng đôi lúc vẫn giữ ý. Điều Tarot khuyên là nói rõ một điều cụ thể thay vì chờ đối phương tự cảm hết phần chưa nói.',
-      'The communication rhythm is moderate: there is care, but some thoughts are still being held back. Tarot advises stating one concrete truth instead of waiting for the other person to sense all the unspoken layers.',
-    );
+    return UiCopy.bilingual('copy_fafc7bf6a79d', isEnglish);
   }
 
   String _facetAttachment(
@@ -1284,31 +1088,14 @@ class TarotReadingService {
     final isEnglish = viewerProfile.isEnglish;
     final coreNeed = _attachmentNeed(viewerProfile.viewerElement, isEnglish);
     if (viewerProfile.isSingle) {
-      return _t(
-        isEnglish,
-        'Nhu cầu sâu của bạn lúc này là $coreNeed. Ở giai đoạn tuổi hiện tại, trái tim không còn chỉ cần hấp dẫn; nó cần cảm giác an tâm và nhất quán để đi tiếp.',
-        'Your deeper need right now is $coreNeed. At this stage of life, the heart no longer wants attraction alone; it wants reassurance and consistency to move forward.',
-      );
+      return UiCopy.bilingual('copy_c7f1cc970532', isEnglish, {'value1': coreNeed});
     }
     final balanceLine = viewerLoveScore > partnerLoveScore + 8
-        ? _t(
-            isEnglish,
-            'Bạn có xu hướng cho đi cảm xúc trước, nên nhu cầu được đáp lại rõ ràng cũng cao hơn.',
-            'You tend to give emotion first, so your need for a visible return is naturally higher.')
+        ? UiCopy.bilingual('copy_5e0258776fdf', isEnglish)
         : partnerLoveScore > viewerLoveScore + 8
-            ? _t(
-                isEnglish,
-                'Đối phương có vẻ mong gắn kết mạnh hơn một nhịp, vì vậy cách bạn phản hồi rất quan trọng.',
-                'The other person seems to want closeness one beat more strongly, so the way you respond matters a lot.')
-            : _t(
-                isEnglish,
-                'Hai phía có nhu cầu gần nhau, chỉ khác ngôn ngữ yêu.',
-                'Both sides have fairly similar needs, only different love languages.');
-    return _t(
-      isEnglish,
-      'Nhu cầu sâu của bạn đang nghiêng về $coreNeed. $balanceLine',
-      'Your deeper need is leaning toward $coreNeed. $balanceLine',
-    );
+            ? UiCopy.bilingual('copy_fd59329bddff', isEnglish)
+            : UiCopy.bilingual('copy_62b6fae2265f', isEnglish);
+    return UiCopy.bilingual('copy_1056e725f64b', isEnglish, {'value1': coreNeed, 'value2': balanceLine});
   }
 
   String _facetTiming(
@@ -1367,28 +1154,14 @@ class TarotReadingService {
                   );
     if (oracleTiming.isNotEmpty) return oracleTiming;
     if (insights.interactionRate >= 1.1 && insights.positivity >= 70) {
-      return _t(
-        isEnglish,
-        'Đây là nhịp khá đẹp để tiến thêm một bước mềm: nói rõ cảm xúc, hẹn một cuộc trò chuyện tử tế, hoặc đặt lại kỳ vọng cho cùng một hướng.',
-        'This is a strong window for one soft step forward: state your feeling, ask for a kind conversation, or realign expectations toward the same direction.',
-      );
+      return UiCopy.bilingual('copy_0d92d8cf686f', isEnglish);
     }
     if (insights.interactionRate < 0.45) {
-      return _t(
-        isEnglish,
-        'Tarot không khuyên đi quá mạnh ngay lúc này. Nhịp đúng là khơi lại sự gần gũi trước, rồi mới chạm vào câu hỏi lớn. Thời điểm đẹp là trong 3 đến 7 ngày tới với một tín hiệu nhỏ nhưng rõ.',
-        'Tarot does not advise pushing too hard right now. The right timing is to restore softness first, then touch the bigger question. The best window is within the next 3 to 7 days with one small but clear signal.',
-      );
+      return UiCopy.bilingual('copy_1db33ebe3502', isEnglish);
     }
     return signals.exclamationCount > 1
-        ? _t(
-            isEnglish,
-            'Cảm xúc khá nhanh và dễ dâng lên, nên càng cần chọn đúng lúc để tránh quá tải.',
-            'Emotion rises quickly here, so timing matters even more to avoid overwhelm.')
-        : _t(
-            isEnglish,
-            'Nhịp hiện tại hợp với một bước chậm nhưng chắc hơn là nhiều hành động dồn dập.',
-            'The current rhythm favors one steady move more than many hurried actions.');
+        ? UiCopy.bilingual('copy_9e182fff6582', isEnglish)
+        : UiCopy.bilingual('copy_36504913265f', isEnglish);
   }
 
   String _facetCompatibility(TarotViewerProfile viewerProfile) {
@@ -1397,68 +1170,58 @@ class TarotReadingService {
       return '${viewerProfile.compatibilityTitle}. ${viewerProfile.compatibilityDescription}';
     }
     if (viewerProfile.hasViewerZodiac) {
-      final rawLoveStyle = ZodiacUtils
-              .zodiacDetails[viewerProfile.viewerZodiacKey]?['love']
+      final rawLoveStyle = ZodiacUtils.localizedDetails(viewerProfile.viewerZodiacKey ?? '')?['love']
               ?.toString()
               .trim() ??
           '';
       if (!isEnglish && rawLoveStyle.isNotEmpty) {
-        return 'Cung ${viewerProfile.viewerZodiacLabel} của bạn cho thấy cách yêu thiên về: $rawLoveStyle';
+        return UiCopy.text('copy_ececea8c80e3', {'value1': viewerProfile.viewerZodiacLabel, 'value2': rawLoveStyle});
       }
-      return _t(
-        isEnglish,
-        'Nếu nhìn theo khí chất ${viewerProfile.viewerZodiacLabel}, bạn thường hợp kiểu người biết nói thật, giữ nhịp đều và không làm cảm xúc của bạn bị treo lửng quá lâu.',
-        'Through the tone of ${viewerProfile.viewerZodiacLabel}, you tend to fit best with people who speak honestly, keep a steady pace, and do not leave your feelings hanging for too long.',
-      );
+      return UiCopy.bilingual('copy_e87392b24f82', isEnglish, {'value1': viewerProfile.viewerZodiacLabel});
     }
-    return _t(
-      isEnglish,
-      'Khi chưa có đủ dữ liệu cung mệnh, Tarot vẫn cho thấy bạn hợp với kiểu kết nối rõ ràng, tôn trọng nhịp cảm xúc và không ép bạn yêu nhanh hơn mức mình sẵn sàng.',
-      'Without enough zodiac data, Tarot still suggests you fit best with a bond that is clear, respectful of emotional timing, and does not force you to move faster than you are ready for.',
-    );
+    return UiCopy.bilingual('copy_5a40a1765eb8', isEnglish);
   }
 
   String _cardHeadline(String slotId, bool isEnglish, bool isSingle) {
     switch (slotId) {
       case 'current_pulse':
-        return _t(
-            isEnglish, 'Nhịp cảm xúc hiện tại', 'Current emotional pulse');
+        return UiCopy.bilingual('copy_9218c5953eb8', isEnglish);
       case 'hidden_tide':
-        return _t(isEnglish, 'Phần đang giấu', 'Hidden tide');
+        return UiCopy.bilingual('copy_4bf15bf3b841', isEnglish);
       case 'heart_path':
-        return _t(isEnglish, 'Hướng mở tim', 'Heart-opening path');
+        return UiCopy.bilingual('copy_32223129138c', isEnglish);
       case 'self_state':
-        return _t(isEnglish, 'Bạn đang mang gì', 'What you are carrying');
+        return UiCopy.bilingual('copy_a4075ad52e59', isEnglish);
       case 'partner_state':
         return _t(
           isEnglish,
-          isSingle ? 'Người bạn đang nghĩ tới' : 'Phía đối phương',
+          isSingle ? UiCopy.text('copy_6e13fe2f0852') : UiCopy.text('copy_d70c709b472a'),
           isSingle ? 'The person on your mind' : 'The other side',
         );
       case 'friction':
-        return _t(isEnglish, 'Điểm va chạm', 'Point of friction');
+        return UiCopy.bilingual('copy_a0c2533f0b71', isEnglish);
       case 'bridge':
-        return _t(isEnglish, 'Cầu nối chữa lành', 'Healing bridge');
+        return UiCopy.bilingual('copy_1c3af5307831', isEnglish);
       case 'root':
-        return _t(isEnglish, 'Gốc cảm xúc', 'Emotional root');
+        return UiCopy.bilingual('copy_4210398a0cde', isEnglish);
       case 'need':
-        return _t(isEnglish, 'Nhu cầu sâu', 'Deeper need');
+        return UiCopy.bilingual('copy_cda9b273f261', isEnglish);
       case 'expression':
-        return _t(isEnglish, 'Cách bạn thể hiện', 'Your love expression');
+        return UiCopy.bilingual('copy_440c1a6aeea1', isEnglish);
       case 'block':
-        return _t(isEnglish, 'Rào cản hiện tại', 'Current block');
+        return UiCopy.bilingual('copy_22d8bd5a5701', isEnglish);
       case 'next_7':
-        return _t(isEnglish, 'Hướng đi 7 ngày tới', 'The next 7 days');
+        return UiCopy.bilingual('copy_46745861d9dc', isEnglish);
       case 'release':
-        return _t(isEnglish, 'Điều nên buông', 'What to release');
+        return UiCopy.bilingual('copy_2ad401bc0fde', isEnglish);
       case 'invite':
-        return _t(isEnglish, 'Điều nên mở cửa', 'What to invite in');
+        return UiCopy.bilingual('copy_fc046557cfd9', isEnglish);
       case 'timing':
-        return _t(isEnglish, 'Nhịp thời điểm', 'Timing pulse');
+        return UiCopy.bilingual('copy_23c57b4dc1b9', isEnglish);
       case 'sign':
-        return _t(isEnglish, 'Dấu hiệu sắp đến', 'Incoming sign');
+        return UiCopy.bilingual('copy_83ddc2ad5ed3', isEnglish);
       default:
-        return _t(isEnglish, 'Thông điệp của lá bài', 'Card message');
+        return UiCopy.bilingual('copy_7f33184fe5d1', isEnglish);
     }
   }
 
@@ -1476,84 +1239,30 @@ class TarotReadingService {
     final slotLine = switch (selection.slotId) {
       'current_pulse' => _t(
           isEnglish,
-          'Ở vị trí này, lá bài nói rằng cảm xúc hiện tại đang ${dominantEnergy == 'warm' ? 'muốn được đón nhận' : dominantEnergy == 'reflective' ? 'cần được gọi tên rõ ràng' : 'đòi hỏi bạn phải nhìn sâu hơn vào điều mình thật sự muốn'}.',
+          UiCopy.text('copy_c38335bc8ea9', {'value1': dominantEnergy == 'warm' ? 'muốn được đón nhận' : dominantEnergy == 'reflective' ? 'cần được gọi tên rõ ràng' : 'đòi hỏi bạn phải nhìn sâu hơn vào điều mình thật sự muốn'}),
           'In this position, the card says your present feeling ${dominantEnergy == 'warm' ? 'wants to be received' : dominantEnergy == 'reflective' ? 'needs to be named clearly' : 'is asking you to look deeper into what you truly want'}.'),
-      'hidden_tide' => _t(
-          isEnglish,
-          'Phần bị giấu nhiều nhất không phải là thiếu thương, mà là nỗi sợ mình mở lòng trước rồi không được đáp lại đúng mức.',
-          'What is most hidden is not a lack of feeling, but the fear of opening first and not being met with the same depth.'),
-      'heart_path' => _t(
-          isEnglish,
-          'Con đường mở tim ở đây không phải thêm kịch tính, mà là nói đúng một điều thật và để người kia thấy nhịp cảm xúc thật của bạn.',
-          'The heart-opening path here is not about more drama, but about saying one true thing and letting the other person see your real rhythm.'),
-      'self_state' => _t(
-          isEnglish,
-          'Vị trí này phản chiếu bạn đang mang theo nhu cầu $needText và có xu hướng quan sát rất kỹ trước khi trao thêm niềm tin.',
-          'This position reflects that you are carrying the need for $needText and tend to observe carefully before offering more trust.'),
+      'hidden_tide' => UiCopy.bilingual('copy_b9c45ed214e5', isEnglish),
+      'heart_path' => UiCopy.bilingual('copy_3cd396e60771', isEnglish),
+      'self_state' => UiCopy.bilingual('copy_8c3b1146e615', isEnglish, {'value1': needText}),
       'partner_state' => viewerProfile.isSingle
-          ? _t(
-              isEnglish,
-              'Nếu đang nghĩ tới một người cụ thể, lá này cho thấy họ có thể cũng đang do dự hoặc chưa đủ rõ để bước hẳn vào vùng cảm xúc của bạn.',
-              'If you have a specific person in mind, this card suggests they may also be hesitating or not yet clear enough to fully step into your emotional space.')
-          : _t(
-              isEnglish,
-              'Lá bài cho thấy phía đối phương đang giữ cảm xúc theo cách riêng của họ. Điều quan trọng là đừng dịch sự chậm lại thành hết thương quá sớm.',
-              'This card shows the other side is holding feeling in their own way. The key is not to translate slowness into a lack of care too early.'),
-      'friction' => _t(
-          isEnglish,
-          'Điểm va chạm hiện tại nằm ở chỗ cảm xúc đi một nhịp, lời nói đi một nhịp khác. Khi nhịp kết nối đang $rhythm, hiểu lầm rất dễ lớn hơn sự thật.',
-          'The current friction lives where feelings move in one rhythm and words move in another. When the connection rhythm feels $rhythm, misunderstandings can grow larger than the truth.'),
-      'bridge' => _t(
-          isEnglish,
-          'Cầu nối chữa lành đến từ một hành động nhỏ nhưng rõ: hỏi han cụ thể, phản hồi đúng lúc, hoặc thừa nhận điều mình đang thật sự sợ.',
-          'The healing bridge comes from one small but clear act: a specific check-in, a timely response, or naming what you are truly afraid of.'),
-      'root' => _t(
-          isEnglish,
-          'Gốc cảm xúc ở đây cho thấy chuyện hiện tại không chỉ là người kia, mà còn là cách trái tim bạn đang định nghĩa an toàn và giá trị của chính mình.',
-          'The emotional root here shows that this is not only about the other person, but also about how your heart is defining safety and self-worth.'),
-      'need' => _t(
-          isEnglish,
-          'Nhu cầu sâu hiện ra rất rõ: bạn cần $needText hơn là những rung động đẹp nhưng thiếu độ chắc.',
-          'The deeper need is very clear: you need $needText more than beautiful sparks that lack steadiness.'),
-      'expression' => _t(
-          isEnglish,
-          'Cách bạn thể hiện yêu thương có thể dịu hơn hoặc sâu hơn mức người khác nhìn thấy ngay. Tarot nhắc rằng không phải ai cũng tự đọc được phần mềm đó nếu bạn không nói ra.',
-          'Your way of expressing love may be softer or deeper than others can immediately read. Tarot reminds you that not everyone can sense that softness if you never name it.'),
-      'block' => _t(
-          isEnglish,
-          'Rào cản hiện tại là thói quen tự đoán ý nhau hoặc tự ép mình phải ổn. Lá này nhắc bạn gỡ nút bằng sự thật, không phải bằng đoán lòng.',
-          'The present block is the habit of guessing each other or forcing yourself to look fine. This card asks you to untie the knot with truth, not with emotional guessing.'),
-      'next_7' => _t(
-          isEnglish,
-          'Trong 7 ngày tới, hướng đi đẹp nhất là một bước nhỏ nhưng có chủ đích. Đừng cố giải quyết mọi thứ trong một lần nói chuyện duy nhất.',
-          'Over the next 7 days, the best direction is one small but intentional move. Do not try to solve everything in one conversation.'),
-      'release' => _t(
-          isEnglish,
-          'Điều nên buông ở đây là cách yêu dựa trên suy đoán, tự thử lòng, hoặc đòi đối phương phải hiểu hết mà chưa từng được nói rõ.',
-          'What should be released here is love built on guessing, emotional testing, or expecting the other person to understand what has never been clearly said.'),
-      'invite' => _t(
-          isEnglish,
-          'Điều nên mời vào là sự rõ ràng, nhịp đều, và cảm giác được đáp lại bằng hành động thực tế chứ không chỉ hứa hẹn.',
-          'What should be invited in is clarity, steadiness, and the feeling of being met through real action, not promises alone.'),
-      'timing' => _t(
-          isEnglish,
-          'Lá này nhấn mạnh chuyện thời điểm: đừng vội khi tim còn rối, nhưng cũng đừng chờ quá lâu đến mức cảm xúc đẹp bị nguội vì thiếu tín hiệu.',
-          'This card emphasizes timing: do not rush while the heart is tangled, but do not wait so long that good feeling cools down from lack of signal.'),
-      'sign' => _t(
-          isEnglish,
-          'Dấu hiệu sắp tới thường không quá ồn ào: một tin nhắn rõ ràng hơn, một phản hồi chủ động hơn, hoặc cảm giác nhẹ người vì bạn biết mình cần gì.',
-          'The sign ahead is not usually loud: a clearer message, a more active response, or the relief of finally knowing what you need.'),
+          ? UiCopy.bilingual('copy_9d24d7963941', isEnglish)
+          : UiCopy.bilingual('copy_984c662b4b1f', isEnglish),
+      'friction' => UiCopy.bilingual('copy_c07faad1e3c0', isEnglish, {'value1': rhythm}),
+      'bridge' => UiCopy.bilingual('copy_6ab16037eb42', isEnglish),
+      'root' => UiCopy.bilingual('copy_1d4d28b70180', isEnglish),
+      'need' => UiCopy.bilingual('copy_7fc3c185d5d1', isEnglish, {'value1': needText}),
+      'expression' => UiCopy.bilingual('copy_25495f48051b', isEnglish),
+      'block' => UiCopy.bilingual('copy_556d54e53259', isEnglish),
+      'next_7' => UiCopy.bilingual('copy_81916c668a15', isEnglish),
+      'release' => UiCopy.bilingual('copy_01be4003f686', isEnglish),
+      'invite' => UiCopy.bilingual('copy_1b516dac44ac', isEnglish),
+      'timing' => UiCopy.bilingual('copy_dc3ebff0110d', isEnglish),
+      'sign' => UiCopy.bilingual('copy_cb8be28171cc', isEnglish),
       _ => '',
     };
     final reverseLine = selection.isReversed
-        ? _t(
-            isEnglish,
-            'Vì lá này xuất hiện ở thế ngược, năng lượng đó đang bị nén, chậm, hoặc dễ đi chệch nếu bạn tiếp tục giữ im lặng.',
-            'Because this card appears reversed, that energy is compressed, delayed, or easily diverted if silence continues.')
-        : _t(
-            isEnglish,
-            'Ở thế xuôi, lá này cho thấy vẫn còn một đường đi đẹp nếu bạn chọn cách thể hiện trưởng thành và đều nhịp.',
-            'In upright position, this card shows there is still a beautiful way forward if you choose a mature and steady expression.');
+        ? UiCopy.bilingual('copy_96c02c91fce8', isEnglish)
+        : UiCopy.bilingual('copy_225fe7e7a432', isEnglish);
     return '${selection.baseMeaning} $slotLine $reverseLine';
   }
 }

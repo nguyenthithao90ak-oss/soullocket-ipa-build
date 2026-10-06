@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
@@ -180,26 +181,26 @@ class AuthRecoveryService {
       case 'permission-denied':
         return permissionDeniedMessage ??
             error.message ??
-            'Mã OTP không đúng. Vui lòng kiểm tra lại.';
+            UiCopy.text('copy_8d9f3b1f9ea4');
       case 'deadline-exceeded':
         return deadlineExceededMessage ??
             error.message ??
-            'Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.';
+            UiCopy.text('copy_ce8b53085ba9');
       case 'failed-precondition':
         return failedPreconditionMessage ??
             error.message ??
-            'Email OTP không khớp email chính của tài khoản hiện tại.';
+            UiCopy.text('copy_7e839d438d88');
       case 'resource-exhausted':
         return resourceExhaustedMessage ??
             error.message ??
-            'Bạn đã nhập sai OTP quá nhiều lần. Vui lòng thử lại sau.';
+            UiCopy.text('copy_3fc83e0151c2');
       case 'unauthenticated':
         return unauthenticatedMessage ??
-            'Bạn cần đăng nhập lại trước khi xác thực email chính.';
+            UiCopy.text('copy_dce241e0d961');
       case 'invalid-argument':
         return invalidArgumentMessage ??
             error.message ??
-            'Thiếu email hoặc mã OTP.';
+            UiCopy.text('copy_011c0f11b574');
       default:
         return error.message ?? fallbackMessage;
     }
@@ -348,15 +349,15 @@ class AuthRecoveryService {
     } on firebase_auth.FirebaseAuthException catch (error) {
       switch (error.code) {
         case 'invalid-email':
-          throw 'Email khôi phục không hợp lệ.';
+          throw UiCopy.text('copy_633fb684c625');
         case 'missing-email':
-          throw 'Vui lòng nhập email để nhận link khôi phục.';
+          throw UiCopy.text('copy_80a91804e836');
         case 'user-not-found':
-          throw 'Không tìm thấy tài khoản ứng với email này.';
+          throw UiCopy.text('copy_8e67c589c00c');
         case 'network-request-failed':
-          throw 'Không thể kết nối mạng để gửi link khôi phục.';
+          throw UiCopy.text('copy_60c58bba9040');
         case 'too-many-requests':
-          throw 'Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau ít phút.';
+          throw UiCopy.text('copy_8cebb78c51c1');
         default:
           throw auth_support.handleFirebaseAuthError(error);
       }
@@ -389,16 +390,16 @@ class AuthRecoveryService {
         throw _messageFromFunctionsError(
           error,
           fallbackMessage: L10nService().translate('auth_fallback_verification_code_send'),
-          permissionDeniedMessage: 'Yêu cầu bị từ chối. Thử lại sau.',
-          failedPreconditionMessage: 'Máy chủ OTP chưa được cấu hình xong.',
+          permissionDeniedMessage: UiCopy.text('copy_fd3b19bd52c2'),
+          failedPreconditionMessage: UiCopy.text('copy_aa51e7b93807'),
           resourceExhaustedMessage:
-              'Bạn yêu cầu mã quá nhiều lần. Hãy chờ rồi thử lại.',
+              UiCopy.text('copy_0e4a181a798a'),
           unauthenticatedMessage:
-              'Phiên bảo mật chưa sẵn sàng. Mở lại app rồi thử lại.',
-          invalidArgumentMessage: 'Email không hợp lệ hoặc thiếu email.',
+              UiCopy.text('copy_e687147b4e28'),
+          invalidArgumentMessage: UiCopy.text('copy_0196a75224f3'),
           appCheckMessage: kDebugMode
-              ? 'App Check chưa sẵn sàng. Chờ vài giây rồi thử lại.'
-              : 'Phiên bảo mật chưa sẵn sàng. Chờ vài giây rồi thử lại.',
+              ? UiCopy.text('copy_21eaeaa66ac6')
+              : UiCopy.text('copy_bb2c1fe6f42a'),
           allowUnauthenticatedWithoutMarkers: true,
         );
       }
@@ -421,17 +422,17 @@ class AuthRecoveryService {
       );
       final rawData = result.data;
       if (rawData is! Map) {
-        throw 'Phản hồi từ máy chủ không hợp lệ (Type mismatch).';
+        throw UiCopy.text('copy_77e1b62cba70');
       }
       final data = Map<String, dynamic>.from(rawData);
       if (data['success'] == true) {
         final token = data['customToken'];
         if (token == null || token.toString().isEmpty) {
-          throw 'Hệ thống không trả về mã đăng nhập hợp lệ.';
+          throw UiCopy.text('copy_4bdb38497394');
         }
         return token.toString();
       }
-      throw data['message'] ?? 'Mã không hợp lệ hoặc đã hết hạn.';
+      throw data['message'] ?? UiCopy.text('copy_46c002d23c60');
     } catch (error) {
       if (error is FirebaseFunctionsException) {
         throw _messageFromFunctionsError(
@@ -439,13 +440,13 @@ class AuthRecoveryService {
           fallbackMessage:
               L10nService().translate('auth_fallback_verification_code_check'),
           appCheckMessage: kDebugMode
-              ? 'Phiên App Check chưa sẵn sàng. Vui lòng chờ vài giây rồi thử xác nhận lại.'
-              : 'Phiên bảo mật chưa sẵn sàng. Hãy chờ vài giây rồi xác nhận lại.',
+              ? UiCopy.text('copy_988dfd5c5227')
+              : UiCopy.text('copy_23f6e3c6977a'),
           allowUnauthenticatedWithoutMarkers: true,
         );
       }
       if (error is String) rethrow;
-      throw 'Không xác nhận được mã OTP: máy chủ không trả về chi tiết lỗi, hãy kiểm tra mã và thử lại.';
+      throw UiCopy.text('copy_18cc86a81b2c');
     }
   }
 
@@ -458,10 +459,10 @@ class AuthRecoveryService {
         _auth.currentUser?.email ?? '',
       );
       if (currentEmail.isEmpty) {
-        throw 'Không tìm thấy email chính của tài khoản hiện tại.';
+        throw UiCopy.text('copy_cc40be154171');
       }
       if (currentEmail != normalizedEmail) {
-        throw 'Email OTP không khớp email chính của tài khoản hiện tại.';
+        throw UiCopy.text('copy_7e839d438d88');
       }
 
       final result = await _callOtpFunction(
@@ -473,10 +474,10 @@ class AuthRecoveryService {
       );
       final data = _asStringDynamicMap(result.data);
       if (data == null) {
-        throw 'Không xác thực được email chính: máy chủ không trả về dữ liệu hợp lệ.';
+        throw UiCopy.text('copy_0b33f3dbe3a6');
       }
       if (data['success'] != true) {
-        throw 'Không xác thực được email chính: email hoặc mã xác thực không hợp lệ.';
+        throw UiCopy.text('copy_556dd063c013');
       }
     } catch (error) {
       if (error is FirebaseFunctionsException) {
@@ -485,12 +486,12 @@ class AuthRecoveryService {
           fallbackMessage:
               L10nService().translate('auth_fallback_primary_email_verify'),
           appCheckMessage: kDebugMode
-              ? 'Phiên App Check chưa sẵn sàng. Vui lòng chờ vài giây rồi thử lại.'
-              : 'Phiên bảo mật chưa sẵn sàng. Hãy chờ vài giây rồi thử lại.',
+              ? UiCopy.text('copy_ec710fce2940')
+              : UiCopy.text('copy_6ca4f267ea45'),
         );
       }
       if (error is String) rethrow;
-      throw 'Không xác thực được email chính: máy chủ không trả về chi tiết lỗi.';
+      throw UiCopy.text('copy_0c9ab11b345f');
     }
   }
 
@@ -525,10 +526,10 @@ class AuthRecoveryService {
         );
       }
       if (data == null) {
-        throw 'Mã không hợp lệ hoặc đã hết hạn.';
+        throw UiCopy.text('copy_46c002d23c60');
       }
       if (data['success'] != true) {
-        throw 'Mã không hợp lệ hoặc đã hết hạn.';
+        throw UiCopy.text('copy_46c002d23c60');
       }
     } catch (error) {
       if (aliasExpectedUid != null) rethrow;
@@ -537,12 +538,12 @@ class AuthRecoveryService {
           error,
           fallbackMessage: L10nService().translate('auth_fallback_verification_code_expired'),
           appCheckMessage: kDebugMode
-              ? 'Phiên App Check chưa sẵn sàng. Vui lòng chờ vài giây rồi thử lại.'
-              : 'Phiên bảo mật chưa sẵn sàng. Hãy chờ vài giây rồi thử lại.',
+              ? UiCopy.text('copy_ec710fce2940')
+              : UiCopy.text('copy_6ca4f267ea45'),
           allowUnauthenticatedWithoutMarkers: true,
         );
       }
-      throw 'Mã không hợp lệ hoặc đã hết hạn.';
+      throw UiCopy.text('copy_46c002d23c60');
     }
   }
 
@@ -619,7 +620,7 @@ class AuthRecoveryService {
 
       final email = user.email?.trim() ?? '';
       if (email.isEmpty) {
-        throw 'Tài khoản hiện tại chưa có email nên chưa thể tạo mật khẩu đăng nhập.';
+        throw UiCopy.text('copy_4202a22da8cd');
       }
 
       final credential = firebase_auth.EmailAuthProvider.credential(
@@ -629,7 +630,7 @@ class AuthRecoveryService {
       await user.linkWithCredential(credential);
       return;
     }
-    throw 'Đăng nhập không thành công bằng mã OTP.';
+    throw UiCopy.text('copy_42987feddb6e');
   }
 
   Future<String> verifyPasswordResetCode(String code) async {
@@ -638,13 +639,13 @@ class AuthRecoveryService {
     } on firebase_auth.FirebaseAuthException catch (error) {
       switch (error.code) {
         case 'invalid-action-code':
-          throw 'Link đặt lại mật khẩu không hợp lệ. Có thể bạn đã mở nhầm email cũ.';
+          throw UiCopy.text('copy_7ffff27f51f2');
         case 'expired-action-code':
-          throw 'Link đặt lại mật khẩu đã hết hạn. Hãy yêu cầu email mới nhất rồi thử lại.';
+          throw UiCopy.text('copy_8c31ffed0ab2');
         case 'user-disabled':
-          throw 'Tài khoản này đã bị vô hiệu hóa nên chưa thể đặt lại mật khẩu.';
+          throw UiCopy.text('copy_a082a2271b95');
         case 'user-not-found':
-          throw 'Không tìm thấy tài khoản cho link đặt lại mật khẩu này.';
+          throw UiCopy.text('copy_573a47ec6955');
         default:
           throw auth_support.handleFirebaseAuthError(error);
       }
@@ -670,15 +671,15 @@ class AuthRecoveryService {
     } on firebase_auth.FirebaseAuthException catch (error) {
       switch (error.code) {
         case 'invalid-action-code':
-          throw 'Link đặt lại mật khẩu không hợp lệ. Có thể bạn đã mở nhầm email cũ.';
+          throw UiCopy.text('copy_7ffff27f51f2');
         case 'expired-action-code':
-          throw 'Link đặt lại mật khẩu đã hết hạn. Hãy yêu cầu email mới nhất rồi thử lại.';
+          throw UiCopy.text('copy_8c31ffed0ab2');
         case 'weak-password':
-          throw 'Mật khẩu mới quá yếu. Hãy dùng ít nhất 6 ký tự.';
+          throw UiCopy.text('copy_fd113f1198f9');
         case 'user-disabled':
-          throw 'Tài khoản này đã bị vô hiệu hóa nên chưa thể đặt lại mật khẩu.';
+          throw UiCopy.text('copy_a082a2271b95');
         case 'user-not-found':
-          throw 'Không tìm thấy tài khoản cho link đặt lại mật khẩu này.';
+          throw UiCopy.text('copy_573a47ec6955');
         default:
           throw auth_support.handleFirebaseAuthError(error);
       }

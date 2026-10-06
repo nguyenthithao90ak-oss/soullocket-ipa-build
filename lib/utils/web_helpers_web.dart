@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 import 'dart:js_interop';
 import 'dart:typed_data';
@@ -146,7 +147,7 @@ Future<void> ensureGoogleMapsScriptReadyImpl(String apiKey) {
   void completeError([web.Event? _]) {
     if (!completer.isCompleted) {
       completer.completeError(
-        StateError('Không tải được Google Maps script trên web.'),
+        StateError(UiCopy.text('copy_6310f8b62572')),
       );
     }
     _googleMapsScriptCompleter = null;

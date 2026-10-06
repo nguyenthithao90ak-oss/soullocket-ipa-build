@@ -1,7 +1,10 @@
 import 'package:soullocket_app/utils/money_format.dart';
-import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../utils/house_money_currency.dart';
+import '../../utils/app_error_mapper.dart';
+import '../../widgets/sl_toast.dart';
 
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -15,8 +18,11 @@ class WishlistScreen extends StatefulWidget {
   final String houseId;
   final String myName;
 
-  const WishlistScreen(
-      {super.key, required this.houseId, required this.myName});
+  const WishlistScreen({
+    super.key,
+    required this.houseId,
+    required this.myName,
+  });
 
   @override
   State<WishlistScreen> createState() => _WishlistScreenState();
@@ -26,8 +32,11 @@ class _WishlistScreenState extends State<WishlistScreen> {
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
       tooltip: context.tr('auth_guide_short'),
-      icon: const Icon(Icons.info_outline_rounded,
-          color: SLColors.primary, size: 22),
+      icon: const Icon(
+        Icons.info_outline_rounded,
+        color: SLColors.primary,
+        size: 22,
+      ),
       onPressed: () => _showInfoDialog(context),
     );
   }
@@ -42,10 +51,15 @@ class _WishlistScreenState extends State<WishlistScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(context.tr('vault_features_label'), style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                context.tr('vault_features_label'),
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               SizedBox(height: 4),
               Text(
-                context.tr('ui_utilities_save_gifts_or_places_you_want_to_5c0a33'),
+                context.tr(
+                  'ui_utilities_save_gifts_or_places_you_want_to_5c0a33',
+                ),
               ),
               SizedBox(height: 12),
               Text(
@@ -54,7 +68,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
               ),
               SizedBox(height: 4),
               Text(
-                context.tr('ui_utilities_click_add_wish_enter_gift_name_attach_dc8dc8'),
+                context.tr(
+                  'ui_utilities_click_add_wish_enter_gift_name_attach_dc8dc8',
+                ),
               ),
             ],
           ),
@@ -75,6 +91,10 @@ class _WishlistScreenState extends State<WishlistScreen> {
   final TextEditingController _itemController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   StreamSubscription<DatabaseEvent>? _sub;
+  StreamSubscription<DatabaseEvent>? _currencySub;
+  String _houseCurrency = '';
+  int _houseGeneration = 0;
+  bool _saving = false;
   Map<dynamic, dynamic>? _data;
   bool _isLoading = true;
 
@@ -85,7 +105,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
   Map<String, String> get _categoryLabels => {
     'gift': L10nService().translate('ui_utilities_qu_t_ng_76b9a1'),
     'date': L10nService().translate('ui_utilities_h_n_h_4e1f88'),
-    'home': 'Nhà chung',
+    'home': L10nService().translate('wishlist_category_home'),
     'dream': L10nService().translate('ui_utilities_c_m_97b826'),
   };
 
@@ -102,6 +122,24 @@ class _WishlistScreenState extends State<WishlistScreen> {
   }
 
   void _loadData() {
+    final generation = ++_houseGeneration;
+    final houseId = widget.houseId;
+    _saving = false;
+    _data = null;
+    _isLoading = true;
+    _houseCurrency = '';
+    _currencySub?.cancel();
+    _currencySub = _dbRef
+        .child(MoneyFormat.houseCurrencyPath(houseId))
+        .onValue
+        .listen((event) {
+          if (!mounted || generation != _houseGeneration) return;
+          setState(
+            () => _houseCurrency = MoneyFormat.normalizeCode(
+              event.snapshot.value,
+            ),
+          );
+        }, onError: (_) {});
     final cacheKey = 'wishlist_${widget.houseId}';
     final cached = OfflineCacheService.loadCacheSync(cacheKey);
     if (cached != null && cached is Map) {
@@ -110,29 +148,33 @@ class _WishlistScreenState extends State<WishlistScreen> {
     }
 
     _sub?.cancel();
-    _sub = _dbRef.child('houses/${widget.houseId}/wishlist')
+    _sub = _dbRef
+        .child('houses/${widget.houseId}/wishlist')
         .limitToLast(200)
-        .onValue.listen(
-        (event) {
-      if (!mounted) return;
-      final val = event.snapshot.value;
-      if (val is Map) {
-        OfflineCacheService.saveCache(cacheKey, val);
-        setState(() {
-          _data = Map<dynamic, dynamic>.from(val);
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _data = {};
-          _isLoading = false;
-        });
-      }
-    }, onError: (_) {
-      if (mounted && _data == null) {
-        setState(() => _isLoading = false);
-      }
-    });
+        .onValue
+        .listen(
+          (event) {
+            if (!mounted || generation != _houseGeneration) return;
+            final val = event.snapshot.value;
+            if (val is Map) {
+              OfflineCacheService.saveCache(cacheKey, val);
+              setState(() {
+                _data = Map<dynamic, dynamic>.from(val);
+                _isLoading = false;
+              });
+            } else {
+              setState(() {
+                _data = {};
+                _isLoading = false;
+              });
+            }
+          },
+          onError: (_) {
+            if (mounted && generation == _houseGeneration && _data == null) {
+              setState(() => _isLoading = false);
+            }
+          },
+        );
   }
 
   @override
@@ -144,41 +186,73 @@ class _WishlistScreenState extends State<WishlistScreen> {
   }
 
   Future<void> _addWish() async {
-    final text = _itemController.text.trim();
+    if (_saving) return;
+    final itemText = _itemController.text;
+    final priceText = _priceController.text;
+    final text = itemText.trim();
     if (text.isEmpty) return;
-
     if (_data != null && _data!.length >= 50) {
-      ScaffoldMessenger.of(context).showSnackBar(SLSnackBar(
-        content: Text(
-            context.tr('ui_utilities_wish_list_has_reached_its_limit_maximum_f8e2ef')),
-        backgroundColor: SLColors.danger,
-      ));
+      SLToast.show(
+        context,
+        context.tr(
+          'ui_utilities_wish_list_has_reached_its_limit_maximum_f8e2ef',
+        ),
+      );
       return;
     }
-
-    final priceText = _priceController.text.replaceAll(RegExp(r'[^0-9]'), '');
-    final price = int.tryParse(priceText) ?? 0;
-    final prefs = OfflineCacheService.getPrefsSync() ??
-        await SharedPreferences.getInstance();
-    final role = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
-
-    final now = DateTime.now();
-    await _dbRef.child('houses/${widget.houseId}/wishlist').push().set({
-      'a': widget.myName,
-      'by': role,
-      'scope': _selectedScope,
-      'category': _selectedCategory,
-      'priority': _selectedPriority,
-      'c': text,
-      'est': price,
-      'ts': now.millisecondsSinceEpoch,
-      'done': false,
-    });
-
-    _itemController.clear();
-    _priceController.clear();
-    if (!mounted) return;
-    FocusScope.of(context).unfocus();
+    final price = priceText.trim().isEmpty
+        ? 0
+        : MoneyFormat.parseWholeAmount(priceText);
+    if (price == null) {
+      SLToast.show(context, context.tr('util_nhpstinhpl_99919c'));
+      return;
+    }
+    final generation = _houseGeneration;
+    final houseId = widget.houseId;
+    final author = widget.myName;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final scope = _selectedScope;
+    final category = _selectedCategory;
+    final priority = _selectedPriority;
+    bool isCurrent() =>
+        mounted &&
+        generation == _houseGeneration &&
+        FirebaseAuth.instance.currentUser?.uid == uid;
+    _saving = true;
+    try {
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
+      if (!isCurrent()) return;
+      final role = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
+      final code = await HouseMoneyCurrency.ensure(
+        root: _dbRef,
+        houseId: houseId,
+        isCurrent: isCurrent,
+      );
+      if (!isCurrent()) return;
+      setState(() => _houseCurrency = code);
+      await _dbRef.child('houses/$houseId/wishlist').push().set({
+        'a': author,
+        'by': role,
+        'scope': scope,
+        'category': category,
+        'priority': priority,
+        'c': text,
+        'est': price,
+        'ts': DateTime.now().millisecondsSinceEpoch,
+        'done': false,
+      });
+      if (!isCurrent()) return;
+      if (_itemController.text == itemText) _itemController.clear();
+      if (_priceController.text == priceText) _priceController.clear();
+      FocusScope.of(context).unfocus();
+    } catch (error) {
+      if (isCurrent())
+        SLToast.show(context, AppErrorMapper.resolve(error).message);
+    } finally {
+      if (generation == _houseGeneration) _saving = false;
+    }
   }
 
   void _toggleDone(String key, bool currentDone) {
@@ -193,7 +267,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
       context: context,
       builder: (ctx) => SLAlertDialog(
         title: Text(context.tr('ui_utilities_delete_the_wish_7675cb')),
-        content: Text(context.tr('ui_utilities_are_you_sure_you_want_to_delete_62ee99')),
+        content: Text(
+          context.tr('ui_utilities_are_you_sure_you_want_to_delete_62ee99'),
+        ),
         actions: [
           SLDialogAction(
             onPressed: () => Navigator.pop(ctx),
@@ -215,8 +291,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
     );
   }
 
-  // TODO(i18n): đọc loại tiền chung của nhà như màn Tài chính.
-  NumberFormat get _currencyFormat => MoneyFormat.forCurrency(null);
+  NumberFormat get _currencyFormat =>
+      MoneyFormat.forCurrency(_houseCurrency.isEmpty ? 'VND' : _houseCurrency);
 
   int _priorityRank(String? value) {
     switch (value) {
@@ -255,6 +331,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
     _itemController.dispose();
     _priceController.dispose();
     _sub?.cancel();
+    _currencySub?.cancel();
     super.dispose();
   }
 
@@ -262,8 +339,11 @@ class _WishlistScreenState extends State<WishlistScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(context, context.tr('util_wishlisti_b2581f'),
-          actions: [_buildInfoIcon(context)]),
+      appBar: SLTheme.appBar(
+        context,
+        context.tr('util_wishlisti_b2581f'),
+        actions: [_buildInfoIcon(context)],
+      ),
       body: SLTheme.softCanvasBackdrop(
         baseColor: SLColors.bgMain,
         accentColor: SLColors.warning,
@@ -307,8 +387,11 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     ),
                   ],
                 ),
-                child: const Icon(Icons.shopping_bag_rounded,
-                    color: Colors.white, size: 22),
+                child: const Icon(
+                  Icons.shopping_bag_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
               ),
               SLSpacing.w12,
               Expanded(
@@ -378,7 +461,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 child: _buildWishTextField(
                   controller: _priceController,
                   hintText: context.tr('util_gi_072c1a'),
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   maxLength: 12,
                 ),
               ),
@@ -401,8 +486,11 @@ class _WishlistScreenState extends State<WishlistScreen> {
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.add_rounded,
-                      color: Colors.white, size: 24),
+                  child: const Icon(
+                    Icons.add_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
               ),
             ],
@@ -441,8 +529,10 @@ class _WishlistScreenState extends State<WishlistScreen> {
           ),
           border: InputBorder.none,
           counterText: '',
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 13,
+            vertical: 12,
+          ),
         ),
       ),
     );
@@ -503,37 +593,41 @@ class _WishlistScreenState extends State<WishlistScreen> {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: options.entries.map((entry) {
-            final selected = selectedValue == entry.key;
-            final accent = colorFor?.call(entry.key) ?? SLColors.primary;
-            return GestureDetector(
-              onTap: () => onSelected(entry.key),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 160),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? accent.withValues(alpha: 0.13)
-                      : Colors.white.withValues(alpha: 0.78),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color: selected
-                        ? accent.withValues(alpha: 0.58)
-                        : SLColors.warning.withValues(alpha: 0.28),
+          children: options.entries
+              .map((entry) {
+                final selected = selectedValue == entry.key;
+                final accent = colorFor?.call(entry.key) ?? SLColors.primary;
+                return GestureDetector(
+                  onTap: () => onSelected(entry.key),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? accent.withValues(alpha: 0.13)
+                          : Colors.white.withValues(alpha: 0.78),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                        color: selected
+                            ? accent.withValues(alpha: 0.58)
+                            : SLColors.warning.withValues(alpha: 0.28),
+                      ),
+                    ),
+                    child: Text(
+                      entry.value,
+                      style: SLTheme.quicksand(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        color: selected ? accent : SLColors.textSecond,
+                      ),
+                    ),
                   ),
-                ),
-                child: Text(
-                  entry.value,
-                  style: SLTheme.quicksand(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    color: selected ? accent : SLColors.textSecond,
-                  ),
-                ),
-              ),
-            );
-          }).toList(growable: false),
+                );
+              })
+              .toList(growable: false),
         ),
       ],
     );
@@ -577,19 +671,20 @@ class _WishlistScreenState extends State<WishlistScreen> {
     final data = _data!;
     final allItems = data.entries
         .map(
-            (e) => {'key': e.key, ...Map<String, dynamic>.from(e.value as Map)})
+          (e) => {'key': e.key, ...Map<String, dynamic>.from(e.value as Map)},
+        )
         .toList();
     var items = allItems
         .where(
-            (item) => item['scope'] == _selectedScope || item['scope'] == null)
+          (item) => item['scope'] == _selectedScope || item['scope'] == null,
+        )
         .toList();
     items.sort((a, b) {
       if (a['done'] == true && b['done'] != true) return 1;
       if (a['done'] != true && b['done'] == true) return -1;
-      final priorityCompare =
-          _priorityRank(b['priority']?.toString()).compareTo(
-        _priorityRank(a['priority']?.toString()),
-      );
+      final priorityCompare = _priorityRank(
+        b['priority']?.toString(),
+      ).compareTo(_priorityRank(a['priority']?.toString()));
       if (priorityCompare != 0) return priorityCompare;
       return (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0);
     });
@@ -670,10 +765,14 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     end: Alignment.bottomRight,
                   ),
                   border: Border.all(
-                      color: SLColors.warning.withValues(alpha: 0.50)),
+                    color: SLColors.warning.withValues(alpha: 0.50),
+                  ),
                 ),
-                child: const Icon(Icons.local_mall_rounded,
-                    color: SLColors.warning, size: 28),
+                child: const Icon(
+                  Icons.local_mall_rounded,
+                  color: SLColors.warning,
+                  size: 28,
+                ),
               ),
               SLSpacing.w12,
               Expanded(
@@ -681,7 +780,10 @@ class _WishlistScreenState extends State<WishlistScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      L10nScope.of(context).format('ui_utilities_value1_wishes_in_the_list_e88ad5', {'value1': totalCount}),
+                      L10nScope.of(context).format(
+                        'ui_utilities_value1_wishes_in_the_list_e88ad5',
+                        {'value1': totalCount},
+                      ),
                       style: SLTheme.quicksand(
                         fontSize: 17,
                         fontWeight: FontWeight.w900,
@@ -690,7 +792,13 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     ),
                     SLSpacing.h4,
                     Text(
-                      L10nScope.of(context).format('ui_utilities_value1_items_completed_value2_7b816b', {'value1': doneCount, 'value2': _currencyFormat.format(totalPrice)}),
+                      L10nScope.of(context).format(
+                        'ui_utilities_value1_items_completed_value2_7b816b',
+                        {
+                          'value1': doneCount,
+                          'value2': _currencyFormat.format(totalPrice),
+                        },
+                      ),
                       style: SLTheme.quicksand(
                         fontSize: 12.2,
                         fontWeight: FontWeight.w700,
@@ -701,7 +809,12 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 ),
               ),
               SLSpacing.w12,
-              SLTheme.chip('$doneCount xong', SLColors.success),
+              SLTheme.chip(
+                L10nScope.of(
+                  context,
+                ).format('wishlist_completed_count', {'count': doneCount}),
+                SLColors.success,
+              ),
             ],
           ),
           SLSpacing.h12,
@@ -716,7 +829,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
           ),
           SLSpacing.h8,
           Text(
-            context.tr('ui_utilities_high_priority_will_be_given_first_to_f4b6ce'),
+            context.tr(
+              'ui_utilities_high_priority_will_be_given_first_to_f4b6ce',
+            ),
             style: SLTheme.quicksand(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
@@ -817,8 +932,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               color: SLColors.warningLight,
-              border:
-                  Border.all(color: SLColors.warning.withValues(alpha: 0.42)),
+              border: Border.all(
+                color: SLColors.warning.withValues(alpha: 0.42),
+              ),
             ),
             child: Icon(
               isDone ? Icons.done_all_rounded : Icons.card_giftcard_rounded,
@@ -870,12 +986,15 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     if (price > 0)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: SLColors.warningLight,
                           borderRadius: BorderRadius.circular(999),
                           border: Border.all(
-                              color: SLColors.warning.withValues(alpha: 0.45)),
+                            color: SLColors.warning.withValues(alpha: 0.45),
+                          ),
                         ),
                         child: Text(
                           _currencyFormat.format(price),
@@ -892,8 +1011,11 @@ class _WishlistScreenState extends State<WishlistScreen> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline_rounded,
-                color: SLTheme.textLight, size: 21),
+            icon: const Icon(
+              Icons.delete_outline_rounded,
+              color: SLTheme.textLight,
+              size: 21,
+            ),
             onPressed: () => _deleteWish(item['key']),
           ),
         ],

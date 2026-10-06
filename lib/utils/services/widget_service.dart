@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import '../../models/widget_appearance.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -303,9 +304,9 @@ class WidgetService {
       case 'valentine':
         return 'Valentine';
       case 'anniversary':
-        return 'Kỷ niệm yêu';
+        return UiCopy.text('copy_4831e0d90cd8');
       case 'birthday':
-        return 'Sinh nhật';
+        return UiCopy.text('copy_6b76f5bbd111');
       case 'none':
       default:
         return '';
@@ -393,11 +394,11 @@ class WidgetService {
   }
 
   static Future<void> _seedDefaultWidgetData() async {
-    await _saveIfMissing<String>('name1', 'Bạn');
-    await _saveIfMissing<String>('name2', 'Người ấy');
-    await _saveIfMissing<String>('daysText', '0 ngày');
-    await _saveIfMissing<String>('status1', 'Chạm để đồng bộ');
-    await _saveIfMissing<String>('status2', 'Mở app để cập nhật');
+    await _saveIfMissing<String>('name1', UiCopy.text('copy_40ffd8d0f1c7'));
+    await _saveIfMissing<String>('name2', UiCopy.text('copy_145933221191'));
+    await _saveIfMissing<String>('daysText', UiCopy.text('copy_71c6218e840d'));
+    await _saveIfMissing<String>('status1', UiCopy.text('copy_294599c72b04'));
+    await _saveIfMissing<String>('status2', UiCopy.text('copy_f618fb7790f3'));
     await _saveIfMissing<bool>('isOnline1', false);
     await _saveIfMissing<bool>('isOnline2', false);
     await _saveIfMissing<String>('weather1', '');
@@ -418,13 +419,13 @@ class WidgetService {
     await _saveIfMissing<String>('seasonResolvedKey', 'none');
     await _saveIfMissing<String>('loveDateText', '');
     await _saveIfMissing<String>('startDateRaw', '');
-    await _saveIfMissing<String>('dayUnitText', 'ngày');
+    await _saveIfMissing<String>('dayUnitText', UiCopy.text('copy_8ccdd0407810'));
     await _saveIfMissing<String>('diaryImagePaths', '[]');
     await _saveIfMissing<String>('diaryImageUrlSignature', '');
     await _saveIfMissing<int>('diaryImageCount', 0);
     await _saveIfMissing<bool>('cycle_enabled', false);
     await _saveIfMissing<String>('cycle_phase', 'menstruation');
-    await _saveIfMissing<String>('cycle_phase_label', '🩸 Giai đoạn Hành kinh');
+    await _saveIfMissing<String>('cycle_phase_label', UiCopy.text('copy_43ecc1a18f92'));
     await _saveIfMissing<String>('cycle_next_period_in', '');
     await _saveIfMissing<String>('cycle_tip', '');
     await _saveIfMissing<String>('cycle_progress', '0.0');
@@ -1051,12 +1052,12 @@ class WidgetService {
           (currentRole == 'user1' ? data['nameU1'] : data['nameU2'])
               ?.toString()
               .trim() ??
-          'Bạn';
+          UiCopy.text('copy_40ffd8d0f1c7');
       final partnerName =
           (partnerRole == 'user1' ? data['nameU1'] : data['nameU2'])
               ?.toString()
               .trim() ??
-          'Người ấy';
+          UiCopy.text('copy_145933221191');
       final myAvatar =
           (currentRole == 'user1' ? data['avtUser1'] : data['avtUser2'])
               ?.toString()
@@ -1071,10 +1072,10 @@ class WidgetService {
       switch (actionType) {
         case 'heart':
         default:
-          title = '$myName gửi ngàn nỗi nhớ';
-          body = '$partnerName sẽ thấy nỗi nhớ này ngay khi online.';
-          message = 'Nhớ bạn nhiều lắm!';
-          notificationBody = 'mở app để nhận nỗi nhớ ngay nhé.';
+          title = UiCopy.text('copy_86edf680a455', {'value1': myName});
+          body = UiCopy.text('copy_c0fa9aac3c41', {'value1': partnerName});
+          message = UiCopy.text('copy_62570c28fbc3');
+          notificationBody = UiCopy.text('copy_0855a83934bc');
           break;
       }
 

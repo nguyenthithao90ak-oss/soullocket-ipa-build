@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Query, Transaction;
@@ -206,7 +207,7 @@ class SocialService {
     required String targetHouseId,
   }) async {
     if (await _isBlockedBetween(myHouseId, targetHouseId)) {
-      throw 'Hai nhà đã chặn nhau, không thể tiếp tục tương tác.';
+      throw UiCopy.text('copy_fb623a9d11d1');
     }
   }
 
@@ -218,13 +219,13 @@ class SocialService {
     final source = sourceHouseId.trim();
     final target = targetHouseId.trim();
     if (source.isEmpty) {
-      throw 'Không tìm thấy nhà hiện tại hợp lệ để chặn người dùng.';
+      throw UiCopy.text('copy_a9f4e7d236c3');
     }
     if (target.isEmpty) {
-      throw 'Không tìm thấy người dùng cần chặn.';
+      throw UiCopy.text('copy_9117f6c43c0c');
     }
     if (source == target) {
-      throw 'Bạn không thể tự chặn chính mình.';
+      throw UiCopy.text('copy_a5ed168856b9');
     }
 
     final updates = <String, Object?>{
@@ -243,7 +244,7 @@ class SocialService {
   }) async {
     final postData = await _loadPostHybrid(postId);
     if (postData == null) {
-      throw 'Bài viết không tồn tại.';
+      throw UiCopy.text('copy_eb757d247d81');
     }
     final targetHouseId = (postData['houseId'] ?? '').toString();
     if (targetHouseId.isEmpty || targetHouseId == myHouseId) return;
@@ -346,13 +347,13 @@ class SocialService {
     if (trimmed.isEmpty) {
       if (allowEmpty) return null;
       return isComment
-          ? 'Bình luận đang trống. Hãy viết vài dòng tử tế rồi gửi nhé.'
-          : 'Bài viết đang trống. Hãy thêm nội dung hoặc ảnh trước khi đăng.';
+          ? UiCopy.text('copy_85003a331bda')
+          : UiCopy.text('copy_542195a289ce');
     }
     if (trimmed.length > maxLength) {
       return isComment
-          ? 'Bình luận chỉ nên tối đa $maxLength ký tự để dễ theo dõi.'
-          : 'Bài viết chỉ nên tối đa $maxLength ký tự.';
+          ? UiCopy.text('copy_c9bde7f648ad', {'value1': maxLength})
+          : UiCopy.text('copy_96b10d3ca15e', {'value1': maxLength});
     }
 
     final normalized = normalizeCommunityText(trimmed);
@@ -361,10 +362,10 @@ class SocialService {
       caseSensitive: false,
     ).allMatches(trimmed).length;
     if (links > 1) {
-      return 'Chỉ nên gắn tối đa 1 liên kết để tránh bị xem là spam.';
+      return UiCopy.text('copy_2867e4b1a2ff');
     }
     if (RegExp(r'(.)\1{7,}').hasMatch(normalized)) {
-      return 'Nội dung có dấu hiệu spam ký tự lặp. Hãy viết rõ ràng hơn.';
+      return UiCopy.text('copy_ee459c8c8c2f');
     }
     return null;
   }
@@ -457,16 +458,16 @@ class SocialService {
     final normalizedPostId = postId.trim();
     final normalizedRequestingHouseId = requestingHouseId.trim();
     if (normalizedPostId.isEmpty) {
-      throw 'Không tìm thấy bài viết cần xóa.';
+      throw UiCopy.text('copy_f0de7094accc');
     }
     if (normalizedPostId == '_legacy_delete_guard_') {
-      throw 'Không tìm thấy bài viết cần xóa.';
+      throw UiCopy.text('copy_f0de7094accc');
     }
 
     // Load post from hybrid (Firestore/RTDB)
     final data = await _loadPostHybrid(normalizedPostId);
     if (data == null) {
-      throw 'Bài viết không tồn tại.';
+      throw UiCopy.text('copy_eb757d247d81');
     }
 
     final postHouseId = (data['houseId'] ?? '').toString().trim();
@@ -505,12 +506,12 @@ class SocialService {
     }
 
     if (!canDelete) {
-      throw 'Bạn không có quyền xóa bài viết này.';
+      throw UiCopy.text('copy_83cbf45152c9');
     }
 
     if (!skipLegacyDeleteCheck &&
         data['houseId']?.toString() != requestingHouseId) {
-      throw 'Bạn không có quyền xóa bài viết này.';
+      throw UiCopy.text('copy_83cbf45152c9');
     }
 
     // Chỉ mục lượt thích cũ sẽ được người dùng dọn khi tải danh sách đã thích.
@@ -535,7 +536,7 @@ class SocialService {
     await _firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(docRef);
       if (!snapshot.exists) {
-        throw 'Bài viết không tồn tại.';
+        throw UiCopy.text('copy_eb757d247d81');
       }
 
       final data = snapshot.data() ?? <String, dynamic>{};
@@ -617,7 +618,7 @@ class SocialService {
             .toString()
             .trim();
         if (requester != authorHouseId && requester != postOwnerHouseId) {
-          throw 'Bạn không có quyền xóa bình luận này.';
+          throw UiCopy.text('copy_2369185115df');
         }
       }
       await docRef.delete();
@@ -754,11 +755,11 @@ class SocialService {
   }) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
-      throw 'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại rồi thử tiếp.';
+      throw UiCopy.text('copy_afdd2528b4bd');
     }
     final postData = await _loadPostHybrid(postId);
     if (postData == null) {
-      throw 'Bài viết không còn tồn tại.';
+      throw UiCopy.text('copy_897dff5217e7');
     }
     final targetHouseId = (postData['houseId'] ?? '').toString();
     await _firestore.collection('reports').add({
@@ -782,12 +783,12 @@ class SocialService {
   }) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
-      throw 'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại rồi thử tiếp.';
+      throw UiCopy.text('copy_afdd2528b4bd');
     }
 
     final commentData = await _loadCommentHybrid(postId, commentId);
     if (commentData == null) {
-      throw 'Bình luận không còn tồn tại.';
+      throw UiCopy.text('copy_c0639fdeda4c');
     }
     final targetHouseId = (commentData['houseId'] ?? commentData['uid'] ?? '')
         .toString();
@@ -813,18 +814,18 @@ class SocialService {
   }) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
-      throw 'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại rồi thử tiếp.';
+      throw UiCopy.text('copy_afdd2528b4bd');
     }
     final target = targetHouseId.trim();
     final reporter = reporterHouseId.trim();
     if (target.isEmpty) {
-      throw 'Không tìm thấy người dùng cần báo cáo.';
+      throw UiCopy.text('copy_00571e951797');
     }
     if (reporter.isEmpty) {
-      throw 'Không tìm thấy nhà hiện tại để gửi báo cáo.';
+      throw UiCopy.text('copy_00729485e8a1');
     }
     if (target == reporter) {
-      throw 'Bạn không thể tự báo cáo chính mình.';
+      throw UiCopy.text('copy_2313e4a25bb6');
     }
 
     await _firestore.collection('reports').add({

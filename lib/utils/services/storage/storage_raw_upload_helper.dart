@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -88,12 +89,12 @@ class StorageRawUploadHelper {
         ? originalFileName
         : storagePath;
     if (!isSupportedMusicFileName(sourceName)) {
-      throw Exception('Chỉ hỗ trợ MP3, M4A, AAC, WAV, OGG, FLAC hoặc MP4.');
+      throw UiCopyException('copy_3a33bb2ed67f');
     }
 
     final fileSize = await file.length();
     if (fileSize <= 0 || fileSize > storageMaxMusicUploadBytes) {
-      throw Exception('File nhạc vượt quá 20MB. Hãy chọn file nhỏ hơn.');
+      throw UiCopyException('copy_49982b436084');
     }
 
     await purgeLegacyCache();
@@ -112,9 +113,7 @@ class StorageRawUploadHelper {
       debugPrint(
         'Lỗi khi upload file nhạc $storagePath: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không tải file nhạc lên đám mây được.').message}',
       );
-      throw Exception(
-        'Không tải file nhạc lên đám mây được: hãy kiểm tra kết nối mạng, định dạng file và quyền truy cập tệp.',
-      );
+      throw UiCopyException('copy_b5ec34320273');
     }
   }
 
@@ -123,18 +122,18 @@ class StorageRawUploadHelper {
     required bool Function(String fileNameOrPath) isSupportedMusicFileName,
   }) async {
     if (kIsWeb) {
-      throw Exception('Trình duyệt hiện chưa hỗ trợ lưu nhạc cục bộ bền vững.');
+      throw UiCopyException('copy_8a78cc271136');
     }
 
     final originalFileName = file.name.isNotEmpty ? file.name : file.path;
     final sourceName = originalFileName.isNotEmpty ? originalFileName : 'music';
     if (!isSupportedMusicFileName(sourceName)) {
-      throw Exception('Chỉ hỗ trợ MP3, M4A, AAC, WAV, OGG, FLAC hoặc MP4.');
+      throw UiCopyException('copy_3a33bb2ed67f');
     }
 
     final fileSize = await file.length();
     if (fileSize > storageMaxMusicUploadBytes) {
-      throw Exception('File nhạc vượt quá 20MB. Hãy chọn file nhỏ hơn.');
+      throw UiCopyException('copy_49982b436084');
     }
 
     final extension = p.extension(sourceName).toLowerCase();

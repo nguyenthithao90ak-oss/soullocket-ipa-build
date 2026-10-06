@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
@@ -468,7 +469,7 @@ class SecurityFlowGuard {
     final message = _runtimeRiskService.messageFor(
       verdict,
       fallback:
-          'Phát hiện thao tác nhạy cảm lặp bất thường. Hãy tắt auto click hoặc chờ một lúc rồi thử lại.',
+          UiCopy.text('copy_f30e6ab7191a'),
     );
 
     if (verdict.effectiveRisk != SecurityProtectionRiskLevel.allow) {
@@ -548,20 +549,20 @@ class SecurityFlowGuard {
   String _cachedVerdictTitle(SecurityRiskLevel level, String code) {
     if (_captureRiskCodes.contains(code)) {
       return level == SecurityRiskLevel.block
-          ? 'Tắt quay màn hình trước khi tiếp tục'
-          : 'Cảnh báo quay màn hình';
+          ? UiCopy.text('copy_ea3de9b4b415')
+          : UiCopy.text('copy_41c923d1474c');
     }
     if (_controlRiskCodes.contains(code)) {
       return level == SecurityRiskLevel.block
-          ? 'Tắt công cụ điều khiển trước khi tiếp tục'
-          : 'Cảnh báo điều khiển tự động';
+          ? UiCopy.text('copy_08448d0941be')
+          : UiCopy.text('copy_3b4c78df6549');
     }
     if (_integrityRiskCodes.contains(code)) {
-      return 'Rủi ro bảo mật trên thiết bị';
+      return UiCopy.text('copy_f00f2ea1c849');
     }
     return level == SecurityRiskLevel.block
-        ? 'Thao tác đang bị khóa'
-        : 'Cảnh báo bảo mật';
+        ? UiCopy.text('copy_640e73d0dda1')
+        : UiCopy.text('copy_0685ec966dcf');
   }
 
   String _cachedVerdictMessage({
@@ -571,13 +572,13 @@ class SecurityFlowGuard {
   }) {
     if (_captureRiskCodes.contains(code)) {
       if (_captureBlockedActions.contains(action)) {
-        return 'Hãy tắt quay màn hình, chia sẻ màn hình hoặc ứng dụng phủ màn hình rồi thử lại.';
+        return UiCopy.text('copy_263f4616aaa3');
       }
-      return 'Hệ thống phát hiện dấu hiệu quay màn hình hoặc overlay. Nếu đây là bạn, hãy tắt nó trước khi tiếp tục.';
+      return UiCopy.text('copy_11bbf7578a86');
     }
 
     if (_controlRiskCodes.contains(code)) {
-      return 'Hãy tắt auto click, macro, remote control hoặc accessibility can thiệp rồi thử lại.';
+      return UiCopy.text('copy_fd58c3a04270');
     }
 
     switch (code) {
@@ -585,17 +586,17 @@ class SecurityFlowGuard {
       case 'unlicensed':
       case 'unrecognized_version':
       case 'modded_app':
-        return 'Hãy cài và sử dụng bản chính thức của ứng dụng rồi thử lại.';
+        return UiCopy.text('copy_31b73da42581');
       case 'malware':
       case 'play_protect':
-        return 'Hãy quét Play Protect, kiểm tra phần mềm độc hại và khởi động lại thiết bị trước khi thử lại.';
+        return UiCopy.text('copy_374d6a2cb4e0');
       case 'root':
       case 'fake_integrity':
-        return 'Thiết bị đang có dấu hiệu can thiệp hệ thống. Tạm khóa thao tác nhạy cảm này để bảo vệ tài khoản.';
+        return UiCopy.text('copy_0e230475ac1e');
       default:
         return level == SecurityRiskLevel.block
-            ? 'Hệ thống tạm khóa thao tác nhạy cảm này vì phát hiện rủi ro bảo mật.'
-            : 'Hệ thống phát hiện rủi ro bảo mật mức cảnh báo. Nếu đây là bạn, hãy xác minh thêm trước khi tiếp tục.';
+            ? UiCopy.text('copy_71d510c19f38')
+            : UiCopy.text('copy_0872c7de0578');
     }
   }
 
@@ -637,7 +638,7 @@ class SecurityFlowGuard {
   String _formatMilliseconds(int value) {
     if (value >= 1000) {
       final seconds = (value / 1000).toStringAsFixed(value >= 2000 ? 0 : 1);
-      return '$seconds giây';
+      return UiCopy.text('copy_a2626da20f60', {'value1': seconds});
     }
     return '$value ms';
   }
@@ -684,7 +685,7 @@ class SecurityFlowGuard {
                 isBlocking
                     ? context.tr('Đã hiểu')
                     : continueLabel ??
-                          (requiresStepUp ? 'Xác minh thêm' : 'Vẫn tiếp tục'),
+                          (requiresStepUp ? UiCopy.text('copy_eae905b4a06d') : UiCopy.text('copy_7f91a875de4b')),
               ),
             ),
           ],

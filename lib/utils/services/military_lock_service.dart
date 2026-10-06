@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'l10n_service.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
@@ -312,7 +313,7 @@ class MilitaryLockService {
         allowBiometrics && resolvedSettings.useBiometrics;
     final resolvedTitle = title ?? getScopeTitle(scope);
     final resolvedReason =
-        reason ?? 'Xác thực để mở ${resolvedTitle.toLowerCase()}.';
+        reason ?? UiCopy.text('copy_c4156d611781', {'value1': resolvedTitle.toLowerCase()});
 
     if (!context.mounted) {
       return false;
@@ -371,7 +372,7 @@ class MilitaryLockService {
   }) async {
     if (allowBiometrics) {
       final bioSuccess = await _authenticateWithDevice(
-        localizedReason: 'Xác thực để thay đổi cài đặt khóa ứng dụng.',
+        localizedReason: UiCopy.text('copy_5cd2ebab1615'),
       );
       if (bioSuccess) return true;
     }
@@ -386,7 +387,7 @@ class MilitaryLockService {
       context: context,
       title: context.tr('ui_common_verify_app_lock_settings_b2918e'),
       expectedSecret: expectedSecret,
-      reason: 'Nhập mã khóa hiện tại để thay đổi cài đặt bảo mật.',
+      reason: UiCopy.text('copy_c9b26efe0ceb'),
       houseId: houseId,
       wantBiometrics: allowBiometrics,
     );
@@ -402,7 +403,7 @@ class MilitaryLockService {
     isAuthenticatingBiometrics = true;
     try {
       return await _localAuth.authenticate(
-        localizedReason: 'Xác thực để kiểm tra tính năng FaceID/Vân tay',
+        localizedReason: UiCopy.text('copy_c636d93cb0f8'),
         authMessages: const <AuthMessages>[
           AndroidAuthMessages(
             signInTitle: 'Kiểm tra sinh trắc học',
@@ -581,7 +582,7 @@ class MilitaryLockService {
               setDialogState(() {
                 isSubmitting = false;
                 controller.clear();
-                errorText = result.message ?? 'Mã khóa chưa đúng. Hãy thử lại.';
+                errorText = result.message ?? UiCopy.text('copy_c542906c7ad5');
                 remainingLockSeconds = result.remainingLockSeconds;
               });
 
@@ -683,13 +684,13 @@ class MilitaryLockService {
   String? _buildPinRecoveryHint(PinRecoveryOptions options) {
     final items = <String>[];
     if ((options.securityQuestion?.trim().isNotEmpty ?? false)) {
-      items.add('câu hỏi bảo mật');
+      items.add(UiCopy.text('copy_a063ca8232b5'));
     }
     for (final email in options.emails) {
       items.add(email.label.toLowerCase());
     }
     if (options.canQuickDelete) {
-      items.add('xóa PIN vừa đặt');
+      items.add(UiCopy.text('copy_9ae32d96b4bc'));
     }
     if (items.isEmpty) {
       return null;
@@ -1080,7 +1081,7 @@ class MilitaryLockService {
                             final answer = answerController.text.trim();
                             if (answer.isEmpty) {
                               setDialogState(() {
-                                errorText = 'Vui lòng nhập câu trả lời.';
+                                errorText = UiCopy.text('copy_d7ec1c3534b0');
                               });
                               return;
                             }
@@ -1102,7 +1103,7 @@ class MilitaryLockService {
                             }
                             setDialogState(() {
                               isChecking = false;
-                              errorText = 'Câu trả lời chưa đúng.';
+                              errorText = UiCopy.text('copy_0df8651ba472');
                             });
                           },
                     child: Text(
@@ -1235,7 +1236,7 @@ class MilitaryLockService {
                             final otp = otpController.text.trim();
                             if (otp.length != 6) {
                               setDialogState(() {
-                                errorText = 'Vui lòng nhập đủ 6 số.';
+                                errorText = UiCopy.text('copy_27037a77fb57');
                               });
                               return;
                             }

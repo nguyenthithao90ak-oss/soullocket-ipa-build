@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -194,7 +195,7 @@ class AuthSignInService {
 
     final currentPrimaryEmail = _auth.currentUser?.email?.trim().toLowerCase();
     if ((currentPrimaryEmail ?? '').isEmpty) {
-      throw 'Bạn cần đăng nhập lại trước khi lưu email phụ.';
+      throw UiCopy.text('copy_d285d1bc9e19');
     }
 
     final resolution = await _lookupLoginEmailResolution(
@@ -213,10 +214,10 @@ class AuthSignInService {
     }
 
     if (resolution.source == 'primary') {
-      throw 'Email này đã là email đăng nhập chính của tài khoản khác. Hãy chọn email khác.';
+      throw UiCopy.text('copy_0d97d34a9fc3');
     }
 
-    throw 'Email phụ này đã được dùng để đăng nhập cho tài khoản khác. Hãy chọn email khác.';
+    throw UiCopy.text('copy_862b22c47570');
   }
 
   Future<_LoginEmailResolution> _lookupLoginEmailResolution(
@@ -259,13 +260,13 @@ class AuthSignInService {
         throw message.isNotEmpty
             ? message
             : (code == 'invalid-argument'
-                  ? 'Email đăng nhập không hợp lệ.'
-                  : 'Email phụ này chưa thể dùng để đăng nhập.');
+                  ? UiCopy.text('copy_6bfc3556a3cb')
+                  : UiCopy.text('copy_41d2b7f35096'));
       }
       if (!allowFallbackOnFailure) {
         throw message.isNotEmpty
             ? message
-            : 'Không kiểm tra được email phụ: hãy kiểm tra email đã nhập, trạng thái đăng nhập và kết nối mạng.';
+            : UiCopy.text('copy_f0a4328a17b2');
       }
       if (kDebugMode) {
         debugPrint(
@@ -326,7 +327,7 @@ class AuthSignInService {
           .timeout(
             const Duration(seconds: 12),
             onTimeout: () =>
-                throw 'Lỗi kết nối máy chủ! Vui lòng kiểm tra lại mạng.',
+                throw UiCopy.text('copy_b8239b73176f'),
           );
 
       if (accountExistsHint == false) {
@@ -422,7 +423,7 @@ class AuthSignInService {
     final serverMessage = payload['message']?.toString().trim() ?? '';
     final message = serverMessage.isNotEmpty
         ? serverMessage
-        : 'Bạn đã thử đăng nhập quá nhiều lần. Vui lòng chờ một lúc rồi thử lại.';
+        : UiCopy.text('copy_d8645453617d');
     return _ServerLoginGuardPrecheck(
       allowed: allowed,
       message: message,
@@ -450,7 +451,7 @@ class AuthSignInService {
       allowed: allowed,
       message: serverMessage.isNotEmpty
           ? serverMessage
-          : 'Bạn đã thử quá nhiều lần. Vui lòng chờ một lúc rồi thử lại.',
+          : UiCopy.text('copy_b645059ae63f'),
     );
   }
 
@@ -588,7 +589,7 @@ class AuthSignInService {
       code: (payload['error'] as String?) ?? 'play_integrity_blocked',
       message:
           (payload['message'] as String?) ??
-          'Thiết bị hoặc bản cài đặt này không đủ tin cậy để đăng nhập.',
+          UiCopy.text('copy_8226b13bc362'),
       payload: payload,
       ttl: const Duration(minutes: 5),
     );
@@ -602,8 +603,8 @@ class AuthSignInService {
   WebAuthenticationOptions _buildAppleWebAuthenticationOptions() {
     final clientId = AppConfig.appleSignInServiceId.trim();
     if (clientId.isEmpty) {
-      throw 'Chưa cấu hình APPLE_SIGN_IN_SERVICE_ID. '
-          'Hãy thêm Service ID Apple dùng cho Sign in with Apple.';
+      throw UiCopy.text('copy_06bad51d391c') +
+          UiCopy.text('copy_08115ce9ee91');
     }
 
     final redirectUrl = AppConfig.appleSignInRedirectUrl.trim();
@@ -613,8 +614,8 @@ class AuthSignInService {
         !redirectUri.isAbsolute ||
         redirectUri.scheme.toLowerCase() != 'https' ||
         redirectUri.host.trim().isEmpty) {
-      throw 'Chưa cấu hình APPLE_SIGN_IN_REDIRECT_URL hợp lệ. '
-          'Giá trị này phải là một URL HTTPS tuyệt đối trên máy chủ của bạn.';
+      throw UiCopy.text('copy_3a48f98fe29d') +
+          UiCopy.text('copy_1d4156a3883e');
     }
 
     return WebAuthenticationOptions(
@@ -629,8 +630,8 @@ class AuthSignInService {
   ) {
     final identityToken = credential.identityToken?.trim() ?? '';
     if (identityToken.isEmpty) {
-      throw 'Apple không trả về identity token hợp lệ. '
-          'Hãy kiểm tra cấu hình Sign in with Apple trên Apple Developer và Firebase.';
+      throw UiCopy.text('copy_5893c1507f48') +
+          UiCopy.text('copy_e2f409eebfcc');
     }
 
     final givenName = credential.givenName?.trim();
@@ -669,7 +670,7 @@ class AuthSignInService {
       } else {
         final isAvailable = await SignInWithApple.isAvailable();
         if (!isAvailable) {
-          throw 'Thiết bị hoặc bản build này chưa hỗ trợ Sign in with Apple.';
+          throw UiCopy.text('copy_422db9a6de1d');
         }
 
         final rawNonce = generateNonce();
@@ -718,39 +719,39 @@ class AuthSignInService {
       }
 
       if (error.code == AuthorizationErrorCode.invalidResponse) {
-        throw 'Apple trả về phản hồi không hợp lệ (invalidResponse). '
-            'Hãy kiểm tra Sign in with Apple capability, provisioning profile và Firebase Apple provider.';
+        throw UiCopy.text('copy_ecb9f90aabd8') +
+            UiCopy.text('copy_b953f60368eb');
       }
 
       if (_usesNativeAppleFlow) {
-        throw 'Đăng nhập Apple thất bại (${error.code}). '
-            'Hãy kiểm tra Apple ID trên máy, capability Sign in with Apple và provisioning profile của bản iOS này.';
+        throw UiCopy.text('copy_22ce6a6ffa09', {'value1': error.code}) +
+            UiCopy.text('copy_021d77b59648');
       }
 
-      throw 'Đăng nhập Apple thất bại (${error.code}). '
-          'Hãy kiểm tra APPLE_SIGN_IN_SERVICE_ID, APPLE_SIGN_IN_REDIRECT_URL và callback server của Apple.';
+      throw UiCopy.text('copy_22ce6a6ffa09', {'value1': error.code}) +
+          UiCopy.text('copy_80190e2b9375');
     } on SignInWithAppleNotSupportedException {
-      throw 'Thiết bị hoặc bản build này chưa hỗ trợ Sign in with Apple. '
-          'Trên iPhone/iPad, hãy kiểm tra capability Sign in with Apple và provisioning profile hợp lệ.';
+      throw UiCopy.text('copy_96bfe5a00337') +
+          UiCopy.text('copy_4bd0996be5a9');
     } on firebase_auth.FirebaseAuthException catch (error) {
       switch (error.code) {
         case 'account-exists-with-different-credential':
         case 'email-already-in-use':
         case 'credential-already-in-use':
-          throw 'Email Apple này đã gắn với phương thức đăng nhập khác. '
-              'Hãy đăng nhập bằng phương thức cũ trước.';
+          throw UiCopy.text('copy_ea3891f0e5eb') +
+              UiCopy.text('copy_1b0666a3e858');
         case 'popup-closed-by-user':
         case 'cancelled-popup-request':
           return null;
         case 'popup-blocked':
-          throw 'Popup đăng nhập Apple đang bị chặn. Hãy cho phép popup rồi thử lại.';
+          throw UiCopy.text('copy_926297a8f3b4');
         case 'operation-not-allowed':
-          throw 'Firebase Authentication chưa bật hoặc chưa cấu hình đúng nhà cung cấp Apple. '
-              'Vào Firebase Console > Authentication > Sign-in method > Apple để kiểm tra.';
+          throw UiCopy.text('copy_07520d3b674c') +
+              UiCopy.text('copy_258797cde736');
         case 'network-request-failed':
-          throw 'Mạng đang lỗi hoặc bị chặn, chưa thể đăng nhập Apple lúc này.';
+          throw UiCopy.text('copy_a04d1237b911');
         default:
-          throw 'Đăng nhập Apple lỗi Firebase (${error.code}). '
+          throw UiCopy.text('copy_1d6e61cd9d38', {'value1': error.code}) +
               '${handleFirebaseAuthError(error)}';
       }
     } catch (error) {
@@ -790,7 +791,7 @@ class AuthSignInService {
           await initCompleter.future.timeout(
             const Duration(seconds: 15),
             onTimeout: () =>
-                throw 'Thời gian chờ Google quá lâu. Vui lòng thử lại.',
+                throw UiCopy.text('copy_90ca8dbde435'),
           );
           _isGoogleSignInInitialized = true;
         }
@@ -819,12 +820,12 @@ class AuthSignInService {
         final googleUser = await authCompleter.future.timeout(
           const Duration(seconds: 20),
           onTimeout: () =>
-              throw 'Bạn đã để màn hình đăng nhập Google quá lâu hoặc chưa hoàn tất thao tác. Vui lòng thử lại.',
+              throw UiCopy.text('copy_fe32cbfef9b5'),
         );
         if (googleUser == null) return null;
         final googleAuth = await googleUser.authentication;
         if ((googleAuth.idToken ?? '').isEmpty) {
-          throw 'Google không trả về ID token hợp lệ. Vui lòng thử lại.';
+          throw UiCopy.text('copy_f82aa856e91f');
         }
 
         final credential = firebase_auth.GoogleAuthProvider.credential(
@@ -856,14 +857,14 @@ class AuthSignInService {
         case 'account-exists-with-different-credential':
         case 'email-already-in-use':
         case 'credential-already-in-use':
-          throw 'Email Google này đã gắn với phương thức đăng nhập khác (ví dụ: Email/Mật khẩu hoặc Apple/Facebook). Hãy đăng nhập bằng phương thức cũ trước rồi vào Cài đặt để liên kết Google.';
+          throw UiCopy.text('copy_271245472cc4');
         case 'popup-closed-by-user':
         case 'cancelled-popup-request':
           return null;
         case 'popup-blocked':
-          throw 'Popup đăng nhập Google đang bị chặn. Hãy cho phép popup rồi thử lại.';
+          throw UiCopy.text('copy_83f706a8dbd7');
         case 'network-request-failed':
-          throw 'Mạng đang lỗi hoặc bị chặn, chưa thể đăng nhập Google lúc này.';
+          throw UiCopy.text('copy_fefe38950597');
         default:
           debugPrint(
             'Google FirebaseAuthException: ${error.code} ${error.message}',
@@ -884,11 +885,11 @@ class AuthSignInService {
       }
       if (isGoogleSignInConfigMismatch(error)) {
         throw kDebugMode
-            ? 'Lỗi Google Sign-In (Code 10/ApiException): SHA-1/SHA-256 trên Firebase chưa khớp với chứng chỉ Play App Signing của ứng dụng trên CH Play. Vui lòng lấy mã SHA từ Play Console và thêm vào Firebase, sau đó tải lại file google-services.json.'
-            : 'Google chưa cho phép đăng nhập trên bản app này. Hãy cập nhật app hoặc thử lại sau.';
+            ? UiCopy.text('copy_8e3988e7f900')
+            : UiCopy.text('copy_9d40ddd37ba1');
       }
       if (isGoogleSignInNetworkIssue(error)) {
-        throw 'Lỗi kết nối hoặc sự cố từ Google, chưa thể đăng nhập Google lúc này.';
+        throw UiCopy.text('copy_1202f512b42f');
       }
       if (error is String) rethrow;
       throw AppErrorMapper.resolve(
@@ -901,7 +902,7 @@ class AuthSignInService {
   }
 
   Future<firebase_auth.UserCredential?> signInWithFacebook() async {
-    throw 'Đăng nhập Facebook không còn được hỗ trợ. Hãy dùng Google hoặc Apple.';
+    throw UiCopy.text('copy_66ddc48da6eb');
   }
 
   Future<void> checkRollingRegisterLimit() async {
@@ -913,9 +914,9 @@ class AuthSignInService {
       const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
       final leftMs = sevenDaysMs - (now - oldestTs);
       final leftDays = (leftMs / (24 * 60 * 60 * 1000)).ceil();
-      throw 'Thiết bị này đã tạo quá nhiều tài khoản trong 7 ngày gần đây. '
-          'Bạn chỉ có thể tạo tối đa 10 tài khoản mới trên cùng thiết bị trong 7 ngày. '
-          'Hãy thử đăng nhập bằng tài khoản hiện có hoặc quay lại sau khoảng $leftDays ngày.';
+      throw UiCopy.text('copy_56918ee43866') +
+          UiCopy.text('copy_c5ac4b9929e5') +
+          UiCopy.text('copy_3da28b7c03a3', {'value1': leftDays});
     }
   }
 
@@ -940,7 +941,7 @@ class AuthSignInService {
           }
         }
         await signOut();
-        throw 'Tính năng tạo tài khoản hiện không khả dụng trên nền tảng này. Vui lòng đăng nhập bằng tài khoản đã có.';
+        throw UiCopy.text('copy_513d718cccb6');
       }
     }
   }
@@ -972,7 +973,7 @@ class AuthSignInService {
       throw firebase_auth.FirebaseAuthException(code: 'operation-not-allowed');
     }
     if (kIsWeb) {
-      throw 'Tính năng tạo tài khoản hiện không khả dụng trên nền tảng này. Vui lòng đăng nhập bằng tài khoản đã có.';
+      throw UiCopy.text('copy_513d718cccb6');
     }
 
     await checkRollingRegisterLimit();
@@ -1339,12 +1340,12 @@ class AuthSignInService {
     String? expectedUid,
   }) async {
     if (kIsWeb) {
-      throw 'Tính năng xóa tài khoản không được hỗ trợ trên phiên bản Web. Vui lòng sử dụng ứng dụng di động để thực hiện thao tác này.';
+      throw UiCopy.text('copy_3aeb67728be9');
     }
 
     final deleteEndpoint = AppConfig.deleteAccountUrl.trim();
     if (deleteEndpoint.isEmpty) {
-      throw 'Chưa cấu hình máy chủ xóa tài khoản.';
+      throw UiCopy.text('copy_cdff04e5e3f0');
     }
     final user = _auth.currentUser;
     if (verificationProof != null &&
@@ -1355,7 +1356,7 @@ class AuthSignInService {
       );
     }
     if (user == null) {
-      throw 'Bạn chưa đăng nhập. Không thể xóa tài khoản.';
+      throw UiCopy.text('copy_880e7a68ffb9');
     }
 
     if (kDebugMode) {
@@ -1581,12 +1582,12 @@ class AuthSignInService {
   Future<void> revokeOtherSessionsAfterPasswordChange() async {
     final user = _auth.currentUser;
     if (user == null) {
-      throw 'Bạn chưa đăng nhập.';
+      throw UiCopy.text('copy_5d6354a5c9ea');
     }
 
     final idToken = await user.getIdToken(true) ?? '';
     if (idToken.isEmpty) {
-      throw 'Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại.';
+      throw UiCopy.text('copy_e9918327e062');
     }
 
     final endpoint = AppConfig.deleteAccountUrl.trim().replaceAll(
@@ -1612,7 +1613,7 @@ class AuthSignInService {
             extra: <String, Object?>{'statusCode': response.statusCode},
           ),
         );
-        throw 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để áp dụng thay đổi bảo mật.';
+        throw UiCopy.text('copy_da04a14910a6');
       }
       unawaited(
         RevenueSecurityTelemetryService.instance.logEvent(
@@ -1622,7 +1623,7 @@ class AuthSignInService {
           extra: <String, Object?>{'statusCode': response.statusCode},
         ),
       );
-      throw 'Không thể đăng xuất các thiết bị khác lúc này. Vui lòng thử lại sau ít phút.';
+      throw UiCopy.text('copy_8c1b274a58ce');
     }
   }
 
@@ -1921,7 +1922,7 @@ class AuthSignInService {
   }) async {
     final endpoint = AppConfig.deleteAccountUrl.trim();
     if (endpoint.isEmpty) {
-      throw 'Chưa cấu hình máy chủ xóa tài khoản.';
+      throw UiCopy.text('copy_cdff04e5e3f0');
     }
 
     try {
@@ -1933,7 +1934,7 @@ class AuthSignInService {
         );
       }
       if (idToken.isEmpty) {
-        throw 'Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại rồi thử xóa tài khoản.';
+        throw UiCopy.text('copy_cf9baffedf61');
       }
 
       final deviceId = await _houseContextService.getDeviceId();
@@ -2011,7 +2012,7 @@ class AuthSignInService {
               extra: <String, Object?>{'statusCode': response.statusCode},
             ),
           );
-          throw 'Phiên đăng nhập đã hết hạn hoặc không còn hợp lệ. Vui lòng đăng nhập lại trước khi xóa tài khoản.';
+          throw UiCopy.text('copy_ed257df55575');
         }
         if (kDebugMode) {
           debugPrint(
@@ -2026,16 +2027,16 @@ class AuthSignInService {
             extra: <String, Object?>{'statusCode': response.statusCode},
           ),
         );
-        throw 'Máy chủ chưa thể xóa hết dữ liệu tài khoản lúc này. Vui lòng thử lại sau ít phút.';
+        throw UiCopy.text('copy_6a1f86e07400');
       }
 
       final decoded = jsonDecode(response.body);
       if (decoded is! Map || decoded['ok'] != true) {
-        throw 'Máy chủ trả về phản hồi xóa tài khoản không hợp lệ.';
+        throw UiCopy.text('copy_b19a41b1c6a1');
       }
       return Map<String, dynamic>.from(decoded);
     } on TimeoutException {
-      throw 'Máy chủ xóa tài khoản phản hồi quá chậm. Vui lòng thử lại khi mạng ổn định hơn.';
+      throw UiCopy.text('copy_14c2fb0aa26a');
     } catch (error) {
       if (kDebugMode) {
         debugPrint(
@@ -2043,7 +2044,7 @@ class AuthSignInService {
         );
       }
       if (error is String || error is AppErrorInfo) rethrow;
-      throw 'Không hoàn tất xóa tài khoản: hãy kiểm tra mạng và đăng nhập lại nếu cần.';
+      throw UiCopy.text('copy_7c1e6549c141');
     }
   }
 

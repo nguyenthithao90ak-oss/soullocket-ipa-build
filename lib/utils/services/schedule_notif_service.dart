@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -257,6 +258,7 @@ class ScheduleNotifService {
     required String eventKey,
     required String eventDate,
     required String eventTitle,
+    int? daysUntil,
   }) async {
     await _sendPayload(<String, dynamic>{
       'houseId': toHouseId,
@@ -267,6 +269,7 @@ class ScheduleNotifService {
       'eventKey': eventKey,
       'eventDate': eventDate,
       'eventTitle': eventTitle,
+      if (daysUntil != null) 'daysUntil': daysUntil,
     });
   }
 
@@ -363,6 +366,7 @@ class ScheduleNotifService {
           eventKey: event.eventKey,
           eventDate: event.dateKey,
           eventTitle: event.title,
+          daysUntil: event.daysUntil,
         );
       }
     } finally {
@@ -663,8 +667,8 @@ class UpcomingEvent {
   bool get isUrgent => daysUntil <= 2;
 
   String get dayLabel {
-    if (daysUntil == 0) return 'Hôm nay';
-    if (daysUntil == 1) return 'Ngày mai';
-    return 'Còn $daysUntil ngày';
+    if (daysUntil == 0) return UiCopy.text('copy_0048b6a408e3');
+    if (daysUntil == 1) return UiCopy.text('copy_b2d702504b15');
+    return UiCopy.text('copy_082263a9a102', {'value1': daysUntil});
   }
 }

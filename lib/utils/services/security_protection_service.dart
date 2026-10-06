@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -39,19 +40,19 @@ extension SecurityProtectionRolloutStageX on SecurityProtectionRolloutStage {
   };
 
   String get adminLabel => switch (this) {
-    SecurityProtectionRolloutStage.logOnly => 'Tuần 1 - Chỉ log',
-    SecurityProtectionRolloutStage.warnOnly => 'Tuần 2 - Chỉ cảnh báo',
+    SecurityProtectionRolloutStage.logOnly => UiCopy.text('copy_1896dd411c4c'),
+    SecurityProtectionRolloutStage.warnOnly => UiCopy.text('copy_41ba58931ca2'),
     SecurityProtectionRolloutStage.blockSensitive =>
-      'Tuần 3 - Chặn thao tác nhạy cảm',
+      UiCopy.text('copy_6447d3d2b1fd'),
   };
 
   String get adminDescription => switch (this) {
     SecurityProtectionRolloutStage.logOnly =>
-      'Chỉ ghi nhận sự kiện, không cảnh báo và không chặn người dùng.',
+      UiCopy.text('copy_a45563987406'),
     SecurityProtectionRolloutStage.warnOnly =>
-      'Risk warn/block đều hạ xuống mức cảnh báo để theo dõi block nhầm.',
+      UiCopy.text('copy_3e2b4b85b044'),
     SecurityProtectionRolloutStage.blockSensitive =>
-      'Áp dụng đúng risk allow/warn/block cho các thao tác nhạy cảm.',
+      UiCopy.text('copy_8e1e09d47a07'),
   };
 
   static SecurityProtectionRolloutStage fromKey(String? raw) {
@@ -94,15 +95,15 @@ extension SecurityProtectionReasonX on SecurityProtectionReason {
   };
 
   String get adminLabel => switch (this) {
-    SecurityProtectionReason.screenCapture => 'Quay/chia sẻ màn hình',
+    SecurityProtectionReason.screenCapture => UiCopy.text('copy_08902e50e159'),
     SecurityProtectionReason.overlay => 'Overlay/tapjacking',
-    SecurityProtectionReason.controlApp => 'Auto click/điều khiển màn hình',
-    SecurityProtectionReason.unofficialBuild => 'Bản build không chính thức',
-    SecurityProtectionReason.unlicensed => 'Bản không được cấp phép',
+    SecurityProtectionReason.controlApp => UiCopy.text('copy_9e1ecf34a68f'),
+    SecurityProtectionReason.unofficialBuild => UiCopy.text('copy_7b91e8ac699b'),
+    SecurityProtectionReason.unlicensed => UiCopy.text('copy_197b39b283d3'),
     SecurityProtectionReason.malware => 'Malware/app access risk',
     SecurityProtectionReason.rootIntegrity => 'Root/fake integrity/modded',
     SecurityProtectionReason.playProtect => 'Play Protect verdict',
-    SecurityProtectionReason.unknown => 'Khác/không xác định',
+    SecurityProtectionReason.unknown => UiCopy.text('copy_5339c627cfb2'),
   };
 
   static SecurityProtectionReason fromKey(String? raw) {

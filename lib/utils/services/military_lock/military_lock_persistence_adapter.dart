@@ -448,12 +448,12 @@ extension _MilitaryLockPersistenceAdapter on MilitaryLockService {
     }
 
     addEmail(
-      'Email phụ',
+      UiCopy.text('copy_a306ef06136b'),
       (security?['backupEmail'] ?? security?['secondaryEmail'] ?? '')
           .toString(),
     );
     addEmail(
-      'Email chính',
+      UiCopy.text('copy_3d96062bf668'),
       (security?['email'] ?? _auth.currentUser?.email ?? '').toString(),
     );
 

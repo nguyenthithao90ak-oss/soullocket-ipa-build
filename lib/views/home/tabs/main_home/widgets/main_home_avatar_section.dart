@@ -183,28 +183,23 @@ part of '../../main_home_tab.dart';
 
 class _StableAvatarNetworkImage extends StatelessWidget {
   final String imageUrl;
-  final String fallbackAsset;
+  final bool female;
   final BoxFit fit;
 
   const _StableAvatarNetworkImage({
     super.key,
     required this.imageUrl,
-    required this.fallbackAsset,
+    required this.female,
     this.fit = BoxFit.cover,
   });
 
   @override
   Widget build(BuildContext context) {
-    Widget buildFallback(BoxFit f) {
-      if (fallbackAsset.endsWith('.json')) {
-        return Lottie.asset(fallbackAsset, fit: f);
-      }
-      return Image.asset(fallbackAsset, fit: f, gaplessPlayback: true);
-    }
+    Widget buildFallback() => CoupleDefaultAvatar(female: female);
 
     final url = imageUrl.trim();
     if (url.isEmpty) {
-      return buildFallback(fit);
+      return buildFallback();
     }
 
     final startupFile = HomeStartupMediaCache.getFile(url);
@@ -228,15 +223,15 @@ class _StableAvatarNetworkImage extends StatelessWidget {
             ),
             fit: fit,
             gaplessPlayback: true,
-            errorBuilder: (_, __, ___) => buildFallback(fit),
+            errorBuilder: (_, __, ___) => buildFallback(),
           );
         }
-        return buildFallback(fit);
+        return buildFallback();
       },
       errorWidget: (context, url, error) {
         // Tự động xóa file cache bị hỏng khi nạp lỗi để lần sau tải lại file sạch
         unawaited(_cleanCorruptedCache(url));
-        return buildFallback(fit);
+        return buildFallback();
       },
     );
   }
@@ -284,15 +279,12 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
       effectiveSize,
     );
     final frameIsCircle = LegacyWebUi.avatarFrameIsCircle(frameKey);
-    final fallbackAsset = isUser1
-        ? 'assets/images/male_avatar_sticker.json'
-        : 'assets/images/female_avatar_sticker.json';
     final avatarContent = isSinglePlaceholder
         ? const _AnimatedSinglePlaceholder()
         : _StableAvatarNetworkImage(
             key: ValueKey<String>('home-avatar-${isUser1 ? 'user1' : 'user2'}'),
             imageUrl: avatarUrl,
-            fallbackAsset: fallbackAsset,
+            female: !isUser1,
             fit: BoxFit.cover,
           );
 
@@ -347,8 +339,28 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
                       ),
               ),
               if (showChooseImageHint)
-                const Positioned.fill(
-                  child: IgnorePointer(child: _BlinkingAvatarHint()),
+                PositionedDirectional(
+                  bottom: 0,
+                  end: 0,
+                  child: IgnorePointer(
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.add_a_photo_outlined,
+                        size: 13,
+                        color: const Color(0xFFCE6F8C),
+                        semanticLabel: context.tr('home_chnnh_719c35'),
+                      ),
+                    ),
+                  ),
                 ),
               if (isUploading)
                 Align(

@@ -48,7 +48,9 @@ class _HomeScrapbookBackdropPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (size.isEmpty) return;
+    // Nền mặc định là màu kem trơn theo bản phác thảo: không phủ giấy kẻ,
+    // sợi chỉ hay chấm trang trí. Chỉ giữ lớp này trên ảnh nền tùy chỉnh/tối.
+    if (size.isEmpty || !hasCustomBackground) return;
     final rect = Offset.zero & size;
 
     if (!hasCustomBackground) {

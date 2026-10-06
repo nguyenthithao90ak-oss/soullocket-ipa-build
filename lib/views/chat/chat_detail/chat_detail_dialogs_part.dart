@@ -1034,7 +1034,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                                   final createdAt =
                                       DateTime.now().millisecondsSinceEpoch;
                                   final defaultName =
-                                      'Nhóm ${memberIds.length} thành viên';
+                                      UiCopy.text('copy_d21ebb07f8b3', {'value1': memberIds.length});
                                   Navigator.of(sheetContext).pop({
                                     'id': 'group_$createdAt',
                                     'name': nameCtrl.text.trim().isEmpty

@@ -1544,7 +1544,7 @@ extension _MapLocationLogicExt on _MapScreenState {
       );
       final togetherLabel = distanceMeters < 30
           ? L10nService().translate('ui_map_together_18bd95')
-          : 'Cách nhau ${distanceMeters.round()}m 💕';
+          : UiCopy.text('copy_8bce0748bed1', {'value1': distanceMeters.round()});
 
       liveMarkerSpecs.add(
         _MapMarkerSpec(

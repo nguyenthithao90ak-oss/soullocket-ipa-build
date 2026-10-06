@@ -4,13 +4,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'offline_cache_service.dart';
 
 class RoleUtils {
-  static final ValueNotifier<String?> roleNotifier =
-      ValueNotifier<String?>(null);
+  static final ValueNotifier<String?> roleNotifier = ValueNotifier<String?>(
+    null,
+  );
 
   /// Phát tín hiệu khi phát hiện 2 thiết bị đang dùng cùng vai.
   /// PresenceService sẽ set true; HomeScreen lắng nghe để hiện thông báo nhẹ.
-  static final ValueNotifier<bool> duplicateRoleNotifier =
-      ValueNotifier<bool>(false);
+  static final ValueNotifier<bool> duplicateRoleNotifier = ValueNotifier<bool>(
+    false,
+  );
 
   static String normalize(String? value) {
     return value?.trim() == 'user2' ? 'user2' : 'user1';
@@ -25,7 +27,8 @@ class RoleUtils {
   }
 
   static Future<String> currentRole() async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     return normalize(prefs.getString('il_role'));
   }
@@ -44,6 +47,13 @@ class RoleUtils {
     final isUser2 = normalize(role) == 'user2';
     return genderSwapped ? !isUser2 : isUser2;
   }
+
+  /// Giá trị `genderSwapped` cần lưu để người ở chỗ [myRole] mang giới tính
+  /// đã chọn; người còn lại tự nhận giới tính ngược lại.
+  static bool genderSwappedFor({
+    required String? myRole,
+    required bool wantsFemale,
+  }) => wantsFemale != (normalize(myRole) == 'user2');
 
   /// Khóa i18n của tên mặc định "Bạn Nam"/"Bạn Nữ" cho một chỗ.
   static String defaultNameKey(String? role, {bool genderSwapped = false}) =>

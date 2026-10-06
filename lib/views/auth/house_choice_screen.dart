@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:flutter/material.dart';
 
 import 'package:soullocket_app/views/auth/house_onboarding_screen.dart';
@@ -24,7 +25,7 @@ class HouseChoiceScreen extends StatelessWidget {
       },
       childBuilder: (_) => HouseOnboardingScreen(
         autoCreateOnly: true,
-        initialHouseName: 'Chúng mình',
+        initialHouseName: UiCopy.text('copy_30f2bdf55443'),
         onHouseCreated: onHouseCreated,
         onSignedOut: onSignedOut,
       ),

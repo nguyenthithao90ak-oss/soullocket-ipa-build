@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/widgets/sl_settings_kit.dart';
-import 'package:lottie/lottie.dart';
+import 'package:soullocket_app/widgets/couple_default_avatar.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/home_image_policy.dart';
 import 'package:soullocket_app/utils/services/home_startup_media_cache.dart';
@@ -55,21 +55,7 @@ class PairingAvatar extends StatelessWidget {
       Theme.of(context).brightness == Brightness.dark,
     );
     final imageUrl = url?.trim() ?? '';
-    final fallback = ColoredBox(
-      color: second ? colors.leaf : colors.blush,
-      child: Lottie.asset(
-        second
-            ? 'assets/images/female_avatar_sticker.json'
-            : 'assets/images/male_avatar_sticker.json',
-        animate: false,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Icon(
-          Icons.person_outline_rounded,
-          color: colors.muted,
-          size: size * 0.44,
-        ),
-      ),
-    );
+    final fallback = CoupleDefaultAvatar(female: second);
     final startupFile = HomeStartupMediaCache.getFile(imageUrl);
     Widget cachedOrFallback() => startupFile == null
         ? fallback

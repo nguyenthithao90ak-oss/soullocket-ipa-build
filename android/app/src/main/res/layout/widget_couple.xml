@@ -64,7 +64,7 @@
                 android:layout_marginTop="7dp"
                 android:ellipsize="end"
                 android:singleLine="true"
-                android:text="@string/widget_default_me"
+                android:text="Ban"
                 android:textColor="#333333"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -93,7 +93,7 @@
                 android:ellipsize="end"
                 android:gravity="center"
                 android:maxLines="1"
-                android:text="@string/widget_sleep_time_active"
+                android:text="Dang hoat dong"
                 android:textColor="#22C55E"
                 android:textSize="9sp"
                 android:textStyle="bold" />
@@ -137,7 +137,7 @@
                 android:letterSpacing="0.01"
                 android:maxLines="2"
                 android:singleLine="false"
-                android:text="0"
+                android:text="56 ngay"
                 android:textColor="#FF4D73"
                 android:textSize="21sp"
                 android:textStyle="bold" />
@@ -196,7 +196,7 @@
                 android:layout_marginTop="7dp"
                 android:ellipsize="end"
                 android:singleLine="true"
-                android:text="@string/widget_default_partner"
+                android:text="Nguoi ay"
                 android:textColor="#333333"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -327,7 +327,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:text="@string/widget_days_unit"
+            android:text="ngay"
             android:textColor="#FF4D73"
             android:textSize="12sp"
             android:textStyle="bold" />
@@ -338,7 +338,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:gravity="center"
-            android:text=""
+            android:text="Tu 01/01/2024"
             android:textColor="#5B6470"
             android:textSize="12sp"
             android:textStyle="bold" />

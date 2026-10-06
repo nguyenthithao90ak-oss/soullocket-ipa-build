@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -115,41 +116,41 @@ String normalizeFacebookLoginFailureMessage(String? message) {
   if (normalized.contains('sorry, something went wrong') ||
       normalized.contains("we're working on it") ||
       normalized.contains('we are working on it')) {
-    return 'Cấu hình đăng nhập Facebook chưa khớp. '
-        'Nếu đang test Android, hãy kiểm tra đúng package name ${AppConfig.androidPackageName} '
-        'và thêm Facebook Key Hash của máy build này vào Meta Developer. '
-        'Đồng thời kiểm tra Firebase Authentication đã bật Facebook và điền đúng App ID/App Secret.';
+    return UiCopy.text('copy_280731cef479') +
+        UiCopy.text('copy_e2074b7d565c', {'value1': AppConfig.androidPackageName}) +
+        UiCopy.text('copy_bf2a85c7cbbd') +
+        UiCopy.text('copy_fc0710cf91a5');
   }
   if (isFacebookSignInConfigMismatch(cleaned)) {
-    return 'Cấu hình đăng nhập Facebook chưa khớp. '
-        'Nếu đang test bản debug, hãy thêm Facebook Key Hash của máy build này vào Facebook Developer. '
-        'Đồng thời kiểm tra Firebase Authentication đã bật Facebook và điền đúng App ID/App Secret.';
+    return UiCopy.text('copy_280731cef479') +
+        UiCopy.text('copy_8d52fd81ecec') +
+        UiCopy.text('copy_fc0710cf91a5');
   }
   if (isFacebookSignInNetworkIssue(cleaned)) {
-    return 'Mạng đang lỗi hoặc bị chặn, chưa thể đăng nhập Facebook lúc này.';
+    return UiCopy.text('copy_df0ce83b9151');
   }
   if (cleaned.isNotEmpty) {
     return cleaned;
   }
-  return 'Đăng nhập Facebook thất bại.';
+  return UiCopy.text('copy_6b81fce42f62');
 }
 
 String handleFirebaseAuthError(firebase_auth.FirebaseAuthException error) {
   switch (error.code) {
     case 'user-not-found':
-      return 'Tài khoản không tồn tại.';
+      return UiCopy.text('copy_59ea6c40495a');
     case 'wrong-password':
-      return 'Sai mật khẩu. Vui lòng thử lại.';
+      return UiCopy.text('copy_c71b0fb2b37f');
     case 'invalid-credential':
-      return 'Thông tin đăng nhập không đúng. Vui lòng kiểm tra lại.';
+      return UiCopy.text('copy_c025de7926fe');
     case 'invalid-email':
-      return 'Định dạng email không hợp lệ.';
+      return UiCopy.text('copy_ce61b5d85b24');
     case 'email-already-in-use':
-      return 'Email này đã có tài khoản. Hãy chuyển sang tab Đăng nhập hoặc dùng Quên mật khẩu nếu bạn không nhớ mật khẩu.';
+      return UiCopy.text('copy_c75e58398890');
     case 'weak-password':
-      return 'Mật khẩu quá yếu. Vui lòng nhập ít nhất 6 ký tự.';
+      return UiCopy.text('copy_3d78f9ebaabb');
     case 'too-many-requests':
-      return 'Bạn đã thử quá nhiều lần. Vui lòng thử lại sau.';
+      return UiCopy.text('copy_7f51acab1f5b');
     default:
       final cleanedMessage = AppErrorMapper.cleanMessage(error.message);
       if (_shouldSurfaceRawAuthMessage(cleanedMessage)) {

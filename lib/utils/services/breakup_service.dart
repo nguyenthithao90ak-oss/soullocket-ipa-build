@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -569,18 +570,18 @@ class BreakupService {
   Future<void> _deleteSharedHouseDataFromServer(String houseId) async {
     final endpoint = AppConfig.sharedHouseCleanupUrl.trim();
     if (endpoint.isEmpty) {
-      throw 'Chưa cấu hình máy chủ xóa dữ liệu chung.';
+      throw UiCopy.text('copy_00424b79713a');
     }
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      throw 'Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại.';
+      throw UiCopy.text('copy_e9918327e062');
     }
 
     try {
       final idToken = await user.getIdToken(true) ?? '';
       if (idToken.isEmpty) {
-        throw 'Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại.';
+        throw UiCopy.text('copy_e9918327e062');
       }
 
       final response = await http
@@ -611,13 +612,13 @@ class BreakupService {
               },
             ),
           );
-          throw 'Phiên đăng nhập đã hết hạn hoặc không còn quyền xóa dữ liệu chung.';
+          throw UiCopy.text('copy_e53f3ec41f00');
         }
         if (errorCode == 'breakup_not_ready') {
-          throw 'Dữ liệu chung chưa đến thời điểm được phép xóa.';
+          throw UiCopy.text('copy_95c61e218f76');
         }
         if (errorCode == 'missing_breakup_request') {
-          throw 'Không tìm thấy yêu cầu chia tay hợp lệ trên máy chủ.';
+          throw UiCopy.text('copy_ebbdba7c33a3');
         }
         if (errorCode == 'house_not_found') {
           return;
@@ -632,12 +633,12 @@ class BreakupService {
             },
           ),
         );
-        throw 'Máy chủ chưa thể xóa dữ liệu chung lúc này.';
+        throw UiCopy.text('copy_50239b6763ba');
       }
 
       final decoded = _tryDecodeJson(response.body);
       if (decoded['ok'] != true) {
-        throw 'Máy chủ trả về phản hồi xóa dữ liệu không hợp lệ.';
+        throw UiCopy.text('copy_a3331075bc8d');
       }
     } on TimeoutException {
       unawaited(
@@ -647,7 +648,7 @@ class BreakupService {
           severity: 'medium',
         ),
       );
-      throw 'Máy chủ xóa dữ liệu phản hồi quá chậm. Vui lòng thử lại khi mạng ổn định hơn.';
+      throw UiCopy.text('copy_42db6bb0a724');
     } catch (e) {
       if (e is String) rethrow;
       unawaited(
@@ -657,7 +658,7 @@ class BreakupService {
           severity: 'high',
         ),
       );
-      throw 'Không thể hoàn tất xóa dữ liệu chung trên máy chủ.';
+      throw UiCopy.text('copy_e3a4bbba60b0');
     }
   }
 
@@ -704,7 +705,7 @@ class BreakupService {
   }
 
   static String _formatDateOnly(int ms) {
-    if (ms <= 0) return 'không xác định';
+    if (ms <= 0) return UiCopy.text('copy_124547b8c7e0');
     final dt = DateTime.fromMillisecondsSinceEpoch(ms);
     final day = dt.day.toString().padLeft(2, '0');
     final month = dt.month.toString().padLeft(2, '0');
@@ -712,13 +713,13 @@ class BreakupService {
   }
 
   static String _formatDateTime(int ms) {
-    if (ms <= 0) return 'không xác định';
+    if (ms <= 0) return UiCopy.text('copy_124547b8c7e0');
     final dt = DateTime.fromMillisecondsSinceEpoch(ms);
     final day = dt.day.toString().padLeft(2, '0');
     final month = dt.month.toString().padLeft(2, '0');
     final hour = dt.hour.toString().padLeft(2, '0');
     final minute = dt.minute.toString().padLeft(2, '0');
-    return '$day/$month/${dt.year} lúc $hour:$minute';
+    return UiCopy.text('copy_03dc788a1b2c', {'value1': day, 'value2': month, 'value3': dt.year, 'value4': hour, 'value5': minute});
   }
 }
 

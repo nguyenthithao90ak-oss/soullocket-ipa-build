@@ -38,3 +38,10 @@ String rewardDayKey([DateTime? now]) {
   final date = rewardCalendarNow(now);
   return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 }
+
+/// Thời điểm làm mới kế tiếp trên server, biểu diễn bằng UTC để đổi giờ an toàn.
+DateTime nextRewardResetUtc([DateTime? now]) {
+  final civil = rewardCalendarNow(now);
+  return DateTime.utc(civil.year, civil.month, civil.day + 1)
+      .subtract(const Duration(hours: 7));
+}

@@ -889,7 +889,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
     });
     if (mounted) {
       setState(() {
-        _housePin = 'â€¢â€¢â€¢â€¢';
+        _housePin = UiCopy.text('copy_8108c245961c');
         _housePinCtrl.clear();
         _showHousePin = false;
       });

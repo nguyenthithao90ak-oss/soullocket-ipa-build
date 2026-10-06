@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -43,9 +44,9 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
           final text =
               message.notification?.body ??
               message.data['text'] ??
-              'Có tin nhắn mới 💕';
+              UiCopy.text('copy_ed5fd66064f8');
           final senderName =
-              message.data['senderName']?.toString() ?? 'Người ấy';
+              message.data['senderName']?.toString() ?? UiCopy.text('copy_145933221191');
           await WidgetService.syncSoulMergeWidgetData(
             message: text.toString(),
             senderName: senderName,
@@ -64,8 +65,8 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
               height: 100,
               width: 100,
               alignment: OverlayAlignment.centerRight,
-              overlayTitle: 'Bong bóng tâm hồn',
-              overlayContent: 'Lời thì thầm đang kết nối...',
+              overlayTitle: UiCopy.text('copy_2ae0a531a5df'),
+              overlayContent: UiCopy.text('copy_2beace08a4bf'),
             );
           }
         }
@@ -171,7 +172,7 @@ void overlayMain() async {
       home: FloatingBubbleWidget(
         initialHouseId: houseId,
         initialRole: role ?? 'user1',
-        initialPartnerName: partnerName ?? 'Người ấy',
+        initialPartnerName: partnerName ?? UiCopy.text('copy_145933221191'),
       ),
     ),
   );

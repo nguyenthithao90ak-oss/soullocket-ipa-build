@@ -189,7 +189,76 @@ flutter:
 
     - assets/i18n/
     - assets/icon.png
-    - assets/images/widget_stickers/
+    - assets/images/widget_stickers/avatar_cream.svg
+    - assets/images/widget_stickers/avatar_warm.svg
+    - assets/images/widget_stickers/bears.svg
+    - assets/images/widget_stickers/bears_twinkle.svg
+    - assets/images/widget_stickers/bunnies.svg
+    - assets/images/widget_stickers/bunnies_twinkle.svg
+    - assets/images/widget_stickers/calendar.svg
+    - assets/images/widget_stickers/cats.svg
+    - assets/images/widget_stickers/cats_twinkle.svg
+    - assets/images/widget_stickers/cycle.svg
+    - assets/images/widget_stickers/decor.svg
+    - assets/images/widget_stickers/gift.svg
+    - assets/images/widget_stickers/gift_twinkle.svg
+    - assets/images/widget_stickers/heart_anatomical.svg
+    - assets/images/widget_stickers/heart_arrow.svg
+    - assets/images/widget_stickers/heart_badge.svg
+    - assets/images/widget_stickers/heart_beat.svg
+    - assets/images/widget_stickers/heart_black.svg
+    - assets/images/widget_stickers/heart_blue.svg
+    - assets/images/widget_stickers/heart_brown.svg
+    - assets/images/widget_stickers/heart_classic.svg
+    - assets/images/widget_stickers/heart_comet.svg
+    - assets/images/widget_stickers/heart_cyan.svg
+    - assets/images/widget_stickers/heart_exclamation.svg
+    - assets/images/widget_stickers/heart_flame.svg
+    - assets/images/widget_stickers/heart_gift.svg
+    - assets/images/widget_stickers/heart_gold.svg
+    - assets/images/widget_stickers/heart_gray.svg
+    - assets/images/widget_stickers/heart_green.svg
+    - assets/images/widget_stickers/heart_growing.svg
+    - assets/images/widget_stickers/heart_hands.svg
+    - assets/images/widget_stickers/heart_healing.svg
+    - assets/images/widget_stickers/heart_infinity.svg
+    - assets/images/widget_stickers/heart_kiss.svg
+    - assets/images/widget_stickers/heart_letter.svg
+    - assets/images/widget_stickers/heart_orange.svg
+    - assets/images/widget_stickers/heart_orbit.svg
+    - assets/images/widget_stickers/heart_outline.svg
+    - assets/images/widget_stickers/heart_pair.svg
+    - assets/images/widget_stickers/heart_pink.svg
+    - assets/images/widget_stickers/heart_purple.svg
+    - assets/images/widget_stickers/heart_red.svg
+    - assets/images/widget_stickers/heart_sparkle.svg
+    - assets/images/widget_stickers/heart_white.svg
+    - assets/images/widget_stickers/letter.svg
+    - assets/images/widget_stickers/letter_twinkle.svg
+    - assets/images/widget_stickers/moon.svg
+    - assets/images/widget_stickers/moon_twinkle.svg
+    - assets/images/widget_stickers/theme_blue.svg
+    - assets/images/widget_stickers/theme_blue_twinkle.svg
+    - assets/images/widget_stickers/theme_cosmic.svg
+    - assets/images/widget_stickers/theme_cosmic_twinkle.svg
+    - assets/images/widget_stickers/theme_dark.svg
+    - assets/images/widget_stickers/theme_dark_twinkle.svg
+    - assets/images/widget_stickers/theme_green.svg
+    - assets/images/widget_stickers/theme_green_twinkle.svg
+    - assets/images/widget_stickers/theme_orange.svg
+    - assets/images/widget_stickers/theme_orange_twinkle.svg
+    - assets/images/widget_stickers/theme_pink.svg
+    - assets/images/widget_stickers/theme_pink_twinkle.svg
+    - assets/images/widget_stickers/theme_premium.svg
+    - assets/images/widget_stickers/theme_premium_twinkle.svg
+    - assets/images/widget_stickers/theme_purple.svg
+    - assets/images/widget_stickers/theme_purple_twinkle.svg
+    - assets/images/widget_stickers/theme_red.svg
+    - assets/images/widget_stickers/theme_red_twinkle.svg
+    - assets/images/widget_stickers/theme_white.svg
+    - assets/images/widget_stickers/theme_white_twinkle.svg
+    - assets/images/widget_stickers/couple_avatar_male_v1.webp
+    - assets/images/widget_stickers/couple_avatar_female_v1.webp
     - assets/images/avatar_male.jpg
     - assets/images/avatar_female.jpg
     - assets/images/female_avatar_sticker.json

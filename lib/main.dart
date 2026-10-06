@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 // =============================================================================
 // SOULLOCKET PROPRIETARY SOURCE CODE
 // BẢN QUYỀN THUỘC VỀ TRƯƠNG VIỆT HOÀNG - TẤT CẢ CÁC QUYỀN ĐƯỢC BẢO LƯU.
@@ -449,7 +450,7 @@ void _scheduleDeferredBootstrap() {
           PlatformDispatcher.instance.onError = (error, stackTrace) {
             final mappedError = AppErrorMapper.resolve(
               error,
-              fallbackMessage: 'Lỗi nền hệ thống.',
+              fallbackMessage: UiCopy.text('copy_ccfa7985a8a4'),
             );
             unawaited(
               ErrorLoggerService.instance.logError(

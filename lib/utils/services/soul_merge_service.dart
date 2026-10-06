@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -70,17 +71,17 @@ class SoulMergeService {
     try {
       final user = _auth.currentUser;
       if (user == null) {
-        throw Exception('Chưa đăng nhập tài khoản.');
+        throw UiCopyException('copy_75305b3e544e');
       }
 
       final houseId = await _houseService.getCurrentHouseId();
       if (houseId == null || houseId.isEmpty) {
-        throw Exception('Không tìm thấy mã nhà hoặc chưa ghép nối.');
+        throw UiCopyException('copy_a889cd9f28dd');
       }
 
       final trimmed = text.trim();
       if (trimmed.length > 2000) {
-        throw Exception('Tin nhắn vượt quá giới hạn 2000 ký tự.');
+        throw UiCopyException('copy_44fdfcf1695b');
       }
 
       final prefs = await SharedPreferences.getInstance();
@@ -98,11 +99,11 @@ class SoulMergeService {
       final body = trimmed.isNotEmpty
           ? trimmed
           : (imageUrl != null
-                ? 'Đã gửi một ảnh'
-                : 'Đã thì thầm với bạn trong Soul Merge 💕');
+                ? UiCopy.text('copy_95645c3098ee')
+                : UiCopy.text('copy_e3cebc8bff52'));
 
       // Lấy tên đúng từ house settings theo role của người gửi
-      String myName = 'Người ấy';
+      String myName = UiCopy.text('copy_145933221191');
       try {
         final settingsSnap = await _db.ref('houses/$houseId/settings').get();
         if (settingsSnap.exists && settingsSnap.value is Map) {
@@ -352,11 +353,11 @@ class SoulMergeService {
         _db.ref('houses/$houseId/settings').get(),
       ]);
       final users = profileSnapshots[0].value as Map<dynamic, dynamic>?;
-      String partnerName = 'Người ấy';
+      String partnerName = UiCopy.text('copy_145933221191');
       if (users != null && users[partnerRole] != null) {
         final partnerInfo = users[partnerRole] as Map<dynamic, dynamic>;
-        partnerName = (partnerInfo['name'] as String?)?.trim() ?? 'Người ấy';
-        if (partnerName.isEmpty) partnerName = 'Người ấy';
+        partnerName = (partnerInfo['name'] as String?)?.trim() ?? UiCopy.text('copy_145933221191');
+        if (partnerName.isEmpty) partnerName = UiCopy.text('copy_145933221191');
       }
 
       // 2. Get house settings for names
@@ -367,9 +368,9 @@ class SoulMergeService {
       // Helper lấy tên theo role
       String nameForRole(String r) {
         if (r == 'user2') {
-          return (nameU2 != null && nameU2.isNotEmpty) ? nameU2 : 'Người ấy';
+          return (nameU2 != null && nameU2.isNotEmpty) ? nameU2 : UiCopy.text('copy_145933221191');
         }
-        return (nameU1 != null && nameU1.isNotEmpty) ? nameU1 : 'Người ấy';
+        return (nameU1 != null && nameU1.isNotEmpty) ? nameU1 : UiCopy.text('copy_145933221191');
       }
 
       // 3. Get Latest Message
@@ -379,7 +380,7 @@ class SoulMergeService {
           .limitToLast(1)
           .get();
 
-      String message = 'Hãy vào nhà để trò chuyện...';
+      String message = UiCopy.text('copy_10b2526771ce');
       String senderName = nameForRole(partnerRole); // default: partner
       if (chatSnap.exists && chatSnap.value is Map) {
         final chatData = chatSnap.value as Map<dynamic, dynamic>;
@@ -393,7 +394,7 @@ class SoulMergeService {
           if (text != null && text.trim().isNotEmpty) {
             message = text.trim();
           } else if (imageUrl != null && imageUrl.isNotEmpty) {
-            message = 'Đã gửi một ảnh';
+            message = UiCopy.text('copy_95645c3098ee');
           }
         }
       }

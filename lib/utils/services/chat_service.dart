@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
@@ -122,8 +123,8 @@ class ChatService {
     caseSensitive: false,
   );
   static final List<String> _blockedPhrases = [
-    'lừa đảo',
-    'chiếm đoạt',
+    UiCopy.text('copy_364db51a25be'),
+    UiCopy.text('copy_474fa880e585'),
     'phishing',
     'hack',
     'malware',
@@ -133,18 +134,18 @@ class ChatService {
   ];
   static final List<String> _riskyLinkPhrases = [
     'click here',
-    'click vào link',
-    'nhận thưởng',
-    'trúng thưởng',
-    'miễn phí',
-    'xác minh',
+    UiCopy.text('copy_cba52b160624'),
+    UiCopy.text('copy_37391f0db18b'),
+    UiCopy.text('copy_20dd77bd38c1'),
+    UiCopy.text('copy_ce7dda7c0cb7'),
+    UiCopy.text('copy_55f33ebfc2ad'),
     'verify',
     'otp',
-    'mật khẩu',
+    UiCopy.text('copy_ebe99bb74ab7'),
     'password',
-    'đăng nhập',
+    UiCopy.text('copy_1afd3f6b880c'),
     'login',
-    'chuyển khoản',
+    UiCopy.text('copy_7535dd5d3ed7'),
   ];
   static const List<String> _suspiciousHosts = [
     'bit.ly',
@@ -157,11 +158,11 @@ class ChatService {
     'rebrand.ly',
   ];
   static final List<String> _friendWelcomeTemplates = [
-    'Hai bạn đã trở thành bạn bè. Hãy bắt đầu trò chuyện nhé! 👋',
-    'Một tình bạn mới vừa chớm nở. Hãy gửi lời chào nào! ✨',
-    'Bạn mới kìa! Ngại ngùng gì mà không gửi một sticker dễ thương? 💌',
-    'Kết nối thành công! Đừng quên chia sẻ những câu chuyện thú vị với nhau nhé. 🌻',
-    'Một người bạn mới có thể là khởi đầu cho nhiều điều tuyệt vời. Bắt chuyện ngay thôi! 🎈',
+    UiCopy.text('copy_8d2788ce5f52'),
+    UiCopy.text('copy_b14dd47105fb'),
+    UiCopy.text('copy_abbbd8f7e0cf'),
+    UiCopy.text('copy_26d5847d999f'),
+    UiCopy.text('copy_ad3e4a0d5bd9'),
   ];
 
   factory ChatService() => _instance;
@@ -324,10 +325,10 @@ class ChatService {
           .get()
           .timeout(const Duration(seconds: 10));
       if (myBlockSnap.value == true) {
-        throw Exception('Hai nhà đã chặn nhau, không thể tiếp tục trò chuyện.');
+        throw UiCopyException('copy_1af5a5eb2b47');
       }
     } on TimeoutException {
-      throw Exception('Kiểm tra trạng thái chặn không thành công do timeout.');
+      throw UiCopyException('copy_abbcd7bba995');
     }
   }
 
@@ -366,28 +367,28 @@ class ChatService {
   // --- SPAM DETECTION ---
   void _detectSpam(String text) {
     final trimmed = text.trim();
-    if (trimmed.isEmpty) throw Exception('Tin nhắn trống');
-    if (trimmed.length > 2000) throw Exception('Tin nhắn quá dài');
+    if (trimmed.isEmpty) throw UiCopyException('copy_5d308b37b644');
+    if (trimmed.length > 2000) throw UiCopyException('copy_19c4aaa26f5f');
 
     final normalized = _normalizeForScan(trimmed);
     for (final phrase in _blockedPhrases) {
       if (normalized.contains(phrase)) {
-        throw Exception('Tin nhắn vi phạm tiêu chuẩn cộng đồng');
+        throw UiCopyException('copy_786c1396b7bb');
       }
     }
 
     if (_repeatCharRegex.hasMatch(normalized) ||
         _repeatWordRegex.hasMatch(normalized)) {
-      throw Exception('Tin nhắn có dấu hiệu spam lặp lại');
+      throw UiCopyException('copy_8ec89d5af7d7');
     }
 
     final urls = _extractUrls(trimmed);
     if (urls.length > 2) {
-      throw Exception('Tin nhắn chứa quá nhiều liên kết');
+      throw UiCopyException('copy_b5587ec8d196');
     }
 
     if (_looksLikePhishing(normalized, urls)) {
-      throw Exception('Phát hiện liên kết độc hại');
+      throw UiCopyException('copy_4690150d7679');
     }
   }
 
@@ -403,7 +404,7 @@ class ChatService {
       throw const SilentRapidActionBlockException();
     }
     if (cooldown >= 0) {
-      throw Exception('Bạn gửi hơi nhanh. Vui lòng chờ một lát rồi thử lại.');
+      throw UiCopyException('copy_d9661cb7655a');
     }
     throw Exception(
       cooldown > 0
@@ -485,18 +486,18 @@ class ChatService {
   String _timelineTextForInternalMessage(ChatMessage message) {
     switch (message.type) {
       case 'image':
-        return 'đã gửi một hình ảnh';
+        return UiCopy.text('copy_890b8f9ec435');
       case 'call_invite':
-        return 'đã bắt đầu một cuộc gọi';
+        return UiCopy.text('copy_906b236b3fb3');
       case 'watch_invite':
-        return 'đã mời xem chung';
+        return UiCopy.text('copy_1c01760f79b2');
       case 'sticker':
-        return 'đã gửi một sticker';
+        return UiCopy.text('copy_2620886e9eee');
       default:
         final preview = _compactTimelinePreview(message.text);
         return preview.isEmpty
-            ? 'đã gửi một tin nhắn mới'
-            : 'đã gửi: "$preview"';
+            ? UiCopy.text('copy_e7430de8505f')
+            : UiCopy.text('copy_50323496d178', {'value1': preview});
     }
   }
 
@@ -529,13 +530,13 @@ class ChatService {
   }) {
     switch (type) {
       case 'image':
-        return '[Hình ảnh]';
+        return UiCopy.text('copy_f88e6b16e3c8');
       case 'call_invite':
-        return '[Cuộc gọi]';
+        return UiCopy.text('copy_8d4676aacbbb');
       case 'watch_invite':
-        return '[Xem cùng]';
+        return UiCopy.text('copy_e27d68976d69');
       case 'share':
-        return '[Chia sẻ]';
+        return UiCopy.text('copy_e544e1b68345');
       default:
         return text;
     }
@@ -582,9 +583,7 @@ class ChatService {
     String type = 'text',
   }) async {
     if (type == 'image') {
-      throw Exception(
-        'Ảnh chat phải gửi qua phiên upload bảo mật của máy chủ.',
-      );
+      throw UiCopyException('copy_a95f3201e509');
     }
     await _runExternalChatAction(
       () async {
@@ -616,7 +615,7 @@ class ChatService {
         unawaited(_syncDirectChatMetadata(roomId, messageId));
       },
       permissionMessage:
-          'Không thể gửi tin nhắn lúc này. Có thể một trong hai bên đã chặn nhau hoặc quyền Firebase chưa đồng bộ.',
+          UiCopy.text('copy_4df8403726fa'),
     );
   }
 
@@ -629,7 +628,7 @@ class ChatService {
   }) async {
     final sessionId = upload.sessionId?.trim() ?? '';
     if (sessionId.isEmpty) {
-      throw Exception('Thiếu phiên gửi ảnh chat.');
+      throw UiCopyException('copy_97f43b3dd853');
     }
 
     Future<bool> warmUpAppCheck({bool forceRefresh = false}) async {
@@ -684,7 +683,7 @@ class ChatService {
           final senderId = isInternal ? senderRole : myHouseId;
           final msgMap = _buildMessageWriteMap(
             senderId: senderId,
-            text: '[Hình ảnh]',
+            text: UiCopy.text('copy_f88e6b16e3c8'),
             type: 'image',
           );
           msgMap['imageUrl'] = url;
@@ -703,12 +702,12 @@ class ChatService {
             'chats/$roomId/lastMessage': _lastMessageWriteMap(
               senderId: senderId,
               type: 'image',
-              text: '[Hình ảnh]',
+              text: UiCopy.text('copy_f88e6b16e3c8'),
               messageId: messageId,
             ),
             'chats/$roomId/updatedAt': ServerValue.timestamp,
           });
-        }, permissionMessage: 'Không thể gửi ảnh lúc này.');
+        }, permissionMessage: UiCopy.text('copy_7ed85160e636'));
         return;
       }
 
@@ -742,9 +741,9 @@ class ChatService {
       }
       switch (resolvedError.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw Exception('Cần đăng nhập để gửi ảnh chat.');
+          throw UiCopyException('copy_3b1a55a37917');
         case 'invalid-argument':
-          throw Exception('Thiếu dữ liệu để hoàn tất gửi ảnh chat.');
+          throw UiCopyException('copy_cbf898f04b81');
         case 'not-found':
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -771,7 +770,7 @@ class ChatService {
           );
         case 'deadline-exceeded':
         case 'unavailable':
-          throw Exception('Không thể kết nối máy chủ gửi ảnh chat.');
+          throw UiCopyException('copy_87c69d5f9627');
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -841,8 +840,8 @@ class ChatService {
         id: '',
         senderId: myHouseId,
         text: isVideo
-            ? 'Đã bắt đầu cuộc gọi video'
-            : 'Đã bắt đầu cuộc gọi thoại',
+            ? UiCopy.text('copy_7d52d87a00a0')
+            : UiCopy.text('copy_119df287d9f7'),
         type: 'call_invite',
         timestamp: DateTime.fromMillisecondsSinceEpoch(0),
         callRoomId: roomId,
@@ -882,7 +881,7 @@ class ChatService {
       final message = ChatMessage(
         id: '',
         senderId: myHouseId,
-        text: 'Đã chia sẻ phòng xem cùng',
+        text: UiCopy.text('copy_a94571f3877d'),
         type: 'watch_invite',
         timestamp: DateTime.fromMillisecondsSinceEpoch(0),
         sharedUrl: url,
@@ -918,7 +917,7 @@ class ChatService {
         await _assertChatRoomOpen(myHouseId, targetHouseId);
         final roomId = _getRoomId(myHouseId, targetHouseId);
         if (!await _ensureViewerRoomIndex(myHouseId, roomId)) {
-          throw Exception('Không thể xác minh quyền truy cập đoạn chat.');
+          throw UiCopyException('copy_a70b1389b932');
         }
 
         final docRef = FirebaseFirestore.instance
@@ -930,7 +929,7 @@ class ChatService {
         await docRef.update({'reactions.$myHouseId': emoji});
       },
       permissionMessage:
-          'Không thả cảm xúc được: có thể tin nhắn không còn tồn tại, chat đã bị đóng hoặc quyền truy cập chưa đồng bộ.',
+          UiCopy.text('copy_8b219d739526'),
     );
   }
 
@@ -1253,9 +1252,7 @@ class ChatService {
   // Tương tự chức năng cũ nhưng cho riêng nội bộ gia đình
   Future<void> sendInternalMessage(String houseId, ChatMessage message) async {
     if (message.type == 'image') {
-      throw Exception(
-        'Ảnh chat nội bộ phải gửi qua phiên upload bảo mật của máy chủ.',
-      );
+      throw UiCopyException('copy_a607edef984f');
     }
     final safeText = _sanitize(message.text);
     if (message.type == 'text' || message.type == 'sticker') {
@@ -1326,7 +1323,7 @@ class ChatService {
     final normalizedUrl = backgroundUrl.trim();
     final normalizedStoragePath = backgroundStoragePath.trim();
     if (normalizedUrl.isEmpty || normalizedStoragePath.isEmpty) {
-      throw Exception('Thiếu dữ liệu nền chat để lưu.');
+      throw UiCopyException('copy_0212518a2b53');
     }
 
     if (isInternal) {
@@ -1342,7 +1339,7 @@ class ChatService {
 
     final normalizedTargetHouseId = (targetHouseId ?? '').trim();
     if (normalizedTargetHouseId.isEmpty) {
-      throw Exception('Thiếu targetHouseId để lưu nền chat.');
+      throw UiCopyException('copy_c4d215429eec');
     }
 
     await _runExternalChatAction(
@@ -1361,7 +1358,7 @@ class ChatService {
         });
       },
       permissionMessage:
-          'Không cập nhật được nền chat: có thể bạn không còn quyền sửa hoặc đoạn chat chưa sẵn sàng.',
+          UiCopy.text('copy_87f57e7f570f'),
     );
   }
 
@@ -1382,7 +1379,7 @@ class ChatService {
 
     final normalizedTargetHouseId = (targetHouseId ?? '').trim();
     if (normalizedTargetHouseId.isEmpty) {
-      throw Exception('Thiếu targetHouseId để xóa nền chat.');
+      throw UiCopyException('copy_d576131ea38d');
     }
 
     await _runExternalChatAction(
@@ -1401,7 +1398,7 @@ class ChatService {
         });
       },
       permissionMessage:
-          'Không xóa được nền chat: có thể bạn không còn quyền sửa hoặc đoạn chat chưa sẵn sàng.',
+          UiCopy.text('copy_9fb3db9b3440'),
     );
   }
 

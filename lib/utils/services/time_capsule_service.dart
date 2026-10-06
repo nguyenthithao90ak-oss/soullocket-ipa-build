@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 
@@ -29,8 +30,8 @@ class TimeCapsuleService {
   }) async {
     final uid = _auth.currentUser?.uid;
     final normalizedHouseId = houseId.trim();
-    if (uid == null) throw Exception('Chưa đăng nhập!');
-    if (normalizedHouseId.isEmpty) throw Exception('Thiếu mã nhà để chôn hòm.');
+    if (uid == null) throw UiCopyException('copy_d267f001bad1');
+    if (normalizedHouseId.isEmpty) throw UiCopyException('copy_321dcb8893fb');
     final response =
         await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
           'createTimeCapsule',
@@ -109,12 +110,12 @@ class TimeCapsuleService {
   ) async {
     final normalizedHouseId = houseId.trim();
     if (normalizedHouseId.isEmpty) {
-      throw Exception('Thiếu mã nhà để mở hòm.');
+      throw UiCopyException('copy_cae8050cc343');
     }
     // Gắn mộc "Đã Khui" lên Firebase
     final cid = capsule['id']?.toString().trim() ?? '';
     if (cid.isEmpty) {
-      throw Exception('Thiếu mã hòm thời gian.');
+      throw UiCopyException('copy_5554cd424b5f');
     }
     final response =
         await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
@@ -133,7 +134,7 @@ class TimeCapsuleService {
     final normalizedHouseId = houseId.trim();
     final normalizedCapsuleId = capsuleId.trim();
     if (normalizedHouseId.isEmpty || normalizedCapsuleId.isEmpty) {
-      throw Exception('Thiếu mã nhà hoặc mã hòm để xóa.');
+      throw UiCopyException('copy_4904ab1ea646');
     }
     await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
       'deleteTimeCapsule',

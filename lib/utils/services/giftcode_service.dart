@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
@@ -47,20 +48,20 @@ class GiftcodeService {
       return GiftcodeResult(
         success: false,
         error: GiftcodeError.invalidCode,
-        message: 'Không xác định được nhà để nhận mã quà tặng.',
+        message: UiCopy.text('copy_a07a59e6014d'),
       );
     }
     if (sanitized.isEmpty) {
       return GiftcodeResult(
         success: false,
-        message: 'Vui lòng nhập mã quà tặng!',
+        message: UiCopy.text('copy_629ee4eb3ffb'),
       );
     }
     if (!AppConfig.isPurchaseEnabled) {
       return GiftcodeResult(
         success: false,
         error: GiftcodeError.permissionDenied,
-        message: 'Giftcode chưa khả dụng trên phiên bản này.',
+        message: UiCopy.text('copy_a56679a47ac6'),
       );
     }
 
@@ -74,7 +75,7 @@ class GiftcodeService {
       final callable = _functions.httpsCallable('redeemGiftcode');
       final response = await callable.call(requestPayload);
       if (response.data is! Map) {
-        throw Exception('Phản hồi mã quà tặng không hợp lệ.');
+        throw UiCopyException('copy_fa10fee8c01e');
       }
       final payload = Map<String, dynamic>.from(response.data as Map);
       final days = (payload['daysAdded'] as num?)?.toInt();
@@ -84,7 +85,7 @@ class GiftcodeService {
         daysAdded: days,
         message: (payload['message']?.toString().trim().isNotEmpty ?? false)
             ? payload['message'].toString()
-            : 'Giftcode hợp lệ!',
+            : UiCopy.text('copy_d3418d65b990'),
       );
     } on FirebaseFunctionsException catch (error) {
       if (_isDebugAppCheckFailure(error)) {
@@ -97,7 +98,7 @@ class GiftcodeService {
             'deviceId': deviceId,
           });
           if (response.data is! Map) {
-            throw Exception('Phản hồi mã quà tặng không hợp lệ.');
+            throw UiCopyException('copy_fa10fee8c01e');
           }
           final payload = Map<String, dynamic>.from(response.data as Map);
           final days = (payload['daysAdded'] as num?)?.toInt();
@@ -107,7 +108,7 @@ class GiftcodeService {
             daysAdded: days,
             message: (payload['message']?.toString().trim().isNotEmpty ?? false)
                 ? payload['message'].toString()
-                : 'Mã quà tặng hợp lệ!',
+                : UiCopy.text('copy_c1cc9215ddc0'),
           );
         } catch (parseError) {
           debugPrint('[Giftcode] Không đọc được payload lỗi: $parseError');
@@ -128,20 +129,20 @@ class GiftcodeService {
         _ => GiftcodeError.unknown,
       };
       final friendlyMessage = mappedError == GiftcodeError.verificationRequired
-          ? 'Không thể xác minh thiết bị lúc này. Vui lòng cập nhật app hoặc thử lại sau.'
+          ? UiCopy.text('copy_8cddfd33d936')
           : normalizedMessage;
       return GiftcodeResult(
         success: false,
         error: mappedError,
         message: friendlyMessage.isNotEmpty
             ? friendlyMessage
-            : 'Hệ thống đang bận, vui lòng thử lại sau.',
+            : UiCopy.text('copy_d489eb4855bd'),
       );
     } catch (_) {
       return GiftcodeResult(
         success: false,
         error: GiftcodeError.unknown,
-        message: 'Hệ thống đang bận, vui lòng thử lại sau.',
+        message: UiCopy.text('copy_d489eb4855bd'),
       );
     }
   }

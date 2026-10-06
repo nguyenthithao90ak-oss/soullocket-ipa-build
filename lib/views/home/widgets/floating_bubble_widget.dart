@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -41,7 +42,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
 
   List<dynamic> _chatHistory = [];
   String _myRole = 'user1';
-  String _partnerName = 'Người ấy';
+  String _partnerName = UiCopy.text('copy_145933221191');
 
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -61,7 +62,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
   void initState() {
     super.initState();
     _myRole = widget.initialRole ?? 'user1';
-    _partnerName = widget.initialPartnerName ?? 'Người ấy';
+    _partnerName = widget.initialPartnerName ?? UiCopy.text('copy_145933221191');
     _houseId = widget.initialHouseId;
 
     _animController = AnimationController(
@@ -98,7 +99,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
             if (type == 'sync_credentials') {
               final hId = data['houseId']?.toString() ?? '';
               final r = data['role']?.toString() ?? 'user1';
-              final pName = data['partnerName']?.toString() ?? 'Người ấy';
+              final pName = data['partnerName']?.toString() ?? UiCopy.text('copy_145933221191');
               if (hId.isNotEmpty) {
                 if (mounted) {
                   setState(() {
@@ -118,7 +119,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
               if (mounted) {
                 setState(() {
                   _myRole = data['myRole'] ?? 'user1';
-                  _partnerName = data['partnerName'] ?? 'Người ấy';
+                  _partnerName = data['partnerName'] ?? UiCopy.text('copy_145933221191');
                 });
               }
             } else if (type == 'new_msg_preview') {
@@ -221,7 +222,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
               setState(() {
                 _houseId = hId;
                 _myRole = data['role']?.toString() ?? 'user1';
-                _partnerName = data['partnerName']?.toString() ?? 'Người ấy';
+                _partnerName = data['partnerName']?.toString() ?? UiCopy.text('copy_145933221191');
               });
             }
             _startListeningFirebaseChat();

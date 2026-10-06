@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
@@ -27,7 +28,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
   bool _isLoadingProfile = true;
 
   String _houseId = '';
-  String _houseName = 'Người dùng SoulLocket';
+  String _houseName = UiCopy.text('copy_6c0058015469');
   String _loginId = '';
   String _email = '';
   String _lockType = 'permanent';
@@ -58,7 +59,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
     }
 
     final houseId = await _houseService.getCurrentHouseId() ?? '';
-    String houseName = 'Người dùng SoulLocket';
+    String houseName = UiCopy.text('copy_6c0058015469');
     String loginId = '';
     String email = user.email ?? '';
     String lockType = 'permanent';

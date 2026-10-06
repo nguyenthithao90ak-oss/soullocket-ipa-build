@@ -30,8 +30,9 @@ abstract final class MoneyFormat {
       // MarketService chưa sẵn sàng: dùng ngôn ngữ.
     }
     try {
-      return NumberFormat.simpleCurrency(locale: LocaleDateFormat.intlLocale)
-              .currencyName ??
+      return NumberFormat.simpleCurrency(
+            locale: LocaleDateFormat.intlLocale,
+          ).currencyName ??
           'USD';
     } catch (_) {
       return 'USD';
@@ -41,6 +42,53 @@ abstract final class MoneyFormat {
   static String normalizeCode(Object? raw) {
     final code = raw?.toString().trim().toUpperCase() ?? '';
     return RegExp(r'^[A-Z]{3}$').hasMatch(code) ? code : '';
+  }
+
+  /// Nhận số nguyên hoặc số có 1–2 chữ số lẻ, rồi làm tròn về đơn vị chính.
+  /// Dấu chấm/phẩy có ba chữ số phía sau là phân nhóm hàng nghìn.
+  /// Không xoá mù ký tự: dữ liệu sai hoặc vượt độ chính xác RTDB bị từ chối.
+  static int? parseWholeAmount(String raw) {
+    final digits = StringBuffer();
+    for (final rune in raw.trim().runes) {
+      if (rune >= 0x0660 && rune <= 0x0669) {
+        digits.write(rune - 0x0660);
+      } else if (rune >= 0x06f0 && rune <= 0x06f9) {
+        digits.write(rune - 0x06f0);
+      } else if (rune >= 0xff10 && rune <= 0xff19) {
+        digits.write(rune - 0xff10);
+      } else if (rune == 0x066b) {
+        digits.write('.');
+      } else if (rune == 0x066c) {
+        digits.write(',');
+      } else {
+        digits.writeCharCode(rune);
+      }
+    }
+    final text = digits.toString().replaceAll(
+      RegExp(r'[\s\u00a0\u202f\u2009]'),
+      '',
+    );
+    if (!RegExp(r'^\+?\d+(?:[.,]\d+)*$').hasMatch(text)) return null;
+    final unsigned = text.startsWith('+') ? text.substring(1) : text;
+    final separator = unsigned.lastIndexOf(RegExp('[.,]'));
+    var whole = unsigned;
+    var roundUp = false;
+    if (separator >= 0 && unsigned.length - separator - 1 <= 2) {
+      whole = unsigned.substring(0, separator);
+      if (whole.contains(unsigned[separator])) return null;
+      roundUp = unsigned.codeUnitAt(separator + 1) >= 0x35;
+    }
+    if (!RegExp(r'^\d+$').hasMatch(whole) &&
+        !RegExp(r'^\d{1,3}(?:,\d{3})+$').hasMatch(whole) &&
+        !RegExp(r'^\d{1,3}(?:\.\d{3})+$').hasMatch(whole) &&
+        !RegExp(r'^\d{1,2}(?:,\d{2})*,\d{3}$').hasMatch(whole)) {
+      return null;
+    }
+    final value =
+        BigInt.parse(whole.replaceAll(RegExp('[.,]'), '')) +
+        (roundUp ? BigInt.one : BigInt.zero);
+    if (value > BigInt.from(9007199254740991)) return null;
+    return value.toInt();
   }
 
   static NumberFormat forCurrency(String? currencyCode) {

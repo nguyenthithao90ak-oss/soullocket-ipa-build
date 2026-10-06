@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
@@ -195,34 +196,34 @@ class HouseSettingsService {
             firstYear: 1900,
             lastYear: DateTime.now().year,
           );
-    final safeDayUnit = dayUnit.trim().isEmpty ? 'ngày yêu' : dayUnit.trim();
+    final safeDayUnit = dayUnit.trim().isEmpty ? UiCopy.text('copy_2697e3b904c8') : dayUnit.trim();
     final safeGreetingQuote = (greetingQuote ?? '').trim();
 
     if (safeHouseName.isEmpty || safeHouseName.length > 30) {
-      throw 'Tên nhà phải từ 1 đến 30 ký tự.';
+      throw UiCopy.text('copy_4cc062135ebb');
     }
     if (safeNameU1.isEmpty) {
-      throw 'Tên người thứ 1 không được để trống.';
+      throw UiCopy.text('copy_d1ffcd04ca3a');
     }
     if (safeStartDate == null) {
-      throw 'Định dạng ngày yêu không hợp lệ.';
+      throw UiCopy.text('copy_583830feabcd');
     }
     if (safeStartDate.isNotEmpty) {
       final parsedStart = DateTime.tryParse(safeStartDate);
       if (parsedStart == null) {
-        throw 'Định dạng ngày yêu không hợp lệ.';
+        throw UiCopy.text('copy_583830feabcd');
       }
       if (parsedStart.isAfter(DateTime.now())) {
-        throw 'Ngày yêu không được ở tương lai.';
+        throw UiCopy.text('copy_b86bdb952c4f');
       }
     }
     if (safeDobU1 == null || safeDobU2 == null) {
-      throw 'Định dạng ngày sinh không hợp lệ.';
+      throw UiCopy.text('copy_f3af5a0689f3');
     }
     for (final dob in [safeDobU1, safeDobU2]) {
       if (dob.isEmpty) continue;
       if (DateTime.tryParse(dob) == null) {
-        throw 'Định dạng ngày sinh không hợp lệ.';
+        throw UiCopy.text('copy_f3af5a0689f3');
       }
     }
 
@@ -253,7 +254,7 @@ class HouseSettingsService {
     _invalidateCache(houseId);
     await _recordSpaceActivity(
       houseId,
-      'đã làm mới thông tin không gian chung',
+      UiCopy.text('copy_cf31b58f42e4'),
     );
   }
 
@@ -309,7 +310,7 @@ class HouseSettingsService {
 
     final safeAvatarUrl = _withRefreshToken(avatarUrl);
     if (safeAvatarUrl.isEmpty || safeAvatarUrl.length > 2048) {
-      throw 'Avatar hồ sơ không hợp lệ.';
+      throw UiCopy.text('copy_1d7b0ff164c2');
     }
 
     await _dbRef.update({
@@ -347,7 +348,7 @@ class HouseSettingsService {
     if (headerImageUrl != null) {
       final safeHeaderImageUrl = headerImageUrl.trim();
       if (safeHeaderImageUrl.length > 2048) {
-        throw 'Ảnh nền hồ sơ quá dài hoặc không hợp lệ.';
+        throw UiCopy.text('copy_9ac4f69319f3');
       }
       updates.addAll({
         'houses/$houseId/settings/profileHeaderImageUrl': safeHeaderImageUrl,
@@ -357,7 +358,7 @@ class HouseSettingsService {
     if (headerThemeKey != null) {
       final safeHeaderThemeKey = headerThemeKey.trim();
       if (safeHeaderThemeKey.length > 40) {
-        throw 'Mã nền hồ sơ không hợp lệ.';
+        throw UiCopy.text('copy_5f6ca1041178');
       }
       updates.addAll({
         'houses/$houseId/settings/profileHeaderThemeKey': safeHeaderThemeKey,
@@ -383,7 +384,7 @@ class HouseSettingsService {
     await _ensureCurrentDeviceCanModifySharedInfo(houseId);
     final trimmed = newName.trim();
     if (trimmed.isEmpty || trimmed.length > 30) {
-      throw 'Tên nhà phải từ 1 đến 30 ký tự.';
+      throw UiCopy.text('copy_4cc062135ebb');
     }
 
     await _dbRef.update({
@@ -401,7 +402,7 @@ class HouseSettingsService {
     _invalidateCache(houseId);
     await _recordSpaceActivity(
       houseId,
-      'đã đổi tên không gian thành "$trimmed"',
+      UiCopy.text('copy_f441050b2671', {'value1': trimmed}),
     );
   }
 
@@ -417,10 +418,10 @@ class HouseSettingsService {
     );
     final parsed = safeDate == null ? null : DateTime.tryParse(safeDate);
     if (parsed == null) {
-      throw 'Định dạng ngày không hợp lệ (YYYY-MM-DD).';
+      throw UiCopy.text('copy_10c643bc9b06');
     }
     if (parsed.isAfter(DateTime.now())) {
-      throw 'Ngày yêu không được ở tương lai!';
+      throw UiCopy.text('copy_c5a64fec2ba5');
     }
     final settingsSnap = await _dbRef.child('houses/$houseId/settings').get();
     final settings = _asStringDynamicMap(settingsSnap.value) ?? {};
@@ -445,12 +446,12 @@ class HouseSettingsService {
       _invalidateCache(houseId);
     } on FirebaseException catch (fe) {
       if (fe.code == 'permission-denied') {
-        throw 'Hệ thống từ chối cập nhật ngày yêu. Có thể do lỗi phân quyền hoặc cấu hình bảo mật.';
+        throw UiCopy.text('copy_923923e20276');
       }
       rethrow;
     }
 
-    await _recordSpaceActivity(houseId, 'đã cập nhật mốc ngày của không gian');
+    await _recordSpaceActivity(houseId, UiCopy.text('copy_89e6665fccd4'));
   }
 
   Future<void> updateCountdownLabels({
@@ -467,10 +468,10 @@ class HouseSettingsService {
     final safeBottomLabel = (bottomLabel ?? '').trim();
 
     if (safeTopLabel.length > 22) {
-      throw 'Chữ phía trên chỉ được tối đa 22 ký tự.';
+      throw UiCopy.text('copy_e8327010af54');
     }
     if (safeBottomLabel.length > 22) {
-      throw 'Chữ phía dưới chỉ được tối đa 22 ký tự.';
+      throw UiCopy.text('copy_bda4934daad9');
     }
 
     final updates = <String, dynamic>{
@@ -495,10 +496,10 @@ class HouseSettingsService {
     await _dbRef.update(updates);
     _invalidateCache(houseId);
     final activityText = hasTopLabel && hasBottomLabel
-        ? 'đã chỉnh lại chữ ở vòng đếm ngày'
+        ? UiCopy.text('copy_ab6a7d1d47e7')
         : hasTopLabel
-        ? 'đã chỉnh dòng chữ phía trên vòng đếm ngày'
-        : 'đã chỉnh dòng chữ phía dưới vòng đếm ngày';
+        ? UiCopy.text('copy_86298275767f')
+        : UiCopy.text('copy_cb5ec858a978');
     await _recordSpaceActivity(houseId, activityText);
   }
 
@@ -593,7 +594,7 @@ class HouseSettingsService {
     required String newMode,
     Duration cooldown = const Duration(hours: 24),
   }) async {
-    throw 'Chế độ Độc thân / Có người ấy chỉ được chọn khi tạo nhà lần đầu và không thể đổi lại trong Cài đặt.';
+    throw UiCopy.text('copy_c4bc8e8281cb');
   }
 
   Future<void> _checkAndUpdateUploadLimit(String houseId) async {
@@ -610,7 +611,7 @@ class HouseSettingsService {
         final count = (value['count'] as num?)?.toInt() ?? 0;
         if (savedDate == todayStr) {
           if (count >= 15) {
-            throw 'Bạn đã thay đổi quá nhiều, vui lòng đợi hôm sau';
+            throw UiCopy.text('copy_efa723a07ce7');
           }
           await ref.update({'count': count + 1});
           return;

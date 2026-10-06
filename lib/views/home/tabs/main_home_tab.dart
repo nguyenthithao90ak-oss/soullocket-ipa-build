@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:soullocket_app/widgets/sl_date_picker.dart';
 import '../../../models/widget_appearance.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
@@ -14,6 +15,7 @@ import 'package:lottie/lottie.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
 import 'package:soullocket_app/widgets/soul_merge_mark.dart';
+import 'package:soullocket_app/widgets/couple_default_avatar.dart';
 import 'package:soullocket_app/views/utilities/tarot/tarot_screen.dart';
 import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/map_tilt_card.dart';
@@ -139,7 +141,6 @@ import 'package:soullocket_app/views/home/widgets/companion/home_companion_motio
 import 'package:soullocket_app/views/home/widgets/companion/home_companion_scene.dart';
 import 'package:soullocket_app/widgets/home_interaction_stickers.dart';
 import 'package:soullocket_app/views/home/widgets/home_sticker_motion.dart';
-import 'package:soullocket_app/widgets/soul_merge_mascot.dart';
 import 'package:soullocket_app/utils/services/sound_service.dart';
 import 'package:soullocket_app/views/home/widgets/companion/home_companion_painter.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/home_compact_sections.dart';

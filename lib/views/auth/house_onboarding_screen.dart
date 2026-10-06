@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'dart:async';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
@@ -342,7 +343,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
           _isIdAvailable = res['available'] == true;
           if (!_isIdAvailable) {
             _idErrorReason =
-                res['reason'] ?? 'Mã nhà đã tồn tại, vui lòng chọn mã khác.';
+                res['reason'] ?? UiCopy.text('copy_c72cec7a67f6');
             final suggs = res['suggestions'];
             if (suggs is List) {
               _idSuggestions = suggs.map((e) => e.toString()).toList();
@@ -1907,7 +1908,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                               const SizedBox(height: 12),
                               Text(
                                 _autoCreateFailureMessage ??
-                                    'Đã có lỗi xảy ra khi chuẩn bị ngôi nhà. Vui lòng thử lại.',
+                                    UiCopy.text('copy_97ce67623377'),
                                 textAlign: TextAlign.center,
                                 style: SLTheme.quicksand(
                                   height: 1.45,

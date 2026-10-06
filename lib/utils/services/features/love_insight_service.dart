@@ -1,3 +1,4 @@
+import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:math';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -387,7 +388,7 @@ class LoveInsightService {
       return LoveInsightData(
         updatedAt: DateTime.now().millisecondsSinceEpoch,
         loveScore: 0,
-        level: 'Chưa có',
+        level: UiCopy.text('copy_a6fbefb9ca66'),
         loveDays: 0,
         positivity: 0,
         diaryMonth: 0,
@@ -397,15 +398,15 @@ class LoveInsightService {
         diaryTotal: 0,
         albumTotal: 0,
         suggestion:
-            'Bạn đang offline hoặc mạng yếu, dữ liệu sẽ được cập nhật khi có mạng.',
+            UiCopy.text('copy_bffcaabe2880'),
         shareU1: 0,
         shareU2: 0,
         offU1: 0,
         offU2: 0,
         interactionRate: 0,
-        nameU1: 'Bạn',
-        nameU2: 'Người ấy',
-        favoriteActivity: 'Chưa rõ',
+        nameU1: UiCopy.text('copy_40ffd8d0f1c7'),
+        nameU2: UiCopy.text('copy_145933221191'),
+        favoriteActivity: UiCopy.text('copy_89a3a265c062'),
         diaryU1: 0,
         diaryU2: 0,
         albumU1: 0,
@@ -1221,7 +1222,7 @@ class LoveInsightService {
                 date: dt,
                 title: tStr,
                 type: 'custom',
-                subtitle: 'Sự kiện riêng',
+                subtitle: UiCopy.text('copy_ed00412a372e'),
               ),
             );
           } catch (error) {
@@ -1299,8 +1300,8 @@ class LoveInsightService {
             nowTs: nowTs,
           )) {
         final name = quietRole == 'user2'
-            ? _string(settings['nameU2'], fallback: 'người ấy')
-            : _string(settings['nameU1'], fallback: 'người ấy');
+            ? _string(settings['nameU2'], fallback: UiCopy.text('copy_ec96c474a63b'))
+            : _string(settings['nameU1'], fallback: UiCopy.text('copy_ec96c474a63b'));
         await PushNotificationHelper.systemEvent(
           toHouseId: houseId,
           type: 'long_time_no_checkin',
