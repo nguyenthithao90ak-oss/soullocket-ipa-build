@@ -1,0 +1,17 @@
+{
+  "date_input_pattern_dmy": {"vi": "ngày/tháng/năm", "en": "DD/MM/YYYY"},
+  "date_input_pattern_mdy": {"vi": "tháng/ngày/năm", "en": "MM/DD/YYYY"},
+  "date_input_pattern_ymd": {"vi": "năm/tháng/ngày", "en": "YYYY/MM/DD"},
+  "date_input_pattern_dm": {"vi": "ngày/tháng", "en": "DD/MM"},
+  "date_input_pattern_md": {"vi": "tháng/ngày", "en": "MM/DD"},
+  "date_input_or": {"vi": "{a} hoặc {b}", "en": "{a} or {b}"},
+  "date_input_helper": {"vi": "Định dạng: {format}", "en": "Format: {format}"},
+  "date_input_err_empty": {"vi": "Nhập ngày theo định dạng {format}.", "en": "Enter a date as {format}."},
+  "date_input_err_incomplete": {"vi": "Nhập đủ {format}.", "en": "Enter the full date as {format}."},
+  "date_input_err_format": {"vi": "Định dạng chưa đúng. Hãy nhập theo {format}.", "en": "Invalid format. Please enter {format}."},
+  "date_input_err_day": {"vi": "Ngày phải từ 01 đến 31.", "en": "Day must be between 01 and 31."},
+  "date_input_err_month": {"vi": "Tháng phải từ 01 đến 12.", "en": "Month must be between 01 and 12."},
+  "date_input_err_year": {"vi": "Năm phải từ {first} đến {last}.", "en": "Year must be between {first} and {last}."},
+  "date_input_err_max_day": {"vi": "Tháng {month} chỉ có {days} ngày.", "en": "Month {month} only has {days} days."},
+  "zodiac_age_days": {"vi": "{count} ngày tuổi", "en": "{count} days old"}
+}

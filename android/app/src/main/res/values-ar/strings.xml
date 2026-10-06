@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_days_unit">يومًا</string>
+    <string name="widget_since_date">منذ %1$s</string>
+    <string name="widget_default_me">أنت</string>
+    <string name="widget_default_partner">حبيبك</string>
+    <string name="widget_label_couple">الثنائي</string>
+    <string name="widget_label_cycle">الدورة</string>
+    <string name="widget_label_calendar">الجدول</string>
+    <string name="widget_label_soul_event">المناسبات والذكريات</string>
+    <string name="widget_label_sleep">النوم ☁️💤</string>
+    <string name="widget_sleep_title">نوم الثنائي ☁️✨</string>
+    <string name="widget_sleep_summary_default">كلاكما مستيقظ ☀️</string>
+    <string name="widget_sleep_status_awake">☀️ مستيقظ</string>
+    <string name="widget_sleep_time_active">نشط</string>
+</resources>

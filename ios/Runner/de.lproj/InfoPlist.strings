@@ -1,0 +1,12 @@
+/* Lời xin quyền & tên app (de). Đồng bộ với Info.plist. */
+"NSCameraUsageDescription" = "SoulLocket nutzt die Kamera für Erinnerungsfotos, zum Scannen von QR-Codes zum Verbinden oder Anmelden und für Videoanrufe, die du startest.";
+"NSFaceIDUsageDescription" = "SoulLocket nutzt Face ID zum schnellen Entsperren und zum Schutz deiner privaten Inhalte.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "SoulLocket nutzt deinen Standort, auch im Hintergrund, um ihn mit deinem Partner zu teilen, die Paarkarte zu aktualisieren und Freunde in der Nähe zu finden.";
+"NSLocationAlwaysUsageDescription" = "SoulLocket nutzt deinen Standort, auch im Hintergrund, um ihn mit deinem Partner zu teilen, die Paarkarte zu aktualisieren und Freunde in der Nähe zu finden.";
+"NSLocationWhenInUseUsageDescription" = "SoulLocket nutzt deinen Standort während der App-Nutzung, um die Paarkarte, deinen aktuellen Standort, Tagebucheinträge mit Ort und Orte in der Nähe anzuzeigen.";
+"NSMicrophoneUsageDescription" = "SoulLocket nutzt das Mikrofon für Sprach- und Videoanrufe und für Audioaufnahmen, wenn du diese Funktionen verwendest.";
+"NSPhotoLibraryAddUsageDescription" = "SoulLocket speichert Erinnerungsfotos, Collagen und andere in der App erstellte Inhalte in deiner Fotomediathek.";
+"NSPhotoLibraryUsageDescription" = "SoulLocket greift auf deine Fotomediathek zu, damit du Fotos oder Videos für Profil, Beiträge, Tagebuch, Collagen und Erinnerungen auswählen kannst.";
+"NSHealthShareUsageDescription" = "Wenn du das Schlaf-Tracking aktivierst, liest SoulLocket aufgezeichnete Schlafdaten aus Apple Health. Zusammenfassungen werden mit deinem Partner geteilt; diese Daten erkennen Schlaf nicht in Echtzeit.";
+"NSHealthUpdateUsageDescription" = "SoulLocket benötigt Zugriff auf deine Gesundheitsdaten, um deinen Schlafplan zu synchronisieren.";
+"NSUserTrackingUsageDescription" = "Deine Daten werden anonymisiert und verwendet, um die App zu verbessern und relevante Werbung anzuzeigen. Sie werden niemals an Dritte verkauft.";

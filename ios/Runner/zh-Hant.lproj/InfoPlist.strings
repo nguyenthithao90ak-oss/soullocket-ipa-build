@@ -1,0 +1,12 @@
+/* Lời xin quyền & tên app (zh-Hant). Đồng bộ với Info.plist. */
+"NSCameraUsageDescription" = "SoulLocket 使用相機拍攝紀念照片、掃描 QR 碼以連結或登入，並在你發起視訊通話時使用。";
+"NSFaceIDUsageDescription" = "SoulLocket 使用 Face ID 快速解鎖並保護你的私密內容。";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "SoulLocket 會使用你的位置（包括在背景），以便與另一半分享位置、更新情侶地圖並幫你找到附近的朋友。";
+"NSLocationAlwaysUsageDescription" = "SoulLocket 會使用你的位置（包括在背景），以便與另一半分享位置、更新情侶地圖並幫你找到附近的朋友。";
+"NSLocationWhenInUseUsageDescription" = "SoulLocket 在你使用 App 時使用你的位置，用於顯示情侶地圖、目前位置、附地點的日記以及附近地點。";
+"NSMicrophoneUsageDescription" = "SoulLocket 在你選擇使用語音／視訊通話或錄音功能時使用麥克風。";
+"NSPhotoLibraryAddUsageDescription" = "SoulLocket 會將紀念照片、拼貼以及你在 App 中創作的內容儲存到你的相簿。";
+"NSPhotoLibraryUsageDescription" = "SoulLocket 存取你的相簿，讓你為個人檔案、貼文、日記、拼貼和回憶選擇照片或影片。";
+"NSHealthShareUsageDescription" = "開啟睡眠追蹤後，SoulLocket 會讀取「健康」中記錄的睡眠資料。睡眠摘要會與另一半分享；這些紀錄不會即時偵測睡眠。";
+"NSHealthUpdateUsageDescription" = "SoulLocket 需要存取你的健康資料以同步睡眠時間表。";
+"NSUserTrackingUsageDescription" = "你的資料會經過匿名化，用於改善 App 體驗並顯示相關廣告，絕不會出售給第三方。";

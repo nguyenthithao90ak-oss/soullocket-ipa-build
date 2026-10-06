@@ -24,13 +24,15 @@ class WidgetSleepProvider : HomeWidgetProvider() {
         for (appWidgetId in appWidgetIds) {
             try {
                 val views = RemoteViews(context.packageName, R.layout.widget_sleep).apply {
-                    val myName = widgetData.getString("sleep_my_name", "Bạn Nam") ?: "Bạn Nam"
-                    val partnerName = widgetData.getString("sleep_partner_name", "Người ấy") ?: "Người ấy"
-                    val myStatus = widgetData.getString("sleep_my_status", "☀️ Đang thức") ?: "☀️ Đang thức"
-                    val partnerStatus = widgetData.getString("sleep_partner_status", "☀️ Đang thức") ?: "☀️ Đang thức"
-                    val myTime = widgetData.getString("sleep_my_time", "Đang hoạt động") ?: "Đang hoạt động"
-                    val partnerTime = widgetData.getString("sleep_partner_time", "Đang hoạt động") ?: "Đang hoạt động"
-                    val summary = widgetData.getString("sleep_summary", "Cả 2 cùng thức ☀️") ?: "Cả 2 cùng thức ☀️"
+                    fun text(key: String, fallbackRes: Int): String =
+                        widgetData.getString(key, null) ?: context.getString(fallbackRes)
+                    val myName = text("sleep_my_name", R.string.widget_default_me)
+                    val partnerName = text("sleep_partner_name", R.string.widget_default_partner)
+                    val myStatus = text("sleep_my_status", R.string.widget_sleep_status_awake)
+                    val partnerStatus = text("sleep_partner_status", R.string.widget_sleep_status_awake)
+                    val myTime = text("sleep_my_time", R.string.widget_sleep_time_active)
+                    val partnerTime = text("sleep_partner_time", R.string.widget_sleep_time_active)
+                    val summary = text("sleep_summary", R.string.widget_sleep_summary_default)
 
                     setTextViewText(R.id.tv_my_name, myName)
                     setTextViewText(R.id.tv_partner_name, partnerName)

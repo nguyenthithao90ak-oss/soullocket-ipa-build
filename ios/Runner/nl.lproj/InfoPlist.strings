@@ -1,0 +1,12 @@
+/* Lời xin quyền & tên app (nl). Đồng bộ với Info.plist. */
+"NSCameraUsageDescription" = "SoulLocket gebruikt de camera om herinneringsfoto's te maken, QR-codes te scannen om te koppelen of in te loggen en voor videogesprekken die je start.";
+"NSFaceIDUsageDescription" = "SoulLocket gebruikt Face ID om snel te ontgrendelen en je privé-inhoud te beschermen.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "SoulLocket gebruikt je locatie, ook op de achtergrond, om die met je partner te delen, de koppelkaart bij te werken en je te helpen vrienden in de buurt te vinden.";
+"NSLocationAlwaysUsageDescription" = "SoulLocket gebruikt je locatie, ook op de achtergrond, om die met je partner te delen, de koppelkaart bij te werken en je te helpen vrienden in de buurt te vinden.";
+"NSLocationWhenInUseUsageDescription" = "SoulLocket gebruikt je locatie tijdens het gebruik van de app om de koppelkaart, je huidige locatie, dagboekberichten met locatie en plekken in de buurt te tonen.";
+"NSMicrophoneUsageDescription" = "SoulLocket gebruikt de microfoon voor spraak- en videogesprekken en om audio op te nemen wanneer je die functies gebruikt.";
+"NSPhotoLibraryAddUsageDescription" = "SoulLocket bewaart herinneringsfoto's, collages en andere inhoud die je in de app maakt in je fotobibliotheek.";
+"NSPhotoLibraryUsageDescription" = "SoulLocket heeft toegang tot je fotobibliotheek zodat je foto's of video's kunt kiezen voor je profiel, berichten, dagboek, collages en herinneringen.";
+"NSHealthShareUsageDescription" = "Als je slaaptracking inschakelt, leest SoulLocket vastgelegde slaap uit Apple Gezondheid. Slaapoverzichten worden met je partner gedeeld; deze gegevens detecteren slaap niet live.";
+"NSHealthUpdateUsageDescription" = "SoulLocket heeft toegang tot je gezondheidsgegevens nodig om je slaapschema te synchroniseren.";
+"NSUserTrackingUsageDescription" = "Je gegevens worden geanonimiseerd en gebruikt om de app te verbeteren en relevante advertenties te tonen. Ze worden nooit aan derden verkocht.";
