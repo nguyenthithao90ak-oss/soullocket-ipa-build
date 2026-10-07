@@ -6,6 +6,7 @@ import 'package:soullocket_app/widgets/sl_feedback.dart';
 import '../../../utils/services/market_service.dart';
 import '../../../utils/calendar/calendar_time_zone.dart';
 import '../../../utils/calendar/calendar_civil_date.dart';
+import '../../../utils/calendar/relationship_duration.dart';
 import '../../../utils/calendar/calendar_display_format.dart';
 import '../../../models/home_calendar_plan.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -19,6 +20,8 @@ import 'package:soullocket_app/widgets/couple_default_avatar.dart';
 import 'package:soullocket_app/views/utilities/tarot/tarot_screen.dart';
 import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/map_tilt_card.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/home_shared_note_header.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/home_partner_letter.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/hero/heartbeat_thread_painter.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/widgets/getting_started_guide.dart';
@@ -58,7 +61,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:soullocket_app/utils/services/offline_cache_service.dart';
+import 'package:soullocket_app/utils/services/core/rtdb_settled_read.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
+import 'package:soullocket_app/utils/services/role_utils.dart';
 import 'package:soullocket_app/utils/services/home_startup_media_cache.dart';
 import 'package:soullocket_app/utils/services/love_insight_service.dart';
 import 'package:soullocket_app/utils/services/location_service.dart';
@@ -134,6 +139,7 @@ import '../../../widgets/lottie_async_loader.dart';
 import '../../../core/fast_backdrop_filter.dart';
 import 'package:soullocket_app/core/sl_countdown_shapes.dart';
 import 'package:soullocket_app/core/sl_route.dart';
+import 'package:soullocket_app/core/routing/single_open_gate.dart';
 import 'package:soullocket_app/views/home/tabs/main_home/widgets/main_home_header_button.dart';
 import 'package:soullocket_app/utils/home_image_policy.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/hero/balanced_countdown_style.dart';
@@ -210,6 +216,8 @@ class MainHomeTab extends StatefulWidget {
 }
 
 class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
+  /// Chặn lối tắt Home bị gọi lặp khi khung hình đang bận.
+  final SingleOpenGate _homeRouteGate = SingleOpenGate();
   final ValueNotifier<bool> _showInsightCardFirstTapHintNotifier =
       ValueNotifier(false);
   final ValueNotifier<double> _avatarUploadProgressNotifier = ValueNotifier(
@@ -289,15 +297,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
 
   int _calculateDays() {
     final dateStr = _houseSettings?['startDate'] ?? _houseSettings?['loveDate'];
-    if (dateStr == null) return 0;
-    try {
-      final DateTime start = DateTime.parse(dateStr.toString());
-      // Cùng quy ước với vòng đếm chính: ngày bắt đầu là ngày 0.
-      final int diff = CalendarCivilDate.daysBetween(start, DateTime.now());
-      return diff < 0 ? 0 : diff;
-    } catch (e) {
-      return 0;
-    }
+    return _relationshipDuration(dateStr?.toString()).totalDays;
   }
 
   TextStyle _uiTextStyle({
@@ -431,6 +431,10 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   final ValueNotifier<String?> _homeMapAlertNotifier = ValueNotifier<String?>(
     null,
   );
+  final ValueNotifier<Map<String, dynamic>?> _homeMapMyPointNotifier =
+      ValueNotifier<Map<String, dynamic>?>(null);
+  final ValueNotifier<Map<String, dynamic>?> _homeMapPartnerPointNotifier =
+      ValueNotifier<Map<String, dynamic>?>(null);
   final ValueNotifier<Map<String, dynamic>?> _homePartnerBatteryNotifier =
       ValueNotifier<Map<String, dynamic>?>(null);
   final ValueNotifier<Map<String, dynamic>?> _homeMyBatteryNotifier =
@@ -497,6 +501,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   String _lastLoveWidgetAccountKey = '';
   String _presenceUiSignature = '';
   String _homeMapPreviewSignature = '';
+  String _homeMapPreviewScope = '';
+  int _homeMapPreviewBindingSerial = 0;
   String? _lastInsightSettingsKey;
   String? _pendingInsightSettingsKey;
   int _insightRequestSerial = 0;
@@ -605,9 +611,11 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     super.initState();
     MarketService.instance.addListener(_onRegionPreferencesChanged);
     L10nService().addListener(_onRegionPreferencesChanged);
-    unawaited(initializeDateFormatting().then((_) {
-      if (mounted) _safeSetState(() {});
-    }));
+    unawaited(
+      initializeDateFormatting().then((_) {
+        if (mounted) _safeSetState(() {});
+      }),
+    );
     unawaited(_loadCustomStickers());
     WidgetsBinding.instance.addObserver(this);
     _isTabActive = widget.isActiveListenable.value;
@@ -737,6 +745,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _presenceDataNotifier.dispose();
     _homeDistanceTextNotifier.dispose();
     _homeMapAlertNotifier.dispose();
+    _homeMapMyPointNotifier.dispose();
+    _homeMapPartnerPointNotifier.dispose();
     _homePartnerBatteryNotifier.dispose();
     _fallingEffectTypeNotifier.dispose();
     _isScrollingNotifier.dispose();
@@ -948,8 +958,15 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   void _updateHomeMapPreview({
     required String distanceText,
     required String? alertText,
+    Map<String, dynamic>? myPoint,
+    Map<String, dynamic>? partnerPoint,
   }) {
-    _updateHomeMapPreviewImpl(distanceText: distanceText, alertText: alertText);
+    _updateHomeMapPreviewImpl(
+      distanceText: distanceText,
+      alertText: alertText,
+      myPoint: myPoint,
+      partnerPoint: partnerPoint,
+    );
   }
 
   dynamic _normalizeInsightSignatureValue(dynamic value) {

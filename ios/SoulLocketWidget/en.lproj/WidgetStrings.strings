@@ -16,7 +16,7 @@
 "sleep_sync_hint" = "Open app to update";
 "sleep_duration" = "{hours}h {minutes}m";
 "comm_ngy_41ec10" = "days";
-"core_presence_online" = "Actif";
+"core_presence_online" = "Active now";
 "home_angoffline_bbb3d5" = "Offline now";
 "home_cpi_d525b0" = "Couple";
 "home_knim_4f6aeb" = "Celebrate";

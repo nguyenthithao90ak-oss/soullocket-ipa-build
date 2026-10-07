@@ -14,7 +14,7 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       final zInfo = ZodiacUtils.getZodiac(dob);
       final emoji = (zInfo?['emoji'] ?? '✨').toString().trim();
 
-      final ageDays = ZodiacUtils.getAgeDayCount(dob) ?? 0;
+      final ageDays = _relationshipDuration(dob).totalDays;
 
       if (ageDays <= 0) {
         return '$emoji 0';
@@ -60,16 +60,19 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
   /// Trả về `null` khi đọc lỗi để lần sau thử lại; danh sách rỗng là kết quả hợp lệ.
   Future<List<String>?> _loadWidgetDiaryImageUrlsImpl(String houseId) async {
     try {
-      final memoriesFuture = _dbRef
-          .child('houses/$houseId/memories')
-          .limitToLast(_widgetDiaryFetchLimit)
-          .get()
-          .timeout(const Duration(seconds: 4));
-      final diaryFuture = _dbRef
-          .child('houses/$houseId/diary')
-          .limitToLast(_widgetDiaryFetchLimit)
-          .get()
-          .timeout(const Duration(seconds: 4));
+      // Đọc qua listener ngắn để bộ nhớ đệm RTDB tránh tải lại 24 bản ghi mỗi phiên.
+      final memoriesFuture = readQuerySettled(
+        _dbRef
+            .child('houses/$houseId/memories')
+            .limitToLast(_widgetDiaryFetchLimit),
+        timeout: const Duration(seconds: 4),
+      );
+      final diaryFuture = readQuerySettled(
+        _dbRef
+            .child('houses/$houseId/diary')
+            .limitToLast(_widgetDiaryFetchLimit),
+        timeout: const Duration(seconds: 4),
+      );
 
       final snapshots = await Future.wait([memoriesFuture, diaryFuture]);
       final merged = <({int order, String url})>[
@@ -349,6 +352,8 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
         'name1': nameU1,
         'name2': nameU2,
         'daysText': '$days $unit',
+        'startDate': startDate,
+        'relationshipTimeZone': MarketService.instance.preferences.timeZoneId,
         'avatar1': avt1,
         'avatar2': avt2,
         'status1': status1Text,

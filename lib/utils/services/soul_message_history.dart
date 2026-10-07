@@ -76,6 +76,14 @@ class SoulMessageHistory {
         }
       }
     }
+    // Tin nằm ngoài trang đầy có thể chỉ vừa trôi về trang cũ.
+    // Tin vắng mặt trong phạm vi snapshot đã phủ là tin bị xóa.
+    _byId.removeWhere(
+      (id, message) =>
+          !incomingIds.contains(id) &&
+          (ordered.length < pageSize ||
+              compareMessages(message, ordered.first) >= 0),
+    );
     _initialized = true;
     _latestIds = incomingIds;
     _merge(ordered);
@@ -94,6 +102,17 @@ class SoulMessageHistory {
       before = SoulMessageCursor.fromMessage(ordered.first);
     }
     hasOlder = ordered.length == pageSize;
+  }
+
+  bool isLatest(String id) => _latestIds.contains(id);
+
+  void applyMessage(String id, Map<String, dynamic>? message) {
+    if (message == null) {
+      _byId.remove(id);
+      _latestIds.remove(id);
+    } else {
+      _byId[id] = {...message, 'id': id};
+    }
   }
 
   void _merge(List<Map<String, dynamic>> page) {

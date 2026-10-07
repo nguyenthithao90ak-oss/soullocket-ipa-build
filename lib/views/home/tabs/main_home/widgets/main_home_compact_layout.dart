@@ -256,11 +256,25 @@ extension _MainHomeCompactLayout on _MainHomeTabState {
       animation: Listenable.merge([
         _homeDistanceTextNotifier,
         _homeMapAlertNotifier,
+        _homeMapMyPointNotifier,
+        _homeMapPartnerPointNotifier,
       ]),
       builder: (context, _) => HomeMapMiniCard(
         title: context.tr('home_bncahaia_12dcb1'),
         distanceText: _homeDistanceTextNotifier.value,
         detailText: _homeMapAlertNotifier.value,
+        myPoint: _homeMapMyPointNotifier.value,
+        partnerPoint: _homeMapPartnerPointNotifier.value,
+        myAvatarUrl: _resolveAvatarForRole(_currentRole),
+        partnerAvatarUrl: _resolveAvatarForRole(_partnerRole),
+        myFemale: RoleUtils.isFemaleRole(
+          _currentRole,
+          genderSwapped: RoleUtils.readGenderSwapped(_houseSettings),
+        ),
+        partnerFemale: RoleUtils.isFemaleRole(
+          _partnerRole,
+          genderSwapped: RoleUtils.readGenderSwapped(_houseSettings),
+        ),
         onTap: () => unawaited(_handleMapCardTap()),
       ),
     );

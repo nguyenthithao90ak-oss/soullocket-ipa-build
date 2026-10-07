@@ -35,14 +35,15 @@ class _AuroraSupportDialogContentState
   final _descriptionController = TextEditingController();
 
   bool _isSubmitting = false;
-  String _selectedCategory = UiCopy.text('copy_f6e110ce45ed');
+  // Giá trị lưu ticket giữ nguyên để tương thích dữ liệu hỗ trợ cũ.
+  String _selectedCategory = '🔐 Không đăng nhập được';
 
-  final List<String> _categories = const [
-    '🔐 Không đăng nhập được',
-    '❓ Quên mật khẩu',
-    '💡 Góp ý tính năng',
-    '✨ Khác',
-  ];
+  static const _categories = <String, String>{
+    '🔐 Không đăng nhập được': 'copy_f6e110ce45ed',
+    '❓ Quên mật khẩu': 'copy_097caed241e0',
+    '💡 Góp ý tính năng': 'copy_d48cdeda6a94',
+    '✨ Khác': 'copy_77e3032ac091',
+  };
 
   @override
   void initState() {
@@ -84,13 +85,17 @@ class _AuroraSupportDialogContentState
     final user = FirebaseAuth.instance.currentUser;
     final effectiveUid =
         user?.uid ?? 'guest_${DateTime.now().millisecondsSinceEpoch}';
-    final effectiveName = name.isEmpty ? UiCopy.text('copy_8c19417f7b96') : name;
-    final effectiveEmail =
-        email.isEmpty ? (user?.email?.trim() ?? UiCopy.text('copy_8d5f260f89b5')) : email;
+    final effectiveName = name.isEmpty
+        ? UiCopy.text('copy_8c19417f7b96')
+        : name;
+    final effectiveEmail = email.isEmpty
+        ? (user?.email?.trim() ?? UiCopy.text('copy_8d5f260f89b5'))
+        : email;
 
     try {
-      final ticketRef =
-          FirebaseDatabase.instance.ref('support_tickets/$effectiveUid');
+      final ticketRef = FirebaseDatabase.instance.ref(
+        'support_tickets/$effectiveUid',
+      );
       final messageKey = ticketRef.child('messages').push().key;
 
       final ticketData = <String, dynamic>{
@@ -137,10 +142,7 @@ class _AuroraSupportDialogContentState
 
       if (!mounted) return;
       Navigator.pop(context);
-      SLNotice.showSuccess(
-        context,
-        context.tr('support_request_sent_message'),
-      );
+      SLNotice.showSuccess(context, context.tr('support_request_sent_message'));
     } catch (_) {
       if (!mounted) return;
       setState(() => _isSubmitting = false);
@@ -155,8 +157,10 @@ class _AuroraSupportDialogContentState
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final maxDialogHeight =
-        (mediaQuery.size.height - mediaQuery.viewInsets.vertical - 40)
-            .clamp(360.0, 680.0);
+        (mediaQuery.size.height - mediaQuery.viewInsets.vertical - 40).clamp(
+          360.0,
+          680.0,
+        );
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -174,10 +178,7 @@ class _AuroraSupportDialogContentState
                 offset: const Offset(0, 10),
               ),
             ],
-            border: Border.all(
-              color: const Color(0xFFFFEBF1),
-              width: 1.5,
-            ),
+            border: Border.all(color: const Color(0xFFFFEBF1), width: 1.5),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(28),
@@ -202,8 +203,9 @@ class _AuroraSupportDialogContentState
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFE9698B)
-                                  .withValues(alpha: 0.28),
+                              color: const Color(
+                                0xFFE9698B,
+                              ).withValues(alpha: 0.28),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -251,8 +253,10 @@ class _AuroraSupportDialogContentState
                         ),
                         splashRadius: 18,
                         padding: EdgeInsets.zero,
-                        constraints:
-                            const BoxConstraints(minWidth: 32, minHeight: 32),
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
                       ),
                     ],
                   ),
@@ -273,14 +277,19 @@ class _AuroraSupportDialogContentState
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: _categories.map((cat) {
-                      final selected = _selectedCategory == cat;
+                    children: _categories.entries.map((cat) {
+                      final selected = _selectedCategory == cat.key;
                       return GestureDetector(
-                        onTap: () => setState(() => _selectedCategory = cat),
+                        onTap: () =>
+                            setState(() => _selectedCategory = cat.key),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 160),
+                          constraints: const BoxConstraints(minHeight: 48),
+                          // Không ép chiều rộng chip: Wrap thích ứng với nhãn dài.
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 11, vertical: 6.5),
+                            horizontal: 11,
+                            vertical: 6.5,
+                          ),
                           decoration: BoxDecoration(
                             color: selected
                                 ? const Color(0xFFFFEEF3)
@@ -294,7 +303,7 @@ class _AuroraSupportDialogContentState
                             ),
                           ),
                           child: Text(
-                            cat,
+                            context.tr(cat.value),
                             style: TextStyle(
                               fontFamily: 'Quicksand',
                               fontSize: 11.5,
@@ -325,7 +334,9 @@ class _AuroraSupportDialogContentState
                   // Email Field
                   _buildSoftInput(
                     controller: _emailController,
-                    hintText: L10nService().translate('support_contact_email_label'),
+                    hintText: L10nService().translate(
+                      'support_contact_email_label',
+                    ),
                     icon: Icons.alternate_email_rounded,
                     keyboardType: TextInputType.emailAddress,
                   ),
@@ -335,7 +346,9 @@ class _AuroraSupportDialogContentState
                   // Description Field
                   _buildSoftInput(
                     controller: _descriptionController,
-                    hintText: L10nService().translate('support_description_hint'),
+                    hintText: L10nService().translate(
+                      'support_description_hint',
+                    ),
                     icon: Icons.chat_bubble_outline_rounded,
                     maxLines: 4,
                   ),
@@ -347,8 +360,8 @@ class _AuroraSupportDialogContentState
                     children: [
                       Expanded(
                         flex: 1,
-                        child: SizedBox(
-                          height: 48,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 48),
                           child: OutlinedButton(
                             onPressed: _isSubmitting
                                 ? null
@@ -378,11 +391,15 @@ class _AuroraSupportDialogContentState
                       const SizedBox(width: 12),
                       Expanded(
                         flex: 2,
-                        child: SizedBox(
-                          height: 48,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 48),
                           child: GestureDetector(
                             onTap: _isSubmitting ? null : _submit,
                             child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
+                              ),
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
                                   colors: [
@@ -395,8 +412,9 @@ class _AuroraSupportDialogContentState
                                 borderRadius: BorderRadius.circular(18),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFFE9698B)
-                                        .withValues(alpha: 0.28),
+                                    color: const Color(
+                                      0xFFE9698B,
+                                    ).withValues(alpha: 0.28),
                                     blurRadius: 14,
                                     offset: const Offset(0, 5),
                                   ),
@@ -411,7 +429,8 @@ class _AuroraSupportDialogContentState
                                           strokeWidth: 2.2,
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
-                                                  Colors.white),
+                                                Colors.white,
+                                              ),
                                         ),
                                       )
                                     : Row(
@@ -424,15 +443,18 @@ class _AuroraSupportDialogContentState
                                             color: Colors.white,
                                           ),
                                           const SizedBox(width: 7),
-                                          Text(
-                                            L10nService()
-                                                .translate('Gửi yêu cầu'),
-                                            style: const TextStyle(
-                                              fontFamily: 'Quicksand',
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w900,
-                                              color: Colors.white,
-                                              letterSpacing: 0.2,
+                                          Flexible(
+                                            child: Text(
+                                              L10nService().translate(
+                                                'Gửi yêu cầu',
+                                              ),
+                                              style: const TextStyle(
+                                                fontFamily: 'Quicksand',
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w900,
+                                                color: Colors.white,
+                                                letterSpacing: 0.2,
+                                              ),
                                             ),
                                           ),
                                         ],
@@ -464,10 +486,7 @@ class _AuroraSupportDialogContentState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(0xFFF2DFE4),
-          width: 1.15,
-        ),
+        border: Border.all(color: const Color(0xFFF2DFE4), width: 1.15),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFFC7728B).withValues(alpha: 0.04),
@@ -505,23 +524,18 @@ class _AuroraSupportDialogContentState
                 color: const Color(0xFFFFF0F3),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(
-                icon,
-                size: 16,
-                color: const Color(0xFFE65F83),
-              ),
+              child: Icon(icon, size: 16, color: const Color(0xFFE65F83)),
             ),
           ),
-          prefixIconConstraints:
-              const BoxConstraints.tightFor(width: 46, height: 46),
+          prefixIconConstraints: const BoxConstraints.tightFor(
+            width: 46,
+            height: 46,
+          ),
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
-            borderSide: const BorderSide(
-              color: Color(0xFFEA7B98),
-              width: 1.5,
-            ),
+            borderSide: const BorderSide(color: Color(0xFFEA7B98), width: 1.5),
           ),
           contentPadding: maxLines > 1
               ? const EdgeInsets.fromLTRB(14, 13, 14, 13)

@@ -1,5 +1,5 @@
 /* Widget extension: cùng bản dịch với assets/i18n/th.json. */
-"p3_health_days_remaining" = "days remaining";
+"p3_health_days_remaining" = "วันเหลือ";
 "sleep_state_unknown" = "ยังไม่มีข้อมูล";
 "sleep_state_disabled" = "ยังไม่ได้เปิดการติดตามการนอน";
 "sleep_state_estimated" = "อาจกำลังพัก";
@@ -16,7 +16,7 @@
 "sleep_sync_hint" = "เปิดแอปเพื่ออัปเดต";
 "sleep_duration" = "{hours} ชม. {minutes} นาที";
 "comm_ngy_41ec10" = "วัน";
-"core_presence_online" = "ใช้งานอยู่";
+"core_presence_online" = "กำลังใช้งาน";
 "home_angoffline_bbb3d5" = "ออฟไลน์แล้ว";
 "home_cpi_d525b0" = "คู่รัก";
 "home_knim_4f6aeb" = "เฉลิมฉลอง";
@@ -29,7 +29,7 @@
 "p3_sleep_sleeping" = "Sleeping";
 "p3_sleep_title" = "Couple Sleep ☁️✨";
 "p7_event_widget_desc" = "Show an upcoming event and the number of remaining days.";
-"p8_events_days_remaining_label" = "DAYS TO GO";
+"p8_events_days_remaining_label" = "วันที่เหลือ";
 "p8_events_title" = "Your shared events";
 "settings_widget_desc_mobile" = "สร้างวิดเจ็ตเพื่อนับวันแห่งความรัก รูปภาพวันครบรอบ รูปแบบหัวใจ สี เค้าโครง และปักหมุดไว้ที่หน้าจอหลักอย่างรวดเร็ว";
 "util_health_enable_cycle_tracking" = "กรุณาเปิดใช้งานคุณลักษณะนี้\nติดตามรอบ";

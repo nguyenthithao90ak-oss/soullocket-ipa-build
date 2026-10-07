@@ -32,6 +32,8 @@ import '../../../../../utils/services/purchase_service.dart';
 import '../../../../../utils/services/security_service.dart';
 import '../../../../../utils/services/storage/storage_service.dart';
 import '../utils/diary_memory_upload_commit.dart';
+import '../utils/diary_memory_older_pages.dart';
+import '../../../../../utils/services/core/rtdb_settled_read.dart';
 import 'diary_feed_controller.dart';
 import 'diary_guard_controller.dart';
 import '../../../../ui_prefs.dart';
@@ -94,12 +96,15 @@ class DiaryMemoryController extends ChangeNotifier {
   bool _isSelectionMode = false;
   final Map<String, Map<String, dynamic>> _selectedMemories =
       <String, Map<String, dynamic>>{};
-  int? _memoryVisibleLimit;
+  // Listener live giữ cố định N bản mới nhất; "tải thêm" đọc từng trang cũ hơn riêng.
+  final DiaryMemoryOlderPages _olderMemoryPages = DiaryMemoryOlderPages();
+  int _olderMemoryPagesGeneration = 0;
   bool _isLoadingMoreMemories = false;
   PreparedDiaryMemoryFeed? _preparedMemoryFeed;
   Object? _preparedMemorySource;
   String _preparedMemorySourceKind = '';
   int _preparedMemoryLimit = 0;
+  int _preparedOlderVersion = -1;
   String _preparedMemoryHighlightKey = '';
   Object? _lastCachedLiveMemoriesSource;
   String? _liveMemoryTsHouseId;
@@ -131,8 +136,6 @@ class DiaryMemoryController extends ChangeNotifier {
 
   int get _memoryCacheLimit =>
       kIsWeb ? _webMemoryCacheLimit : _appMemoryCacheLimit;
-
-  int get _memoryQueryLimit => _memoryVisibleLimit ?? _memoryCacheLimit;
 
   int get _memoryLoadMoreStep => AppConfig.albumPageSize;
 
@@ -481,42 +484,71 @@ class DiaryMemoryController extends ChangeNotifier {
   }
 
   void _resetMemoriesPagination() {
-    _memoryVisibleLimit = _memoryCacheLimit;
     _isLoadingMoreMemories = false;
+    _olderMemoryPagesGeneration++;
+    _olderMemoryPages.reset();
   }
 
   void loadMoreMemories() {
-    if (_isLoadingMoreMemories) {
+    final houseId = _cachedHouseIdForMemories;
+    final cursor = _olderMemoryPages.nextCursor;
+    if (_isLoadingMoreMemories ||
+        houseId == null ||
+        cursor == null ||
+        !_olderMemoryPages.canLoadMore(_memoryCacheLimit)) {
       return;
     }
     _isLoadingMoreMemories = true;
-    _memoryVisibleLimit = _memoryQueryLimit + _memoryLoadMoreStep;
-    // ⚡ Không reset stream cache — giữ dữ liệu cũ làm fallback
-    // trong khi chờ stream mới gửi về, tránh flash trắng
-    _cachedHouseIdForMemories = null;
-    _memoriesQuery = null;
-    _memoriesStream = null;
-    _memoriesCacheFuture = null;
-    _memoriesCacheHouseId = null;
-    // Giữ _preparedMemoryFeed để UI không bị mất dữ liệu tạm thời
     notifyListeners();
+    unawaited(
+      _loadOlderMemoriesPage(houseId, cursor, _olderMemoryPagesGeneration),
+    );
+  }
+
+  /// Chỉ đọc trang cũ hơn bản cũ nhất đang có. Trước đây tăng `limitToLast` của
+  /// listener live nên mỗi lần tải thêm server gửi lại cả danh sách (vài trăm KB).
+  Future<void> _loadOlderMemoriesPage(
+    String houseId,
+    MemoryOrderCursor cursor,
+    int generation,
+  ) async {
+    bool inScope() =>
+        !_isDisposed &&
+        generation == _olderMemoryPagesGeneration &&
+        _cachedHouseIdForMemories == houseId;
+    try {
+      final snapshot = await readQuerySettled(
+        _dbRef
+            .child('houses/$houseId/memories')
+            .orderByChild('ts')
+            .endBefore(cursor.value, key: cursor.key)
+            .limitToLast(_memoryLoadMoreStep),
+        settle: const Duration(milliseconds: 400),
+        timeout: const Duration(seconds: 12),
+      );
+      if (!inScope()) return;
+      _olderMemoryPages.addPage([
+        for (final child in snapshot.children)
+          if (child.key != null) MapEntry(child.key!, child.value),
+      ], pageSize: _memoryLoadMoreStep);
+    } catch (e) {
+      debugPrint(
+        '[DiaryMemory] load older memories failed: ${AppErrorMapper.resolve(e).message}',
+      );
+    } finally {
+      if (inScope()) {
+        _isLoadingMoreMemories = false;
+        _notifyIfActive();
+      }
+    }
   }
 
   void finishLoadingMoreIfNeeded(
     bool waitingForLive, {
     required void Function(VoidCallback callback) schedulePostFrame,
   }) {
-    if (!_isLoadingMoreMemories || waitingForLive) {
-      return;
-    }
-
-    schedulePostFrame(() {
-      if (!_isLoadingMoreMemories) {
-        return;
-      }
-      _isLoadingMoreMemories = false;
-      notifyListeners();
-    });
+    // Trạng thái tải thêm kết thúc trong _loadOlderMemoriesPage khi trang cũ đọc xong;
+    // listener live không còn đổi query nên không chờ sự kiện live ở đây.
   }
 
   void _resetMemoriesStreamCache() {
@@ -554,8 +586,17 @@ class DiaryMemoryController extends ChangeNotifier {
       _memoriesQuery = _dbRef
           .child('houses/$normalizedHouseId/memories')
           .orderByChild('ts')
-          .limitToLast(_memoryQueryLimit);
-      _memoriesStream = _memoriesQuery!.onValue;
+          .limitToLast(_memoryCacheLimit);
+      _memoriesStream = _memoriesQuery!.onValue.map((event) {
+        if (_cachedHouseIdForMemories == normalizedHouseId) {
+          // Thứ tự con theo query (cũ → mới) để biết mốc tải trang cũ.
+          _olderMemoryPages.applyLiveWindow([
+            for (final child in event.snapshot.children)
+              if (child.key != null) MapEntry(child.key!, child.value),
+          ], windowLimit: _memoryCacheLimit);
+        }
+        return event;
+      });
     }
     return _memoriesStream;
   }
@@ -654,8 +695,8 @@ class DiaryMemoryController extends ChangeNotifier {
         );
       }
     });
-    final queryLimit = _memoryQueryLimit;
-    // Đổi nhà hoặc đổi cửa sổ truy vấn (tải thêm) chỉ lập mốc mới, không so sánh.
+    final queryLimit = _memoryCacheLimit;
+    // Đổi nhà hoặc đổi cửa sổ truy vấn chỉ lập mốc mới, không so sánh.
     final previous =
         _liveMemoryTsHouseId == houseId && _liveMemoryTsLimit == queryLimit
         ? _liveMemoryTs
@@ -926,7 +967,8 @@ class DiaryMemoryController extends ChangeNotifier {
   }) {
     final source = useLiveSource ? liveSource : cacheSource;
     final sourceKind = useLiveSource ? 'live' : 'cache';
-    final limit = _memoryQueryLimit;
+    final limit = _memoryCacheLimit;
+    final olderVersion = useLiveSource ? _olderMemoryPages.version : -1;
     final highlightKey =
         '${_normalizeHouseId(houseId)}|${startDate?.millisecondsSinceEpoch ?? 0}|$relationshipMode';
 
@@ -934,6 +976,7 @@ class DiaryMemoryController extends ChangeNotifier {
         identical(_preparedMemorySource, source) &&
         _preparedMemorySourceKind == sourceKind &&
         _preparedMemoryLimit == limit &&
+        _preparedOlderVersion == olderVersion &&
         _preparedMemoryHighlightKey == highlightKey) {
       return _preparedMemoryFeed!;
     }
@@ -944,8 +987,23 @@ class DiaryMemoryController extends ChangeNotifier {
       useLiveSource: useLiveSource,
       limit: limit,
     );
+    final liveCount = photos.length;
 
     final normalizedHouseId = _normalizeHouseId(houseId);
+    final olderItems = _olderMemoryPages.items;
+    if (useLiveSource && olderItems.isNotEmpty) {
+      // Nối các trang cũ đã tải sau cửa sổ live; bản có trong live luôn được ưu tiên.
+      final liveIds = {for (final photo in photos) photo['id']};
+      olderItems.forEach((id, value) {
+        if (liveIds.contains(id)) return;
+        final item = Map<String, dynamic>.from(value)
+          ..['id'] = id
+          ..['houseId'] = normalizedHouseId;
+        _normalizeMemoryPhotoUrl(item);
+        photos.add(item);
+      });
+      photos.sort((a, b) => _readCacheTs(b).compareTo(_readCacheTs(a)));
+    }
     if (useLiveSource &&
         source is Map &&
         normalizedHouseId != null &&
@@ -966,13 +1024,18 @@ class DiaryMemoryController extends ChangeNotifier {
           cacheSource is List &&
           (isOffline || waitingForLive),
       canLoadMore:
-          !isOffline && (photos.length >= limit || _isLoadingMoreMemories),
+          !isOffline &&
+          (_isLoadingMoreMemories ||
+              (useLiveSource &&
+                  liveCount >= limit &&
+                  _olderMemoryPages.canLoadMore(limit))),
     );
 
     _preparedMemoryFeed = prepared;
     _preparedMemorySource = source;
     _preparedMemorySourceKind = sourceKind;
     _preparedMemoryLimit = limit;
+    _preparedOlderVersion = olderVersion;
     _preparedMemoryHighlightKey = highlightKey;
     return prepared;
   }
@@ -988,6 +1051,7 @@ class DiaryMemoryController extends ChangeNotifier {
     }
 
     final updates = <String, dynamic>{};
+    final olderPatches = <String, Map<String, Object?>>{};
     final dateKey = DateFormat('yyyy-MM-dd').format(selectedDate);
     final editedAt = DateTime.now().millisecondsSinceEpoch;
 
@@ -1017,6 +1081,13 @@ class DiaryMemoryController extends ChangeNotifier {
       updates['$path/date'] = nextTs;
       updates['$path/dateKey'] = dateKey;
       updates['$path/albumDateEditedAt'] = editedAt;
+      olderPatches[memoryId] = {
+        'ts': nextTs,
+        'timestamp': nextTs,
+        'date': nextTs,
+        'dateKey': dateKey,
+        'albumDateEditedAt': editedAt,
+      };
 
       photo['ts'] = nextTs;
       photo['timestamp'] = nextTs;
@@ -1029,6 +1100,8 @@ class DiaryMemoryController extends ChangeNotifier {
     }
 
     await _dbRef.update(updates);
+    // Ảnh ở trang cũ không có listener: áp ngày mới ngay trên máy này.
+    olderPatches.forEach(_olderMemoryPages.patch);
     _clearPreparedMemoryFeedCache();
     await OfflineCacheService.saveCache('memories_$normalizedHouseId', null);
     notifyListeners();
@@ -1152,6 +1225,7 @@ class DiaryMemoryController extends ChangeNotifier {
             : const <dynamic>[],
       );
 
+      _olderMemoryPages.forget(_selectedMemories.keys.toList());
       _exitSelectionMode(notify: false);
       if (!context.mounted) {
         return;
@@ -1232,6 +1306,9 @@ class DiaryMemoryController extends ChangeNotifier {
                 ServerValue.increment(-deletedVideoBytes);
           }
           await _dbRef.update(updates);
+          _olderMemoryPages.forget(
+            deletedItems.map((item) => item['memoryId'].toString()),
+          );
           await _logDeletedMemoriesToActivityHistory(
             houseId: houseId,
             deletedItems: deletedItems,
@@ -1474,6 +1551,7 @@ class DiaryMemoryController extends ChangeNotifier {
         houseId: houseId,
         memoryIds: [memoryId],
       );
+      _olderMemoryPages.forget([memoryId]);
       await _logDeletedMemoriesToActivityHistory(
         houseId: houseId,
         deletedItems: result['deletedItems'] is List
@@ -1530,6 +1608,7 @@ class DiaryMemoryController extends ChangeNotifier {
                 ServerValue.increment(-imageBytes - thumbnailBytes);
           }
           await _dbRef.update(singleDeleteUpdates);
+          _olderMemoryPages.forget([memoryId]);
           await _logDeletedMemoriesToActivityHistory(
             houseId: houseId,
             deletedItems: [
@@ -1785,11 +1864,16 @@ class DiaryMemoryController extends ChangeNotifier {
           totalVideoBytes >= videoStorageCap) {
         final imgCapMb = vipAccess.totalMemoryStorageCapMb;
         final vidCapMb = vipAccess.totalMemoryVideoCapMb;
+        // Gói không có kho video chỉ báo kho ảnh, tránh hiện "video 0MB".
         showSnackBar(
-          L10nService().format('diary_storage_full_message', {
-                'image': imgCapMb,
-                'video': vidCapMb,
-              }) +
+          (vidCapMb <= 0
+                  ? L10nService().format('memory_free_storage_full', {
+                      'image': imgCapMb,
+                    })
+                  : L10nService().format('diary_storage_full_message', {
+                      'image': imgCapMb,
+                      'video': vidCapMb,
+                    })) +
               (!vipAccess.isVip && AppConfig.isPurchaseEnabled
                   ? context.tr('diary_storage_upgrade_hint')
                   : ''),
@@ -1818,17 +1902,28 @@ class DiaryMemoryController extends ChangeNotifier {
       if (!isRetry &&
           imageUploadedToday >= imageLimitBytes &&
           videoUploadedToday >= videoLimitBytes) {
-        final imageLimitMb = (imageLimitBytes / (1024 * 1024)).toStringAsFixed(
-          0,
-        );
-        final videoLimitMb = (videoLimitBytes / (1024 * 1024)).toStringAsFixed(
-          0,
-        );
+        // Hạn mức lẻ như 2,5 MB không được làm tròn thành "3"; số nguyên giữ dạng cũ.
+        String formatMb(int bytes) {
+          final mb = bytes / (1024 * 1024);
+          if (mb == mb.roundToDouble()) return mb.toStringAsFixed(0);
+          try {
+            return NumberFormat.decimalPattern(
+              Localizations.localeOf(context).toString(),
+            ).format(mb);
+          } catch (_) {
+            return mb.toStringAsFixed(1);
+          }
+        }
+
+        final imageLimitMb = formatMb(imageLimitBytes);
+        final videoLimitMb = formatMb(videoLimitBytes);
         showSnackBar(
           vipAccess.isVip
               ? L10nScope.of(context).format('ui_home_you_have_used_up_all_your_upload_955ced', {'value1': imageLimitMb, 'value2': videoLimitMb})
               : AppConfig.isPurchaseEnabled
-              ? L10nScope.of(context).format('ui_home_accounts_typically_only_upload_value1_mb_photos_c94b49', {'value1': imageLimitMb, 'value2': videoLimitMb})
+              ? videoLimitBytes <= 0
+                    ? L10nService().format('memory_free_daily_photo_limit', {'value1': imageLimitMb})
+                    : L10nScope.of(context).format('ui_home_accounts_typically_only_upload_value1_mb_photos_c94b49', {'value1': imageLimitMb, 'value2': videoLimitMb})
               : context.tr('ui_home_you_have_used_up_all_your_upload_44821d'),
           backgroundColor: const Color(0xFFE53935),
         );
@@ -1838,14 +1933,35 @@ class DiaryMemoryController extends ChangeNotifier {
       // Cho chọn ảnh/video thoải mái — giới hạn bằng dung lượng, không giới hạn số lượng
       final limitToPick = StorageService.clampImagePickLimit(99);
 
+      // Gói thường không tải video: trình chọn chỉ hiện ảnh. Video lọt vào từ
+      // hàng chờ cũ/chia sẻ được bỏ khỏi lượt tải và khỏi hàng chờ.
+      final canUploadVideo = vipAccess.dailyVideoUploadLimitBytes > 0;
       final selected =
-          presetImages ?? await _storageService.pickMedia(limit: limitToPick);
+          presetImages ??
+          (canUploadVideo
+              ? await _storageService.pickMedia(limit: limitToPick)
+              : await _storageService.pickImages(limit: limitToPick));
       if (selected.isEmpty || !scopeIsCurrent()) return;
       final pending = await _buildPendingUploadFiles();
-      final images = <String, XFile>{
+      final candidates = <String, XFile>{
         for (final file in pending) file.path: file,
         for (final file in selected) file.path: file,
       }.values.toList();
+      bool isVideo(XFile file) => _storageService
+          .detectContentType(file.name.isNotEmpty ? file.name : file.path)
+          .startsWith('video/');
+      final blockedVideos = canUploadVideo
+          ? const <XFile>[]
+          : candidates.where(isVideo).toList();
+      final images = candidates.where((f) => !blockedVideos.contains(f)).toList();
+      if (blockedVideos.isNotEmpty) {
+        await _removePendingUploadedImages(blockedVideos);
+        if (!context.mounted || !scopeIsCurrent()) return;
+        showSnackBar(
+          L10nService().translate('memory_video_vip_only'),
+          backgroundColor: const Color(0xFFE53935),
+        );
+      }
       if (images.isEmpty || !context.mounted || !scopeIsCurrent()) {
         return;
       }

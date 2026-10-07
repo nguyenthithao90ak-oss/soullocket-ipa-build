@@ -1,5 +1,5 @@
 /* Widget extension: cùng bản dịch với assets/i18n/zh-TW.json. */
-"p3_health_days_remaining" = "days remaining";
+"p3_health_days_remaining" = "天後";
 "sleep_state_unknown" = "尚無資料";
 "sleep_state_disabled" = "睡眠追蹤尚未開啟";
 "sleep_state_estimated" = "可能在休息";
@@ -16,7 +16,7 @@
 "sleep_sync_hint" = "開啟應用程式更新";
 "sleep_duration" = "{hours}小時{minutes}分鐘";
 "comm_ngy_41ec10" = "天";
-"core_presence_online" = "活躍";
+"core_presence_online" = "目前在線";
 "home_angoffline_bbb3d5" = "現已離線";
 "home_cpi_d525b0" = "情侶";
 "home_knim_4f6aeb" = "慶祝";
@@ -29,7 +29,7 @@
 "p3_sleep_sleeping" = "Sleeping";
 "p3_sleep_title" = "Couple Sleep ☁️✨";
 "p7_event_widget_desc" = "Show an upcoming event and the number of remaining days.";
-"p8_events_days_remaining_label" = "DAYS TO GO";
+"p8_events_days_remaining_label" = "剩餘天數";
 "p8_events_title" = "Your shared events";
 "settings_widget_desc_mobile" = "建立主畫面小工具,顯示戀愛天數、回憶照片、愛心樣式、顏色、版面,並快速固定到主畫面。";
 "util_health_enable_cycle_tracking" = "請啟用該功能\n週期追蹤。";

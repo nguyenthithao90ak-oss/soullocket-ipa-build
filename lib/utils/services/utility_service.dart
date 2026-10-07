@@ -1,4 +1,3 @@
-import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:flutter/foundation.dart'
     show kDebugMode, kIsWeb, TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
@@ -227,7 +226,7 @@ class UtilityService {
     ),
     UtilityApp(
       id: 'soul_events',
-      title: UiCopy.text('copy_fc725e371ce1'),
+      title: 'copy_fc725e371ce1',
       icon: Icons.event_note_rounded,
       colors: [const Color(0xFFFF4D94), const Color(0xFFFF8C42)],
     ),
@@ -289,7 +288,7 @@ class UtilityService {
     ),
     UtilityApp(
       id: 'surprise_maker',
-      title: UiCopy.text('copy_acc31b27dfe9'),
+      title: 'copy_acc31b27dfe9',
       icon: Icons.favorite_rounded,
       colors: [const Color(0xFFFF758C), const Color(0xFFFF7EB3)],
     ),
@@ -350,7 +349,7 @@ class UtilityService {
     ),
     UtilityApp(
       id: 'sleep_tracker',
-      title: UiCopy.text('copy_e0f3f270aa01'),
+      title: 'copy_e0f3f270aa01',
       icon: Icons.bedtime_rounded,
       colors: [const Color(0xFF5E35B1), const Color(0xFF3949AB)],
     ),

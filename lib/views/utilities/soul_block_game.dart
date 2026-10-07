@@ -247,7 +247,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     _sfxPlayers = List<AudioPlayer>.generate(4, (int index) => AudioPlayer());
     // Mỗi màn chơi có ID riêng, tránh dispose màn cũ đóng player màn mới.
     _bgmPlayer = AudioPlayer();
-
     _playPulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 980),
@@ -539,8 +538,14 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
     _showFloatingMessage(
       automatic
-          ? L10nScope.of(context).format('ui_utilities_automatically_convert_value1_block_b6e0e4', {'value1': replacementCount})
-          : L10nScope.of(context).format('ui_utilities_changed_value1_block_2f374a', {'value1': replacementCount}),
+          ? L10nScope.of(context).format(
+              'ui_utilities_automatically_convert_value1_block_b6e0e4',
+              {'value1': replacementCount},
+            )
+          : L10nScope.of(context).format(
+              'ui_utilities_changed_value1_block_2f374a',
+              {'value1': replacementCount},
+            ),
       color: automatic ? const Color(0xFF7AE7FF) : const Color(0xFFFFD166),
     );
     return true;

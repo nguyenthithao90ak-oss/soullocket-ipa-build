@@ -16,9 +16,14 @@ class AppReferralService {
   static const _pendingKey = 'app_referral_pending_v1';
   static const _installationKey = 'app_referral_installation_v1';
   static const _nativeReadKey = 'app_referral_native_read_v1';
+  static const _profileCachePrefix = 'app_referral_profile_v1_';
+  static const _profileCacheMaxAge = Duration(hours: 24);
+  static const _profileRefreshCooldown = Duration(minutes: 5);
   SharedPreferences? _prefs;
   StreamSubscription<User?>? _authSubscription;
   Future<void>? _initializing;
+  final Map<String, Future<AppReferralProfile>> _profileLoads = {};
+  final Map<String, DateTime> _profileRefreshAttempts = {};
   bool _claiming = false;
   bool _disposed = false;
 
@@ -41,7 +46,7 @@ class AppReferralService {
         if (code != null) await _rememberCode(code);
       } else if (defaultTargetPlatform == TargetPlatform.android &&
           _prefs!.getBool(_nativeReadKey) != true) {
-        await _readPlayReferrer();
+        unawaited(_readPlayReferrer());
       }
       if (_disposed) return;
       _authSubscription = FirebaseAuth.instance.authStateChanges().listen((_) {
@@ -89,6 +94,7 @@ class AppReferralService {
         }
       }
       await _prefs!.setBool(_nativeReadKey, true);
+      unawaited(_claimPending());
     } catch (_) {
       // Play Store đang cập nhật/mất kết nối: thử lại lần mở app sau.
     }
@@ -138,10 +144,67 @@ class AppReferralService {
     }
   }
 
-  Future<AppReferralProfile> loadProfile() async {
-    await initialize();
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) throw StateError('sign_in_required');
+  String _profileCacheKey(String uid) => '$_profileCachePrefix$uid';
+
+  AppReferralProfile? _readCachedProfile(String uid) {
+    final raw = _prefs?.getString(_profileCacheKey(uid));
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final decoded = Map<String, dynamic>.from(jsonDecode(raw) as Map);
+      if (decoded['uid'] != uid) return null;
+      final cachedAt = (decoded['cachedAt'] as num?)?.toInt();
+      if (cachedAt == null) return null;
+      final age = DateTime.now().difference(
+        DateTime.fromMillisecondsSinceEpoch(cachedAt),
+      );
+      if (age < Duration.zero || age > _profileCacheMaxAge) return null;
+      return AppReferralProfile.fromJson(
+        Map<String, dynamic>.from(decoded['profile'] as Map),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _saveProfile(AppReferralProfile profile, String uid) async {
+    final prefs = _prefs;
+    if (prefs == null || FirebaseAuth.instance.currentUser?.uid != uid) {
+      return;
+    }
+    await prefs.setString(
+      _profileCacheKey(uid),
+      jsonEncode({
+        'uid': uid,
+        'cachedAt': DateTime.now().millisecondsSinceEpoch,
+        'profile': {
+          'code': profile.code,
+          'playInstalls': profile.playInstalls,
+          'joined': profile.joined,
+          'storeVisits': profile.storeVisits,
+          'rewardStatus': profile.rewardsEnabled
+              ? 'one_day_pro_per_join'
+              : 'pending',
+          'rewardDaysPerJoin': profile.rewardDaysPerJoin,
+          'rewardedReferrals': profile.rewardedReferrals,
+          'pendingRewards': profile.pendingRewards,
+        },
+      }),
+    );
+  }
+
+  Future<AppReferralProfile> _loadFreshProfile(String uid) async {
+    final pending = _profileLoads[uid];
+    if (pending != null) return pending;
+    final request = _fetchProfile(uid);
+    _profileLoads[uid] = request;
+    try {
+      return await request;
+    } finally {
+      if (identical(_profileLoads[uid], request)) _profileLoads.remove(uid);
+    }
+  }
+
+  Future<AppReferralProfile> _fetchProfile(String uid) async {
     final result = await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
       'getAppReferralProfile',
       timeout: const Duration(seconds: 30),
@@ -150,7 +213,48 @@ class AppReferralService {
     if (_disposed || FirebaseAuth.instance.currentUser?.uid != uid) {
       throw StateError('account_changed');
     }
-    return AppReferralProfile.fromJson(result.data);
+    final profile = AppReferralProfile.fromJson(result.data);
+    await _saveProfile(profile, uid);
+    return profile;
+  }
+
+  void _scheduleProfileRefresh(String uid, DateTime cachedAt) {
+    final now = DateTime.now();
+    if (now.difference(cachedAt) < const Duration(minutes: 10)) return;
+    final lastAttempt = _profileRefreshAttempts[uid];
+    if (lastAttempt != null &&
+        now.difference(lastAttempt) < _profileRefreshCooldown) {
+      return;
+    }
+    _profileRefreshAttempts[uid] = now;
+    unawaited(
+      _loadFreshProfile(
+        uid,
+      ).then<void>((_) {}, onError: (Object _, StackTrace _) {}),
+    );
+  }
+
+  Future<AppReferralProfile> loadProfile({bool forceRefresh = false}) async {
+    await initialize();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) throw StateError('sign_in_required');
+    if (!forceRefresh) {
+      final cached = _readCachedProfile(uid);
+      if (cached != null) {
+        final raw = _prefs?.getString(_profileCacheKey(uid));
+        final cachedAt = raw == null
+            ? null
+            : (jsonDecode(raw) as Map)['cachedAt'];
+        if (cachedAt is num) {
+          _scheduleProfileRefresh(
+            uid,
+            DateTime.fromMillisecondsSinceEpoch(cachedAt.toInt()),
+          );
+        }
+        return cached;
+      }
+    }
+    return _loadFreshProfile(uid);
   }
 
   Future<String?> _claim(Map<String, dynamic> data, String uid) async {

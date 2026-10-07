@@ -20,9 +20,6 @@ import '../../../utils/services/house_service.dart';
 import '../../../utils/services/utility_service.dart';
 import '../../../utils/services/offline_cache_service.dart';
 import '../../../core/sl_theme.dart';
-import '../../utilities/local_album_screen.dart';
-import 'package:soullocket_app/core/sl_route.dart';
-import 'package:soullocket_app/views/home/tabs/settings/settings_links_manager_screen.dart';
 import 'package:soullocket_app/views/utilities/utility_launcher.dart';
 // import '../../utils/sl_notice.dart';
 
@@ -253,44 +250,33 @@ class _UtilitiesTabState extends State<UtilitiesTab>
   static DateTime? _lastUtilityAdTime;
 
   Future<void> _navigateToApp(String id) async {
-    if (!UtilityService.isUtilityAllowed(id, _relationshipMode)) {
-      final blockedMessage = UtilityService.blockedMessageForMode(
-        id,
-        _relationshipMode,
-      );
-      if (blockedMessage.isNotEmpty) {
-        SLNotice.showInfo(context, blockedMessage);
-        return;
-      }
-      SLNotice.showInfo(context, context.tr('home_tinchnychd_6061d1'));
-      return;
-    }
-    // LocalAlbumScreen khong can houseId
-    if (id == 'local_album') {
-      Navigator.push(
-        context,
-        SLRoute(builder: (_) => const LocalAlbumScreen()),
-      );
-      return;
-    }
-    final houseId = _houseId;
-    if (houseId == null || houseId.isEmpty) {
-      SLNotice.showInfo(context, context.tr('home_angtidliun_f42fcd'));
-      return;
-    }
+    await UtilityLauncher.open(
+      context,
+      id: id,
+      houseId: _houseId,
+      myName: _myName,
+      relationshipMode: _relationshipMode,
+      beforeOpen: () => _prepareUtilityOpen(id),
+    );
+  }
 
-    if (id == 'couple_connect') {
-      Navigator.push(
-        context,
-        SLRoute(builder: (_) => SettingsLinksManagerScreen(houseId: houseId)),
-      );
-      return;
-    }
+  Future<bool> _prepareUtilityOpen(String id) async {
+    if (!mounted) return false;
+
+    final houseId = _houseId?.trim();
+    final uid = _auth.currentUser?.uid;
+    if (houseId == null || houseId.isEmpty || uid == null) return false;
+    bool isCurrentScope() =>
+        mounted && _auth.currentUser?.uid == uid && _houseId?.trim() == houseId;
 
     final isPro = await _adMob.isProUser();
+    if (!isCurrentScope()) return false;
     if (!isPro && id != 'store') {
       final now = DateTime.now();
-      final prefs = await SharedPreferences.getInstance();
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
+      if (!isCurrentScope()) return false;
 
       // 1. Tăng bộ đếm click
       int tapCount = (prefs.getInt('utility_click_tap_count') ?? 0) + 1;
@@ -366,27 +352,33 @@ class _UtilitiesTabState extends State<UtilitiesTab>
       }
     }
 
-    if (!mounted) {
-      return;
-    }
+    if (!isCurrentScope()) return false;
 
-    await _utilityService.markAppAsRecentlyUsed(id);
-    final updatedRecentApps = await _utilityService.getRecentApps();
-    if (mounted && !_sameAppIds(_recentApps, updatedRecentApps)) {
-      setState(() {
-        _recentApps = updatedRecentApps;
-      });
-    }
+    // Không giữ route lại vì hai lần ghi prefs/đọc danh sách gần đây. Các
+    // thao tác này chỉ cập nhật hàng "Gần đây" sau khi màn hình đã mở.
+    unawaited(_persistRecentUtility(id, uid, houseId));
 
     unawaited(_checkAndShowAppReviewForUtility());
+    return isCurrentScope();
+  }
 
-    if (!mounted) return;
-    await UtilityLauncher.openScreen(
-      context,
-      id: id,
-      houseId: houseId,
-      myName: _myName,
-      relationshipMode: _relationshipMode,
-    );
+  Future<void> _persistRecentUtility(
+    String id,
+    String expectedUid,
+    String expectedHouseId,
+  ) async {
+    try {
+      await _utilityService.markAppAsRecentlyUsed(id);
+      final updatedRecentApps = await _utilityService.getRecentApps();
+      if (!mounted ||
+          _auth.currentUser?.uid != expectedUid ||
+          _houseId?.trim() != expectedHouseId ||
+          _sameAppIds(_recentApps, updatedRecentApps)) {
+        return;
+      }
+      setState(() => _recentApps = updatedRecentApps);
+    } catch (error) {
+      debugPrint('[Utilities] Không lưu được tiện ích gần đây: $error');
+    }
   }
 }

@@ -1,5 +1,5 @@
 /* Widget extension: cùng bản dịch với assets/i18n/id.json. */
-"p3_health_days_remaining" = "days remaining";
+"p3_health_days_remaining" = "hari tersisa";
 "sleep_state_unknown" = "Belum ada data";
 "sleep_state_disabled" = "Pelacakan tidur belum aktif";
 "sleep_state_estimated" = "Mungkin beristirahat";
@@ -16,7 +16,7 @@
 "sleep_sync_hint" = "Buka aplikasi untuk memperbarui";
 "sleep_duration" = "{hours} j {minutes} m";
 "comm_ngy_41ec10" = "hari";
-"core_presence_online" = "Aktif";
+"core_presence_online" = "Sedang aktif";
 "home_angoffline_bbb3d5" = "Offline sekarang";
 "home_cpi_d525b0" = "Pasangan";
 "home_knim_4f6aeb" = "Rayakan";
@@ -29,7 +29,7 @@
 "p3_sleep_sleeping" = "Sleeping";
 "p3_sleep_title" = "Couple Sleep ☁️✨";
 "p7_event_widget_desc" = "Show an upcoming event and the number of remaining days.";
-"p8_events_days_remaining_label" = "DAYS TO GO";
+"p8_events_days_remaining_label" = "HARI TERSISA";
 "p8_events_title" = "Your shared events";
 "settings_widget_desc_mobile" = "Buat widget untuk menghitung hari cinta, foto hari jadi, gaya hati, warna, tata letak, dan sematkan dengan cepat ke layar beranda.";
 "util_health_enable_cycle_tracking" = "Silakan aktifkan fitur tersebut\npelacakan siklus.";

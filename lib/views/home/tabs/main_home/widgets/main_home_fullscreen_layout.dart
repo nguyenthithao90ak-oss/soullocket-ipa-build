@@ -62,6 +62,7 @@ class _FullscreenHomeBody extends StatelessWidget {
       resizeToAvoidBottomInset: false,
       body: HomeCompanionScene(
         followScroll: true,
+        calm: true,
         enabled: uiState.homeCompanionEnabled,
         soundEnabled: uiState.homeCompanionSoundEnabled,
         maxVisibleCharacters: 2,

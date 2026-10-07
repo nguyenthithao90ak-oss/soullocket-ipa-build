@@ -3,6 +3,10 @@ import 'home_companion_outfit.dart';
 /// Giữ Kuromi nguyên cỡ; đồng bộ chiều cao từ chân đến đỉnh tai, không kéo méo.
 abstract final class HomeCompanionMetrics {
   static const kuromiScale = 0.624;
+
+  /// Thu nhỏ toàn bộ hình vẽ quanh chân để bé gọn, ít che nội dung Home.
+  /// Vùng chạm và khoảng cách giữa các bé giữ nguyên cỡ cũ (dễ chạm hơn).
+  static const displayScale = 0.82;
   static const restingHeight = 67.0;
   static const bearScale = kuromiScale * 1.15 * restingHeight / 54;
   // Chiều cao nét vẽ trước khi cân: thỏ 60, gấu 54, Melody 68 điểm ảnh.

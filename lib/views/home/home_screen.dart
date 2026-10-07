@@ -27,6 +27,7 @@ import '../../utils/services/offline_cache_service.dart';
 import '../../utils/services/auth/auth_house_context_service.dart';
 
 import '../../core/sl_route.dart';
+import '../../core/routing/single_open_gate.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/auth_service.dart';
 import '../../utils/services/device_manager_service.dart';
@@ -412,6 +413,7 @@ class _HomeScreenState extends State<HomeScreen>
   StreamSubscription? _pairingSub;
   StreamSubscription? _settingsSub;
   StreamSubscription<WidgetLaunchAction>? _widgetActionSub;
+  final SingleOpenGate _widgetRouteGate = SingleOpenGate();
   StreamSubscription<DatabaseEvent>? _notificationBadgeSub;
   Timer? _vipThemeRotateTimer;
   Timer? _startupTasksTimer;
@@ -550,7 +552,9 @@ class _HomeScreenState extends State<HomeScreen>
       final prefs = await SharedPreferences.getInstance();
       final houseId = prefs.getString('il_house_id');
       final role = prefs.getString('il_role') ?? 'user1';
-      final partnerName = prefs.getString('overlay_partner_name') ?? UiCopy.text('copy_145933221191');
+      final partnerName =
+          prefs.getString('overlay_partner_name') ??
+          UiCopy.text('copy_145933221191');
 
       if (houseId != null && houseId.isNotEmpty) {
         final payloadText = jsonEncode({
@@ -859,12 +863,11 @@ class _HomeScreenState extends State<HomeScreen>
       return;
     }
     final ownerUid = FirebaseAuth.instance.currentUser?.uid;
-    void onIncoming(
-      roomId,
-      callerId,
-      data,
-    ) {
-      if (!mounted || _incomingCall != null || WebRTCService().isBusy || FirebaseAuth.instance.currentUser?.uid != ownerUid) {
+    void onIncoming(roomId, callerId, data) {
+      if (!mounted ||
+          _incomingCall != null ||
+          WebRTCService().isBusy ||
+          FirebaseAuth.instance.currentUser?.uid != ownerUid) {
         return;
       }
       _incomingCall = <String, dynamic>{
@@ -874,13 +877,21 @@ class _HomeScreenState extends State<HomeScreen>
       };
       unawaited(_showIncomingCallDialog());
     }
+
     if (_isHouseUnpairedCache) {
-      _callSub = WebRTCService().listenForIncomingCalls(normalizedHouseId, onIncoming);
-    } else {
-      _callSub = WebRTCService().watchIncomingCoupleCalls(normalizedHouseId).listen(
-        (data) => onIncoming(data['roomId'], data['houseId'], data),
-        onError: (Object error) => debugPrint('Couple call inbox: ${AppErrorMapper.resolve(error).message}'),
+      _callSub = WebRTCService().listenForIncomingCalls(
+        normalizedHouseId,
+        onIncoming,
       );
+    } else {
+      _callSub = WebRTCService()
+          .watchIncomingCoupleCalls(normalizedHouseId)
+          .listen(
+            (data) => onIncoming(data['roomId'], data['houseId'], data),
+            onError: (Object error) => debugPrint(
+              'Couple call inbox: ${AppErrorMapper.resolve(error).message}',
+            ),
+          );
     }
   }
 
@@ -922,12 +933,20 @@ class _HomeScreenState extends State<HomeScreen>
         ],
       ),
     );
-    final statusSub = FirebaseDatabase.instance.ref('calls/${incoming['roomId']}/status').onValue.listen((event) {
-      final status = event.snapshot.value;
-      if (status != 'ringing' && route.isActive) navigator.removeRoute(route);
-    }, onError: (Object error) {
-      if (route.isActive) navigator.removeRoute(route);
-    });
+    final statusSub = FirebaseDatabase.instance
+        .ref('calls/${incoming['roomId']}/status')
+        .onValue
+        .listen(
+          (event) {
+            final status = event.snapshot.value;
+            if (status != 'ringing' && route.isActive) {
+              navigator.removeRoute(route);
+            }
+          },
+          onError: (Object error) {
+            if (route.isActive) navigator.removeRoute(route);
+          },
+        );
     final accepted = await navigator.push(route);
     await statusSub.cancel();
     if (!mounted) {
@@ -940,7 +959,9 @@ class _HomeScreenState extends State<HomeScreen>
         await _declineIncomingCall(incoming);
       }
     } catch (error) {
-      if (mounted) SLNotice.showError(context, context.tr('p4_call_connection_failed'));
+      if (mounted) {
+        SLNotice.showError(context, context.tr('p4_call_connection_failed'));
+      }
       debugPrint('Incoming call: ${AppErrorMapper.resolve(error).message}');
     } finally {
       _incomingCall = null;
@@ -1065,7 +1086,15 @@ class _HomeScreenState extends State<HomeScreen>
     await _handleWidgetLaunchAction(action);
   }
 
-  Future<void> _handleWidgetLaunchAction(WidgetLaunchAction action) async {
+  Future<void> _handleWidgetLaunchAction(WidgetLaunchAction action) {
+    return _widgetRouteGate.run(
+      () => _handleWidgetLaunchActionInternal(action),
+    );
+  }
+
+  Future<void> _handleWidgetLaunchActionInternal(
+    WidgetLaunchAction action,
+  ) async {
     if (!mounted) return;
 
     switch (action) {
@@ -1084,7 +1113,11 @@ class _HomeScreenState extends State<HomeScreen>
       case WidgetLaunchAction.sleep:
         final sleepHouse = await _houseService.getCurrentHouseId();
         if (!mounted || sleepHouse == null || sleepHouse.isEmpty) return;
-        await Navigator.of(context).push(SLRoute(builder: (_) => SleepTrackerScreen(houseId: sleepHouse, myName: '')));
+        await Navigator.of(context).push(
+          SLRoute(
+            builder: (_) => SleepTrackerScreen(houseId: sleepHouse, myName: ''),
+          ),
+        );
         return;
       case WidgetLaunchAction.soul_events:
         await _openSoulEventsFromWidget();

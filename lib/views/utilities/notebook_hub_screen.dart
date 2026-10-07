@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/core/routing/single_open_gate.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'widgets/keepsake_design.dart';
@@ -8,6 +11,8 @@ import 'wishlist_screen.dart';
 
 /// Trang điều hướng cho ba không gian ghi lại kế hoạch và điều nhỏ muốn nhớ.
 class NotebookHubScreen extends StatelessWidget {
+  static final SingleOpenGate _openGate = SingleOpenGate();
+
   final String houseId;
   final String myName;
 
@@ -96,15 +101,7 @@ class NotebookHubScreen extends StatelessWidget {
                       ),
                       sliver: SliverToBoxAdapter(
                         child: _NotebookPrompt(
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => SharedNotesScreen(
-                                houseId: houseId,
-                                myName: myName,
-                                openPrompt: true,
-                              ),
-                            ),
-                          ),
+                          onTap: () => _openPrompt(context),
                         ),
                       ),
                     ),
@@ -137,9 +134,29 @@ class NotebookHubScreen extends StatelessWidget {
   }
 
   void _open(BuildContext context, _NotebookDestination destination) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => destination.builder()));
+    unawaited(
+      _openGate.run(() async {
+        await Navigator.of(
+          context,
+        ).push(MaterialPageRoute<void>(builder: (_) => destination.builder()));
+      }),
+    );
+  }
+
+  void _openPrompt(BuildContext context) {
+    unawaited(
+      _openGate.run(() async {
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => SharedNotesScreen(
+              houseId: houseId,
+              myName: myName,
+              openPrompt: true,
+            ),
+          ),
+        );
+      }),
+    );
   }
 }
 

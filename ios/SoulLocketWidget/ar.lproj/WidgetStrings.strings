@@ -1,5 +1,5 @@
 /* Widget extension: cùng bản dịch với assets/i18n/ar.json. */
-"p3_health_days_remaining" = "days remaining";
+"p3_health_days_remaining" = "أيام متبقية";
 "sleep_state_unknown" = "لا توجد بيانات بعد";
 "sleep_state_disabled" = "تتبّع النوم غير مفعّل";
 "sleep_state_estimated" = "قد يكون مستريحًا";
@@ -16,7 +16,7 @@
 "sleep_sync_hint" = "افتح التطبيق للتحديث";
 "sleep_duration" = "{hours} س {minutes} د";
 "comm_ngy_41ec10" = "يومًا";
-"core_presence_online" = "نشط";
+"core_presence_online" = "نشط الآن";
 "home_angoffline_bbb3d5" = "غير متصل الآن";
 "home_cpi_d525b0" = "زوجان";
 "home_knim_4f6aeb" = "احتفل";
@@ -29,7 +29,7 @@
 "p3_sleep_sleeping" = "Sleeping";
 "p3_sleep_title" = "Couple Sleep ☁️✨";
 "p7_event_widget_desc" = "Show an upcoming event and the number of remaining days.";
-"p8_events_days_remaining_label" = "DAYS TO GO";
+"p8_events_days_remaining_label" = "الأيام المتبقية";
 "p8_events_title" = "Your shared events";
 "settings_widget_desc_mobile" = "أنشئ أدوات لحساب أيام الحب وصور الذكرى السنوية وأنماط القلب والألوان والتخطيطات وقم بتثبيتها بسرعة على الشاشة الرئيسية.";
 "util_health_enable_cycle_tracking" = "يرجى تفعيل الميزة\nتتبع الدورة.";

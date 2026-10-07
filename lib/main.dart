@@ -295,6 +295,12 @@ void main() {
         // để hiển thị ngày theo vùng thay vì cố định dd/MM/yyyy.
         await initializeDateFormatting();
         await BuildSignatureService.verifyOfficialBuildSignature();
+        // Vẽ ngay màn tải thay vì giữ màn chờ đen của hệ điều hành trong lúc
+        // khởi tạo Firebase (tối đa 3 giây); MyApp thay thế khi sẵn sàng.
+        if (!kIsWeb) {
+          runApp(const StartupLoadingApp());
+          FlutterNativeSplash.remove();
+        }
         unawaited(OfflineSyncQueue.instance.startListening());
 
         // Firebase khởi tạo với timeout để không bao giờ treo màn hình Splash

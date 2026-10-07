@@ -1,5 +1,5 @@
 /* Widget extension: cùng bản dịch với assets/i18n/tr.json. */
-"p3_health_days_remaining" = "days remaining";
+"p3_health_days_remaining" = "gün kaldı";
 "sleep_state_unknown" = "Henüz veri yok";
 "sleep_state_disabled" = "Uyku takibi kapalı";
 "sleep_state_estimated" = "Dinleniyor olabilir";
@@ -16,7 +16,7 @@
 "sleep_sync_hint" = "Güncellemek için uygulamayı açın";
 "sleep_duration" = "{hours} sa {minutes} dk";
 "comm_ngy_41ec10" = "gün";
-"core_presence_online" = "Aktif";
+"core_presence_online" = "Şu anda aktif";
 "home_angoffline_bbb3d5" = "Şu anda çevrimdışı";
 "home_cpi_d525b0" = "Çift";
 "home_knim_4f6aeb" = "Kutla";
@@ -29,7 +29,7 @@
 "p3_sleep_sleeping" = "Sleeping";
 "p3_sleep_title" = "Couple Sleep ☁️✨";
 "p7_event_widget_desc" = "Show an upcoming event and the number of remaining days.";
-"p8_events_days_remaining_label" = "DAYS TO GO";
+"p8_events_days_remaining_label" = "KALAN GÜNLER";
 "p8_events_title" = "Your shared events";
 "settings_widget_desc_mobile" = "Aşk günlerini, yıldönümü fotoğraflarını, kalp stillerini, renkleri, düzenleri saymak için widget'lar oluşturun ve bunları hızlı bir şekilde ana ekrana sabitleyin.";
 "util_health_enable_cycle_tracking" = "Lütfen özelliği etkinleştirin\ndöngüsü takibi.";

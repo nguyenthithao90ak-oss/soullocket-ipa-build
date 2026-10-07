@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:soullocket_app/utils/services/soul_message_history.dart';
+import 'package:soullocket_app/utils/services/soul_message_actions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -32,6 +33,7 @@ import 'package:soullocket_app/utils/services/webrtc_service.dart';
 import 'soul_merge/soul_merge_chat_bar.dart';
 import 'soul_merge/soul_merge_design.dart';
 import 'soul_merge/soul_merge_interaction_strip.dart';
+import 'soul_merge/soul_merge_touch_cascade.dart';
 import 'soul_merge/soul_merge_options_sheet.dart';
 import 'soul_merge/sticker_bottom_sheet.dart';
 
@@ -71,9 +73,14 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
   bool _partnerHasBumped = false;
   final ValueNotifier<double> _interactiveScaleNotifier = ValueNotifier(1.0);
   int _heartPulse = 0;
+  final GlobalKey<SoulMergeTouchCascadeState> _touchCascadeKey =
+      GlobalKey<SoulMergeTouchCascadeState>();
   DateTime? _lastManualNudgeTime;
 
   final TextEditingController _customMsgController = TextEditingController();
+  final FocusNode _soulComposerFocusNode = FocusNode();
+  Map<String, dynamic>? _replyTarget;
+  bool _isSendingMessage = false;
   StreamSubscription<List<Map<String, dynamic>>>? _messagesSub;
   StreamSubscription<Map<String, dynamic>>? _interactiveEventsSub;
   final List<FloatingMessage> _floatingMessages = [];
@@ -212,6 +219,10 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
     setState(() => _heartPulse++);
   }
 
+  void _startTouchHolding() {
+    _touchCascadeKey.currentState?.startHolding(connected: _isMerged);
+  }
+
   Future<void> _initUserInfo() async {
     try {
       _houseId = await _mergeService.getCurrentHouseId();
@@ -309,7 +320,10 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
   }
 
   Future<void> _pickAndSendChatImage() async {
-    if (_isUploadingPhoto) return;
+    if (_isUploadingPhoto || !_scopeIsCurrent) return;
+    final initialHouseId = _houseId;
+    final initialUid = _screenOwnerUid;
+    final reply = _replyTarget;
     try {
       final prefs = await SharedPreferences.getInstance();
       final now = DateTime.now();
@@ -345,7 +359,12 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
         source: ImageSource.gallery,
         imageQuality: 50,
       );
-      if (image == null) return;
+      if (image == null ||
+          !mounted ||
+          !_scopeIsCurrent ||
+          _houseId != initialHouseId) {
+        return;
+      }
 
       setState(() => _isUploadingPhoto = true);
 
@@ -359,7 +378,15 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
 
       final url = uploadResult?.downloadUrl;
       if (url != null && url.isNotEmpty) {
-        await _mergeService.sendSoulMessage('', imageUrl: url);
+        await _mergeService.sendSoulMessage(
+          '',
+          imageUrl: url,
+          replyTo: reply?['id']?.toString(),
+          expectedHouseId: initialHouseId,
+          expectedUid: initialUid,
+        );
+        if (!mounted || !_scopeIsCurrent || _houseId != initialHouseId) return;
+        if (identical(_replyTarget, reply)) setState(() => _replyTarget = null);
         await prefs.setInt('il_sm_photo_count', currentCount + 1);
       }
     } catch (e) {
@@ -371,6 +398,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
 
   void _onTapDown(Offset globalPosition) {
     _interactiveScaleNotifier.value = 0.9;
+    _startTouchHolding();
     _handleLocalBump();
 
     final now = DateTime.now();
@@ -400,6 +428,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
 
   void _onTapUp() {
     _interactiveScaleNotifier.value = 1.0;
+    _touchCascadeKey.currentState?.releaseHolding();
   }
 
   void _onTapCancel() {
@@ -531,6 +560,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
   void _triggerMerge() async {
     if (_isMerged) return;
     debugPrint('[SoulMergeScreen] Merging triggered!');
+    _touchCascadeKey.currentState?.completeConnection();
     setState(() {
       _isMerged = true;
     });
@@ -626,6 +656,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
   void dispose() {
     _vipSub?.cancel();
     _customMsgController.dispose();
+    _soulComposerFocusNode.dispose();
     _chatScrollController.removeListener(_onChatScroll);
     _chatScrollController.dispose();
     _backgroundSub?.cancel();
@@ -706,6 +737,13 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
               ),
             ),
 
+          Positioned.fill(
+            child: SoulMergeTouchCascade(
+              key: _touchCascadeKey,
+              style: _activeStyle,
+            ),
+          ),
+
           // 4. Floating message bubbles
           for (final msg in _floatingMessages)
             FloatingMessageWidget(key: msg.id, message: msg),
@@ -733,7 +771,16 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
                             partnerName: _partnerName,
                             isSelfReady: _iHaveBumped,
                             isPartnerReady: _partnerHasBumped,
-                            onAccessibleTap: _handleLocalBump,
+                            onAccessibleTap: () {
+                              // Screen reader dùng hai lần kích hoạt để giữ/thả.
+                              if (_interactiveScaleNotifier.value < 1) {
+                                _onTapUp();
+                              } else {
+                                _interactiveScaleNotifier.value = .9;
+                                _startTouchHolding();
+                                _handleLocalBump();
+                              }
+                            },
                             heartPulse: _heartPulse,
                             heartStyle: _activeStyle,
                             photoUrls: latestPhotos
@@ -853,11 +900,23 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
                 !_chatScrollController.hasClients ||
                 _chatScrollController.offset < 48;
             _messageHistory.applyLatest(list);
-            final visibleHistory = _messageHistory.messages;
+            final visibleHistory = _visibleSoulMessages;
+            if (_replyTarget != null) {
+              final targets = visibleHistory.where(
+                (message) => message['id'] == _replyTarget!['id'],
+              );
+              _replyTarget = targets.isEmpty ? null : targets.first;
+            }
+            final visibleLatest = list
+                .where(
+                  (message) =>
+                      SoulMessageActions.visibleTo(message, _screenOwnerUid),
+                )
+                .toList();
 
-            if (list.isNotEmpty) {
+            if (visibleLatest.isNotEmpty) {
               int highestT = 0;
-              for (final msg in list) {
+              for (final msg in visibleLatest) {
                 final t = msg['timestamp'] as int? ?? 0;
                 if (t > highestT) highestT = t;
               }
@@ -871,7 +930,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
 
             if (isFirstLoad) {
               _hasProcessedFirstMessages = true;
-              final unreadMsgs = list.where((msg) {
+              final unreadMsgs = visibleLatest.where((msg) {
                 final t = msg['timestamp'] as int? ?? 0;
                 final sender = (msg['sender'] ?? '').toString().trim();
                 final isSelf = (sender == _myRole);
@@ -891,13 +950,13 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
                 }
               }
 
-              for (final msg in list) {
+              for (final msg in visibleLatest) {
                 final t = msg['timestamp'] as int? ?? 0;
                 if (t > maxTimestamp) maxTimestamp = t;
               }
             }
 
-            for (final msg in list) {
+            for (final msg in visibleLatest) {
               final t = msg['timestamp'] as int? ?? 0;
               if (t > _lastMsgTimestamp) {
                 if (t > maxTimestamp) maxTimestamp = t;
@@ -1014,7 +1073,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
       );
       if (!mounted || !_scopeIsCurrent || _houseId != houseId) return;
       _messageHistory.applyOlder(page, requestedBefore: before);
-      setState(() => _chatHistory = _messageHistory.messages);
+      setState(() => _chatHistory = _visibleSoulMessages);
     } catch (error) {
       if (!mounted || !_scopeIsCurrent) return;
       setState(() => _historyLoadFailed = true);
@@ -1301,8 +1360,27 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
   }
 
   Future<void> _sendStickerMessage(String assetPath) async {
+    if (_isSendingMessage || !_scopeIsCurrent) return;
     if (await _checkSpamAndMaybeBlock()) return;
-    await _mergeService.sendSoulMessage('', imageUrl: assetPath);
+    final reply = _replyTarget;
+    try {
+      await _mergeService.sendSoulMessage(
+        '',
+        imageUrl: assetPath,
+        replyTo: reply?['id']?.toString(),
+        expectedHouseId: _houseId,
+        expectedUid: _screenOwnerUid,
+      );
+      if (!mounted || !_scopeIsCurrent) return;
+      if (identical(_replyTarget, reply)) setState(() => _replyTarget = null);
+    } catch (error) {
+      if (mounted && _scopeIsCurrent) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.tr('p4_soul_send_failed'))),
+        );
+      }
+      return;
+    }
 
     if (_houseId != null && _houseId!.isNotEmpty) {
       unawaited(
@@ -1318,6 +1396,133 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
     }
   }
 
+  List<Map<String, dynamic>> get _visibleSoulMessages => _messageHistory
+      .messages
+      .where(
+        (message) => SoulMessageActions.visibleTo(message, _screenOwnerUid),
+      )
+      .toList();
+
+  void _onSoulMessageChanged(String id, Map<String, dynamic>? message) {
+    if (!mounted || !_scopeIsCurrent) return;
+    setState(() {
+      _messageHistory.applyMessage(id, message);
+      _chatHistory = _visibleSoulMessages;
+      if (_replyTarget?['id'] == id) {
+        _replyTarget =
+            message != null &&
+                SoulMessageActions.visibleTo(message, _screenOwnerUid)
+            ? message
+            : null;
+      }
+    });
+    _sendOverlaySyncPayload();
+  }
+
+  Future<void> _performMessageAction(
+    Map<String, dynamic> message,
+    String errorKey,
+    Future<void> Function(String houseId, String uid, String id) action,
+  ) async {
+    final houseId = _houseId;
+    final uid = _screenOwnerUid;
+    final id = message['id']?.toString() ?? '';
+    if (!mounted ||
+        !_scopeIsCurrent ||
+        houseId == null ||
+        uid == null ||
+        id.isEmpty) {
+      return;
+    }
+    try {
+      await action(houseId, uid, id);
+    } catch (error) {
+      if (!mounted || !_scopeIsCurrent || _houseId != houseId) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.tr(errorKey))));
+      debugPrint('[SoulMergeScreen] Message action failed');
+    }
+  }
+
+  Future<void> _reactToSoulMessage(
+    Map<String, dynamic> message,
+    String reaction,
+  ) => _performMessageAction(
+    message,
+    'p4_soul_action_reaction_failed',
+    (houseId, uid, id) => _mergeService.setSoulReaction(
+      houseId: houseId,
+      expectedUid: uid,
+      messageId: id,
+      reaction: reaction,
+    ),
+  );
+
+  Future<void> _removeSoulReaction(Map<String, dynamic> message) =>
+      _performMessageAction(
+        message,
+        'p4_soul_action_reaction_failed',
+        (houseId, uid, id) => _mergeService.removeSoulReaction(
+          houseId: houseId,
+          expectedUid: uid,
+          messageId: id,
+        ),
+      );
+
+  bool _canDeleteSoulMessage(Map<String, dynamic> message) =>
+      _scopeIsCurrent &&
+      message['senderUid'] != null &&
+      message['senderUid'] == _screenOwnerUid;
+
+  void _replyToSoulMessage(Map<String, dynamic> message) {
+    if (!_scopeIsCurrent) return;
+    setState(() => _replyTarget = message);
+    _soulComposerFocusNode.requestFocus();
+  }
+
+  Future<void> _hideSoulMessage(Map<String, dynamic> message) =>
+      _performMessageAction(message, 'p4_soul_action_delete_failed', (
+        houseId,
+        uid,
+        id,
+      ) async {
+        await _mergeService.hideSoulMessage(
+          houseId: houseId,
+          expectedUid: uid,
+          messageId: id,
+        );
+        if (mounted && _scopeIsCurrent && _houseId == houseId) {
+          _onSoulMessageChanged(id, {
+            ...message,
+            'hiddenFor': {
+              if (message['hiddenFor'] is Map)
+                ...Map<String, dynamic>.from(message['hiddenFor'] as Map),
+              uid: true,
+            },
+          });
+        }
+      });
+
+  Future<void> _deleteSoulMessage(Map<String, dynamic> message) =>
+      _performMessageAction(message, 'p4_soul_action_delete_failed', (
+        houseId,
+        uid,
+        id,
+      ) async {
+        await _mergeService.deleteSoulMessage(
+          houseId: houseId,
+          expectedUid: uid,
+          messageId: id,
+        );
+        if (mounted && _scopeIsCurrent && _houseId == houseId) {
+          _onSoulMessageChanged(id, null);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.tr('p4_soul_action_deleted'))),
+          );
+        }
+      });
+
   void _showStickerBottomSheet() {
     StickerBottomSheet.show(
       context: context,
@@ -1325,7 +1530,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
     );
   }
 
-  void _sendCustomMessage() {
+  Future<void> _sendCustomMessage() async {
+    if (_isSendingMessage || !_scopeIsCurrent) return;
+    final draft = _customMsgController.text;
     final text = _customMsgController.text.trim();
     if (text.isEmpty) return;
 
@@ -1387,9 +1594,31 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
       }
     }
 
-    _customMsgController.clear();
-    unawaited(_sendSoulMessage(text));
-    FocusScope.of(context).unfocus();
+    final reply = _replyTarget;
+    final houseId = _houseId;
+    final uid = _screenOwnerUid;
+    if (houseId == null || uid == null) return;
+    setState(() => _isSendingMessage = true);
+    try {
+      if (await _checkSpamAndMaybeBlock()) return;
+      await _mergeService.sendSoulMessage(
+        text,
+        replyTo: reply?['id']?.toString(),
+        expectedHouseId: houseId,
+        expectedUid: uid,
+      );
+      if (!mounted || !_scopeIsCurrent || _houseId != houseId) return;
+      if (_customMsgController.text == draft) _customMsgController.clear();
+      if (identical(_replyTarget, reply)) setState(() => _replyTarget = null);
+    } catch (error) {
+      if (mounted && _scopeIsCurrent && _houseId == houseId) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.tr('p4_soul_send_failed'))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSendingMessage = false);
+    }
   }
 
   String _formatTime(int? timestamp) {
@@ -1422,6 +1651,20 @@ class _SoulMergeScreenState extends State<SoulMergeScreen> {
       onShowSticker: _showStickerBottomSheet,
       onSendPreset: (message) => unawaited(_sendSoulMessage(message)),
       formatTime: _formatTime,
+      onReactMessage: _reactToSoulMessage,
+      onDeleteMessage: _deleteSoulMessage,
+      onReplyMessage: _replyToSoulMessage,
+      canDeleteMessage: _canDeleteSoulMessage,
+      composerFocusNode: _soulComposerFocusNode,
+      onHideMessage: _hideSoulMessage,
+      onRemoveReaction: _removeSoulReaction,
+      currentUid: _screenOwnerUid,
+      replyTarget: _replyTarget,
+      onCancelReply: () => setState(() => _replyTarget = null),
+      isSending: _isSendingMessage,
+      watchMessage: (id) => _mergeService.watchSoulMessage(_houseId!, id),
+      shouldWatchMessage: (id) => !_messageHistory.isLatest(id),
+      onMessageChanged: _onSoulMessageChanged,
     );
   }
 

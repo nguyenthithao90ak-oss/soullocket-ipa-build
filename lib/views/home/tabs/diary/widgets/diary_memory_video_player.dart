@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:video_player/video_player.dart';
 import '../../../../../utils/services/infrastructure/cloudflare_r2_service.dart';
 import '../../../../../utils/services/private_media_url_service.dart';
@@ -19,6 +20,10 @@ class DiaryMemoryVideoPlayer extends StatefulWidget {
   final Stream<String?>? authChanges;
   final String? Function()? currentUid;
 
+  /// Nơi công bố controller của video đang phát để màn xem hiện thanh tua ở lớp giao
+  /// diện (ngoài vùng phóng to). Chỉ trang đang hiển thị mới ghi vào đây.
+  final ValueNotifier<VideoPlayerController?>? controlsTarget;
+
   const DiaryMemoryVideoPlayer({
     super.key,
     required this.url,
@@ -32,6 +37,7 @@ class DiaryMemoryVideoPlayer extends StatefulWidget {
     this.previewOnly = false,
     this.authChanges,
     this.currentUid,
+    this.controlsTarget,
   });
 
   @override
@@ -49,6 +55,7 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
   StreamSubscription<String?>? _auth;
   Timer? _expiry;
   String? _uid;
+  VideoPlayerController? _published;
   String? get _currentUid => widget.currentUid != null
       ? widget.currentUid!()
       : FirebaseAuth.instance.currentUser?.uid;
@@ -82,8 +89,47 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
         oldWidget.memoryId != widget.memoryId) {
       unawaited(_initVideo());
     } else if (oldWidget.isActive != widget.isActive) {
-      unawaited(_syncPlayback());
+      // Đổi phát/dừng sau khung hình: thanh tua ở lớp giao diện cũng nghe controller này.
+      unawaited(
+        _afterBuild().then((_) async {
+          if (!mounted) return;
+          await _syncPlayback();
+          await _syncControlsTarget();
+        }),
+      );
+    } else if (oldWidget.controlsTarget != widget.controlsTarget) {
+      unawaited(_syncControlsTarget());
     }
+  }
+
+  /// Chờ hết khung hình đang dựng; notifier/controller đổi giữa lúc build sẽ đánh dấu
+  /// widget ngoài cây con cần build lại và Flutter báo lỗi.
+  Future<void> _afterBuild() async {
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      await SchedulerBinding.instance.endOfFrame;
+    }
+  }
+
+  Future<void> _syncControlsTarget() async {
+    final target = widget.controlsTarget;
+    if (target == null) return;
+    await _afterBuild();
+    final controller = _controller;
+    final wanted =
+        mounted &&
+        controller != null &&
+        _initialized &&
+        !_hasError &&
+        widget.isActive &&
+        !widget.previewOnly;
+    if (wanted) {
+      target.value = controller;
+    } else if (_published != null && identical(target.value, _published)) {
+      // Chỉ gỡ controller của chính trang này, không gỡ của trang khác đang phát.
+      target.value = null;
+    }
+    _published = wanted ? controller : null;
   }
 
   @override
@@ -125,6 +171,7 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
     } catch (_) {
       if (mounted && identical(_controller, controller)) {
         setState(() => _hasError = true);
+        unawaited(_syncControlsTarget());
       }
     }
   }
@@ -158,7 +205,15 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
   Future<void> _releaseController() async {
     final previous = _controller;
     _controller = null;
-    if (previous != null) await previous.dispose();
+    if (previous == null) return;
+    // Gỡ khỏi thanh tua trước khi giải phóng để lớp giao diện không dùng controller đã hủy.
+    final target = widget.controlsTarget;
+    if (target != null && identical(target.value, previous)) {
+      await _afterBuild();
+      if (identical(target.value, previous)) target.value = null;
+    }
+    if (identical(_published, previous)) _published = null;
+    await previous.dispose();
   }
 
   Future<void> _initVideo() async {
@@ -210,6 +265,7 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
         if (!current()) return;
         setState(() => _initialized = true);
         await _syncPlayback();
+        await _syncControlsTarget();
         return;
       } catch (_) {
         if (!current()) return;

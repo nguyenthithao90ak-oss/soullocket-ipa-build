@@ -1,4 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_map/flutter_map.dart' as fm;
+import 'package:latlong2/latlong.dart' as ll;
+import 'package:soullocket_app/core/constants/app_config.dart';
+import 'package:soullocket_app/utils/home_image_policy.dart';
+import 'package:soullocket_app/widgets/couple_default_avatar.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/features/love_insight_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -14,38 +21,6 @@ class HomeCompactHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final hour = now.hour;
-    final (String labelKey, IconData icon, Color accent) = hour < 6
-        ? (
-            'home_time_late_night_title',
-            Icons.bedtime_rounded,
-            const Color(0xFF6A4FA3),
-          )
-        : hour < 11
-        ? (
-            'home_time_morning_title',
-            Icons.wb_sunny_rounded,
-            const Color(0xFFA0590F),
-          )
-        : hour < 14
-        ? (
-            'home_time_noon_title',
-            Icons.light_mode_rounded,
-            const Color(0xFFB24F2B),
-          )
-        : hour < 19
-        ? (
-            'home_time_afternoon_title',
-            Icons.auto_awesome_rounded,
-            const Color(0xFFB0305A),
-          )
-        : (
-            'home_time_evening_title',
-            Icons.nightlight_round,
-            const Color(0xFF6A4FA3),
-          );
-    final dateLabel = MaterialLocalizations.of(context).formatMediumDate(now);
     final subtitleText = subtitle?.trim() ?? '';
 
     return Semantics(
@@ -53,25 +28,6 @@ class HomeCompactHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(icon, size: 15, color: accent),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  '${context.tr(labelKey)} · $dateLabel',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: SLTheme.quicksand(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: accent,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
           Text(
             title,
             maxLines: 2,
@@ -674,84 +630,142 @@ class HomeMapMiniCard extends StatelessWidget {
     required this.distanceText,
     required this.onTap,
     this.detailText,
+    this.myPoint,
+    this.partnerPoint,
+    this.myAvatarUrl = '',
+    this.partnerAvatarUrl = '',
+    this.myFemale = false,
+    this.partnerFemale = true,
+    this.tileProvider,
   });
 
   final String title;
   final String distanceText;
   final String? detailText;
+  final Map<String, dynamic>? myPoint;
+  final Map<String, dynamic>? partnerPoint;
+  final String myAvatarUrl;
+  final String partnerAvatarUrl;
+  final bool myFemale;
+  final bool partnerFemale;
+  final fm.TileProvider? tileProvider;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final detail = detailText?.trim() ?? '';
+    final mine = _MiniMapPoint.fromMap(myPoint);
+    final partner = _MiniMapPoint.fromMap(partnerPoint);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final ink = dark ? const Color(0xFFF5E7EE) : SLColors.ink;
+    final muted = dark ? const Color(0xFFC6B9C1) : SLColors.textSecond;
     return Semantics(
       button: true,
       label: [title, distanceText, if (detail.isNotEmpty) detail].join(', '),
       excludeSemantics: true,
       child: Material(
         key: const ValueKey('home-map-mini'),
-        color: SLColors.paper,
+        color: dark ? const Color(0xFF302C34) : SLColors.paper,
         borderRadius: BorderRadius.circular(24),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 10, 10, 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: const SizedBox(
-                    height: 84,
-                    child: CustomPaint(painter: _MiniMapPainter()),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 190),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: SizedBox(
+                      height: 84,
+                      child: mine == null && partner == null
+                          ? ColoredBox(
+                              key: const ValueKey('home-map-no-location'),
+                              color: dark
+                                  ? const Color(0xFF38434A)
+                                  : const Color(0xFFE4F2EF),
+                              child: Center(
+                                child: Icon(
+                                  Icons.explore_rounded,
+                                  size: 36,
+                                  color: dark
+                                      ? const Color(0xFFA8C7C1)
+                                      : const Color(0xFF7FA9A0),
+                                ),
+                              ),
+                            )
+                          : _HomeMiniMapPreview(
+                              myPoint: mine,
+                              partnerPoint: partner,
+                              myAvatarUrl: myAvatarUrl,
+                              partnerAvatarUrl: partnerAvatarUrl,
+                              myFemale: myFemale,
+                              partnerFemale: partnerFemale,
+                              tileProvider: tileProvider,
+                            ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                  if (mine != null || partner != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
+                      child: Text(
+                        context.tr('home_compact_map_attribution'),
+                        textAlign: TextAlign.end,
+                        textScaler: TextScaler.noScaling,
                         style: SLTheme.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF2E6A86),
+                          fontSize: 8,
+                          fontWeight: FontWeight.w600,
+                          color: muted,
+                          height: 1.1,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        distanceText,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: SLTheme.quicksand(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: SLColors.textPrimary,
-                          height: 1.3,
+                    ),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.favorite_rounded,
+                              size: 12,
+                              color: dark
+                                  ? const Color(0xFFF5A1B6)
+                                  : const Color(0xFFD65D7C),
+                            ),
+                            const SizedBox(width: 5),
+                            Expanded(
+                              child: _miniCardText(
+                                title,
+                                color: dark
+                                    ? const Color(0xFFAAD2C7)
+                                    : const Color(0xFF3B796D),
+                                fontSize: 11.5,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      if (detail.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          detail,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: SLTheme.quicksand(
-                            fontSize: 12,
+                        const SizedBox(height: 4),
+                        _miniCardText(distanceText, color: ink, fontSize: 14),
+                        if (detail.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          _miniCardText(
+                            detail,
+                            color: muted,
+                            fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: SLColors.textSecond,
                           ),
-                        ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -760,74 +774,325 @@ class HomeMapMiniCard extends StatelessWidget {
   }
 }
 
-class _MiniMapPainter extends CustomPainter {
-  const _MiniMapPainter();
+Widget _miniCardText(
+  String text, {
+  required Color color,
+  required double fontSize,
+  FontWeight fontWeight = FontWeight.w700,
+  int maxLines = 2,
+  Key? key,
+}) => Text(
+  text,
+  key: key,
+  maxLines: maxLines,
+  overflow: TextOverflow.ellipsis,
+  style: SLTheme.quicksand(
+    fontSize: fontSize,
+    fontWeight: fontWeight,
+    color: color,
+    height: 1.2,
+  ),
+);
+
+class _MiniMapPoint {
+  const _MiniMapPoint({required this.coordinate, required this.isLive});
+  final ll.LatLng coordinate;
+  final bool isLive;
+
+  static _MiniMapPoint? fromMap(Map<String, dynamic>? data) {
+    double? parse(Object? value) => value is num
+        ? value.toDouble()
+        : value is String
+        ? double.tryParse(value.trim())
+        : null;
+    final latitude = parse(data?['lt'] ?? data?['lat']);
+    final longitude = parse(data?['lg'] ?? data?['lng']);
+    if (latitude == null ||
+        longitude == null ||
+        !latitude.isFinite ||
+        !longitude.isFinite ||
+        latitude.abs() > 90 ||
+        longitude.abs() > 180) {
+      return null;
+    }
+    return _MiniMapPoint(
+      coordinate: ll.LatLng(latitude, longitude),
+      isLive: data?['isLive'] == true,
+    );
+  }
+}
+
+class _HomeMiniMapPreview extends StatefulWidget {
+  const _HomeMiniMapPreview({
+    required this.myPoint,
+    required this.partnerPoint,
+    required this.myAvatarUrl,
+    required this.partnerAvatarUrl,
+    required this.myFemale,
+    required this.partnerFemale,
+    required this.tileProvider,
+  });
+  final _MiniMapPoint? myPoint;
+  final _MiniMapPoint? partnerPoint;
+  final String myAvatarUrl;
+  final String partnerAvatarUrl;
+  final bool myFemale;
+  final bool partnerFemale;
+  final fm.TileProvider? tileProvider;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()..color = const Color(0xFFDDEFF4),
-    );
+  State<_HomeMiniMapPreview> createState() => _HomeMiniMapPreviewState();
+}
 
-    final road = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-    canvas.drawPath(
-      Path()
-        ..moveTo(-8, h * 0.72)
-        ..cubicTo(w * 0.2, h * 0.55, w * 0.38, h * 0.82, w * 0.6, h * 0.6)
-        ..cubicTo(w * 0.75, h * 0.45, w * 0.9, h * 0.38, w + 8, h * 0.46),
-      road..strokeWidth = 7,
-    );
-    canvas.drawPath(
-      Path()
-        ..moveTo(w * 0.27, -8)
-        ..cubicTo(w * 0.31, h * 0.35, w * 0.25, h * 0.7, w * 0.35, h + 8),
-      road..strokeWidth = 5,
-    );
-    canvas.drawPath(
-      Path()
-        ..moveTo(w * 0.72, -8)
-        ..cubicTo(w * 0.67, h * 0.3, w * 0.77, h * 0.62, w * 0.69, h + 8),
-      road..strokeWidth = 5,
-    );
+class _HomeMiniMapPreviewState extends State<_HomeMiniMapPreview> {
+  final _controller = fm.MapController();
+  fm.TileProvider? _tileProvider;
+  ScrollPosition? _scrollPosition;
+  bool _visible = false;
+  bool _visibilityCheckPending = false;
+  bool _ready = false;
 
-    final start = Offset(w * 0.23, h * 0.34);
-    final end = Offset(w * 0.79, h * 0.6);
-    final route = Path()
-      ..moveTo(start.dx, start.dy)
-      ..cubicTo(w * 0.4, h * 0.1, w * 0.63, h * 0.84, end.dx, end.dy);
-    final dash = Paint()
-      ..color = SLColors.primaryActive
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5
-      ..strokeCap = StrokeCap.round;
-    for (final metric in route.computeMetrics()) {
-      var distance = 0.0;
-      while (distance < metric.length) {
-        canvas.drawPath(metric.extractPath(distance, distance + 4), dash);
-        distance += 9;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final position = Scrollable.maybeOf(context)?.position;
+    if (position != _scrollPosition) {
+      _scrollPosition?.removeListener(_scheduleVisibilityCheck);
+      _scrollPosition = position;
+      _scrollPosition?.addListener(_scheduleVisibilityCheck);
+    }
+    _scheduleVisibilityCheck();
+  }
+
+  void _scheduleVisibilityCheck() {
+    if (_visibilityCheckPending) return;
+    _visibilityCheckPending = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _visibilityCheckPending = false;
+      if (!mounted) return;
+      final surface = context.findRenderObject();
+      if (surface is! RenderBox || !surface.hasSize) return;
+      final Object? viewport = RenderAbstractViewport.maybeOf(surface);
+      final surfaceRect = surface.localToGlobal(Offset.zero) & surface.size;
+      final viewportRect = viewport is RenderBox && viewport.hasSize
+          ? viewport.localToGlobal(Offset.zero) & viewport.size
+          : Offset.zero & MediaQuery.sizeOf(context);
+      final visible =
+          TickerMode.valuesOf(context).enabled &&
+          surfaceRect.overlaps(viewportRect);
+      if (visible != _visible) {
+        setState(() {
+          _visible = visible;
+          if (!visible) _tileProvider = null;
+        });
       }
-    }
+    });
+  }
 
-    void pin(Offset center, Color color) {
-      canvas.drawCircle(center, 9, Paint()..color = Colors.white);
-      canvas.drawCircle(center, 6.5, Paint()..color = color);
-    }
+  List<ll.LatLng> get _coordinates => [
+    if (widget.myPoint != null) widget.myPoint!.coordinate,
+    if (widget.partnerPoint != null) widget.partnerPoint!.coordinate,
+  ];
+  fm.CameraFit get _cameraFit => fm.CameraFit.bounds(
+    bounds: fm.LatLngBounds.fromPoints(_coordinates),
+    padding: const EdgeInsets.fromLTRB(36, 38, 36, 10),
+    maxZoom: 14.5,
+  );
 
-    pin(start, SLColors.primary);
-    pin(end, SLColors.accentPurpleDark);
+  @override
+  void didUpdateWidget(covariant _HomeMiniMapPreview oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.myPoint?.coordinate != widget.myPoint?.coordinate ||
+        oldWidget.partnerPoint?.coordinate != widget.partnerPoint?.coordinate) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _ready) _controller.fitCamera(_cameraFit);
+      });
+    }
   }
 
   @override
-  bool shouldRepaint(covariant _MiniMapPainter oldDelegate) => false;
+  void dispose() {
+    _scrollPosition?.removeListener(_scheduleVisibilityCheck);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mine = widget.myPoint;
+    final partner = widget.partnerPoint;
+    final together =
+        mine != null &&
+        partner != null &&
+        const ll.Distance().as(
+              ll.LengthUnit.Meter,
+              mine.coordinate,
+              partner.coordinate,
+            ) <
+            200;
+    final mineOnLeft =
+        mine != null &&
+        partner != null &&
+        mine.coordinate.longitude <= partner.coordinate.longitude;
+    return RepaintBoundary(
+      child: Stack(
+        children: [
+          IgnorePointer(
+            child: fm.FlutterMap(
+              mapController: _controller,
+              options: fm.MapOptions(
+                initialCameraFit: _cameraFit,
+                minZoom: 0,
+                maxZoom: 15,
+                backgroundColor: const Color(0xFFE4F2EF),
+                interactionOptions: const fm.InteractionOptions(
+                  flags: fm.InteractiveFlag.none,
+                ),
+                onMapReady: () => _ready = true,
+              ),
+              children: [
+                if (_visible)
+                  fm.TileLayer(
+                    urlTemplate: const String.fromEnvironment(
+                      'HOME_MAP_OSM_TILE_URL',
+                      defaultValue:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    ),
+                    userAgentPackageName: AppConfig.androidPackageName,
+                    tileProvider: _tileProvider ??=
+                        widget.tileProvider ??
+                        fm.NetworkTileProvider(silenceExceptions: true),
+                    maxNativeZoom: 19,
+                    panBuffer: 0,
+                    keepBuffer: 0,
+                    retinaMode: false,
+                  ),
+                fm.MarkerLayer(
+                  markers: [
+                    if (mine != null)
+                      fm.Marker(
+                        point: mine.coordinate,
+                        width: 40,
+                        height: 38,
+                        alignment: together
+                            ? (mineOnLeft
+                                  ? Alignment.topRight
+                                  : Alignment.topLeft)
+                            : Alignment.topCenter,
+                        child: _MiniMapAvatarPin(
+                          key: const ValueKey('home-map-my-avatar'),
+                          imageUrl: widget.myAvatarUrl,
+                          female: widget.myFemale,
+                          live: mine.isLive,
+                          color: const Color(0xFFE87998),
+                        ),
+                      ),
+                    if (partner != null)
+                      fm.Marker(
+                        point: partner.coordinate,
+                        width: 40,
+                        height: 38,
+                        alignment: together
+                            ? (mineOnLeft
+                                  ? Alignment.topLeft
+                                  : Alignment.topRight)
+                            : Alignment.topCenter,
+                        child: _MiniMapAvatarPin(
+                          key: const ValueKey('home-map-partner-avatar'),
+                          imageUrl: widget.partnerAvatarUrl,
+                          female: widget.partnerFemale,
+                          live: partner.isLive,
+                          color: const Color(0xFF9778C9),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-/// Tóm tắt "Hành trình" thu nhỏ; chạm để mở trang thống kê đầy đủ.
+class _MiniMapAvatarPin extends StatelessWidget {
+  const _MiniMapAvatarPin({
+    super.key,
+    required this.imageUrl,
+    required this.female,
+    required this.live,
+    required this.color,
+  });
+  final String imageUrl;
+  final bool female;
+  final bool live;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = imageUrl.trim();
+    Widget fallback() => CoupleDefaultAvatar(female: female, animate: false);
+    return Stack(
+      alignment: Alignment.topCenter,
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          padding: const EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.25),
+                blurRadius: 5,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: ClipOval(
+            child: url.isEmpty
+                ? fallback()
+                : CachedNetworkImage(
+                    imageUrl: url,
+                    fit: BoxFit.cover,
+                    memCacheWidth: HomeImagePolicy.avatarPixels,
+                    memCacheHeight: HomeImagePolicy.avatarPixels,
+                    maxWidthDiskCache: HomeImagePolicy.avatarPixels,
+                    maxHeightDiskCache: HomeImagePolicy.avatarPixels,
+                    fadeInDuration: Duration.zero,
+                    fadeOutDuration: Duration.zero,
+                    placeholder: (context, imageUrl) => fallback(),
+                    errorWidget: (context, imageUrl, error) => fallback(),
+                  ),
+          ),
+        ),
+        Positioned(
+          bottom: 0,
+          child: Icon(Icons.favorite_rounded, size: 11, color: color),
+        ),
+        if (live)
+          PositionedDirectional(
+            end: 2,
+            top: 1,
+            child: Container(
+              key: const ValueKey('home-map-live-dot'),
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: const Color(0xFF459479),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 1.5),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class HomeInsightMiniCard extends StatelessWidget {
   const HomeInsightMiniCard({
     super.key,
@@ -835,24 +1100,23 @@ class HomeInsightMiniCard extends StatelessWidget {
     required this.isSingle,
     required this.onTap,
   });
-
   final LoveInsightData? data;
   final bool isSingle;
   final VoidCallback onTap;
 
-  static const Color _surface = Color(0xFFF0EAFB);
-  static const Color _accent = Color(0xFF5B3E99);
-  static const Color _ink = Color(0xFF2E1F4D);
-  static const Color _body = Color(0xFF5A4A78);
-
   @override
   Widget build(BuildContext context) {
     final insight = data;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final accent = dark ? const Color(0xFFD0B5F2) : const Color(0xFF7955A4);
+    final ink = dark ? const Color(0xFFF1E9FB) : const Color(0xFF463057);
+    final muted = dark ? const Color(0xFFC6B6D8) : const Color(0xFF786486);
     final scoreLabel = context.tr(
       isSingle ? 'home_chshotng_328c7a' : 'home_chshnhphc_7c8e85',
     );
     final score = insight?.loveScore.clamp(0, 100) ?? 0;
     final memories = insight?.memoryThisMonth ?? 0;
+    final numberFormat = MaterialLocalizations.of(context).formatDecimal;
     final semanticLabel = insight == null
         ? context.tr('home_anggomthmc_0715ce')
         : [
@@ -861,135 +1125,184 @@ class HomeInsightMiniCard extends StatelessWidget {
             '$scoreLabel $score/100',
             L10nService().translateActiveDays(insight.activeDays),
           ].join(', ');
-
     return Semantics(
       button: true,
       label: semanticLabel,
       excludeSemantics: true,
       child: Material(
         key: const ValueKey('home-insight-mini'),
-        color: _surface,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(24),
         clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: insight == null
-                ? Text(
-                    context.tr('home_anggomthmc_0715ce'),
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                    style: SLTheme.quicksand(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: _body,
-                      height: 1.4,
-                    ),
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: AlignmentDirectional.topStart,
+              end: AlignmentDirectional.bottomEnd,
+              colors: dark
+                  ? const [Color(0xFF3E344A), Color(0xFF332D3D)]
+                  : const [Color(0xFFF4EDFF), Color(0xFFEDE4F8)],
+            ),
+          ),
+          child: InkWell(
+            onTap: onTap,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 190),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_month_rounded,
+                          size: 14,
+                          color: accent,
+                        ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: _miniCardText(
                             context.tr('home_compact_this_month'),
-                            style: SLTheme.quicksand(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: _accent,
+                            color: accent,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (insight == null) ...[
+                      const SizedBox(height: 12),
+                      Icon(Icons.auto_awesome_rounded, size: 26, color: accent),
+                      const SizedBox(height: 8),
+                      _miniCardText(
+                        context.tr('home_anggomthmc_0715ce'),
+                        color: muted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        maxLines: 4,
+                      ),
+                    ] else ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _miniCardText(
+                                  numberFormat(memories),
+                                  key: const ValueKey('home-month-memories'),
+                                  color: ink,
+                                  fontSize: 34,
+                                  maxLines: 1,
+                                ),
+                                _miniCardText(
+                                  context.tr('home_compact_memories_unit'),
+                                  color: muted,
+                                  fontSize: 12,
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Wrap(
-                            crossAxisAlignment: WrapCrossAlignment.end,
-                            spacing: 6,
-                            children: [
-                              Text(
-                                '$memories',
-                                style: SLTheme.quicksand(
-                                  fontSize: 34,
-                                  fontWeight: FontWeight.w700,
-                                  color: _ink,
-                                  height: 1.0,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 3),
-                                child: Text(
-                                  context.tr('home_compact_memories_unit'),
-                                  style: SLTheme.quicksand(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    color: _ink,
+                          const SizedBox(width: 4),
+                          Transform.rotate(
+                            angle: -0.12,
+                            child: Container(
+                              width: 32,
+                              height: 36,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: dark
+                                    ? const Color(0xFF55435E)
+                                    : const Color(0xFFFFFAFF),
+                                borderRadius: BorderRadius.circular(11),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: accent.withValues(alpha: 0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
                                   ),
-                                ),
+                                ],
                               ),
-                            ],
+                              child: const Icon(
+                                Icons.photo_library_rounded,
+                                size: 21,
+                                color: Color(0xFFD880A2),
+                              ),
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  scoreLabel,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: SLTheme.quicksand(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: _body,
-                                  ),
-                                ),
-                              ),
-                              Text(
-                                '$score',
-                                style: SLTheme.quicksand(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: _ink,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(999),
-                            child: LinearProgressIndicator(
-                              value: score / 100,
-                              minHeight: 8,
-                              backgroundColor: const Color(0xFFDCCFF3),
-                              valueColor: const AlwaysStoppedAnimation<Color>(
-                                SLColors.accentPurpleDark,
-                              ),
+                          Expanded(
+                            child: _miniCardText(
+                              scoreLabel,
+                              color: muted,
+                              fontSize: 11,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            L10nService().translateActiveDays(
-                              insight.activeDays,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: SLTheme.quicksand(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: _body,
-                            ),
+                          const SizedBox(width: 4),
+                          _miniCardText(
+                            numberFormat(score),
+                            key: const ValueKey('home-month-score'),
+                            color: ink,
+                            fontSize: 12,
                           ),
                         ],
                       ),
+                      const SizedBox(height: 5),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: LinearProgressIndicator(
+                          value: score / 100,
+                          minHeight: 6,
+                          backgroundColor: accent.withValues(alpha: 0.15),
+                          valueColor: AlwaysStoppedAnimation<Color>(accent),
+                        ),
+                      ),
+                      const SizedBox(height: 9),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(
+                            alpha: dark ? 0.08 : 0.65,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.wb_sunny_rounded,
+                              size: 13,
+                              color: Color(0xFFD99C62),
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: _miniCardText(
+                                L10nService().translateActiveDays(
+                                  insight.activeDays,
+                                ),
+                                key: const ValueKey('home-month-active-days'),
+                                color: muted,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
-                  ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import '../utils/sticker_image_policy.dart';
 
 part 'original_sticker_rigs.dart';
 part 'original_sticker_performances.dart';
@@ -284,13 +285,8 @@ class _OriginalStickerState extends State<OriginalSticker> {
   ImageStream? _stream;
   ImageInfo? _info;
   bool _failed = false;
+  bool _resolvingImage = false;
   late final _listener = ImageStreamListener(_onImage, onError: _onError);
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _resolveImage();
-  }
 
   @override
   void didUpdateWidget(covariant OriginalSticker oldWidget) {
@@ -299,18 +295,27 @@ class _OriginalStickerState extends State<OriginalSticker> {
       _info?.dispose();
       _info = null;
       _failed = false;
-      _resolveImage();
     }
   }
 
-  void _resolveImage() {
-    final next = AssetImage(
-      widget.assetPath,
+  void _resolveImage(Size size) {
+    final next = StickerImagePolicy.provider(
+      assetPath: widget.assetPath,
+      size: size,
+      devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+      columns: widget.columns,
+      rows: widget.rows,
     ).resolve(createLocalImageConfiguration(context));
     if (_stream?.key == next.key) return;
     _stream?.removeListener(_listener);
     _stream = next;
-    next.addListener(_listener);
+    _failed = false;
+    _resolvingImage = true;
+    try {
+      next.addListener(_listener);
+    } finally {
+      _resolvingImage = false;
+    }
   }
 
   void _onImage(ImageInfo info, bool synchronousCall) {
@@ -318,15 +323,26 @@ class _OriginalStickerState extends State<OriginalSticker> {
       info.dispose();
       return;
     }
-    setState(() {
+    void update() {
       _info?.dispose();
       _info = info;
       _failed = false;
-    });
+    }
+
+    if (synchronousCall) {
+      update();
+    } else {
+      setState(update);
+    }
   }
 
   void _onError(Object error, StackTrace? stack) {
-    if (mounted) setState(() => _failed = true);
+    if (!mounted) return;
+    if (_resolvingImage) {
+      _failed = true;
+    } else {
+      setState(() => _failed = true);
+    }
   }
 
   @override
@@ -341,38 +357,38 @@ class _OriginalStickerState extends State<OriginalSticker> {
     child: SizedBox(
       width: widget.width,
       height: widget.height,
-      child: _failed
-          ? const Icon(Icons.image_not_supported_outlined)
-          : LayoutBuilder(
-              builder: (context, constraints) {
-                final width =
-                    widget.width ??
-                    (constraints.hasBoundedWidth ? constraints.maxWidth : 72.0);
-                final height =
-                    widget.height ??
-                    (constraints.hasBoundedHeight
-                        ? constraints.maxHeight
-                        : width);
-                final source = _info?.image;
-                return CustomPaint(
-                  size: Size(width, height),
-                  painter: source == null
-                      ? null
-                      : OriginalStickerPainter(
-                          image: source,
-                          source: Rect.fromLTWH(
-                            source.width * widget.column / widget.columns,
-                            source.height * widget.row / widget.rows,
-                            source.width / widget.columns,
-                            source.height / widget.rows,
-                          ),
-                          regions: const [],
-                          animation: const AlwaysStoppedAnimation(0),
-                          filterQuality: widget.filterQuality,
-                        ),
-                );
-              },
-            ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width =
+              widget.width ??
+              (constraints.hasBoundedWidth ? constraints.maxWidth : 72.0);
+          final height =
+              widget.height ??
+              (constraints.hasBoundedHeight ? constraints.maxHeight : width);
+          _resolveImage(Size(width, height));
+          if (_failed) {
+            return const Icon(Icons.image_not_supported_outlined);
+          }
+          final source = _info?.image;
+          return CustomPaint(
+            size: Size(width, height),
+            painter: source == null
+                ? null
+                : OriginalStickerPainter(
+                    image: source,
+                    source: Rect.fromLTWH(
+                      source.width * widget.column / widget.columns,
+                      source.height * widget.row / widget.rows,
+                      source.width / widget.columns,
+                      source.height / widget.rows,
+                    ),
+                    regions: const [],
+                    animation: const AlwaysStoppedAnimation(0),
+                    filterQuality: widget.filterQuality,
+                  ),
+          );
+        },
+      ),
     ),
   );
 }

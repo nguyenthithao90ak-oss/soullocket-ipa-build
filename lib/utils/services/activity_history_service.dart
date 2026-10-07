@@ -15,6 +15,10 @@ import 'storage/storage_service.dart';
 import 'offline_cache_service.dart';
 import 'l10n_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/core/service_locator.dart';
+import 'notebook/notebook_d1_client.dart';
+import 'house_lists/house_list_d1_client.dart';
+import 'core/rtdb_settled_read.dart';
 
 class ActivityHistoryEntry {
   final String id;
@@ -482,7 +486,18 @@ class ActivityHistoryService {
       return false;
     }
 
-    await _db.ref(entry.restorePath).set(payload);
+    final d1ListKind = _d1ListKinds[entry.module.trim().toLowerCase()];
+    if (entry.module.trim().toLowerCase() == 'shared_notes' &&
+        payload['backend'] == 'd1') {
+      // Sổ tay đã chuyển sang D1: khôi phục qua API (kiểm tra revision và cửa sổ 3 ngày),
+      // không ghi lại cây RTDB mà rules đã chặn.
+      if (!await _restoreD1Note(entry, payload)) return false;
+    } else if (d1ListKind != null && payload['backend'] == 'd1') {
+      // Danh sách của nhà trên D1 (mốc E): cùng cách khôi phục qua API như Sổ tay.
+      if (!await _restoreD1ListItem(entry, payload, d1ListKind)) return false;
+    } else {
+      await _db.ref(entry.restorePath).set(payload);
+    }
 
     await add(
       L10nService().format('home_activity_restored', {
@@ -500,6 +515,74 @@ class ActivityHistoryService {
       previewUrl: entry.previewUrl,
       previewType: entry.previewType,
     );
+    return true;
+  }
+
+  Future<bool> _restoreD1Note(
+    ActivityHistoryEntry entry,
+    Map<String, dynamic> payload,
+  ) async {
+    final revision = (payload['restoreRevision'] as num?)?.toInt() ?? 0;
+    if (entry.houseId.isEmpty || entry.entityId.isEmpty || revision <= 0) {
+      return false;
+    }
+    try {
+      await locator<NotebookD1Client>().restore(
+        houseId: entry.houseId,
+        noteId: entry.entityId,
+        expectedRevision: revision,
+      );
+    } catch (e) {
+      debugPrint(
+        'ActivityHistory notebook restore failed: ${AppErrorMapper.resolve(e).kind.name}',
+      );
+      return false;
+    }
+    try {
+      await _db
+          .ref('houses/${entry.houseId}/metadata/last_updated_notes')
+          .set(DateTime.now().millisecondsSinceEpoch);
+    } catch (_) {
+      /* Ghi chú đã khôi phục; máy kia thấy ở lần tải sau. */
+    }
+    return true;
+  }
+
+  /// Module lịch sử → loại danh sách D1 (trùng tên node RTDB và cờ dataBackends).
+  static const Map<String, String> _d1ListKinds = {
+    'bucket_list': 'bucket',
+    'wishlist': 'wishlist',
+  };
+
+  Future<bool> _restoreD1ListItem(
+    ActivityHistoryEntry entry,
+    Map<String, dynamic> payload,
+    String kind,
+  ) async {
+    final revision = (payload['restoreRevision'] as num?)?.toInt() ?? 0;
+    if (entry.houseId.isEmpty || entry.entityId.isEmpty || revision <= 0) {
+      return false;
+    }
+    try {
+      await locator<HouseListD1Client>().restore(
+        houseId: entry.houseId,
+        kind: kind,
+        itemId: entry.entityId,
+        expectedRevision: revision,
+      );
+    } catch (e) {
+      debugPrint(
+        'ActivityHistory $kind restore failed: ${AppErrorMapper.resolve(e).kind.name}',
+      );
+      return false;
+    }
+    try {
+      await _db
+          .ref('houses/${entry.houseId}/metadata/last_updated_$kind')
+          .set(DateTime.now().millisecondsSinceEpoch);
+    } catch (_) {
+      /* Mục đã khôi phục; máy kia thấy ở lần tải sau. */
+    }
     return true;
   }
 
@@ -635,8 +718,11 @@ $rows
   }
 
   /// Đọc cả nhánh một lần; bước tải và bước dọn dùng chung kết quả này.
+  /// Đọc qua listener ngắn để bộ nhớ đệm RTDB tránh tải lại khi lịch sử không đổi.
   Future<Map<dynamic, dynamic>?> _readRemoteRaw(String houseId) async {
-    final snapshot = await _db.ref('houses/$houseId/activity_history').get();
+    final snapshot = await readQuerySettled(
+      _db.ref('houses/$houseId/activity_history'),
+    );
     if (!snapshot.exists || snapshot.value == null) return null;
     return Map<dynamic, dynamic>.from(snapshot.value as Map);
   }

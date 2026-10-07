@@ -17,10 +17,14 @@ class BalancedCountdownPalette {
   Color get paper => dark ? const Color(0xFF2D252D) : const Color(0xFFFFFCF9);
   Color get blush => dark ? const Color(0xFF45303C) : const Color(0xFFF9E9EF);
   Color get border => dark ? const Color(0xFF775260) : const Color(0xFFE6BCCB);
+  Color get gold => dark ? const Color(0xFFE2C28F) : const Color(0xFFC8A16E);
   Color get label => transparent ? Colors.white : muted;
+  // Ba điểm màu: đậm ở góc trên, hồng nhạt ở góc dưới để số có chiều sâu.
   List<Color> get numberColors => transparent
       ? const [Colors.white, Color(0xFFFFE5EE)]
-      : [rose, dark ? const Color(0xFFD894B6) : const Color(0xFFC57491)];
+      : dark
+      ? const [Color(0xFFF6C8D8), Color(0xFFF0B1C4), Color(0xFFD894B6)]
+      : const [Color(0xFF8E3352), Color(0xFFA83F60), Color(0xFFCB7F9A)];
 
   LinearGradient get outerGradient => LinearGradient(
     begin: Alignment.topLeft,
@@ -56,11 +60,16 @@ class BalancedCountdownSurface extends StatelessWidget {
     super.key,
     this.shapeKey = 'circle',
     this.transparent = false,
+    this.progress,
     this.child,
   });
 
   final String shapeKey;
   final bool transparent;
+
+  /// 0–1: tiến độ đến mốc kế tiếp, vẽ thành vòng cung quanh viền. Chỉ áp dụng
+  /// cho hình tròn; null thì giữ hai cung trang trí như bản xem trước.
+  final double? progress;
   final Widget? child;
 
   /// Chung một viền cho nền thật và đường đi của bé, kể cả squircle co giãn.
@@ -135,6 +144,7 @@ class BalancedCountdownSurface extends StatelessWidget {
                             painter: _BalancedKeepsakePainter(
                               palette: palette,
                               round: shapeKey == 'circle' || shapeKey.isEmpty,
+                              progress: progress?.clamp(0.0, 1.0).toDouble(),
                             ),
                           ),
                         ),
@@ -153,22 +163,88 @@ class BalancedCountdownSurface extends StatelessWidget {
 }
 
 class _BalancedKeepsakePainter extends CustomPainter {
-  const _BalancedKeepsakePainter({required this.palette, required this.round});
+  const _BalancedKeepsakePainter({
+    required this.palette,
+    required this.round,
+    this.progress,
+  });
   final BalancedCountdownPalette palette;
   final bool round;
+  final double? progress;
 
   @override
   void paint(Canvas canvas, Size size) {
     canvas.save();
     canvas.scale(size.width / 240, size.height / 240);
+    const canvasRect = Rect.fromLTWH(0, 0, 240, 240);
+    // Vệt sáng mềm góc trên trái để nền có chiều sâu, không dùng blur.
+    if (!palette.transparent) {
+      canvas.drawRect(
+        canvasRect,
+        Paint()
+          ..shader = RadialGradient(
+            center: const Alignment(-.45, -.65),
+            radius: .95,
+            colors: [
+              Colors.white.withValues(alpha: palette.dark ? .06 : .6),
+              Colors.white.withValues(alpha: 0),
+            ],
+          ).createShader(canvasRect),
+      );
+    }
     final pen = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2
       ..strokeCap = StrokeCap.round
       ..color = (palette.transparent ? Colors.white : palette.border)
           .withValues(alpha: .65);
-    if (round) {
-      const orbit = Rect.fromLTWH(12, 12, 216, 216);
+    const orbit = Rect.fromLTWH(12, 12, 216, 216);
+    final ringProgress = progress;
+    if (round && ringProgress != null) {
+      final base = palette.transparent ? Colors.white : palette.border;
+      canvas.drawArc(
+        orbit,
+        0,
+        2 * math.pi,
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3.6
+          ..color = base.withValues(alpha: .32),
+      );
+      final sweepAngle = 2 * math.pi * ringProgress;
+      if (sweepAngle > 0) {
+        final end = palette.transparent ? Colors.white : palette.rose;
+        canvas.drawArc(
+          orbit,
+          -math.pi / 2,
+          sweepAngle,
+          false,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 3.6
+            ..strokeCap = StrokeCap.round
+            ..shader = SweepGradient(
+              endAngle: math.max(.2, sweepAngle),
+              colors: [
+                (palette.transparent ? Colors.white : palette.gold).withValues(
+                  alpha: .85,
+                ),
+                end,
+              ],
+              transform: const GradientRotation(-math.pi / 2),
+            ).createShader(orbit),
+        );
+        final angle = -math.pi / 2 + sweepAngle;
+        final dot = Offset(
+          orbit.center.dx + orbit.width / 2 * math.cos(angle),
+          orbit.center.dy + orbit.height / 2 * math.sin(angle),
+        );
+        canvas.drawCircle(dot, 7, Paint()..color = end.withValues(alpha: .2));
+        canvas.drawCircle(dot, 4.4, Paint()..color = end);
+        canvas.drawCircle(dot, 1.8, Paint()..color = Colors.white);
+      }
+    } else if (round) {
       canvas.drawArc(orbit, -.48 * math.pi, .30 * math.pi, false, pen);
       canvas.drawArc(orbit, .52 * math.pi, .30 * math.pi, false, pen);
     }
@@ -210,7 +286,8 @@ class _BalancedKeepsakePainter extends CustomPainter {
   bool shouldRepaint(covariant _BalancedKeepsakePainter oldDelegate) =>
       oldDelegate.palette.dark != palette.dark ||
       oldDelegate.palette.transparent != palette.transparent ||
-      oldDelegate.round != round;
+      oldDelegate.round != round ||
+      oldDelegate.progress != progress;
 }
 
 class BalancedCountdownOption extends StatelessWidget {

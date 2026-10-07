@@ -77,8 +77,57 @@ class _ModernHomeBody extends StatelessWidget {
       );
     }
 
+    final partnerName = isSingle ? '' : state._resolvePartnerName();
+    return HomePartnerLetterHost(
+      houseId: isSingle ? null : state._houseId,
+      uid: state._auth.currentUser?.uid,
+      partnerName: partnerName,
+      builder: (context, letter, openLetter) => _buildCompanionScene(
+        context,
+        uiState: uiState,
+        effectProfile: effectProfile,
+        partnerName: partnerName,
+        hasLetter: letter != null,
+        openLetter: openLetter,
+      ),
+    );
+  }
+
+  /// Thỏ = người ấy, gấu = mình. Offline quá 30 phút thì thỏ ngủ gật.
+  HomeCompanionPartnerStatus _companionPartnerStatus() {
+    if (isSingle) return HomeCompanionPartnerStatus.unknown;
+    final role = state._partnerRole;
+    final data = state._presenceForRole(role);
+    if (data == null) return HomeCompanionPartnerStatus.unknown;
+    if (PresenceService.isSleeping(data))
+      return HomeCompanionPartnerStatus.away;
+    if (state._isRoleOnline(role)) return HomeCompanionPartnerStatus.online;
+    final lastSeen = state._readEpochMs(data['lastSeen']);
+    if (lastSeen == null) return HomeCompanionPartnerStatus.away;
+    final idle = DateTime.now().millisecondsSinceEpoch - lastSeen;
+    return idle > const Duration(minutes: 30).inMilliseconds
+        ? HomeCompanionPartnerStatus.away
+        : HomeCompanionPartnerStatus.unknown;
+  }
+
+  Widget _buildCompanionScene(
+    BuildContext context, {
+    required UiPrefsState uiState,
+    required UiEffectProfile effectProfile,
+    required String partnerName,
+    required bool hasLetter,
+    required VoidCallback openLetter,
+  }) {
     return HomeCompanionScene(
       followScroll: true,
+      calm: true,
+      partnerStatusListenable: _PartnerStatusListenable(
+        state._presenceDataNotifier,
+        _companionPartnerStatus,
+      ),
+      partnerName: partnerName,
+      partnerHasLetter: hasLetter,
+      onOpenPartnerLetter: openLetter,
       enabled: uiState.homeCompanionEnabled,
       soundEnabled: uiState.homeCompanionSoundEnabled,
       maxVisibleCharacters: 2,
@@ -207,16 +256,31 @@ class _ModernHomeBody extends StatelessWidget {
                                   )
                                 : MediaQuery.paddingOf(context).top + 62,
                           ),
-                          HomeCompactHeader(
-                            title:
-                                homeShowHouseName && houseName.trim().isNotEmpty
-                                ? houseName
-                                : smartGreeting,
-                            subtitle:
-                                homeShowHouseName && houseName.trim().isNotEmpty
-                                ? smartGreeting
-                                : null,
-                          ),
+                          // Cặp đôi: lời nhắn chung đồng bộ thay cho lời chào tự động.
+                          if (!isSingle &&
+                              (state._houseId?.isNotEmpty ?? false)) ...[
+                            if (homeShowHouseName &&
+                                houseName.trim().isNotEmpty)
+                              HomeCompactHeader(title: houseName),
+                            HomeCompanionContentArea(
+                              child: HomeSharedNoteHeader(
+                                houseId: state._houseId!,
+                                partnerName: state._resolvePartnerName(),
+                              ),
+                            ),
+                          ] else
+                            HomeCompactHeader(
+                              title:
+                                  homeShowHouseName &&
+                                      houseName.trim().isNotEmpty
+                                  ? houseName
+                                  : smartGreeting,
+                              subtitle:
+                                  homeShowHouseName &&
+                                      houseName.trim().isNotEmpty
+                                  ? smartGreeting
+                                  : null,
+                            ),
                           SLSpacing.h16,
                           state._buildGettingStartedChecklist(
                             isSingle: isSingle,
@@ -395,4 +459,24 @@ class _ChatReminderBanner extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Trạng thái người ấy cho bé thỏ, tính lại mỗi khi presence đổi mà không
+/// dựng lại nội dung Home (chỉ chuyển tiếp listener của notifier gốc).
+class _PartnerStatusListenable
+    extends ValueListenable<HomeCompanionPartnerStatus> {
+  _PartnerStatusListenable(this._source, this._resolve);
+
+  final Listenable _source;
+  final HomeCompanionPartnerStatus Function() _resolve;
+
+  @override
+  HomeCompanionPartnerStatus get value => _resolve();
+
+  @override
+  void addListener(VoidCallback listener) => _source.addListener(listener);
+
+  @override
+  void removeListener(VoidCallback listener) =>
+      _source.removeListener(listener);
 }

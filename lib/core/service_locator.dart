@@ -23,6 +23,7 @@ import 'package:soullocket_app/utils/services/companion_journey_service.dart';
 import 'package:soullocket_app/utils/services/privacy_collection_service.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
 import 'package:soullocket_app/utils/services/house_settings_service.dart';
+import 'package:soullocket_app/utils/services/home_shared_note_service.dart';
 import 'package:soullocket_app/utils/services/location_service.dart';
 import 'package:soullocket_app/utils/services/love_insight_service.dart';
 import 'package:soullocket_app/utils/services/notification_service.dart';
@@ -30,6 +31,8 @@ import 'package:soullocket_app/utils/services/soul_event_reminder_service.dart';
 import 'package:soullocket_app/utils/services/presence_service.dart';
 import 'package:soullocket_app/utils/services/storage/storage_service.dart';
 import 'package:soullocket_app/utils/services/infrastructure/cloudflare_data_service.dart';
+import 'package:soullocket_app/utils/services/notebook/notebook_d1_client.dart';
+import 'package:soullocket_app/utils/services/house_lists/house_list_d1_client.dart';
 import 'package:soullocket_app/utils/services/utilities/note_service.dart';
 import 'package:soullocket_app/utils/services/utility_service.dart';
 import 'package:soullocket_app/utils/services/sound_service.dart';
@@ -68,6 +71,7 @@ void setupLocator() {
   // ── House domain ────────────────────────────────────────────────────────
   locator.registerLazySingleton(() => HouseService());
   locator.registerLazySingleton(() => HouseSettingsService());
+  locator.registerLazySingleton(() => HomeSharedNoteService());
 
   // ── Realtime / Presence ─────────────────────────────────────────────────
   locator.registerLazySingleton(() => PresenceService());
@@ -81,6 +85,14 @@ void setupLocator() {
   locator.registerLazySingleton(
     () => CloudflareDataService(),
     dispose: (service) => service.dispose(),
+  );
+  locator.registerLazySingleton(
+    () => NotebookD1Client(),
+    dispose: (client) => client.dispose(),
+  );
+  locator.registerLazySingleton(
+    () => HouseListD1Client(),
+    dispose: (client) => client.dispose(),
   );
 
   // ── Insight / Utility ───────────────────────────────────────────────────

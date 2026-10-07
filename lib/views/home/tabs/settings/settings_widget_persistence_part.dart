@@ -41,17 +41,16 @@ extension _SettingsTabWidgetPersistence on _SettingsTabState {
       return const <String>[];
     }
     try {
+      // Cùng truy vấn với Home: đọc qua listener ngắn để dùng lại bộ nhớ đệm RTDB.
       final snapshots = await Future.wait([
-        _dbRef
-            .child('houses/$houseId/memories')
-            .limitToLast(24)
-            .get()
-            .timeout(const Duration(seconds: 4)),
-        _dbRef
-            .child('houses/$houseId/diary')
-            .limitToLast(24)
-            .get()
-            .timeout(const Duration(seconds: 4)),
+        readQuerySettled(
+          _dbRef.child('houses/$houseId/memories').limitToLast(24),
+          timeout: const Duration(seconds: 4),
+        ),
+        readQuerySettled(
+          _dbRef.child('houses/$houseId/diary').limitToLast(24),
+          timeout: const Duration(seconds: 4),
+        ),
       ]);
       // Gộp cùng hai nguồn với Home để thay khung không làm mất ảnh nhật ký.
       final merged = <String, dynamic>{};

@@ -1,6 +1,8 @@
 import 'package:soullocket_app/utils/locale_date_format.dart';
 import '../../../utils/services/custom_mood_sticker_service.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
+import 'package:video_player/video_player.dart';
+import 'diary/widgets/diary_memory_video_controls.dart';
 import 'diary/widgets/diary_memory_video_player.dart';
 import 'diary/widgets/private_diary_image.dart';
 import 'diary/utils/private_memory_link_policy.dart';
@@ -1021,6 +1023,8 @@ class _DiaryTabState extends State<DiaryTab>
           final isZoomedInNotifier = ValueNotifier<bool>(false);
           final dragOffsetNotifier = ValueNotifier<Offset>(Offset.zero);
           final dragScaleNotifier = ValueNotifier<double>(1.0);
+          // Video của trang đang xem; lớp giao diện dùng để hiện thanh tua.
+          final activeVideoNotifier = ValueNotifier<VideoPlayerController?>(null);
 
           return StatefulBuilder(
             builder: (context, setState) {
@@ -1088,6 +1092,7 @@ class _DiaryTabState extends State<DiaryTab>
                                 return _MemoryViewerPage(
                                   isActive: index == currentIndex,
                                   item: allPhotos[index],
+                                  activeVideoNotifier: activeVideoNotifier,
                                   dragOffsetNotifier: dragOffsetNotifier,
                                   dragScaleNotifier: dragScaleNotifier,
                                   isZoomedInNotifier: isZoomedInNotifier,
@@ -1103,6 +1108,7 @@ class _DiaryTabState extends State<DiaryTab>
                             Builder(
                               builder: (context) => _MemoryViewerPage(
                                 item: initialItem,
+                                activeVideoNotifier: activeVideoNotifier,
                                 dragOffsetNotifier: dragOffsetNotifier,
                                 dragScaleNotifier: dragScaleNotifier,
                                 isZoomedInNotifier: isZoomedInNotifier,
@@ -1164,17 +1170,52 @@ class _DiaryTabState extends State<DiaryTab>
                                             left: 0,
                                             right: 0,
                                             bottom: 0,
-                                            child: IgnorePointer(
-                                              child: MemoryViewerFooter(
-                                                position: currentIndex + 1,
-                                                total: allPhotos.isEmpty
-                                                    ? 1
-                                                    : allPhotos.length,
-                                                timestamp:
-                                                    _formatMemoryTimestamp(
-                                                      currentItem,
-                                                    ),
-                                              ),
+                                            child: ValueListenableBuilder<
+                                              VideoPlayerController?
+                                            >(
+                                              valueListenable:
+                                                  activeVideoNotifier,
+                                              builder: (context, video, _) =>
+                                                  Column(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .stretch,
+                                                    children: [
+                                                      if (video != null)
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets.symmetric(
+                                                                horizontal: 12,
+                                                              ),
+                                                          child:
+                                                              DiaryMemoryVideoControls(
+                                                                controller:
+                                                                    video,
+                                                              ),
+                                                        ),
+                                                      IgnorePointer(
+                                                        child: MemoryViewerFooter(
+                                                          position:
+                                                              currentIndex + 1,
+                                                          total:
+                                                              allPhotos.isEmpty
+                                                              ? 1
+                                                              : allPhotos
+                                                                    .length,
+                                                          timestamp:
+                                                              _formatMemoryTimestamp(
+                                                                currentItem,
+                                                              ),
+                                                          topPadding:
+                                                              video != null
+                                                              ? 12
+                                                              : 48,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
                                             ),
                                           ),
                                           Positioned(
@@ -1347,12 +1388,8 @@ class _DiaryTabState extends State<DiaryTab>
     return _feedController.resolveMemoryAuthorName(item);
   }
 
-  int _memoryThumbnailCacheWidth(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    return (((mediaQuery.size.width - 64) / 3) * mediaQuery.devicePixelRatio)
-        .ceil()
-        .clamp(240, 768);
-  }
+  int _memoryThumbnailCacheWidth(BuildContext context) =>
+      _memoryThumbnailCacheWidthFor(MediaQuery.of(context));
 
   int _postImageCacheWidth(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -1416,6 +1453,13 @@ class _DiaryTabState extends State<DiaryTab>
     return _DiaryTabShell(state: this);
   }
 }
+
+/// Cỡ giải mã ảnh nhỏ ở lưới album. Màn xem ảnh dùng lại để hiện tạm ảnh đã
+/// lưu trong lúc tải bản lớn.
+int _memoryThumbnailCacheWidthFor(MediaQueryData mediaQuery) =>
+    (((mediaQuery.size.width - 64) / 3) * mediaQuery.devicePixelRatio)
+        .ceil()
+        .clamp(240, 768);
 
 class _MemoryZoomDraggableWrapper extends StatefulWidget {
   final Widget child;
@@ -1512,6 +1556,7 @@ class _MemoryZoomDraggableWrapperState
 class _MemoryViewerPage extends StatefulWidget {
   final Map<String, dynamic> item;
   final bool isActive;
+  final ValueNotifier<VideoPlayerController?>? activeVideoNotifier;
   final ValueNotifier<Offset> dragOffsetNotifier;
   final ValueNotifier<double> dragScaleNotifier;
   final ValueNotifier<bool> isZoomedInNotifier;
@@ -1522,6 +1567,7 @@ class _MemoryViewerPage extends StatefulWidget {
   const _MemoryViewerPage({
     required this.item,
     this.isActive = true,
+    this.activeVideoNotifier,
     required this.dragOffsetNotifier,
     required this.dragScaleNotifier,
     required this.isZoomedInNotifier,
@@ -1624,6 +1670,7 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
                             requireFreshAuthorization:
                                 PrivateMemoryLinkPolicy.isPrivate(widget.item),
                             isActive: widget.isActive,
+                            controlsTarget: widget.activeVideoNotifier,
                             url: url,
                             houseId:
                                 widget.item['houseId']?.toString() ??
@@ -1641,6 +1688,10 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
                               memoryId: widget.item['id']?.toString() ?? '',
                               fit: BoxFit.contain,
                               cacheWidth: 2200,
+                              placeholderCacheWidth:
+                                  _memoryThumbnailCacheWidthFor(
+                                    MediaQuery.of(context),
+                                  ),
                             ),
                           )
                         : _imageProvider != null

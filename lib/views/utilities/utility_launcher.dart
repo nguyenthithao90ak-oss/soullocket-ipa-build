@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/core/routing/single_open_gate.dart';
 import 'package:soullocket_app/core/sl_route.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/military_lock_service.dart';
@@ -35,6 +36,8 @@ import 'wheel/wheel_screen.dart';
 /// Mở một tiện ích theo ID; tab Tiện ích và lối tắt đã ghim ở trang Nhà
 /// dùng chung để luôn ra cùng một màn hình và cùng bước khóa.
 abstract final class UtilityLauncher {
+  static final SingleOpenGate _openGate = SingleOpenGate();
+
   /// Kiểm tra quyền theo chế độ, nhà hiện tại và các tiện ích đặc biệt rồi mở.
   static Future<void> open(
     BuildContext context, {
@@ -42,7 +45,29 @@ abstract final class UtilityLauncher {
     required String? houseId,
     required String myName,
     required String relationshipMode,
+    Future<bool> Function()? beforeOpen,
+  }) {
+    return _openGate.run(
+      () => _openInternal(
+        context,
+        id: id,
+        houseId: houseId,
+        myName: myName,
+        relationshipMode: relationshipMode,
+        beforeOpen: beforeOpen,
+      ),
+    );
+  }
+
+  static Future<void> _openInternal(
+    BuildContext context, {
+    required String id,
+    required String? houseId,
+    required String myName,
+    required String relationshipMode,
+    Future<bool> Function()? beforeOpen,
   }) async {
+    if (!context.mounted) return;
     if (!UtilityService.isUtilityAllowed(id, relationshipMode)) {
       final blockedMessage = UtilityService.blockedMessageForMode(
         id,
@@ -77,7 +102,9 @@ abstract final class UtilityLauncher {
       );
       return;
     }
-    await openScreen(
+    if (beforeOpen != null && !await beforeOpen()) return;
+    if (!context.mounted) return;
+    await _openScreenInternal(
       context,
       id: id,
       houseId: resolvedHouseId,
@@ -93,7 +120,26 @@ abstract final class UtilityLauncher {
     required String houseId,
     required String myName,
     required String relationshipMode,
+  }) {
+    return _openGate.run(
+      () => _openScreenInternal(
+        context,
+        id: id,
+        houseId: houseId,
+        myName: myName,
+        relationshipMode: relationshipMode,
+      ),
+    );
+  }
+
+  static Future<void> _openScreenInternal(
+    BuildContext context, {
+    required String id,
+    required String houseId,
+    required String myName,
+    required String relationshipMode,
   }) async {
+    if (!context.mounted) return;
     Widget? screen;
     switch (id) {
       case 'note':

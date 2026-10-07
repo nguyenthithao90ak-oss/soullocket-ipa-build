@@ -34,8 +34,12 @@ class _AppReferralCardState extends State<AppReferralCard> {
   @override
   void initState() {
     super.initState();
+    final currentUser = FirebaseAuth.instance.currentUser;
+    _uid = currentUser?.uid;
+    if (currentUser != null) unawaited(_refresh());
     _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
       if (!mounted) return;
+      if (user?.uid == _uid && (_loading || _profile != null)) return;
       _request++;
       setState(() {
         _uid = user?.uid;
@@ -56,7 +60,7 @@ class _AppReferralCardState extends State<AppReferralCard> {
       _uid == uid &&
       FirebaseAuth.instance.currentUser?.uid == uid;
 
-  Future<void> _refresh() async {
+  Future<void> _refresh({bool forceRefresh = false}) async {
     final uid = _uid;
     if (!_sameAccount(uid)) return;
     final request = ++_request;
@@ -66,7 +70,7 @@ class _AppReferralCardState extends State<AppReferralCard> {
       _failure = null;
     });
     try {
-      final profile = await _service.loadProfile();
+      final profile = await _service.loadProfile(forceRefresh: forceRefresh);
       if (!_sameAccount(uid) || request != _request) return;
       setState(() {
         _profile = profile;
@@ -227,7 +231,7 @@ class _AppReferralCardState extends State<AppReferralCard> {
                 tooltip: context.tr('referral_refresh'),
                 onPressed: _loading || _working || _uid == null
                     ? null
-                    : _refresh,
+                    : () => _refresh(forceRefresh: true),
                 icon: const Icon(Icons.refresh_rounded),
               ),
             ],
@@ -395,7 +399,7 @@ class _AppReferralCardState extends State<AppReferralCard> {
           ],
           if (!_loading && _profile == null && _uid != null)
             TextButton.icon(
-              onPressed: _refresh,
+              onPressed: () => _refresh(forceRefresh: true),
               icon: const Icon(Icons.refresh_rounded),
               label: Text(context.tr('referral_retry')),
             ),

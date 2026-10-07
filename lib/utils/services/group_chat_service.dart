@@ -1,4 +1,5 @@
 import 'package:soullocket_app/utils/ui_copy.dart';
+import '../chat_message_policy.dart';
 import 'dart:async';
 
 import 'package:cloud_functions/cloud_functions.dart';
@@ -20,22 +21,6 @@ class GroupChatService {
 
   factory GroupChatService() => _instance;
   GroupChatService._internal();
-
-  static final RegExp _repeatCharRegex = RegExp(r'(.)\1{11,}');
-  static final RegExp _repeatWordRegex = RegExp(
-    r'\b([^\s]+)\b(?:\s+\1\b){5,}',
-    caseSensitive: false,
-  );
-  static final List<String> _blockedPhrases = <String>[
-    UiCopy.text('copy_364db51a25be'),
-    UiCopy.text('copy_474fa880e585'),
-    'phishing',
-    'hack',
-    'malware',
-    'spam',
-    'bitch',
-    'fuck',
-  ];
 
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final FirebaseFunctions _functions = FirebaseFunctions.instance;
@@ -108,32 +93,8 @@ class GroupChatService {
     return room;
   }
 
-  void _detectSpam(String text) {
-    final trimmed = text.trim();
-    if (trimmed.isEmpty) {
-      throw UiCopyException('copy_5d308b37b644');
-    }
-    if (trimmed.length > 1500) {
-      throw UiCopyException('copy_19c4aaa26f5f');
-    }
-
-    final normalized = trimmed
-        .toLowerCase()
-        .replaceAll(RegExp(r'[_\-.]+'), ' ')
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .trim();
-
-    for (final phrase in _blockedPhrases) {
-      if (normalized.contains(phrase)) {
-        throw UiCopyException('copy_786c1396b7bb');
-      }
-    }
-
-    if (_repeatCharRegex.hasMatch(normalized) ||
-        _repeatWordRegex.hasMatch(normalized)) {
-      throw UiCopyException('copy_8ec89d5af7d7');
-    }
-  }
+  void _detectSpam(String text) =>
+      ChatMessagePolicy.validate(text, maxLength: 1500, scanLinks: false);
 
   Future<void> _enforceRateLimit(String actionKey) async {
     final allowed = await _antiSpamRateLimitService.checkRateLimit(
@@ -429,9 +390,7 @@ class GroupChatService {
                         nextMembers.contains(viewerHouseId.trim())) {
                       return;
                     }
-                    controller.addError(
-                      UiCopyException('copy_f5c8f262e423'),
-                    );
+                    controller.addError(UiCopyException('copy_f5c8f262e423'));
                   },
                 );
               },

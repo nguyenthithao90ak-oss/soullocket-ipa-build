@@ -1,4 +1,5 @@
 import 'package:soullocket_app/utils/ui_copy.dart';
+import '../chat_message_policy.dart';
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
@@ -113,51 +114,7 @@ int countUnreadChatMetas(
 
 class ChatService {
   static final ChatService _instance = ChatService._internal();
-  static final RegExp _urlRegex = RegExp(
-    r'((https?:\/\/)|(www\.))[^\s]+',
-    caseSensitive: false,
-  );
-  static final RegExp _repeatCharRegex = RegExp(r'(.)\1{11,}');
-  static final RegExp _repeatWordRegex = RegExp(
-    r'\b([^\s]+)\b(?:\s+\1\b){5,}',
-    caseSensitive: false,
-  );
-  static final List<String> _blockedPhrases = [
-    UiCopy.text('copy_364db51a25be'),
-    UiCopy.text('copy_474fa880e585'),
-    'phishing',
-    'hack',
-    'malware',
-    'spam',
-    'bitch',
-    'fuck',
-  ];
-  static final List<String> _riskyLinkPhrases = [
-    'click here',
-    UiCopy.text('copy_cba52b160624'),
-    UiCopy.text('copy_37391f0db18b'),
-    UiCopy.text('copy_20dd77bd38c1'),
-    UiCopy.text('copy_ce7dda7c0cb7'),
-    UiCopy.text('copy_55f33ebfc2ad'),
-    'verify',
-    'otp',
-    UiCopy.text('copy_ebe99bb74ab7'),
-    'password',
-    UiCopy.text('copy_1afd3f6b880c'),
-    'login',
-    UiCopy.text('copy_7535dd5d3ed7'),
-  ];
-  static const List<String> _suspiciousHosts = [
-    'bit.ly',
-    'tinyurl.com',
-    'cutt.ly',
-    'tiny.cc',
-    'goo.su',
-    't.ly',
-    'is.gd',
-    'rebrand.ly',
-  ];
-  static final List<String> _friendWelcomeTemplates = [
+  static List<String> get _friendWelcomeTemplates => [
     UiCopy.text('copy_8d2788ce5f52'),
     UiCopy.text('copy_b14dd47105fb'),
     UiCopy.text('copy_abbbd8f7e0cf'),
@@ -365,32 +322,7 @@ class ChatService {
   }
 
   // --- SPAM DETECTION ---
-  void _detectSpam(String text) {
-    final trimmed = text.trim();
-    if (trimmed.isEmpty) throw UiCopyException('copy_5d308b37b644');
-    if (trimmed.length > 2000) throw UiCopyException('copy_19c4aaa26f5f');
-
-    final normalized = _normalizeForScan(trimmed);
-    for (final phrase in _blockedPhrases) {
-      if (normalized.contains(phrase)) {
-        throw UiCopyException('copy_786c1396b7bb');
-      }
-    }
-
-    if (_repeatCharRegex.hasMatch(normalized) ||
-        _repeatWordRegex.hasMatch(normalized)) {
-      throw UiCopyException('copy_8ec89d5af7d7');
-    }
-
-    final urls = _extractUrls(trimmed);
-    if (urls.length > 2) {
-      throw UiCopyException('copy_b5587ec8d196');
-    }
-
-    if (_looksLikePhishing(normalized, urls)) {
-      throw UiCopyException('copy_4690150d7679');
-    }
-  }
+  void _detectSpam(String text) => ChatMessagePolicy.validate(text);
 
   Future<void> _enforceRateLimit(String action, {required String type}) async {
     final allowed = await _antiSpamRateLimitService.checkRateLimit(
@@ -411,53 +343,6 @@ class ChatService {
           ? 'Bạn gửi quá nhanh. Vui lòng chờ $cooldown giây rồi thử lại.'
           : 'Bạn gửi quá nhanh. Vui lòng thử lại sau.',
     );
-  }
-
-  String _normalizeForScan(String text) {
-    return text
-        .toLowerCase()
-        .replaceAll(RegExp(r'[_\-.]+'), ' ')
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .trim();
-  }
-
-  List<Uri> _extractUrls(String text) {
-    final urls = <Uri>[];
-    for (final match in _urlRegex.allMatches(text)) {
-      final raw = match.group(0);
-      if (raw == null || raw.isEmpty) continue;
-      final candidate = raw.startsWith('www.') ? 'https://$raw' : raw;
-      final uri = Uri.tryParse(candidate);
-      if (uri == null) continue;
-      final host = uri.host.trim();
-      if (host.isEmpty) continue;
-      urls.add(uri);
-    }
-    return urls;
-  }
-
-  bool _looksLikePhishing(String normalized, List<Uri> urls) {
-    if (urls.isEmpty) {
-      return normalized.contains('win free') ||
-          normalized.contains('click here');
-    }
-
-    for (final uri in urls) {
-      final host = uri.host.toLowerCase();
-      if (_suspiciousHosts.any(
-        (value) => host == value || host.endsWith('.$value'),
-      )) {
-        return true;
-      }
-      if (RegExp(r'^\d{1,3}(\.\d{1,3}){3}$').hasMatch(host)) {
-        return true;
-      }
-      if (host.contains('xn--')) {
-        return true;
-      }
-    }
-
-    return _riskyLinkPhrases.any(normalized.contains);
   }
 
   String _sanitize(String input) {
@@ -585,38 +470,34 @@ class ChatService {
     if (type == 'image') {
       throw UiCopyException('copy_a95f3201e509');
     }
-    await _runExternalChatAction(
-      () async {
-        await _assertNotBlocked(myHouseId, targetHouseId);
-        await _assertChatRoomOpen(myHouseId, targetHouseId);
-        final safeText = _sanitize(text);
-        if (type == 'text' || type == 'sticker') {
-          _detectSpam(safeText);
-        }
-        await _enforceRateLimit('chat_send_$myHouseId', type: type);
-        final roomId = _getRoomId(myHouseId, targetHouseId);
-        await _ensureChatRoomStructure(myHouseId, targetHouseId, roomId);
-        await _ensureChatRoomIndex(myHouseId, targetHouseId, roomId);
+    await _runExternalChatAction(() async {
+      await _assertNotBlocked(myHouseId, targetHouseId);
+      await _assertChatRoomOpen(myHouseId, targetHouseId);
+      final safeText = _sanitize(text);
+      if (type == 'text' || type == 'sticker') {
+        _detectSpam(safeText);
+      }
+      await _enforceRateLimit('chat_send_$myHouseId', type: type);
+      final roomId = _getRoomId(myHouseId, targetHouseId);
+      await _ensureChatRoomStructure(myHouseId, targetHouseId, roomId);
+      await _ensureChatRoomIndex(myHouseId, targetHouseId, roomId);
 
-        final msgPayload = _buildMessageWriteMap(
-          senderId: myHouseId,
-          text: safeText,
-          type: type,
-        );
-        msgPayload['ts'] = DateTime.now().millisecondsSinceEpoch;
+      final msgPayload = _buildMessageWriteMap(
+        senderId: myHouseId,
+        text: safeText,
+        type: type,
+      );
+      msgPayload['ts'] = DateTime.now().millisecondsSinceEpoch;
 
-        final docRef = await FirebaseFirestore.instance
-            .collection('chats')
-            .doc(roomId)
-            .collection('messages')
-            .add(msgPayload);
-        final messageId = docRef.id;
+      final docRef = await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(roomId)
+          .collection('messages')
+          .add(msgPayload);
+      final messageId = docRef.id;
 
-        unawaited(_syncDirectChatMetadata(roomId, messageId));
-      },
-      permissionMessage:
-          UiCopy.text('copy_4df8403726fa'),
-    );
+      unawaited(_syncDirectChatMetadata(roomId, messageId));
+    }, permissionMessage: UiCopy.text('copy_4df8403726fa'));
   }
 
   Future<void> sendImageMessage(
@@ -911,26 +792,22 @@ class ChatService {
     String messageId,
     String emoji,
   ) async {
-    await _runExternalChatAction(
-      () async {
-        await _assertNotBlocked(myHouseId, targetHouseId);
-        await _assertChatRoomOpen(myHouseId, targetHouseId);
-        final roomId = _getRoomId(myHouseId, targetHouseId);
-        if (!await _ensureViewerRoomIndex(myHouseId, roomId)) {
-          throw UiCopyException('copy_a70b1389b932');
-        }
+    await _runExternalChatAction(() async {
+      await _assertNotBlocked(myHouseId, targetHouseId);
+      await _assertChatRoomOpen(myHouseId, targetHouseId);
+      final roomId = _getRoomId(myHouseId, targetHouseId);
+      if (!await _ensureViewerRoomIndex(myHouseId, roomId)) {
+        throw UiCopyException('copy_a70b1389b932');
+      }
 
-        final docRef = FirebaseFirestore.instance
-            .collection('chats')
-            .doc(roomId)
-            .collection('messages')
-            .doc(messageId);
+      final docRef = FirebaseFirestore.instance
+          .collection('chats')
+          .doc(roomId)
+          .collection('messages')
+          .doc(messageId);
 
-        await docRef.update({'reactions.$myHouseId': emoji});
-      },
-      permissionMessage:
-          UiCopy.text('copy_8b219d739526'),
-    );
+      await docRef.update({'reactions.$myHouseId': emoji});
+    }, permissionMessage: UiCopy.text('copy_8b219d739526'));
   }
 
   // Removed streamMessages using onValue to prevent unbounded reads.
@@ -1342,24 +1219,20 @@ class ChatService {
       throw UiCopyException('copy_c4d215429eec');
     }
 
-    await _runExternalChatAction(
-      () async {
-        final roomId = _getRoomId(myHouseId, normalizedTargetHouseId);
-        await _ensureChatRoomStructure(
-          myHouseId,
-          normalizedTargetHouseId,
-          roomId,
-        );
-        await _ensureChatRoomIndex(myHouseId, normalizedTargetHouseId, roomId);
-        await _dbRef.update({
-          'chats/$roomId/backgroundUrl': normalizedUrl,
-          'chats/$roomId/backgroundStoragePath': normalizedStoragePath,
-          'chats/$roomId/backgroundUpdatedAt': ServerValue.timestamp,
-        });
-      },
-      permissionMessage:
-          UiCopy.text('copy_87f57e7f570f'),
-    );
+    await _runExternalChatAction(() async {
+      final roomId = _getRoomId(myHouseId, normalizedTargetHouseId);
+      await _ensureChatRoomStructure(
+        myHouseId,
+        normalizedTargetHouseId,
+        roomId,
+      );
+      await _ensureChatRoomIndex(myHouseId, normalizedTargetHouseId, roomId);
+      await _dbRef.update({
+        'chats/$roomId/backgroundUrl': normalizedUrl,
+        'chats/$roomId/backgroundStoragePath': normalizedStoragePath,
+        'chats/$roomId/backgroundUpdatedAt': ServerValue.timestamp,
+      });
+    }, permissionMessage: UiCopy.text('copy_87f57e7f570f'));
   }
 
   Future<void> clearChatBackground({
@@ -1382,24 +1255,20 @@ class ChatService {
       throw UiCopyException('copy_d576131ea38d');
     }
 
-    await _runExternalChatAction(
-      () async {
-        final roomId = _getRoomId(myHouseId, normalizedTargetHouseId);
-        await _ensureChatRoomStructure(
-          myHouseId,
-          normalizedTargetHouseId,
-          roomId,
-        );
-        await _ensureChatRoomIndex(myHouseId, normalizedTargetHouseId, roomId);
-        await _dbRef.update({
-          'chats/$roomId/backgroundUrl': null,
-          'chats/$roomId/backgroundStoragePath': null,
-          'chats/$roomId/backgroundUpdatedAt': ServerValue.timestamp,
-        });
-      },
-      permissionMessage:
-          UiCopy.text('copy_9fb3db9b3440'),
-    );
+    await _runExternalChatAction(() async {
+      final roomId = _getRoomId(myHouseId, normalizedTargetHouseId);
+      await _ensureChatRoomStructure(
+        myHouseId,
+        normalizedTargetHouseId,
+        roomId,
+      );
+      await _ensureChatRoomIndex(myHouseId, normalizedTargetHouseId, roomId);
+      await _dbRef.update({
+        'chats/$roomId/backgroundUrl': null,
+        'chats/$roomId/backgroundStoragePath': null,
+        'chats/$roomId/backgroundUpdatedAt': ServerValue.timestamp,
+      });
+    }, permissionMessage: UiCopy.text('copy_9fb3db9b3440'));
   }
 
   Future<void> deleteChatBackgroundAsset({

@@ -195,11 +195,15 @@ class MemoryViewerFooter extends StatelessWidget {
     required this.position,
     required this.total,
     required this.timestamp,
+    this.topPadding = 48,
   });
 
   final int position;
   final int total;
   final String timestamp;
+
+  /// Khoảng đệm phía trên chữ; thu nhỏ khi thanh tua video nằm ngay phía trên.
+  final double topPadding;
 
   @override
   Widget build(BuildContext context) => DecoratedBox(
@@ -214,7 +218,7 @@ class MemoryViewerFooter extends StatelessWidget {
     child: Padding(
       padding: EdgeInsets.fromLTRB(
         22,
-        48,
+        topPadding,
         22,
         MediaQuery.paddingOf(context).bottom + 24,
       ),

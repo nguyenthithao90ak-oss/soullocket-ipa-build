@@ -7,7 +7,11 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
 
   String _resolveAvatarForRole(String role) {
     final field = role == 'user1' ? 'avtUser1' : 'avtUser2';
-    return _houseSettings?[field]?.toString().trim() ?? '';
+    final alias = role == 'user1' ? 'avatarU1' : 'avatarU2';
+    return (_houseSettings?[field] ?? _houseSettings?[alias])
+            ?.toString()
+            .trim() ??
+        '';
   }
 
   String _resolveRoleBadge(String role) {
@@ -783,7 +787,13 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     final effectiveLng = isLive
         ? currentLng
         : (lastLng ?? (hasHistory ? currentLng : null));
-    if (!hasHistory || effectiveLat == null || effectiveLng == null) {
+    if (!hasHistory ||
+        effectiveLat == null ||
+        effectiveLng == null ||
+        !effectiveLat.isFinite ||
+        !effectiveLng.isFinite ||
+        effectiveLat.abs() > 90 ||
+        effectiveLng.abs() > 180) {
       return null;
     }
     return {
@@ -830,12 +840,32 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
   }
 
   void _bindHomeMapPreview(String houseId) {
+    if (!mounted) return;
+    final uid = _auth.currentUser?.uid;
+    if (uid == null || _houseId != houseId) return;
+    final role = _currentRole;
+    final bindingSerial = ++_homeMapPreviewBindingSerial;
+    final scope = '$uid|$houseId|$role';
+    if (_homeMapPreviewScope != scope) {
+      _homeMapPreviewScope = scope;
+      _updateHomeMapPreview(
+        distanceText: context.tr('home_location_searching'),
+        alertText: null,
+      );
+    }
+    bool isStale() =>
+        !mounted ||
+        _homeMapPreviewBindingSerial != bindingSerial ||
+        _auth.currentUser?.uid != uid ||
+        _houseId != houseId ||
+        _currentRole != role;
     _gpsSubscription?.cancel();
     _gpsSubscription = _dbRef
         .child('gps/$houseId')
         .onValue
         .listen(
           (event) {
+            if (!mounted || isStale()) return;
             final isSingle = _isSingleRelationship;
             final gpsData = _toStringDynamicMap(event.snapshot.value);
             final myPoint = _gpsPreviewStateForRole(gpsData, _currentRole);
@@ -956,10 +986,12 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
             _updateHomeMapPreview(
               distanceText: nextDistance,
               alertText: nextAlert,
+              myPoint: myPoint,
+              partnerPoint: partnerPoint,
             );
           },
           onError: (Object error) {
-            if (!mounted) {
+            if (!mounted || isStale()) {
               debugPrint('Home GPS preview listener failed (unmounted)');
               return;
             }

@@ -33,11 +33,11 @@ class MusicTrack {
   }
 
   Map<String, dynamic> toJson() => {
-        'url': url,
-        'title': title,
-        'type': type,
-        'isDefault': isDefault,
-      };
+    'url': url,
+    'title': title,
+    'type': type,
+    'isDefault': isDefault,
+  };
 }
 
 class MusicService {
@@ -136,10 +136,12 @@ class MusicService {
 
     _audioPlayer.setReleaseMode(ReleaseMode.stop);
 
-    _playerStateSub =
-        _audioPlayer.onPlayerStateChanged.listen(_onPlayerStateChanged);
-    _playerCompleteSub =
-        _audioPlayer.onPlayerComplete.listen((_) => _onPlayerComplete());
+    _playerStateSub = _audioPlayer.onPlayerStateChanged.listen(
+      _onPlayerStateChanged,
+    );
+    _playerCompleteSub = _audioPlayer.onPlayerComplete.listen(
+      (_) => _onPlayerComplete(),
+    );
 
     UiPrefs.notifier.addListener(_handleUiPrefsChanged);
 
@@ -179,7 +181,8 @@ class MusicService {
   }
 
   Future<void> _applyResolvedMusic() async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     _playlist = _readLocalMusicData(prefs);
     _currentIndex = 0;
@@ -265,10 +268,9 @@ class MusicService {
       }
       await _audioPlayer.play(source);
     } catch (e) {
-      debugPrint('Error playing music: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể phát nhạc.',
-      ).message}');
+      debugPrint(
+        'Error playing music: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể phát nhạc.').message}',
+      );
       isPlayingNotifier.value = false;
     }
   }
@@ -297,8 +299,8 @@ class MusicService {
 
   MusicTrack get currentTrack =>
       _playlist.isNotEmpty && _currentIndex < _playlist.length
-          ? _playlist[_currentIndex]
-          : defaultTrack;
+      ? _playlist[_currentIndex]
+      : defaultTrack;
 
   int get currentIndex => _currentIndex;
 
@@ -314,11 +316,11 @@ class MusicService {
 
   String get currentType =>
       _playlist.isNotEmpty && _currentIndex < _playlist.length
-          ? _playlist[_currentIndex].type
-          : 'audio';
+      ? _playlist[_currentIndex].type
+      : 'audio';
   String? get currentUrl =>
       _playlist.isNotEmpty && _currentIndex < _playlist.length
-          ? _playlist[_currentIndex].url
-          : defaultMusicAsset;
+      ? _playlist[_currentIndex].url
+      : defaultMusicAsset;
   List<MusicTrack> get playlist => _playlist;
 }

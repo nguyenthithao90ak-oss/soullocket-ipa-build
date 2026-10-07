@@ -7,6 +7,7 @@ import 'home_companion_motion.dart';
 import 'home_companion_outfit.dart';
 import 'home_companion_play.dart';
 import 'home_companion_metrics.dart';
+import 'home_companion_mood.dart';
 
 export 'home_companion_outfit.dart';
 
@@ -21,8 +22,15 @@ class HomeCompanionPainter extends CustomPainter {
     this.outfit,
     this.play,
     this.socialPlay,
+    this.mood,
   }) : super(
-         repaint: Listenable.merge([motion, paintOffset, play, socialPlay]),
+         repaint: Listenable.merge([
+           motion,
+           paintOffset,
+           play,
+           socialPlay,
+           mood,
+         ]),
        );
 
   final HomeCompanionMotion motion;
@@ -33,6 +41,7 @@ class HomeCompanionPainter extends CustomPainter {
   final HomeCompanionOutfit? outfit;
   final HomeCompanionPlay? play;
   final HomeCompanionPlay? socialPlay;
+  final HomeCompanionMood? mood;
   HomeCompanionPlay? get _activePlay =>
       (socialPlay?.active ?? false) && socialPlay!.contains(character)
       ? socialPlay
@@ -43,6 +52,13 @@ class HomeCompanionPainter extends CustomPainter {
   HomeCompanionOutfit get _outfit =>
       outfit ?? HomeCompanionOutfit.defaults(character);
   bool get _isBear => character == HomeCompanionCharacter.bear;
+
+  /// Ngủ gật chỉ khi đang đứng yên, không giữa cú nhảy hoặc trò chơi.
+  bool get _dozing =>
+      showEffects &&
+      (mood?.dozing ?? false) &&
+      motion.phase == HomeCompanionPhase.idle &&
+      !(_activePlay?.active ?? false);
   bool get _isKuromi => character == HomeCompanionCharacter.kuromi;
   bool get _isMelody => character == HomeCompanionCharacter.melody;
   bool get _hasHood => _isKuromi || _isMelody;
@@ -87,6 +103,21 @@ class HomeCompanionPainter extends CustomPainter {
         : const CompanionPlayPose();
     canvas.translate(playPose.offset.dx, playPose.offset.dy);
 
+    // Đè lên chữ/khối nội dung thì mờ bớt; thu nhỏ cả bé lẫn hiệu ứng quanh chân.
+    final feet = motion.position;
+    final opacity = mood?.opacity ?? 1.0;
+    final faded = opacity < 0.99;
+    if (faded) {
+      canvas.saveLayer(
+        Rect.fromLTRB(feet.dx - 72, feet.dy - 150, feet.dx + 72, feet.dy + 14),
+        Paint()..color = Color.fromRGBO(0, 0, 0, opacity),
+      );
+    }
+    canvas.save();
+    canvas.translate(feet.dx, feet.dy);
+    canvas.scale(HomeCompanionMetrics.displayScale);
+    canvas.translate(-feet.dx, -feet.dy);
+
     // Giảm chuyển động giữ tư thế nghỉ; cú vượt đang dở giữ độ cao để
     // không rơi xuyên đầu bạn bên dưới. Ticker ngừng nên độ cao không đổi.
     final phase = showEffects && !(_activePlay?.active ?? false)
@@ -120,7 +151,10 @@ class HomeCompanionPainter extends CustomPainter {
     final affection = showEffects ? motion.affection.clamp(0.0, 1.0) : 0.0;
     final greeting = math.sin((1 - affection) * math.pi * 5) * affection;
     final sweep = sweeping ? math.sin(seconds * 10) : 0.0;
-    final breathe = math.sin(seconds * 2.4);
+    final dozing = _dozing;
+    final breathe = dozing
+        ? math.sin(seconds * 1.3) * 1.6
+        : math.sin(seconds * 2.4);
     final bodyBob = moving
         ? -(1 - math.cos(stride * 2)) * (approaching ? 2.0 : 1.4)
         : sweeping
@@ -222,12 +256,22 @@ class HomeCompanionPainter extends CustomPainter {
             : 0.1 + breathe * 0.045,
       );
     }
-    if (!sweeping) _paintProp(canvas, bodyBob, seconds);
+    if (!sweeping) {
+      if (mood?.carryingLetter ?? false) {
+        _paintLetter(canvas, bodyBob, seconds);
+      } else {
+        _paintProp(canvas, bodyBob, seconds);
+      }
+    }
     canvas.restore();
 
     if (showEffects && motion.celebration > 0) _paintCleanGlints(canvas);
     if (affection > 0) _paintAffectionHearts(canvas, affection, hopLift);
     if (showEffects) _paintPlayEffects(canvas, playPose, seconds);
+    if (dozing) _paintSleepZ(canvas, seconds);
+    canvas.restore();
+    if (faded) canvas.restore();
+    _paintBubble(canvas, size, playPose.offset + offset, hopLift);
     canvas.restore();
   }
 
@@ -648,7 +692,7 @@ class HomeCompanionPainter extends CustomPainter {
     final blink = blinkPhase > 4.97 && blinkPhase < 5.11;
     final eyeY = sweeping ? -48.0 : -49.0;
     for (final eyeX in const [-7.5, 10.5]) {
-      if (blink || happy) {
+      if (blink || happy || _dozing) {
         _stroke(
           canvas,
           Path()
@@ -856,7 +900,7 @@ class HomeCompanionPainter extends CustomPainter {
         (motion.elapsedSeconds + (_isKuromi ? 2.2 : 3.7)) % 5.4 > 5.2;
     const ink = Color(0xFF302B34);
     for (final x in [-15.0, 15.0]) {
-      if (blink || happy) {
+      if (blink || happy || _dozing) {
         _stroke(
           canvas,
           Path()
@@ -1340,6 +1384,141 @@ class HomeCompanionPainter extends CustomPainter {
     canvas.drawCircle(center, 5.5, Paint()..color = const Color(0xFFEFC3A1));
   }
 
+  /// Phong thư nhỏ trên tay: người ấy vừa để lại lời nhắn chưa đọc.
+  void _paintLetter(Canvas canvas, double bob, double seconds) {
+    canvas.save();
+    canvas.translate(19, -25 + bob);
+    canvas.rotate(-0.12 + math.sin(seconds * 2.2) * 0.06);
+    final body = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(-9, -6.5, 18, 13),
+      const Radius.circular(2.2),
+    );
+    canvas.drawRRect(body, Paint()..color = const Color(0xFFFFFBF4));
+    canvas.drawRRect(
+      body,
+      Paint()
+        ..color = const Color(0xFFCF718B)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.3,
+    );
+    _stroke(
+      canvas,
+      Path()
+        ..moveTo(-8.2, -5.6)
+        ..lineTo(0, 0.8)
+        ..lineTo(8.2, -5.6),
+      color: const Color(0xFFCF718B),
+      width: 1.2,
+    );
+    canvas.save();
+    canvas.translate(0, 1.6);
+    canvas.scale(2.6);
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, 0.85)
+        ..cubicTo(-0.35, 0.5, -1, 0.05, -1, -0.42)
+        ..cubicTo(-1, -1.12, -0.23, -1.3, 0, -0.65)
+        ..cubicTo(0.23, -1.3, 1, -1.12, 1, -0.42)
+        ..cubicTo(1, 0.05, 0.35, 0.5, 0, 0.85)
+        ..close(),
+      Paint()..color = const Color(0xFFE0457F),
+    );
+    canvas.restore();
+    canvas.restore();
+  }
+
+  /// Ba chữ "z" bay chậm lên cạnh đầu khi bé ngủ gật.
+  void _paintSleepZ(Canvas canvas, double seconds) {
+    final paint = Paint()
+      ..color = _eye
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.6
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    for (var i = 0; i < 3; i++) {
+      final t = (seconds * 0.35 + i / 3) % 1;
+      final alpha = math.sin(t * math.pi).clamp(0.0, 1.0);
+      if (alpha < 0.05) continue;
+      final half = 2.6 + t * 2.4;
+      final center = motion.position + Offset(16 + t * 12, -70 - t * 26);
+      canvas.drawPath(
+        Path()
+          ..moveTo(center.dx - half, center.dy - half)
+          ..lineTo(center.dx + half, center.dy - half)
+          ..lineTo(center.dx - half, center.dy + half)
+          ..lineTo(center.dx + half, center.dy + half),
+        paint..color = _eye.withValues(alpha: 0.75 * alpha),
+      );
+    }
+  }
+
+  /// Bong bóng chữ ngắn trên đầu, không thu nhỏ để luôn đọc rõ.
+  void _paintBubble(Canvas canvas, Size size, Offset shift, double hopLift) {
+    final text = mood?.bubble;
+    final opacity = mood?.bubbleOpacity ?? 0;
+    if (!showEffects || text == null || text.isEmpty || opacity < 0.02) {
+      return;
+    }
+    final style = mood!.bubbleStyle;
+    final painter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: style.copyWith(
+          color: (style.color ?? const Color(0xFF6B3A4C)).withValues(
+            alpha: opacity,
+          ),
+        ),
+      ),
+      textDirection: mood!.bubbleDirection,
+      maxLines: 2,
+      ellipsis: '…',
+      textAlign: TextAlign.center,
+    )..layout(maxWidth: math.min(200, size.width - 32));
+    const padX = 10.0, padY = 6.0, tail = 6.0;
+    final width = painter.width + padX * 2;
+    final height = painter.height + padY * 2;
+    final feet = motion.position;
+    final bottom =
+        feet.dy - (74 + hopLift) * HomeCompanionMetrics.displayScale - tail;
+    // Giữ bong bóng trong khung nhìn theo trục ngang.
+    final minLeft = 8 - shift.dx;
+    final maxLeft = size.width - 8 - width - shift.dx;
+    final left = (feet.dx - width / 2)
+        .clamp(minLeft, math.max(minLeft, maxLeft))
+        .toDouble();
+    final rect = Rect.fromLTWH(left, bottom - height, width, height);
+    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(12));
+    final tailX = feet.dx
+        .clamp(rect.left + 12, math.max(rect.left + 12, rect.right - 12))
+        .toDouble();
+    final shape = Path()
+      ..addRRect(rrect)
+      ..moveTo(tailX - 5, rect.bottom - 0.5)
+      ..lineTo(tailX, rect.bottom + tail)
+      ..lineTo(tailX + 5, rect.bottom - 0.5)
+      ..close();
+    canvas.drawShadow(
+      shape,
+      const Color(0xFF9D7079).withValues(alpha: 0.4 * opacity),
+      3,
+      false,
+    );
+    canvas.drawPath(
+      shape,
+      Paint()
+        ..color = (darkMode ? const Color(0xFF3A2C33) : Colors.white)
+            .withValues(alpha: 0.97 * opacity),
+    );
+    canvas.drawRRect(
+      rrect,
+      Paint()
+        ..color = const Color(0xFFCF718B).withValues(alpha: 0.35 * opacity)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
+    painter.paint(canvas, Offset(rect.left + padX, rect.top + padY));
+  }
+
   void _paintAffectionHearts(Canvas canvas, double affection, double hopLift) {
     final progress = 1 - affection;
     final opacity = math.sin(progress * math.pi).clamp(0.0, 1.0);
@@ -1578,6 +1757,7 @@ class HomeCompanionPainter extends CustomPainter {
       oldDelegate.outfit != outfit ||
       oldDelegate.play != play ||
       oldDelegate.socialPlay != socialPlay ||
+      oldDelegate.mood != mood ||
       oldDelegate.paintOffset != paintOffset ||
       oldDelegate.darkMode != darkMode ||
       oldDelegate.showEffects != showEffects;

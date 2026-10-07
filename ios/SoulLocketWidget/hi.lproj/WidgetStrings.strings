@@ -1,5 +1,5 @@
 /* Widget extension: cùng bản dịch với assets/i18n/hi.json. */
-"p3_health_days_remaining" = "days remaining";
+"p3_health_days_remaining" = "दिन बाकी";
 "sleep_state_unknown" = "अभी डेटा नहीं";
 "sleep_state_disabled" = "नींद की निगरानी बंद है";
 "sleep_state_estimated" = "शायद आराम कर रहे हैं";
@@ -16,7 +16,7 @@
 "sleep_sync_hint" = "अपडेट के लिए ऐप खोलें";
 "sleep_duration" = "{hours} घं {minutes} मि";
 "comm_ngy_41ec10" = "दिन";
-"core_presence_online" = "सक्रिय";
+"core_presence_online" = "अभी सक्रिय";
 "home_angoffline_bbb3d5" = "अभी ऑफ़लाइन";
 "home_cpi_d525b0" = "युगल";
 "home_knim_4f6aeb" = "जश्न मनाओ";
@@ -29,7 +29,7 @@
 "p3_sleep_sleeping" = "Sleeping";
 "p3_sleep_title" = "Couple Sleep ☁️✨";
 "p7_event_widget_desc" = "Show an upcoming event and the number of remaining days.";
-"p8_events_days_remaining_label" = "DAYS TO GO";
+"p8_events_days_remaining_label" = "दिन बाकी";
 "p8_events_title" = "Your shared events";
 "settings_widget_desc_mobile" = "प्यार के दिन, सालगिरह की तस्वीरें, दिल की शैली, रंग, लेआउट गिनने के लिए विजेट बनाएं और उन्हें तुरंत होम स्क्रीन पर पिन करें।";
 "util_health_enable_cycle_tracking" = "कृपया सुविधा सक्षम करें\nसाइकिल ट्रैकिंग.";

@@ -19,6 +19,9 @@ import 'package:soullocket_app/utils/services/infrastructure/storage_service.dar
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_connection_date.dart';
+import 'pairing_display_cache.dart';
+import 'pairing_shortcut_state.dart';
+import '../../../../../utils/services/offline_cache_service.dart';
 
 class PairingDashboardScreen extends StatefulWidget {
   const PairingDashboardScreen({super.key});
@@ -57,6 +60,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   StreamSubscription? _connectionDateSub;
   Stream<List<PairingRequest>>? _incomingRequestsStream;
   String? _respondingRequestId;
+  PairingShortcutState _displayCacheState = PairingShortcutState();
 
   String _t(String key) => context.tr(key);
 
@@ -85,6 +89,18 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     final generation = ++_loadGeneration;
     final uid = FirebaseAuth.instance.currentUser?.uid;
     _scopeUid = uid;
+    final prefs = OfflineCacheService.getPrefsSync();
+    final cachedHouseId = uid != null && prefs?.getString('il_auth_uid') == uid
+        ? prefs?.getString('il_house_id')?.trim()
+        : null;
+    final cachedState = cachedHouseId == null
+        ? PairingShortcutState()
+        : PairingDisplayCache.restore(
+            uid: uid,
+            houseId: cachedHouseId,
+            prefs: prefs,
+          );
+    final cachedSettings = cachedState.settings;
     _loadTimer?.cancel();
     _dateTimer?.cancel();
     unawaited(_settingsSub?.cancel());
@@ -110,6 +126,18 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       _avatarU1 = null;
       _avatarU2 = null;
       _incomingRequestsStream = null;
+      _displayCacheState = cachedState;
+      _myHouseId = cachedHouseId;
+      _isPaired = cachedState.ready && cachedState.paired;
+      _hasResolvedPairing = cachedState.ready;
+      _isLoading = !cachedState.ready;
+      if (cachedState.ready) {
+        _nameU1 = cachedSettings['nameU1']?.toString();
+        _nameU2 = cachedSettings['nameU2']?.toString();
+        _genderSwapped = RoleUtils.readGenderSwapped(cachedSettings);
+        _avatarU1 = pairingAvatarUrl(cachedSettings, 'user1');
+        _avatarU2 = pairingAvatarUrl(cachedSettings, 'user2');
+      }
     });
     bool isCurrent() =>
         mounted &&
@@ -153,12 +181,14 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       return;
     }
 
-    _loadTimer = Timer(const Duration(seconds: 8), () {
-      handleLoadError(TimeoutException('Pairing state unavailable'));
-    });
+    if (!cachedState.ready) {
+      _loadTimer = Timer(const Duration(seconds: 8), () {
+        handleLoadError(TimeoutException('Pairing state unavailable'));
+      });
+    }
     String? houseId;
     try {
-      houseId = await HouseService().getCurrentHouseId(preferFresh: true);
+      houseId = await HouseService().getCurrentHouseId(preferFresh: false);
     } catch (error) {
       handleLoadError(error);
       return;
@@ -170,6 +200,19 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       return;
     }
     _myHouseId = houseId;
+    void rememberDisplay() {
+      if (!isCurrent()) return;
+      unawaited(
+        PairingDisplayCache.remember(
+          uid: uid,
+          houseId: houseId!,
+          state: _displayCacheState,
+        ).catchError((Object error) {
+          debugPrint('[Pairing] Display cache unavailable: $error');
+        }),
+      );
+    }
+
     _incomingRequestsStream = PairingService.instance.listenToIncomingRequests(
       houseId,
     );
@@ -182,6 +225,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           if (!isCurrent()) return;
           final value = event.snapshot.value;
           final settings = value is Map ? value : const {};
+          _displayCacheState.applySettings(settings);
           setState(() {
             _settingsReceived = true;
             _settingsPaired = settings['isPaired'] == true;
@@ -191,6 +235,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
             _avatarU1 = pairingAvatarUrl(settings, 'user1');
             _avatarU2 = pairingAvatarUrl(settings, 'user2');
           });
+          rememberDisplay();
           _applyPairingStatus();
         }, onError: handleLoadError);
 
@@ -204,9 +249,11 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
             if (!isCurrent()) return;
             final value = event.snapshot.value;
             final members = value is Map ? value : const {};
+            _displayCacheState.applyMembers(members);
             _membersReceived = true;
             _membersPaired = members.length >= 2;
             _members = members;
+            rememberDisplay();
             _applyPairingStatus();
           },
           onError: (Object error) {

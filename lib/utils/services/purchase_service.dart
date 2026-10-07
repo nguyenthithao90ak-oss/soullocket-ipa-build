@@ -187,15 +187,17 @@ class VipAccessInfo {
     return isVip ? 999 : 999;
   }
 
-  /// Giới hạn dung lượng ảnh (sau nén) upload mỗi ngày (bytes)
+  /// Giới hạn dung lượng ảnh (sau nén) upload mỗi ngày (bytes).
+  /// Khớp `limits()` trong functions/privateMemoryUpload.js: 2,5 / 20 / 40 MB.
   int get dailyImageUploadLimitBytes {
-    if (!isVip) return 5 * 1024 * 1024;
+    if (!isVip) return (5 * 1024 * 1024) ~/ 2;
     return isLifetime ? 40 * 1024 * 1024 : 20 * 1024 * 1024;
   }
 
-  /// Giới hạn dung lượng video (sau nén) upload mỗi ngày (bytes)
+  /// Giới hạn dung lượng video upload mỗi ngày (bytes). Gói thường không tải được
+  /// video mới (0), khớp `limits()` trong functions/privateMemoryUpload.js.
   int get dailyVideoUploadLimitBytes {
-    if (!isVip) return 15 * 1024 * 1024;
+    if (!isVip) return 0;
     return isLifetime ? 100 * 1024 * 1024 : 50 * 1024 * 1024;
   }
 
@@ -204,14 +206,16 @@ class VipAccessInfo {
     return isLifetime ? 400 : 200;
   }
 
+  /// Tổng kho ảnh của nhà (MB); video có kho riêng ở [totalMemoryVideoCapMb].
   int get totalMemoryStorageCapMb {
-    if (!isVip) return 182;
-    return isLifetime ? 1024 : 512;
+    if (!isVip) return 91;
+    return isLifetime ? 1024 : 256;
   }
 
   int get totalMemoryVideoCapMb {
-    if (!isVip) return 182;
-    return isLifetime ? 1024 : 512;
+    if (!isVip) return 0;
+    // Khớp limits() ở functions/privateMemoryUpload.js (giảm một nửa từ 07/10/2026).
+    return isLifetime ? 512 : 256;
   }
 
   @override

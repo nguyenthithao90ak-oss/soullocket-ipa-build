@@ -1,101 +1,32 @@
 part of '../../main_home_tab.dart';
 
 extension _MainHomeFormatters on _MainHomeTabState {
+  RelationshipDuration _relationshipDuration(String? dateString) =>
+      RelationshipDuration.at(
+        dateString,
+        timeZoneId: MarketService.instance.preferences.timeZoneId,
+      );
+
   String _calculateLoveDays(String? dateString) {
-    if (dateString == null || dateString.isEmpty) return '0';
-    try {
-      final startDate = DateTime.parse(dateString);
-      // Đếm theo ngày lịch (không theo 24 giờ) để không hụt 1 ngày khi đổi
-      // giờ mùa hè ở Mỹ/châu Âu/Úc.
-      final difference =
-          CalendarCivilDate.daysBetween(startDate, DateTime.now());
-      return difference >= 0 ? difference.toString() : '0';
-    } catch (e) {
-      return '0';
-    }
+    return _relationshipDuration(dateString).totalDays.toString();
   }
 
   Map<String, String> _getLoveTimeDetail(String? dateString) {
-    if (dateString == null || dateString.isEmpty) {
-      return {'h': '00', 'm': '00', 's': '00'};
-    }
-    try {
-      final startDate = DateTime.parse(dateString);
-      final now = DateTime.now();
-      // So theo giờ đồng hồ (wall clock) để giờ/phút/giây không lệch 1 tiếng
-      // sau khi đổi giờ mùa hè.
-      final difference = DateTime.utc(
-        now.year,
-        now.month,
-        now.day,
-        now.hour,
-        now.minute,
-        now.second,
-      ).difference(
-        DateTime.utc(
-          startDate.year,
-          startDate.month,
-          startDate.day,
-          startDate.hour,
-          startDate.minute,
-          startDate.second,
-        ),
-      );
-      if (difference.isNegative) {
-        return {'h': '00', 'm': '00', 's': '00'};
-      }
-
-      final hours = difference.inHours % 24;
-      final minutes = difference.inMinutes % 60;
-      final seconds = difference.inSeconds % 60;
-
-      return {
-        'h': hours.toString().padLeft(2, '0'),
-        'm': minutes.toString().padLeft(2, '0'),
-        's': seconds.toString().padLeft(2, '0'),
-      };
-    } catch (e) {
-      return {'h': '00', 'm': '00', 's': '00'};
-    }
+    final duration = _relationshipDuration(dateString);
+    return {
+      'h': duration.hours.toString().padLeft(2, '0'),
+      'm': duration.minutes.toString().padLeft(2, '0'),
+      's': duration.seconds.toString().padLeft(2, '0'),
+    };
   }
 
   Map<String, String> _getLoveYmdDetail(String? dateString) {
-    if (dateString == null || dateString.isEmpty) {
-      return {'y': '00', 'M': '00', 'd': '00'};
-    }
-    try {
-      final startDate = DateTime.parse(dateString);
-      final now = DateTime.now();
-
-      var years = now.year - startDate.year;
-      var months = now.month - startDate.month;
-      var days = now.day - startDate.day;
-
-      if (days < 0) {
-        final prevMonthDate = DateTime(now.year, now.month, 0);
-        days += prevMonthDate.day;
-        months--;
-      }
-
-      if (months < 0) {
-        months += 12;
-        years--;
-      }
-
-      if (years < 0) {
-        years = 0;
-        months = 0;
-        days = 0;
-      }
-
-      return {
-        'y': years.toString().padLeft(2, '0'),
-        'M': months.toString().padLeft(2, '0'),
-        'd': days.toString().padLeft(2, '0'),
-      };
-    } catch (e) {
-      return {'y': '00', 'M': '00', 'd': '00'};
-    }
+    final duration = _relationshipDuration(dateString);
+    return {
+      'y': duration.years.toString().padLeft(2, '0'),
+      'M': duration.months.toString().padLeft(2, '0'),
+      'd': duration.days.toString().padLeft(2, '0'),
+    };
   }
 
   String _getSmartGreeting() {
@@ -129,7 +60,7 @@ extension _MainHomeFormatters on _MainHomeTabState {
   }
 
   String _extractAgeDays(String dob) {
-    return (ZodiacUtils.getAgeDayCount(dob) ?? 0).toString();
+    return _relationshipDuration(dob).totalDays.toString();
   }
 
   String _resolveCountdownLabel(String? customLabel, String fallback) {

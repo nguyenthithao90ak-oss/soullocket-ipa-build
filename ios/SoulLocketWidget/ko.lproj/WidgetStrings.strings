@@ -1,5 +1,5 @@
 /* Widget extension: cùng bản dịch với assets/i18n/ko.json. */
-"p3_health_days_remaining" = "days remaining";
+"p3_health_days_remaining" = "일 남음";
 "sleep_state_unknown" = "아직 데이터 없음";
 "sleep_state_disabled" = "수면 추적이 꺼져 있어요";
 "sleep_state_estimated" = "휴식 중일 수 있음";
@@ -16,7 +16,7 @@
 "sleep_sync_hint" = "앱을 열어 업데이트";
 "sleep_duration" = "{hours}시간 {minutes}분";
 "comm_ngy_41ec10" = "일";
-"core_presence_online" = "활성";
+"core_presence_online" = "현재 활동 중";
 "home_angoffline_bbb3d5" = "현재 오프라인";
 "home_cpi_d525b0" = "커플";
 "home_knim_4f6aeb" = "축하하다";
@@ -29,7 +29,7 @@
 "p3_sleep_sleeping" = "Sleeping";
 "p3_sleep_title" = "Couple Sleep ☁️✨";
 "p7_event_widget_desc" = "Show an upcoming event and the number of remaining days.";
-"p8_events_days_remaining_label" = "DAYS TO GO";
+"p8_events_days_remaining_label" = "남은 일수";
 "p8_events_title" = "Your shared events";
 "settings_widget_desc_mobile" = "사랑의 날, 기념일 사진, 하트 스타일, 색상, 레이아웃을 계산하는 위젯을 만들고 이를 홈 화면에 빠르게 고정하세요.";
 "util_health_enable_cycle_tracking" = "기능을 활성화해주세요\n주기 추적.";

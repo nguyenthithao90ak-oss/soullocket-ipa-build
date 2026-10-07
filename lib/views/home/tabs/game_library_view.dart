@@ -12,6 +12,8 @@ class GameLibraryView extends StatelessWidget {
     this.downloadProgress,
     this.onDelete,
     this.cover,
+    this.secondaryAction,
+    this.secondaryLabel,
   });
 
   final bool isDownloaded;
@@ -19,6 +21,8 @@ class GameLibraryView extends StatelessWidget {
   final VoidCallback onPlay;
   final VoidCallback? onDelete;
   final Widget? cover;
+  final VoidCallback? secondaryAction;
+  final String? secondaryLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -296,6 +300,41 @@ class GameLibraryView extends StatelessWidget {
                                     ),
                                   ),
                                 ),
+                                if (secondaryAction != null &&
+                                    secondaryLabel != null) ...[
+                                  const SizedBox(height: 10),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: OutlinedButton.icon(
+                                      key: const ValueKey(
+                                        'memory-puzzle-action',
+                                      ),
+                                      onPressed: progress == null
+                                          ? secondaryAction
+                                          : null,
+                                      icon: const Icon(Icons.extension_rounded),
+                                      label: Text(
+                                        secondaryLabel!,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: accent,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 18,
+                                          vertical: 14,
+                                        ),
+                                        side: BorderSide(
+                                          color: accent.withValues(alpha: .45),
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),

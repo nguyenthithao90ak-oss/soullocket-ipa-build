@@ -69,10 +69,10 @@ class NotificationService {
   static const int _dailySleepReminderId = 21450045;
 
   // Kênh thông báo Android (phải khai báo trước khi dùng)
-  static const AndroidNotificationChannel _channel = AndroidNotificationChannel(
+  static AndroidNotificationChannel get _channel => AndroidNotificationChannel(
     'soullocket_high_importance', // id
-    'SoulLocket Thông Báo', // name
-    description: 'Thông báo quan trọng từ người ấy 💕',
+    L10nService().translate('notifications_title'),
+    description: L10nService().translate('notification_partner_channel_description'),
     importance: Importance.high,
     playSound: true,
   );
@@ -230,7 +230,23 @@ class NotificationService {
     // Không lưu gộp vào houses/{houseId}/fcmTokens nữa để tách biệt hoàn toàn thiết bị theo UID
   }
 
-  void _onNotificationLocaleChanged() => unawaited(_saveNotificationLocale());
+  void _onNotificationLocaleChanged() {
+    unawaited(_saveNotificationLocale());
+    unawaited(_refreshLocalizedChannel());
+  }
+
+  Future<void> _refreshLocalizedChannel() async {
+    if (kIsWeb || !_localPluginReady) return;
+    try {
+      // Giữ ID cũ để Android bảo toàn lựa chọn âm thanh/quyền của người dùng.
+      await _localNotif
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(_channel);
+    } catch (_) {
+      debugPrint('[NotificationService] localized channel refresh unavailable');
+    }
+  }
 
   Future<void> _saveNotificationLocale() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -639,9 +655,9 @@ class NotificationService {
         color: const Color(0xFFFF5E7E),
         actions: isCinemaInvite
             ? <AndroidNotificationAction>[
-                const AndroidNotificationAction(
+              AndroidNotificationAction(
                   'cinema_accept',
-                  'Chấp nhận',
+                  UiCopy.text('pairing_ui_request_accept'),
                   showsUserInterface: true,
                 ),
               ]

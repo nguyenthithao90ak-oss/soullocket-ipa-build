@@ -66,6 +66,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _reactionFlightSubscription = null;
     _gpsSubscription?.cancel();
     _gpsSubscription = null;
+    _homeMapPreviewBindingSerial++;
     _interactionRotationTimer?.cancel();
     _interactionRotationTimer = null;
     _pendingWidgetSettings = null;
@@ -226,16 +227,26 @@ extension _MainHomeLoadController on _MainHomeTabState {
   void _updateHomeMapPreviewImpl({
     required String distanceText,
     required String? alertText,
+    Map<String, dynamic>? myPoint,
+    Map<String, dynamic>? partnerPoint,
   }) {
-    final nextSignature = '$distanceText|${alertText ?? ''}';
-    bool needsUpdate = false;
-    if (_homeMapPreviewSignature != nextSignature) {
-      _homeMapPreviewSignature = nextSignature;
-      needsUpdate = true;
+    String pointSignature(Map<String, dynamic>? point) {
+      if (point == null) return 'none';
+      return '${point['lt']}|${point['lg']}|${point['isLive']}|${point['hasHistory']}';
     }
+
+    final nextSignature =
+        '$distanceText|${alertText ?? ''}|${pointSignature(myPoint)}|${pointSignature(partnerPoint)}';
+    if (_homeMapPreviewSignature == nextSignature) return;
+    _homeMapPreviewSignature = nextSignature;
     _homeDistanceTextNotifier.value = distanceText;
     _homeMapAlertNotifier.value = alertText;
-    if (!needsUpdate) return;
+    _homeMapMyPointNotifier.value = myPoint == null
+        ? null
+        : Map<String, dynamic>.from(myPoint);
+    _homeMapPartnerPointNotifier.value = partnerPoint == null
+        ? null
+        : Map<String, dynamic>.from(partnerPoint);
   }
 
   dynamic _normalizeInsightSignatureValueImpl(dynamic value) {
@@ -933,6 +944,11 @@ extension _MainHomeLoadController on _MainHomeTabState {
 
     final sessionId = _invalidateLiveWorkSessionImpl();
     if (isNewHouseContext) {
+      _homeMapPreviewScope = '';
+      _updateHomeMapPreview(
+        distanceText: L10nService().translate('home_location_searching'),
+        alertText: null,
+      );
       // âš¡ Chá»‰ cancel bindings cÅ© khi Ä‘á»•i nhÃ  context má»›i, trÃ¡nh teardown listener rÃ¡c
       _cancelLiveWorkBindingsImpl();
     }

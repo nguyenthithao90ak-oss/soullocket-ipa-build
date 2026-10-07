@@ -11,6 +11,7 @@ import '../../app_error_mapper.dart';
 
 import '../../../views/home/tabs/diary/utils/diary_memory_media.dart';
 import '../../../views/home/tabs/diary/utils/private_memory_link_policy.dart';
+import '../core/rtdb_settled_read.dart';
 import '../private_media_url_service.dart';
 import 'soul_block_image_cache.dart';
 
@@ -57,6 +58,7 @@ class SoulBlockMemoryService {
     bool next = false,
     int diaryWidth = 640,
     int limit = defaultCandidateLimit,
+    bool rankForPlay = true,
   }) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null || houseId.trim().isEmpty) return const [];
@@ -80,12 +82,22 @@ class SoulBlockMemoryService {
             .get()
             .timeout(const Duration(seconds: 8));
         final data = _photoCandidate(preferredId, saved.value);
-        if (data != null) items.add(data);
+        if (data != null) {
+          items.insert(
+            0,
+            PrivateMemoryLinkPolicy.isPrivate(data)
+                ? PrivateMemoryLinkPolicy.offlineMetadata(data)
+                : data,
+          );
+        }
       } catch (error) {
+        if (_isAccessError(error)) rethrow;
         debugPrint(AppErrorMapper.resolve(error).message);
       }
     }
     if (FirebaseAuth.instance.currentUser?.uid != uid) return const [];
+    // Game ghép ảnh tự xếp hạng bằng lịch sử của nó, nhưng dùng chung query/cache.
+    if (!rankForPlay) return items;
     items.shuffle(_random);
     await _historyWrite;
     final prefs = await SharedPreferences.getInstance();
@@ -128,12 +140,14 @@ class SoulBlockMemoryService {
   ) async {
     final loadKey = '$key|$limit';
     final pending = _candidateLoads.putIfAbsent(loadKey, () async {
-      final snapshot = await FirebaseDatabase.instance
-          .ref('houses/$houseId/memories')
-          .orderByChild('ts')
-          .limitToLast(limit)
-          .get()
-          .timeout(const Duration(seconds: 12));
+      // Listener ngắn thay cho get(): danh sách không đổi thì bộ nhớ đệm RTDB không tải lại.
+      final snapshot = await readQuerySettled(
+        FirebaseDatabase.instance
+            .ref('houses/$houseId/memories')
+            .orderByChild('ts')
+            .limitToLast(limit),
+        timeout: const Duration(seconds: 12),
+      );
       if (FirebaseAuth.instance.currentUser?.uid != uid) {
         return <Map<String, dynamic>>[];
       }
@@ -159,7 +173,9 @@ class SoulBlockMemoryService {
     });
     try {
       return (await pending).map(Map<String, dynamic>.from).toList();
-    } catch (_) {
+    } catch (error) {
+      // Mất quyền không được coi là lỗi mạng để phục hồi catalog cũ.
+      if (_isAccessError(error)) rethrow;
       final stale = _candidateCache[key];
       if (stale != null && FirebaseAuth.instance.currentUser?.uid == uid) {
         return stale.items.map(Map<String, dynamic>.from).toList();
@@ -171,6 +187,14 @@ class SoulBlockMemoryService {
       }
     }
   }
+
+  bool _isAccessError(Object error) =>
+      error is FirebaseException &&
+      const {
+        'permission-denied',
+        'unauthenticated',
+        'unauthorized',
+      }.contains(error.code);
 
   Future<SoulBlockPhoto?> loadPhoto(
     String houseId,

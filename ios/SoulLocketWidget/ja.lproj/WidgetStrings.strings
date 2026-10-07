@@ -1,5 +1,5 @@
 /* Widget extension: cùng bản dịch với assets/i18n/ja.json. */
-"p3_health_days_remaining" = "days remaining";
+"p3_health_days_remaining" = "日後";
 "sleep_state_unknown" = "データなし";
 "sleep_state_disabled" = "睡眠の記録はオフです";
 "sleep_state_estimated" = "休息中かもしれません";
@@ -16,7 +16,7 @@
 "sleep_sync_hint" = "アプリを開いて更新";
 "sleep_duration" = "{hours}時間{minutes}分";
 "comm_ngy_41ec10" = "日";
-"core_presence_online" = "アクティブ";
+"core_presence_online" = "オンライン";
 "home_angoffline_bbb3d5" = "現在オフラインです";
 "home_cpi_d525b0" = "カップル";
 "home_knim_4f6aeb" = "祝う";
@@ -29,7 +29,7 @@
 "p3_sleep_sleeping" = "Sleeping";
 "p3_sleep_title" = "Couple Sleep ☁️✨";
 "p7_event_widget_desc" = "Show an upcoming event and the number of remaining days.";
-"p8_events_days_remaining_label" = "DAYS TO GO";
+"p8_events_days_remaining_label" = "残り日数";
 "p8_events_title" = "Your shared events";
 "settings_widget_desc_mobile" = "愛の日、記念日の写真、ハートのスタイル、色、レイアウトをカウントするウィジェットを作成し、ホーム画面にすぐに固定します。";
 "util_health_enable_cycle_tracking" = "機能を有効にしてください\nサイクル追跡。";
@@ -37,8 +37,8 @@
 "widget_sync_empty" = "アプリを開いて内容を同期してください。";
 "p8_events_today_upper" = "TODAY";
 "p8_events_empty_title" = "No events yet";
-"widget_title_sleep" = "Couple Sleep";
-"p3_health_phase_period" = "Period phase";
+"widget_title_sleep" = "二度寝";
+"p3_health_phase_period" = "期間中";
 "p3_health_next_period" = "until your next period";
 "milestone_today" = "📍 今日";
 "milestone_days_left" = "🌸残り {days} 日";

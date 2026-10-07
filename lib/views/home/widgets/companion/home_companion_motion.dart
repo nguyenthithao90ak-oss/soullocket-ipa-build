@@ -119,6 +119,23 @@ class HomeCompanionMotion extends ChangeNotifier {
 
   bool get isDragging => _dragOrigin != null;
 
+  /// Khoảng nghỉ giữa hai lần đi dạo (giây). Home dùng giá trị chậm hơn để
+  /// bé ngồi chơi nhiều hơn chạy; mặc định giữ nhịp cũ cho nơi khác.
+  double restMinSeconds = 1.8;
+  double restSpreadSeconds = 2.2;
+
+  /// Khoảng cách giữa hai lần bụi xuất hiện để bé quét.
+  double dustIntervalSeconds = 45;
+
+  /// Ngủ gật: đứng yên tại chỗ, không tự đi dạo hay quét bụi.
+  /// Chạm tay vẫn gọi bé lại được; xong bé ngủ tiếp.
+  bool dozing = false;
+
+  /// Scene bật khi bé buồn ngủ mà đang đè lên chữ: đi sang khối khác tìm
+  /// chỗ trống rồi mới ngủ. Bé tự tắt cờ sau mỗi lần đi và đếm số lần thử.
+  bool seekClearSpot = false;
+  int clearSeekCount = 0;
+
   /// Scene cung cấp kiểm tra chiếm chỗ trước khi thay đổi vị trí thật.
   bool Function(Offset feet, double lift)? canMoveTo;
   bool movementBlocked = false;
@@ -498,9 +515,9 @@ class HomeCompanionMotion extends ChangeNotifier {
       _settled = false;
       if (_journey.isNotEmpty) _setPhase(_journey.first.phase);
     }
-    if (createsDust && _elapsed >= _nextDustAt && _dust.isEmpty) {
+    if (createsDust && !dozing && _elapsed >= _nextDustAt && _dust.isEmpty) {
       _spawnDust();
-      _nextDustAt = _elapsed + 45;
+      _nextDustAt = _elapsed + dustIntervalSeconds;
     }
     if (_journey.isNotEmpty) {
       _advanceJourney(dt);
@@ -512,7 +529,16 @@ class HomeCompanionMotion extends ChangeNotifier {
         if (!_startCleaning()) _rest();
       }
     } else if (_phaseTime >= _idleDuration) {
-      if (!_startCleaning()) _wander();
+      if (dozing && seekClearSpot && _track != null) {
+        seekClearSpot = false;
+        clearSeekCount++;
+        _finishedPatrol = true;
+        _wander();
+      } else if (dozing) {
+        _phaseTime = 0;
+      } else if (!_startCleaning()) {
+        _wander();
+      }
     }
     notifyListeners();
   }
@@ -641,7 +667,7 @@ class HomeCompanionMotion extends ChangeNotifier {
   void requestCleaning() {
     if (!hasSurfaces || _pinnedPosition != null) return;
     if (_dust.isEmpty) _spawnDust();
-    _nextDustAt = _elapsed + 45;
+    _nextDustAt = _elapsed + dustIntervalSeconds;
     if (_journey.isEmpty && _phase != HomeCompanionPhase.sweeping) {
       _startCleaning();
     }
@@ -677,7 +703,7 @@ class HomeCompanionMotion extends ChangeNotifier {
 
   void _rest() {
     _setPhase(HomeCompanionPhase.idle);
-    _idleDuration = 1.8 + _random.nextDouble() * 2.2;
+    _idleDuration = restMinSeconds + _random.nextDouble() * restSpreadSeconds;
   }
 
   void _wander() {
@@ -1003,7 +1029,7 @@ class HomeCompanionMotion extends ChangeNotifier {
       _dustTargets.remove(spot.seed);
       // Sau khi dọn xong vẫn dành thời gian đi thăm khối khác, không tạo
       // bụi lại ngay nếu hành trình dọn trước đó kéo dài hơn 45 giây.
-      if (_dust.isEmpty) _nextDustAt = _elapsed + 45;
+      if (_dust.isEmpty) _nextDustAt = _elapsed + dustIntervalSeconds;
       _setPhase(HomeCompanionPhase.celebrating);
     }
   }

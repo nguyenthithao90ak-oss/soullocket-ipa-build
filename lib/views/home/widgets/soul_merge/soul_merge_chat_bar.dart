@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -6,6 +8,9 @@ import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
 import 'soul_merge_design.dart';
 import 'soul_merge_photo_tile.dart';
 import 'soul_merge_photo_viewer.dart';
+import 'soul_merge_reactions.dart';
+import 'soul_merge_message_actions.dart';
+import 'soul_merge_live_message.dart';
 
 class SoulMergeChatBar extends StatelessWidget {
   const SoulMergeChatBar({
@@ -29,6 +34,20 @@ class SoulMergeChatBar extends StatelessWidget {
     this.onRetryHistory,
     this.onLoadOlder,
     this.imageProviderBuilder,
+    this.composerFocusNode,
+    this.replyTarget,
+    this.onCancelReply,
+    this.isSending = false,
+    this.onReactMessage,
+    this.onDeleteMessage,
+    this.onReplyMessage,
+    this.canDeleteMessage,
+    this.onHideMessage,
+    this.onRemoveReaction,
+    this.currentUid,
+    this.watchMessage,
+    this.shouldWatchMessage,
+    this.onMessageChanged,
   });
 
   final List<Map<String, dynamic>> chatHistory;
@@ -50,6 +69,20 @@ class SoulMergeChatBar extends StatelessWidget {
   final VoidCallback? onRetryHistory;
   final VoidCallback? onLoadOlder;
   final ImageProvider Function(String)? imageProviderBuilder;
+  final FocusNode? composerFocusNode;
+  final Map<String, dynamic>? replyTarget;
+  final VoidCallback? onCancelReply;
+  final bool isSending;
+  final Future<void> Function(Map<String, dynamic>, String)? onReactMessage;
+  final Future<void> Function(Map<String, dynamic>)? onDeleteMessage;
+  final ValueChanged<Map<String, dynamic>>? onReplyMessage;
+  final bool Function(Map<String, dynamic>)? canDeleteMessage;
+  final Future<void> Function(Map<String, dynamic>)? onHideMessage;
+  final Future<void> Function(Map<String, dynamic>)? onRemoveReaction;
+  final String? currentUid;
+  final Stream<Map<String, dynamic>?> Function(String)? watchMessage;
+  final bool Function(String)? shouldWatchMessage;
+  final void Function(String, Map<String, dynamic>?)? onMessageChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -101,6 +134,16 @@ class SoulMergeChatBar extends StatelessWidget {
                 loadFailed: historyLoadFailed,
                 onRetry: onRetryHistory,
                 imageProviderBuilder: imageProviderBuilder,
+                onReactMessage: onReactMessage,
+                onDeleteMessage: onDeleteMessage,
+                onReplyMessage: onReplyMessage,
+                canDeleteMessage: canDeleteMessage,
+                onHideMessage: onHideMessage,
+                onRemoveReaction: onRemoveReaction,
+                currentUid: currentUid,
+                watchMessage: watchMessage,
+                shouldWatchMessage: shouldWatchMessage,
+                onMessageChanged: onMessageChanged,
               ),
             ),
             if (presets.isNotEmpty) ...[
@@ -108,12 +151,19 @@ class SoulMergeChatBar extends StatelessWidget {
               _MergePresetRow(presets: presets, onSelected: onSendPreset),
             ],
             const SizedBox(height: 10),
+            if (replyTarget != null)
+              _MergeReplyBanner(
+                preview: soulMessagePreview(context, replyTarget),
+                onCancel: onCancelReply,
+              ),
             _MergeComposer(
               controller: textController,
               isUploadingPhoto: isUploadingPhoto,
               onPickImage: onPickImage,
               onShowSticker: onShowSticker,
               onSend: onSendCustomMessage,
+              focusNode: composerFocusNode,
+              isSending: isSending,
             ),
           ],
         ),
@@ -172,6 +222,16 @@ class _MergeChatHistory extends StatelessWidget {
     required this.loadFailed,
     required this.onRetry,
     this.imageProviderBuilder,
+    this.onReactMessage,
+    this.onDeleteMessage,
+    this.onReplyMessage,
+    this.canDeleteMessage,
+    this.onHideMessage,
+    this.onRemoveReaction,
+    this.currentUid,
+    this.watchMessage,
+    this.shouldWatchMessage,
+    this.onMessageChanged,
   });
 
   final List<Map<String, dynamic>> history;
@@ -182,6 +242,16 @@ class _MergeChatHistory extends StatelessWidget {
   final bool loadFailed;
   final VoidCallback? onRetry;
   final ImageProvider Function(String)? imageProviderBuilder;
+  final Future<void> Function(Map<String, dynamic>, String)? onReactMessage;
+  final Future<void> Function(Map<String, dynamic>)? onDeleteMessage;
+  final ValueChanged<Map<String, dynamic>>? onReplyMessage;
+  final bool Function(Map<String, dynamic>)? canDeleteMessage;
+  final Future<void> Function(Map<String, dynamic>)? onHideMessage;
+  final Future<void> Function(Map<String, dynamic>)? onRemoveReaction;
+  final String? currentUid;
+  final Stream<Map<String, dynamic>?> Function(String)? watchMessage;
+  final bool Function(String)? shouldWatchMessage;
+  final void Function(String, Map<String, dynamic>?)? onMessageChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -278,7 +348,15 @@ class _MergeChatHistory extends StatelessWidget {
                     final photoIndex = photos.indexWhere(
                       (entry) => identical(entry, message),
                     );
-                    return _MergeMessageBubble(
+                    final replyId = message['replyTo']?.toString();
+                    Map<String, dynamic>? quote;
+                    for (final entry in history) {
+                      if (entry['id'] == replyId) {
+                        quote = entry;
+                        break;
+                      }
+                    }
+                    final bubble = _MergeMessageBubble(
                       key: ValueKey(message['id']),
                       isSelf: message['sender']?.toString() == myRole,
                       grouped: grouped,
@@ -292,15 +370,63 @@ class _MergeChatHistory extends StatelessWidget {
                       ),
                       text: message['text']?.toString() ?? '',
                       imageUrl: message['imageUrl']?.toString() ?? '',
+                      reactions: _readReactions(message['reactions']),
+                      replyPreview: replyId == null
+                          ? null
+                          : soulMessagePreview(context, quote),
                       imageProvider: imageProviderBuilder?.call(
                         message['imageUrl']?.toString() ?? '',
                       ),
                       time: formatTime((message['timestamp'] as num?)?.toInt()),
+                      onLongPress: () => SoulMergeMessageActions.show(
+                        context,
+                        message,
+                        uid: currentUid,
+                        onReact: onReactMessage,
+                        onRemoveReaction: onRemoveReaction,
+                        onHide: onHideMessage,
+                        onDelete: onDeleteMessage,
+                        onReply: onReplyMessage,
+                        canDelete: canDeleteMessage?.call(message) ?? false,
+                        onOpenPhoto: photoIndex < 0
+                            ? null
+                            : () => SoulMergePhotoViewer.show(
+                                context,
+                                urls: photos
+                                    .map(
+                                      (entry) => entry['imageUrl'].toString(),
+                                    )
+                                    .toList(growable: false),
+                                initialIndex: photoIndex,
+                                imageProviderBuilder: imageProviderBuilder,
+                              ),
+                      ),
                     );
+                    return watchMessage == null || onMessageChanged == null
+                        ? bubble
+                        : SoulMergeLiveMessage(
+                            key: ValueKey(message['id']),
+                            messageId: message['id'].toString(),
+                            watch: watchMessage!,
+                            enabled:
+                                shouldWatchMessage?.call(
+                                  message['id'].toString(),
+                                ) ??
+                                true,
+                            onChanged: onMessageChanged!,
+                            child: bubble,
+                          );
                   },
                 ),
               ),
       ),
+    );
+  }
+
+  static Map<String, String> _readReactions(Object? raw) {
+    if (raw is! Map) return const <String, String>{};
+    return raw.map<String, String>(
+      (key, value) => MapEntry(key.toString(), value.toString()),
     );
   }
 }
@@ -315,6 +441,9 @@ class _MergeMessageBubble extends StatelessWidget {
     required this.text,
     required this.imageUrl,
     required this.time,
+    required this.reactions,
+    this.onLongPress,
+    this.replyPreview,
   });
 
   final bool isSelf;
@@ -324,6 +453,9 @@ class _MergeMessageBubble extends StatelessWidget {
   final String text;
   final String imageUrl;
   final String time;
+  final Map<String, String> reactions;
+  final VoidCallback? onLongPress;
+  final String? replyPreview;
 
   @override
   Widget build(BuildContext context) {
@@ -337,79 +469,145 @@ class _MergeMessageBubble extends StatelessWidget {
 
     return Align(
       alignment: isSelf ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: EdgeInsets.only(
-          top: grouped ? 2 : 12,
-          bottom: 3,
-          left: isSelf ? 42 : 0,
-          right: isSelf ? 0 : 42,
-        ),
-        padding: isSticker
-            ? EdgeInsets.zero
-            : hasImage
-            ? const EdgeInsets.all(5)
-            : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: isSticker
-            ? null
-            : BoxDecoration(
-                color: isSelf ? colors.sent : colors.surface,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(18),
-                  topRight: const Radius.circular(18),
-                  bottomLeft: Radius.circular(isSelf ? 18 : 5),
-                  bottomRight: Radius.circular(isSelf ? 5 : 18),
-                ),
-                border: Border.all(color: isSelf ? colors.sent : colors.line),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF754653).withValues(alpha: 0.08),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
+      child: GestureDetector(
+        onLongPress: onLongPress,
+        child: Container(
+          margin: EdgeInsets.only(
+            top: grouped ? 2 : 12,
+            bottom: 3,
+            left: isSelf ? 42 : 0,
+            right: isSelf ? 0 : 42,
+          ),
+          padding: isSticker
+              ? EdgeInsets.zero
+              : hasImage
+              ? const EdgeInsets.all(5)
+              : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: isSticker
+              ? null
+              : BoxDecoration(
+                  color: isSelf ? colors.sent : colors.surface,
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(18),
+                    topRight: const Radius.circular(18),
+                    bottomLeft: Radius.circular(isSelf ? 18 : 5),
+                    bottomRight: Radius.circular(isSelf ? 5 : 18),
                   ),
-                ],
-              ),
-        child: Column(
-          crossAxisAlignment: isSelf
-              ? CrossAxisAlignment.end
-              : CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (hasImage)
-              _MergeMessageMedia(
-                imageUrl: imageUrl,
-                localSticker: localSticker,
-                legacySticker: isLegacySticker,
-                onOpenPhoto: onOpenPhoto,
-                imageProvider: imageProvider,
-              ),
-            if (text.isNotEmpty)
-              Padding(
-                padding: EdgeInsets.only(top: hasImage ? 5 : 0),
-                child: Text(
-                  text,
-                  style: SLTheme.quicksand(
-                    color: isSelf ? Colors.white : colors.ink,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    height: 1.25,
-                  ),
+                  border: Border.all(color: isSelf ? colors.sent : colors.line),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF754653).withValues(alpha: 0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
-              ),
-            if (time.isNotEmpty && !isSticker)
-              Padding(
-                padding: const EdgeInsets.only(top: 3),
-                child: Text(
-                  time,
-                  style: SLTheme.quicksand(
+          child: Column(
+            crossAxisAlignment: isSelf
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (replyPreview != null)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 7),
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
                     color: isSelf
-                        ? Colors.white.withValues(alpha: 0.78)
-                        : colors.muted,
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w700,
+                        ? Colors.white.withValues(alpha: .16)
+                        : colors.blush,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    replyPreview!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: isSelf ? Colors.white : colors.ink,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
-              ),
-          ],
+              if (hasImage)
+                _MergeMessageMedia(
+                  imageUrl: imageUrl,
+                  localSticker: localSticker,
+                  legacySticker: isLegacySticker,
+                  onOpenPhoto: onOpenPhoto,
+                  imageProvider: imageProvider,
+                ),
+              if (text.isNotEmpty)
+                Padding(
+                  padding: EdgeInsets.only(top: hasImage ? 5 : 0),
+                  child: Text(
+                    text,
+                    style: SLTheme.quicksand(
+                      color: isSelf ? Colors.white : colors.ink,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      height: 1.25,
+                    ),
+                  ),
+                ),
+              if (time.isNotEmpty && !isSticker)
+                Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Text(
+                    time,
+                    style: SLTheme.quicksand(
+                      color: isSelf
+                          ? Colors.white.withValues(alpha: 0.78)
+                          : colors.muted,
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              if (reactions.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 5),
+                  child: Wrap(
+                    spacing: 3,
+                    runSpacing: 3,
+                    children: reactions.values
+                        .map(
+                          (reaction) => _SoulReactionChip(reference: reaction),
+                        )
+                        .toList(growable: false),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SoulReactionChip extends StatelessWidget {
+  const _SoulReactionChip({required this.reference});
+
+  final String reference;
+
+  @override
+  Widget build(BuildContext context) {
+    final spec = SoulMergeReactionCatalog.find(reference);
+    final sticker = SoulLocketStickerCatalog.find(reference);
+    if (spec == null || sticker == null) {
+      return const SizedBox.shrink();
+    }
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: spec.color,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(2),
+        child: SoulLocketAnimatedSticker(
+          sticker: sticker,
+          size: 25,
+          animate: false,
+          semanticLabel: context.tr(spec.labelKey),
         ),
       ),
     );
@@ -504,6 +702,8 @@ class _MergeComposer extends StatelessWidget {
     required this.onPickImage,
     required this.onShowSticker,
     required this.onSend,
+    this.focusNode,
+    this.isSending = false,
   });
 
   final TextEditingController controller;
@@ -511,6 +711,8 @@ class _MergeComposer extends StatelessWidget {
   final VoidCallback onPickImage;
   final VoidCallback onShowSticker;
   final VoidCallback onSend;
+  final FocusNode? focusNode;
+  final bool isSending;
 
   @override
   Widget build(BuildContext context) {
@@ -556,6 +758,7 @@ class _MergeComposer extends StatelessWidget {
             Expanded(
               child: TextField(
                 controller: controller,
+                focusNode: focusNode,
                 textCapitalization: TextCapitalization.sentences,
                 minLines: 1,
                 maxLines: 4,
@@ -580,13 +783,15 @@ class _MergeComposer extends StatelessWidget {
                     vertical: 10,
                   ),
                 ),
-                onSubmitted: (_) => onSend(),
+                onSubmitted: (_) {
+                  if (!isSending) onSend();
+                },
               ),
             ),
             Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: onSend,
+                onTap: isSending ? null : onSend,
                 borderRadius: BorderRadius.circular(15),
                 child: Ink(
                   width: 48,
@@ -595,11 +800,21 @@ class _MergeComposer extends StatelessWidget {
                     color: colors.sent,
                     borderRadius: BorderRadius.circular(15),
                   ),
-                  child: const Icon(
-                    Icons.arrow_upward_rounded,
-                    color: Colors.white,
-                    size: 21,
-                  ),
+                  child: isSending
+                      ? const Center(
+                          child: SizedBox.square(
+                            dimension: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          ),
+                        )
+                      : const Icon(
+                          Icons.arrow_upward_rounded,
+                          color: Colors.white,
+                          size: 21,
+                        ),
                 ),
               ),
             ),
@@ -646,6 +861,56 @@ class _ComposerAction extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _MergeReplyBanner extends StatelessWidget {
+  const _MergeReplyBanner({required this.preview, required this.onCancel});
+  final String preview;
+  final VoidCallback? onCancel;
+  @override
+  Widget build(BuildContext context) {
+    final colors = SoulMergeColors(context);
+    return Container(
+      padding: const EdgeInsetsDirectional.only(start: 12),
+      margin: const EdgeInsets.only(bottom: 6),
+      decoration: BoxDecoration(
+        color: colors.blush,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.reply_rounded, color: colors.rose, size: 20),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.tr('p4_soul_action_reply'),
+                  style: TextStyle(
+                    color: colors.rose,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12,
+                  ),
+                ),
+                Text(
+                  preview,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: colors.ink, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: context.tr('p4_soul_reply_cancel'),
+            onPressed: onCancel,
+            icon: Icon(Icons.close_rounded, color: colors.muted),
+          ),
+        ],
       ),
     );
   }

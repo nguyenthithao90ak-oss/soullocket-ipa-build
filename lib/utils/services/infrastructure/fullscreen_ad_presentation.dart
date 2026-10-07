@@ -177,14 +177,25 @@ Future<T?> loadAdWithTimeout<T extends Ad>({
   timer = Timer(timeout, () => finish(null));
   Future<void> start() async {
     try {
-      await load((ad) {
-        if (result.isCompleted || !canAccept()) {
-          if (!identical(accepted, ad)) unawaited(disposeSafely(ad));
+      await load(
+        (ad) {
+          if (result.isCompleted || !canAccept()) {
+            if (!identical(accepted, ad)) unawaited(disposeSafely(ad));
+            finish(null);
+            return;
+          }
+          finish(ad);
+        },
+        (error) {
+          // Ghi mã lỗi đã được AppErrorMapper làm sạch để chẩn đoán fill/load;
+          // không ghi ad unit, token hay dữ liệu người dùng.
+          debugPrint(
+            'AdMobService: ad load callback failed: '
+            '${AppErrorMapper.resolve(error).message}',
+          );
           finish(null);
-          return;
-        }
-        finish(ad);
-      }, (_) => finish(null));
+        },
+      );
     } catch (error) {
       finish(null);
       debugPrint(

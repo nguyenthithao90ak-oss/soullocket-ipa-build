@@ -155,7 +155,10 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
   Future<void> _syncBgmWithSound() {
     // Tuần tự hóa lệnh: trở lại app tiếp tục bản nhạc đang phát.
     _bgmSyncQueue = _bgmSyncQueue.then((_) async {
-      if (!mounted || _audioDisposed || !_audioSettingsLoaded || !_audioReady) {
+      if (!mounted ||
+          _audioDisposed ||
+          !_audioSettingsLoaded ||
+          !_audioReady) {
         return;
       }
       try {

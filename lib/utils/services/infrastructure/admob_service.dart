@@ -30,6 +30,7 @@ import 'app_open_ad_presentation.dart';
 import 'fullscreen_ad_presentation.dart';
 import 'reward_request_scope.dart';
 import 'ad_reward_receipt_store.dart';
+import 'staggered_ad_preloader.dart';
 
 /// ============================================================
 ///  AdMobService — GRA (Phase Production)
@@ -225,6 +226,19 @@ class AdMobService {
   int _privacyEpoch = 0;
   final Set<BannerAd> _banners = {};
   final ValueNotifier<int> adRevision = ValueNotifier(0);
+  late final _startupAdPreloader = StaggeredAdPreloader(
+    canPreload: () =>
+        _canUseAds &&
+        !_isShowingFullscreenAd &&
+        !_nativeFullscreenVisible &&
+        !_isRewardedAdLoading &&
+        !_isSoulGameRewardedAdLoading &&
+        !_isAppOpenLoading &&
+        !_isInterstitialLoading,
+    onError: (error, _) => debugPrint(
+      'AdMob preload failed: ${AppErrorMapper.resolve(error).message}',
+    ),
+  );
   bool get _canUseAds =>
       _sdkInitialized &&
       _requestConfigurationReady &&
@@ -254,11 +268,17 @@ class AdMobService {
 
   void _discardAds() {
     _privacyEpoch++;
+    _startupAdPreloader.cancel();
     _requestConfigurationReady = false;
     _isRewardedAdLoading = false;
     _rewardedLoadId++;
     _rewardedLoadedAt = null;
     _interstitialLoadId++;
+    final interstitialCompleter = _interstitialLoadCompleter;
+    if (interstitialCompleter != null && !interstitialCompleter.isCompleted) {
+      interstitialCompleter.complete();
+    }
+    _interstitialLoadCompleter = null;
     _interstitialLoadedAt = null;
     _isSoulGameRewardedAdLoading = false;
     _soulGameRewardedLoadId++;
@@ -548,15 +568,13 @@ class AdMobService {
       }
       _requestConfigurationReady = true;
       adRevision.value++;
-      // Trì hoãn tải quảng cáo nền 3s sau khi SDK ready
-      // để không tranh CPU với UI rendering khi app khởi động
-      Future<void>.delayed(const Duration(seconds: 3), () {
-        if (!_canUseAds || epoch != _privacyEpoch) return;
-        _loadRewardedAd();
-        _loadSoulGameRewardedAd();
-        unawaited(loadInterstitialAd());
-        unawaited(loadAppOpenAd());
-      });
+      _startupAdPreloader.start([
+        () async {
+          await loadAppOpenAd();
+        },
+        _loadRewardedAd,
+        loadInterstitialAd,
+      ]);
     } catch (error) {
       _umpAllowsAds = false;
       debugPrint(
@@ -594,7 +612,7 @@ class AdMobService {
         : MaxAdContentRating.g,
   );
 
-  void _loadRewardedAd({int retryCount = 0}) {
+  Future<void> _loadRewardedAd({int retryCount = 0}) async {
     if (kIsWeb || !_canUseAds) return;
     if (_rewardedAd != null &&
         (_rewardedLoadedAt == null ||
@@ -637,7 +655,7 @@ class AdMobService {
       }
     }
 
-    unawaited(load());
+    await load();
   }
 
   void _loadSoulGameRewardedAd() {
@@ -718,10 +736,15 @@ class AdMobService {
   }
 
   void preloadRewardedAd() {
-    _loadRewardedAd();
+    unawaited(_loadRewardedAd());
   }
 
   void preloadSoulGameRewardedAd() {
+    unawaited(_initializeAndPreloadSoulGameRewardedAd());
+  }
+
+  Future<void> _initializeAndPreloadSoulGameRewardedAd() async {
+    await initialize();
     _loadSoulGameRewardedAd();
   }
 
@@ -998,7 +1021,8 @@ class AdMobService {
   /// Hiển thị quảng cáo rewarded. Trả về true nếu user xem đủ.
   Future<bool> showRewardedAd({
     bool ignoreCooldown = false,
-    Duration loadTimeout = const Duration(seconds: 5),
+    // Đồng bộ với timeout tải native để mạng chậm không bị bỏ qua sớm.
+    Duration loadTimeout = const Duration(seconds: 12),
     String? verifiedPurpose,
   }) => _withFullscreenLock(
     () => _showRewardedAd(
@@ -1388,6 +1412,7 @@ class AdMobService {
   InterstitialAd? _interstitialAd;
   bool _isInterstitialLoading = false;
   int _interstitialLoadId = 0;
+  Completer<void>? _interstitialLoadCompleter;
   DateTime? _interstitialLoadedAt;
   Timer? _autoInterstitialTimer;
   bool _autoInterstitialSchedulerEnabled = false;
@@ -1418,10 +1443,17 @@ class AdMobService {
       _interstitialAd = null;
       _interstitialLoadedAt = null;
     }
-    if (_interstitialAd != null || _isInterstitialLoading) return;
+    if (_interstitialAd != null) return;
+    if (_isInterstitialLoading) {
+      // Một caller đang tải thì chờ cùng Future; không bỏ qua lượt show đang đến.
+      await (_interstitialLoadCompleter?.future ?? Future<void>.value());
+      return;
+    }
     _isInterstitialLoading = true;
     final epoch = _privacyEpoch;
     final loadId = ++_interstitialLoadId;
+    final completer = Completer<void>();
+    _interstitialLoadCompleter = completer;
     bool current() => epoch == _privacyEpoch && loadId == _interstitialLoadId;
     final ad = await loadAdWithTimeout<InterstitialAd>(
       canAccept: () => current() && _canUseAds,
@@ -1434,13 +1466,18 @@ class AdMobService {
         ),
       ),
     );
-    if (!current() || !_canUseAds) {
+    final isCurrent = current();
+    if (!isCurrent || !_canUseAds) {
       if (ad != null) unawaited(ad.dispose());
-      return;
+    } else {
+      _interstitialAd = ad;
+      _interstitialLoadedAt = ad == null ? null : DateTime.now();
     }
-    _isInterstitialLoading = false;
-    _interstitialAd = ad;
-    _interstitialLoadedAt = ad == null ? null : DateTime.now();
+    if (isCurrent) {
+      _isInterstitialLoading = false;
+      _interstitialLoadCompleter = null;
+    }
+    if (!completer.isCompleted) completer.complete();
   }
 
   Future<bool> showInterstitialAd() => _withFullscreenLock(_showInterstitialAd);
@@ -1477,7 +1514,7 @@ class AdMobService {
     if (!_canUseAds) return false;
     await loadInterstitialAd();
 
-    // Nếu vẫn null (do tải lỗi), thì bỏ qua
+    // Chờ xong lượt tải hiện tại; chỉ bỏ qua khi lượt đó thật sự thất bại.
     if (_interstitialAd == null) return false;
 
     final ad = _interstitialAd!;

@@ -4,8 +4,25 @@ import '../../../../../utils/services/offline_cache_service.dart';
 import 'pairing_shortcut_state.dart';
 
 class PairingDisplayCache {
+  static const _maxAge = Duration(hours: 24);
+
   static String cacheKey(String uid, String houseId) =>
       'pairing_display_${uid}_$houseId';
+
+  static bool _isFresh(Map saved) {
+    final rawTimestamp = saved['cachedAt'];
+    if (rawTimestamp == null) return true;
+    final timestamp = rawTimestamp is num
+        ? rawTimestamp.toInt()
+        : int.tryParse(rawTimestamp.toString());
+    if (timestamp == null || timestamp.abs() > 8640000000000000) {
+      return false;
+    }
+    final age = DateTime.now().difference(
+      DateTime.fromMillisecondsSinceEpoch(timestamp),
+    );
+    return age >= Duration.zero && age <= _maxAge;
+  }
 
   static PairingShortcutState restore({
     required String? uid,
@@ -28,6 +45,7 @@ class PairingDisplayCache {
     final saved = read(cacheKey(uid, houseId));
     final scoped =
         saved is Map && saved['uid'] == uid && saved['houseId'] == houseId;
+    if (scoped && !_isFresh(saved)) return PairingShortcutState();
     if (scoped && saved['paired'] is bool && saved['settings'] is Map) {
       return PairingShortcutState(cachedSnapshot: saved);
     }
@@ -51,7 +69,12 @@ class PairingDisplayCache {
     }
     final data = state.toCache();
     if (data == null) return;
-    final snapshot = {...data, 'uid': uid, 'houseId': houseId};
+    final snapshot = {
+      ...data,
+      'uid': uid,
+      'houseId': houseId,
+      'cachedAt': DateTime.now().millisecondsSinceEpoch,
+    };
     final key = cacheKey(uid, houseId);
     OfflineCacheService.setMemoryCache(key, snapshot, const Duration(hours: 8));
     await OfflineCacheService.saveCache(key, snapshot);

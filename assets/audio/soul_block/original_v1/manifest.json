@@ -6,10 +6,10 @@
   "assets": [
     {
       "file": "neon_memory.mp3",
-      "duration": 75.29412698412699,
-      "peak_dbfs": -2.85,
-      "bytes": 1205916,
-      "sha256": "f2920ee6163c94dbb84dcdfccbe95e687b5c5aea96065c0bd1fac2f8523e6349"
+      "duration": 75.294127,
+      "peak_dbfs": -3.9,
+      "bytes": 904464,
+      "sha256": "ee0b4c957563a3cddfd5dfb9d5d6195ebe8ebe5a4c96d5265439131ade4223bb"
     },
     {
       "file": "tap.wav",

@@ -1,13 +1,19 @@
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
-import 'dart:async' show unawaited;
+import 'dart:async' show StreamSubscription, unawaited;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../utilities/block_blast_game.dart';
 import '../../../utils/app_error_mapper.dart';
 import '../../../utils/services/games/game_download_service.dart';
+import '../../../utils/services/games/memory_puzzle_sound.dart';
+import '../../../utils/services/house_service.dart';
+import '../../../utils/services/offline_cache_service.dart';
+import '../../utilities/memory_puzzle/memory_puzzle_screen.dart';
+import '../../utilities/memory_puzzle/memory_puzzle_session.dart';
 import 'game_library_view.dart';
 import 'soul_block_diary_cover.dart';
 
@@ -23,6 +29,9 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
 
   final Map<String, bool> _downloadedGames = {'soul_block': false};
   int _coverRevision = 0;
+  bool _openingPuzzle = false;
+  bool _openingGame = false;
+  bool _openingSoulBlock = false;
 
   @override
   void initState() {
@@ -156,26 +165,34 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
   }
 
   void _onGameTap(String gameId, String name, VoidCallback onPlay) async {
-    final service = GameDownloadService();
-    final isDownloaded = await service.isGameDownloaded(gameId);
-    if (!mounted) return;
-    if (isDownloaded) {
-      onPlay();
-      return;
-    }
+    if (_openingGame) return;
+    _openingGame = true;
+    try {
+      final service = GameDownloadService();
+      final isDownloaded = await service.isGameDownloaded(gameId);
+      if (!mounted) return;
+      if (isDownloaded) {
+        onPlay();
+        return;
+      }
 
-    final shouldDownload = await _confirmGameDownload(gameId, name);
-    if (!mounted || !shouldDownload) return;
+      final shouldDownload = await _confirmGameDownload(gameId, name);
+      if (!mounted || !shouldDownload) return;
 
-    final downloaded = await _handleRealDownload(gameId);
-    if (!mounted) return;
-    await _loadDownloadStatus();
-    if (downloaded && mounted) {
-      onPlay();
+      final downloaded = await _handleRealDownload(gameId);
+      if (!mounted) return;
+      await _loadDownloadStatus();
+      if (downloaded && mounted) {
+        onPlay();
+      }
+    } finally {
+      _openingGame = false;
     }
   }
 
   Future<void> _openSoulBlockGame(BuildContext context) async {
+    if (_openingSoulBlock) return;
+    _openingSoulBlock = true;
     final openGameErrorMsg = context.tr('home_khngmcsoul_009d9e');
     final navigator = Navigator.of(context, rootNavigator: true);
     final messenger = ScaffoldMessenger.maybeOf(context);
@@ -194,6 +211,76 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
       messenger
         ..clearSnackBars()
         ..showSnackBar(SLSnackBar(content: Text(openGameErrorMsg)));
+    } finally {
+      _openingSoulBlock = false;
+    }
+  }
+
+  Future<void> _openMemoryPuzzle(BuildContext context) async {
+    if (_openingPuzzle) return;
+    _openingPuzzle = true;
+    try {
+      final noHouseMessage = context.tr('memory_puzzle_no_house');
+      final messenger = ScaffoldMessenger.maybeOf(context);
+      final navigator = Navigator.of(context, rootNavigator: true);
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      final houseId = await HouseService().getCurrentHouseId();
+      if (!mounted) return;
+      if (uid == null ||
+          houseId == null ||
+          houseId.isEmpty ||
+          FirebaseAuth.instance.currentUser?.uid != uid) {
+        messenger?.showSnackBar(SLSnackBar(content: Text(noHouseMessage)));
+        return;
+      }
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
+          await SharedPreferences.getInstance();
+      if (!mounted || FirebaseAuth.instance.currentUser?.uid != uid) return;
+      late final MaterialPageRoute<void> puzzleRoute;
+      final session = MemoryPuzzleSession.forHouse(
+        uid: uid,
+        houseId: houseId,
+        isCurrent: () =>
+            mounted &&
+            FirebaseAuth.instance.currentUser?.uid == uid &&
+            (prefs.getString('il_house_id') ?? houseId) == houseId,
+        onAccessDenied: () {
+          if (mounted && puzzleRoute.isCurrent) navigator.pop();
+          messenger?.showSnackBar(SLSnackBar(content: Text(noHouseMessage)));
+        },
+      );
+      final audio = MemoryPuzzleSound();
+      StreamSubscription<User?>? auth;
+      try {
+        puzzleRoute = MaterialPageRoute<void>(
+          settings: const RouteSettings(name: 'memory_puzzle'),
+          builder: (_) => MemoryPuzzleScreen(
+            progressScope: '$uid|$houseId',
+            audio: audio,
+            loadPhoto: ({excludePhotoId, preferredPhotoId}) =>
+                session.loadPhoto(
+                  excludePhotoId: excludePhotoId,
+                  preferredPhotoId: preferredPhotoId,
+                ),
+            loadProgress: session.loadProgress,
+            saveProgress: session.saveProgress,
+          ),
+        );
+        auth = FirebaseAuth.instance.authStateChanges().listen((user) {
+          // Không giữ ảnh của tài khoản trước trên một route độc lập với Home.
+          if (user?.uid != uid && puzzleRoute.isCurrent) {
+            navigator.removeRoute(puzzleRoute);
+          }
+        });
+        await navigator.push(puzzleRoute);
+      } finally {
+        await auth?.cancel();
+        session.dispose();
+        await audio.dispose();
+      }
+    } finally {
+      _openingPuzzle = false;
     }
   }
 
@@ -211,6 +298,8 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
         'Soul Block',
         () => _openSoulBlockGame(context),
       ),
+      secondaryLabel: context.tr('memory_puzzle_open'),
+      secondaryAction: () => unawaited(_openMemoryPuzzle(context)),
       onDelete: downloaded
           ? () => _confirmDeleteGame(context, 'soul_block', 'Soul Block')
           : null,

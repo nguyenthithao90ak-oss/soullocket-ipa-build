@@ -403,14 +403,11 @@ class TarotReadingService {
   final LoveInsightService _loveInsightService = LoveInsightService();
 
   String _pickOracleLine(
-    bool isEnglish,
     int seed, {
-    required List<String> vi,
-    required List<String> en,
+    required List<String> keys,
   }) {
-    final items = isEnglish ? en : vi;
-    if (items.isEmpty) return '';
-    return items[seed.abs() % items.length];
+    if (keys.isEmpty) return '';
+    return UiCopy.text(keys[seed.abs() % keys.length]);
   }
 
   static const List<TarotSpreadTemplate> spreads = [
@@ -972,35 +969,21 @@ class TarotReadingService {
         (insights.positivity.round() * 3);
     final oracleAdvice = viewerProfile.isSingle
         ? _pickOracleLine(
-            isEnglish,
             seed,
-            vi: const [
-              'Lá bài khuyên bạn giữ tiêu chuẩn cảm xúc rõ ràng: điều gì làm tim dịu xuống thì giữ lại, điều gì làm tim phải gồng lên thì lùi ra.',
-              'Nguồn trực giác nghiêng về chữa lành: đừng mở cửa trái tim chỉ vì cô đơn, hãy mở khi bạn thấy sự bình yên đi cùng sức hút.',
-              'Theo mạch tarot cổ điển, vận tình cảm đẹp hơn khi bạn đi chậm mà sáng: quan sát sự nhất quán trước khi trao thêm kỳ vọng.',
-              'Thông điệp từ trải bài là chọn người có mặt thật trong hành động, vì năng lượng bền luôn mạnh hơn cảm xúc bùng lên ngắn hạn.',
-            ],
-            en: const [
-              'The cards advise keeping your emotional standards clear: keep what softens your heart, step back from what makes it brace itself.',
-              'The intuitive current leans toward healing: do not open your heart out of loneliness, open it when peace arrives with attraction.',
-              'In the classical tarot flow, love looks better when you move slowly but clearly: watch consistency before giving more expectation.',
-              'The spread points toward choosing real presence in action, because steady energy outlasts short emotional fireworks.',
+            keys: const [
+              'copy_23445894e70a',
+              'copy_a96ef7ee6675',
+              'copy_e410c73062ac',
+              'copy_163cf1c71b28',
             ],
           )
         : _pickOracleLine(
-            isEnglish,
             seed,
-            vi: const [
-              'Lời khuyên của tarot là chọn một hành động dịu nhưng thật: mở lòng vừa đủ, giữ ranh giới vừa đủ, và để năng lượng đẹp có chỗ lớn lên.',
-              'Theo dòng chữa lành, mối liên kết này hợp với sự mềm mại có ý thức: bớt thử lòng, tăng sự hiện diện, để cảm xúc được an toàn mà nở ra.',
-              'Lá bài nghiêng về thực hành: thay vì đòi câu trả lời hoàn hảo, hãy nuôi kết nối bằng những điều nhỏ nhưng nhất quán và tử tế.',
-              'Mạch tarot trực giác khuyên hai bạn giữ không gian sáng cho nhau: nói thật, đừng quá phòng thủ, và để trái tim thở trước khi quyết định lớn.',
-            ],
-            en: const [
-              'The tarot advice is to choose one gentle but real action: open just enough, hold just enough boundary, and let good energy grow.',
-              'In the healing current, this bond responds best to conscious softness: less testing, more presence, so feeling can unfold safely.',
-              'The cards lean practical here: instead of demanding a perfect answer, feed the bond through small acts that stay consistent and kind.',
-              'The intuitive stream advises keeping a bright space between you: speak truth, lower the armor, and let the heart breathe before big decisions.',
+            keys: const [
+              'copy_4e48fa36d0f0',
+              'copy_0f7c797db866',
+              'copy_a432fb8beb98',
+              'copy_311c1613e739',
             ],
           );
     if (oracleAdvice.isNotEmpty) return oracleAdvice;
@@ -1050,21 +1033,14 @@ class TarotReadingService {
   ) {
     final isEnglish = viewerProfile.isEnglish;
     final oracleCommunication = _pickOracleLine(
-      isEnglish,
       signals.messageCount +
           (signals.questionCount * 3) +
           (insights.positivity.round() * 5),
-      vi: const [
-        'Theo biểu tượng của trải bài, điều quan trọng lúc này không phải nói nhiều mà là nói đúng phần thật nhất của trái tim.',
-        'Nguồn tarot trực giác cho thấy lớp ngôn ngữ đang nghiêng về sự chân thành mềm: lời ít nhưng ấm sẽ mở cửa tốt hơn lời đẹp mà mơ hồ.',
-        'Nếu đọc theo mạch cổ điển, các lá bài nhấn vào sự rõ ràng và thiện ý; năng lượng đẹp đến từ cách bạn đặt lời nói đúng chỗ.',
-        'Thông điệp nổi bật của trải bài là giữ lời nói sáng và gọn: điều được nói ra từ bình an thường chạm sâu hơn điều nói ra từ lo sợ.',
-      ],
-      en: const [
-        'Through the symbols of this spread, what matters now is not saying more, but saying the truest part of the heart.',
-        'The intuitive tarot stream shows a language of gentle honesty: fewer words with warmth open more than beautiful but foggy speech.',
-        'In the classical reading flow, the cards emphasize clarity and goodwill; good energy comes from placing words with intention.',
-        'The standout message here is to keep speech bright and clean: words spoken from calm tend to reach deeper than words spoken from fear.',
+      keys: const [
+        'copy_0f5d368dbf2b',
+        'copy_0e8c5f5417c6',
+        'copy_fd0dbf077183',
+        'copy_5d885addb2ad',
       ],
     );
     if (oracleCommunication.isNotEmpty) return oracleCommunication;
@@ -1110,46 +1086,28 @@ class TarotReadingService {
     final oracleTiming =
         insights.interactionRate >= 1.1 && insights.positivity >= 70
             ? _pickOracleLine(
-                isEnglish,
                 seed,
-                vi: const [
-                  'Dòng chảy của trải bài đang mở: đây là lúc thuận để tiến một bước mềm, miễn là bạn vẫn giữ được sự bình tâm.',
-                  'Các lá bài đồng thuận về thời điểm khá sáng; một cử chỉ tử tế hoặc một lời nói thật lúc này dễ được đón nhận hơn.',
-                  'Nguồn bói chữa lành cho thấy cánh cửa đang hé mở, hợp với một bước tiến nhẹ nhàng hơn là một cú thúc mạnh.',
-                ],
-                en: const [
-                  'The spread is opening in flow: this is a good time for one soft step, as long as you stay grounded.',
-                  'The cards agree that the timing looks bright; one kind gesture or one honest sentence is more likely to be received now.',
-                  'The healing stream suggests the door is slightly open, which favors a gentle move more than a forceful push.',
+                keys: const [
+                  'copy_28095b6c0e84',
+                  'copy_b17f20498e4b',
+                  'copy_5069a9eb881b',
                 ],
               )
             : insights.interactionRate < 0.45
                 ? _pickOracleLine(
-                    isEnglish,
                     seed,
-                    vi: const [
-                      'Trải bài chưa khuyến khích đẩy nhanh. Hợp hơn là để mọi thứ lắng lại, rồi chọn một thời điểm êm để chạm vào điều quan trọng.',
-                      'Mạch thời điểm đang nghiêng về hồi phục và gom năng lượng; đi chậm lúc này thường đẹp hơn cố ép kết quả.',
-                      'Tarot cho thấy nên nuôi lại sự ấm áp trước, rồi mới nói tới bước lớn hơn trong kết nối này.',
-                    ],
-                    en: const [
-                      'The spread does not support rushing. It is better to let things settle, then touch the important matter in a softer moment.',
-                      'The timing stream leans toward recovery and gathering energy; moving slowly looks better than forcing an outcome.',
-                      'Tarot suggests restoring warmth first before asking this connection to carry a bigger step.',
+                    keys: const [
+                      'copy_a2d65c69d4dc',
+                      'copy_18f6da86eacd',
+                      'copy_4ad7fd9ae055',
                     ],
                   )
                 : _pickOracleLine(
-                    isEnglish,
                     seed,
-                    vi: const [
-                      'Nhịp của trải bài hợp với một bước chắc tay hơn là nhiều động tác dồn dập.',
-                      'Dòng chảy hiện tại khuyên chọn thời điểm khi lòng đã yên, vì quyết định từ bình an sẽ bền hơn.',
-                      'Các lá bài cho thấy thời điểm đẹp đến từ sự tỉnh táo và đều đặn, không đến từ vội vàng.',
-                    ],
-                    en: const [
-                      'The spread favors one steady move more than many rushed actions.',
-                      'The current flow advises choosing a moment when the heart is calm, because decisions made from peace tend to last longer.',
-                      'The cards suggest that good timing comes from steadiness and clarity, not urgency.',
+                    keys: const [
+                      'copy_5ae0cb2d8ab4',
+                      'copy_dfd56fef5891',
+                      'copy_b33883e903f6',
                     ],
                   );
     if (oracleTiming.isNotEmpty) return oracleTiming;

@@ -1,19 +1,30 @@
-import 'package:soullocket_app/utils/ui_copy.dart';
+import '../services/holiday_service.dart';
+import '../services/l10n_service.dart';
+
 class DateHighlightHelper {
-  static const Map<String, Map<String, String>> _holidayMap = {
-    '01-01': {'icon': '🎉', 'text': 'Năm mới'},
-    '02-14': {'icon': '💖', 'text': 'Valentine'},
-    '03-08': {'icon': '💐', 'text': 'Quốc tế Phụ nữ'},
-    '04-30': {'icon': '🇻🇳', 'text': 'Giải phóng miền Nam'},
-    '05-01': {'icon': '🛠️', 'text': 'Quốc tế Lao động'},
-    '06-01': {'icon': '🧸', 'text': 'Quốc tế Thiếu nhi'},
-    '09-02': {'icon': '🇻🇳', 'text': 'Quốc khánh'},
-    '10-20': {'icon': '🌹', 'text': 'Phụ nữ Việt Nam'},
-    '11-20': {'icon': '👩‍🏫', 'text': 'Nhà giáo Việt Nam'},
-    '12-24': {'icon': '🎄', 'text': 'Giáng sinh'},
-    '12-25': {'icon': '🎅', 'text': 'Giáng sinh'},
-    '12-31': {'icon': '🎆', 'text': 'Giao thừa'},
-  };
+  static const _holidayMap =
+      <String, ({String icon, String key, bool vietnamOnly})>{
+        '01-01': (icon: '🎉', key: 'holiday_new_year', vietnamOnly: false),
+        '02-14': (icon: '💖', key: 'holiday_valentine', vietnamOnly: false),
+        '03-08': (icon: '💐', key: 'holiday_womens_day', vietnamOnly: false),
+        '04-30': (
+          icon: '🇻🇳',
+          key: 'holiday_liberation_day',
+          vietnamOnly: true,
+        ),
+        '05-01': (icon: '🛠️', key: 'holiday_labor_day', vietnamOnly: false),
+        '06-01': (icon: '🧸', key: 'holiday_children_day', vietnamOnly: false),
+        '09-02': (icon: '🇻🇳', key: 'holiday_national_day', vietnamOnly: true),
+        '10-20': (icon: '🌹', key: 'holiday_vn_womens_day', vietnamOnly: true),
+        '11-20': (
+          icon: '👩‍🏫',
+          key: 'holiday_teachers_day',
+          vietnamOnly: true,
+        ),
+        '12-24': (icon: '🎄', key: 'holiday_christmas_eve', vietnamOnly: false),
+        '12-25': (icon: '🎅', key: 'holiday_christmas', vietnamOnly: false),
+        '12-31': (icon: '🎆', key: 'holiday_new_year_eve', vietnamOnly: false),
+      };
 
   static List<Map<String, String>> getDateHighlights(
     int timestamp, {
@@ -27,18 +38,31 @@ class DateHighlightHelper {
         '${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
     final tags = <Map<String, String>>[];
 
-    if (_holidayMap.containsKey(mmdd)) {
-      tags.add(_holidayMap[mmdd]!);
+    final holiday = _holidayMap[mmdd];
+    if (holiday != null &&
+        (!holiday.vietnamOnly || HolidayService.isVietnamUser())) {
+      tags.add({
+        'icon': holiday.icon,
+        'text': L10nService().translate(holiday.key),
+      });
     }
 
     if (anniversaryDate != null &&
         d.month == anniversaryDate.month &&
         d.day == anniversaryDate.day) {
       if (d.year == anniversaryDate.year) {
-        tags.add({'icon': '💕', 'text': UiCopy.text('copy_07d4844612d2')});
+        tags.add({
+          'icon': '💕',
+          'text': L10nService().translate('holiday_anniversary_start'),
+        });
       } else if (d.year > anniversaryDate.year) {
         final years = d.year - anniversaryDate.year;
-        tags.add({'icon': '💕', 'text': UiCopy.text('copy_82e418760b5a', {'value1': years})});
+        tags.add({
+          'icon': '💕',
+          'text': L10nService().format('holiday_anniversary_years', {
+            'years': years,
+          }),
+        });
       }
     }
 

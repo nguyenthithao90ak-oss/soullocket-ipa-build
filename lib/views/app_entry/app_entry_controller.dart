@@ -425,13 +425,6 @@ class AppEntryController {
       await _runGuarded('initialize AdMob', () => _adMobService.initialize());
     });
 
-    Future<void>.delayed(const Duration(seconds: 60), () async {
-      await _runGuarded('preload rewarded ads', () async {
-        _adMobService.preloadRewardedAd();
-        _adMobService.preloadSoulGameRewardedAd();
-      });
-    });
-
     unawaited(
       Future<void>.delayed(const Duration(seconds: 75), () async {
         await _runGuarded(

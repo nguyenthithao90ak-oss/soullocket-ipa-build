@@ -8,8 +8,11 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_database/firebase_database.dart';
+import '../../core/service_locator.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/activity_history_service.dart';
+import '../../utils/services/house_lists/house_list_controller.dart';
+import '../../utils/services/house_lists/house_list_d1_client.dart';
 import '../../utils/app_error_mapper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -85,17 +88,23 @@ class _BucketListScreenState extends State<BucketListScreen>
   final TextEditingController _itemController = TextEditingController();
 
   List<_ConfettiPiece> _confetti = [];
-  late Stream<DatabaseEvent> _bucketStream;
+  // Mốc E: cờ server chọn nguồn RTDB hoặc D1; ghi D1 có revision + idempotency.
+  late HouseListController _list;
   late AnimationController _confettiCtrl;
   bool _showConfetti = false;
+  final Set<String> _busyKeys = {};
+
+  HouseListController _createList() => HouseListController(
+    houseId: widget.houseId,
+    kind: 'bucket',
+    rtdbLimit: 50,
+    client: locator<HouseListD1Client>(),
+  )..start();
 
   @override
   void initState() {
     super.initState();
-    _bucketStream = _dbRef
-        .child('houses/${widget.houseId}/bucket')
-        .limitToLast(50)
-        .onValue;
+    _list = _createList();
     _confettiCtrl =
         AnimationController(vsync: this, duration: const Duration(seconds: 2))
           ..addStatusListener((s) {
@@ -109,15 +118,15 @@ class _BucketListScreenState extends State<BucketListScreen>
   void didUpdateWidget(covariant BucketListScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.houseId != widget.houseId) {
-      _bucketStream = _dbRef
-          .child('houses/${widget.houseId}/bucket')
-          .limitToLast(50)
-          .onValue;
+      _list.dispose();
+      _list = _createList();
+      _busyKeys.clear();
     }
   }
 
   @override
   void dispose() {
+    _list.dispose();
     _confettiCtrl.dispose();
     _itemController.dispose();
     super.dispose();
@@ -156,33 +165,32 @@ class _BucketListScreenState extends State<BucketListScreen>
     final text = _itemController.text.trim();
     if (text.isEmpty) return;
 
-    final currentSnap = await _dbRef
-        .child('houses/${widget.houseId}/bucket')
-        .get();
-    if (currentSnap.exists && currentSnap.value is Map) {
-      final currentMap = currentSnap.value as Map;
-      if (currentMap.length >= 50) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SLSnackBar(
-            content: Text(context.tr('p3_bucket_limit_reached')),
-            backgroundColor: SLColors.danger,
-          ),
-        );
-        return;
-      }
+    // Danh sách đang nghe (tối đa 50 mục) đủ để đếm, không tải lại toàn bộ node mỗi lần thêm.
+    if (_list.items.length >= 50) {
+      _showLimitReached();
+      return;
     }
 
-    if (!mounted) return;
+    final list = _list;
     final now = DateTime.now();
     final labelAction = context.tr('util_thm1mcvobu_fc5d40');
-    await _dbRef.child('houses/${widget.houseId}/bucket').push().set({
+    final record = <String, Object?>{
       'a': widget.myName,
       'c': text,
       'ts': now.millisecondsSinceEpoch,
       'time': LocaleDateFormat.date(now),
       'done': false,
-    });
+    };
+    if (list.useD1) {
+      try {
+        await list.create(list.newItemId(), record);
+      } catch (error) {
+        if (mounted && identical(list, _list)) _showWriteError(error);
+        return;
+      }
+    } else {
+      await _dbRef.child('houses/${widget.houseId}/bucket').push().set(record);
+    }
 
     final prefs = await SharedPreferences.getInstance();
     final role = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
@@ -197,10 +205,59 @@ class _BucketListScreenState extends State<BucketListScreen>
   }
 
   void _toggleItem(String key, bool currentDone) {
-    _dbRef.child('houses/${widget.houseId}/bucket/$key').update({
-      'done': !currentDone,
-    });
+    final list = _list;
+    if (list.useD1) {
+      if (_busyKeys.contains(key)) return;
+      setState(() => _busyKeys.add(key));
+      unawaited(_toggleD1Item(list, key, currentDone));
+    } else {
+      _dbRef.child('houses/${widget.houseId}/bucket/$key').update({
+        'done': !currentDone,
+      });
+    }
     if (!currentDone) _triggerCelebration();
+  }
+
+  Future<void> _toggleD1Item(
+    HouseListController list,
+    String key,
+    bool currentDone,
+  ) async {
+    try {
+      await list.patch(key, {'done': !currentDone});
+    } catch (error) {
+      if (mounted && identical(list, _list)) _showWriteError(error);
+    } finally {
+      if (mounted && identical(list, _list)) {
+        setState(() => _busyKeys.remove(key));
+      }
+    }
+  }
+
+  void _showLimitReached() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SLSnackBar(
+        content: Text(context.tr('p3_bucket_limit_reached')),
+        backgroundColor: SLColors.danger,
+      ),
+    );
+  }
+
+  void _showWriteError(Object error) {
+    if (error is HouseListLimitException) {
+      _showLimitReached();
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SLSnackBar(
+        content: Text(
+          error is HouseListConflictException
+              ? context.tr('house_list_conflict_reloaded')
+              : AppErrorMapper.resolve(error).message,
+        ),
+        backgroundColor: SLColors.danger,
+      ),
+    );
   }
 
   void _deleteItem(String key) {
@@ -233,6 +290,11 @@ class _BucketListScreenState extends State<BucketListScreen>
   void _doDeleteItem(String key) {
     final labelAction = context.tr('util_xamtmcbuck_d18916');
     final labelTitle = context.tr('util_xabucketli_47d0b4');
+    final list = _list;
+    if (list.useD1) {
+      unawaited(_doDeleteD1Item(list, key, labelAction, labelTitle));
+      return;
+    }
     final existing = _dbRef.child('houses/${widget.houseId}/bucket/$key');
     existing.get().then((snapshot) async {
       if (!snapshot.exists || snapshot.value is! Map) {
@@ -256,6 +318,46 @@ class _BucketListScreenState extends State<BucketListScreen>
     });
   }
 
+  Future<void> _doDeleteD1Item(
+    HouseListController list,
+    String key,
+    String labelAction,
+    String labelTitle,
+  ) async {
+    final current = list.items[key];
+    if (current == null || _busyKeys.contains(key)) return;
+    final revision = list.revisionOf(key);
+    setState(() => _busyKeys.add(key));
+    try {
+      await ActivityHistoryService.instance.add(
+        labelAction,
+        houseId: list.houseId,
+        title: labelTitle,
+        subtitle: current['c']?.toString() ?? '',
+        action: 'delete',
+        module: 'bucket_list',
+        entityType: 'bucket_item',
+        entityId: key,
+        sourceLabel: 'Bucket List',
+        restorePath: 'houses/${list.houseId}/bucket/$key',
+        // Khôi phục đi qua API D1 với revision sau khi xóa, không ghi lại RTDB.
+        restorePayload: {
+          ...HouseListD1Client.apiData(current),
+          'backend': 'd1',
+          'restoreRevision': revision + 1,
+        },
+      );
+      if (!identical(list, _list)) return;
+      await list.remove(key);
+    } catch (error) {
+      if (mounted && identical(list, _list)) _showWriteError(error);
+    } finally {
+      if (mounted && identical(list, _list)) {
+        setState(() => _busyKeys.remove(key));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -276,17 +378,17 @@ class _BucketListScreenState extends State<BucketListScreen>
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 760),
-                  child: StreamBuilder(
-                    stream: _bucketStream,
-                    builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
+                  child: ListenableBuilder(
+                    listenable: _list,
+                    builder: (context, _) {
+                      if (_list.loading) {
                         return const Center(
                           child: CircularProgressIndicator(
                             color: SLColors.primary,
                           ),
                         );
                       }
-                      if (snapshot.hasError) {
+                      if (_list.error != null && _list.items.isEmpty) {
                         return Padding(
                           padding: SLSpacing.all16,
                           child: Center(
@@ -294,7 +396,7 @@ class _BucketListScreenState extends State<BucketListScreen>
                               icon: Icons.error_outline_rounded,
                               title: context.tr('util_khngticbuc_cb9126'),
                               subtitle: AppErrorMapper.resolve(
-                                snapshot.error,
+                                _list.error,
                               ).message,
                               accentColor: SLColors.danger,
                             ),
@@ -302,29 +404,16 @@ class _BucketListScreenState extends State<BucketListScreen>
                         );
                       }
 
-                      List<Map<String, dynamic>> items =
-                          <Map<String, dynamic>>[];
-                      if (snapshot.hasData &&
-                          snapshot.data?.snapshot.value != null) {
-                        final raw = snapshot.data!.snapshot.value;
-                        if (raw is Map) {
-                          final data = Map<dynamic, dynamic>.from(raw);
-                          items = data.entries
-                              .where((e) => e.value is Map)
-                              .map(
-                                (e) => {
-                                  'key': e.key,
-                                  ...Map<String, dynamic>.from(e.value as Map),
-                                },
-                              )
-                              .toList();
-                        }
-                        items.sort(
-                          (a, b) => (a['done'] == true ? 1 : 0).compareTo(
-                            b['done'] == true ? 1 : 0,
-                          ),
-                        );
-                      }
+                      final items = _list.items.entries
+                          .map(
+                            (e) => <String, dynamic>{'key': e.key, ...e.value},
+                          )
+                          .toList();
+                      items.sort(
+                        (a, b) => (a['done'] == true ? 1 : 0).compareTo(
+                          b['done'] == true ? 1 : 0,
+                        ),
+                      );
 
                       final doneCount = items
                           .where((i) => i['done'] == true)

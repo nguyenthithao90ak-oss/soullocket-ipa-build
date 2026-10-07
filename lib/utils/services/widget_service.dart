@@ -110,7 +110,13 @@ class WidgetService {
         _didBootstrap = true;
       }
 
-      if (forceUpdate) {
+      // CalendarReminderService gọi bootstrap khi đổi tùy chọn ngay cả khi
+      // Home đóng. Widget đếm ngày vì vậy luôn nhận cùng múi giờ với lịch.
+      final relationshipZoneChanged = await _saveWidgetDataIfChanged<String>(
+        'relationshipTimeZone',
+        MarketService.instance.preferences.timeZoneId ?? '',
+      );
+      if (forceUpdate || relationshipZoneChanged) {
         await refreshWidgetShell();
       }
     } catch (error) {
@@ -603,8 +609,8 @@ class WidgetService {
     required String daysText,
     String? avatarUrl1,
     String? avatarUrl2,
-    String status1 = 'Đang hoạt động',
-    String status2 = 'Đang hoạt động',
+    String? status1,
+    String? status2,
     bool isOnline1 = true,
     bool isOnline2 = true,
     String weather1 = '',
@@ -649,8 +655,14 @@ class WidgetService {
       await _saveWidgetDataIfChanged<String>('name1', name1);
       await _saveWidgetDataIfChanged<String>('name2', name2);
       await _saveWidgetDataIfChanged<String>('daysText', daysText);
-      await _saveWidgetDataIfChanged<String>('status1', status1);
-      await _saveWidgetDataIfChanged<String>('status2', status2);
+      await _saveWidgetDataIfChanged<String>(
+        'status1',
+        status1 ?? L10nService().translate('core_presence_online'),
+      );
+      await _saveWidgetDataIfChanged<String>(
+        'status2',
+        status2 ?? L10nService().translate('core_presence_online'),
+      );
       await _saveWidgetDataIfChanged<bool>('isOnline1', isOnline1);
       await _saveWidgetDataIfChanged<bool>('isOnline2', isOnline2);
       await _saveWidgetDataIfChanged<String>('weather1', weather1);

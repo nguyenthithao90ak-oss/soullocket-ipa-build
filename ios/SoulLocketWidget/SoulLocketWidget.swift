@@ -36,6 +36,13 @@ struct CoupleWidgetData {
     var photoFrameKey: String = "rounded"
     var diaryLayoutKey: String = "single"
     var loveDateText: String = ""
+    var relationshipTimeZone: String = ""
+
+    var relationshipCalendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: relationshipTimeZone) ?? .current
+        return calendar
+    }
 
     func resolvedDaysText(referenceDate: Date = Date()) -> String {
         var unit = dayUnitText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -51,27 +58,25 @@ struct CoupleWidgetData {
                            .replacingOccurrences(of: " of love", with: "")
         }
 
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        var startDate = formatter.date(from: raw)
-        if startDate == nil {
-            formatter.formatOptions = [.withInternetDateTime]
-            startDate = formatter.date(from: raw)
-        }
-        if startDate == nil {
-            let fallbackFormatter = DateFormatter()
-            fallbackFormatter.locale = Locale(identifier: "en_US_POSIX")
-            fallbackFormatter.dateFormat = "yyyy-MM-dd"
-            startDate = fallbackFormatter.date(from: raw)
-        }
-        guard let startDate else {
+        // startDate là ngày đã chọn, không phải instant UTC. Dùng Gregorian
+        // ngay cả khi máy đặt Phật lịch/Hijri, và lấy hôm nay theo vùng đã chọn.
+        guard relationshipTimeZone.isEmpty || TimeZone(identifier: relationshipTimeZone) != nil,
+              raw.count >= 10 else { return daysText }
+        let key = String(raw.prefix(10))
+        guard key.range(of: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$", options: .regularExpression) != nil else {
             return daysText
         }
-
-        let calendar = Calendar.current
-        let startOfToday = calendar.startOfDay(for: referenceDate)
-        let startOfAnchor = calendar.startOfDay(for: startDate)
-        let days = max(0, calendar.dateComponents([.day], from: startOfAnchor, to: startOfToday).day ?? 0)
+        let parts = key.split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 3 else { return daysText }
+        var civil = Calendar(identifier: .gregorian)
+        civil.timeZone = TimeZone(secondsFromGMT: 0)!
+        let anchor = DateComponents(year: parts[0], month: parts[1], day: parts[2])
+        guard anchor.isValidDate(in: civil),
+              let startOfAnchor = civil.date(from: anchor),
+              let startOfToday = civil.date(from: relationshipCalendar.dateComponents(
+                [.year, .month, .day], from: referenceDate
+              )) else { return daysText }
+        let days = max(0, civil.dateComponents([.day], from: startOfAnchor, to: startOfToday).day ?? 0)
         return "\(days) \(unit)"
     }
 
@@ -135,7 +140,8 @@ struct CoupleWidgetData {
             widgetStickerKey: WidgetAppearanceDesign.sticker(defaults?.string(forKey: "widgetStickerKey") ?? "none"),
             photoFrameKey: WidgetAppearanceDesign.frame(defaults?.string(forKey: "photoFrameKey") ?? "rounded"),
             diaryLayoutKey: WidgetAppearanceDesign.layout(defaults?.string(forKey: "diaryLayoutKey") ?? "single"),
-            loveDateText: defaults?.string(forKey: "loveDateText") ?? ""
+            loveDateText: defaults?.string(forKey: "loveDateText") ?? "",
+            relationshipTimeZone: defaults?.string(forKey: "relationshipTimeZone") ?? ""
         )
     }
 }
@@ -162,6 +168,13 @@ struct CoupleWidgetProvider: TimelineProvider {
         var dates = [now]
         for index in 1...12 {
             dates.append(Date(timeIntervalSince1970: start + Double(index) * 1800))
+        }
+        // Múi giờ lệch 45 phút có nửa đêm nằm giữa hai mốc 30 phút UTC.
+        let calendar = data.relationshipCalendar
+        if let midnight = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)),
+           let last = dates.last, midnight <= last {
+            dates.append(midnight)
+            dates = Array(Set(dates)).sorted()
         }
         let entries = dates.map { CoupleEntry(date: $0, data: data) }
         completion(Timeline(entries: entries, policy: .atEnd))

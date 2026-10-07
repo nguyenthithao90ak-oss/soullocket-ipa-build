@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/constants/app_config.dart';
 import '../utils/services/l10n_service.dart';
+import '../utils/services/purchase_service.dart';
 import 'first_setup_guide_progress.dart';
 
 enum GettingStartedTopic { account, memory, pairing }
@@ -81,6 +84,10 @@ Future<GettingStartedResult?> showGettingStartedArticle(
                     color: Color(0xFF51434B),
                   ),
                 ),
+                if (topic == GettingStartedTopic.memory) ...[
+                  const SizedBox(height: 24),
+                  MemoryPlanLimits(showVip: AppConfig.isPurchaseEnabled),
+                ],
                 if (topic == GettingStartedTopic.pairing)
                   for (var step = 1; step <= 4; step++) ...[
                     const SizedBox(height: 20),
@@ -397,6 +404,184 @@ class _GettingStartedChecklistState extends State<GettingStartedChecklist> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Dung lượng kỷ niệm theo gói. Số liệu lấy từ [VipAccessInfo] (cùng nguồn app dùng để
+/// chặn trước khi tải lên); máy chủ `functions/privateMemoryUpload.js` (limits) giữ cùng
+/// mức và là nơi quyết định cuối cùng.
+class MemoryPlanLimits extends StatelessWidget {
+  const MemoryPlanLimits({super.key, required this.showVip});
+
+  /// Bản build tắt giao diện mua hàng thì app coi mọi người là tài khoản thường.
+  final bool showVip;
+
+  /// Kích thước tối đa một tệp và số ngày giữ trong thùng rác (theo máy chủ).
+  static const int maxFileMb = 100;
+  static const int trashDays = 3;
+
+  static const _free = VipAccessInfo(
+    isVip: false,
+    planId: '',
+    expiresAtMs: null,
+  );
+  static const _timed = VipAccessInfo(
+    isVip: true,
+    planId: VipProduct.monthly,
+    expiresAtMs: null,
+  );
+  static const _lifetime = VipAccessInfo(
+    isVip: true,
+    planId: VipProduct.lifetime,
+    expiresAtMs: null,
+  );
+
+  static const _title = TextStyle(
+    fontSize: 17,
+    fontWeight: FontWeight.w700,
+    color: Color(0xFF392E34),
+  );
+  static const _body = TextStyle(
+    fontSize: 15,
+    height: 1.6,
+    color: Color(0xFF51434B),
+  );
+
+  /// MB theo cách máy chủ tính (1 MB = 1024 × 1024 byte); từ 1024 MB hiện thành GB.
+  static String formatSize(BuildContext context, double megabytes) {
+    final gigabytes = megabytes >= 1024;
+    final value = gigabytes ? megabytes / 1024 : megabytes;
+    String number;
+    try {
+      number = NumberFormat.decimalPattern(
+        Localizations.localeOf(context).toString(),
+      ).format(value);
+    } catch (_) {
+      number = value == value.roundToDouble()
+          ? value.toStringAsFixed(0)
+          : value.toStringAsFixed(1);
+    }
+    // Đơn vị theo ngôn ngữ (ví dụ "Mo" tiếng Pháp, "МБ" tiếng Nga).
+    return L10nScope.of(context).format(
+      gigabytes ? 'starter_memory_size_gb' : 'starter_memory_size_mb',
+      {'value': number},
+    );
+  }
+
+  static double _mb(int bytes) => bytes / (1024 * 1024);
+
+  Widget _plan(
+    BuildContext context, {
+    required String key,
+    required IconData icon,
+    required VipAccessInfo access,
+  }) {
+    final photos = L10nScope.of(context).format('starter_memory_plan_photos', {
+      'daily': formatSize(context, _mb(access.dailyImageUploadLimitBytes)),
+      'total': formatSize(context, access.totalMemoryStorageCapMb.toDouble()),
+    });
+    final videos = access.dailyVideoUploadLimitBytes <= 0
+        ? context.tr('starter_memory_plan_no_video')
+        : L10nScope.of(context).format('starter_memory_plan_videos', {
+            'daily': formatSize(
+              context,
+              _mb(access.dailyVideoUploadLimitBytes),
+            ),
+            'total': formatSize(
+              context,
+              access.totalMemoryVideoCapMb.toDouble(),
+            ),
+          });
+    return Container(
+      key: ValueKey('memory-plan-$key'),
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFEADDE1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 20, color: const Color(0xFFAC4E6C)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  context.tr(key),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF392E34),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(photos, style: _body),
+          Text(videos, style: _body),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      key: const ValueKey('memory-plan-limits'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(context.tr('starter_memory_plans_title'), style: _title),
+        const SizedBox(height: 6),
+        Text(context.tr('starter_memory_plans_intro'), style: _body),
+        _plan(
+          context,
+          key: 'starter_memory_plan_free',
+          icon: Icons.person_outline_rounded,
+          access: _free,
+        ),
+        if (showVip) ...[
+          _plan(
+            context,
+            key: 'starter_memory_plan_vip',
+            icon: Icons.workspace_premium_outlined,
+            access: _timed,
+          ),
+          _plan(
+            context,
+            key: 'starter_memory_plan_lifetime',
+            icon: Icons.all_inclusive_rounded,
+            access: _lifetime,
+          ),
+        ],
+        const SizedBox(height: 14),
+        Text(
+          L10nScope.of(context).format('starter_memory_plans_notes', {
+            'maxFile': formatSize(context, maxFileMb.toDouble()),
+            'trashDays': trashDays,
+          }),
+          style: _body,
+        ),
+        if (showVip) ...[
+          const SizedBox(height: 18),
+          Text(context.tr('starter_memory_plans_expiry_title'), style: _title),
+          const SizedBox(height: 6),
+          Text(
+            L10nScope.of(context).format('starter_memory_plans_expiry', {
+              'freeTotal': formatSize(
+                context,
+                _free.totalMemoryStorageCapMb.toDouble(),
+              ),
+            }),
+            style: _body,
+          ),
+        ],
+      ],
     );
   }
 }

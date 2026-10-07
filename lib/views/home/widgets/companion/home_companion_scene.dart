@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:soullocket_app/core/service_locator.dart';
 import 'package:soullocket_app/utils/services/companion_journey_service.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -14,8 +16,11 @@ import 'home_companion_painter.dart';
 import 'home_companion_play.dart';
 import 'home_companion_traffic.dart';
 import 'home_companion_metrics.dart';
+import 'home_companion_mood.dart';
 import 'home_companion_wardrobe.dart';
 import '../../../ui_prefs.dart';
+
+export 'home_companion_mood.dart' show HomeCompanionPartnerStatus;
 
 /// Lớp trang trí cục bộ: quan sát chạm nền; chỉ nhận tap/giữ đúng trên bé.
 /// Gesture kéo vẫn nhường Scrollable, không phủ vùng bắt chạm toàn màn hình.
@@ -43,6 +48,12 @@ class HomeCompanionScene extends StatefulWidget {
     ),
     this.motion,
     this.audio,
+    this.calm = false,
+    this.partnerStatus = HomeCompanionPartnerStatus.unknown,
+    this.partnerStatusListenable,
+    this.partnerName = '',
+    this.partnerHasLetter = false,
+    this.onOpenPartnerLetter,
   });
 
   final Widget child;
@@ -73,6 +84,23 @@ class HomeCompanionScene extends StatefulWidget {
   /// Cho phép kiểm thử độc lập; scene chỉ dispose bộ điều khiển tự tạo.
   final HomeCompanionMotion? motion;
   final HomeCompanionAudio? audio;
+
+  /// Home: nghỉ lâu hơn giữa các lần đi dạo, ít quét bụi hơn.
+  final bool calm;
+
+  /// Thỏ đại diện người ấy, gấu đại diện mình (chỉ khi có [partnerName]).
+  final HomeCompanionPartnerStatus partnerStatus;
+
+  /// Ưu tiên hơn [partnerStatus]: Home cập nhật presence qua notifier riêng,
+  /// scene tự nghe để không phải dựng lại cả nội dung Home.
+  final ValueListenable<HomeCompanionPartnerStatus>? partnerStatusListenable;
+  final String partnerName;
+
+  /// Người ấy vừa để lại lời nhắn chưa đọc: thỏ cầm phong thư đi tìm gấu.
+  final bool partnerHasLetter;
+
+  /// Chạm vào thỏ đang cầm thư để mở đọc.
+  final VoidCallback? onOpenPartnerLetter;
 
   @override
   State<HomeCompanionScene> createState() => _HomeCompanionSceneState();
@@ -156,6 +184,22 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   }
 
   final _socialPlay = HomeCompanionPlay();
+  final _moods = {
+    for (final character in HomeCompanionCharacter.values)
+      character: HomeCompanionMood(),
+  };
+  // Khối nội dung (cùng tọa độ chân bé) để biết bé có đè chữ. Khối có
+  // viền cong (vòng đếm ngày) dùng đa giác thật, không dùng khung vuông.
+  List<_ContentShape> _contentShapes = const [];
+  final Set<_HomeCompanionContentAreaState> _contentAreas = {};
+  HomeCompanionPartnerStatus _partnerStatusNow =
+      HomeCompanionPartnerStatus.unknown;
+  bool _letterNow = false;
+  double _nextStatusCheckAt = 60;
+  final _bubbleText = <HomeCompanionCharacter, String>{};
+  final _bubbleStart = <HomeCompanionCharacter, double>{};
+  final _bubbleUntil = <HomeCompanionCharacter, double>{};
+  double _nextLetterCueAt = 0;
   double _socialClock = 0;
   double _nextSocialAt = 24;
   int _socialTurn = 0;
@@ -229,6 +273,9 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
       for (final character in _characters) character: _motionFor(character),
     });
     _audio = widget.audio ?? HomeCompanionAudio();
+    _applyCalm();
+    widget.partnerStatusListenable?.addListener(_partnerStatusChanged);
+    _refreshPartner(announce: false);
     _ticker = createTicker(_tick);
     final lifecycle = WidgetsBinding.instance.lifecycleState;
     _foreground = lifecycle == null || lifecycle == AppLifecycleState.resumed;
@@ -264,7 +311,226 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     _routeCurrent = ModalRoute.isCurrentOf(context) ?? true;
     _tickerAllowed = TickerMode.valuesOf(context).enabled;
     _reduced = MediaQuery.disableAnimationsOf(context);
+    _applyBubbleStyle();
     _sync();
+    _scheduleMeasure();
+  }
+
+  void _applyBubbleStyle() {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final base = Theme.of(context).textTheme.bodyMedium;
+    final direction = Directionality.maybeOf(context) ?? TextDirection.ltr;
+    for (final mood in _moods.values) {
+      mood.bubbleDirection = direction;
+      mood.bubbleStyle = TextStyle(
+        fontFamily: base?.fontFamily,
+        fontFamilyFallback: base?.fontFamilyFallback,
+        fontSize: 12.5,
+        fontWeight: FontWeight.w700,
+        height: 1.25,
+        color: dark ? const Color(0xFFFBE3EC) : const Color(0xFF6B3A4C),
+      );
+    }
+  }
+
+  void _applyCalm() {
+    for (final character in HomeCompanionCharacter.values) {
+      final motion = _motionFor(character);
+      motion.restMinSeconds = widget.calm ? 6 : 1.8;
+      motion.restSpreadSeconds = widget.calm ? 6 : 2.2;
+      motion.dustIntervalSeconds = widget.calm ? 120 : 45;
+    }
+  }
+
+  bool get _hasPartner => widget.partnerName.trim().isNotEmpty;
+
+  void _partnerStatusChanged() {
+    if (mounted) _refreshPartner();
+  }
+
+  /// Thỏ = người ấy: ngủ khi người ấy offline lâu, chạy tới chào gấu khi
+  /// người ấy vừa online, cầm thư khi có lời nhắn chưa đọc.
+  void _refreshPartner({bool announce = true}) {
+    const partner = HomeCompanionCharacter.bunny;
+    final active = _hasPartner;
+    final status = active
+        ? widget.partnerStatusListenable?.value ?? widget.partnerStatus
+        : HomeCompanionPartnerStatus.unknown;
+    final letter = active && widget.partnerHasLetter;
+    final previousStatus = _partnerStatusNow;
+    final previousLetter = _letterNow;
+    _partnerStatusNow = status;
+    _letterNow = letter;
+    final dozing = !letter && status == HomeCompanionPartnerStatus.away;
+    final pet = _motionFor(partner);
+    if (pet.dozing != dozing) pet.clearSeekCount = 0;
+    pet.dozing = dozing;
+    _moods[partner]!
+      ..dozing = dozing
+      ..carryingLetter = letter;
+    if (!active || !announce) return;
+    if (letter && !previousLetter) {
+      _nextLetterCueAt = _socialClock;
+    } else if (status == HomeCompanionPartnerStatus.online &&
+        previousStatus != HomeCompanionPartnerStatus.online) {
+      _say(partner, _partnerLine(HomeCompanionPartnerStatus.online));
+      _visitSelf();
+    }
+  }
+
+  void _visitSelf() {
+    const self = HomeCompanionCharacter.bear;
+    if (!_characters.contains(self) ||
+        !_characters.contains(HomeCompanionCharacter.bunny) ||
+        !widget.animate ||
+        _reduced ||
+        widget.pinToViewport ||
+        _anyPlay) {
+      return;
+    }
+    _motion.visitFriend(_buddy, userInvited: true);
+  }
+
+  String _partnerLine(HomeCompanionPartnerStatus status) {
+    final l10n = L10nScope.of(context);
+    final params = {'name': widget.partnerName.trim()};
+    return switch (status) {
+      HomeCompanionPartnerStatus.online => l10n.format(
+        'companion_partner_online_bubble',
+        params,
+      ),
+      HomeCompanionPartnerStatus.away => l10n.format(
+        'companion_partner_sleep_bubble',
+        params,
+      ),
+      HomeCompanionPartnerStatus.unknown => l10n.format(
+        'companion_partner_name_bubble',
+        params,
+      ),
+    };
+  }
+
+  void _say(
+    HomeCompanionCharacter character,
+    String text, {
+    double seconds = 3.2,
+  }) {
+    if (!mounted || text.trim().isEmpty) return;
+    _bubbleText[character] = text;
+    _bubbleStart[character] = _socialClock;
+    _bubbleUntil[character] = _socialClock + seconds;
+    // Ticker có thể đang dừng (bé đứng yên): hiện ngay, frame sau mới mờ dần.
+    _moods[character]!.setBubble(text, 1);
+  }
+
+  /// Chạm vào bé: hiện bé là ai để hai người nhận ra nhau trên Home.
+  void _sayIdentity(HomeCompanionCharacter character) {
+    if (!_hasPartner) return;
+    if (character == HomeCompanionCharacter.bunny) {
+      _say(character, _partnerLine(_partnerStatusNow));
+    } else if (character == HomeCompanionCharacter.bear) {
+      _say(character, L10nScope.of(context).translate('companion_self_bubble'));
+    }
+  }
+
+  void _tickMoods(Duration delta) {
+    final dt = (delta.inMicroseconds / 1000000).clamp(0.0, 0.1).toDouble();
+    const scale = HomeCompanionMetrics.displayScale;
+    for (final character in HomeCompanionCharacter.values) {
+      final mood = _moods[character]!;
+      final motion = _motionFor(character);
+      if (!motion.hasSurfaces) {
+        mood.opacity = 1;
+        mood.setBubble(null, 0);
+        continue;
+      }
+      // Thân bé (đã thu nhỏ) đè lên khối nội dung quá 20% thì mờ còn một nửa.
+      final width = HomeCompanionMetrics.bodyWidth(character) * scale;
+      final feet = motion.position;
+      final lift = motion.hopLift * scale;
+      final body = Rect.fromLTRB(
+        feet.dx - width / 2,
+        feet.dy - lift - 66 * scale,
+        feet.dx + width / 2,
+        feet.dy - lift - 4,
+      );
+      final covered = _coveredFraction(body) > 0.2;
+      final target = covered ? 0.5 : 1.0;
+      // Buồn ngủ trên chữ: nhờ bé đi tìm chỗ trống (tối đa 4 lần) rồi mới ngủ.
+      motion.seekClearSpot =
+          motion.dozing &&
+          covered &&
+          motion.phase == HomeCompanionPhase.idle &&
+          motion.clearSeekCount < 4;
+      var next = mood.opacity + (target - mood.opacity) * math.min(1, dt * 6);
+      if ((target - next).abs() < 0.02) next = target;
+      mood.opacity = next;
+
+      final until = _bubbleUntil[character];
+      final text = _bubbleText[character];
+      if (until == null || text == null || _socialClock >= until) {
+        _bubbleUntil.remove(character);
+        _bubbleText.remove(character);
+        _bubbleStart.remove(character);
+        mood.setBubble(null, 0);
+      } else {
+        final shown = _socialClock - (_bubbleStart[character] ?? _socialClock);
+        final fadeIn = math.min(1.0, shown / 0.2 + 0.4);
+        final fadeOut = math.min(1.0, (until - _socialClock) / 0.4);
+        mood.setBubble(text, math.min(fadeIn, fadeOut));
+      }
+    }
+    // Mốc "offline quá 30 phút" có thể qua mà presence không đổi.
+    if (_socialClock >= _nextStatusCheckAt) {
+      _nextStatusCheckAt = _socialClock + 60;
+      _refreshPartner();
+    }
+    // Thư chưa đọc: định kỳ nhắc bằng bong bóng và chạy tới chỗ gấu.
+    if (_hasPartner &&
+        widget.partnerHasLetter &&
+        _characters.contains(HomeCompanionCharacter.bunny) &&
+        _socialClock >= _nextLetterCueAt) {
+      _nextLetterCueAt = _socialClock + 25;
+      _say(
+        HomeCompanionCharacter.bunny,
+        L10nScope.of(context).format('companion_partner_letter_bubble', {
+          'name': widget.partnerName.trim(),
+        }),
+        seconds: 4,
+      );
+      _visitSelf();
+    }
+  }
+
+  /// Tỷ lệ thân bé nằm trên khối nội dung, lấy mẫu lưới 5×6 điểm.
+  double _coveredFraction(Rect body) {
+    if (_contentShapes.isEmpty || body.isEmpty) return 0;
+    final candidates = [
+      for (final shape in _contentShapes)
+        if (shape.bounds.overlaps(body)) shape,
+    ];
+    if (candidates.isEmpty) return 0;
+    var inside = 0;
+    const columns = 5, rows = 6;
+    for (var row = 0; row < rows; row++) {
+      for (var column = 0; column < columns; column++) {
+        final point = Offset(
+          body.left + body.width * (column + 0.5) / columns,
+          body.top + body.height * (row + 0.5) / rows,
+        );
+        if (candidates.any((shape) => shape.contains(point))) inside++;
+      }
+    }
+    return inside / (columns * rows);
+  }
+
+  void _registerContent(_HomeCompanionContentAreaState area) {
+    _contentAreas.add(area);
+    _scheduleMeasure();
+  }
+
+  void _unregisterContent(_HomeCompanionContentAreaState area) {
+    _contentAreas.remove(area);
     _scheduleMeasure();
   }
 
@@ -296,6 +562,12 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     if (oldWidget.maxVisibleCharacters != widget.maxVisibleCharacters) {
       _journeyChanged();
     }
+    if (oldWidget.calm != widget.calm) _applyCalm();
+    if (oldWidget.partnerStatusListenable != widget.partnerStatusListenable) {
+      oldWidget.partnerStatusListenable?.removeListener(_partnerStatusChanged);
+      widget.partnerStatusListenable?.addListener(_partnerStatusChanged);
+    }
+    _refreshPartner();
     _sync();
     _scheduleMeasure();
   }
@@ -460,6 +732,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     }
     _tickGuests(delta);
     _tickSocial();
+    _tickMoods(delta);
     var greetingVoice = HomeCompanionCharacter.bunny;
     for (final character in HomeCompanionCharacter.values) {
       final serial = _motionFor(character).greetingSerial;
@@ -602,6 +875,8 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
       final candidate = pairs[(_socialTurn + i) % pairs.length];
       final a = _motionFor(candidate.$1), b = _motionFor(candidate.$2);
       if (!a.hasSurfaces || !b.hasSurfaces) continue;
+      // Bé đang ngủ gật (người ấy offline lâu) không bị rủ đi chơi.
+      if (a.dozing || b.dozing) continue;
       if (a.position.dy < top + 92 ||
           b.position.dy < top + 92 ||
           a.position.dy > top + root.size.height - 80 ||
@@ -673,7 +948,15 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     final character = _spriteAt(global);
     if (character == null || _spriteGestureRejected) return;
     _spriteHandledThisTap = true;
+    if (character == HomeCompanionCharacter.bunny &&
+        _hasPartner &&
+        widget.partnerHasLetter &&
+        widget.onOpenPartnerLetter != null) {
+      widget.onOpenPartnerLetter!();
+      return;
+    }
     if (!widget.animate || _reduced) return;
+    _sayIdentity(character);
     if (widget.soundEnabled) _audio.unlock();
     _pendingSprite = character;
     _pendingApproach = global;
@@ -1028,6 +1311,30 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
           ),
         );
       }
+      final shapes = <_ContentShape>[
+        for (final surface in surfaces)
+          _ContentShape(
+            surface.outline == null
+                ? surface.obstacleBounds ?? surface.bounds
+                : surface.bounds,
+            surface.outline,
+          ),
+      ];
+      for (final area in _contentAreas.toList(growable: false)) {
+        if (!area.mounted) continue;
+        final box = area._key.currentContext?.findRenderObject();
+        if (box is! RenderBox || !box.attached || !box.hasSize) continue;
+        final scroll = Scrollable.maybeOf(area.context)?.position;
+        final shift = widget.followScroll && identical(scroll, _scrollPosition)
+            ? -_paintOffset.value
+            : Offset.zero;
+        final rect = MatrixUtils.transformRect(
+          box.getTransformTo(root),
+          Offset.zero & box.size,
+        ).shift(shift);
+        if (rect.isFinite && !rect.isEmpty) shapes.add(_ContentShape(rect));
+      }
+      _contentShapes = List.unmodifiable(shapes);
       if (widget.followScroll && surfaces.isNotEmpty) {
         // Bao phủ các ô đã mount, không cắt đường đi theo mép viewport mỗi
         // lần cuộn. Thỏ ra khỏi khung cùng ô, không dịch chuyển tức thời sang ô khác.
@@ -1263,6 +1570,10 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     _melody.dispose();
     _guestPlay.dispose();
     _play.dispose();
+    widget.partnerStatusListenable?.removeListener(_partnerStatusChanged);
+    for (final mood in _moods.values) {
+      mood.dispose();
+    }
     super.dispose();
   }
 
@@ -1319,6 +1630,9 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
                                             ),
                                             painter: HomeCompanionPainter(
                                               motion: _motion,
+                                              mood:
+                                                  _moods[HomeCompanionCharacter
+                                                      .bunny],
                                               outfit: _outfitFor(
                                                 HomeCompanionCharacter.bunny,
                                                 outfits,
@@ -1339,6 +1653,9 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
                                             foregroundPainter:
                                                 HomeCompanionPainter(
                                                   motion: _buddy,
+                                                  mood:
+                                                      _moods[HomeCompanionCharacter
+                                                          .bear],
                                                   character:
                                                       HomeCompanionCharacter
                                                           .bear,
@@ -1368,6 +1685,9 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
                                             ),
                                             painter: HomeCompanionPainter(
                                               motion: _kuromi,
+                                              mood:
+                                                  _moods[HomeCompanionCharacter
+                                                      .kuromi],
                                               character:
                                                   HomeCompanionCharacter.kuromi,
                                               outfit: _outfitFor(
@@ -1390,6 +1710,9 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
                                             foregroundPainter:
                                                 HomeCompanionPainter(
                                                   motion: _melody,
+                                                  mood:
+                                                      _moods[HomeCompanionCharacter
+                                                          .melody],
                                                   character:
                                                       HomeCompanionCharacter
                                                           .melody,
@@ -1477,6 +1800,67 @@ class _CompanionHoldRecognizer extends LongPressGestureRecognizer {
   @override
   bool isPointerAllowed(PointerDownEvent event) =>
       (allowed?.call(event.position) ?? false) && super.isPointerAllowed(event);
+}
+
+/// Khối nội dung để xét bé có đè chữ: khung chữ nhật, hoặc đa giác viền.
+class _ContentShape {
+  _ContentShape(this.bounds, [this.outline]);
+  final Rect bounds;
+  final List<Offset>? outline;
+
+  bool contains(Offset point) {
+    if (!bounds.contains(point)) return false;
+    final polygon = outline;
+    if (polygon == null || polygon.length < 3) return true;
+    var inside = false;
+    for (var i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      final a = polygon[i], b = polygon[j];
+      if ((a.dy > point.dy) != (b.dy > point.dy) &&
+          point.dx < (b.dx - a.dx) * (point.dy - a.dy) / (b.dy - a.dy) + a.dx) {
+        inside = !inside;
+      }
+    }
+    return inside;
+  }
+}
+
+/// Vùng chữ quan trọng mà bé không đi trên đó (ví dụ lời nhắn đầu Home):
+/// khi thân bé đè lên, bé tự mờ bớt để chữ vẫn đọc rõ.
+class HomeCompanionContentArea extends StatefulWidget {
+  const HomeCompanionContentArea({super.key, required this.child});
+  final Widget child;
+  @override
+  State<HomeCompanionContentArea> createState() =>
+      _HomeCompanionContentAreaState();
+}
+
+class _HomeCompanionContentAreaState extends State<HomeCompanionContentArea> {
+  final _key = GlobalKey();
+  _HomeCompanionSceneState? _scene;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final next = context
+        .dependOnInheritedWidgetOfExactType<_HomeCompanionScope>()
+        ?.scene;
+    if (_scene != next) {
+      _scene?._unregisterContent(this);
+      _scene = next;
+      _scene?._registerContent(this);
+    }
+  }
+
+  @override
+  void dispose() {
+    _scene?._unregisterContent(this);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SizeChangedLayoutNotifier(
+    child: SizedBox(key: _key, child: widget.child),
+  );
 }
 
 class _HomeCompanionScope extends InheritedWidget {

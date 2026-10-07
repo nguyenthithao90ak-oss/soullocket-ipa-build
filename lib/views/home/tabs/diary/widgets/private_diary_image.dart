@@ -21,6 +21,7 @@ class PrivateDiaryImage extends StatefulWidget {
     required this.memoryId,
     this.fit = BoxFit.cover,
     this.cacheWidth,
+    this.placeholderCacheWidth,
     this.resolve,
     this.authChanges,
     this.currentUid,
@@ -33,6 +34,10 @@ class PrivateDiaryImage extends StatefulWidget {
   final String memoryId;
   final BoxFit fit;
   final int? cacheWidth;
+
+  /// Cỡ ảnh nhỏ đã lưu (ví dụ ảnh ở lưới album). Khi bản [cacheWidth] chưa có,
+  /// hiện tạm ảnh nhỏ này trong lúc tải thay vì màn chờ.
+  final int? placeholderCacheWidth;
   final Future<PrivateMediaUrlResult> Function()? resolve;
   final Stream<String?>? authChanges;
   final String? Function()? currentUid;
@@ -53,6 +58,8 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
     authChanges: widget.authChanges == null ? null : () => widget.authChanges!,
   );
   ImageProvider<Object>? _provider;
+  ImageProvider<Object>? _placeholder;
+  bool _ownsPlaceholder = false;
   PrivateDiaryImageCache? _cache;
   PrivateDiaryImageCacheEntry? _entry;
   StreamSubscription<String?>? _auth;
@@ -141,6 +148,13 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
     _provider = null;
     _entry = null;
     if (provider != null && !retained) unawaited(provider.evict());
+    final placeholder = _placeholder;
+    _placeholder = null;
+    // Ảnh tạm lấy từ cache RAM dùng chung thì không thu hồi.
+    if (placeholder != null && _ownsPlaceholder) {
+      unawaited(placeholder.evict());
+    }
+    _ownsPlaceholder = false;
   }
 
   Future<void> _load({bool refresh = false}) async {
@@ -203,6 +217,38 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
             debugPrint('[PrivateDiaryImage] encrypted disk cache hit');
           }
           return;
+        }
+      }
+      // Bản lớn chưa có: hiện tạm ảnh nhỏ đã lưu (RAM hoặc cache đĩa mã hóa)
+      // trong lúc xin quyền và tải, để mở ảnh không phải nhìn màn chờ.
+      final placeholderWidth = widget.placeholderCacheWidth;
+      if (placeholderWidth != null && placeholderWidth != widget.cacheWidth) {
+        final ramHit = _cache?.get((
+          uid: uid,
+          houseId: widget.houseId,
+          memoryId: widget.memoryId,
+          width: placeholderWidth,
+        ));
+        Uint8List? bytes;
+        if (ramHit == null && widget.imageProviderFactory == null) {
+          bytes = await diskCache?.read(
+            uid,
+            PrivateImageDiskCache.key(
+              uid,
+              widget.houseId,
+              widget.memoryId,
+              placeholderWidth,
+            ),
+          );
+          if (!current()) return;
+        }
+        final placeholder =
+            ramHit?.provider ?? (bytes == null ? null : MemoryImage(bytes));
+        if (placeholder != null && _provider == null) {
+          setState(() {
+            _placeholder = placeholder;
+            _ownsPlaceholder = ramHit == null;
+          });
         }
       }
       final result = await (widget.loadQueue ?? _loadQueue)
@@ -338,6 +384,15 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
     super.dispose();
   }
 
+  Widget _placeholderImage() => Image(
+    image: _placeholder!,
+    fit: widget.fit,
+    width: double.infinity,
+    height: double.infinity,
+    gaplessPlayback: true,
+    errorBuilder: (_, _, _) => const DiaryImageLoading(),
+  );
+
   Widget _retry() => Center(
     child: IconButton(
       tooltip: L10nService().translate('core_retry'),
@@ -362,10 +417,14 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
 
   @override
   Widget build(BuildContext context) {
-    if (_failed) return _retry();
+    final placeholder = _placeholder;
+    // Đang có ảnh tạm thì giữ ảnh tạm, kể cả khi bản lớn lỗi (vẫn cho thử lại sau).
+    if (_failed) return placeholder == null ? _retry() : _placeholderImage();
     final provider = _provider;
     if (provider == null) {
-      return const DiaryImageLoading();
+      return placeholder == null
+          ? const DiaryImageLoading()
+          : _placeholderImage();
     }
     return Image(
       image: provider,
@@ -376,7 +435,9 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
       frameBuilder: (context, child, frame, wasSynchronouslyLoaded) =>
           wasSynchronouslyLoaded || frame != null
           ? child
-          : const DiaryImageLoading(),
+          : placeholder == null
+          ? const DiaryImageLoading()
+          : _placeholderImage(),
       errorBuilder: (_, error, stack) {
         if (kDebugMode) {
           final code = error is NetworkImageLoadException

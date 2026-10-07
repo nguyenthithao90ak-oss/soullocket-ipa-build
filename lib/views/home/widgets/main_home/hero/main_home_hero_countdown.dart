@@ -696,11 +696,24 @@ class _MainHomeHeroCountdownCircleState
     // tự giảm nhẹ để không bị tràn trên màn hình điện thoại nhỏ.
     final topLabelLength = widget.circleTopLabel.trim().length;
     final bottomLabelLength = widget.circleBottomLabel.trim().length;
-    double labelFontSize(int length) => length <= 8
-        ? (widget.circleSize * .14).clamp(22.0, 50.0).toDouble()
-        : length <= 14
-        ? (widget.circleSize * .11).clamp(17.0, 38.0).toDouble()
-        : (widget.circleSize * .09).clamp(14.0, 28.0).toDouble();
+    // Kiểu mặc định: nhãn nhỏ lại để con số là điểm nhấn chính.
+    final labelScale = useKeepsakeSurface ? .8 : 1.0;
+    double labelFontSize(int length) =>
+        (length <= 8
+            ? (widget.circleSize * .14).clamp(22.0, 50.0).toDouble()
+            : length <= 14
+            ? (widget.circleSize * .11).clamp(17.0, 38.0).toDouble()
+            : (widget.circleSize * .09).clamp(14.0, 28.0).toDouble()) *
+        labelScale;
+    // Vòng cung quanh viền: tiến độ trong chu kỳ 100 ngày hiện tại (chỉ hiển
+    // thị, tính từ số ngày đã có, không đọc/ghi dữ liệu).
+    final dayCount = int.tryParse(widget.circleValue.trim());
+    final double? milestoneProgress =
+        useKeepsakeSurface && dayCount != null && dayCount > 0
+        ? ((dayCount - 1) % 100 + 1) / 100
+        : null;
+    // Nút bắn tim: tối thiểu 48dp để dễ chạm, nằm trọn ở góc ngoài vòng tròn.
+    final heartButtonSize = (widget.circleSize * .15).clamp(48.0, 60.0);
     final topLabelFontSize = labelFontSize(topLabelLength);
     final bottomLabelFontSize = labelFontSize(bottomLabelLength);
 
@@ -785,6 +798,7 @@ class _MainHomeHeroCountdownCircleState
                         child: BalancedCountdownSurface(
                           shapeKey: widget.countdownShapeKey,
                           transparent: transparentMode,
+                          progress: milestoneProgress,
                         ),
                       )
                     else
@@ -849,13 +863,19 @@ class _MainHomeHeroCountdownCircleState
                                             if (_cachedPhotoUrls.isNotEmpty &&
                                                 widget.countdownStyleKey ==
                                                     'floating_hearts')
+                                              // Ảnh trôi mờ nhẹ để chữ phía
+                                              // trên luôn đọc rõ.
                                               RepaintBoundary(
-                                                child: SnowGlobePhotoLayer(
-                                                  photoUrls: _cachedPhotoUrls
-                                                      .take(3)
-                                                      .toList(),
-                                                  circleSize: widget.circleSize,
-                                                  enableMotion: enableMotion,
+                                                child: Opacity(
+                                                  opacity: .5,
+                                                  child: SnowGlobePhotoLayer(
+                                                    photoUrls: _cachedPhotoUrls
+                                                        .take(3)
+                                                        .toList(),
+                                                    circleSize:
+                                                        widget.circleSize,
+                                                    enableMotion: enableMotion,
+                                                  ),
                                                 ),
                                               ),
                                             if (!transparentMode &&
@@ -939,11 +959,9 @@ class _MainHomeHeroCountdownCircleState
                           ._uiTextStyle(
                             fontSize:
                                 (widget.circleSize *
-                                        (useKeepsakeSurface ? .34 : .44))
+                                        (useKeepsakeSurface ? .39 : .44))
                                     .clamp(64.0, 180.0),
-                            fontWeight: useKeepsakeSurface
-                                ? FontWeight.w700
-                                : FontWeight.w800,
+                            fontWeight: FontWeight.w800,
                             color: Colors.white,
                             height: .96,
                             letterSpacing: -2,
@@ -966,10 +984,11 @@ class _MainHomeHeroCountdownCircleState
 
             // 2. Outer ring & clickable heart badge (positioned in the larger parent stack)
             if (widget.countdownStyleKey == 'floating_hearts') ...[
-              // Clickable floating heart badge on bottom-left, using Align for better dynamic positioning
+              // Nút tim tròn nằm ở góc dưới-trái, ngoài vùng chữ của vòng tròn;
+              // ảnh bắn ra từ chính tâm nút.
               Positioned(
-                left: widget.circleSize * 0.1,
-                bottom: widget.circleSize * 0.05,
+                left: 0,
+                bottom: 0,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
@@ -990,20 +1009,47 @@ class _MainHomeHeroCountdownCircleState
                       return;
                     }
                     _triggerExplosion(
-                      Offset(widget.circleSize * 0.1, widget.circleSize * 1.1),
+                      Offset(
+                        heartButtonSize / 2,
+                        widget.circleSize - heartButtonSize / 2,
+                      ),
                     );
                   },
-                  child: Icon(
-                    Icons.favorite_rounded,
-                    size: widget.circleSize * 0.18,
-                    color: const Color(0xFFFF9FBC),
-                    shadows: [
-                      Shadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
+                  child: Container(
+                    width: heartButtonSize,
+                    height: heartButtonSize,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Colors.white, Color(0xFFFFE7F1)],
                       ),
-                    ],
+                      border: Border.all(color: Colors.white, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(
+                            0xFFFF4F93,
+                          ).withValues(alpha: 0.32),
+                          blurRadius: 18,
+                          spreadRadius: -2,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: ShaderMask(
+                      blendMode: BlendMode.srcIn,
+                      shaderCallback: (bounds) => const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFFFF7AA8), Color(0xFFE0457F)],
+                      ).createShader(bounds),
+                      child: Icon(
+                        Icons.favorite_rounded,
+                        size: heartButtonSize * .5,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ),

@@ -18,6 +18,7 @@ import 'package:soullocket_app/widgets/sl_date_picker.dart';
 import 'package:soullocket_app/utils/flexible_date_input.dart';
 
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
+import 'package:soullocket_app/views/app_entry/widgets/loading_scaffold.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -356,6 +357,32 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
         );
       },
+    );
+  }
+}
+
+/// Màn tải hiển thị ngay khi Dart sẵn sàng, trong lúc Firebase còn khởi tạo.
+/// `LoadingScaffold` dùng chung đồng hồ chuyển động nên khi [MyApp] thay thế,
+/// màn tải của AppEntry chạy tiếp mà không phát lại hiệu ứng mở đầu.
+class StartupLoadingApp extends StatelessWidget {
+  const StartupLoadingApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'SoulLocket',
+      locale: L10nService().locale,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: {
+        L10nService().locale,
+        ...L10nService().supportedLocales,
+      },
+      debugShowCheckedModeBanner: false,
+      home: const LoadingScaffold(),
     );
   }
 }

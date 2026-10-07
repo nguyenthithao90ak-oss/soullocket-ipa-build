@@ -229,7 +229,7 @@ class StorageService {
   String _requireCurrentUid() {
     final uid = _auth.currentUser?.uid.trim() ?? '';
     if (uid.isEmpty) {
-      throw UiCopyException('copy_0d17dba25af1');
+      throw const UiCopyException('copy_0d17dba25af1');
     }
     return uid;
   }
@@ -307,43 +307,43 @@ class StorageService {
         throw Exception(
           AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể tạo phiên gửi ảnh chat.',
+            fallbackMessage: UiCopy.text('copy_d8769088f9cd'),
           ).message,
         );
       }
       switch (error.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw UiCopyException('copy_3b1a55a37917');
+          throw const UiCopyException('copy_3b1a55a37917');
         case 'invalid-argument':
-          throw UiCopyException('copy_6561892964ac');
+          throw const UiCopyException('copy_6561892964ac');
         case 'not-found':
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
                 ? error.message!.trim()
-                : 'Không tìm thấy cuộc chat cần gửi ảnh.',
+                : UiCopy.text('copy_4eddadaf393b'),
           );
         case 'failed-precondition':
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
                 ? error.message!.trim()
-                : 'Đoạn chat này chưa sẵn sàng để gửi ảnh.',
+                : UiCopy.text('copy_43b8e078d49e'),
           );
         case 'resource-exhausted':
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
                 ? error.message!.trim()
-                : 'Bạn đã dùng hết lượt gửi ảnh chat hôm nay.',
+                : UiCopy.text('copy_a474359238f5'),
           );
         case 'permission-denied':
-          throw UiCopyException('copy_8a24722de890');
+          throw const UiCopyException('copy_8a24722de890');
         case 'deadline-exceeded':
         case 'unavailable':
-          throw UiCopyException('copy_87c69d5f9627');
+          throw const UiCopyException('copy_87c69d5f9627');
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
                 ? error.message!.trim()
-                : 'Không thể tạo phiên gửi ảnh chat.',
+                : UiCopy.text('copy_d8769088f9cd'),
           );
       }
     }
@@ -377,25 +377,25 @@ class StorageService {
         throw Exception(
           AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể tạo phiên tải ảnh Kỷ niệm.',
+            fallbackMessage: UiCopy.text('copy_eab9ad5c7371'),
           ).message,
         );
       }
       switch (error.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw UiCopyException('copy_b44a30bfef88');
+          throw const UiCopyException('copy_b44a30bfef88');
         case 'invalid-argument':
-          throw UiCopyException('copy_1a801c2953b4');
+          throw const UiCopyException('copy_1a801c2953b4');
         case 'permission-denied':
-          throw UiCopyException('copy_dd37c52a99a6');
+          throw const UiCopyException('copy_dd37c52a99a6');
         case 'deadline-exceeded':
         case 'unavailable':
-          throw UiCopyException('copy_dd8932601953');
+          throw const UiCopyException('copy_dd8932601953');
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
                 ? error.message!.trim()
-                : 'Không thể tạo phiên tải ảnh Kỷ niệm.',
+                : UiCopy.text('copy_eab9ad5c7371'),
           );
       }
     }
@@ -429,25 +429,25 @@ class StorageService {
         throw Exception(
           AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể tạo phiên tải ảnh Album.',
+            fallbackMessage: UiCopy.text('copy_10be00596ae0'),
           ).message,
         );
       }
       switch (error.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw UiCopyException('copy_f7bbe23f6145');
+          throw const UiCopyException('copy_f7bbe23f6145');
         case 'invalid-argument':
-          throw UiCopyException('copy_07b57ae1291a');
+          throw const UiCopyException('copy_07b57ae1291a');
         case 'permission-denied':
-          throw UiCopyException('copy_0a0e82c2da65');
+          throw const UiCopyException('copy_0a0e82c2da65');
         case 'deadline-exceeded':
         case 'unavailable':
-          throw UiCopyException('copy_98cbed0ef403');
+          throw const UiCopyException('copy_98cbed0ef403');
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
                 ? error.message!.trim()
-                : 'Không thể tạo phiên tải ảnh Album.',
+                : UiCopy.text('copy_10be00596ae0'),
           );
       }
     }
@@ -521,25 +521,25 @@ class StorageService {
         throw Exception(
           AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể tạo phiên tải ảnh công khai.',
+            fallbackMessage: UiCopy.text('copy_d8232a854797'),
           ).message,
         );
       }
       switch (error.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw UiCopyException('copy_3e75f7405247');
+          throw const UiCopyException('copy_3e75f7405247');
         case 'invalid-argument':
-          throw UiCopyException('copy_c62167c0e18b');
+          throw const UiCopyException('copy_c62167c0e18b');
         case 'permission-denied':
-          throw UiCopyException('copy_89a73767f9fc');
+          throw const UiCopyException('copy_89a73767f9fc');
         case 'deadline-exceeded':
         case 'unavailable':
-          throw UiCopyException('copy_f8b58a3bc941');
+          throw const UiCopyException('copy_f8b58a3bc941');
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
                 ? error.message!.trim()
-                : 'Không thể tạo phiên tải ảnh công khai.',
+                : UiCopy.text('copy_d8232a854797'),
           );
       }
     }
@@ -575,31 +575,31 @@ class StorageService {
     } on FirebaseFunctionsException catch (error) {
       switch (error.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw UiCopyException('copy_90a477ac6e83');
+          throw const UiCopyException('copy_90a477ac6e83');
         case 'invalid-argument':
-          throw UiCopyException('copy_c6d946b85ebe');
+          throw const UiCopyException('copy_c6d946b85ebe');
         case 'not-found':
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
                 ? error.message!.trim()
-                : 'Không tìm thấy phiên tải ảnh Album.',
+                : UiCopy.text('copy_434b65142912'),
           );
         case 'permission-denied':
-          throw UiCopyException('copy_6c6006ba38ea');
+          throw const UiCopyException('copy_6c6006ba38ea');
         case 'failed-precondition':
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
                 ? error.message!.trim()
-                : 'Ảnh Album chưa sẵn sàng để hoàn tất.',
+                : UiCopy.text('copy_911c5a651794'),
           );
         case 'deadline-exceeded':
         case 'unavailable':
-          throw UiCopyException('copy_67d933ac8ea6');
+          throw const UiCopyException('copy_67d933ac8ea6');
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
                 ? error.message!.trim()
-                : 'Không thể hoàn tất ảnh Album.',
+                : UiCopy.text('copy_b00ea75234bf'),
           );
       }
     }
@@ -645,32 +645,32 @@ class StorageService {
     } on FirebaseFunctionsException catch (error) {
       switch (error.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw UiCopyException('copy_e51f8753446e');
+          throw const UiCopyException('copy_e51f8753446e');
         case 'invalid-argument':
-          throw UiCopyException('copy_7d96fae4af62');
+          throw const UiCopyException('copy_7d96fae4af62');
         case 'resource-exhausted':
-          throw UiCopyException('copy_5470f87bf0a1');
+          throw const UiCopyException('copy_5470f87bf0a1');
         case 'not-found':
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
                 ? error.message!.trim()
-                : 'Không tìm thấy phiên tải ảnh Kỷ niệm.',
+                : UiCopy.text('copy_d53ece706e72'),
           );
         case 'permission-denied':
         case 'failed-precondition':
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
                 ? error.message!.trim()
-                : 'Phiên tải ảnh Kỷ niệm không còn hợp lệ.',
+                : UiCopy.text('copy_65566be85752'),
           );
         case 'deadline-exceeded':
         case 'unavailable':
-          throw UiCopyException('copy_4efcae934e53');
+          throw const UiCopyException('copy_4efcae934e53');
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
                 ? error.message!.trim()
-                : 'Không thể hoàn tất ảnh Kỷ niệm.',
+                : UiCopy.text('copy_bc4b444de59c'),
           );
       }
     }
@@ -740,7 +740,7 @@ class StorageService {
         .toSet()
         .toList();
     if (normalizedIds.isEmpty) {
-      throw UiCopyException('copy_5128b4443dbd');
+      throw const UiCopyException('copy_5128b4443dbd');
     }
 
     Future<Map<String, dynamic>> callMoveToTrash() {
@@ -775,25 +775,25 @@ class StorageService {
       }
       switch (resolvedError.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw UiCopyException('copy_34e1b3d650e7');
+          throw const UiCopyException('copy_34e1b3d650e7');
         case 'invalid-argument':
-          throw UiCopyException('copy_2f7fb878a0de');
+          throw const UiCopyException('copy_2f7fb878a0de');
         case 'permission-denied':
-          throw UiCopyException('copy_febe3f9cb924');
+          throw const UiCopyException('copy_febe3f9cb924');
         case 'not-found':
           throw Exception(
             (resolvedError.message ?? '').trim().isNotEmpty
                 ? resolvedError.message!.trim()
-                : 'Không tìm thấy ảnh Kỷ niệm cần xóa.',
+                : UiCopy.text('copy_e4f4b31ebb17'),
           );
         case 'deadline-exceeded':
         case 'unavailable':
-          throw UiCopyException('copy_8f44baa3f6f7');
+          throw const UiCopyException('copy_8f44baa3f6f7');
         default:
           throw Exception(
             (resolvedError.message ?? '').trim().isNotEmpty
                 ? resolvedError.message!.trim()
-                : 'Không thể xóa ảnh Kỷ niệm.',
+                : UiCopy.text('copy_f6339bd5b947'),
           );
       }
     }
@@ -828,31 +828,31 @@ class StorageService {
     } on FirebaseFunctionsException catch (error) {
       switch (error.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw UiCopyException('copy_d4788b9ad5cb');
+          throw const UiCopyException('copy_d4788b9ad5cb');
         case 'invalid-argument':
-          throw UiCopyException('copy_342a1ad34a6a');
+          throw const UiCopyException('copy_342a1ad34a6a');
         case 'permission-denied':
-          throw UiCopyException('copy_fffaee0b9efd');
+          throw const UiCopyException('copy_fffaee0b9efd');
         case 'not-found':
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
                 ? error.message!.trim()
-                : 'Không tìm thấy ảnh Kỷ niệm trong thùng rác.',
+                : UiCopy.text('copy_116f932f2fef'),
           );
         case 'failed-precondition':
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
                 ? error.message!.trim()
-                : 'Ảnh Kỷ niệm đã quá hạn khôi phục.',
+                : UiCopy.text('copy_93c7f90ed214'),
           );
         case 'deadline-exceeded':
         case 'unavailable':
-          throw UiCopyException('copy_f077e76c9760');
+          throw const UiCopyException('copy_f077e76c9760');
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
                 ? error.message!.trim()
-                : 'Không thể khôi phục ảnh Kỷ niệm.',
+                : UiCopy.text('copy_d10920183db5'),
           );
       }
     }
@@ -879,19 +879,19 @@ class StorageService {
     } on FirebaseFunctionsException catch (error) {
       switch (error.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw UiCopyException('copy_66a39337300e');
+          throw const UiCopyException('copy_66a39337300e');
         case 'invalid-argument':
-          throw UiCopyException('copy_7b3f71abbf6b');
+          throw const UiCopyException('copy_7b3f71abbf6b');
         case 'permission-denied':
-          throw UiCopyException('copy_e52c27bcd89e');
+          throw const UiCopyException('copy_e52c27bcd89e');
         case 'deadline-exceeded':
         case 'unavailable':
-          throw UiCopyException('copy_ba3af1f1f4ce');
+          throw const UiCopyException('copy_ba3af1f1f4ce');
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
                 ? error.message!.trim()
-                : 'Không thể dọn thùng rác Kỷ niệm.',
+                : UiCopy.text('copy_cfe91d96d169'),
           );
       }
     }
@@ -982,36 +982,36 @@ class StorageService {
         throw Exception(
           AppErrorMapper.resolve(
             error,
-            fallbackMessage: 'Không thể hoàn tất ảnh công khai.',
+            fallbackMessage: UiCopy.text('copy_748909ef83bb'),
           ).message,
         );
       }
       switch (error.code.trim().toLowerCase()) {
         case 'unauthenticated':
-          throw UiCopyException('copy_d63f7c5741da');
+          throw const UiCopyException('copy_d63f7c5741da');
         case 'invalid-argument':
-          throw UiCopyException('copy_cd208658eecf');
+          throw const UiCopyException('copy_cd208658eecf');
         case 'not-found':
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
                 ? error.message!.trim()
-                : 'Không tìm thấy phiên tải ảnh công khai.',
+                : UiCopy.text('copy_3303f1fbd57c'),
           );
         case 'permission-denied':
         case 'failed-precondition':
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
                 ? error.message!.trim()
-                : 'Phiên tải ảnh công khai không còn hợp lệ.',
+                : UiCopy.text('copy_228e5c9a8b73'),
           );
         case 'deadline-exceeded':
         case 'unavailable':
-          throw UiCopyException('copy_56d7893f7c4e');
+          throw const UiCopyException('copy_56d7893f7c4e');
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
                 ? error.message!.trim()
-                : 'Không thể hoàn tất ảnh công khai.',
+                : UiCopy.text('copy_748909ef83bb'),
           );
       }
     }
@@ -1146,7 +1146,7 @@ class StorageService {
       };
     } catch (e) {
       debugPrint('Collage R2 upload error: $e');
-      throw UiCopyException('copy_97d441d22938');
+      throw const UiCopyException('copy_97d441d22938');
     }
   }
 
@@ -1757,7 +1757,7 @@ class StorageService {
   }) async {
     final normalizedHouseId = houseId.trim();
     if (normalizedHouseId.isEmpty) {
-      throw UiCopyException('copy_57a524aa6dd1');
+      throw const UiCopyException('copy_57a524aa6dd1');
     }
     _requireCurrentUid();
 
@@ -1806,14 +1806,14 @@ class StorageService {
       );
       final rawSession = sessionResult.data;
       if (rawSession is! Map) {
-        throw UiCopyException('copy_dd1fed82cddc');
+        throw const UiCopyException('copy_dd1fed82cddc');
       }
       final session = Map<String, dynamic>.from(rawSession);
       final uploadId = session['uploadId']?.toString().trim() ?? '';
       final uploadUrl = session['url']?.toString().trim() ?? '';
       final storagePath = session['path']?.toString().trim() ?? '';
       if (uploadId.isEmpty || uploadUrl.isEmpty || storagePath.isEmpty) {
-        throw UiCopyException('copy_3081f058c454');
+        throw const UiCopyException('copy_3081f058c454');
       }
 
       final headers = <String, String>{};
@@ -1842,7 +1842,7 @@ class StorageService {
       );
       final finalizeData = finalized.data;
       if (finalizeData is! Map || finalizeData['success'] != true) {
-        throw UiCopyException('copy_a72d2688a7b4');
+        throw const UiCopyException('copy_a72d2688a7b4');
       }
 
       return StorageUploadResult(
@@ -1858,7 +1858,7 @@ class StorageService {
       throw Exception(
         AppErrorMapper.resolve(
           error,
-          fallbackMessage: 'Không thể tải ảnh lên kho bí mật.',
+          fallbackMessage: UiCopy.text('copy_8b4ec9270935'),
         ).message,
       );
     }

@@ -8,6 +8,7 @@ import 'house_service.dart';
 import 'notification_service.dart';
 import 'widget_service.dart';
 import 'soul_message_history.dart';
+import 'soul_message_actions.dart';
 import 'soul_merge_role_stream.dart';
 import 'package:soullocket_app/utils/services/core/presence_service.dart';
 
@@ -67,31 +68,52 @@ class SoulMergeService {
   }
 
   /// Send a persistent message to the partner during Soul Merge
-  Future<void> sendSoulMessage(String text, {String? imageUrl}) async {
+  Future<void> sendSoulMessage(
+    String text, {
+    String? imageUrl,
+    String? replyTo,
+    String? expectedHouseId,
+    String? expectedUid,
+  }) async {
     try {
       final user = _auth.currentUser;
       if (user == null) {
-        throw UiCopyException('copy_75305b3e544e');
+        throw const UiCopyException('copy_75305b3e544e');
       }
 
       final houseId = await _houseService.getCurrentHouseId();
       if (houseId == null || houseId.isEmpty) {
-        throw UiCopyException('copy_a889cd9f28dd');
+        throw const UiCopyException('copy_a889cd9f28dd');
       }
 
+      if (_auth.currentUser?.uid != user.uid ||
+          (expectedUid != null && expectedUid != user.uid) ||
+          (expectedHouseId != null && expectedHouseId != houseId)) {
+        throw StateError('Soul Merge scope changed');
+      }
+      if (replyTo != null && !SoulMessageActions.validId(replyTo)) {
+        throw ArgumentError('Invalid reply target');
+      }
       final trimmed = text.trim();
       if (trimmed.length > 2000) {
-        throw UiCopyException('copy_44fdfcf1695b');
+        throw const UiCopyException('copy_44fdfcf1695b');
       }
 
       final prefs = await SharedPreferences.getInstance();
       final role = _normalizeRole(prefs.getString('il_role'));
 
+      if (_auth.currentUser?.uid != user.uid ||
+          await getCurrentHouseId() != houseId ||
+          _auth.currentUser?.uid != user.uid) {
+        throw StateError('Soul Merge scope changed');
+      }
       final ref = _db.ref('houses/$houseId/soul_merge/chat');
       await ref.push().set({
         if (trimmed.isNotEmpty) 'text': trimmed,
         if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
         'sender': role,
+        'senderUid': user.uid,
+        'replyTo': ?replyTo,
         'timestamp': ServerValue.timestamp,
       });
 
@@ -140,6 +162,93 @@ class SoulMergeService {
       debugPrint('[SoulMergeService] sendSoulMessage error: $e');
       rethrow;
     }
+  }
+
+  Future<void> _requireMessageScope(
+    String houseId,
+    String expectedUid,
+    String messageId,
+  ) async {
+    if (!SoulMessageActions.validId(messageId)) {
+      throw ArgumentError('Invalid message id');
+    }
+    if (houseId.isEmpty ||
+        _auth.currentUser?.uid != expectedUid ||
+        await getCurrentHouseId() != houseId ||
+        _auth.currentUser?.uid != expectedUid) {
+      throw StateError('Soul Merge scope changed');
+    }
+  }
+
+  Future<void> setSoulReaction({
+    required String houseId,
+    required String expectedUid,
+    required String messageId,
+    required String reaction,
+  }) async {
+    if (!SoulMessageActions.validReaction(reaction)) {
+      throw ArgumentError('Invalid reaction');
+    }
+    await _requireMessageScope(houseId, expectedUid, messageId);
+    await _db
+        .ref(
+          'houses/$houseId/soul_merge/chat/$messageId/reactions/$expectedUid',
+        )
+        .set(reaction);
+  }
+
+  Future<void> removeSoulReaction({
+    required String houseId,
+    required String expectedUid,
+    required String messageId,
+  }) async {
+    await _requireMessageScope(houseId, expectedUid, messageId);
+    await _db
+        .ref(
+          'houses/$houseId/soul_merge/chat/$messageId/reactions/$expectedUid',
+        )
+        .remove();
+  }
+
+  Future<void> hideSoulMessage({
+    required String houseId,
+    required String expectedUid,
+    required String messageId,
+  }) async {
+    await _requireMessageScope(houseId, expectedUid, messageId);
+    await _db
+        .ref(
+          'houses/$houseId/soul_merge/chat/$messageId/hiddenFor/$expectedUid',
+        )
+        .set(true);
+  }
+
+  /// Rules chỉ cho UID sở hữu xóa tin với cả hai.
+  Future<void> deleteSoulMessage({
+    required String houseId,
+    required String expectedUid,
+    required String messageId,
+  }) async {
+    await _requireMessageScope(houseId, expectedUid, messageId);
+    await _db.ref('houses/$houseId/soul_merge/chat/$messageId').remove();
+  }
+
+  Stream<Map<String, dynamic>?> watchSoulMessage(
+    String houseId,
+    String messageId,
+  ) {
+    if (!SoulMessageActions.validId(messageId)) return const Stream.empty();
+    return _db.ref('houses/$houseId/soul_merge/chat/$messageId').onValue.map((
+      event,
+    ) {
+      final raw = event.snapshot.value;
+      return raw is Map
+          ? <String, dynamic>{
+              ...Map<String, dynamic>.from(raw),
+              'id': messageId,
+            }
+          : null;
+    });
   }
 
   /// Watch the latest page of persistent messages in Soul Merge
@@ -356,7 +465,9 @@ class SoulMergeService {
       String partnerName = UiCopy.text('copy_145933221191');
       if (users != null && users[partnerRole] != null) {
         final partnerInfo = users[partnerRole] as Map<dynamic, dynamic>;
-        partnerName = (partnerInfo['name'] as String?)?.trim() ?? UiCopy.text('copy_145933221191');
+        partnerName =
+            (partnerInfo['name'] as String?)?.trim() ??
+            UiCopy.text('copy_145933221191');
         if (partnerName.isEmpty) partnerName = UiCopy.text('copy_145933221191');
       }
 
@@ -368,9 +479,13 @@ class SoulMergeService {
       // Helper lấy tên theo role
       String nameForRole(String r) {
         if (r == 'user2') {
-          return (nameU2 != null && nameU2.isNotEmpty) ? nameU2 : UiCopy.text('copy_145933221191');
+          return (nameU2 != null && nameU2.isNotEmpty)
+              ? nameU2
+              : UiCopy.text('copy_145933221191');
         }
-        return (nameU1 != null && nameU1.isNotEmpty) ? nameU1 : UiCopy.text('copy_145933221191');
+        return (nameU1 != null && nameU1.isNotEmpty)
+            ? nameU1
+            : UiCopy.text('copy_145933221191');
       }
 
       // 3. Get Latest Message
@@ -391,7 +506,12 @@ class SoulMergeService {
           final sender = (msgData['sender'] as String?)?.trim() ?? partnerRole;
           // Lấy tên đúng của người gửi tin nhắn đó
           senderName = nameForRole(sender);
-          if (text != null && text.trim().isNotEmpty) {
+          if (!SoulMessageActions.visibleTo(
+            Map<String, dynamic>.from(msgData),
+            _auth.currentUser?.uid,
+          )) {
+            message = UiCopy.text('copy_10b2526771ce');
+          } else if (text != null && text.trim().isNotEmpty) {
             message = text.trim();
           } else if (imageUrl != null && imageUrl.isNotEmpty) {
             message = UiCopy.text('copy_95645c3098ee');

@@ -178,9 +178,9 @@ class _JourneySheetState extends State<_JourneySheet> {
       await UiPrefs.setHomeCompanionEnabled(enabled);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SLSnackBar(content: Text(context.tr('legacy_save_failed'))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SLSnackBar(content: Text(context.tr('legacy_save_failed'))),
+      );
     } finally {
       if (mounted) setState(() => _petPreferenceBusy = false);
     }
