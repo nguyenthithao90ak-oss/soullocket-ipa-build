@@ -15,7 +15,6 @@ import '../../../core/sl_theme.dart';
 import '../../../utils/services/location_service.dart';
 import '../../../utils/app_error_mapper.dart';
 import '../../../utils/services/love_wheel_service.dart';
-import '../../../utils/services/sound_service.dart';
 import 'package:soullocket_app/widgets/sl_toast.dart';
 import 'wheel_options_editor.dart';
 import 'wheel_stage.dart';
@@ -402,7 +401,6 @@ class _WheelScreenState extends State<WheelScreen>
         }
       });
       HapticFeedback.heavyImpact();
-      unawaited(SoundService().playResult());
       unawaited(_loadLocalHistory());
     }
   }
