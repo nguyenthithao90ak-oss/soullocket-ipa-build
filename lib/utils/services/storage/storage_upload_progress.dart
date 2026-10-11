@@ -47,12 +47,18 @@ abstract final class StorageUploadProgress {
     try {
       await for (final chunk in source) {
         if (chunk.isEmpty) continue;
-        sent += chunk.length;
-        if (sent > totalBytes) {
-          throw StateError('Upload stream exceeded expected size');
+        var offset = 0;
+        while (offset < chunk.length) {
+          final length = (chunk.length - offset).clamp(0, chunkSize);
+          final piece = chunk.sublist(offset, offset + length);
+          sent += piece.length;
+          if (sent > totalBytes) {
+            throw StateError('Upload stream exceeded expected size');
+          }
+          sink.add(piece);
+          onProgress?.call(sent / totalBytes);
+          offset += length;
         }
-        sink.add(chunk);
-        onProgress?.call(sent / totalBytes);
       }
       if (sent != totalBytes) {
         throw StateError('Upload stream ended before expected size');

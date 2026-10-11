@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/sl_theme.dart';
 import '../../../utils/services/l10n_service.dart';
+import '../../../utils/services/sound_service.dart';
 import 'models/tarot_models.dart';
 import 'painters/tarot_painters.dart';
 
@@ -197,11 +198,20 @@ class _TarotScreenState extends State<TarotScreen> {
     if (index >= draws.length || draws[index].revealed) return;
     final copy = List<TarotDraw>.of(draws);
     copy[index] = copy[index].reveal();
+    final completed = copy.every((draw) => draw.revealed);
     setState(() => draws = copy);
+    if (completed) {
+      unawaited(SoundService().playResult());
+    } else {
+      unawaited(SoundService().playFlip());
+    }
   }
 
-  void revealAll() =>
-      setState(() => draws = [for (final draw in draws) draw.reveal()]);
+  void revealAll() {
+    if (draws.isEmpty || allRevealed) return;
+    setState(() => draws = [for (final draw in draws) draw.reveal()]);
+    unawaited(SoundService().playResult());
+  }
   bool get allRevealed =>
       draws.isNotEmpty && draws.every((draw) => draw.revealed);
   void setup() => setState(() {
